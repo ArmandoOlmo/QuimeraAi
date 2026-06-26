@@ -38,6 +38,69 @@ export interface SendMessageParams {
     messageType?: 'text' | 'image' | 'template';
 }
 
+const VALID_CHANNELS = new Set<SocialChannel>(['facebook', 'whatsapp', 'instagram', 'web']);
+
+const normalizeChannel = (value: unknown): SocialChannel => (
+    VALID_CHANNELS.has(value as SocialChannel) ? value as SocialChannel : 'web'
+);
+
+const normalizeParticipantId = (data: any, fallbackId: string): string => (
+    String(data.participantId || data.participant_id || data.participantEmail || data.participantPhone || fallbackId)
+);
+
+const normalizeConversationRecord = (
+    id: string,
+    data: any,
+    lastMessage?: SocialMessage,
+): ConversationWithMessages => ({
+    id,
+    projectId: String(data.projectId || data.project_id || ''),
+    channel: normalizeChannel(data.channel),
+    participantId: normalizeParticipantId(data, id),
+    participantName: data.participantName || data.participant_name || undefined,
+    participantAvatar: data.participantAvatar || data.participant_avatar || undefined,
+    participantEmail: data.participantEmail || data.participant_email || undefined,
+    participantPhone: data.participantPhone || data.participant_phone || undefined,
+    status: data.status || 'active',
+    startedAt: data.startedAt || data.started_at || data.createdAt || data.created_at,
+    lastMessageAt: data.lastMessageAt || data.last_message_at || data.updatedAt || data.updated_at,
+    messageCount: Number(data.messageCount ?? data.message_count ?? 0),
+    unreadCount: Number(data.unreadCount ?? data.unread_count ?? 0),
+    assignedTo: data.assignedTo || data.assigned_to || undefined,
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    notes: data.notes,
+    leadId: data.leadId || data.lead_id || undefined,
+    metadata: data.metadata || {},
+    messages: [],
+    lastMessage,
+});
+
+const normalizeMessageRecord = (id: string, data: any): SocialMessage => ({
+    id,
+    conversationId: data.conversationId || data.conversation_id,
+    projectId: String(data.projectId || data.project_id || ''),
+    channel: normalizeChannel(data.channel),
+    direction: data.direction || 'inbound',
+    senderId: String(data.senderId || data.sender_id || ''),
+    senderName: data.senderName || data.sender_name,
+    senderAvatar: data.senderAvatar || data.sender_avatar,
+    recipientId: data.recipientId || data.recipient_id,
+    message: String(data.message || ''),
+    messageType: data.messageType || data.message_type || 'text',
+    mediaUrl: data.mediaUrl || data.media_url,
+    timestamp: data.timestamp || data.createdAt || data.created_at || new Date().toISOString(),
+    status: data.status || 'delivered',
+    response: data.response,
+    responseTimestamp: data.responseTimestamp || data.response_timestamp,
+    metadata: data.metadata || {},
+    processedByAI: data.processedByAI ?? data.processed_by_ai,
+    aiConfidence: data.aiConfidence ?? data.ai_confidence,
+    escalatedToHuman: data.escalatedToHuman ?? data.escalated_to_human,
+    errorCode: data.errorCode || data.error_code,
+    errorMessage: data.errorMessage || data.error_message,
+    retryCount: data.retryCount ?? data.retry_count,
+} as SocialMessage);
+
 // =============================================================================
 // HOOK
 // =============================================================================
@@ -120,27 +183,7 @@ export const useSocialChat = (projectId: string, userId?: string) => {
                         console.debug('[useSocialChat] Could not fetch last message:', msgError);
                     }
 
-                    conversationsData.push({
-                        id: docSnap.id,
-                        projectId: data.projectId,
-                        channel: data.channel,
-                        participantId: data.participantId,
-                        participantName: data.participantName,
-                        participantAvatar: data.participantAvatar,
-                        participantEmail: data.participantEmail,
-                        participantPhone: data.participantPhone,
-                        status: data.status || 'active',
-                        startedAt: data.startedAt,
-                        lastMessageAt: data.lastMessageAt,
-                        messageCount: data.messageCount || 0,
-                        unreadCount: data.unreadCount || 0,
-                        assignedTo: data.assignedTo,
-                        tags: data.tags || [],
-                        notes: data.notes,
-                        leadId: data.leadId,
-                        messages: [],
-                        lastMessage,
-                    });
+                    conversationsData.push(normalizeConversationRecord(docSnap.id, data, lastMessage));
                 }
 
                 setConversations(conversationsData);
@@ -182,10 +225,7 @@ export const useSocialChat = (projectId: string, userId?: string) => {
 
             const snapshot = await getDocs(messagesQuery);
             let messages: SocialMessage[] = snapshot.docs
-                .map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                } as SocialMessage));
+                .map(doc => normalizeMessageRecord(doc.id, doc.data()));
 
             if (messages.length === 0) {
                 const legacyMessagesQuery = query(
@@ -198,10 +238,7 @@ export const useSocialChat = (projectId: string, userId?: string) => {
 
                 const legacySnapshot = await getDocs(legacyMessagesQuery);
                 messages = legacySnapshot.docs
-                    .map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    } as SocialMessage))
+                    .map(doc => normalizeMessageRecord(doc.id, doc.data()))
                     .filter(msg =>
                         msg.conversationId === conversationId ||
                         msg.senderId === participantId ||
@@ -428,7 +465,9 @@ export const useSocialChat = (projectId: string, userId?: string) => {
                 const nameMatch = conv.participantName?.toLowerCase().includes(searchLower);
                 const emailMatch = conv.participantEmail?.toLowerCase().includes(searchLower);
                 const phoneMatch = conv.participantPhone?.includes(filter.searchTerm);
-                if (!nameMatch && !emailMatch && !phoneMatch) return false;
+                const messageMatch = conv.lastMessage?.message?.toLowerCase().includes(searchLower);
+                const tagMatch = conv.tags?.some(tag => tag.toLowerCase().includes(searchLower));
+                if (!nameMatch && !emailMatch && !phoneMatch && !messageMatch && !tagMatch) return false;
             }
             return true;
         });
@@ -446,8 +485,9 @@ export const useSocialChat = (projectId: string, userId?: string) => {
         let activeCount = 0;
 
         conversations.forEach(conv => {
-            byChannel[conv.channel].conversations++;
-            byChannel[conv.channel].unread += conv.unreadCount;
+            const channel = normalizeChannel(conv.channel);
+            byChannel[channel].conversations++;
+            byChannel[channel].unread += conv.unreadCount;
             totalUnread += conv.unreadCount;
             if (conv.status === 'active' || conv.status === 'pending') {
                 activeCount++;

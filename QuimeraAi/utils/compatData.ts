@@ -90,6 +90,8 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     bio_page_events: ['id', 'tenant_id', 'project_id', 'bio_page_id', 'block_id', 'link_id', 'event_type', 'source', 'referrer', 'utm', 'user_agent', 'ip_hash', 'metadata', 'created_at'],
     bio_page_qr_codes: ['id', 'tenant_id', 'project_id', 'bio_page_id', 'url', 'color', 'background_color', 'logo_url', 'metadata', 'created_at', 'updated_at'],
     bio_page_subscribers: ['id', 'tenant_id', 'project_id', 'bio_page_id', 'email', 'name', 'consent', 'source', 'audience_id', 'metadata', 'subscribed_at', 'created_at'],
+    social_conversations: ['id', 'tenant_id', 'project_id', 'channel', 'participant_id', 'participant_name', 'participant_avatar', 'participant_email', 'participant_phone', 'status', 'started_at', 'last_message_at', 'message_count', 'unread_count', 'assigned_to', 'tags', 'notes', 'lead_id', 'metadata', 'created_at', 'updated_at'],
+    social_messages: ['id', 'tenant_id', 'project_id', 'conversation_id', 'channel', 'direction', 'sender_id', 'sender_name', 'sender_avatar', 'recipient_id', 'message', 'message_type', 'media_url', 'timestamp', 'status', 'response', 'response_timestamp', 'processed_by_ai', 'ai_confidence', 'escalated_to_human', 'error_code', 'error_message', 'retry_count', 'metadata', 'created_at', 'updated_at'],
 };
 
 const EMAIL_TABLES = new Set(['email_campaigns', 'email_audiences', 'email_automations', 'email_logs']);
@@ -115,6 +117,10 @@ const COLLECTION_TABLES: Record<string, string> = {
     bio_page_qr_codes: 'bio_page_qr_codes',
     bioPageSubscribers: 'bio_page_subscribers',
     bio_page_subscribers: 'bio_page_subscribers',
+    socialConversations: 'social_conversations',
+    social_conversations: 'social_conversations',
+    socialMessages: 'social_messages',
+    social_messages: 'social_messages',
     publicStores: 'public_stores',
     public_stores: 'public_stores',
     storeUsers: 'store_users',
@@ -189,6 +195,8 @@ const JSON_FALLBACK_COLUMN: Record<string, string> = {
     bio_page_links: 'metadata',
     bio_page_events: 'metadata',
     bio_page_qr_codes: 'metadata',
+    social_conversations: 'metadata',
+    social_messages: 'metadata',
 };
 
 const FIELD_ALIASES: Record<string, string> = {

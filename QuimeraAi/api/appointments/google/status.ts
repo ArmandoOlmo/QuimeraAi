@@ -5,7 +5,7 @@ import {
   assertGoogleCalendarProjectAccess,
   disconnectGoogleCalendarIntegration,
   getGoogleCalendarIntegrationStatus,
-} from '../../../services/appointments/appointmentGoogleCalendarSyncService.ts';
+} from '../../../services/appointments/appointmentGoogleCalendarSyncService.js';
 import {
   JSON_HEADERS,
   normalizeString,
@@ -13,7 +13,7 @@ import {
   requestOrigin,
   send,
   sendNoContent,
-} from './_lib.ts';
+} from './_lib.js';
 
 function queryValue(req: IncomingMessage, key: string): string | undefined {
   const url = new URL(req.url || '/', requestOrigin(req));

@@ -7,14 +7,14 @@ import {
   syncGoogleCalendarIntegration,
   upsertGoogleCalendarIntegration,
   verifyGoogleCalendarOAuthState,
-} from '../../../../services/appointments/appointmentGoogleCalendarSyncService.ts';
+} from '../../../../services/appointments/appointmentGoogleCalendarSyncService.js';
 import {
   googleRedirectUri,
   redirectWithStatus,
   requestOrigin,
   safeReturnUrl,
   send,
-} from '../_lib.ts';
+} from '../_lib.js';
 
 function queryValue(req: IncomingMessage, key: string): string | undefined {
   const url = new URL(req.url || '/', requestOrigin(req));

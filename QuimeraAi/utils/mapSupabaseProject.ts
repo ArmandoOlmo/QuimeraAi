@@ -3,6 +3,7 @@ import { initialData } from '../data/initialData';
 import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { generatePagesFromLegacyProject } from './legacyMigration';
 import { resolveProjectName } from './resolveProjectName';
+import { resolveProjectAiAssistantConfig } from './chatbotEngine/projectAiAssistantConfig';
 
 type SupabaseProjectRow = Record<string, any>;
 
@@ -264,6 +265,10 @@ export function mapSupabaseRowToProject(row: SupabaseProjectRow): Project {
     const pages = looksLikeSparseFallbackPages(rawPages, pageData) && componentOrder
         ? generatePagesFromLegacyProject(componentOrder, sectionVisibility || {}, pageData)
         : rawPages;
+    const aiAssistantConfig = resolveProjectAiAssistantConfig({
+        ai_assistant_config: row.ai_assistant_config ?? null,
+        data: dataPayload,
+    });
 
     return {
         ...dataPayload,
@@ -285,7 +290,7 @@ export function mapSupabaseRowToProject(row: SupabaseProjectRow): Project {
             (Array.isArray(row.categories) && row.categories.length > 0
                 ? row.categories
                 : dataPayload.categories) ?? undefined,
-        aiAssistantConfig: row.ai_assistant_config ?? dataPayload.aiAssistantConfig,
+        aiAssistantConfig: aiAssistantConfig ?? row.ai_assistant_config ?? dataPayload.aiAssistantConfig,
         seoConfig: row.seo_config ?? dataPayload.seoConfig,
         crmConfig: row.crm_config ?? dataPayload.crmConfig,
     } as Project;

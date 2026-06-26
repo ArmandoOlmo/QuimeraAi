@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactDOM from 'react-dom';
 import { MessageSquare, X } from 'lucide-react';
 import { useSafeEditor } from '../contexts/EditorContext';
 import { useSafeProject } from '../contexts/project/ProjectContext';
-import { Lead, AiAssistantConfig } from '../types';
+import { Lead, AiAssistantConfig, PageSection } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { supabase } from '../supabase';
@@ -13,9 +13,14 @@ import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleI
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
+import {
+    buildChatbotEngineSurfaceContext,
+    mergeChatbotEngineSurfaceContext,
+    type ChatbotEngineSurfaceContext,
+} from '../utils/chatbotEngine/surfaceContext';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 
 function parseAppointmentDate(value: any, fallback?: Date): Date {
     if (value instanceof Date) return value;
@@ -48,13 +53,15 @@ interface ChatbotWidgetProps {
     };
     // Directly hide "Powered by Quimera" badge (for contexts without tenant context)
     hidePoweredBy?: boolean;
+    chatbotEngineContext?: ChatbotEngineSurfaceContext;
 }
 
 const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     isPreview = false,
     standaloneConfig,
     standaloneProject,
-    hidePoweredBy: propHidePoweredBy = false
+    hidePoweredBy: propHidePoweredBy = false,
+    chatbotEngineContext: propChatbotEngineContext
 }) => {
     const editorContext = useSafeEditor();
     const projectContext = useSafeProject();
@@ -185,6 +192,45 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // We use both the context view and the URL route to be robust
     const { isEditorRoute } = useRouter();
     const isInEditor = view === 'editor' || isEditorRoute;
+    const visibleSections = useMemo(
+        () => ((componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []) as PageSection[],
+        [componentOrder, sectionVisibility],
+    );
+    const effectiveChatbotEngineContext = useMemo(() => mergeChatbotEngineSurfaceContext(
+        propChatbotEngineContext || buildChatbotEngineSurfaceContext({
+            sourceSurface: isInEditor || isPreview ? 'admin_preview' : 'website',
+            sourceModule: 'website-builder',
+            route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            entityType: 'project',
+            entityId: projectIdForApi,
+            contextKeys: ['chatbot-widget', currentSection, ...visibleSections],
+            metadata: {
+                widgetMode: standaloneProject ? 'standalone' : isInEditor ? 'editor' : 'public',
+                isPreview,
+            },
+        }),
+        {
+            route: propChatbotEngineContext?.route || (typeof window !== 'undefined' ? window.location.pathname : undefined),
+            entityId: propChatbotEngineContext?.entityId || projectIdForApi,
+            contextKeys: ['chatbot-widget', currentSection, ...visibleSections],
+            metadata: {
+                currentSection,
+                visibleSections,
+                widgetApiProjectId,
+                widgetMode: standaloneProject ? 'standalone' : isInEditor ? 'editor' : 'public',
+                isPreview,
+            },
+        },
+    ), [
+        propChatbotEngineContext,
+        isInEditor,
+        isPreview,
+        projectIdForApi,
+        currentSection,
+        visibleSections,
+        standaloneProject,
+        widgetApiProjectId,
+    ]);
 
     // We no longer return null here so that programmatic triggers (like open-quimera-chat) 
     // can always work. The floating button visibility is controlled below.
@@ -392,9 +438,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     extra: {
                         widgetApiProjectId,
                         captureSource: leadData.source || 'chatbot-widget',
+                        chatbotEngineContext: effectiveChatbotEngineContext,
                     },
                 }),
+                chatbotEngineContext: effectiveChatbotEngineContext,
             },
+            sourceSurface: effectiveChatbotEngineContext.sourceSurface,
+            sourceModule: effectiveChatbotEngineContext.sourceModule,
         };
 
         // If addLead is available (editor context), use it
@@ -450,10 +500,10 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     // Handle updating lead transcript at conversation end
-    const handleUpdateLeadTranscript = async (leadId: string, transcript: string) => {
+    const handleUpdateLeadTranscript = async (leadId: string, transcript: string, notes?: string) => {
         // If updateLead is available (editor context), use it
         if (updateLead) {
-            await updateLead(leadId, { conversationTranscript: transcript });
+            await updateLead(leadId, { conversationTranscript: transcript, ...(notes ? { notes } : {}) });
             console.log('[ChatbotWidget] ✅ Transcript updated via context');
             return;
         }
@@ -482,6 +532,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     tenantId: currentTenantId,
                     title: appointmentData.title,
                     description: appointmentData.description,
+                    notes: appointmentData.notes,
                     type: appointmentData.type || 'consultation',
                     startDate: appointmentData.startDate,
                     endDate: appointmentData.endDate,
@@ -504,9 +555,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     metadata: {
                         ...(appointmentData.metadata || {}),
                         ownerId,
+                        sourceSurface: effectiveChatbotEngineContext.sourceSurface,
+                        sourceModule: effectiveChatbotEngineContext.sourceModule,
+                        chatbotEngineContext: effectiveChatbotEngineContext,
                         widgetMode: standaloneProject ? 'standalone' : 'editor',
                         locale: i18n.language,
                         bookingChannel: appointmentData.bookingChannel,
+                        customerRequestSummary: appointmentData.notes,
                     },
                 });
                 if (result.leadId) setLeadCaptured(true);
@@ -525,6 +580,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             const appointmentPayload = {
                 title: appointmentData.title,
                 description: appointmentData.description,
+                notes: appointmentData.notes,
                 type: appointmentData.type,
                 startDate: appointmentData.startDate.toISOString(),
                 endDate: appointmentData.endDate.toISOString(),
@@ -536,13 +592,18 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 sourceConversationId: appointmentData.sourceConversationId,
                 source: 'chatbot',
                 sourceComponent: 'ChatCore',
-                sourceModule: 'chatcore',
+                sourceModule: effectiveChatbotEngineContext.sourceModule,
+                sourceSurface: effectiveChatbotEngineContext.sourceSurface,
                 locale: i18n.language,
                 generatedByAI: appointmentData.generatedByAI,
                 bookingChannel: appointmentData.bookingChannel,
                 metadata: {
                     ...(appointmentData.metadata || {}),
+                    sourceSurface: effectiveChatbotEngineContext.sourceSurface,
+                    sourceModule: effectiveChatbotEngineContext.sourceModule,
+                    chatbotEngineContext: effectiveChatbotEngineContext,
                     bookingChannel: appointmentData.bookingChannel,
+                    customerRequestSummary: appointmentData.notes,
                     widgetMode: standaloneProject ? 'standalone' : 'editor',
                 },
                 idempotencyKey: `chatbot:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`
@@ -677,10 +738,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         currentPageContext={{
                             section: currentSection,
                             pageData: data,
-                            visibleSections: (componentOrder as any)?.filter((sec: any) => sectionVisibility?.[sec] !== false) || []
+                            visibleSections
                         }}
                         cmsArticles={cmsArticles}
                         activePropertyContext={activePropertyContext}
+                        chatbotEngineContext={effectiveChatbotEngineContext}
                         hidePoweredBy={hasWhiteLabelBranding || propHidePoweredBy}
                     />
                 )}

@@ -7,9 +7,9 @@ import type {
     AppointmentType,
     BlockedDate,
 } from '../../types';
-import { recordAppointmentEngineEvent } from './appointmentEventService';
-import { createAppointmentFollowUpTask, createOrLinkLeadForAppointment } from './appointmentLeadPipelineService';
-import { createAppointmentPaymentDraft } from './appointmentPaymentService';
+import { recordAppointmentEngineEvent } from './appointmentEventService.js';
+import { createAppointmentFollowUpTask, createOrLinkLeadForAppointment } from './appointmentLeadPipelineService.js';
+import { createAppointmentPaymentDraft } from './appointmentPaymentService.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 
@@ -207,6 +207,26 @@ const defaultReminders = (): AppointmentReminder[] => [
     { id: randomId('reminder'), type: 'email', minutesBefore: 1440, sent: false, enabled: true },
     { id: randomId('reminder'), type: 'email', minutesBefore: 60, sent: false, enabled: true },
 ];
+
+const buildInitialMeetingNotes = (
+    input: CanonicalAppointmentInput,
+    content: string | undefined,
+    source: AppointmentSource,
+): Appointment['notes'] => {
+    const normalizedContent = normalizeString(content, 6000);
+    if (!normalizedContent) return [];
+
+    const nowIso = new Date().toISOString();
+    return [{
+        id: randomId('note'),
+        content: normalizedContent,
+        createdAt: timestampFromIso(nowIso),
+        createdBy: input.createdBy || input.organizerId || input.sourceComponent || 'ChatCore',
+        isPrivate: false,
+        aiGenerated: input.generatedByAI || source === 'chatbot',
+        pinned: source === 'chatbot',
+    }];
+};
 
 const DEFAULT_WEEKLY_HOURS: AppointmentWeeklyHoursRule[] = [
     { day: 'monday', enabled: true, startTime: '09:00', endTime: '17:00' },
@@ -534,6 +554,8 @@ export async function createAppointmentCanonical(
 
     const source = input.source || 'dashboard';
     const linkedLeadIds = uniqueStrings(input.linkedLeadIds, [input.linkedLeadId, input.sourceLeadId]);
+    const appointmentNotes = normalizeString(input.notes, 6000);
+    const initialNotes = buildInitialMeetingNotes(input, appointmentNotes, source);
     const metadata = {
         ...(input.metadata || {}),
         source,
@@ -547,6 +569,7 @@ export async function createAppointmentCanonical(
         correlationId: input.correlationId,
         locale: input.locale,
         conversationTranscript: normalizeString(input.conversationTranscript, 20000),
+        customerRequestSummary: appointmentNotes,
     };
 
     const row = {
@@ -567,7 +590,7 @@ export async function createAppointmentCanonical(
         location: input.location || { type: 'virtual' },
         reminders: input.reminders || defaultReminders(),
         attachments: [],
-        notes: [],
+        notes: initialNotes,
         follow_up_actions: [],
         ai_prep_enabled: true,
         linked_lead_ids: linkedLeadIds,

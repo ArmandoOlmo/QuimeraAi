@@ -3,8 +3,8 @@ import { getSupabaseAdmin } from '../../_lib/supabaseAdmin.js';
 import {
   createEmailProviderRegistry,
   createResendEmailProvider,
-} from '../../../services/email/emailProviderService.ts';
-import { processEmailOutbox } from '../../../services/email/emailOutboxProcessor.ts';
+} from '../../../services/email/emailProviderService.js';
+import { processEmailOutbox } from '../../../services/email/emailOutboxProcessor.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',

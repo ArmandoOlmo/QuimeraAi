@@ -9,7 +9,15 @@ interface LeadsTimelineProps {
     onAddActivity: (activity: { type: ActivityType; title: string; description?: string }) => Promise<void>;
 }
 
-const ACTIVITY_ICONS: Record<ActivityType, { icon: React.ElementType; color: string; bgColor: string }> = {
+type ActivityIconConfig = { icon: React.ElementType; color: string; bgColor: string };
+
+const DEFAULT_ACTIVITY_ICON: ActivityIconConfig = {
+    icon: MessageSquare,
+    color: 'text-q-text-muted',
+    bgColor: 'bg-secondary/40',
+};
+
+const ACTIVITY_ICONS: Record<ActivityType, ActivityIconConfig> = {
     call: { icon: Phone, color: 'text-q-accent', bgColor: 'bg-q-accent/10' },
     email: { icon: Mail, color: 'text-q-accent', bgColor: 'bg-q-accent/10' },
     meeting: { icon: Calendar, color: 'text-q-success', bgColor: 'bg-q-success/10' },
@@ -17,6 +25,10 @@ const ACTIVITY_ICONS: Record<ActivityType, { icon: React.ElementType; color: str
     status_change: { icon: TrendingUp, color: 'text-q-warning', bgColor: 'bg-q-warning/10' },
     task_completed: { icon: CheckCircle, color: 'text-q-success', bgColor: 'bg-q-success/10' },
 };
+
+function getActivityConfig(type: LeadActivity['type']): ActivityIconConfig {
+    return ACTIVITY_ICONS[type as ActivityType] || DEFAULT_ACTIVITY_ICON;
+}
 
 const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity }) => {
     const { t } = useTranslation();
@@ -48,18 +60,24 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
         }
     };
 
-    const formatDate = (timestamp: { seconds: number; nanoseconds: number }) => {
-        const date = new Date(timestamp.seconds * 1000);
+    const formatDate = (timestamp: LeadActivity['createdAt']) => {
+        const date = typeof timestamp === 'string'
+            ? new Date(timestamp)
+            : new Date(Number(timestamp?.seconds || 0) * 1000);
+        if (Number.isNaN(date.getTime()) || date.getTime() <= 0) {
+            return t('leads.timeline.unknownTime', 'Unknown time');
+        }
+
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
+        if (diffMins < 1) return t('leads.timeline.justNow', 'Just now');
+        if (diffMins < 60) return t('leads.timeline.minutesAgo', '{{count}}m ago', { count: diffMins });
+        if (diffHours < 24) return t('leads.timeline.hoursAgo', '{{count}}h ago', { count: diffHours });
+        if (diffDays < 7) return t('leads.timeline.daysAgo', '{{count}}d ago', { count: diffDays });
 
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
     };
@@ -83,36 +101,36 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                 <form onSubmit={handleSubmit} className="bg-secondary/20 border border-q-border rounded-xl p-4 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs text-q-text-muted mb-1 block">Type</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">{t('leads.timeline.fields.type', 'Type')}</label>
                             <AppSelect
                                 value={newActivity.type}
                                 onChange={e => setNewActivity({ ...newActivity, type: e.target.value as ActivityType })}
                                 className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                             >
-                                <option value="call">Phone Call</option>
-                                <option value="email">Email</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="note">Note</option>
+                                <option value="call">{t('leads.timeline.types.call', 'Phone Call')}</option>
+                                <option value="email">{t('leads.timeline.types.email', 'Email')}</option>
+                                <option value="meeting">{t('leads.timeline.types.meeting', 'Meeting')}</option>
+                                <option value="note">{t('leads.timeline.types.note', 'Note')}</option>
                             </AppSelect>
                         </div>
                         <div>
-                            <label className="text-xs text-q-text-muted mb-1 block">Title</label>
+                            <label className="text-xs text-q-text-muted mb-1 block">{t('leads.timeline.fields.title', 'Title')}</label>
                             <input
                                 type="text"
                                 value={newActivity.title}
                                 onChange={e => setNewActivity({ ...newActivity, title: e.target.value })}
-                                placeholder="Quick summary..."
+                                placeholder={t('leads.timeline.placeholders.title', 'Quick summary...')}
                                 className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
                                 required
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Description (optional)</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('leads.timeline.fields.description', 'Description (optional)')}</label>
                         <textarea
                             value={newActivity.description}
                             onChange={e => setNewActivity({ ...newActivity, description: e.target.value })}
-                            placeholder="Additional details..."
+                            placeholder={t('leads.timeline.placeholders.description', 'Additional details...')}
                             className="w-full bg-q-surface border border-q-border rounded px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                             rows={2}
                         />
@@ -126,7 +144,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                             }}
                             className="px-3 py-1.5 text-sm border border-q-border rounded hover:bg-secondary transition-colors"
                         >
-                            Cancel
+                            {t('common.cancel', 'Cancel')}
                         </button>
                         <button
                             type="submit"
@@ -148,7 +166,7 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                     </div>
                 ) : (
                     activities.map((activity, index) => {
-                        const config = ACTIVITY_ICONS[activity.type];
+                        const config = getActivityConfig(activity.type);
                         const Icon = config.icon;
 
                         return (
@@ -206,4 +224,3 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
 };
 
 export default LeadsTimeline;
-

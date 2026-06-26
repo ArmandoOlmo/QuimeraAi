@@ -6,6 +6,7 @@ type VisitorStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 const BIO_PAGE_VISITOR_STORAGE_KEY = 'quimera:bio-page:anonymous-visitor-id';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const BIO_PAGE_UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 
 export type BioPageEventType =
     | 'bio_page_viewed'
@@ -22,13 +23,73 @@ export type BioPageEventType =
     | 'bio_chat_opened'
     | 'bio_tab_changed';
 
+const BIO_PAGE_EVENTS_REQUIRING_LINK_ID = new Set<BioPageEventType>([
+    'bio_link_clicked',
+    'bio_social_clicked',
+    'bio_collection_clicked',
+]);
+
 export function getBioPageUtm(search = typeof window !== 'undefined' ? window.location.search : ''): Record<string, string> {
     const params = new URLSearchParams(search);
     return Object.fromEntries(
-        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']
-            .map(key => [key, params.get(key) || ''] as const)
+        BIO_PAGE_UTM_KEYS
+            .map(key => [key, sanitizeBioPageAttributionToken(params.get(key) || '', 120)] as const)
             .filter(([, value]) => Boolean(value)),
     );
+}
+
+export function getBioPageTrafficSource(search = typeof window !== 'undefined' ? window.location.search : ''): string | null {
+    const params = new URLSearchParams(search);
+    const utm = getBioPageUtm(search);
+    return utm.utm_source || sanitizeBioPageAttributionToken(params.get('source') || '', 80) || null;
+}
+
+function sanitizeBioPageAttributionToken(value: unknown, maxLength: number): string {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.includes('@')) return '';
+
+    return trimmed
+        .replace(/[\u0000-\u001f\u007f]+/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-zA-Z0-9._~:-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, maxLength);
+}
+
+function sanitizeBioPageUtm(utm: Record<string, string> = {}): Record<string, string> {
+    return Object.fromEntries(
+        BIO_PAGE_UTM_KEYS
+            .map(key => [key, sanitizeBioPageAttributionToken(utm[key], 120)] as const)
+            .filter(([, value]) => Boolean(value)),
+    );
+}
+
+function getDefaultBioPageReferrer(): string | null {
+    return typeof document !== 'undefined' ? document.referrer : null;
+}
+
+function shouldRecordBioPageAnalytics(page: Pick<BioPageData, 'settings'>): boolean {
+    return page.settings?.analyticsEnabled !== false;
+}
+
+function sanitizeBioPageReferrer(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+        const referrerUrl = new URL(trimmed);
+        referrerUrl.search = '';
+        referrerUrl.hash = '';
+        const safeReferrer = referrerUrl.toString();
+        if (safeReferrer.includes('@')) return null;
+        return safeReferrer.slice(0, 240);
+    } catch {
+        if (trimmed.includes('@')) return null;
+        return sanitizeBioPageAttributionToken(trimmed, 160) || null;
+    }
 }
 
 function createAnonymousVisitorId(): string {
@@ -56,7 +117,7 @@ export function getBioPageAnonymousVisitorId(
 }
 
 export async function recordBioPageEvent(input: {
-    page: Pick<BioPageData, 'id' | 'projectId' | 'tenantId'>;
+    page: Pick<BioPageData, 'id' | 'projectId' | 'tenantId' | 'settings'>;
     eventType: BioPageEventType;
     blockId?: string | null;
     linkId?: string | null;
@@ -65,8 +126,19 @@ export async function recordBioPageEvent(input: {
     utm?: Record<string, string>;
     metadata?: Record<string, unknown>;
 }, client: SupabaseClient = supabase): Promise<void> {
+    if (!shouldRecordBioPageAnalytics(input.page)) return;
+
     const safeBlockId = input.blockId && UUID_RE.test(input.blockId) ? input.blockId : null;
     const safeLinkId = input.linkId && UUID_RE.test(input.linkId) ? input.linkId : null;
+    if (BIO_PAGE_EVENTS_REQUIRING_LINK_ID.has(input.eventType) && !safeLinkId) {
+        console.warn('[BioPageAnalytics] Event not recorded: persisted link attribution is required.');
+        return;
+    }
+    if (input.eventType === 'bio_product_clicked' && !safeBlockId && !safeLinkId) {
+        console.warn('[BioPageAnalytics] Event not recorded: persisted product attribution is required.');
+        return;
+    }
+
     const metadata = {
         ...(input.metadata || {}),
         ...(input.blockId && !input.metadata?.blockId ? { blockId: input.blockId } : {}),
@@ -80,9 +152,9 @@ export async function recordBioPageEvent(input: {
         block_id: safeBlockId,
         link_id: safeLinkId,
         event_type: input.eventType,
-        source: input.source || null,
-        referrer: input.referrer || (typeof document !== 'undefined' ? document.referrer : null),
-        utm: input.utm || getBioPageUtm(),
+        source: sanitizeBioPageAttributionToken(input.source || '', 80) || null,
+        referrer: sanitizeBioPageReferrer(input.referrer ?? getDefaultBioPageReferrer()),
+        utm: sanitizeBioPageUtm(input.utm || getBioPageUtm()),
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 512) : null,
         metadata,
     });
@@ -119,16 +191,18 @@ export async function recordBioPageClick(
             ? 'bio_social_clicked'
             : 'bio_link_clicked';
     const attributedBlockId = blockId || (typeof link.metadata?.blockId === 'string' ? link.metadata.blockId : null);
+    const trafficSource = getBioPageTrafficSource();
 
     await recordBioPageEvent({
         page,
         eventType,
         blockId: attributedBlockId,
         linkId: link.id,
-        source: link.platform || link.linkType || 'link',
+        source: trafficSource,
         metadata: {
             title: link.title,
             platform: link.platform,
+            linkDestination: link.platform || link.linkType || 'link',
             linkType: link.linkType,
             blockId: attributedBlockId,
         },
@@ -175,6 +249,14 @@ function getEventMetadataId(metadata: unknown, key: 'blockId' | 'linkId'): strin
     return typeof candidate === 'string' ? candidate.trim().slice(0, 160) : '';
 }
 
+function getEventSourceKey(event: { source?: unknown; utm?: unknown; referrer?: unknown }): string {
+    const source = typeof event.source === 'string' ? event.source : '';
+    return source.trim()
+        || getUtmValue(event.utm, 'utm_source')
+        || normalizeReferrer(event.referrer)
+        || 'direct';
+}
+
 export async function getBioPageAnalytics(input: {
     page: BioPageData;
     dateFrom?: string;
@@ -201,11 +283,13 @@ export async function getBioPageAnalytics(input: {
     const deviceBreakdown: Record<string, number> = {};
     const blockBreakdown: Record<string, number> = {};
     const linkCounts = new Map<string, number>();
+    const linkSourceCounts = new Map<string, Record<string, number>>();
     const uniqueViewKeys = new Set<string>();
 
     events.forEach((event, index) => {
         eventBreakdown[event.event_type] = (eventBreakdown[event.event_type] || 0) + 1;
-        incrementBreakdown(sourceBreakdown, event.source || getUtmValue(event.utm, 'utm_source') || normalizeReferrer(event.referrer));
+        const sourceKey = getEventSourceKey(event);
+        incrementBreakdown(sourceBreakdown, sourceKey);
         const utmSource = getUtmValue(event.utm, 'utm_source');
         const utmCampaign = getUtmValue(event.utm, 'utm_campaign');
         if (utmSource) incrementBreakdown(utmSourceBreakdown, utmSource);
@@ -219,6 +303,9 @@ export async function getBioPageAnalytics(input: {
         const linkId = event.link_id || getEventMetadataId(event.metadata, 'linkId');
         if (String(event.event_type).includes('clicked') && linkId) {
             linkCounts.set(linkId, (linkCounts.get(linkId) || 0) + 1);
+            const sources = linkSourceCounts.get(linkId) || {};
+            incrementBreakdown(sources, sourceKey);
+            linkSourceCounts.set(linkId, sources);
         }
         if (event.event_type === 'bio_page_viewed') {
             const visitorId = getEventVisitorId(event.metadata);
@@ -257,6 +344,21 @@ export async function getBioPageAnalytics(input: {
         tabChanges: eventBreakdown.bio_tab_changed || 0,
         topLinks: input.page.links
             .map(link => ({ id: link.id, title: link.title, clicks: linkCounts.get(link.id) || link.clicks || 0 }))
+            .sort((a, b) => b.clicks - a.clicks)
+            .slice(0, 10),
+        linkSourceBreakdown: input.page.links
+            .map(link => {
+                const sources = linkSourceCounts.get(link.id) || {};
+                const sourceEntries = Object.entries(sources).sort((a, b) => b[1] - a[1]);
+                return {
+                    id: link.id,
+                    title: link.title,
+                    clicks: linkCounts.get(link.id) || 0,
+                    topSource: sourceEntries[0]?.[0] || 'direct',
+                    sources,
+                };
+            })
+            .filter(link => link.clicks > 0)
             .sort((a, b) => b.clicks - a.clicks)
             .slice(0, 10),
         sourceBreakdown,

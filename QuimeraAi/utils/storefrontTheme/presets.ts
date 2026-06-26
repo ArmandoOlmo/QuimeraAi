@@ -1,5 +1,5 @@
 import type { StorefrontThemeSettings } from '../../types/ecommerce';
-import { DEFAULT_STOREFRONT_THEME } from '../../types/ecommerce';
+import { DEFAULT_STOREFRONT_THEME } from '../../types/ecommerce.js';
 import type {
     StorefrontCatalogSize,
     StorefrontCatalogSizeRule,

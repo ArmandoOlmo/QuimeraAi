@@ -28,6 +28,7 @@ export interface WebsitePlanBrandProfile {
 export interface WebsitePlanContentMap {
     pages: Array<{ url?: string; title: string; purpose: string; summary: string }>;
     testimonials?: any[];
+    faqs?: Array<Record<string, any>>;
     products?: any[];
     menuItems?: any[];
     properties?: any[];

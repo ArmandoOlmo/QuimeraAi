@@ -37,36 +37,39 @@ const SECTION_LABEL_KEYS: Partial<Record<PageSection, string>> = {
     team: 'aiWebsiteStudio.preview.sections.team',
 };
 
-const BIO_PAGE_BLOCK_LABELS: Partial<Record<BioPageBlockType, string>> = {
-    profile: 'Profile',
-    link: 'Links',
-    social_links: 'Social icons',
-    featured_banner: 'Banner',
-    featured_media: 'Media',
-    product_grid: 'Shop',
-    product_collection: 'Collections',
-    booking: 'Booking',
-    lead_form: 'Lead form',
-    email_subscribe: 'Email signup',
-    portfolio_grid: 'Portfolio',
-    testimonials: 'Proof',
-    faq: 'FAQ',
-    contact: 'Contact',
-    chatbot_cta: 'ChatCore',
-    divider: 'Divider',
-    spacer: 'Spacer',
-    custom_html_placeholder: 'Custom placeholder',
+const BIO_PAGE_BLOCK_LABEL_KEYS: Partial<Record<BioPageBlockType, string>> = {
+    profile: 'aiWebsiteStudio.preview.bioPage.blocks.profile',
+    link: 'aiWebsiteStudio.preview.bioPage.blocks.link',
+    social_links: 'aiWebsiteStudio.preview.bioPage.blocks.socialLinks',
+    featured_banner: 'aiWebsiteStudio.preview.bioPage.blocks.featuredBanner',
+    featured_media: 'aiWebsiteStudio.preview.bioPage.blocks.featuredMedia',
+    media_grid: 'aiWebsiteStudio.preview.bioPage.blocks.mediaGrid',
+    product_grid: 'aiWebsiteStudio.preview.bioPage.blocks.productGrid',
+    product_collection: 'aiWebsiteStudio.preview.bioPage.blocks.productCollection',
+    booking: 'aiWebsiteStudio.preview.bioPage.blocks.booking',
+    lead_form: 'aiWebsiteStudio.preview.bioPage.blocks.leadForm',
+    email_subscribe: 'aiWebsiteStudio.preview.bioPage.blocks.emailSubscribe',
+    portfolio_grid: 'aiWebsiteStudio.preview.bioPage.blocks.portfolioGrid',
+    testimonials: 'aiWebsiteStudio.preview.bioPage.blocks.testimonials',
+    faq: 'aiWebsiteStudio.preview.bioPage.blocks.faq',
+    contact: 'aiWebsiteStudio.preview.bioPage.blocks.contact',
+    chatbot_cta: 'aiWebsiteStudio.preview.bioPage.blocks.chatbotCta',
+    divider: 'aiWebsiteStudio.preview.bioPage.blocks.divider',
+    spacer: 'aiWebsiteStudio.preview.bioPage.blocks.spacer',
+    custom_html_placeholder: 'aiWebsiteStudio.preview.bioPage.blocks.customHtmlPlaceholder',
 };
 
-const BIO_PAGE_INTEGRATION_LABELS: Record<keyof BioPageBlueprint['integrations'], string> = {
-    ecommerce: 'Ecommerce',
-    appointments: 'Appointments',
-    crm: 'CRM',
-    emailMarketing: 'Email',
-    chatbot: 'ChatCore',
-    media: 'Media AI',
-    analytics: 'Analytics',
-    websiteBuilder: 'Builder',
+const BIO_PAGE_INTEGRATION_LABEL_KEYS: Record<keyof BioPageBlueprint['integrations'], string> = {
+    businessBlueprint: 'aiWebsiteStudio.preview.bioPage.integrations.businessBlueprint',
+    designSystem: 'aiWebsiteStudio.preview.bioPage.integrations.designSystem',
+    ecommerce: 'aiWebsiteStudio.preview.bioPage.integrations.ecommerce',
+    appointments: 'aiWebsiteStudio.preview.bioPage.integrations.appointments',
+    crm: 'aiWebsiteStudio.preview.bioPage.integrations.crm',
+    emailMarketing: 'aiWebsiteStudio.preview.bioPage.integrations.emailMarketing',
+    chatbot: 'aiWebsiteStudio.preview.bioPage.integrations.chatbot',
+    media: 'aiWebsiteStudio.preview.bioPage.integrations.media',
+    analytics: 'aiWebsiteStudio.preview.bioPage.integrations.analytics',
+    websiteBuilder: 'aiWebsiteStudio.preview.bioPage.integrations.websiteBuilder',
 };
 
 function getHomePage(project: Project): SitePage {
@@ -138,11 +141,12 @@ function getEcommerceSummary(project: Project) {
     };
 }
 
-function formatBioPageBlockLabel(type: BioPageBlockType): string {
-    return BIO_PAGE_BLOCK_LABELS[type] || type.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
+function formatBioPageBlockLabel(type: BioPageBlockType, t: (key: string) => string): string {
+    const key = BIO_PAGE_BLOCK_LABEL_KEYS[type];
+    return key ? t(key) : type.replace(/_/g, ' ').replace(/^./, char => char.toUpperCase());
 }
 
-function getBioPageSummary(project: Project) {
+function getBioPageSummary(project: Project, t: (key: string) => string) {
     const blueprint = project.businessBlueprint?.bioPageBlueprint;
     if (!blueprint?.enabled) return null;
 
@@ -151,9 +155,9 @@ function getBioPageSummary(project: Project) {
         .sort((a, b) => a.order - b.order);
     const links = [...(blueprint.links || []), ...(blueprint.socialLinks || [])]
         .filter(link => link.visible !== false);
-    const enabledIntegrations = (Object.keys(BIO_PAGE_INTEGRATION_LABELS) as Array<keyof BioPageBlueprint['integrations']>)
+    const enabledIntegrations = (Object.keys(BIO_PAGE_INTEGRATION_LABEL_KEYS) as Array<keyof BioPageBlueprint['integrations']>)
         .filter(key => blueprint.integrations?.[key])
-        .map(key => BIO_PAGE_INTEGRATION_LABELS[key]);
+        .map(key => t(BIO_PAGE_INTEGRATION_LABEL_KEYS[key]));
 
     return {
         title: blueprint.profile.displayName || blueprint.title,
@@ -162,7 +166,7 @@ function getBioPageSummary(project: Project) {
         status: blueprint.status,
         layout: blueprint.theme.layoutVariant,
         blocks,
-        blockLabels: blocks.map(block => formatBioPageBlockLabel(block.type)),
+        blockLabels: blocks.map(block => formatBioPageBlockLabel(block.type, t)),
         linkCount: links.length,
         enabledIntegrations,
         needsReview: blueprint.needsReview || blueprint.status === 'needs_review',
@@ -179,13 +183,13 @@ export function GeneratedWebsitePreview({
     onBackToPlan,
 }: GeneratedWebsitePreviewProps) {
     const { t } = useTranslation();
-    const translate = useCallback((key: string, options?: Record<string, unknown>) => t(key, options), [t]);
+    const translate = useCallback((key: string, options?: Record<string, unknown>) => String(t(key, options)), [t]);
     const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
     const homePage = useMemo(() => getHomePage(project), [project]);
     const hero = useMemo(() => getHeroData(project), [project]);
     const summary = useMemo(() => getProjectSummary(project, translate), [project, translate]);
     const ecommerceSummary = useMemo(() => getEcommerceSummary(project), [project]);
-    const bioPageSummary = useMemo(() => getBioPageSummary(project), [project]);
+    const bioPageSummary = useMemo(() => getBioPageSummary(project, translate), [project, translate]);
     const studioSummary = useMemo(() => getAiStudioSummary({ generatedProject: project, copy: getAiStudioSummaryCopy(translate) }), [project, translate]);
     const sectionLabels = useMemo(() => (
         project.componentOrder
@@ -355,40 +359,42 @@ export function GeneratedWebsitePreview({
                             <AppCard variant="elevated" className="rounded-xl p-4">
                                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-q-text">
                                     <Link2 className="h-4 w-4 text-q-accent" />
-                                    Bio Page draft
+                                    {t('aiWebsiteStudio.preview.bioPage.title')}
                                 </div>
                                 <div className="space-y-2 text-xs text-q-text-secondary">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Profile</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.profile')}</span>
                                         <span className="min-w-0 truncate font-semibold text-q-text">{bioPageSummary.title}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Handle</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.handle')}</span>
                                         <span className="font-mono text-[11px] font-semibold text-q-text">@{bioPageSummary.handle}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Public route</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.publicRoute')}</span>
                                         <span className="font-mono text-[11px] font-semibold text-q-text">{bioPageSummary.route}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Status</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.status')}</span>
                                         <span className="font-semibold text-q-text">{bioPageSummary.status}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Links</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.links')}</span>
                                         <span className="font-semibold text-q-text">{bioPageSummary.linkCount}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Blocks</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.blocksLabel')}</span>
                                         <span className="font-semibold text-q-text">{bioPageSummary.blocks.length}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>Layout</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.layout')}</span>
                                         <span className="font-semibold text-q-text">{bioPageSummary.layout}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span>SEO</span>
-                                        <span className="font-semibold text-q-text">{bioPageSummary.noIndex ? 'noindex draft' : 'index ready'}</span>
+                                        <span>{t('aiWebsiteStudio.preview.bioPage.seo')}</span>
+                                        <span className="font-semibold text-q-text">
+                                            {bioPageSummary.noIndex ? t('aiWebsiteStudio.preview.bioPage.seoNoIndex') : t('aiWebsiteStudio.preview.bioPage.seoIndexReady')}
+                                        </span>
                                     </div>
                                 </div>
                                 {bioPageSummary.blockLabels.length > 0 && (
@@ -410,7 +416,10 @@ export function GeneratedWebsitePreview({
                                     </div>
                                 )}
                                 <div className="mt-3 rounded-lg border border-q-border/70 bg-q-surface/60 px-3 py-2 text-[11px] leading-relaxed text-q-text-secondary">
-                                    {bioPageSummary.needsReview ? 'Needs review. ' : ''}Created as a private draft after save. Publishing still happens from the Bio Page editor.
+                                    {bioPageSummary.needsReview && (
+                                        <span className="font-semibold text-q-warning">{t('aiWebsiteStudio.preview.bioPage.needsReviewNotice')} </span>
+                                    )}
+                                    {t('aiWebsiteStudio.preview.bioPage.draftNotice')}
                                 </div>
                             </AppCard>
                         )}

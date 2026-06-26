@@ -15,6 +15,10 @@ const BIO_PAGE_TRAFFIC_DEFAULTS: Record<BioPageTrafficChannel, { source: string;
     share: { source: 'bio_page', medium: 'share' },
     qr: { source: 'qr', medium: 'bio_page' },
 };
+const PUBLIC_DEMO_BIO_SLUG = 'demo';
+const PUBLIC_DEMO_BIO_PAGE_ID = '00000000-0000-4000-8000-00000000b100';
+const PUBLIC_DEMO_PROJECT_ID = '00000000-0000-4000-8000-00000000b101';
+const PUBLIC_DEMO_UPDATED_AT = '2026-06-26T00:00:00.000Z';
 
 type PaymentReturnStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
@@ -29,6 +33,18 @@ function isDuplicateLeadError(error: unknown): boolean {
     const candidate = error as { code?: string; message?: string } | null;
     return candidate?.code === '23505'
         || /leads_bio_page_project_email_source_unique_idx|duplicate key|unique constraint/i.test(candidate?.message || '');
+}
+
+function createBioPageLeadId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, token => {
+        const value = Math.floor(Math.random() * 16);
+        const nibble = token === 'x' ? value : (value & 0x3) | 0x8;
+        return nibble.toString(16);
+    });
 }
 
 const BIO_PAGE_ANALYTICS_METADATA_ALLOWED_KEYS = new Set([
@@ -80,6 +96,439 @@ export function getPublicRenderableBioPage(page: BioPageData): BioPageData | nul
     };
 }
 
+function createPublicBioPageDemo(): BioPageData {
+    return {
+        id: PUBLIC_DEMO_BIO_PAGE_ID,
+        projectId: PUBLIC_DEMO_PROJECT_ID,
+        tenantId: null,
+        userId: null,
+        username: PUBLIC_DEMO_BIO_SLUG,
+        slug: PUBLIC_DEMO_BIO_SLUG,
+        title: 'Quimera Creator Studio',
+        description: 'AI-powered link in bio funnel with commerce, booking, lead capture, media and ChatCore.',
+        profile: {
+            name: 'Quimera Creator Studio',
+            displayName: 'Quimera Creator Studio',
+            handle: '@quimera.ai',
+            bio: 'Launch a mobile-first creator storefront with links, shop, booking, media, email capture and AI chat from one Quimera project.',
+            avatarUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=320&q=80',
+            coverImageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80',
+            category: 'AI Creator Commerce',
+            location: 'San Juan, Puerto Rico',
+            verifiedBadgeEnabled: true,
+            generatedByAI: true,
+        },
+        theme: {
+            preset: 'quimera-bio-engine-demo',
+            layoutVariant: 'creator',
+            backgroundColor: '#0b1020',
+            backgroundType: 'gradient',
+            backgroundGradient: 'linear-gradient(160deg, #0b1020 0%, #14213d 42%, #0f766e 100%)',
+            gradientColor: '#0f766e',
+            buttonStyle: 'glass',
+            buttonShape: 'rounded',
+            buttonShadow: 'soft',
+            buttonColor: '#00d1b2',
+            buttonTextColor: '#061016',
+            textColor: '#f8fafc',
+            titleFont: 'Inter, system-ui, sans-serif',
+            titleColor: '#ffffff',
+            bodyFont: 'Inter, system-ui, sans-serif',
+            bodyColor: '#d7f5ef',
+            profileLayout: 'circle',
+            profileSize: 'large',
+            titleStyle: 'text',
+            headerOverlay: true,
+            headerOverlayColor: 'rgba(6, 16, 22, 0.42)',
+            profileBox: false,
+            profileBoxRadius: 'xl',
+            showQuimeraFooter: true,
+            cardRadius: 16,
+        },
+        links: [
+            {
+                id: '00000000-0000-4000-8000-00000000b110',
+                title: 'Build your Bio Page with AI Studio',
+                url: '/dashboard/ai-studio?surface=bio-page',
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'internal',
+                icon: 'sparkles',
+                order: 0,
+                orderIndex: 0,
+                clickTrackingEnabled: true,
+                generatedByAI: true,
+                metadata: { sourceModule: 'ai-studio', sourceComponent: 'PublicBioPageDemo' },
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b111',
+                title: 'Creator storefront',
+                url: '/store/demo',
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'product',
+                icon: 'shopping-bag',
+                order: 1,
+                orderIndex: 1,
+                clickTrackingEnabled: true,
+                generatedByAI: true,
+                metadata: { sourceModule: 'ecommerce', sourceComponent: 'PublicBioPageDemo' },
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b112',
+                title: 'Book a strategy session',
+                url: `/appointments?project=${PUBLIC_DEMO_PROJECT_ID}`,
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'booking',
+                icon: 'calendar',
+                order: 2,
+                orderIndex: 2,
+                clickTrackingEnabled: true,
+                generatedByAI: true,
+                metadata: { sourceModule: 'appointments', sourceComponent: 'PublicBioPageDemo' },
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b113',
+                title: 'Ask the AI concierge',
+                url: '',
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'chatbot',
+                icon: 'message-circle',
+                order: 3,
+                orderIndex: 3,
+                clickTrackingEnabled: true,
+                generatedByAI: true,
+                metadata: { sourceModule: 'chatcore', sourceComponent: 'PublicBioPageDemo' },
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b114',
+                title: 'Instagram',
+                url: 'https://instagram.com/quimera.ai',
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'social',
+                platform: 'instagram',
+                order: 4,
+                orderIndex: 4,
+                clickTrackingEnabled: true,
+                metadata: { sourceModule: 'social', sourceComponent: 'PublicBioPageDemo' },
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b115',
+                title: 'YouTube',
+                url: 'https://youtube.com/@quimeraai',
+                enabled: true,
+                visible: true,
+                clicks: 0,
+                linkType: 'social',
+                platform: 'youtube',
+                order: 5,
+                orderIndex: 5,
+                clickTrackingEnabled: true,
+                metadata: { sourceModule: 'social', sourceComponent: 'PublicBioPageDemo' },
+            },
+        ],
+        blocks: [
+            {
+                id: '00000000-0000-4000-8000-00000000b120',
+                type: 'profile',
+                title: 'Quimera Creator Studio',
+                order: 0,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'bio-page-engine',
+                data: {},
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b121',
+                type: 'social_links',
+                title: 'Social',
+                order: 1,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'social',
+                data: {
+                    linkIds: [
+                        '00000000-0000-4000-8000-00000000b114',
+                        '00000000-0000-4000-8000-00000000b115',
+                    ],
+                    layout: 'icons',
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b122',
+                type: 'link',
+                title: 'Primary links',
+                order: 2,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'website-builder',
+                data: {
+                    linkIds: [
+                        '00000000-0000-4000-8000-00000000b110',
+                        '00000000-0000-4000-8000-00000000b111',
+                        '00000000-0000-4000-8000-00000000b112',
+                        '00000000-0000-4000-8000-00000000b113',
+                    ],
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b123',
+                type: 'featured_banner',
+                title: 'From bio link to mini funnel',
+                description: 'Route visitors into shop, booking, CRM leads, email capture and AI support from one mobile page.',
+                order: 3,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'business-blueprint',
+                data: { url: '/dashboard/bio-pages' },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b124',
+                type: 'product_grid',
+                title: 'Shop featured products',
+                order: 4,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'ecommerce',
+                data: {
+                    productIds: [
+                        '00000000-0000-4000-8000-00000000b140',
+                        '00000000-0000-4000-8000-00000000b141',
+                    ],
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b125',
+                type: 'media_grid',
+                title: 'Media AI highlights',
+                order: 5,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'media-ai',
+                data: {
+                    items: [
+                        {
+                            title: 'Launch reel',
+                            url: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=640&q=80',
+                            href: '/dashboard/media',
+                        },
+                        {
+                            title: 'Product shoot',
+                            url: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=640&q=80',
+                            href: '/dashboard/ecommerce',
+                        },
+                        {
+                            title: 'Creator workflow',
+                            url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=640&q=80',
+                            href: '/dashboard/ai-studio',
+                        },
+                    ],
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b126',
+                type: 'portfolio_grid',
+                title: 'Portfolio',
+                order: 6,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'website-builder',
+                data: {
+                    items: [
+                        {
+                            title: 'Launch page',
+                            imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=640&q=80',
+                            href: '/editor/demo',
+                        },
+                        {
+                            title: 'Creator offer',
+                            imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=640&q=80',
+                            href: '/dashboard/bio-pages',
+                        },
+                        {
+                            title: 'CRM funnel',
+                            imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=640&q=80',
+                            href: '/dashboard/crm',
+                        },
+                    ],
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b127',
+                type: 'booking',
+                title: 'Book a strategy session',
+                description: 'Send visitors directly into Quimera Appointments.',
+                order: 7,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'appointments',
+                data: {
+                    bookingMode: 'external',
+                    url: `/appointments?project=${PUBLIC_DEMO_PROJECT_ID}&source=bio-demo`,
+                    durationMinutes: 45,
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b128',
+                type: 'email_subscribe',
+                title: 'Get the creator funnel checklist',
+                description: 'Join the demo audience and see how Quimera routes subscribers into Email Marketing.',
+                order: 8,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'email-marketing',
+                data: {
+                    audienceId: 'bio-page-demo',
+                    placeholder: 'Email address',
+                    buttonText: 'Subscribe',
+                    consentRequired: true,
+                    consentText: 'I agree to receive Quimera demo emails.',
+                    successMessage: 'You are on the list.',
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b129',
+                type: 'lead_form',
+                title: 'Capture a qualified lead',
+                description: 'CRM-ready intake form for high-intent visitors.',
+                order: 9,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'crm',
+                data: {
+                    tags: ['bio-page-demo', 'creator-funnel'],
+                    fields: [
+                        { id: 'name', label: 'Name', type: 'text', required: true },
+                        { id: 'email', label: 'Email', type: 'email', required: true },
+                        { id: 'message', label: 'What are you launching?', type: 'textarea', required: false },
+                    ],
+                    consentRequired: true,
+                    consentText: 'I agree to be contacted about this request.',
+                    successMessage: 'Thanks. The lead was captured.',
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b130',
+                type: 'contact',
+                title: 'Contact',
+                description: 'Talk to the team or hand off to sales.',
+                order: 10,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'crm',
+                data: {
+                    email: 'hello@quimera.ai',
+                    phone: '+1 787 555 0199',
+                    whatsapp: '17875550199',
+                    address: 'San Juan, Puerto Rico',
+                    url: 'https://quimera.ai',
+                },
+                generatedByAI: true,
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b131',
+                type: 'chatbot_cta',
+                title: 'Open ChatCore assistant',
+                description: 'AI concierge trained on this Bio Page context.',
+                order: 11,
+                visible: true,
+                status: 'configured',
+                sourceModule: 'chatcore',
+                data: {},
+                generatedByAI: true,
+            },
+        ],
+        products: [
+            {
+                id: '00000000-0000-4000-8000-00000000b140',
+                name: 'Creator Funnel Kit',
+                price: 49,
+                imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=640&q=80',
+                url: `/store/${PUBLIC_DEMO_PROJECT_ID}/product/creator-funnel-kit`,
+                slug: 'creator-funnel-kit',
+                status: 'active',
+                categoryId: 'creator-tools',
+                categoryName: 'Creator Tools',
+                categorySlug: 'creator-tools',
+            },
+            {
+                id: '00000000-0000-4000-8000-00000000b141',
+                name: 'AI Launch Session',
+                price: 149,
+                imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=640&q=80',
+                url: `/store/${PUBLIC_DEMO_PROJECT_ID}/product/ai-launch-session`,
+                slug: 'ai-launch-session',
+                status: 'active',
+                categoryId: 'services',
+                categoryName: 'Services',
+                categorySlug: 'services',
+            },
+        ],
+        emailSignupEnabled: true,
+        isPublished: true,
+        status: 'published',
+        seo: {
+            title: 'Quimera Creator Studio Bio Page',
+            description: 'A public demo of the Quimera Bio Page Engine with shop, booking, lead capture, media and ChatCore.',
+            ogImageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80',
+            canonicalUrl: '/bio/demo',
+            noIndex: true,
+            schemaType: 'Organization',
+        },
+        settings: {
+            emailSignupEnabled: true,
+            leadCaptureEnabled: true,
+            chatbotEnabled: true,
+            shopEnabled: true,
+            bookingEnabled: true,
+            showQuimeraFooter: true,
+            qrColor: '#00d1b2',
+            qrBackgroundColor: '#061016',
+            shareUtmSource: 'bio_page',
+            shareUtmMedium: 'share',
+            shareUtmCampaign: 'quimera_bio_demo',
+            qrUtmSource: 'qr',
+            qrUtmMedium: 'bio_page',
+            qrUtmCampaign: 'quimera_bio_demo',
+            analyticsEnabled: false,
+            integrations: {
+                aiStudio: true,
+                businessBlueprint: true,
+                designSystem: true,
+                ecommerce: true,
+                appointments: true,
+                crm: true,
+                emailMarketing: true,
+                chatCore: true,
+                mediaAI: true,
+                websiteBuilder: true,
+            },
+        },
+        aiAssistant: null,
+        createdAt: PUBLIC_DEMO_UPDATED_AT,
+        updatedAt: PUBLIC_DEMO_UPDATED_AT,
+        publishedAt: PUBLIC_DEMO_UPDATED_AT,
+    };
+}
+
 async function hydratePublicBioPageProducts(page: BioPageData): Promise<BioPageData> {
     if (!page.projectId || !page.blocks.some(block => block.visible !== false && ['product_grid', 'product_collection'].includes(block.type))) {
         return page;
@@ -128,7 +577,9 @@ export async function getPublicBioPageBySlug(slugInput: string, client: Supabase
         .maybeSingle();
 
     if (error) throw error;
-    if (!data?.id) return null;
+    if (!data?.id) {
+        return validation.slug === PUBLIC_DEMO_BIO_SLUG ? createPublicBioPageDemo() : null;
+    }
     const page = await getBioPageById(data.id, client);
     const publicPage = page ? getPublicRenderableBioPage(page) : null;
     return publicPage ? hydratePublicBioPageProducts(publicPage) : null;
@@ -275,7 +726,7 @@ export async function submitBioPageLead(input: {
     metadata?: Record<string, unknown>;
 }, client: SupabaseClient = supabase): Promise<string | null> {
     const source = input.source || 'bio_page';
-    if (!input.page.projectId || !input.page.tenantId) return null;
+    if (!input.page.projectId) return null;
     const email = typeof input.lead.email === 'string' ? input.lead.email.trim().toLowerCase() : '';
     const bioPageDedupeKey = email ? `email:${email}` : '';
     const leadMetadata = {
@@ -297,8 +748,10 @@ export async function submitBioPageLead(input: {
         ...(Array.isArray(input.lead.tags) ? input.lead.tags : []),
     ].filter(Boolean)));
 
+    const leadId = createBioPageLeadId();
     const payload = {
-        tenant_id: input.page.tenantId,
+        id: leadId,
+        tenant_id: input.page.tenantId || null,
         project_id: input.page.projectId,
         name: input.lead.name || '',
         email,
@@ -312,7 +765,7 @@ export async function submitBioPageLead(input: {
     };
     const analyticsMetadata = sanitizeBioPageAnalyticsMetadata(leadMetadata);
 
-    const { data, error } = await client.from('leads').insert(payload).select('id').single();
+    const { error } = await client.from('leads').insert(payload);
     if (error) {
         if (isDuplicateLeadError(error)) {
             await recordBioPageEvent({
@@ -343,7 +796,7 @@ export async function submitBioPageLead(input: {
         metadata: { ...analyticsMetadata, crmWrite: 'created' },
     }, client);
 
-    return data.id;
+    return leadId;
 }
 
 export async function subscribeBioPageEmail(input: {

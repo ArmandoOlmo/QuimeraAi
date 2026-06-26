@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
   Calendar,
@@ -22,6 +23,10 @@ import {
   trackPublicRestaurantMenuEvent,
 } from '../../../services/restaurants/publicRestaurantMenuService';
 import { Button, IconButton } from '../../../src/design-system/components';
+import ChatbotWidget from '../../ChatbotWidget';
+import { buildChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
+
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 
 interface PublicRestaurantMenuPayload {
   restaurant: RestaurantSettings;
@@ -42,7 +47,7 @@ const formatPrice = (item: RestaurantMenuItem) => {
   return `${item.currency || 'USD'} ${price.toFixed(2)}`;
 };
 
-const formatUpdatedAt = (value: unknown) => {
+const formatUpdatedAt = (value: unknown, locale?: string) => {
   if (!value) return '';
   const date = typeof value === 'string'
     ? new Date(value)
@@ -50,7 +55,7 @@ const formatUpdatedAt = (value: unknown) => {
       ? (value as { toDate: () => Date }).toDate()
       : null;
   if (!date || Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(locale || undefined, { month: 'short', day: 'numeric' });
 };
 
 const mapUrl = (address?: string) =>
@@ -63,6 +68,7 @@ const handleInteractiveKey = (event: React.KeyboardEvent, action: () => void) =>
 };
 
 const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaurantId }) => {
+  const { t, i18n } = useTranslation();
   const [payload, setPayload] = useState<PublicRestaurantMenuPayload | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +87,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
   });
   const [reservationStatus, setReservationStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [reservationError, setReservationError] = useState('');
+  const [chatbotPayload, setChatbotPayload] = useState<{ config: any; project: any } | null>(null);
   const reservationStarted = useRef(false);
 
   useEffect(() => {
@@ -102,7 +109,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
           });
         }
       } catch (err: any) {
-        if (!cancelled) setError(err.message || 'Menu could not be loaded.');
+        if (!cancelled) setError(err.message || t('restaurants.publicMenu.errors.load'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -112,9 +119,46 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
     return () => {
       cancelled = true;
     };
-  }, [restaurantId]);
+  }, [restaurantId, t]);
 
   const restaurant = payload?.restaurant || null;
+  useEffect(() => {
+    if (!restaurant?.projectId) {
+      setChatbotPayload(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const publicProjectId = restaurant.ownerId
+      ? `${restaurant.ownerId}_${restaurant.projectId}`
+      : restaurant.projectId;
+
+    const loadChatbotConfig = async () => {
+      try {
+        const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(publicProjectId)}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          setChatbotPayload(null);
+          return;
+        }
+        const next = await response.json();
+        if (!controller.signal.aborted) {
+          setChatbotPayload(next?.config && next?.project ? next : null);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.warn('[PublicRestaurantMenuPage] Chatbot config unavailable:', error);
+          setChatbotPayload(null);
+        }
+      }
+    };
+
+    void loadChatbotConfig();
+
+    return () => controller.abort();
+  }, [restaurant?.ownerId, restaurant?.projectId]);
+
   const categories = useMemo(() => {
     const seen = new Set<string>();
     return (payload?.items || []).reduce<string[]>((acc, item) => {
@@ -140,14 +184,40 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
       ].some((value) => String(value || '').toLowerCase().includes(needle));
     });
   }, [payload, query]);
+  const restaurantChatbotContext = useMemo(() => (
+    restaurant ? buildChatbotEngineSurfaceContext({
+      sourceSurface: 'restaurant_menu',
+      sourceModule: 'restaurants',
+      route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      entityType: selectedDish ? 'restaurant_menu_item' : 'restaurant_menu',
+      entityId: selectedDish?.id || restaurant.id,
+      entitySlug: restaurant.publicSlug,
+      contextKeys: [
+        'restaurant_menu',
+        'qr_menu',
+        activeCategory ? `category:${activeCategory}` : '',
+        selectedDish ? 'selected_dish' : '',
+      ].filter(Boolean),
+      metadata: {
+        restaurantId: restaurant.id,
+        projectId: restaurant.projectId,
+        restaurantName: restaurant.name,
+        cuisineType: restaurant.cuisineType,
+        activeCategory,
+        selectedDishId: selectedDish?.id,
+        selectedDishName: selectedDish?.name,
+        visibleItemCount: filteredItems.length,
+      },
+    }) : undefined
+  ), [activeCategory, filteredItems.length, restaurant, selectedDish]);
 
   const grouped = useMemo(() => {
     return filteredItems.reduce<Record<string, RestaurantMenuItem[]>>((acc, item) => {
-      const category = item.category || 'Menu';
+      const category = item.category || t('restaurants.publicMenu.defaultCategory');
       acc[category] = [...(acc[category] || []), item];
       return acc;
     }, {});
-  }, [filteredItems]);
+  }, [filteredItems, t]);
 
   const featuredItems = useMemo(() => filteredItems.filter((item) => item.isFeatured).slice(0, 4), [filteredItems]);
 
@@ -197,13 +267,13 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
         notes: '',
       });
     } catch (err: any) {
-      setReservationError(err.message || 'Reservation could not be created.');
+      setReservationError(err.message || t('restaurants.publicMenu.errors.reservation'));
       setReservationStatus('error');
     }
   };
 
   const today = new Date().toISOString().slice(0, 10);
-  const lastUpdated = formatUpdatedAt(restaurant?.updatedAt);
+  const lastUpdated = formatUpdatedAt(restaurant?.updatedAt, i18n.language);
   const minPartySize = 1;
   const maxPartySize = Math.max(minPartySize, Number(restaurant?.maxPartySize || 12));
 
@@ -220,8 +290,8 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
       <main className="min-h-screen bg-q-bg text-foreground flex items-center justify-center p-6">
         <div className="max-w-sm text-center">
           <AlertCircle className="mx-auto mb-3 h-8 w-8 text-q-text-muted" />
-          <h1 className="text-xl font-semibold">Menu not found</h1>
-          <p className="mt-2 text-sm text-q-text-muted">{error || 'This restaurant menu is not available yet.'}</p>
+          <h1 className="text-xl font-semibold">{t('restaurants.publicMenu.notFoundTitle')}</h1>
+          <p className="mt-2 text-sm text-q-text-muted">{error || t('restaurants.publicMenu.notAvailable')}</p>
         </div>
       </main>
     );
@@ -245,7 +315,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
             )}
             <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-white/80">
               {restaurant.cuisineType && <span>{restaurant.cuisineType}</span>}
-              {lastUpdated && <span>Updated {lastUpdated}</span>}
+              {lastUpdated && <span>{t('restaurants.publicMenu.updated', { date: lastUpdated })}</span>}
             </div>
             <h1 className="text-4xl font-bold tracking-normal text-white md:text-6xl">{restaurant.name}</h1>
             <div className="mt-5 grid gap-3 text-sm text-white/85 sm:grid-cols-2">
@@ -270,7 +340,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                   className="inline-flex items-center gap-2 rounded-lg bg-q-accent px-4 py-2.5 text-sm font-semibold text-q-text-on-accent shadow-sm transition hover:opacity-90"
                 >
                   <Calendar size={16} />
-                  Reserve
+                  {t('restaurants.publicMenu.reserve')}
                 </a>
               )}
               {restaurant.phone && (
@@ -280,7 +350,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                   className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <Phone size={16} />
-                  Call
+                  {t('restaurants.publicMenu.call')}
                 </a>
               )}
               {restaurant.address && (
@@ -292,7 +362,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                   className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
                 >
                   <MapPin size={16} />
-                  Map
+                  {t('restaurants.publicMenu.map')}
                 </a>
               )}
             </div>
@@ -307,7 +377,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search dishes, allergens, ingredients"
+              placeholder={t('restaurants.publicMenu.searchPlaceholder')}
               className="w-full rounded-lg border border-q-border bg-q-surface py-2.5 pl-9 pr-3 text-sm text-q-text outline-none transition focus:border-q-accent focus:ring-2 focus:ring-q-accent/20"
             />
           </div>
@@ -335,7 +405,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
           <div className="mb-10">
             <div className="mb-4 flex items-center gap-2">
               <Star size={18} className="text-q-accent" />
-              <h2 className="text-xl font-semibold">Featured dishes</h2>
+              <h2 className="text-xl font-semibold">{t('restaurants.publicMenu.featuredDishes')}</h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {featuredItems.map((item) => (
@@ -369,9 +439,9 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
         {filteredItems.length === 0 ? (
           <div className="rounded-lg border border-q-border bg-q-surface p-8 text-center">
             <Utensils className="mx-auto mb-3 h-8 w-8 text-q-text-muted" />
-            <h2 className="text-lg font-semibold">No dishes found</h2>
+            <h2 className="text-lg font-semibold">{t('restaurants.publicMenu.noDishesTitle')}</h2>
             <p className="mt-2 text-sm text-q-text-muted">
-              {query ? 'Try a different search.' : 'This menu is being prepared.'}
+              {query ? t('restaurants.publicMenu.noDishesSearch') : t('restaurants.publicMenu.noDishesEmpty')}
             </p>
           </div>
         ) : (
@@ -420,17 +490,17 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
         {restaurant.reservationEnabled && (
           <section id="reserve" className="mt-12 scroll-mt-28 rounded-lg border border-q-border bg-q-surface p-5 md:p-6">
             <div className="mb-5">
-              <p className="text-sm font-semibold text-q-accent">Reservations</p>
-              <h2 className="mt-1 text-2xl font-bold">Reserve a table</h2>
+              <p className="text-sm font-semibold text-q-accent">{t('restaurants.publicMenu.reservationsEyebrow')}</p>
+              <h2 className="mt-1 text-2xl font-bold">{t('restaurants.publicMenu.reserveTableTitle')}</h2>
               <p className="mt-2 text-sm text-q-text-muted">
-                Requests are sent to the restaurant dashboard for confirmation.
+                {t('restaurants.publicMenu.reserveTableDescription')}
               </p>
             </div>
 
             {reservationStatus === 'success' && (
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-q-success/30 bg-q-success/10 p-3 text-sm">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 text-q-success" />
-                <p>Your reservation request was received.</p>
+                <p>{t('restaurants.publicMenu.reservationSuccess')}</p>
               </div>
             )}
 
@@ -443,7 +513,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
 
             <form onSubmit={handleReservationSubmit} onFocus={handleReservationStart} className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-1.5 text-sm font-medium">
-                Name
+                {t('restaurants.publicMenu.fields.name')}
                 <input
                   required
                   value={reservation.customerName}
@@ -452,7 +522,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Email
+                {t('restaurants.publicMenu.fields.email')}
                 <input
                   required
                   type="email"
@@ -462,7 +532,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Phone
+                {t('restaurants.publicMenu.fields.phone')}
                 <input
                   type="tel"
                   value={reservation.customerPhone}
@@ -471,7 +541,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Guests
+                {t('restaurants.publicMenu.fields.guests')}
                 <select
                   value={reservation.partySize}
                   onChange={(event) => setReservation((current) => ({ ...current, partySize: Number(event.target.value) }))}
@@ -483,7 +553,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 </select>
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Date
+                {t('restaurants.publicMenu.fields.date')}
                 <input
                   required
                   type="date"
@@ -494,7 +564,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-medium">
-                Time
+                {t('restaurants.publicMenu.fields.time')}
                 <input
                   required
                   type="time"
@@ -505,7 +575,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
-                Notes
+                {t('restaurants.publicMenu.fields.notes')}
                 <textarea
                   rows={3}
                   value={reservation.notes}
@@ -519,7 +589,7 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
                 className="h-12 md:col-span-2"
                 fullWidth
               >
-                Send request
+                {t('restaurants.publicMenu.sendRequest')}
               </Button>
             </form>
           </section>
@@ -531,34 +601,34 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
           {restaurant.reservationEnabled ? (
             <a href="#reserve" onClick={handleReservationStart} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-q-accent px-3 py-2.5 text-sm font-semibold text-q-text-on-accent">
               <Calendar size={16} />
-              Reserve
+              {t('restaurants.publicMenu.reserve')}
             </a>
           ) : (
             <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-surface px-3 py-2.5 text-sm font-semibold text-q-text-muted">
               <Calendar size={16} />
-              Closed
+              {t('restaurants.publicMenu.closed')}
             </span>
           )}
           {restaurant.phone ? (
             <a href={`tel:${restaurant.phone}`} onClick={() => void trackPublicRestaurantMenuEvent(restaurant, 'call_clicked', { phone: restaurant.phone })} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-surface px-3 py-2.5 text-sm font-semibold">
               <Phone size={16} />
-              Call
+              {t('restaurants.publicMenu.call')}
             </a>
           ) : (
             <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-surface px-3 py-2.5 text-sm font-semibold text-q-text-muted">
               <Phone size={16} />
-              Call
+              {t('restaurants.publicMenu.call')}
             </span>
           )}
           {restaurant.address ? (
             <a href={mapUrl(restaurant.address)} target="_blank" rel="noreferrer" onClick={() => void trackPublicRestaurantMenuEvent(restaurant, 'map_clicked', { address: restaurant.address })} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-surface px-3 py-2.5 text-sm font-semibold">
               <MapPin size={16} />
-              Map
+              {t('restaurants.publicMenu.map')}
             </a>
           ) : (
             <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-surface px-3 py-2.5 text-sm font-semibold text-q-text-muted">
               <MapPin size={16} />
-              Map
+              {t('restaurants.publicMenu.map')}
             </span>
           )}
         </div>
@@ -567,11 +637,34 @@ const PublicRestaurantMenuPage: React.FC<{ restaurantId: string }> = ({ restaura
       {selectedDish && (
         <DishDetailModal item={selectedDish} onClose={() => setSelectedDish(null)} />
       )}
+      {chatbotPayload && restaurantChatbotContext && restaurant?.projectId && (
+        <ChatbotWidget
+          standaloneConfig={chatbotPayload.config}
+          standaloneProject={{
+            ...(chatbotPayload.project || {}),
+            id: restaurant.projectId,
+            userId: restaurant.ownerId || chatbotPayload.project?.userId,
+            name: restaurant.name,
+            data: {
+              ...(chatbotPayload.project?.data || {}),
+              restaurantMenu: {
+                restaurant,
+                visibleItems: filteredItems.slice(0, 20),
+              },
+            },
+            theme: chatbotPayload.project?.theme,
+            componentOrder: chatbotPayload.project?.componentOrder || [],
+            sectionVisibility: chatbotPayload.project?.sectionVisibility || {},
+          }}
+          chatbotEngineContext={restaurantChatbotContext}
+        />
+      )}
     </main>
   );
 };
 
 const DishBadges = ({ item, compact = false }: { item: RestaurantMenuItem; compact?: boolean }) => {
+  const { t } = useTranslation();
   const dietaryTags = item.dietaryTags || [];
   const allergens = item.allergens || [];
   const visibleDietary = compact ? dietaryTags.slice(0, 3) : dietaryTags;
@@ -584,7 +677,7 @@ const DishBadges = ({ item, compact = false }: { item: RestaurantMenuItem; compa
       {item.isFeatured && (
         <span className="inline-flex items-center gap-1 rounded-lg bg-q-accent/10 px-2 py-1 text-xs font-medium text-q-accent">
           <Star size={12} />
-          Featured
+          {t('restaurants.publicMenu.featured')}
         </span>
       )}
       {visibleDietary.map((tag) => (
@@ -604,6 +697,7 @@ const DishBadges = ({ item, compact = false }: { item: RestaurantMenuItem; compa
 };
 
 const DishDetailModal = ({ item, onClose }: { item: RestaurantMenuItem; onClose: () => void }) => {
+  const { t } = useTranslation();
   const price = formatPrice(item);
 
   return (
@@ -611,7 +705,7 @@ const DishDetailModal = ({ item, onClose }: { item: RestaurantMenuItem; onClose:
       <div className="mx-auto max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-lg border border-q-border bg-q-bg shadow-xl md:rounded-lg">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-q-border bg-q-bg/95 px-4 py-3 backdrop-blur">
           <h2 className="font-semibold">{item.name}</h2>
-          <IconButton icon={<X size={18} />} label="Close dish details" onClick={onClose} />
+          <IconButton icon={<X size={18} />} label={t('restaurants.publicMenu.closeDishDetails')} onClick={onClose} />
         </div>
         {item.imageUrl && (
           <img src={item.imageUrl} alt="" className="aspect-[16/9] w-full object-cover" />
@@ -631,7 +725,7 @@ const DishDetailModal = ({ item, onClose }: { item: RestaurantMenuItem; onClose:
 
           {(item.ingredients || []).length > 0 && (
             <div>
-              <h4 className="mb-2 text-sm font-semibold">Ingredients</h4>
+              <h4 className="mb-2 text-sm font-semibold">{t('restaurants.publicMenu.ingredients')}</h4>
               <p className="text-sm text-q-text-muted">{item.ingredients.join(', ')}</p>
             </div>
           )}
@@ -640,7 +734,7 @@ const DishDetailModal = ({ item, onClose }: { item: RestaurantMenuItem; onClose:
             <div>
               <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <MessageSquare size={15} />
-                Pair it with
+                {t('restaurants.publicMenu.pairItWith')}
               </h4>
               <p className="text-sm text-q-text-muted">{item.upsellItems.join(', ')}</p>
             </div>

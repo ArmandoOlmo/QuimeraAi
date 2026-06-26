@@ -192,6 +192,16 @@ export interface AiAssistantConfig {
     appearance?: ChatAppearanceConfig;
     enableLiveVoice: boolean;
     voiceName: 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Zephyr';
+    /** Legacy/project-level voice provider fallback. ChatbotBlueprint deployment.voiceSettings is preferred. */
+    voiceProvider?: 'elevenlabs' | 'none';
+    /** Legacy/project-level provider agent ID fallback. ChatbotBlueprint deployment.voiceSettings.agentId is preferred. */
+    voiceAgentId?: string;
+    /** Backward-compatible alias for provider agent ID. */
+    liveVoiceAgentId?: string;
+    /** Require visitor consent before starting a live voice session. Defaults to true. */
+    voiceConsentRequired?: boolean;
+    /** Voice language behavior. ChatbotBlueprint deployment.voiceSettings.languageMode is preferred. */
+    voiceLanguageMode?: 'project_default' | 'visitor_language' | 'fixed';
     // Gemini 3.1 Flash Live capabilities
     /** Enable affective dialog — AI adapts tone to match user emotion (e.g., frustration detection) */
     enableAffectiveDialog?: boolean;
@@ -257,7 +267,6 @@ export interface GlobalChatbotPrompts {
     /** User ID who made the last update */
     updatedBy?: string;
 }
-
 
 
 

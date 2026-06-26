@@ -22,6 +22,7 @@ import {
     resolveRealtyDetailPath,
     resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
+import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 
 // Import section components
 import Header from './Header';
@@ -627,7 +628,24 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                     </SectionBackground>
                 );
 
-            case 'appointmentBooking':
+            case 'appointmentBooking': {
+                const bookingContext = buildChatbotEngineSurfaceContext({
+                    sourceSurface: 'booking_page',
+                    sourceModule: 'appointments',
+                    route: page.slug,
+                    entityType: 'booking_page',
+                    entityId: page.id || project.id,
+                    entitySlug: page.slug,
+                    contextKeys: ['website', 'booking_page', 'appointments', `section:${key}`],
+                    metadata: {
+                        projectId: project.id,
+                        ownerId: (project as any).userId,
+                        pageId: page.id,
+                        pageSlug: page.slug,
+                        sourceComponent: 'PageRendererAppointmentBookingSection',
+                        sourceBlockId: key,
+                    },
+                });
                 return (
                     <SectionBackground backgroundImageUrl={mergedData.appointmentBooking?.backgroundImageUrl} backgroundColor={mergedData.appointmentBooking?.colors?.background} backgroundOverlayEnabled={mergedData.appointmentBooking?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.appointmentBooking?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.appointmentBooking?.backgroundOverlayColor} backgroundPosition={mergedData.appointmentBooking?.backgroundPosition}>
                         <AppointmentBooking
@@ -637,9 +655,15 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             buttonBorderRadius={mergedData.appointmentBooking?.buttonBorderRadius || buttonBorderRadius}
                             projectId={project.id}
                             ownerId={(project as any).userId}
+                            sourceComponent="PageRendererAppointmentBookingSection"
+                            sourceModule="appointments"
+                            sourceSurface="booking_page"
+                            sourceBlockId={key}
+                            chatbotEngineContext={bookingContext}
                         />
                     </SectionBackground>
                 );
+            }
 
             case 'newsletter':
                 return (

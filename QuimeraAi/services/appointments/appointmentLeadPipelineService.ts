@@ -36,6 +36,16 @@ const normalizeString = (value: unknown, maxLength = 2000): string | undefined =
     return trimmed ? trimmed.slice(0, maxLength) : undefined;
 };
 
+const normalizeNoteBlock = (value: unknown, maxLength = 6000): string | undefined => {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value
+        .replace(/\r\n/g, '\n')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    return trimmed ? trimmed.slice(0, maxLength) : undefined;
+};
+
 const uniqueStrings = (...groups: Array<Array<string | undefined | null> | undefined>): string[] => {
     const tags = new Set<string>();
     groups.flat().forEach((item) => {
@@ -43,6 +53,17 @@ const uniqueStrings = (...groups: Array<Array<string | undefined | null> | undef
         if (tag) tags.add(tag);
     });
     return Array.from(tags);
+};
+
+const appendLeadNotes = (existingNotes: unknown, nextNotes: unknown): string | undefined => {
+    const existing = normalizeNoteBlock(existingNotes, 10000) || '';
+    const next = normalizeNoteBlock(nextNotes, 6000);
+    if (!next) return existing || undefined;
+    if (!existing) return next;
+
+    const dedupeNeedle = next.slice(0, 160);
+    if (dedupeNeedle && existing.includes(dedupeNeedle)) return existing;
+    return `${existing}\n\n${next}`.slice(0, 10000);
 };
 
 const resolveLeadSource = (source?: string): string => {
@@ -71,6 +92,7 @@ const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, 
     sourceComponent: input.sourceComponent,
     sourceModule: input.sourceModule,
     conversationTranscript: normalizeString(input.conversationTranscript, 20000),
+    customerRequestSummary: normalizeString(input.notes, 6000),
     idempotencyKey: input.idempotencyKey,
     correlationId: input.correlationId,
 });
@@ -124,10 +146,12 @@ export async function createOrLinkLeadForAppointment(
             ? lead.custom_data
             : {};
         const updatedTags = uniqueStrings(lead.tags || [], tags);
+        const updatedNotes = appendLeadNotes(lead.notes, input.notes);
         const update = await client
             .from('leads')
             .update({
                 tags: updatedTags,
+                ...(updatedNotes !== undefined ? { notes: updatedNotes } : {}),
                 custom_data: {
                     ...existingCustomData,
                     ...metadata,

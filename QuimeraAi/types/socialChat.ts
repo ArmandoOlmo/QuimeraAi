@@ -13,6 +13,8 @@ export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
 
 export type MessageDirection = 'inbound' | 'outbound';
 
+export type SocialTimestamp = { seconds: number; nanoseconds: number } | string | Date;
+
 export interface SocialMessage {
     id: string;
     conversationId?: string;
@@ -26,10 +28,10 @@ export interface SocialMessage {
     message: string;
     messageType: 'text' | 'image' | 'audio' | 'video' | 'document' | 'location' | 'template';
     mediaUrl?: string;
-    timestamp: { seconds: number; nanoseconds: number };
+    timestamp: SocialTimestamp;
     status: MessageStatus;
     response?: string;
-    responseTimestamp?: { seconds: number; nanoseconds: number };
+    responseTimestamp?: SocialTimestamp;
     metadata?: Record<string, any>;
     // AI processing
     processedByAI?: boolean;
@@ -55,14 +57,15 @@ export interface SocialConversation {
     participantEmail?: string;
     participantPhone?: string;
     status: 'active' | 'closed' | 'pending' | 'escalated';
-    startedAt: { seconds: number; nanoseconds: number };
-    lastMessageAt: { seconds: number; nanoseconds: number };
+    startedAt: SocialTimestamp;
+    lastMessageAt: SocialTimestamp;
     messageCount: number;
     unreadCount: number;
     assignedTo?: string; // Human agent ID if escalated
     tags?: string[];
     notes?: string;
     leadId?: string; // Link to CRM lead
+    metadata?: Record<string, any>;
 }
 
 // =============================================================================
@@ -341,8 +344,6 @@ export type {
     SocialMessage as SocialChatMessage,
     SocialConversation as ChatConversation,
 };
-
-
 
 
 

@@ -1,10 +1,11 @@
 /**
  * PublicBioPage
  * Public-facing bio page viewer - accessible without authentication
- * Route: /bio/:username
+ * Route: /bio/:slug
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ExternalLink, Loader2, Link2, MessageCircle, X, Send,
     Instagram, Youtube, Twitter, Linkedin, Facebook, Twitch,
@@ -37,6 +38,8 @@ import {
     trackBioPageTabChange,
 } from '../services/bioPage';
 import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
+import { getBioSlugFromPathname } from '../utils/bioPageRouting';
+import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 import type { BioPageData, BioPageLink, BioPageProfile, BioPageTheme } from '../services/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
 import type { Lead } from '../types';
@@ -183,11 +186,13 @@ const findPublicBioPageLinkBlockId = (page: BioPageData, link: BioPageLink): str
 };
 
 interface PublicBioPageProps {
+    slug?: string;
     username?: string;
 }
 
 type PublicBioTab = 'links' | 'shop' | 'media' | 'book' | 'contact';
 type PublicLeadFieldType = 'text' | 'email' | 'phone' | 'textarea';
+type PublicBioTranslate = (key: string, fallback: string, options?: Record<string, unknown>) => string;
 
 interface PublicLeadField {
     id: string;
@@ -196,25 +201,26 @@ interface PublicLeadField {
     required: boolean;
 }
 
-const PUBLIC_BIO_TABS: Array<{ id: PublicBioTab; label: string }> = [
-    { id: 'links', label: 'Links' },
-    { id: 'shop', label: 'Shop' },
-    { id: 'media', label: 'Media' },
-    { id: 'book', label: 'Book' },
-    { id: 'contact', label: 'Contact' },
+const PUBLIC_BIO_TABS: Array<{ id: PublicBioTab; labelKey: string; fallback: string }> = [
+    { id: 'links', labelKey: 'tabs.links', fallback: 'Links' },
+    { id: 'shop', labelKey: 'tabs.shop', fallback: 'Shop' },
+    { id: 'media', labelKey: 'tabs.media', fallback: 'Media' },
+    { id: 'book', labelKey: 'tabs.book', fallback: 'Book' },
+    { id: 'contact', labelKey: 'tabs.contact', fallback: 'Contact' },
 ];
 
 const PUBLIC_LEAD_FIELD_TYPES = new Set<PublicLeadFieldType>(['text', 'email', 'phone', 'textarea']);
-const DEFAULT_PUBLIC_LEAD_FIELDS: PublicLeadField[] = [
-    { id: 'name', label: 'Name', type: 'text', required: true },
-    { id: 'email', label: 'Email', type: 'email', required: true },
-    { id: 'message', label: 'Message', type: 'textarea', required: false },
-];
 const DEFAULT_PUBLIC_EMAIL_PLACEHOLDER = 'Email address';
 const DEFAULT_PUBLIC_EMAIL_BUTTON_TEXT = 'Subscribe';
 const DEFAULT_PUBLIC_EMAIL_CONSENT_TEXT = 'I agree to receive marketing emails.';
 const DEFAULT_PUBLIC_EMAIL_SUCCESS_MESSAGE = 'Thanks for subscribing.';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const getDefaultPublicLeadFields = (translate: PublicBioTranslate): PublicLeadField[] => [
+    { id: 'name', label: translate('leadFields.name', 'Name'), type: 'text', required: true },
+    { id: 'email', label: translate('leadFields.email', 'Email'), type: 'email', required: true },
+    { id: 'message', label: translate('leadFields.message', 'Message'), type: 'textarea', required: false },
+];
 
 const normalizeLeadFieldId = (value: unknown, fallback: string): string => {
     const rawValue = typeof value === 'string' ? value : fallback;
@@ -227,14 +233,20 @@ const normalizeLeadFieldId = (value: unknown, fallback: string): string => {
     return normalized || fallback;
 };
 
-const getLeadFieldLabel = (id: string): string => (
-    id
+const getLeadFieldLabel = (id: string, translate: PublicBioTranslate): string => {
+    const normalized = id.trim().toLowerCase();
+    if (normalized === 'name') return translate('leadFields.name', 'Name');
+    if (normalized === 'email') return translate('leadFields.email', 'Email');
+    if (normalized === 'phone') return translate('leadFields.phone', 'Phone');
+    if (normalized === 'message') return translate('leadFields.message', 'Message');
+    return id
         .replace(/[-_]+/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase())
-);
+        .replace(/\b\w/g, char => char.toUpperCase());
+};
 
-const normalizeLeadFormFields = (value: unknown): PublicLeadField[] => {
-    if (!Array.isArray(value)) return DEFAULT_PUBLIC_LEAD_FIELDS;
+const normalizeLeadFormFields = (value: unknown, translate: PublicBioTranslate): PublicLeadField[] => {
+    const defaultFields = getDefaultPublicLeadFields(translate);
+    if (!Array.isArray(value)) return defaultFields;
 
     const seen = new Set<string>();
     const fields = value
@@ -252,7 +264,7 @@ const normalizeLeadFormFields = (value: unknown): PublicLeadField[] => {
             seen.add(id);
             return {
                 id,
-                label: (rawLabel || getLeadFieldLabel(id)).slice(0, 80),
+                label: (rawLabel || getLeadFieldLabel(id, translate)).slice(0, 80),
                 type,
                 required: fieldRecord.required !== false,
             };
@@ -260,7 +272,7 @@ const normalizeLeadFormFields = (value: unknown): PublicLeadField[] => {
         .filter((field): field is PublicLeadField => Boolean(field));
 
     if (!fields.length || !fields.some(field => field.type === 'email')) {
-        return DEFAULT_PUBLIC_LEAD_FIELDS;
+        return defaultFields;
     }
 
     return fields.slice(0, 6);
@@ -274,6 +286,7 @@ const getPublicTabForBlock = (block: BioPageData['blocks'][number]): PublicBioTa
         case 'product_collection':
             return 'shop';
         case 'featured_media':
+        case 'media_grid':
         case 'portfolio_grid':
             return 'media';
         case 'booking':
@@ -335,7 +348,11 @@ const applyBioPageSeoTags = (page: BioPageData) => {
     setCanonicalLink(canonicalUrl);
 };
 
-const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
+const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
+    const { t } = useTranslation();
+    const tp = useCallback<PublicBioTranslate>((key, fallback, options) => (
+        String(t(`publicBioPage.${key}`, { defaultValue: fallback, ...(options || {}) }))
+    ), [t]);
     const [bioPageData, setBioPageData] = useState<BioPageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -357,27 +374,30 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
     const [leadError, setLeadError] = useState<string | null>(null);
     const [submittingLeadBlockId, setSubmittingLeadBlockId] = useState<string | null>(null);
 
-    // Extract username from URL if not passed as prop
-    const bioUsername = username || window.location.pathname.split('/bio/')[1];
+    const bioSlug = useMemo(() => (
+        slug
+        || username
+        || (typeof window !== 'undefined' ? getBioSlugFromPathname(window.location.pathname) : '')
+    ), [slug, username]);
 
     useEffect(() => {
         const fetchBioPage = async () => {
-            if (!bioUsername) {
-                setError('No username provided');
+            if (!bioSlug) {
+                setError(tp('errors.noSlug', 'No Bio Page slug provided.'));
                 setIsLoading(false);
                 return;
             }
 
             try {
-                const data = await getPublicBioPageBySlug(bioUsername);
+                const data = await getPublicBioPageBySlug(bioSlug);
                 if (!data) {
-                    setError('Bio page not found');
+                    setError(tp('errors.notFound', 'Bio page not found.'));
                     setIsLoading(false);
                     return;
                 }
 
                 if (!data.isPublished) {
-                    setError('This bio page is not published');
+                    setError(tp('errors.unpublished', 'This bio page is not published.'));
                     setIsLoading(false);
                     return;
                 }
@@ -392,14 +412,14 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                 void trackBioPageAppointmentPaymentReturn(data);
             } catch (err) {
                 console.error('Error fetching bio page:', err);
-                setError('Failed to load bio page');
+                setError(tp('errors.failedLoad', 'Failed to load bio page.'));
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchBioPage();
-    }, [bioUsername]);
+    }, [bioSlug, tp]);
 
     // Lead capture handler for public bio page chatbot
     const handleLeadCapture = useCallback(async (leadData: Partial<Lead>): Promise<string | undefined> => {
@@ -475,7 +495,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             origin: window.location.origin,
             channel: 'share',
         });
-        const title = bioPageData.seo?.title || bioPageData.title || bioPageData.profile.displayName || bioPageData.profile.name || 'Bio Page';
+        const title = bioPageData.seo?.title || bioPageData.title || bioPageData.profile.displayName || bioPageData.profile.name || tp('titleFallback', 'Bio Page');
         const text = bioPageData.seo?.description || bioPageData.description || bioPageData.profile.bio || '';
 
         try {
@@ -486,7 +506,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                 await navigator.clipboard.writeText(shareUrl);
                 setShareStatus('copied');
             } else {
-                window.prompt('Copy this Bio Page URL', shareUrl);
+                window.prompt(tp('share.copyPrompt', 'Copy this Bio Page URL'), shareUrl);
                 setShareStatus('copied');
             }
             void trackBioPageShare(bioPageData);
@@ -496,7 +516,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                 setShareStatus('error');
             }
         }
-    }, [bioPageData]);
+    }, [bioPageData, tp]);
 
     const handlePublicTabChange = useCallback((tab: PublicBioTab) => {
         setActivePublicTab(tab);
@@ -514,14 +534,14 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             setEmailErrorsByBlockId(previous => ({ ...previous, [subscribeBlock.id]: message }));
         };
         if (!EMAIL_RE.test(email)) {
-            setBlockEmailError('Please enter a valid email');
+            setBlockEmailError(tp('errors.invalidEmail', 'Please enter a valid email.'));
             return;
         }
 
         const consentRequired = true;
         const consentAccepted = signupConsentByBlockId[subscribeBlock.id] === true;
         if (consentRequired && !consentAccepted) {
-            setBlockEmailError('Please accept the consent checkbox.');
+            setBlockEmailError(tp('errors.consentRequired', 'Please accept the consent checkbox.'));
             return;
         }
 
@@ -548,7 +568,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             });
 
             if (!result.ok) {
-                setBlockEmailError('error' in result ? result.error : 'Unable to subscribe.');
+                setBlockEmailError('error' in result ? result.error : tp('errors.subscribeFailed', 'Unable to subscribe.'));
                 return;
             }
 
@@ -558,11 +578,11 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             console.log('[PublicBioPage] Email subscriber saved');
         } catch (err) {
             console.error('[PublicBioPage] Error saving email subscriber:', err);
-            setBlockEmailError('Something went wrong. Please try again.');
+            setBlockEmailError(tp('errors.genericFailed', 'Something went wrong. Please try again.'));
         } finally {
             setSubmittingEmailBlockId(null);
         }
-    }, [bioPageData, signupConsentByBlockId, signupEmailByBlockId]);
+    }, [bioPageData, signupConsentByBlockId, signupEmailByBlockId, tp]);
 
     const handleLeadFieldChange = useCallback((blockId: string, fieldId: string, value: string) => {
         setLeadFieldValues(previous => ({
@@ -575,7 +595,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
         e.preventDefault();
         if (!bioPageData) return;
 
-        const fields = normalizeLeadFormFields(leadBlock.data?.fields);
+        const fields = normalizeLeadFormFields(leadBlock.data?.fields, tp);
         const fieldValues = Object.fromEntries(
             fields.map(field => [
                 field.id,
@@ -584,21 +604,21 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
         );
         const missingField = fields.find(field => field.required && !fieldValues[field.id]);
         if (missingField) {
-            setLeadError(`${missingField.label} is required.`);
+            setLeadError(tp('errors.requiredField', '{{field}} is required.', { field: missingField.label }));
             return;
         }
 
         const emailField = fields.find(field => field.type === 'email') || fields.find(field => field.id === 'email');
         const email = emailField ? fieldValues[emailField.id].toLowerCase() : '';
         if (!EMAIL_RE.test(email)) {
-            setLeadError('Please enter a valid email');
+            setLeadError(tp('errors.invalidEmail', 'Please enter a valid email.'));
             return;
         }
 
         const consentRequired = leadBlock.data?.consentRequired === true;
         const consentAccepted = leadConsentValues[leadBlock.id] === true;
         if (consentRequired && !consentAccepted) {
-            setLeadError('Please accept the consent checkbox.');
+            setLeadError(tp('errors.consentRequired', 'Please accept the consent checkbox.'));
             return;
         }
 
@@ -681,14 +701,39 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             setLeadConsentValues(previous => ({ ...previous, [leadBlock.id]: false }));
         } catch (err) {
             console.error('[PublicBioPage] Error submitting lead:', err);
-            setLeadError('Something went wrong. Please try again.');
+            setLeadError(tp('errors.genericFailed', 'Something went wrong. Please try again.'));
         } finally {
             setSubmittingLeadBlockId(null);
         }
-    }, [bioPageData, leadConsentValues, leadFieldValues]);
+    }, [bioPageData, leadConsentValues, leadFieldValues, tp]);
 
     const bioPageChatContext = useMemo(() => (
         bioPageData ? buildBioPageChatContext(bioPageData, { activeBlockId: activeChatBlockId }) : null
+    ), [activeChatBlockId, bioPageData]);
+    const bioPageChatbotEngineContext = useMemo(() => (
+        bioPageData ? buildChatbotEngineSurfaceContext({
+            sourceSurface: 'bio_page',
+            sourceModule: 'bio-page',
+            route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            entityType: 'bio_page',
+            entityId: bioPageData.id,
+            entitySlug: bioPageData.slug,
+            contextKeys: [
+                'bio_page',
+                activeChatBlockId ? 'chat_block' : '',
+                ...(bioPageData.blocks || [])
+                    .filter(block => block.visible !== false)
+                    .map(block => `block:${block.type}`),
+            ].filter(Boolean),
+            metadata: {
+                projectId: bioPageData.projectId,
+                tenantId: bioPageData.tenantId,
+                activeBlockId: activeChatBlockId,
+                linkCount: bioPageData.links?.length || 0,
+                visibleBlockCount: (bioPageData.blocks || []).filter(block => block.visible !== false).length,
+                profileName: bioPageData.profile.name,
+            },
+        }) : undefined
     ), [activeChatBlockId, bioPageData]);
 
     if (isLoading) {
@@ -696,7 +741,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-                    <p className="text-gray-400 text-sm">Loading...</p>
+                    <p className="text-gray-400 text-sm">{tp('loading', 'Loading...')}</p>
                 </div>
             </div>
         );
@@ -707,8 +752,8 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
                 <div className="text-center">
                     <Link2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1>
-                    <p className="text-gray-400">{error || 'This bio page does not exist.'}</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">{tp('pageNotFound', 'Page Not Found')}</h1>
+                    <p className="text-gray-400">{error || tp('errors.missingPage', 'This bio page does not exist.')}</p>
                 </div>
             </div>
         );
@@ -867,17 +912,17 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
     const visibleEmailSubscribeBlockId = visibleEmailSubscribeBlock?.id || 'email-subscribe';
     const emailSubscribePlaceholder = typeof visibleEmailSubscribeBlock?.data?.placeholder === 'string' && visibleEmailSubscribeBlock.data.placeholder.trim()
         ? visibleEmailSubscribeBlock.data.placeholder
-        : DEFAULT_PUBLIC_EMAIL_PLACEHOLDER;
+        : tp('email.placeholder', DEFAULT_PUBLIC_EMAIL_PLACEHOLDER);
     const emailSubscribeButtonText = typeof visibleEmailSubscribeBlock?.data?.buttonText === 'string' && visibleEmailSubscribeBlock.data.buttonText.trim()
         ? visibleEmailSubscribeBlock.data.buttonText
-        : DEFAULT_PUBLIC_EMAIL_BUTTON_TEXT;
+        : tp('email.buttonText', DEFAULT_PUBLIC_EMAIL_BUTTON_TEXT);
     const emailSubscribeConsentRequired = true;
     const emailSubscribeConsentText = typeof visibleEmailSubscribeBlock?.data?.consentText === 'string' && visibleEmailSubscribeBlock.data.consentText.trim()
         ? visibleEmailSubscribeBlock.data.consentText
-        : DEFAULT_PUBLIC_EMAIL_CONSENT_TEXT;
+        : tp('email.consentText', DEFAULT_PUBLIC_EMAIL_CONSENT_TEXT);
     const emailSubscribeSuccessMessage = typeof visibleEmailSubscribeBlock?.data?.successMessage === 'string' && visibleEmailSubscribeBlock.data.successMessage.trim()
         ? visibleEmailSubscribeBlock.data.successMessage
-        : DEFAULT_PUBLIC_EMAIL_SUCCESS_MESSAGE;
+        : tp('email.successMessage', DEFAULT_PUBLIC_EMAIL_SUCCESS_MESSAGE);
     const emailSubscribeValue = signupEmailByBlockId[visibleEmailSubscribeBlockId] || '';
     const emailSubscribeSubmitted = emailSubmittedBlockIds[visibleEmailSubscribeBlockId] === true;
     const emailSubscribeError = emailErrorsByBlockId[visibleEmailSubscribeBlockId] || null;
@@ -902,6 +947,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                 return filterBioPageProductsForBlock(bioPageData.products || [], block).length > 0;
             case 'featured_media':
                 return Boolean(getSafeBioBlockMediaUrl(block));
+            case 'media_grid':
             case 'portfolio_grid':
                 return getBlockItems(block.data?.items).some(item => (
                     typeof item.url === 'string' && Boolean(getSafeBioBlockMediaUrl({ data: { url: item.url } }))
@@ -965,17 +1011,17 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
             onClick={handleShare}
             className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold backdrop-blur transition-transform hover:scale-105 active:scale-95"
             style={{ color: bodyColor, fontFamily: theme.bodyFont || 'inherit' }}
-            aria-label="Share this Bio Page"
+            aria-label={tp('share.ariaLabel', 'Share this Bio Page')}
         >
             <Share2 size={14} />
             <span>
                 {shareStatus === 'copied'
-                    ? 'Copied'
+                    ? tp('share.copied', 'Copied')
                     : shareStatus === 'shared'
-                      ? 'Shared'
+                      ? tp('share.shared', 'Shared')
                       : shareStatus === 'error'
-                        ? 'Try again'
-                        : 'Share'}
+                        ? tp('share.tryAgain', 'Try again')
+                        : tp('share.label', 'Share')}
             </span>
         </button>
     );
@@ -1102,7 +1148,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
 
                     {availablePublicTabs.length > 1 && (
                         <nav
-                            aria-label="Bio Page sections"
+                            aria-label={tp('tabs.ariaLabel', 'Bio Page sections')}
                             className="mb-5 flex gap-1 overflow-x-auto rounded-full border border-white/10 bg-black/20 p-1 backdrop-blur"
                         >
                             {availablePublicTabs.map(tab => {
@@ -1120,7 +1166,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                             fontFamily: theme.bodyFont || 'inherit',
                                         }}
                                     >
-                                        {tab.label}
+                                        {tp(tab.labelKey, tab.fallback)}
                                     </button>
                                 );
                             })}
@@ -1133,18 +1179,18 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                             <input
                                 value={shopSearchQuery}
                                 onChange={(event) => setShopSearchQuery(event.target.value)}
-                                placeholder="Search products"
+                                placeholder={tp('shop.searchPlaceholder', 'Search products')}
                                 className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-white/45"
                                 style={{ color: bodyColor, fontFamily: theme.bodyFont || 'inherit' }}
                                 type="search"
-                                aria-label="Search products"
+                                aria-label={tp('shop.searchAriaLabel', 'Search products')}
                             />
                             {shopSearchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setShopSearchQuery('')}
                                     className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
-                                    aria-label="Clear product search"
+                                    aria-label={tp('shop.clearSearch', 'Clear product search')}
                                     style={{ color: bodyColor }}
                                 >
                                     <X size={14} />
@@ -1190,7 +1236,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                             ) : (
                                 <form onSubmit={(event) => handleEmailSignup(event, visibleEmailSubscribeBlock)}>
                                     <p className="text-xs text-center mb-2 opacity-70" style={{ color: bodyColor }}>
-                                        {visibleEmailSubscribeBlock.title || 'Join my newsletter'}
+                                        {visibleEmailSubscribeBlock.title || tp('email.defaultTitle', 'Join my newsletter')}
                                     </p>
                                     {visibleEmailSubscribeBlock.description && (
                                         <p className="mb-3 text-center text-[11px] opacity-70" style={{ color: bodyColor }}>
@@ -1267,7 +1313,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                             style={getButtonStyle()}
                                         >
                                             <MessageCircle size={18} className="opacity-80 flex-shrink-0" />
-                                            <span className="flex-1 text-center">{block.title || 'Chat with us'}</span>
+                                            <span className="flex-1 text-center">{block.title || tp('chat.cta', 'Chat with us')}</span>
                                         </button>
                                     );
                                 }
@@ -1277,9 +1323,9 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                         return (
                                             <div key={block.id} className="overflow-hidden rounded-2xl border border-white/10 bg-black/15 p-3 backdrop-blur">
                                                 <AppointmentBooking
-                                                    title={block.title || 'Book an appointment'}
-                                                    description={block.description || 'Choose an available time and send your request.'}
-                                                    buttonText="Request booking"
+                                                    title={block.title || tp('booking.title', 'Book an appointment')}
+                                                    description={block.description || tp('booking.description', 'Choose an available time and send your request.')}
+                                                    buttonText={tp('booking.requestButton', 'Request booking')}
                                                     durationMinutes={typeof block.data?.durationMinutes === 'number' ? block.data.durationMinutes : 60}
                                                     paddingY="none"
                                                     paddingX="none"
@@ -1306,8 +1352,10 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                                     ownerId={bioPageData.userId || undefined}
                                                     compact
                                                     sourceComponent="BioPageBookingBlock"
-                                                    sourceModule="bio-page-engine"
+                                                    sourceModule="bio-page"
+                                                    sourceSurface="bio_page"
                                                     sourceBlockId={block.id}
+                                                    chatbotEngineContext={bioPageChatbotEngineContext}
                                                     onBookingIntent={() => void trackBioPageBookingStarted(bioPageData, block.id)}
                                                     onBookingCompleted={(result) => void trackBioPageBookingCompleted(bioPageData, block.id, result)}
                                                 />
@@ -1328,20 +1376,20 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                             style={getButtonStyle()}
                                         >
                                             <Calendar size={18} className="opacity-80 flex-shrink-0" />
-                                            <span className="flex-1 text-center">{block.title || 'Book now'}</span>
+                                            <span className="flex-1 text-center">{block.title || tp('booking.bookNow', 'Book now')}</span>
                                         </button>
                                     );
                                 }
 
                                 if (block.type === 'lead_form') {
-                                    const fields = normalizeLeadFormFields(block.data?.fields);
+                                    const fields = normalizeLeadFormFields(block.data?.fields, tp);
                                     const consentRequired = block.data?.consentRequired === true;
                                     const consentText = typeof block.data?.consentText === 'string' && block.data.consentText.trim()
                                         ? block.data.consentText.trim()
-                                        : 'I agree to be contacted about this request.';
+                                        : tp('lead.consentText', 'I agree to be contacted about this request.');
                                     const successMessage = typeof block.data?.successMessage === 'string' && block.data.successMessage.trim()
                                         ? block.data.successMessage.trim()
-                                        : 'Thanks. We will be in touch soon.';
+                                        : tp('lead.successMessage', 'Thanks. We will be in touch soon.');
                                     const isSubmitted = submittedLeadBlockIds[block.id] === true;
                                     const isSubmittingThisLead = submittingLeadBlockId === block.id;
                                     return (
@@ -1353,7 +1401,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                                 </div>
                                             ) : (
                                                 <form onSubmit={(event) => handleLeadSubmit(event, block)} className="space-y-2">
-                                                    <p className="text-sm font-semibold text-center" style={{ color: titleColor }}>{block.title || 'Contact'}</p>
+                                                    <p className="text-sm font-semibold text-center" style={{ color: titleColor }}>{block.title || tp('contact.title', 'Contact')}</p>
                                                     {fields.map(field => {
                                                         const value = leadFieldValues[getLeadFieldKey(block.id, field.id)] || '';
                                                         const commonProps = {
@@ -1402,7 +1450,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                                         className="w-full rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-60"
                                                         style={{ backgroundColor: theme.buttonColor, color: theme.buttonTextColor || '#ffffff' }}
                                                     >
-                                                        {isSubmittingThisLead ? 'Sending...' : 'Send'}
+                                                        {isSubmittingThisLead ? tp('lead.sending', 'Sending...') : tp('lead.send', 'Send')}
                                                     </button>
                                                     {leadError && <p className="text-xs text-red-400 text-center">{leadError}</p>}
                                                 </form>
@@ -1423,7 +1471,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                           : '';
                                     const rawUrl = typeof block.data?.url === 'string' ? block.data.url.trim() : '';
                                     const safeUrl = rawUrl
-                                        ? getSafeBioLinkUrl({ id: `${block.id}-url`, title: block.title || 'Contact', url: rawUrl, enabled: true, clicks: 0 })
+                                        ? getSafeBioLinkUrl({ id: `${block.id}-url`, title: block.title || tp('contact.title', 'Contact'), url: rawUrl, enabled: true, clicks: 0 })
                                         : '';
                                     const sanitizedPhone = phone.replace(/[^\d+]/g, '');
                                     const whatsappUrl = whatsapp.startsWith('http')
@@ -1433,19 +1481,19 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                           : '';
                                     const contactMethods: Array<{ key: string; label: string; value: string; href?: string; icon: LucideIcon }> = [
                                         ...(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-                                            ? [{ key: 'email', label: 'Email', value: email, href: `mailto:${email}`, icon: Mail }]
+                                            ? [{ key: 'email', label: tp('contact.email', 'Email'), value: email, href: `mailto:${email}`, icon: Mail }]
                                             : []),
                                         ...(sanitizedPhone
-                                            ? [{ key: 'phone', label: 'Phone', value: phone, href: `tel:${sanitizedPhone}`, icon: Phone }]
+                                            ? [{ key: 'phone', label: tp('contact.phone', 'Phone'), value: phone, href: `tel:${sanitizedPhone}`, icon: Phone }]
                                             : []),
                                         ...(whatsappUrl
-                                            ? [{ key: 'whatsapp', label: 'WhatsApp', value: whatsapp || 'Message on WhatsApp', href: whatsappUrl, icon: MessageCircle }]
+                                            ? [{ key: 'whatsapp', label: 'WhatsApp', value: whatsapp || tp('contact.whatsappMessage', 'Message on WhatsApp'), href: whatsappUrl, icon: MessageCircle }]
                                             : []),
                                         ...(safeUrl
-                                            ? [{ key: 'url', label: 'Website', value: safeUrl, href: safeUrl, icon: Globe }]
+                                            ? [{ key: 'url', label: tp('contact.website', 'Website'), value: safeUrl, href: safeUrl, icon: Globe }]
                                             : []),
                                         ...(address
-                                            ? [{ key: 'address', label: 'Address', value: address, icon: MapPin }]
+                                            ? [{ key: 'address', label: tp('contact.address', 'Address'), value: address, icon: MapPin }]
                                             : []),
                                     ];
 
@@ -1453,7 +1501,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
 
                                     return (
                                         <div key={block.id} className="rounded-2xl border border-white/10 bg-black/15 p-4 text-left backdrop-blur">
-                                            <p className="text-sm font-semibold" style={{ color: titleColor }}>{block.title || 'Contact'}</p>
+                                            <p className="text-sm font-semibold" style={{ color: titleColor }}>{block.title || tp('contact.title', 'Contact')}</p>
                                             {(block.description || text) && (
                                                 <p className="mt-1 text-xs opacity-75" style={{ color: bodyColor }}>
                                                     {block.description || text}
@@ -1522,7 +1570,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                         : '';
                                     return (
                                         <div key={block.id} className="rounded-2xl border border-white/10 bg-black/15 p-4 backdrop-blur">
-                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || collectionLabel || 'Shop'}</p>
+                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || collectionLabel || tp('shop.title', 'Shop')}</p>
                                             {visibleProducts.length ? (
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {visibleProducts.slice(0, activeShopSearchQuery ? 12 : 4).map(product => (
@@ -1541,7 +1589,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                                 </div>
                                             ) : (
                                                 <p className="rounded-xl bg-white/10 px-3 py-4 text-center text-xs" style={{ color: bodyColor }}>
-                                                    No products match this search.
+                                                    {tp('shop.noProductsMatch', 'No products match this search.')}
                                                 </p>
                                             )}
                                         </div>
@@ -1557,27 +1605,34 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                             {mediaType === 'video' ? (
                                                 <video src={mediaUrl} controls playsInline className="aspect-video w-full bg-black object-cover" />
                                             ) : (
-                                                <img src={mediaUrl} alt={block.title || 'Featured media'} className="aspect-video w-full object-cover" />
+                                                <img src={mediaUrl} alt={block.title || tp('media.featured', 'Featured media')} className="aspect-video w-full object-cover" />
                                             )}
                                             <div className="p-4">
-                                                <p className="text-sm font-semibold" style={{ color: titleColor }}>{block.title || 'Featured media'}</p>
+                                                <p className="text-sm font-semibold" style={{ color: titleColor }}>{block.title || tp('media.featured', 'Featured media')}</p>
                                                 {block.description && <p className="mt-1 text-xs opacity-75" style={{ color: bodyColor }}>{block.description}</p>}
                                             </div>
                                         </div>
                                     );
                                 }
 
-                                if (block.type === 'portfolio_grid') {
+                                if (block.type === 'media_grid' || block.type === 'portfolio_grid') {
                                     const items = getBlockItems(block.data?.items);
                                     if (!items.length) return null;
+                                    const isMediaGrid = block.type === 'media_grid';
+                                    const titleFallback = isMediaGrid ? tp('mediaGrid.title', 'Media') : tp('portfolio.title', 'Portfolio');
+                                    const itemLabelFallback = (index: number) => (
+                                        isMediaGrid
+                                            ? tp('mediaGrid.itemLabel', 'Media item {{index}}', { index })
+                                            : tp('portfolio.itemLabel', 'Portfolio item {{index}}', { index })
+                                    );
                                     return (
                                         <div key={block.id} className="rounded-2xl border border-white/10 bg-black/15 p-4 backdrop-blur">
-                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || 'Portfolio'}</p>
+                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || titleFallback}</p>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {items.slice(0, 9).map((item, index) => {
                                                     const rawUrl = typeof item.url === 'string' ? item.url : typeof item.imageUrl === 'string' ? item.imageUrl : '';
                                                     const url = rawUrl ? getSafeBioBlockMediaUrl({ data: { url: rawUrl } }) : '';
-                                                    const title = typeof item.title === 'string' ? item.title : `Portfolio item ${index + 1}`;
+                                                    const title = typeof item.title === 'string' ? item.title : itemLabelFallback(index + 1);
                                                     const itemType = typeof item.type === 'string' ? item.type : '';
                                                     const itemHref = typeof item.href === 'string'
                                                         ? getSafeBioLinkUrl({ id: `${block.id}-${index}-href`, title, url: item.href, enabled: true, clicks: 0 })
@@ -1608,7 +1663,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                     if (!items.length) return null;
                                     return (
                                         <div key={block.id} className="rounded-2xl border border-white/10 bg-black/15 p-4 text-left backdrop-blur">
-                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || 'Testimonials'}</p>
+                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || tp('testimonials.title', 'Testimonials')}</p>
                                             <div className="space-y-3">
                                                 {items.slice(0, 4).map((item, index) => {
                                                     const rating = typeof item.rating === 'number' ? Math.min(Math.max(item.rating, 1), 5) : 0;
@@ -1617,7 +1672,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                                     return (
                                                         <figure key={`${block.id}-testimonial-${index}`} className="rounded-xl bg-white/10 p-3">
                                                             {rating > 0 && (
-                                                                <div className="mb-2 flex gap-0.5" aria-label={`${rating} out of 5`}>
+                                                                <div className="mb-2 flex gap-0.5" aria-label={tp('testimonials.ratingLabel', '{{rating}} out of 5', { rating })}>
                                                                     {Array.from({ length: rating }).map((_, starIndex) => (
                                                                         <Star key={`${block.id}-star-${index}-${starIndex}`} size={12} fill="currentColor" style={{ color: theme.buttonColor }} />
                                                                     ))}
@@ -1644,7 +1699,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                     if (!items.length) return null;
                                     return (
                                         <div key={block.id} className="rounded-2xl border border-white/10 bg-black/15 p-4 text-left backdrop-blur">
-                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || 'FAQ'}</p>
+                                            <p className="mb-3 text-sm font-semibold" style={{ color: titleColor }}>{block.title || tp('faq.title', 'FAQ')}</p>
                                             <div className="space-y-3">
                                                 {items.slice(0, 5).map((item, index) => (
                                                     <div key={`${block.id}-${index}`}>
@@ -1671,7 +1726,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                             className="text-xs hover:opacity-80 transition-opacity"
                             style={{ color: bodyColor }}
                         >
-                            Made with Quimera.ai
+                            {tp('footer.madeWith', 'Made with Quimera.ai')}
                         </a>
                     </div>
                 </div>
@@ -1692,7 +1747,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                     >
                         {/* Header with close button */}
                         <div className="flex items-center justify-between p-4 border-b" style={{ backgroundColor: theme.buttonColor }}>
-                            <span className="font-medium text-white">Chat with {profile.name}</span>
+                            <span className="font-medium text-white">{tp('chat.header', 'Chat with {{name}}', { name: profile.name })}</span>
                             <button
                                 onClick={() => {
                                     setIsChatbotOpen(false);
@@ -1710,7 +1765,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                 config={bioPageData.aiAssistant}
                                 project={{
                                     id: bioPageData.projectId || bioPageData.id,
-                                    name: bioPageData.profile.name || 'Chat',
+                                    name: bioPageData.profile.name || tp('chat.fallbackName', 'Chat'),
                                     description: bioPageData.profile.bio || '',
                                     userId: bioPageData.userId || undefined,
                                     data: bioPageChatContext?.pageData || {},
@@ -1751,10 +1806,10 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                         fullScreenOnMobile: true,
                                     },
                                     messages: {
-                                        welcomeMessage: 'Hi! How can I help you today?',
+                                        welcomeMessage: tp('chat.welcomeMessage', 'Hi! How can I help you today?'),
                                         welcomeMessageEnabled: true,
                                         welcomeDelay: 0,
-                                        inputPlaceholder: 'Type a message...',
+                                        inputPlaceholder: tp('chat.inputPlaceholder', 'Type a message...'),
                                         quickReplies: [],
                                         showTypingIndicator: true,
                                     },
@@ -1778,21 +1833,22 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ username }) => {
                                 autoOpen={true}
                                 isEmbedded={true}
                                 currentPageContext={bioPageChatContext as any}
+                                chatbotEngineContext={bioPageChatbotEngineContext}
                                 onLeadCapture={handleLeadCapture}
                                 className="h-full flex-1"
                             />
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                                 <MessageCircle size={48} className="text-gray-300 mb-4" />
-                                <h3 className="text-lg font-medium text-gray-700 mb-2">Chat unavailable</h3>
+                                <h3 className="text-lg font-medium text-gray-700 mb-2">{tp('chat.unavailable', 'Chat unavailable')}</h3>
                                 <p className="text-sm text-gray-500">
-                                    The chatbot configuration is not available for this page.
+                                    {tp('chat.unavailableDescription', 'The chatbot configuration is not available for this page.')}
                                 </p>
                                 <button
                                     onClick={() => setIsChatbotOpen(false)}
                                     className="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors"
                                 >
-                                    Close
+                                    {tp('chat.close', 'Close')}
                                 </button>
                             </div>
                         )}

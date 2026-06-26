@@ -26,13 +26,20 @@ import ChatCustomizationSettings from './ChatCustomizationSettings';
 import SocialChannelsSettings from './SocialChannelsSettings';
 import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
+import ChatbotEngineDashboard from './ChatbotEngineDashboard';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
+import { normalizeChatAppearanceConfig } from '../../../utils/chatThemes';
 
-type Tab = 'overview' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
+type Tab = 'overview' | 'engine' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
+
+const OPERATOR_CHATBOT_TABS: Tab[] = ['overview', 'socialInbox'];
+const OPERATOR_CHATBOT_TAB_SET = new Set<Tab>(OPERATOR_CHATBOT_TABS);
+const CHATBOT_ENGINE_MANAGER_ROLES = new Set(['owner', 'superadmin', 'admin', 'manager']);
+const CHATBOT_ENGINE_MANAGER_TENANT_ROLES = new Set(['agency_owner', 'agency_admin']);
 
 const voices: { name: AiAssistantConfig['voiceName']; description: string; gender: string }[] = [
     { name: 'Zephyr', description: 'Calm, balanced, professional.', gender: 'Female' },
@@ -42,33 +49,63 @@ const voices: { name: AiAssistantConfig['voiceName']; description: string; gende
     { name: 'Fenrir', description: 'Strong, clear, direct.', gender: 'Male' },
 ];
 
+const normalizeAiAssistantDashboardConfig = (config: AiAssistantConfig): AiAssistantConfig => ({
+    ...config,
+    appearance: normalizeChatAppearanceConfig(config.appearance),
+});
+
 const AiAssistantDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { aiAssistantConfig, setAiAssistantConfig, saveAiAssistantConfig } = useAI();
     const editorContext = useSafeEditor();
     const { activeProject, projects, loadProject, updateProjectAiConfig } = useProject();
     const { setView } = useUI();
-    const { user } = useAuth();
+    const { user, userDocument, isUserOwner, currentTenantRole, canAccessSuperAdmin } = useAuth();
     const { cmsPosts, loadCMSPosts } = useCMS();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(true);
     const [activeTab, setActiveTab] = useState<Tab>('overview');
-    const [formData, setFormData] = useState<AiAssistantConfig>(aiAssistantConfig);
+    const [formData, setFormData] = useState<AiAssistantConfig>(() => normalizeAiAssistantDashboardConfig(aiAssistantConfig));
     const [isSaving, setIsSaving] = useState(false);
     const [voiceGenderFilter, setVoiceGenderFilter] = useState<'all' | 'Male' | 'Female'>('all');
     const isSavingRef = useRef(false);
 
+    const canManageChatbotEngine = useMemo(() => {
+        const userRole = String(userDocument?.role || '').toLowerCase();
+        const tenantRole = String(currentTenantRole || '').toLowerCase();
+
+        return Boolean(
+            isUserOwner ||
+            canAccessSuperAdmin ||
+            CHATBOT_ENGINE_MANAGER_ROLES.has(userRole) ||
+            CHATBOT_ENGINE_MANAGER_TENANT_ROLES.has(tenantRole)
+        );
+    }, [canAccessSuperAdmin, currentTenantRole, isUserOwner, userDocument?.role]);
+
     const tabs = useMemo(() => [
-        { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={18} />, description: 'Resumen de rendimiento y estado' },
-        { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge'), icon: <Book size={18} />, description: 'Gestiona la base de conocimiento' },
-        { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality'), icon: <User size={18} />, description: 'Define la identidad del asistente' },
-        { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice'), icon: <Mic size={18} />, description: 'Configura la voz y respuestas' },
-        { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture'), icon: <Sparkles size={18} />, description: 'Estrategias de captación' },
-        { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization'), icon: <Sliders size={18} />, description: 'Apariencia del chat' },
-        { id: 'socialChannels', label: 'Canales', icon: <Phone size={18} />, description: 'Conexiones externas' },
-        { id: 'socialInbox', label: 'Bandeja', icon: <Inbox size={18} />, description: 'Mensajes y conversaciones' },
-        { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings'), icon: <Settings size={18} />, description: 'Configuración general' },
+        { id: 'overview', label: t('aiAssistant.dashboard.tabs.overview'), icon: <Activity size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.overview') },
+        { id: 'engine', label: t('aiAssistant.dashboard.tabs.engine'), icon: <LayoutGrid size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.engine') },
+        { id: 'knowledge', label: t('aiAssistant.dashboard.tabs.knowledge'), icon: <Book size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.knowledge') },
+        { id: 'personality', label: t('aiAssistant.dashboard.tabs.personality'), icon: <User size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.personality') },
+        { id: 'voice', label: t('aiAssistant.dashboard.tabs.voice'), icon: <Mic size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.voice') },
+        { id: 'leadCapture', label: t('aiAssistant.dashboard.tabs.leadCapture'), icon: <Sparkles size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.leadCapture') },
+        { id: 'customization', label: t('aiAssistant.dashboard.tabs.customization'), icon: <Sliders size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.customization') },
+        { id: 'socialChannels', label: t('aiAssistant.dashboard.tabs.socialChannels'), icon: <Phone size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.socialChannels') },
+        { id: 'socialInbox', label: t('aiAssistant.dashboard.tabs.socialInbox'), icon: <Inbox size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.socialInbox') },
+        { id: 'settings', label: t('aiAssistant.dashboard.tabs.settings'), icon: <Settings size={18} />, description: t('aiAssistant.dashboard.tabDescriptions.settings') },
     ], [t]);
+
+    const visibleTabs = useMemo(() => (
+        canManageChatbotEngine
+            ? tabs
+            : tabs.filter(tab => OPERATOR_CHATBOT_TAB_SET.has(tab.id as Tab))
+    ), [canManageChatbotEngine, tabs]);
+
+    useEffect(() => {
+        if (!visibleTabs.some(tab => tab.id === activeTab)) {
+            setActiveTab('overview');
+        }
+    }, [activeTab, visibleTabs]);
 
     // Load AI config from active project when it changes
     useEffect(() => {
@@ -77,11 +114,12 @@ const AiAssistantDashboard: React.FC = () => {
 
         if (activeProject?.aiAssistantConfig) {
             // Load config from project (from Supabase)
-            setFormData(activeProject.aiAssistantConfig);
-            setAiAssistantConfig(activeProject.aiAssistantConfig);
+            const normalizedConfig = normalizeAiAssistantDashboardConfig(activeProject.aiAssistantConfig);
+            setFormData(normalizedConfig);
+            setAiAssistantConfig(normalizedConfig);
         } else if (aiAssistantConfig) {
             // Fallback to context config
-            setFormData(aiAssistantConfig);
+            setFormData(normalizeAiAssistantDashboardConfig(aiAssistantConfig));
         }
     }, [activeProject?.id, activeProject?.aiAssistantConfig]);
 
@@ -89,7 +127,7 @@ const AiAssistantDashboard: React.FC = () => {
     useEffect(() => {
         setFormData(prev => ({
             ...prev,
-            appearance: aiAssistantConfig.appearance
+            appearance: normalizeChatAppearanceConfig(aiAssistantConfig.appearance)
         }));
     }, [aiAssistantConfig.appearance]);
 
@@ -121,6 +159,31 @@ const AiAssistantDashboard: React.FC = () => {
     const handleSelectProject = (projectId: string) => {
         loadProject(projectId, false, false);
     };
+
+    const renderOperatorAccessPanel = () => (
+        <div className="quimera-dashboard-panel-card p-5 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/70 text-q-text-muted">
+                        <Shield size={18} />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground">{t('aiAssistant.dashboard.operatorAccessTitle')}</h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-q-text-muted">{t('aiAssistant.dashboard.operatorAccessDesc')}</p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('socialInbox')}
+                    className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-q-border/60 px-4 text-sm font-semibold text-foreground transition-colors hover:border-q-accent/40 hover:bg-q-surface"
+                >
+                    <Inbox size={16} />
+                    {t('aiAssistant.dashboard.operatorInboxCta')}
+                </button>
+            </div>
+            <div className="mt-5 rounded-lg border border-q-border/60 bg-q-surface/40 p-4 text-sm text-q-text-muted">
+                {t('aiAssistant.dashboard.operatorAccessScope')}
+            </div>
+        </div>
+    );
 
     const userProjects = projects.filter(p => p.status !== 'Template');
     const projectIds = useMemo(() => userProjects.map(p => p.id), [userProjects]);
@@ -222,7 +285,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 onClick={refreshStats}
                                 disabled={isLoadingStats}
                                 className="text-q-text-muted hover:text-foreground transition-colors"
-                                title="Actualizar estadísticas"
+                                title={t('aiAssistant.dashboard.refreshStats')}
                             >
                                 <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
                             </button>
@@ -240,10 +303,10 @@ const AiAssistantDashboard: React.FC = () => {
                                         <BarChart3 className="w-7 h-7 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
                                         <div>
                                             <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                                                Quimera Chat Analytics
+                                                {t('aiAssistant.dashboard.analyticsTitle')}
                                             </h2>
                                             <p className="text-q-text-muted text-sm mt-0.5">
-                                                Estadísticas en tiempo real de todos tus proyectos
+                                                {t('aiAssistant.dashboard.analyticsSubtitle')}
                                             </p>
                                         </div>
                                     </div>
@@ -254,10 +317,10 @@ const AiAssistantDashboard: React.FC = () => {
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                                     {[
-                                        { icon: MessageCircle, value: globalStats.totalActiveChats, label: 'Chats Activos', hint: 'En todos los proyectos' },
-                                        { icon: Zap, value: globalStats.totalMessages24h, label: 'Mensajes (24h)', hint: 'Últimas 24 horas' },
-                                        { icon: Users, value: globalStats.totalLeads, label: 'Leads Totales', hint: 'Generados por chat' },
-                                        { icon: Clock, value: formatResponseTime(globalStats.avgResponseTime), label: 'Tiempo Respuesta', hint: 'Promedio global' },
+                                        { icon: MessageCircle, value: globalStats.totalActiveChats, label: t('aiAssistant.dashboard.globalStats.activeChats'), hint: t('aiAssistant.dashboard.globalStats.activeChatsHint') },
+                                        { icon: Zap, value: globalStats.totalMessages24h, label: t('aiAssistant.dashboard.globalStats.messages24h'), hint: t('aiAssistant.dashboard.globalStats.messages24hHint') },
+                                        { icon: Users, value: globalStats.totalLeads, label: t('aiAssistant.dashboard.globalStats.totalLeads'), hint: t('aiAssistant.dashboard.globalStats.totalLeadsHint') },
+                                        { icon: Clock, value: formatResponseTime(globalStats.avgResponseTime), label: t('aiAssistant.dashboard.globalStats.responseTime'), hint: t('aiAssistant.dashboard.globalStats.responseTimeHint') },
                                     ].map((stat) => {
                                         const Icon = stat.icon;
 
@@ -292,7 +355,7 @@ const AiAssistantDashboard: React.FC = () => {
                                 searchQuery={searchQuery}
                                 onSearchChange={setSearchQuery}
                                 onClose={() => setIsMobileSearchOpen(false)}
-                                placeholder="Buscar proyecto..."
+                                placeholder={t('aiAssistant.dashboard.searchProjectPlaceholder')}
                             />
 
                             {/* Header */}
@@ -326,7 +389,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                     <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-q-success/20 backdrop-blur-sm border border-q-success/30">
                                                         <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                                         <span className="text-xs font-semibold text-q-success">
-                                                            {projectStats.activeConversations} activo{projectStats.activeConversations !== 1 ? 's' : ''}
+                                                            {t('aiAssistant.dashboard.activeConversationsBadge', { count: projectStats.activeConversations })}
                                                         </span>
                                                     </div>
                                                 )}
@@ -362,9 +425,9 @@ const AiAssistantDashboard: React.FC = () => {
                                                     {/* Stats Row */}
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {[
-                                                            { value: projectStats?.totalMessages || 0, label: 'Mensajes' },
-                                                            { value: projectStats?.totalLeads || 0, label: 'Leads' },
-                                                            { value: formatResponseTime(projectStats?.avgResponseTime || 0), label: 'Resp.' },
+                                                            { value: projectStats?.totalMessages || 0, label: t('aiAssistant.dashboard.projectStats.messages') },
+                                                            { value: projectStats?.totalLeads || 0, label: t('aiAssistant.dashboard.projectStats.leads') },
+                                                            { value: formatResponseTime(projectStats?.avgResponseTime || 0), label: t('aiAssistant.dashboard.projectStats.response') },
                                                         ].map((stat) => (
                                                             <div
                                                                 key={stat.label}
@@ -390,7 +453,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                                 </div>
                                                             ))}
                                                             {(!projectStats?.channelBreakdown.length) && (
-                                                                <span className="text-xs text-q-text-muted">Sin canales</span>
+                                                                <span className="text-xs text-q-text-muted">{t('aiAssistant.dashboard.noChannels')}</span>
                                                             )}
                                                         </div>
 
@@ -423,9 +486,9 @@ const AiAssistantDashboard: React.FC = () => {
                             ) : searchQuery ? (
                                 <div className="text-center py-16 quimera-dashboard-panel-card">
                                     <Search className="w-12 h-12 text-q-text-muted mx-auto mb-4" strokeWidth={1.5} />
-                                    <h3 className="text-lg font-bold mb-2">Sin resultados</h3>
+                                    <h3 className="text-lg font-bold mb-2">{t('aiAssistant.dashboard.noSearchResults')}</h3>
                                     <p className="text-sm text-q-text-muted">
-                                        No se encontraron proyectos para "{searchQuery}"
+                                        {t('aiAssistant.dashboard.noSearchResultsDesc', { query: searchQuery })}
                                     </p>
                                 </div>
                             ) : (
@@ -440,16 +503,16 @@ const AiAssistantDashboard: React.FC = () => {
                             <div className="quimera-dashboard-panel-card group mt-8 p-6">
                                 <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                                     <Sparkles className="w-5 h-5 quimera-status-card-accent-text" strokeWidth={2} />
-                                    Ideas para mejorar tu Dashboard
+                                    {t('aiAssistant.dashboard.improvementIdeas')}
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {[
-                                        { icon: Target, title: 'Objetivos Semanales', desc: 'Define metas de leads y conversaciones por proyecto' },
-                                        { icon: BarChart3, title: 'Comparativas', desc: 'Compara rendimiento entre proyectos lado a lado' },
-                                        { icon: Bell, title: 'Alertas Inteligentes', desc: 'Notificaciones cuando hay alta actividad' },
-                                        { icon: Bot, title: 'AI Insights', desc: 'Resumen semanal generado por IA de tendencias' },
-                                        { icon: TrendingUp, title: 'Gráficas Avanzadas', desc: 'Visualiza tendencias por hora del día' },
-                                        { icon: Trophy, title: 'Leaderboard', desc: 'Ranking de proyectos con mejor engagement' },
+                                        { icon: Target, title: t('aiAssistant.dashboard.ideas.weeklyGoals.title'), desc: t('aiAssistant.dashboard.ideas.weeklyGoals.desc') },
+                                        { icon: BarChart3, title: t('aiAssistant.dashboard.ideas.comparisons.title'), desc: t('aiAssistant.dashboard.ideas.comparisons.desc') },
+                                        { icon: Bell, title: t('aiAssistant.dashboard.ideas.smartAlerts.title'), desc: t('aiAssistant.dashboard.ideas.smartAlerts.desc') },
+                                        { icon: Bot, title: t('aiAssistant.dashboard.ideas.aiInsights.title'), desc: t('aiAssistant.dashboard.ideas.aiInsights.desc') },
+                                        { icon: TrendingUp, title: t('aiAssistant.dashboard.ideas.advancedCharts.title'), desc: t('aiAssistant.dashboard.ideas.advancedCharts.desc') },
+                                        { icon: Trophy, title: t('aiAssistant.dashboard.ideas.leaderboard.title'), desc: t('aiAssistant.dashboard.ideas.leaderboard.desc') },
                                     ].map((idea) => {
                                         const Icon = idea.icon;
 
@@ -476,6 +539,10 @@ const AiAssistantDashboard: React.FC = () => {
     }
 
     const renderTabContent = () => {
+        if (!canManageChatbotEngine && !OPERATOR_CHATBOT_TAB_SET.has(activeTab)) {
+            return renderOperatorAccessPanel();
+        }
+
         switch (activeTab) {
             case 'overview':
                 const currentProjectStats = activeProject ? getStatsForProject(activeProject.id) : null;
@@ -488,7 +555,7 @@ const AiAssistantDashboard: React.FC = () => {
                                     onClick={refreshStats}
                                     disabled={isLoadingStats}
                                     className="p-2 rounded-lg hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
-                                    title="Actualizar estadísticas"
+                                    title={t('aiAssistant.dashboard.refreshStats')}
                                 >
                                     <RefreshCw size={16} className={isLoadingStats ? 'animate-spin' : ''} />
                                 </button>
@@ -510,96 +577,118 @@ const AiAssistantDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="quimera-dashboard-panel-card group p-6">
-                            <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Business Profile */}
-                                <button
-                                    onClick={() => setActiveTab('knowledge')}
-                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.businessProfile ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
-                                            <Building2 size={20} />
+                        {canManageChatbotEngine ? (
+                            <div className="quimera-dashboard-panel-card group p-6">
+                                <h3 className="font-bold text-lg mb-4">{t('aiAssistant.dashboard.configStatus')}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Business Profile */}
+                                    <button
+                                        onClick={() => setActiveTab('knowledge')}
+                                        className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg flex-shrink-0 ${formData.businessProfile ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
+                                                <Building2 size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.businessProfile')}</span>
+                                                <span className="text-xs text-q-text-muted">{t('aiAssistant.dashboard.businessInfo')}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.businessProfile')}</span>
-                                            <span className="text-xs text-q-text-muted">Información del negocio</span>
-                                        </div>
-                                    </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.businessProfile ? 'bg-q-success' : 'bg-q-accent'}`} />
-                                </button>
+                                        <div className={`w-2 h-2 rounded-full ${formData.businessProfile ? 'bg-q-success' : 'bg-q-accent'}`} />
+                                    </button>
 
-                                {/* Knowledge Base */}
-                                <button
-                                    onClick={() => setActiveTab('knowledge')}
-                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
-                                            <BookOpen size={20} />
+                                    {/* Knowledge Base */}
+                                    <button
+                                        onClick={() => setActiveTab('knowledge')}
+                                        className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg flex-shrink-0 ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success/10 text-q-success' : 'bg-q-accent/10 text-q-accent'}`}>
+                                                <BookOpen size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.knowledgeBase')}</span>
+                                                <span className="text-xs text-q-text-muted">
+                                                    {t('aiAssistant.dashboard.knowledgeBaseStats', {
+                                                        faqs: formData.faqs?.length || 0,
+                                                        docs: formData.knowledgeDocuments?.length || 0,
+                                                        links: formData.knowledgeLinks?.length || 0,
+                                                        articles: formData.cmsArticleIds?.length || 0,
+                                                    })}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Base de Conocimiento</span>
-                                            <span className="text-xs text-q-text-muted">{formData.faqs?.length || 0} FAQs, {formData.knowledgeDocuments?.length || 0} docs, {formData.knowledgeLinks?.length || 0} links, {formData.cmsArticleIds?.length || 0} artículos CMS</span>
-                                        </div>
-                                    </div>
-                                    <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success' : 'bg-q-accent'}`} />
-                                </button>
+                                        <div className={`w-2 h-2 rounded-full ${(formData.faqs?.length > 0 || formData.knowledgeDocuments?.length > 0 || formData.knowledgeLinks?.length > 0 || (formData.cmsArticleIds?.length || 0) > 0) ? 'bg-q-success' : 'bg-q-accent'}`} />
+                                    </button>
 
-                                {/* Lead Capture */}
-                                <button
-                                    onClick={() => setActiveTab('leadCapture')}
-                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.leadCaptureEnabled ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
-                                            <Sparkles size={20} />
+                                    {/* Lead Capture */}
+                                    <button
+                                        onClick={() => setActiveTab('leadCapture')}
+                                        className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg flex-shrink-0 ${formData.leadCaptureEnabled ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
+                                                <Sparkles size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.leadCaptureStatus')}</span>
+                                                <span className="text-xs text-q-text-muted">{formData.leadCaptureEnabled ? t('aiAssistant.dashboard.statusActive') : t('aiAssistant.dashboard.statusInactive')}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Captura de Leads</span>
-                                            <span className="text-xs text-q-text-muted">{formData.leadCaptureEnabled ? 'Activado' : 'Desactivado'}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.leadCaptureEnabled ? 'bg-q-success' : 'bg-q-error'}`} />
-                                </button>
+                                        <div className={`w-2 h-2 rounded-full ${formData.leadCaptureEnabled ? 'bg-q-success' : 'bg-q-error'}`} />
+                                    </button>
 
-                                {/* Live Voice */}
-                                <button
-                                    onClick={() => setActiveTab('voice')}
-                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.enableLiveVoice ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
-                                            <Mic size={20} />
+                                    {/* Live Voice */}
+                                    <button
+                                        onClick={() => setActiveTab('voice')}
+                                        className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg flex-shrink-0 ${formData.enableLiveVoice ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
+                                                <Mic size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.liveVoice')}</span>
+                                                <span className="text-xs text-q-text-muted">{formData.enableLiveVoice ? t('aiAssistant.dashboard.statusActive') : t('aiAssistant.dashboard.statusInactive')}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.liveVoice')}</span>
-                                            <span className="text-xs text-q-text-muted">{formData.enableLiveVoice ? 'Activado' : 'Desactivado'}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.enableLiveVoice ? 'bg-q-success' : 'bg-q-error'}`} />
-                                </button>
+                                        <div className={`w-2 h-2 rounded-full ${formData.enableLiveVoice ? 'bg-q-success' : 'bg-q-error'}`} />
+                                    </button>
 
-                                {/* Chat Active */}
-                                <button
-                                    onClick={() => setActiveTab('settings')}
-                                    className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg flex-shrink-0 ${formData.isActive ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
-                                            <MessageSquare size={20} />
+                                    {/* Chat Active */}
+                                    <button
+                                        onClick={() => setActiveTab('settings')}
+                                        className="flex items-center justify-between p-4 rounded-xl border border-q-border/60 bg-q-surface/50 hover:bg-q-surface hover:border-q-border transition-all text-left group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg flex-shrink-0 ${formData.isActive ? 'bg-q-success/10 text-q-success' : 'bg-q-error/10 text-q-error'}`}>
+                                                <MessageSquare size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">{t('aiAssistant.dashboard.chatStatus')}</span>
+                                                <span className="text-xs text-q-text-muted">{formData.isActive ? t('aiAssistant.dashboard.statusOnline') : t('aiAssistant.dashboard.statusOffline')}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="font-semibold text-sm block group-hover:text-[var(--quimera-status-accent-from)] transition-colors">Estado del Chat</span>
-                                            <span className="text-xs text-q-text-muted">{formData.isActive ? 'Online' : 'Offline'}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-q-success' : 'bg-q-error'}`} />
-                                </button>
+                                        <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-q-success' : 'bg-q-error'}`} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        ) : renderOperatorAccessPanel()}
                     </div>
+                );
+
+            case 'engine':
+                return (
+                    <ChatbotEngineDashboard
+                        project={activeProject}
+                        actorId={user?.id}
+                        onOpenAppearance={() => setActiveTab('customization')}
+                        onOpenInbox={() => setActiveTab('socialInbox')}
+                        onOpenKnowledge={() => setActiveTab('knowledge')}
+                        onOpenVoice={() => setActiveTab('voice')}
+                        onProjectRefresh={(projectOverride) => loadProject(activeProject.id, false, false, projectOverride)}
+                    />
                 );
 
             case 'knowledge':
@@ -712,18 +801,18 @@ const AiAssistantDashboard: React.FC = () => {
                                         }}
                                         className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                                     >
-                                        Seleccionar todos los publicados
+                                        {t('aiAssistant.dashboard.selectPublishedArticles')}
                                     </button>
                                 )}
                             </div>
                             <p className="text-sm text-q-text-muted mb-4">
-                                Selecciona los artículos del blog que el chatbot podrá consultar para responder preguntas.
+                                {t('aiAssistant.dashboard.cmsArticlesDesc')}
                             </p>
                             {cmsPosts.length === 0 ? (
                                 <div className="text-center py-8 bg-secondary/10 rounded-xl border border-dashed border-q-border">
                                     <Newspaper className="w-10 h-10 mx-auto text-q-text-muted/40 mb-3" />
-                                    <p className="text-sm text-q-text-muted">No hay artículos en el CMS de este proyecto.</p>
-                                    <p className="text-xs text-q-text-muted mt-1">Crea artículos en el CMS y aparecerán aquí automáticamente.</p>
+                                    <p className="text-sm text-q-text-muted">{t('aiAssistant.dashboard.noCmsArticles')}</p>
+                                    <p className="text-xs text-q-text-muted mt-1">{t('aiAssistant.dashboard.noCmsArticlesDesc')}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
@@ -756,7 +845,7 @@ const AiAssistantDashboard: React.FC = () => {
                                                             ? 'bg-q-success/10 text-q-success'
                                                             : 'bg-q-accent/10 text-q-accent'
                                                             }`}>
-                                                            {post.status === 'published' ? 'Publicado' : 'Borrador'}
+                                                            {post.status === 'published' ? t('aiAssistant.dashboard.published') : t('aiAssistant.dashboard.draft')}
                                                         </span>
                                                     </div>
                                                     {post.excerpt && (
@@ -895,16 +984,32 @@ const AiAssistantDashboard: React.FC = () => {
             case 'settings':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
-                        <div className="quimera-dashboard-panel-card group p-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-lg">{t('aiAssistant.dashboard.activateAssistant')}</h3>
-                                <p className="text-sm text-q-text-muted">{t('aiAssistant.dashboard.activateAssistantDesc')}</p>
-                            </div>
+                        <div className="quimera-dashboard-panel-card group p-5 sm:p-6">
                             <button
+                                type="button"
                                 onClick={() => updateForm('isActive', !formData.isActive)}
-                                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-[var(--quimera-status-accent-from)]' : 'bg-secondary'}`}
+                                aria-pressed={Boolean(formData.isActive)}
+                                className="w-full max-w-3xl flex flex-col gap-4 rounded-xl text-left transition-colors sm:flex-row sm:items-center sm:justify-between"
                             >
-                                <span className={`shrink-0 inline-block h-4 w-4 transform rounded-full bg-q-surface transition ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className="min-w-0">
+                                    <span className="block font-bold text-lg text-foreground">{t('aiAssistant.dashboard.activateAssistant')}</span>
+                                    <span className="block text-sm text-q-text-muted">{t('aiAssistant.dashboard.activateAssistantDesc')}</span>
+                                </span>
+                                <span className="inline-flex items-center gap-3 shrink-0">
+                                    <span className={`text-xs font-semibold uppercase tracking-wide ${formData.isActive ? 'text-q-success' : 'text-q-text-muted'}`}>
+                                        {formData.isActive ? t('aiAssistant.dashboard.enabled') : t('aiAssistant.dashboard.disabled')}
+                                    </span>
+                                    <span
+                                        className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors ${formData.isActive
+                                            ? 'border-[var(--quimera-status-accent-from)] bg-[var(--quimera-status-accent-from)]'
+                                            : 'border-q-border bg-secondary'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${formData.isActive ? 'translate-x-5' : 'translate-x-0'}`}
+                                        />
+                                    </span>
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -913,6 +1018,7 @@ const AiAssistantDashboard: React.FC = () => {
             default: return null;
         }
     };
+    const isFullWidthTab = activeTab === 'socialInbox' || activeTab === 'engine';
 
     return (
         <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
@@ -936,19 +1042,21 @@ const AiAssistantDashboard: React.FC = () => {
                         <button
                             onClick={() => setIsMobileNavOpen(prev => !prev)}
                             className="md:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
-                            aria-label={isMobileNavOpen ? 'Ocultar menú' : 'Mostrar menú'}
-                            title={isMobileNavOpen ? 'Ocultar menú' : 'Mostrar menú'}
+                            aria-label={isMobileNavOpen ? t('aiAssistant.dashboard.hideMenu') : t('aiAssistant.dashboard.showMenu')}
+                            title={isMobileNavOpen ? t('aiAssistant.dashboard.hideMenu') : t('aiAssistant.dashboard.showMenu')}
                         >
                             {isMobileNavOpen ? <PanelTopClose size={18} /> : <PanelTopOpen size={18} />}
                         </button>
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:text-q-success disabled:hover:bg-transparent"
-                        >
-                            <Save className="w-4 h-4" />
-                            <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>
-                        </button>
+                        {canManageChatbotEngine && (
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all text-q-text-muted hover:text-foreground hover:bg-secondary/50 disabled:text-q-success disabled:hover:bg-transparent"
+                            >
+                                <Save className="w-4 h-4" />
+                                <span className="hidden sm:inline">{isSaving ? t('aiAssistant.dashboard.saving') : t('aiAssistant.dashboard.save')}</span>
+                            </button>
+                        )}
                         <HeaderBackButton onClick={() => setView('dashboard')} />
                     </div>
                 </header>
@@ -956,14 +1064,14 @@ const AiAssistantDashboard: React.FC = () => {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
 
                     {/* LEFT: Configuration Area (Scrollable) - Full width when Inbox is active */}
-                    <div className={`${activeTab === 'socialInbox' ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-q-border bg-q-bg overflow-hidden relative z-10`}>
+                    <div className={`${isFullWidthTab ? 'lg:col-span-12' : 'lg:col-span-8 xl:col-span-6'} flex flex-col border-r border-q-border bg-q-bg overflow-hidden relative z-10`}>
                         <div className="flex flex-col md:flex-row h-full overflow-hidden">
                             {/* Desktop Sidebar (New) */}
                             <div className="hidden md:flex flex-col w-[240px] border-r border-q-border/50 bg-secondary/5 py-6 overflow-y-auto shrink-0">
                                 <div className="px-4 mb-2">
-                                    <h3 className="text-xs font-bold text-q-text-muted uppercase tracking-wider px-2 mb-2">Menú Principal</h3>
+                                    <h3 className="text-xs font-bold text-q-text-muted uppercase tracking-wider px-2 mb-2">{t('aiAssistant.dashboard.mainMenu')}</h3>
                                     <div className="space-y-1">
-                                        {tabs.map((tab) => (
+                                        {visibleTabs.map((tab) => (
                                             <button
                                                 key={tab.id}
                                                 onClick={() => setActiveTab(tab.id as Tab)}
@@ -982,6 +1090,17 @@ const AiAssistantDashboard: React.FC = () => {
                                             </button>
                                         ))}
                                     </div>
+                                    {!canManageChatbotEngine && (
+                                        <div className="mt-4 rounded-lg border border-q-border/60 bg-q-surface/35 p-3">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                                                <Shield size={14} className="text-q-text-muted" />
+                                                {t('aiAssistant.dashboard.advancedControls')}
+                                            </div>
+                                            <p className="mt-1 text-xs leading-5 text-q-text-muted">
+                                                {t('aiAssistant.dashboard.advancedControlsDesc')}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -989,7 +1108,7 @@ const AiAssistantDashboard: React.FC = () => {
                             {isMobileNavOpen && (
                                 <div className="md:hidden w-full bg-q-bg z-20 border-b border-q-border px-2 py-2 shrink-0">
                                     <div className="grid grid-cols-3 gap-1">
-                                        {tabs.map((tab) => (
+                                        {visibleTabs.map((tab) => (
                                             <button
                                                 key={tab.id}
                                                 onClick={() => {
@@ -1011,15 +1130,15 @@ const AiAssistantDashboard: React.FC = () => {
 
                             {/* Content Area */}
                             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
-                                <div className={`min-h-full ${activeTab === 'socialInbox' ? '' : 'p-4 sm:p-6 md:p-8 pb-24'}`}>
-                                    {renderTabContent()}
-                                </div>
+	                                <div className={`min-h-full ${activeTab === 'socialInbox' ? '' : 'p-4 sm:p-6 md:p-8 pb-24'}`}>
+	                                    {renderTabContent()}
+	                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* RIGHT: Widget Preview Area (Fixed/Sticky Feel) - Hidden when Inbox is active */}
-                    {activeTab !== 'socialInbox' && (
+                    {!isFullWidthTab && (
                         <div className="hidden lg:flex lg:col-span-4 xl:col-span-6 flex-col bg-muted/30 relative items-center justify-center p-10 overflow-hidden">
                             {/* Dot pattern - visible in both themes */}
                             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#d5d5d5_1px,transparent_1px)] dark:bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:16px_16px]"></div>

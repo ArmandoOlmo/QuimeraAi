@@ -50,6 +50,7 @@ import {
     validateGeneratedWebsite,
 } from '../../../utils/websitePlanEngine';
 import { attachAiStudioBusinessBlueprint } from '../../../utils/businessBlueprint';
+import { resolveProjectAiAssistantConfig } from '../../../utils/chatbotEngine/projectAiAssistantConfig';
 import { applyProjectBioPageBlueprintDraft } from '../../../services/bioPage';
 import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
 import { getStudioReadiness } from '../../../utils/studioUX';
@@ -1928,6 +1929,18 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                 description: brief.description,
                 services: brief.services?.map((s, i) => ({ id: `svc-${i}`, name: s.name, description: s.description, isAIGenerated: true })),
                 contactInfo: brief.contactInfo, language: i18n.language,
+                hasEcommerce: Boolean(brief.hasEcommerce || planForGeneration.businessProfile.hasEcommerce),
+                storeSetup: {
+                    storeName: brief.businessName,
+                    currency: 'USD',
+                    currencySymbol: '$',
+                    shippingType: 'local',
+                    selectedCategories: Array.from(new Set([
+                        ...(planForGeneration.contentMap.products || [])
+                            .map(product => typeof product === 'object' && product ? String((product as any).category || '') : '')
+                            .filter(Boolean),
+                    ])),
+                },
             } as any, chatbotGlobalColors);
 
             // Generate pages
@@ -2070,7 +2083,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             setGenerationPhase(prev => prev ? { ...prev, phase: 'finalizing', progress: 95, currentStep: 'Saving and opening editor...' } : prev);
 
             // Build the complete project object
-            const fullProject = attachAiStudioBusinessBlueprint({
+            let fullProject = attachAiStudioBusinessBlueprint({
                 id: finalProjectId,
                 name: brief.businessName || 'My Website',
                 thumbnailUrl: extractHeroImage(finalData, componentOrder) || '',
@@ -2090,6 +2103,18 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                 createdBy: user.id,
                 existingBusinessBlueprint,
             });
+            const hydratedAiAssistantConfig = resolveProjectAiAssistantConfig({
+                ai_assistant_config: fullProject.aiAssistantConfig as any,
+                data: {
+                    businessBlueprint: fullProject.businessBlueprint,
+                },
+            });
+            if (hydratedAiAssistantConfig) {
+                fullProject = {
+                    ...fullProject,
+                    aiAssistantConfig: hydratedAiAssistantConfig as any,
+                };
+            }
 
             if (isDev) {
                 console.log('[AIWebsiteStudio] Commerce blueprints generated:', {

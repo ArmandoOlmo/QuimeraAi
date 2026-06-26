@@ -167,6 +167,12 @@ function cloneBioPageRecord(value?: Record<string, unknown>): Record<string, unk
     return JSON.parse(JSON.stringify(record)) as Record<string, unknown>;
 }
 
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : undefined;
+}
+
 function isBioPageSystemBlock(block: Pick<BioPageBlock, 'type'>): boolean {
     return block.type === 'profile' || block.type === 'link';
 }
@@ -312,7 +318,7 @@ export function getBioPagePublishIssues(page: BioPageData): string[] {
                 const url = typeof block.data?.url === 'string' ? block.data.url : '';
                 if (!url || !sanitizeBioMediaUrl(url)) issues.push(`Block "${label}" needs a safe media URL.`);
             }
-            if (block.type === 'portfolio_grid') {
+            if (block.type === 'portfolio_grid' || block.type === 'media_grid') {
                 const items = Array.isArray(block.data?.items) ? block.data.items : [];
                 const hasRenderableItem = items.some(item => {
                     if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
@@ -324,7 +330,8 @@ export function getBioPagePublishIssues(page: BioPageData): string[] {
                           : '';
                     return Boolean(url && sanitizeBioMediaUrl(url));
                 });
-                if (!hasRenderableItem) issues.push(`Block "${label}" needs at least one safe portfolio item.`);
+                const itemTypeLabel = block.type === 'media_grid' ? 'media' : 'portfolio';
+                if (!hasRenderableItem) issues.push(`Block "${label}" needs at least one safe ${itemTypeLabel} item.`);
             }
         });
 
@@ -465,6 +472,8 @@ function rowSettings(row: AnyRecord): BioPageSettings {
 }
 
 function mapBlockRow(row: AnyRecord): BioPageBlock {
+    const settings = row.settings || {};
+    const data = row.data || {};
     return {
         id: row.id,
         type: row.type as BioPageBlockType,
@@ -475,12 +484,13 @@ function mapBlockRow(row: AnyRecord): BioPageBlock {
         status: row.visible === false ? 'hidden' : row.needs_review ? 'needs_review' : 'configured',
         sourceModule: row.source_module || undefined,
         sourceEntityId: row.source_entity_id || undefined,
-        data: row.data || {},
-        settings: row.settings || {},
+        data,
+        settings,
         needsReview: row.needs_review === true,
         generatedByAI: row.generated_by_ai === true,
         userModified: row.user_modified === true,
         lockedFromRegeneration: row.locked_from_regeneration === true,
+        sourceMap: readRecord(settings.sourceMap) || readRecord(data.sourceMap),
     };
 }
 
@@ -506,6 +516,7 @@ function mapLinkRow(row: AnyRecord): BioPageLink {
         generatedByAI: metadata.generatedByAI === true,
         userModified: metadata.userModified === true,
         lockedFromRegeneration: metadata.lockedFromRegeneration === true,
+        sourceMap: readRecord(metadata.sourceMap),
         metadata,
     };
 }
@@ -701,6 +712,11 @@ function pagePayload(input: {
 }
 
 function blockPayload(block: BioPageBlock, page: Pick<BioPageData, 'id' | 'projectId' | 'tenantId'>): AnyRecord {
+    const sourceMap = readRecord(block.sourceMap);
+    const settings = {
+        ...(block.settings || {}),
+        ...(sourceMap ? { sourceMap } : {}),
+    };
     const payload: AnyRecord = {
         tenant_id: page.tenantId || null,
         project_id: page.projectId,
@@ -711,7 +727,7 @@ function blockPayload(block: BioPageBlock, page: Pick<BioPageData, 'id' | 'proje
         order_index: block.order || 0,
         visible: block.visible !== false,
         data: block.data || {},
-        settings: block.settings || {},
+        settings,
         source_module: block.sourceModule || null,
         source_entity_id: block.sourceEntityId || null,
         generated_by_ai: block.generatedByAI === true,
@@ -726,6 +742,7 @@ function blockPayload(block: BioPageBlock, page: Pick<BioPageData, 'id' | 'proje
 
 function linkPayload(link: BioPageLink, page: Pick<BioPageData, 'id' | 'projectId' | 'tenantId'>, index: number): AnyRecord {
     const sanitizedUrl = sanitizeBioUrl(link.url);
+    const sourceMap = readRecord(link.sourceMap);
     const payload: AnyRecord = {
         tenant_id: page.tenantId || null,
         project_id: page.projectId,
@@ -747,6 +764,7 @@ function linkPayload(link: BioPageLink, page: Pick<BioPageData, 'id' | 'projectI
             generatedByAI: link.generatedByAI === true,
             userModified: link.userModified === true,
             lockedFromRegeneration: link.lockedFromRegeneration === true,
+            ...(sourceMap ? { sourceMap } : {}),
             legacyId: isUuid(link.id) ? undefined : link.id,
         },
         updated_at: new Date().toISOString(),
@@ -1226,6 +1244,10 @@ export function createBioPageFromBlueprint(input: {
             shopEnabled: blueprint.shop.enabled,
             bookingEnabled: blueprint.booking.enabled,
             showQuimeraFooter: blueprint.theme.showQuimeraFooter,
+            sourceMap: {
+                ...(blueprint.sourceMap || {}),
+                bioPageBlueprint: 'businessBlueprint.bioPageBlueprint',
+            },
         },
         links: blueprint.links.map((link, index) => ({
             id: link.id,
@@ -1246,6 +1268,11 @@ export function createBioPageFromBlueprint(input: {
             generatedByAI: link.generatedByAI,
             userModified: link.userModified,
             lockedFromRegeneration: link.lockedFromRegeneration,
+            sourceMap: link.sourceMap,
+            metadata: {
+                sourceMap: link.sourceMap,
+                blueprintStatus: link.status,
+            },
         })),
         blocks: blueprint.blocks.map(block => ({
             id: block.id,
@@ -1258,11 +1285,16 @@ export function createBioPageFromBlueprint(input: {
             sourceModule: block.sourceModule,
             sourceEntityId: block.sourceEntityId,
             data: block.data,
-            settings: block.settings,
+            settings: {
+                ...(block.settings || {}),
+                ...(block.sourceMap ? { sourceMap: block.sourceMap } : {}),
+                blueprintStatus: block.status,
+            },
             needsReview: block.needsReview,
             generatedByAI: block.generatedByAI,
             userModified: block.userModified,
             lockedFromRegeneration: block.lockedFromRegeneration,
+            sourceMap: block.sourceMap,
         })),
     };
 }

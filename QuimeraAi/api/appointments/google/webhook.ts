@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getSupabaseAdmin } from '../../_lib/supabaseAdmin.js';
-import { markGoogleCalendarWebhookPending } from '../../../services/appointments/appointmentGoogleCalendarSyncService.ts';
-import { send, sendNoContent } from './_lib.ts';
+import { markGoogleCalendarWebhookPending } from '../../../services/appointments/appointmentGoogleCalendarSyncService.js';
+import { send, sendNoContent } from './_lib.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method === 'OPTIONS') {

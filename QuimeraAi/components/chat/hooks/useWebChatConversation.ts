@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { SocialConversation, SocialMessage } from '../../../types/socialChat';
+import type { ChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
 // =============================================================================
 // TYPES
@@ -25,6 +26,9 @@ export interface ParticipantInfo {
 export interface WebChatConversationOptions {
     apiBaseUrl?: string;
     publicProjectId?: string;
+    sourceSurface?: string;
+    sourceModule?: string;
+    chatbotEngineContext?: ChatbotEngineSurfaceContext;
 }
 
 // =============================================================================
@@ -41,6 +45,9 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
     const conversationIdRef = useRef<string | null>(null);
     const apiBaseUrl = options.apiBaseUrl?.replace(/\/$/, '');
     const publicProjectId = options.publicProjectId || projectId;
+    const sourceSurface = options.sourceSurface || options.chatbotEngineContext?.sourceSurface || 'website';
+    const sourceModule = options.sourceModule || options.chatbotEngineContext?.sourceModule || 'chatcore';
+    const chatbotEngineContext = options.chatbotEngineContext;
     const shouldPersistToDatabase = Boolean(userId);
     const shouldPersistViaApi = Boolean(!userId && apiBaseUrl && publicProjectId);
     const shouldPersist = shouldPersistToDatabase || shouldPersistViaApi;
@@ -80,6 +87,18 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
         return response.json();
     }, [apiBaseUrl, publicProjectId]);
 
+    const buildContextPayload = useCallback((metadata: Record<string, unknown> = {}) => ({
+        sourceSurface,
+        sourceModule,
+        chatbotEngineContext,
+        metadata: {
+            ...metadata,
+            sourceSurface,
+            sourceModule,
+            chatbotEngineContext,
+        },
+    }), [sourceSurface, sourceModule, chatbotEngineContext]);
+
     // ==========================================================================
     // CREATE OR GET CONVERSATION
     // ==========================================================================
@@ -110,6 +129,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                     body: JSON.stringify({
                         sessionId: sessionIdRef.current,
                         participantInfo,
+                        ...buildContextPayload(),
                     }),
                 });
 
@@ -166,7 +186,13 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                 lastMessageAt: now,
                 messageCount: 0,
                 unreadCount: 0,
-                tags: ['web-chat'],
+                tags: ['web-chat', `surface:${sourceSurface}`, `module:${sourceModule}`],
+                metadata: {
+                    sourceSurface,
+                    sourceModule,
+                    chatbotEngineContext,
+                    sessionId: sessionIdRef.current,
+                },
             };
             
             // Only add optional fields if they have values
@@ -191,7 +217,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             setIsLoading(false);
             return null;
         }
-    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext]);
 
     // ==========================================================================
     // SAVE MESSAGE
@@ -220,6 +246,9 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                         role: message.role,
                         text: message.text,
                         isVoiceMessage: message.isVoiceMessage,
+                        ...buildContextPayload({
+                            isVoiceMessage: message.isVoiceMessage === true,
+                        }),
                     }),
                 });
                 messageCountRef.current = result.messageCount || messageCountRef.current + 1;
@@ -243,6 +272,12 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                 timestamp: now,
                 status: 'delivered',
                 processedByAI: message.role === 'model',
+                metadata: {
+                    sourceSurface,
+                    sourceModule,
+                    chatbotEngineContext,
+                    isVoiceMessage: message.isVoiceMessage === true,
+                },
             };
 
             // Save message to socialMessages collection
@@ -264,7 +299,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             console.error('[useWebChatConversation] Error saving message:', err);
             return false;
         }
-    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext]);
 
     // ==========================================================================
     // UPDATE PARTICIPANT INFO
@@ -285,7 +320,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             if (shouldPersistViaApi) {
                 await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ participantInfo: info }),
+                    body: JSON.stringify({ participantInfo: info, ...buildContextPayload() }),
                 });
                 console.log('[useWebChatConversation] Updated participant info');
                 return true;
@@ -306,7 +341,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             console.error('[useWebChatConversation] Error updating participant:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
 
     // ==========================================================================
     // CLOSE CONVERSATION
@@ -325,7 +360,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             if (shouldPersistViaApi) {
                 await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: 'closed' }),
+                    body: JSON.stringify({ status: 'closed', ...buildContextPayload() }),
                 });
                 console.log('[useWebChatConversation] Closed conversation');
                 return true;
@@ -342,7 +377,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             console.error('[useWebChatConversation] Error closing conversation:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
 
     // ==========================================================================
     // LINK TO LEAD
@@ -361,7 +396,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             if (shouldPersistViaApi) {
                 await callWidgetApi(`/conversations/${encodeURIComponent(targetConvId)}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ leadId }),
+                    body: JSON.stringify({ leadId, ...buildContextPayload() }),
                 });
                 console.log('[useWebChatConversation] Linked to lead:', leadId);
                 return true;
@@ -378,7 +413,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             console.error('[useWebChatConversation] Error linking to lead:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
 
     // ==========================================================================
     // SAVE FULL TRANSCRIPT

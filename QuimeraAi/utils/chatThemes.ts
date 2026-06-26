@@ -115,6 +115,79 @@ export const getDefaultAppearanceConfig = (): ChatAppearanceConfig => ({
     theme: 'light'
 });
 
+export const normalizeChatAppearanceConfig = (
+    appearance?: Partial<ChatAppearanceConfig> | null,
+): ChatAppearanceConfig => {
+    const defaults = getDefaultAppearanceConfig();
+    const input = (appearance || {}) as Partial<ChatAppearanceConfig>;
+    const messages = input.messages || {};
+
+    return {
+        branding: {
+            ...defaults.branding,
+            ...(input.branding || {}),
+        },
+        colors: {
+            ...defaults.colors,
+            ...(input.colors || {}),
+        },
+        behavior: {
+            ...defaults.behavior,
+            ...(input.behavior || {}),
+        },
+        messages: {
+            ...defaults.messages,
+            ...messages,
+            quickReplies: Array.isArray(messages.quickReplies)
+                ? messages.quickReplies
+                : defaults.messages.quickReplies,
+        },
+        button: {
+            ...defaults.button,
+            ...(input.button || {}),
+        },
+        theme: input.theme || defaults.theme,
+    };
+};
+
+const isDefaultColorValue = (value: unknown, defaultValue: string): boolean => (
+    typeof value !== 'string'
+    || value.trim() === ''
+    || value.toLowerCase() === defaultValue.toLowerCase()
+);
+
+export const resolveChatAppearanceConfig = (
+    appearance?: Partial<ChatAppearanceConfig> | null,
+    projectGlobalColors?: Partial<GlobalColors> | null,
+): ChatAppearanceConfig => {
+    const normalized = normalizeChatAppearanceConfig(appearance);
+
+    if (!projectGlobalColors) {
+        return normalized;
+    }
+
+    const defaults = getDefaultAppearanceConfig();
+    const projectPreset = buildProjectPreset(projectGlobalColors as GlobalColors);
+    const projectColors = projectPreset.colors || {};
+    const storedColors = appearance?.colors || {};
+    const colors = { ...normalized.colors };
+
+    (Object.keys(projectColors) as Array<keyof typeof projectColors>).forEach((key) => {
+        const projectValue = projectColors[key];
+        const defaultValue = defaults.colors[key as keyof typeof defaults.colors];
+        const storedValue = storedColors[key as keyof typeof storedColors];
+
+        if (typeof projectValue === 'string' && isDefaultColorValue(storedValue, defaultValue)) {
+            (colors as any)[key] = projectValue;
+        }
+    });
+
+    return {
+        ...normalized,
+        colors,
+    };
+};
+
 // Theme Presets
 export const THEME_PRESETS: Record<string, Partial<ChatAppearanceConfig>> = {
     professional: {
@@ -419,4 +492,3 @@ export const getButtonStyleClasses = (style: 'circle' | 'rounded' | 'square') =>
     };
     return styleMap[style];
 };
-

@@ -53,7 +53,15 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts/,
     },
     {
+      name: 'public-chromium',
+      testMatch: /.*\.public\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    {
       name: 'chromium',
+      testIgnore: /.*\.public\.spec\.ts/,
       use: { 
         ...devices['Desktop Chrome'],
         // Use prepared auth state.
@@ -64,6 +72,7 @@ export default defineConfig({
 
     {
       name: 'firefox',
+      testIgnore: /.*\.public\.spec\.ts/,
       use: { 
         ...devices['Desktop Firefox'],
         storageState: 'playwright/.auth/user.json',
@@ -73,6 +82,7 @@ export default defineConfig({
 
     {
       name: 'webkit',
+      testIgnore: /.*\.public\.spec\.ts/,
       use: { 
         ...devices['Desktop Safari'],
         storageState: 'playwright/.auth/user.json',
@@ -82,7 +92,7 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_SKIP_WEB_SERVER === '1' ? undefined : {
     command: 'npm run dev -- --port 5173',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,

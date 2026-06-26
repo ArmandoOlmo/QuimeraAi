@@ -11,7 +11,7 @@ ChatCore creates appointments through the canonical Appointments Engine contract
   - `components/dashboard/ai/ChatSimulator.tsx`
 - Service/API contract:
   - `createAppointmentFromChat` in `services/appointments/appointmentEngineService.ts`
-  - public widget appointment endpoints in `api/widget/[...path].ts`
+  - public widget appointment endpoints in `api/widget/[project]/...`
 
 ## Required metadata
 

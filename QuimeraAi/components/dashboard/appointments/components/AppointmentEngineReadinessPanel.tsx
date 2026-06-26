@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Bot,
     CalendarClock,
+    ChevronDown,
     CheckCircle2,
     Clock3,
     CreditCard,
@@ -43,6 +44,8 @@ const stateDotStyles: Record<ReadinessState, string> = {
     action: 'bg-q-error',
 };
 
+const READINESS_COLLAPSED_STORAGE_KEY = 'quimera_appointments_readiness_collapsed';
+
 export const AppointmentEngineReadinessPanel: React.FC<AppointmentEngineReadinessPanelProps> = ({
     analytics,
     appointmentsBlueprint,
@@ -52,6 +55,8 @@ export const AppointmentEngineReadinessPanel: React.FC<AppointmentEngineReadines
     legacyBlockedDateCount,
 }) => {
     const { t } = useTranslation();
+    const [isCollapsed, setIsCollapsed] = React.useState(() => readCollapsedPreference(READINESS_COLLAPSED_STORAGE_KEY));
+    const contentId = 'appointments-engine-readiness-content';
     const engine = analytics.engine;
     const publicBooking = appointmentsBlueprint?.publicBooking;
     const chatcore = appointmentsBlueprint?.chatcore;
@@ -114,27 +119,62 @@ export const AppointmentEngineReadinessPanel: React.FC<AppointmentEngineReadines
     ];
 
     const readyCount = items.filter(item => item.state === 'ready').length;
+    const toggleLabel = isCollapsed
+        ? t('appointments.readiness.expand')
+        : t('appointments.readiness.collapse');
+    const toggleCollapsed = React.useCallback(() => {
+        setIsCollapsed(prev => {
+            const next = !prev;
+            saveCollapsedPreference(READINESS_COLLAPSED_STORAGE_KEY, next);
+            return next;
+        });
+    }, []);
 
     return (
         <section className="border-b border-q-border bg-q-bg px-3 py-3 sm:px-6">
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
+            <div className={`${isCollapsed ? 'mb-0' : 'mb-3'} flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between`}>
+                <button
+                    type="button"
+                    onClick={toggleCollapsed}
+                    aria-expanded={!isCollapsed}
+                    aria-controls={contentId}
+                    aria-label={toggleLabel}
+                    title={toggleLabel}
+                    className="-ml-1 rounded-md px-1 py-0.5 text-left transition hover:bg-q-surface/50 focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                >
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-q-text-muted">
                         {t('appointments.readiness.eyebrow')}
                     </p>
                     <h2 className="text-sm font-semibold text-foreground">
                         {t('appointments.readiness.title')}
                     </h2>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-q-text-muted">
-                    <Clock3 className="h-4 w-4" strokeWidth={2} />
-                    <span>
-                        {t('appointments.readiness.score', { ready: readyCount, total: items.length })}
-                    </span>
+                </button>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-xs text-q-text-muted">
+                        <Clock3 className="h-4 w-4" strokeWidth={2} />
+                        <span>
+                            {t('appointments.readiness.score', { ready: readyCount, total: items.length })}
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={toggleCollapsed}
+                        aria-expanded={!isCollapsed}
+                        aria-controls={contentId}
+                        aria-label={toggleLabel}
+                        title={toggleLabel}
+                        className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-q-border/60 bg-q-surface/60 text-q-text-muted transition hover:border-q-accent/40 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                    >
+                        <ChevronDown
+                            className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`}
+                            strokeWidth={2}
+                        />
+                    </button>
                 </div>
             </div>
 
-            <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-9">
+            {!isCollapsed && (
+            <div id={contentId} className="grid gap-2 md:grid-cols-3 xl:grid-cols-9">
                 {items.map(({ key, state, icon: Icon }) => (
                     <div key={key} className="rounded-lg border border-q-border/60 bg-q-surface/60 px-3 py-2">
                         <div className="mb-2 flex items-center justify-between gap-2">
@@ -155,8 +195,27 @@ export const AppointmentEngineReadinessPanel: React.FC<AppointmentEngineReadines
                     </div>
                 ))}
             </div>
+            )}
         </section>
     );
 };
 
 export default AppointmentEngineReadinessPanel;
+
+function readCollapsedPreference(key: string): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+        return window.localStorage.getItem(key) === 'true';
+    } catch {
+        return false;
+    }
+}
+
+function saveCollapsedPreference(key: string, value: boolean) {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, String(value));
+    } catch {
+        // Ignore storage failures; the live UI state still updates.
+    }
+}

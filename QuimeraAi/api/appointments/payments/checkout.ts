@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getSupabaseAdmin } from '../../_lib/supabaseAdmin.js';
-import { createAppointmentCheckoutSession } from '../../../services/appointments/appointmentCheckoutService.ts';
+import { createAppointmentCheckoutSession } from '../../../services/appointments/appointmentCheckoutService.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',

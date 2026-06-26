@@ -1,12 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getSupabaseAdmin } from '../../../_lib/supabaseAdmin.js';
-import { processGoogleCalendarSyncJobs } from '../../../../services/appointments/appointmentGoogleCalendarSyncService.ts';
+import { processGoogleCalendarSyncJobs } from '../../../../services/appointments/appointmentGoogleCalendarSyncService.js';
 import {
   JSON_HEADERS,
   send,
   sendNoContent,
   tokenFromRequest,
-} from '../_lib.ts';
+} from '../_lib.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method === 'OPTIONS') {

@@ -1,0 +1,83 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { ChatbotEngineAuditEvent } from '../../utils/chatbotEngine/actionRegistry';
+
+type SupabaseLike = Pick<SupabaseClient, 'from'>;
+
+export interface ChatbotEngineEventResult {
+    id?: string;
+    warning?: string;
+    duplicate?: boolean;
+}
+
+function stripUndefined<T extends Record<string, unknown>>(value: T): T {
+    return Object.fromEntries(
+        Object.entries(value).filter(([, entry]) => entry !== undefined),
+    ) as T;
+}
+
+function isDuplicateEventError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const record = error as { code?: unknown; message?: unknown; details?: unknown; hint?: unknown };
+    const text = [record.message, record.details, record.hint]
+        .filter((entry): entry is string => typeof entry === 'string')
+        .join(' ')
+        .toLowerCase();
+
+    return record.code === '23505'
+        || text.includes('duplicate key')
+        || text.includes('chatbot_engine_events_project_event_idempotency_uidx');
+}
+
+async function findExistingIdempotentEvent(
+    client: SupabaseLike,
+    event: ChatbotEngineAuditEvent,
+): Promise<ChatbotEngineEventResult> {
+    if (!event.idempotency_key) {
+        return { warning: 'chatbot_engine_event_duplicate_without_idempotency_key' };
+    }
+
+    try {
+        const { data, error } = await client
+            .from('chatbot_engine_events')
+            .select('id')
+            .eq('project_id', event.project_id)
+            .eq('event_type', event.event_type)
+            .eq('idempotency_key', event.idempotency_key)
+            .maybeSingle();
+
+        if (error) return { warning: `chatbot_engine_event_duplicate_lookup_failed:${error.message}` };
+        if (typeof data?.id === 'string') return { id: data.id, duplicate: true };
+        return { warning: 'chatbot_engine_event_duplicate_not_found' };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'unknown_error';
+        return { warning: `chatbot_engine_event_duplicate_lookup_failed:${message}` };
+    }
+}
+
+export async function recordChatbotEngineEvent(
+    client: SupabaseLike,
+    event: ChatbotEngineAuditEvent,
+): Promise<ChatbotEngineEventResult> {
+    if (!event.project_id || !event.event_type) {
+        return { warning: 'chatbot_engine_event_skipped_missing_scope' };
+    }
+
+    try {
+        const { data, error } = await client
+            .from('chatbot_engine_events')
+            .insert(stripUndefined(event as unknown as Record<string, unknown>))
+            .select('id')
+            .maybeSingle();
+
+        if (error) {
+            if (isDuplicateEventError(error)) {
+                return findExistingIdempotentEvent(client, event);
+            }
+            return { warning: `chatbot_engine_event_insert_failed:${error.message}` };
+        }
+        return { id: typeof data?.id === 'string' ? data.id : undefined };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'unknown_error';
+        return { warning: `chatbot_engine_event_insert_failed:${message}` };
+    }
+}

@@ -2,10 +2,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
     createResendEcommerceEmailProvider,
     type EcommerceEmailProvider,
-} from '../../utils/ecommerce/ecommerceEmailService.ts';
+} from '../../utils/ecommerce/ecommerceEmailService.js';
 import type { AppointmentEmailFlowType } from './appointmentEventService';
-import type { EmailProvider } from '../email/emailProviderService.ts';
-import { dispatchCrossModuleTransactionalEmail } from '../email/emailCrossModuleDispatcher.ts';
+import type { EmailProvider } from '../email/emailProviderService.js';
+import { dispatchCrossModuleTransactionalEmail } from '../email/emailCrossModuleDispatcher.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type Locale = 'en' | 'es';

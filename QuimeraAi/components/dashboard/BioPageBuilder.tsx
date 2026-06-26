@@ -118,6 +118,7 @@ import {
     buildBioPageTrackedUrl,
     filterBioPageProductsForBlock,
     getBioPageAnalytics,
+    getBioPageIntegrationReadiness,
     getBioPageEligibleStorefrontProducts,
     isBioSlugAvailable,
     mapStorefrontProductToBioPageProduct,
@@ -127,6 +128,7 @@ import {
     type BioPageAnalyticsSummary,
     type BioPageBlock,
     type BioPageBlockType,
+    type BioPageIntegrationReadiness,
 } from '../../services/bioPage';
 import { loadPublicStorefrontCatalog, type PublicStorefrontCategory } from '../../utils/ecommerce/publicStorefrontCatalog';
 
@@ -487,19 +489,23 @@ const getBioLeadTags = (value: unknown): string[] => (
 
 const BIO_BLOCK_LIBRARY: Array<{
     type: BioPageBlockType;
+    labelKey: string;
+    descriptionKey: string;
     label: string;
     description: string;
     icon: LucideIcon;
     sourceModule: string;
     data?: Record<string, unknown>;
 }> = [
-    { type: 'social_links', label: 'Social icons', description: 'Show selected social links as compact profile icons.', icon: AtSign, sourceModule: 'bio-page-engine', data: { linkIds: [], layout: 'icons' } },
-    { type: 'featured_banner', label: 'Featured banner', description: 'Promote one launch, offer, or announcement.', icon: Star, sourceModule: 'bio-page-engine', data: { url: '' } },
-    { type: 'product_grid', label: 'Shop products', description: 'Show approved Ecommerce products.', icon: ShoppingBag, sourceModule: 'ecommerce', data: { productIds: [] } },
-    { type: 'product_collection', label: 'Product collection', description: 'Show products from selected Ecommerce categories.', icon: Store, sourceModule: 'ecommerce', data: { collectionIds: [], productIds: [] } },
-    { type: 'booking', label: 'Booking', description: 'Send visitors into Appointments or embed booking inline.', icon: Calendar, sourceModule: 'appointments', data: { url: '', bookingMode: 'cta', durationMinutes: 60 } },
+    { type: 'social_links', labelKey: 'blockLibrarySocialIcons', descriptionKey: 'blockLibrarySocialIconsDesc', label: 'Social icons', description: 'Show selected social links as compact profile icons.', icon: AtSign, sourceModule: 'bio-page-engine', data: { linkIds: [], layout: 'icons' } },
+    { type: 'featured_banner', labelKey: 'blockLibraryFeaturedBanner', descriptionKey: 'blockLibraryFeaturedBannerDesc', label: 'Featured banner', description: 'Promote one launch, offer, or announcement.', icon: Star, sourceModule: 'bio-page-engine', data: { url: '' } },
+    { type: 'product_grid', labelKey: 'blockLibraryShopProducts', descriptionKey: 'blockLibraryShopProductsDesc', label: 'Shop products', description: 'Show approved Ecommerce products.', icon: ShoppingBag, sourceModule: 'ecommerce', data: { productIds: [] } },
+    { type: 'product_collection', labelKey: 'blockLibraryProductCollection', descriptionKey: 'blockLibraryProductCollectionDesc', label: 'Product collection', description: 'Show products from selected Ecommerce categories.', icon: Store, sourceModule: 'ecommerce', data: { collectionIds: [], productIds: [] } },
+    { type: 'booking', labelKey: 'blockLibraryBooking', descriptionKey: 'blockLibraryBookingDesc', label: 'Booking', description: 'Send visitors into Appointments or embed booking inline.', icon: Calendar, sourceModule: 'appointments', data: { url: '', bookingMode: 'cta', durationMinutes: 60 } },
     {
         type: 'lead_form',
+        labelKey: 'blockLibraryLeadCapture',
+        descriptionKey: 'blockLibraryLeadCaptureDesc',
         label: 'Lead capture',
         description: 'Capture CRM leads from the bio page.',
         icon: FileText,
@@ -514,6 +520,8 @@ const BIO_BLOCK_LIBRARY: Array<{
     },
     {
         type: 'email_subscribe',
+        labelKey: 'blockLibraryEmailSubscribe',
+        descriptionKey: 'blockLibraryEmailSubscribeDesc',
         label: 'Email subscribe',
         description: 'Collect consented subscribers.',
         icon: Mail,
@@ -527,13 +535,24 @@ const BIO_BLOCK_LIBRARY: Array<{
             successMessage: DEFAULT_BIO_EMAIL_SUCCESS_MESSAGE,
         },
     },
-    { type: 'featured_media', label: 'Featured media', description: 'Feature a video, image, or downloadable asset.', icon: Video, sourceModule: 'media-ai', data: { url: '', mediaType: 'image' } },
-    { type: 'portfolio_grid', label: 'Portfolio grid', description: 'Show selected media or portfolio items.', icon: Grid, sourceModule: 'media-ai', data: { items: [] } },
-    { type: 'testimonials', label: 'Testimonials', description: 'Show manually verified customer quotes.', icon: Users, sourceModule: 'crm', data: { items: [] } },
-    { type: 'chatbot_cta', label: 'ChatCore CTA', description: 'Open the project AI assistant.', icon: MessageCircle, sourceModule: 'chatcore', data: {} },
-    { type: 'faq', label: 'FAQ', description: 'Answer high-intent questions.', icon: Lightbulb, sourceModule: 'bio-page-engine', data: { items: [] } },
-    { type: 'contact', label: 'Contact', description: 'Show direct contact details.', icon: Phone, sourceModule: 'crm', data: { url: '' } },
+    { type: 'featured_media', labelKey: 'blockLibraryFeaturedMedia', descriptionKey: 'blockLibraryFeaturedMediaDesc', label: 'Featured media', description: 'Feature a video, image, or downloadable asset.', icon: Video, sourceModule: 'media-ai', data: { url: '', mediaType: 'image' } },
+    { type: 'media_grid', labelKey: 'blockLibraryMediaGrid', descriptionKey: 'blockLibraryMediaGridDesc', label: 'Media grid', description: 'Show a compact grid of project media assets.', icon: Grid, sourceModule: 'media-ai', data: { items: [] } },
+    { type: 'portfolio_grid', labelKey: 'blockLibraryPortfolioGrid', descriptionKey: 'blockLibraryPortfolioGridDesc', label: 'Portfolio grid', description: 'Show selected media or portfolio items.', icon: Grid, sourceModule: 'media-ai', data: { items: [] } },
+    { type: 'testimonials', labelKey: 'blockLibraryTestimonials', descriptionKey: 'blockLibraryTestimonialsDesc', label: 'Testimonials', description: 'Show manually verified customer quotes.', icon: Users, sourceModule: 'crm', data: { items: [] } },
+    { type: 'chatbot_cta', labelKey: 'blockLibraryChatCoreCta', descriptionKey: 'blockLibraryChatCoreCtaDesc', label: 'ChatCore CTA', description: 'Open the project AI assistant.', icon: MessageCircle, sourceModule: 'chatcore', data: {} },
+    { type: 'faq', labelKey: 'blockLibraryFaq', descriptionKey: 'blockLibraryFaqDesc', label: 'FAQ', description: 'Answer high-intent questions.', icon: Lightbulb, sourceModule: 'bio-page-engine', data: { items: [] } },
+    { type: 'contact', labelKey: 'blockLibraryContact', descriptionKey: 'blockLibraryContactDesc', label: 'Contact', description: 'Show direct contact details.', icon: Phone, sourceModule: 'crm', data: { url: '' } },
 ];
+
+type BioPageTranslate = (key: string, defaultValue: string) => string;
+
+const getBioBlockDefinitionCopy = (
+    definition: (typeof BIO_BLOCK_LIBRARY)[number],
+    translate: BioPageTranslate,
+) => ({
+    label: translate(`bioPage.${definition.labelKey}`, definition.label),
+    description: translate(`bioPage.${definition.descriptionKey}`, definition.description),
+});
 
 const BLOCK_ICON_BY_TYPE: Partial<Record<BioPageBlockType, LucideIcon>> = {
     profile: User,
@@ -541,6 +560,7 @@ const BLOCK_ICON_BY_TYPE: Partial<Record<BioPageBlockType, LucideIcon>> = {
     social_links: AtSign,
     featured_banner: Star,
     featured_media: Video,
+    media_grid: Grid,
     product_grid: ShoppingBag,
     product_collection: Store,
     booking: Calendar,
@@ -1527,15 +1547,19 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                         </div>
                     )}
 
-                    {block.type === 'portfolio_grid' && (
+                    {(block.type === 'media_grid' || block.type === 'portfolio_grid') && (
                         <div className="space-y-2 rounded-lg border border-q-border/60 bg-muted/30 p-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <p className="text-xs font-semibold text-foreground">
-                                        {t('bioPage.portfolioAssets', 'Portfolio assets')}
+                                        {block.type === 'media_grid'
+                                            ? t('bioPage.mediaGridAssets', 'Media assets')
+                                            : t('bioPage.portfolioAssets', 'Portfolio assets')}
                                     </p>
                                     <p className="text-[11px] text-q-text-muted">
-                                        {t('bioPage.portfolioBlockHint', 'Select project media assets; empty grids stay hidden publicly.')}
+                                        {block.type === 'media_grid'
+                                            ? t('bioPage.mediaGridBlockHint', 'Select project media assets for a compact public grid; empty grids stay hidden publicly.')
+                                            : t('bioPage.portfolioBlockHint', 'Select project media assets; empty grids stay hidden publicly.')}
                                     </p>
                                 </div>
                                 <span className="rounded-md bg-q-surface px-2 py-1 text-[11px] font-semibold text-q-text-muted">
@@ -1808,6 +1832,8 @@ const BioPageBuilder: React.FC = () => {
     const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState('');
     const [isGeneratingQr, setIsGeneratingQr] = useState(false);
+    const [integrationReadiness, setIntegrationReadiness] = useState<BioPageIntegrationReadiness | null>(null);
+    const [isLoadingIntegrationReadiness, setIsLoadingIntegrationReadiness] = useState(false);
     const [slugDraft, setSlugDraft] = useState('');
     const [slugAvailability, setSlugAvailability] = useState<SlugAvailabilityState>({ status: 'idle', slug: '' });
     const [availableBioProducts, setAvailableBioProducts] = useState<BioProductOption[]>([]);
@@ -2027,6 +2053,60 @@ const BioPageBuilder: React.FC = () => {
             cancelled = true;
         };
     }, [activeTab, bioPage, analyticsRange]);
+
+    useEffect(() => {
+        if (!bioPage?.id || !['settings', 'share', 'analytics'].includes(activeTab)) return;
+
+        let cancelled = false;
+        setIsLoadingIntegrationReadiness(true);
+
+        getBioPageIntegrationReadiness({
+            ...(bioPage as any),
+            slug: slug || bioPage.slug || bioPage.username,
+            username: slug || bioPage.username || bioPage.slug,
+            profile,
+            theme,
+            links,
+            blocks,
+            products,
+            emailSignupEnabled,
+            seo,
+            settings: {
+                ...(bioPage.settings || {}),
+                ...settings,
+            },
+            isPublished: bioPage.isPublished,
+            status: bioPage.status,
+        })
+            .then(readiness => {
+                if (!cancelled) setIntegrationReadiness(readiness);
+            })
+            .catch(error => {
+                if (!cancelled) {
+                    console.warn('[BioPageBuilder] Integration readiness unavailable:', error);
+                    setIntegrationReadiness(null);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setIsLoadingIntegrationReadiness(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        activeTab,
+        bioPage,
+        slug,
+        profile,
+        theme,
+        links,
+        blocks,
+        products,
+        emailSignupEnabled,
+        seo,
+        settings,
+    ]);
 
     // Delete a subscriber
     const handleDeleteSubscriber = async (subscriberId: string) => {
@@ -2271,10 +2351,11 @@ const BioPageBuilder: React.FC = () => {
     };
 
     const addBioBlock = (definition: (typeof BIO_BLOCK_LIBRARY)[number]) => {
+        const copy = getBioBlockDefinitionCopy(definition, t);
         contextAddBlock({
             type: definition.type,
-            title: definition.label,
-            description: definition.description,
+            title: copy.label,
+            description: copy.description,
             sourceModule: definition.sourceModule,
             data: definition.data || {},
             status: 'configured',
@@ -2506,6 +2587,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             .filter(block => canAccessEcommerce || block.type !== 'product_grid')
                             .map(definition => {
                                 const Icon = definition.icon;
+                                const copy = getBioBlockDefinitionCopy(definition, t);
                                 return (
                                     <button
                                         key={definition.type}
@@ -2516,8 +2598,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                             <Icon size={17} />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block text-sm font-semibold text-foreground">{definition.label}</span>
-                                            <span className="block truncate text-xs text-q-text-muted">{definition.description}</span>
+                                            <span className="block text-sm font-semibold text-foreground">{copy.label}</span>
+                                            <span className="block truncate text-xs text-q-text-muted">{copy.description}</span>
                                         </span>
                                         <Plus size={16} className="text-q-text-muted" />
                                     </button>
@@ -3685,6 +3767,12 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         const deviceEntries = Object.entries(analyticsSummary?.deviceBreakdown || {}).sort((a, b) => b[1] - a[1]);
         const blockEntries = Object.entries(analyticsSummary?.blockBreakdown || {}).sort((a, b) => b[1] - a[1]);
         const eventEntries = Object.entries(analyticsSummary?.eventBreakdown || {}).sort((a, b) => b[1] - a[1]);
+        const linkSourceRows = (analyticsSummary?.linkSourceBreakdown || [])
+            .map(link => ({
+                ...link,
+                sourceEntries: Object.entries(link.sources || {}).sort((a, b) => b[1] - a[1]),
+            }))
+            .filter(link => link.clicks > 0);
         const maxSourceCount = Math.max(1, ...sourceEntries.map(([, count]) => count));
         const maxUtmSourceCount = Math.max(1, ...utmSourceEntries.map(([, count]) => count));
         const maxBlockCount = Math.max(1, ...blockEntries.map(([, count]) => count));
@@ -3723,6 +3811,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 ['summary', 'shares', String(analyticsSummary.shares || 0)],
                 ['summary', 'chat_opens', String(analyticsSummary.chatOpens || 0)],
                 ...topLinks.map(link => ['link', link.title, String(link.clicks)]),
+                ...linkSourceRows.flatMap(link => (
+                    link.sourceEntries.map(([source, count]) => ['link_source', `${link.title} / ${source}`, String(count)])
+                )),
                 ...sourceEntries.map(([source, count]) => ['source', source, String(count)]),
                 ...utmSourceEntries.map(([source, count]) => ['utm_source', source, String(count)]),
                 ...utmCampaignEntries.map(([campaign, count]) => ['utm_campaign', campaign, String(count)]),
@@ -3860,6 +3951,36 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             </span>
                         </div>
                     ))}
+                </div>
+
+                <div className="space-y-2">
+                    <h3 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                        {t('bioPage.linkSourceAnalytics', 'Link sources')}
+                    </h3>
+                    {linkSourceRows.length ? linkSourceRows.slice(0, 8).map(link => (
+                        <div key={link.id} className="space-y-2 rounded-lg bg-q-surface/30 p-3">
+                            <div className="flex items-center justify-between gap-3 text-sm">
+                                <div className="min-w-0">
+                                    <p className="truncate font-medium text-foreground">{link.title}</p>
+                                    <p className="text-[11px] text-q-text-muted">
+                                        {t('bioPage.topSource', 'Top source')}: {link.topSource}
+                                    </p>
+                                </div>
+                                <span className="shrink-0 font-semibold text-primary">{link.clicks.toLocaleString()}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {link.sourceEntries.slice(0, 3).map(([source, count]) => (
+                                    <span key={`${link.id}-${source}`} className="rounded-full border border-q-border/60 bg-q-surface px-2 py-1 text-[11px] font-medium text-q-text-muted">
+                                        {source}: {count.toLocaleString()}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="rounded-lg border border-dashed border-q-border px-3 py-4 text-center text-xs text-q-text-muted">
+                            {t('bioPage.noLinkSourceAnalytics', 'No link source attribution yet.')}
+                        </p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -4092,6 +4213,180 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         </div>
     );
 
+    const getReadinessStatusLabel = (status: BioPageIntegrationReadiness['publication']['status']) => {
+        const labels = {
+            ready: t('bioPage.integrationStatusReady', 'Ready'),
+            needs_setup: t('bioPage.integrationStatusNeedsSetup', 'Needs setup'),
+            needs_review: t('bioPage.integrationStatusNeedsReview', 'Review'),
+            disabled: t('bioPage.integrationStatusDisabled', 'Disabled'),
+        };
+        return labels[status];
+    };
+
+    const getReadinessStatusClass = (status: BioPageIntegrationReadiness['publication']['status']) => {
+        if (status === 'ready') return 'border-q-success/25 bg-q-success/10 text-q-success';
+        if (status === 'needs_setup') return 'border-q-warning/25 bg-q-warning/10 text-q-warning';
+        if (status === 'needs_review') return 'border-primary/25 bg-primary/10 text-primary';
+        return 'border-q-border bg-muted/40 text-q-text-muted';
+    };
+
+    const renderIntegrationReadinessPanel = () => {
+        const items = integrationReadiness ? [
+            {
+                id: 'ecommerce',
+                icon: ShoppingBag,
+                label: t('bioPage.integrationEcommerce', 'Ecommerce'),
+                status: integrationReadiness.ecommerce.status,
+                detail: t('bioPage.integrationProductsCount', '{{count}} products', { count: integrationReadiness.ecommerce.productCount }),
+            },
+            {
+                id: 'appointments',
+                icon: Calendar,
+                label: t('bioPage.integrationAppointments', 'Appointments'),
+                status: integrationReadiness.appointments.status,
+                detail: t('bioPage.integrationServicesCount', '{{count}} services', { count: integrationReadiness.appointments.serviceCount }),
+            },
+            {
+                id: 'crm',
+                icon: Users,
+                label: t('bioPage.integrationCrm', 'CRM / Leads'),
+                status: integrationReadiness.crm.status,
+                detail: t('bioPage.integrationLeadFormsCount', '{{blocks}} blocks · {{fields}} fields', {
+                    blocks: integrationReadiness.crm.leadBlockCount,
+                    fields: integrationReadiness.crm.leadFieldCount,
+                }),
+            },
+            {
+                id: 'email',
+                icon: Mail,
+                label: t('bioPage.integrationEmailMarketing', 'Email Marketing'),
+                status: integrationReadiness.emailMarketing.status,
+                detail: t('bioPage.integrationAudienceCount', '{{count}} audiences', { count: integrationReadiness.emailMarketing.audienceCount }),
+            },
+            {
+                id: 'chatcore',
+                icon: MessageCircle,
+                label: t('bioPage.integrationChatCore', 'ChatCore'),
+                status: integrationReadiness.chatbot.status,
+                detail: integrationReadiness.chatbot.inlineCtaEnabled || integrationReadiness.chatbot.floatingChatEnabled
+                    ? t('bioPage.integrationChatCoreEnabled', 'CTA or floating chat enabled')
+                    : t('bioPage.integrationChatCoreDisabled', 'No chat block enabled'),
+            },
+            {
+                id: 'media',
+                icon: Image,
+                label: t('bioPage.integrationMediaAi', 'Media AI'),
+                status: integrationReadiness.media.status,
+                detail: t('bioPage.integrationMediaCount', '{{assets}} assets · {{references}} references', {
+                    assets: integrationReadiness.media.aiGeneratedAssetCount || integrationReadiness.media.assetCount,
+                    references: integrationReadiness.media.pageMediaReferenceCount,
+                }),
+            },
+            {
+                id: 'analytics',
+                icon: BarChart3,
+                label: t('bioPage.integrationAnalytics', 'Analytics'),
+                status: integrationReadiness.analytics.status,
+                detail: t('bioPage.integrationEventsCount', '{{count}} events', { count: integrationReadiness.analytics.eventCount }),
+            },
+            {
+                id: 'website',
+                icon: Globe,
+                label: t('bioPage.integrationWebsiteBuilder', 'Website Builder'),
+                status: integrationReadiness.websiteBuilder.status,
+                detail: t('bioPage.integrationSectionsCount', '{{count}} sections', { count: integrationReadiness.websiteBuilder.sectionCount }),
+            },
+            {
+                id: 'business-blueprint',
+                icon: Sparkles,
+                label: t('bioPage.integrationBusinessBlueprint', 'BusinessBlueprint'),
+                status: integrationReadiness.businessBlueprint.status,
+                detail: t('bioPage.integrationBlueprintSourcesCount', '{{sources}} sources · {{review}} review', {
+                    sources: integrationReadiness.businessBlueprint.sourceMapCount,
+                    review: integrationReadiness.businessBlueprint.reviewRequiredCount,
+                }),
+            },
+            {
+                id: 'design-system',
+                icon: Palette,
+                label: t('bioPage.integrationDesignSystem', 'Design System'),
+                status: integrationReadiness.designSystem.status,
+                detail: t('bioPage.integrationDesignTokensCount', '{{count}} tokens', { count: integrationReadiness.designSystem.tokenCount }),
+            },
+            {
+                id: 'seo',
+                icon: Search,
+                label: t('bioPage.integrationSeo', 'SEO'),
+                status: integrationReadiness.seo.status,
+                detail: integrationReadiness.seo.hasTitle && integrationReadiness.seo.hasDescription
+                    ? t('bioPage.integrationSeoReady', 'Title and description ready')
+                    : t('bioPage.integrationSeoNeedsCopy', 'Title or description missing'),
+            },
+            {
+                id: 'qr',
+                icon: QrCode,
+                label: t('bioPage.integrationQr', 'QR Code'),
+                status: integrationReadiness.qrCode.status,
+                detail: integrationReadiness.qrCode.generated
+                    ? t('bioPage.integrationQrGenerated', 'Trackable QR generated')
+                    : t('bioPage.integrationQrNotGenerated', 'QR not generated yet'),
+            },
+            {
+                id: 'publication',
+                icon: Share2,
+                label: t('bioPage.integrationPublication', 'Publication'),
+                status: integrationReadiness.publication.status,
+                detail: t('bioPage.integrationPublishIssuesCount', '{{count}} issues', { count: integrationReadiness.publication.issueCount }),
+            },
+        ] : [];
+
+        return (
+            <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
+                            {t('bioPage.integrationReadiness', 'Integration readiness')}
+                        </p>
+                        <p className="text-xs text-q-text-muted">
+                            {t('bioPage.integrationReadinessDesc', 'Checks connected Quimera modules before public launch.')}
+                        </p>
+                    </div>
+                    {isLoadingIntegrationReadiness && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
+                </div>
+
+                {!integrationReadiness && !isLoadingIntegrationReadiness ? (
+                    <p className="rounded-lg border border-dashed border-q-border px-3 py-4 text-center text-xs text-q-text-muted">
+                        {t('bioPage.integrationReadinessUnavailable', 'Readiness is available after the Bio Page draft is saved.')}
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                        {items.map(item => {
+                            const Icon = item.icon;
+                            return (
+                                <div key={item.id} className="min-w-0 rounded-lg border border-q-border/50 bg-background/60 p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex min-w-0 items-start gap-2">
+                                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-q-text-muted">
+                                                <Icon size={15} />
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-semibold text-foreground">{item.label}</p>
+                                                <p className="truncate text-xs text-q-text-muted">{item.detail}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${getReadinessStatusClass(item.status)}`}>
+                                            {getReadinessStatusLabel(item.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const renderSettingsPanel = () => {
         const displaySlug = slugValidation.ok === true ? slugValidation.slug : normalizedDraftSlug || currentBioSlug || 'bio';
         const publicUrl = `${window.location.origin}/bio/${displaySlug}`;
@@ -4111,6 +4406,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
         return (
             <div className="space-y-4">
+                {renderIntegrationReadinessPanel()}
+
                 <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-3">
                     <div>
                         <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
@@ -4458,6 +4755,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     origin: window.location.origin,
                     color: typeof settings.qrColor === 'string' ? settings.qrColor : theme.buttonColor,
                     backgroundColor: typeof settings.qrBackgroundColor === 'string' ? settings.qrBackgroundColor : '#ffffff',
+                    logoUrl: typeof settings.qrLogoUrl === 'string' ? settings.qrLogoUrl : profile.logoUrl || profile.avatarUrl,
                 });
                 setQrDataUrl(qr.dataUrl);
             } catch (error) {
@@ -4564,7 +4862,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     </div>
                     {qrDataUrl && (
                         <div className="mt-4 flex items-center gap-4">
-                            <img src={qrDataUrl} alt="Bio Page QR" className="h-32 w-32 rounded-lg bg-white p-2" />
+                            <img src={qrDataUrl} alt={t('bioPage.qrImageAlt', 'Bio Page QR code')} className="h-32 w-32 rounded-lg bg-white p-2" />
                             <button
                                 onClick={handleDownloadQr}
                                 className="h-9 px-3 rounded-lg border border-q-border/60 text-sm font-medium text-foreground flex items-center gap-2"
@@ -4790,10 +5088,13 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 );
             }
 
-            if (block.type === 'portfolio_grid' && items.length) {
+            if ((block.type === 'media_grid' || block.type === 'portfolio_grid') && items.length) {
+                const isMediaGrid = block.type === 'media_grid';
                 return (
                     <div key={block.id} className="mt-3 p-3 text-left" style={previewBlockCardStyle}>
-                        <p className="mb-2 text-xs font-semibold" style={{ color: titleColor }}>{block.title || 'Portfolio'}</p>
+                        <p className="mb-2 text-xs font-semibold" style={{ color: titleColor }}>
+                            {block.title || (isMediaGrid ? t('bioPage.mediaGridTitle', 'Media') : t('bioPage.portfolioTitle', 'Portfolio'))}
+                        </p>
                         <div className="grid grid-cols-3 gap-1.5">
                             {items.slice(0, 6).map((item, index) => {
                                 const rawUrl = typeof item.url === 'string' ? item.url : typeof item.imageUrl === 'string' ? item.imageUrl : '';

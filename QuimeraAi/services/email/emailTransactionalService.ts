@@ -1,8 +1,8 @@
-import type { EmailProvider, EmailProviderRegistry } from './emailProviderService.ts';
-import { normalizeEmail } from './emailProviderService.ts';
-import { assertEmailReadiness, getEmailSettings } from './emailSettingsService.ts';
-import { findEmailLogByIdempotencyKey, recordEmailLog } from './emailLogService.ts';
-import { processEmailOutbox } from './emailOutboxProcessor.ts';
+import type { EmailProvider, EmailProviderRegistry } from './emailProviderService.js';
+import { normalizeEmail } from './emailProviderService.js';
+import { assertEmailReadiness, getEmailSettings } from './emailSettingsService.js';
+import { findEmailLogByIdempotencyKey, recordEmailLog } from './emailLogService.js';
+import { processEmailOutbox } from './emailOutboxProcessor.js';
 
 type SupabaseClient = any;
 

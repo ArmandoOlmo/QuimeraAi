@@ -111,6 +111,7 @@ import { useSafeTenant } from '../contexts/tenant';
 import { sanitizeI18nObject } from '../utils/sanitizeData';
 import { useTranslation } from 'react-i18next';
 import { normalizeStorefrontHrefForWebsiteContext } from '../utils/storefrontRouter';
+import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 
 // ... (rest of imports)
 
@@ -820,6 +821,59 @@ const LandingPageContent: React.FC = () => {
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
+  const landingChatbotEngineContext = useMemo(() => {
+    const route = typeof window !== 'undefined' ? window.location.pathname : undefined;
+    const isRealtyProperty = Boolean(activePropertySlug);
+    const isStorefrontSurface = storeView.type !== 'none';
+    const isCheckout = storeView.type === 'checkout';
+    const entityType = isRealtyProperty
+      ? 'realty_property'
+      : isCheckout
+        ? 'checkout'
+        : storeView.type === 'product'
+          ? 'product'
+          : storeView.type === 'category'
+            ? 'category'
+            : showRealtyDirectory
+              ? 'realty_directory'
+              : activePost
+                ? 'blog_post'
+                : activeCategorySlug
+                  ? 'blog_category'
+                  : activePage
+                    ? 'site_page'
+                    : 'website';
+
+    return buildChatbotEngineSurfaceContext({
+      sourceSurface: isRealtyProperty ? 'realty_property_page' : isCheckout ? 'checkout' : isStorefrontSurface ? 'storefront' : 'website',
+      sourceModule: isRealtyProperty || showRealtyDirectory ? 'real-estate' : isStorefrontSurface ? 'ecommerce' : 'website-builder',
+      route,
+      entityType,
+      entityId: activePage?.id || activePost?.id || activeProjectId || undefined,
+      entitySlug: activePropertySlug || (storeView.type === 'product' || storeView.type === 'category' ? storeView.slug : undefined) || activeCategorySlug || activePage?.slug || undefined,
+      contextKeys: [
+        'website',
+        isRealtyProperty ? 'realty_property_page' : '',
+        showRealtyDirectory ? 'realty_directory' : '',
+        isStorefrontSurface ? 'storefront' : '',
+        isCheckout ? 'checkout' : '',
+        storeView.type === 'product' ? 'product' : '',
+        storeView.type === 'category' ? 'category' : '',
+        activePost ? 'blog_post' : '',
+        activeCategorySlug ? 'blog_category' : '',
+        activePage ? 'site_page' : '',
+      ].filter(Boolean),
+      metadata: {
+        projectId: activeProjectId,
+        ownerId: activeProject?.userId,
+        activePageSlug: activePage?.slug,
+        activePostSlug: activePost?.slug,
+        activeCategorySlug,
+        propertySlug: activePropertySlug,
+        storeView: storeView.type,
+      },
+    });
+  }, [activeCategorySlug, activePage, activePost, activeProject?.userId, activeProjectId, activePropertySlug, showRealtyDirectory, storeView]);
 
   // Helper function to render custom components
   const renderCustomComponent = (customComponentId: string) => {
@@ -2153,7 +2207,7 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* Chatbot Widget - Renders independently outside component order */}
-      <ChatbotWidget isPreview={isEditorMode} />
+      <ChatbotWidget isPreview={isEditorMode} chatbotEngineContext={landingChatbotEngineContext} />
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
       {data?.signupFloat && effectiveComponentOrder.includes('signupFloat') && (sectionVisibility.signupFloat !== false) && (

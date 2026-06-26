@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getSupabaseAdmin } from '../../_lib/supabaseAdmin.js';
-import { processAppointmentEmailLogs } from '../../../services/appointments/appointmentEmailDeliveryService.ts';
+import { processAppointmentEmailLogs } from '../../../services/appointments/appointmentEmailDeliveryService.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',

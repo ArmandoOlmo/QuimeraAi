@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Appointment, AppointmentReminder } from '../../types';
-import type { IntegrationEvent, IntegrationEventType } from '../../types/integrationEvents';
+import type { IntegrationEvent, IntegrationEventModule, IntegrationEventType } from '../../types/integrationEvents';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 
@@ -86,11 +86,17 @@ const subjectKeyForFlow = (flowType: AppointmentEmailFlowType) => `appointmentBo
 
 const isUuid = (value?: string | null): value is string => !!value && UUID_RE.test(value);
 
-const getEventSourceModule = (appointment: Appointment) => {
-    if (appointment.sourceModule === 'chatcore' || appointment.sourceComponent === 'ChatCore') return 'chatcore';
-    if (appointment.source === 'chatbot' || appointment.sourceModule === 'chatbot') return 'chatbot';
-    if (appointment.source === 'public_booking' || appointment.sourceModule === 'website-builder') return 'website-builder';
-    return 'appointments';
+const normalizeEventSourceModule = (value?: string | null): IntegrationEventModule | undefined => {
+    const normalized = typeof value === 'string' ? value.trim() : '';
+    return normalized ? normalized as IntegrationEventModule : undefined;
+};
+
+const getEventSourceModule = (appointment: Appointment): IntegrationEventModule => {
+    const sourceModule = normalizeEventSourceModule(appointment.sourceModule);
+    if (sourceModule === 'chatcore' || appointment.sourceComponent === 'ChatCore') return 'chatcore';
+    if (appointment.source === 'chatbot' || sourceModule === 'chatbot') return 'chatbot';
+    if (appointment.source === 'public_booking') return sourceModule || 'website-builder';
+    return sourceModule || 'appointments';
 };
 
 const buildIntegrationEvent = (

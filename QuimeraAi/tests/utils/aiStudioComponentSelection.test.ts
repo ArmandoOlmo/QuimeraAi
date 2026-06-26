@@ -137,6 +137,46 @@ describe('AI Component Selection + Design Intelligence Layer', () => {
         });
     });
 
+    it('exposes every rendered Bio Page block family to AI and anatomy registries', () => {
+        const renderedBioBlocks = [
+            'bioProfile',
+            'bioLinks',
+            'bioSocialLinks',
+            'bioFeaturedBanner',
+            'bioFeaturedMedia',
+            'bioShop',
+            'bioProductCollection',
+            'bioBooking',
+            'bioLeadCapture',
+            'bioEmailSubscribe',
+            'bioMediaGrid',
+            'bioPortfolio',
+            'bioTestimonials',
+            'bioFaq',
+            'bioContact',
+            'bioChatCTA',
+        ] as const;
+
+        renderedBioBlocks.forEach(componentId => {
+            const definition = getComponentDefinition(componentId);
+            const anatomy = getComponentAnatomy(componentId);
+
+            expect(definition, componentId).toMatchObject({
+                family: 'bio_page_block',
+                compatibleBuilders: ['bio-page'],
+                implementationStatus: 'rendered',
+            });
+            expect(definition?.dataAccess.presentationOwner, componentId).toBe('bio-page-engine');
+            expect(definition?.aiSelection.canSelect, componentId).toBe(true);
+            expect(anatomy?.layoutVariants.length, componentId).toBeGreaterThan(0);
+            expect(anatomy?.layoutVariants.every(variant => Boolean(variant.mobileBehavior)), componentId).toBe(true);
+            expect(anatomy?.antiPatterns.length, componentId).toBeGreaterThan(0);
+        });
+
+        expect(getComponentDefinition('bioTestimonials')?.aiSelection.antiPatterns.join(' ')).toMatch(/fabricate testimonials/i);
+        expect(getComponentDefinition('bioProductCollection')?.dataAccess.canonicalSystem).toBe('ecommerce-engine');
+    });
+
     it('maps required anatomy variants, slots, and mobile behavior for initial components', () => {
         const initialComponents = [
             'hero',

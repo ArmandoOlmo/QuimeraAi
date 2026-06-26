@@ -10,16 +10,48 @@ import { isProxyMode } from '../../utils/genAiClient';
 import { generateContentViaProxy, generateMultimodalContentViaProxy } from '../../utils/geminiProxyClient';
 import { captureCurrentView } from '../../utils/visionUtils';
 import { logApiCall } from '../../services/apiLoggingService';
-import { useEcommerceChat } from './hooks/useEcommerceChat';
+import {
+    useEcommerceChat,
+    type ReturnPolicy,
+    type ShippingInfo,
+} from './hooks/useEcommerceChat';
+import { useChatbotBusinessActions } from './hooks/useChatbotBusinessActions';
 import { useWebChatConversation } from './hooks/useWebChatConversation';
 import { getGlobalChatbotPrompts, getDefaultPrompts, applyPromptTemplate } from '../../utils/globalChatbotPrompts';
 import type { GlobalChatbotPrompts } from '../../types';
 import { useCanAccessService } from '../../hooks/useServiceAvailability';
-import { buildCanonicalEmailDraftMetadata } from '../../services/email/emailModuleIntentService.ts';
+import {
+    buildCanonicalEmailDraftMetadata,
+    type CanonicalEmailSourceModule,
+} from '../../services/email/emailModuleIntentService.ts';
 import { Conversation, Role } from '@elevenlabs/client';
 import AppSelect from '../ui/AppSelect';
+import {
+    buildChatbotEngineSurfacePrompt,
+    type ChatbotEngineSurfaceContext,
+} from '../../utils/chatbotEngine/surfaceContext';
+import { resolveChatCoreVoiceSettings } from '../../utils/chatbotEngine/voiceSettings';
+import { buildChatbotCustomerRequestNotes } from '../../utils/chatbotEngine/customerRequestNotes';
 
-const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
+const CANONICAL_CHAT_EMAIL_MODULES: CanonicalEmailSourceModule[] = [
+    'ecommerce',
+    'crm',
+    'leads',
+    'chatcore',
+    'appointments',
+    'restaurants',
+    'realty',
+    'website-builder',
+    'ai-studio',
+    'bio-page-engine',
+];
+
+function resolveChatCanonicalEmailModule(sourceModule?: string | null): CanonicalEmailSourceModule {
+    return CANONICAL_CHAT_EMAIL_MODULES.includes(sourceModule as CanonicalEmailSourceModule)
+        ? sourceModule as CanonicalEmailSourceModule
+        : 'chatcore';
+}
 
 // =============================================================================
 // INTERFACES
@@ -41,6 +73,7 @@ export type ChatCoreBookingChannel =
 export interface ChatAppointmentData {
     title: string;
     description?: string;
+    notes?: string;
     type?: 'video_call' | 'phone_call' | 'in_person' | 'consultation' | 'demo' | 'follow_up' | 'interview' | 'other';
     startDate: Date;
     endDate: Date;
@@ -70,7 +103,7 @@ export interface ChatCoreProps {
     project: Project;
     appearance: ChatAppearanceConfig;
     onLeadCapture?: (leadData: Partial<Lead>) => Promise<string | undefined>;
-    onUpdateLeadTranscript?: (leadId: string, transcript: string) => Promise<void>;
+    onUpdateLeadTranscript?: (leadId: string, transcript: string, notes?: string) => Promise<void>;
     onCreateAppointment?: (appointmentData: ChatAppointmentData) => Promise<string | undefined>;
     existingAppointments?: AppointmentSlot[];
     className?: string;
@@ -83,6 +116,7 @@ export interface ChatCoreProps {
     currentPageContext?: PageContext;
     cmsArticles?: { id: string; title: string; content: string }[];
     activePropertyContext?: any;
+    chatbotEngineContext?: ChatbotEngineSurfaceContext;
 }
 
 interface Message {
@@ -95,6 +129,100 @@ interface PreChatFormData {
     name: string;
     email: string;
     phone?: string;
+}
+
+const DEFAULT_CHAT_APPEARANCE: ChatAppearanceConfig = {
+    branding: {
+        logoType: 'none',
+        logoSize: 'md',
+        botAvatarEmoji: 'AI',
+        showBotAvatar: true,
+        showUserAvatar: false,
+        userAvatarStyle: 'initials',
+    },
+    colors: {
+        primaryColor: '#7c3aed',
+        secondaryColor: '#2563eb',
+        accentColor: '#14b8a6',
+        userBubbleColor: '#7c3aed',
+        userTextColor: '#ffffff',
+        botBubbleColor: '#f3f4f6',
+        botTextColor: '#1f2937',
+        backgroundColor: '#ffffff',
+        inputBackground: '#f9fafb',
+        inputBorder: '#e5e7eb',
+        inputText: '#1f2937',
+        headerBackground: '#7c3aed',
+        headerText: '#ffffff',
+    },
+    behavior: {
+        position: 'bottom-right',
+        offsetX: 24,
+        offsetY: 24,
+        width: 'md',
+        height: 'lg',
+        autoOpen: false,
+        autoOpenDelay: 0,
+        openOnScroll: 0,
+        openOnTime: 0,
+        fullScreenOnMobile: true,
+    },
+    messages: {
+        welcomeMessage: '',
+        welcomeMessageEnabled: true,
+        welcomeDelay: 0,
+        inputPlaceholder: 'Type your message...',
+        quickReplies: [],
+        showTypingIndicator: true,
+    },
+    button: {
+        buttonStyle: 'circle',
+        buttonSize: 'md',
+        buttonIcon: 'chat',
+        showButtonText: false,
+        pulseEffect: false,
+        shadowSize: 'md',
+        showTooltip: false,
+        tooltipText: '',
+    },
+    theme: 'light',
+};
+
+function resolveChatAppearance(
+    appearanceInput: Partial<ChatAppearanceConfig> | null | undefined,
+    config: AiAssistantConfig,
+): ChatAppearanceConfig {
+    const input = appearanceInput || {};
+    const messages = input.messages || {};
+
+    return {
+        branding: {
+            ...DEFAULT_CHAT_APPEARANCE.branding,
+            ...(input.branding || {}),
+        },
+        colors: {
+            ...DEFAULT_CHAT_APPEARANCE.colors,
+            ...(input.colors || {}),
+        },
+        behavior: {
+            ...DEFAULT_CHAT_APPEARANCE.behavior,
+            ...(input.behavior || {}),
+        },
+        messages: {
+            ...DEFAULT_CHAT_APPEARANCE.messages,
+            welcomeMessage: messages.welcomeMessage || DEFAULT_CHAT_APPEARANCE.messages.welcomeMessage || `Hello, I am ${config.agentName || 'AI Assistant'}.`,
+            welcomeMessageEnabled: messages.welcomeMessageEnabled !== false,
+            welcomeDelay: typeof messages.welcomeDelay === 'number' ? messages.welcomeDelay : DEFAULT_CHAT_APPEARANCE.messages.welcomeDelay,
+            inputPlaceholder: messages.inputPlaceholder || DEFAULT_CHAT_APPEARANCE.messages.inputPlaceholder,
+            quickReplies: Array.isArray(messages.quickReplies) ? messages.quickReplies : [],
+            showTypingIndicator: messages.showTypingIndicator !== false,
+        },
+        button: {
+            ...DEFAULT_CHAT_APPEARANCE.button,
+            ...(input.button || {}),
+        },
+        theme: input.theme || DEFAULT_CHAT_APPEARANCE.theme,
+    };
 }
 
 const toPlainText = (value: unknown): string => {
@@ -150,6 +278,75 @@ const extractContactFromMessage = (text: string): { email: string | null; phone:
         email: emailMatch?.[0] || null,
         phone: phoneMatch?.[0] || null,
     };
+};
+
+interface ActiveEcommerceProductReference {
+    productId?: string;
+    productSlug?: string;
+}
+
+const readContextString = (value: unknown): string | undefined => (
+    typeof value === 'string' && value.trim() ? value.trim() : undefined
+);
+
+const resolveActiveEcommerceProduct = (
+    context?: ChatbotEngineSurfaceContext | null,
+): ActiveEcommerceProductReference | null => {
+    if (!context) return null;
+    const metadata = context.metadata || {};
+    const isProductSurface = context.entityType === 'product'
+        || context.contextKeys.includes('product')
+        || readContextString(metadata.routeView) === 'product';
+
+    if (!isProductSurface) return null;
+
+    const productId = readContextString(metadata.productId)
+        || readContextString(metadata.activeProductId)
+        || (context.entityType === 'product' ? readContextString(context.entityId) : undefined);
+    const productSlug = readContextString(metadata.productSlug)
+        || readContextString(metadata.activeProductSlug)
+        || (context.entityType === 'product' ? readContextString(context.entitySlug) : undefined);
+
+    return productId || productSlug ? { productId, productSlug } : null;
+};
+
+const extractOrderIdentifier = (message: string): string | null => {
+    const explicitMatch = message.match(/(?:pedido|orden|order|tracking)\s*(?:#|numero|n[uú]mero|number|id)?\s*[:#-]?\s*([A-Z0-9][A-Z0-9-]{3,})/i);
+    if (explicitMatch?.[1]) return explicitMatch[1].trim();
+    const hashMatch = message.match(/#([A-Z0-9][A-Z0-9-]{3,})/i);
+    return hashMatch?.[1]?.trim() || null;
+};
+
+const hasEcommerceIntent = (message: string, pattern: RegExp): boolean => pattern.test(message);
+
+const ECOMMERCE_ORDER_INTENT_RE = /\b(estado|rastreo|tracking|pedido|orden|order|shipment|env[ií]o)\b/i;
+const ECOMMERCE_SHIPPING_INTENT_RE = /\b(env[ií]o|shipping|delivery|entrega|despacho|llega|tarda)\b/i;
+const ECOMMERCE_RETURNS_INTENT_RE = /\b(devoluci[oó]n|devolver|return|returns|refund|reembolso|cambio)\b/i;
+const ECOMMERCE_CHECKOUT_INTENT_RE = /\b(checkout|pagar|pago|comprar|buy|purchase|carrito|cart|finalizar compra|ordenar)\b/i;
+const ECOMMERCE_INQUIRY_INTENT_RE = /\b(me interesa|quiero informaci[oó]n|mas info|m[aá]s info|consulta|contacto|contact|cotiz|quote|disponibilidad|availability)\b/i;
+const ECOMMERCE_RECOMMENDATION_INTENT_RE = /\b(recomiend|recommend|suggest|suger|similar|alternativa|related|combina|combo)\b/i;
+const ECOMMERCE_PRODUCT_SEARCH_INTENT_RE = /\b(producto|productos|precio|price|cat[aá]logo|catalog|tienes|busco|looking for|stock|inventario|disponible|available)\b/i;
+const HUMAN_HANDOFF_INTENT_RE = /\b(humano|persona|agente|representante|asesor|operador|human|agent|representative|operator)\b/i;
+const HUMAN_HANDOFF_PHRASE_RE = /(hablar|conectar|conectame|conéctame|pasame|pásame|quiero hablar|necesito hablar|talk|connect|transfer).{0,48}(humano|persona|agente|representante|asesor|soporte|human|person|agent|representative|support)/i;
+const HUMAN_HANDOFF_URGENT_RE = /\b(urgente|urgency|urgent|ahora|now|emergencia|emergency|molesto|enojado|queja|complaint|reclamo|problema|issue|error|fallo|fail)\b/i;
+const HUMAN_HANDOFF_ORDER_RE = /\b(pedido|orden|order|tracking|env[ií]o|shipping|pago|payment|checkout|refund|reembolso|devoluci[oó]n|return)\b/i;
+const HUMAN_HANDOFF_PRICING_RE = /\b(precio|pricing|cotizaci[oó]n|cotizar|quote|cost|costo|presupuesto|proposal)\b/i;
+
+const hasHumanHandoffIntent = (message: string): boolean => (
+    HUMAN_HANDOFF_PHRASE_RE.test(message) || HUMAN_HANDOFF_INTENT_RE.test(message)
+);
+
+const resolveHumanHandoffReason = (message: string): string => {
+    if (HUMAN_HANDOFF_ORDER_RE.test(message)) return 'order_or_payment_support';
+    if (HUMAN_HANDOFF_PRICING_RE.test(message)) return 'pricing';
+    if (HUMAN_HANDOFF_URGENT_RE.test(message)) return 'support';
+    return 'human_requested';
+};
+
+const resolveHumanHandoffPriority = (message: string): 'normal' | 'high' | 'urgent' => {
+    if (/\b(urgente|urgent|emergencia|emergency|ahora|now)\b/i.test(message)) return 'urgent';
+    if (HUMAN_HANDOFF_URGENT_RE.test(message)) return 'high';
+    return 'normal';
 };
 
 // Detect visual intent - when user asks about what they see on screen
@@ -312,7 +509,7 @@ CRITERIOS DE URGENCIA:
 const ChatCore: React.FC<ChatCoreProps> = ({
     config,
     project,
-    appearance,
+    appearance: appearanceInput,
     onLeadCapture,
     onUpdateLeadTranscript,
     onCreateAppointment,
@@ -326,7 +523,8 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     hidePoweredBy = false,
     currentPageContext,
     cmsArticles,
-    activePropertyContext
+    activePropertyContext,
+    chatbotEngineContext
 }) => {
     const authContext = useSafeAuth();
     const user = authContext?.user ?? null;
@@ -337,6 +535,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const projectContext = useSafeProject();
     const activeProject = projectContext?.activeProject ?? project; // Use prop project if context not available
     const { t, i18n } = useTranslation();
+    const appearance = useMemo(
+        () => resolveChatAppearance(appearanceInput, config),
+        [appearanceInput, config],
+    );
 
     // Auto-detect White Label branding on /preview/ routes (where tenant context is unavailable)
     const [autoHidePoweredBy, setAutoHidePoweredBy] = useState(false);
@@ -367,17 +569,38 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const canAccessEcommerce = useCanAccessService('ecommerce');
     const isEcommerceEnabled = canAccessEcommerce && (!!(project as any)?.ecommerceEnabled || !!(activeProject as any)?.ecommerceEnabled);
     const projectOwnerId = project?.userId || (activeProject as any)?.userId || user?.id;
+    const projectIdForConversation = project?.id || activeProject?.id || '';
+    const chatLanguage = config.languages?.includes('Spanish') || i18n.language?.startsWith('es') ? 'es' : 'en';
     const {
         checkOrderStatus,
         getProductInfo,
+        recommendProducts,
         getShippingInfo,
         getReturnPolicy,
+        createProductInquiry,
+        startCheckoutIntent,
         formatOrderResponse,
         formatProductResponse,
-    } = useEcommerceChat(project?.id || activeProject?.id || '', projectOwnerId, config.languages?.includes('Spanish') ? 'es' : 'en');
+        formatRecommendationsResponse,
+        formatProductInquiryResponse,
+        formatCheckoutIntentResponse,
+    } = useEcommerceChat(projectIdForConversation, projectOwnerId, chatLanguage, {
+        apiBaseUrl: WIDGET_API_BASE_URL,
+        sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+        sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+        chatbotEngineContext,
+    });
+    const {
+        requestHumanHandoff,
+        formatHumanHandoffResponse,
+    } = useChatbotBusinessActions(projectIdForConversation, projectOwnerId, chatLanguage, {
+        apiBaseUrl: WIDGET_API_BASE_URL,
+        sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+        sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+        chatbotEngineContext,
+    });
 
     // Web chat conversation hook for Inbox persistence
-    const projectIdForConversation = project?.id || activeProject?.id || '';
     const publicConversationProjectId = projectOwnerId && projectIdForConversation
         ? `${projectOwnerId}_${projectIdForConversation}`
         : projectIdForConversation;
@@ -389,6 +612,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     } = useWebChatConversation(projectIdForConversation, user?.id, {
         apiBaseUrl: WIDGET_API_BASE_URL,
         publicProjectId: publicConversationProjectId,
+        sourceSurface: chatbotEngineContext?.sourceSurface,
+        sourceModule: chatbotEngineContext?.sourceModule,
+        chatbotEngineContext,
     });
 
     // Get lead capture config with defaults
@@ -442,6 +668,10 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [visualizerLevels, setVisualizerLevels] = useState(new Array(20).fill(4));
+    const liveVoiceSettings = useMemo(
+        () => resolveChatCoreVoiceSettings(config, project),
+        [config, project],
+    );
 
     // Refs
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -658,6 +888,7 @@ ${suggestAvailableSlots()}
             `).join('\n\n')}
             ` : ''}
         `;
+        const surfaceContext = buildChatbotEngineSurfacePrompt(chatbotEngineContext);
 
         const brandName = project?.brandIdentity?.name || project?.name || 'our business';
         const brandIndustry = project?.brandIdentity?.industry || 'various services';
@@ -688,6 +919,8 @@ ${suggestAvailableSlots()}
             
             YOUR KNOWLEDGE BASE:
             ${businessContext}
+
+            ${surfaceContext}
 
             ${coreInstructions}
             
@@ -795,9 +1028,11 @@ ${suggestAvailableSlots()}
         extra: Record<string, unknown> = {},
     ): Record<string, unknown> => ({
         ...extra,
-        sourceModule: 'chatcore',
+        sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+        sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
         sourceComponent: 'ChatCore',
         bookingChannel,
+        chatbotEngineContext,
         chatCore: {
             bookingChannel,
             conversationId: conversationIdRef.current,
@@ -808,15 +1043,200 @@ ${suggestAvailableSlots()}
         },
     });
 
+    const buildCustomerRequestNotes = (
+        sourceMessages: Message[] = messagesRef.current,
+        options: {
+            intentAnalysis?: CustomerIntentAnalysis | null;
+            customer?: PreChatFormData | { name?: string; email?: string; phone?: string };
+            customerProvidedNotes?: string | null;
+            appointmentTitle?: string | null;
+            appointmentDateTime?: string | null;
+        } = {},
+    ) => buildChatbotCustomerRequestNotes({
+        projectName: project?.name || activeProject?.name,
+        agentName: config.agentName || 'ChatCore',
+        messages: sourceMessages,
+        intentAnalysis: options.intentAnalysis || null,
+        customer: {
+            name: options.customer?.name || preChatData.name,
+            email: options.customer?.email || preChatData.email,
+            phone: options.customer?.phone || preChatData.phone,
+        },
+        customerProvidedNotes: options.customerProvidedNotes,
+        appointmentTitle: options.appointmentTitle,
+        appointmentDateTime: options.appointmentDateTime,
+        sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+        sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+        conversationId: conversationIdRef.current,
+        leadId: capturedLeadIdRef.current,
+        locale: i18n.language,
+    });
+
+    const formatShippingPolicyResponse = (shipping: ShippingInfo | null): string => {
+        const isSpanish = config.languages?.includes('Spanish');
+        if (!shipping) {
+            return isSpanish
+                ? 'La politica de envio no esta configurada o revisada para responder publicamente.'
+                : 'The shipping policy is not configured or reviewed for public answers.';
+        }
+
+        const lines = [
+            shipping.message,
+            shipping.freeShippingThreshold
+                ? `${isSpanish ? 'Envio gratis desde' : 'Free shipping from'} ${shipping.currency} ${shipping.freeShippingThreshold.toFixed(2)}`
+                : '',
+            ...shipping.methods.slice(0, 5).map(method => [
+                method.name,
+                `${shipping.currency} ${method.price.toFixed(2)}`,
+                method.estimatedDays ? `${isSpanish ? 'Tiempo estimado' : 'Estimated time'}: ${method.estimatedDays}` : '',
+            ].filter(Boolean).join(' - ')),
+        ];
+
+        return lines.filter(Boolean).join('\n');
+    };
+
+    const formatReturnsPolicyResponse = (policy: ReturnPolicy | null): string => {
+        const isSpanish = config.languages?.includes('Spanish');
+        if (!policy) {
+            return isSpanish
+                ? 'La politica de devoluciones no esta configurada o revisada para responder publicamente.'
+                : 'The returns policy is not configured or reviewed for public answers.';
+        }
+
+        const lines = [
+            policy.message,
+            policy.acceptsReturns == null
+                ? ''
+                : `${isSpanish ? 'Acepta devoluciones' : 'Accepts returns'}: ${policy.acceptsReturns ? (isSpanish ? 'Si' : 'Yes') : 'No'}`,
+            policy.returnWindow ? `${isSpanish ? 'Ventana' : 'Window'}: ${policy.returnWindow} ${isSpanish ? 'dias' : 'days'}` : '',
+            policy.refundMethod ? `${isSpanish ? 'Reembolso' : 'Refund'}: ${policy.refundMethod}` : '',
+            policy.conditions.length > 0 ? `${isSpanish ? 'Condiciones' : 'Conditions'}: ${policy.conditions.slice(0, 4).join('; ')}` : '',
+            policy.process.length > 0 ? `${isSpanish ? 'Proceso' : 'Process'}: ${policy.process.slice(0, 4).join('; ')}` : '',
+        ];
+
+        return lines.filter(Boolean).join('\n');
+    };
+
+    const resolveProductInquiryName = (email?: string | null): string => {
+        const fallback = config.languages?.includes('Spanish') ? 'Visitante ChatCore' : 'ChatCore visitor';
+        return preChatData.name.trim() || email?.split('@')[0]?.trim() || fallback;
+    };
+
+    const runCanonicalHumanHandoffAction = async (
+        userMessage: string,
+        contact: { email: string | null; phone: string | null },
+        convId?: string | null,
+    ): Promise<string | null> => {
+        if (!hasHumanHandoffIntent(userMessage)) return null;
+
+        const reason = resolveHumanHandoffReason(userMessage);
+        const priority = resolveHumanHandoffPriority(userMessage);
+        const result = await requestHumanHandoff({
+            conversationId: convId || '',
+            reason,
+            priority,
+            summary: userMessage,
+            message: userMessage,
+            requesterName: preChatData.name.trim() || undefined,
+            requesterEmail: contact.email || preChatData.email.trim() || undefined,
+            requesterPhone: contact.phone || preChatData.phone?.trim() || undefined,
+            consent: leadConfig.enabled,
+            idempotencyKey: `chatcore:${projectIdForConversation || project?.id}:${convId || 'pending'}:${reason}`,
+            metadata: {
+                leadId: capturedLeadIdRef.current,
+                sourceComponent: 'ChatCore',
+                handoffDetectedBy: 'chatcore-deterministic-intent',
+                messageCount: messagesRef.current.length,
+                isEmbedded,
+            },
+        });
+
+        return formatHumanHandoffResponse(result);
+    };
+
+    const runCanonicalEcommerceAction = async (
+        userMessage: string,
+        contact: { email: string | null; phone: string | null },
+    ): Promise<string | null> => {
+        if (!isEcommerceEnabled) return null;
+
+        const activeProduct = resolveActiveEcommerceProduct(chatbotEngineContext);
+        const orderIdentifier = extractOrderIdentifier(userMessage);
+
+        if (orderIdentifier && hasEcommerceIntent(userMessage, ECOMMERCE_ORDER_INTENT_RE)) {
+            const order = await checkOrderStatus(orderIdentifier, 'orderId');
+            return formatOrderResponse(order);
+        }
+
+        if (hasEcommerceIntent(userMessage, ECOMMERCE_RETURNS_INTENT_RE)) {
+            const policy = await getReturnPolicy();
+            return formatReturnsPolicyResponse(policy);
+        }
+
+        if (hasEcommerceIntent(userMessage, ECOMMERCE_SHIPPING_INTENT_RE)) {
+            const shipping = await getShippingInfo();
+            return formatShippingPolicyResponse(shipping);
+        }
+
+        if (activeProduct && hasEcommerceIntent(userMessage, ECOMMERCE_CHECKOUT_INTENT_RE)) {
+            const checkoutIntent = await startCheckoutIntent({
+                items: [{
+                    productId: activeProduct.productId,
+                    productSlug: activeProduct.productSlug,
+                    quantity: 1,
+                }],
+                idempotencyKey: `chatcore:${projectIdForConversation || project?.id}:${activeProduct.productId || activeProduct.productSlug}:checkout`,
+            });
+            return formatCheckoutIntentResponse(checkoutIntent);
+        }
+
+        if (
+            activeProduct
+            && (contact.email || contact.phone)
+            && hasEcommerceIntent(userMessage, ECOMMERCE_INQUIRY_INTENT_RE)
+        ) {
+            const inquiry = await createProductInquiry({
+                productId: activeProduct.productId,
+                productSlug: activeProduct.productSlug,
+                name: resolveProductInquiryName(contact.email),
+                email: contact.email || undefined,
+                phone: contact.phone || undefined,
+                message: userMessage,
+                consent: leadConfig.enabled,
+                idempotencyKey: `chatcore:${projectIdForConversation || project?.id}:${activeProduct.productId || activeProduct.productSlug}:${contact.email || contact.phone}:inquiry`,
+            });
+            return formatProductInquiryResponse(inquiry);
+        }
+
+        if (hasEcommerceIntent(userMessage, ECOMMERCE_RECOMMENDATION_INTENT_RE)) {
+            const recommendations = await recommendProducts({
+                query: userMessage,
+                activeProductId: activeProduct?.productId,
+                activeProductSlug: activeProduct?.productSlug,
+                inStockOnly: true,
+                limit: 4,
+            });
+            return formatRecommendationsResponse(recommendations);
+        }
+
+        if (hasEcommerceIntent(userMessage, ECOMMERCE_PRODUCT_SEARCH_INTENT_RE)) {
+            const products = await getProductInfo(userMessage, 'name');
+            return formatProductResponse(products);
+        }
+
+        return null;
+    };
+
     const saveFinalTranscriptToLead = async () => {
         if (capturedLeadIdRef.current && onUpdateLeadTranscript && messages.length > 0) {
             const fullTranscript = messages.map(m => {
                 const prefix = m.isVoiceMessage ? '🎙️ ' : '';
                 return `${prefix}${m.role === 'user' ? 'Usuario' : config.agentName || 'Asistente'}: ${m.text} `;
             }).join('\n\n');
+            const customerRequestNotes = buildCustomerRequestNotes(messages);
 
             try {
-                await onUpdateLeadTranscript(capturedLeadIdRef.current, fullTranscript);
+                await onUpdateLeadTranscript(capturedLeadIdRef.current, fullTranscript, customerRequestNotes);
                 console.log('[ChatCore] ✅ Final transcript saved to lead');
             } catch (error) {
                 console.error('[ChatCore] ❌ Error saving final transcript:', error);
@@ -873,6 +1293,11 @@ ${suggestAvailableSlots()}
                 email: preChatData.email,
                 phone: preChatData.phone,
             });
+            const customerRequestNotes = buildCustomerRequestNotes(messages, {
+                intentAnalysis,
+                customer: preChatData,
+                customerProvidedNotes: t('chatbotWidget.leadNotesPreChat'),
+            });
 
             if (onLeadCapture) {
                 const leadId = await onLeadCapture({
@@ -885,14 +1310,17 @@ ${suggestAvailableSlots()}
                     leadScore: intentAnalysis?.intentScore || leadScore,
                     conversationTranscript: conversationText,
                     tags: ['chatbot', 'pre-chat-form'],
-                    notes: t('chatbotWidget.leadNotesPreChat'),
+                    notes: customerRequestNotes,
                     // Include AI-analyzed customer intent
                     aiAnalysis: intentAnalysis?.customerInterest || undefined,
                     recommendedAction: intentAnalysis?.recommendedAction || undefined,
                     aiScore: intentAnalysis?.intentScore || undefined,
                     metadata: {
+                        sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+                        sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+                        chatbotEngineContext,
                         canonicalEmail: buildCanonicalEmailDraftMetadata({
-                            sourceModule: 'chatcore',
+                            sourceModule: resolveChatCanonicalEmailModule(chatbotEngineContext?.sourceModule),
                             sourceComponent: 'ChatCore',
                             sourceEvent: 'pre_chat_lead_capture',
                             sourceEntityType: 'lead',
@@ -908,8 +1336,11 @@ ${suggestAvailableSlots()}
                                 conversationId: convId,
                                 leadCaptureMode: 'pre_chat_form',
                                 messageCount: messages.length,
+                                customerRequestSummary: customerRequestNotes,
+                                chatbotEngineContext,
                             },
                         }),
+                        customerRequestSummary: customerRequestNotes,
                     },
                 });
                 if (leadId) {
@@ -976,6 +1407,21 @@ ${suggestAvailableSlots()}
                 phone: appointmentForm.phone,
             });
             const transcriptForLead = buildConversationTranscript();
+            const intentAnalysis = messagesRef.current.some(message => message.role === 'user')
+                ? await analyzeCustomerIntent(messagesRef.current, project?.id || 'chatbot', user?.id)
+                : null;
+            const appointmentTitle = t('chatbotWidget.appointments.formTitle', { name: appointmentForm.name });
+            const customerRequestNotes = buildCustomerRequestNotes(messagesRef.current, {
+                intentAnalysis,
+                customer: {
+                    name: appointmentForm.name,
+                    email: appointmentForm.email,
+                    phone: appointmentForm.phone,
+                },
+                customerProvidedNotes: appointmentForm.notes,
+                appointmentTitle,
+                appointmentDateTime: startDate.toISOString(),
+            });
 
             console.log('[ChatCore] 📝 Generating transcript for appointment:', {
                 messagesCount: messagesRef.current.length,
@@ -984,8 +1430,9 @@ ${suggestAvailableSlots()}
             });
 
             const appointmentData: ChatAppointmentData = {
-                title: t('chatbotWidget.appointments.formTitle', { name: appointmentForm.name }),
+                title: appointmentTitle,
                 description: appointmentForm.notes || t('chatbotWidget.appointments.formDescription', { name: appointmentForm.name }),
+                notes: customerRequestNotes,
                 type: appointmentForm.appointmentType as any,
                 startDate,
                 endDate,
@@ -1001,6 +1448,7 @@ ${suggestAvailableSlots()}
                 metadata: buildChatCoreAppointmentMetadata('chatcore_form', {
                     formDurationMinutes: durationMinutes,
                     appointmentType: appointmentForm.appointmentType,
+                    customerRequestSummary: customerRequestNotes,
                 }),
             };
 
@@ -1186,10 +1634,25 @@ ${suggestAvailableSlots()}
             // Create appointment with extracted data
             const convId = await ensureConversationId();
             const transcriptForLead = buildConversationTranscript();
+            const appointmentTitle = t('chatbotWidget.appointments.aiTitle', { name: clientName || t('chatbotWidget.appointments.defaultClient') });
+            const intentAnalysis = messagesRef.current.some(message => message.role === 'user')
+                ? await analyzeCustomerIntent([...messagesRef.current, { role: 'model', text: response }], project?.id || 'chatbot', user?.id)
+                : null;
+            const customerRequestNotes = buildCustomerRequestNotes([...messagesRef.current, { role: 'model', text: response }], {
+                intentAnalysis,
+                customer: {
+                    name: clientName,
+                    email: clientEmail,
+                },
+                customerProvidedNotes: response.substring(0, 1000),
+                appointmentTitle,
+                appointmentDateTime: extractedDate.toISOString(),
+            });
 
             const appointmentData: ChatAppointmentData = {
-                title: t('chatbotWidget.appointments.aiTitle', { name: clientName || t('chatbotWidget.appointments.defaultClient') }),
+                title: appointmentTitle,
                 description: t('chatbotWidget.appointments.aiDescription', { context: response.substring(0, 200) }),
+                notes: customerRequestNotes,
                 type: 'consultation',
                 startDate: extractedDate,
                 endDate: new Date(extractedDate.getTime() + 60 * 60000),
@@ -1204,6 +1667,7 @@ ${suggestAvailableSlots()}
                 metadata: buildChatCoreAppointmentMetadata('chatcore_ai_confirmation', {
                     extractedFromResponse: response.substring(0, 500),
                     extractionConfidence: clientEmail || clientName ? 'medium' : 'low',
+                    customerRequestSummary: customerRequestNotes,
                 }),
             };
 
@@ -1276,10 +1740,26 @@ ${suggestAvailableSlots()}
 
         const convId = await ensureConversationId();
         const transcriptForLead = buildConversationTranscript();
+        const appointmentTitle = data.title || t('chatbotWidget.appointments.chatTitle');
+        const intentAnalysis = messagesRef.current.some(message => message.role === 'user')
+            ? await analyzeCustomerIntent(messagesRef.current, project?.id || 'chatbot', user?.id)
+            : null;
+        const customerRequestNotes = buildCustomerRequestNotes(messagesRef.current, {
+            intentAnalysis,
+            customer: {
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+            },
+            customerProvidedNotes: data.notes,
+            appointmentTitle,
+            appointmentDateTime: startDate.toISOString(),
+        });
 
         const appointmentData: ChatAppointmentData = {
-            title: data.title || t('chatbotWidget.appointments.chatTitle'),
+            title: appointmentTitle,
             description: data.notes || t('chatbotWidget.appointments.formDescription', { name: data.name || t('chatbotWidget.appointments.defaultClient') }),
+            notes: customerRequestNotes,
             type: (data.type as any) || 'consultation',
             startDate,
             endDate,
@@ -1294,6 +1774,7 @@ ${suggestAvailableSlots()}
             locale: i18n.language,
             metadata: buildChatCoreAppointmentMetadata('chatcore_structured_block', {
                 structuredBlock: data,
+                customerRequestSummary: customerRequestNotes,
             }),
         };
 
@@ -1336,6 +1817,7 @@ ${suggestAvailableSlots()}
 
         const newMessages: Message[] = [...messages, { role: 'user', text: userMessage }];
         setMessages(newMessages);
+        const extractedContact = extractContactFromMessage(userMessage);
 
         // Create conversation and save messages for Inbox
         const convId = await ensureConversationId();
@@ -1359,34 +1841,45 @@ ${suggestAvailableSlots()}
 
         // Auto-detect contact info from user message (conversational capture)
         if (leadConfig.enabled && leadConfig.conversationalMode && !leadCaptured) {
-            const extracted = extractContactFromMessage(userMessage);
-            if (extracted.email) {
-                console.log('[ChatCore] 📧 Contact detected in message:', extracted);
+            if (extractedContact.email) {
+                console.log('[ChatCore] 📧 Contact detected in message:', extractedContact);
                 const convText = newMessages.map(m => `${m.role === 'user' ? 'Usuario' : 'Asistente'}: ${m.text}`).join('\n');
                 const intentAnalysis = await analyzeCustomerIntent(newMessages, project?.id || 'chatbot', user?.id);
-                await updateParticipantInfo({ email: extracted.email, phone: extracted.phone || undefined });
+                const customerRequestNotes = buildCustomerRequestNotes(newMessages, {
+                    intentAnalysis,
+                    customer: {
+                        email: extractedContact.email,
+                        phone: extractedContact.phone || undefined,
+                    },
+                    customerProvidedNotes: userMessage,
+                });
+                await updateParticipantInfo({ email: extractedContact.email, phone: extractedContact.phone || undefined });
                 if (onLeadCapture) {
                     const leadId = await onLeadCapture({
-                        email: extracted.email,
-                        phone: extracted.phone || undefined,
+                        email: extractedContact.email,
+                        phone: extractedContact.phone || undefined,
                         status: 'new',
-                        message: 'Lead captured via conversation',
+                        message: userMessage,
                         value: 0,
-                        leadScore: intentAnalysis?.intentScore || calculateLeadScore({ email: extracted.email }, newMessages, true),
+                        leadScore: intentAnalysis?.intentScore || calculateLeadScore({ email: extractedContact.email }, newMessages, true),
                         conversationTranscript: convText,
                         tags: ['chatbot', 'conversational-capture', highIntentDetectedRef.current ? 'high-intent' : 'organic'],
+                        notes: customerRequestNotes,
                         aiAnalysis: intentAnalysis?.customerInterest || undefined,
                         recommendedAction: intentAnalysis?.recommendedAction || undefined,
                         aiScore: intentAnalysis?.intentScore || undefined,
                         metadata: {
+                            sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+                            sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+                            chatbotEngineContext,
                             canonicalEmail: buildCanonicalEmailDraftMetadata({
-                                sourceModule: 'chatcore',
+                                sourceModule: resolveChatCanonicalEmailModule(chatbotEngineContext?.sourceModule),
                                 sourceComponent: 'ChatCore',
                                 sourceEvent: 'conversational_lead_capture',
                                 sourceEntityType: 'lead',
-                                sourceEntityId: conversationIdRef.current || extracted.email,
+                                sourceEntityId: conversationIdRef.current || extractedContact.email,
                                 projectId: project?.id,
-                                recipientEmail: extracted.email,
+                                recipientEmail: extractedContact.email,
                                 needsReview: true,
                                 safeToEdit: true,
                                 generatedByAI: true,
@@ -1397,8 +1890,11 @@ ${suggestAvailableSlots()}
                                     leadCaptureMode: 'conversational_capture',
                                     highIntentDetected: highIntentDetectedRef.current,
                                     messageCount: newMessages.length,
+                                    customerRequestSummary: customerRequestNotes,
+                                    chatbotEngineContext,
                                 },
                             }),
+                            customerRequestSummary: customerRequestNotes,
                         },
                     });
                     if (leadId) {
@@ -1414,6 +1910,20 @@ ${suggestAvailableSlots()}
         setIsLoading(true);
 
         try {
+            const canonicalHumanHandoffResponse = await runCanonicalHumanHandoffAction(userMessage, extractedContact, convId);
+            if (canonicalHumanHandoffResponse) {
+                setMessages(prev => [...prev, { role: 'model', text: canonicalHumanHandoffResponse }]);
+                await saveConversationMessage({ role: 'model', text: canonicalHumanHandoffResponse });
+                return;
+            }
+
+            const canonicalEcommerceResponse = await runCanonicalEcommerceAction(userMessage, extractedContact);
+            if (canonicalEcommerceResponse) {
+                setMessages(prev => [...prev, { role: 'model', text: canonicalEcommerceResponse }]);
+                await saveConversationMessage({ role: 'model', text: canonicalEcommerceResponse });
+                return;
+            }
+
             if (hasApiKey === false && !isProxyMode()) {
                 promptForKeySelection();
                 setIsLoading(false);
@@ -1573,8 +2083,10 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     const startLiveSession = async () => {
-        if (!config.enableLiveVoice) {
-            alert(t('chatbotWidget.liveVoiceDisabled'));
+        if (!liveVoiceSettings.enabled || !liveVoiceSettings.agentId) {
+            alert(liveVoiceSettings.unavailableReason === 'agent_missing'
+                ? t('chatbotWidget.liveVoiceNotConfigured')
+                : t('chatbotWidget.liveVoiceDisabled'));
             return;
         }
 
@@ -1582,7 +2094,7 @@ ${suggestAvailableSlots()}
 
         try {
             const session = await Conversation.startSession({
-                agentId: '52ac360bd7d15d8bd5e86b214d14338adc732616468d4dc145ce3d12df400eb5',
+                agentId: liveVoiceSettings.agentId,
                 onConnect: () => {
                     setIsConnecting(false);
                     setIsLiveActive(true);
@@ -1852,7 +2364,7 @@ ${suggestAvailableSlots()}
     // =============================================================================
     // RENDER
     // =============================================================================
-    console.log('[ChatCore Debug] config.enableLiveVoice:', config.enableLiveVoice, 'isLiveActive:', isLiveActive, 'showPreChatForm:', showPreChatForm);
+    console.log('[ChatCore Debug] liveVoiceEnabled:', liveVoiceSettings.enabled, 'voiceSource:', liveVoiceSettings.source, 'isLiveActive:', isLiveActive, 'showPreChatForm:', showPreChatForm);
 
     return (
         <div className={`flex flex-col h-full ${className} `}>
@@ -2199,7 +2711,7 @@ ${suggestAvailableSlots()}
                             borderColor: appearance.colors?.inputBorder
                         }}
                     >
-                        {config.enableLiveVoice && (
+                        {liveVoiceSettings.enabled && (
                             <button
                                 onClick={startLiveSession}
                                 disabled={isConnecting}

@@ -933,12 +933,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             return;
         }
 
-        // If using projectOverride, add it to projects list if not already there
-        if (projectOverride && !projectsRef.current.find(p => p.id === projectId)) {
-            console.log('[ProjectContext] Adding projectOverride to projects list');
+        // If using projectOverride, replace the in-memory project immediately so
+        // feature dashboards can repaint after their scoped mutations.
+        if (projectOverride) {
+            console.log('[ProjectContext] Applying projectOverride to projects list');
             setProjects(prev => {
-                if (prev.some(p => p.id === projectOverride.id)) return prev;
-                return [projectOverride, ...prev];
+                let replaced = false;
+                const next = prev.map(p => {
+                    if (p.id !== projectOverride.id) return p;
+                    replaced = true;
+                    return projectOverride;
+                });
+                return replaced ? next : [projectOverride, ...prev];
             });
         }
 
@@ -1606,6 +1612,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
         };
+        const aiAssistantConfigToSave = (normalizedProjectData as any).aiAssistantConfig;
 
         if ((normalizedProjectData as any).vercelProjectId) {
             dataToSave.vercelProjectId = (normalizedProjectData as any).vercelProjectId;
@@ -1635,6 +1642,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
+                ...(aiAssistantConfigToSave && { ai_assistant_config: aiAssistantConfigToSave }),
             });
             if (insertErr) throw insertErr;
             finalId = providedId;
@@ -1653,6 +1661,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
+                ...(aiAssistantConfigToSave && { ai_assistant_config: aiAssistantConfigToSave }),
             }).select().single();
             if (insertErr) throw insertErr;
             finalId = docRef.id;

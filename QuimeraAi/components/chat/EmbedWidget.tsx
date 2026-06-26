@@ -10,7 +10,7 @@ interface EmbedWidgetProps {
     apiUrl?: string;
 }
 
-const DEFAULT_WIDGET_API_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+const DEFAULT_WIDGET_API_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 
 const EmbedWidget: React.FC<EmbedWidgetProps> = ({ 
     projectId,
@@ -121,6 +121,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                 body: JSON.stringify({
                     title: appointmentData.title,
                     description: appointmentData.description,
+                    notes: appointmentData.notes,
                     type: appointmentData.type,
                     startDate: appointmentData.startDate.toISOString(),
                     endDate: appointmentData.endDate.toISOString(),
@@ -140,6 +141,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                         ...(appointmentData.metadata || {}),
                         embeddedWidget: true,
                         bookingChannel: appointmentData.bookingChannel,
+                        customerRequestSummary: appointmentData.notes,
                     },
                 }),
             });
@@ -246,8 +248,6 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 };
 
 export default EmbedWidget;
-
-
 
 
 

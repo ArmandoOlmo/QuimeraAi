@@ -56,50 +56,105 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
     ];
 
     return (
-        <div className={cn("flex flex-col border-b border-q-border bg-q-bg", className)}>
-            {/* Row 1: Date Nav + Actions */}
-            <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 gap-2">
-                {/* Left: Date Navigation */}
-                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                    <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 shrink-0">
+        <div className={cn("border-b border-q-border bg-q-bg px-3 py-2 sm:px-5", className)}>
+            <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex shrink-0 items-center rounded-lg bg-secondary/50 p-0.5">
                         <button
                             onClick={() => onNavigate('prev')}
-                            className="p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-all active:scale-95 touch-manipulation"
+                            className="rounded-md p-1 text-q-text-muted transition-all hover:bg-q-bg hover:text-foreground active:scale-95 touch-manipulation"
                         >
-                            <ChevronLeft size={18} />
+                            <ChevronLeft size={16} />
                         </button>
                         <button
                             onClick={() => onNavigate('today')}
-                            className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-semibold text-foreground hover:text-[var(--quimera-status-accent-from)] transition-colors touch-manipulation"
+                            className="px-2 py-1 text-xs font-semibold text-foreground transition-colors hover:text-[var(--quimera-status-accent-from)] touch-manipulation"
                         >
                             {t('common.today', 'Hoy')}
                         </button>
                         <button
                             onClick={() => onNavigate('next')}
-                            className="p-1.5 hover:bg-q-bg rounded-md text-q-text-muted hover:text-foreground transition-all active:scale-95 touch-manipulation"
+                            className="rounded-md p-1 text-q-text-muted transition-all hover:bg-q-bg hover:text-foreground active:scale-95 touch-manipulation"
                         >
-                            <ChevronRight size={18} />
+                            <ChevronRight size={16} />
                         </button>
                     </div>
 
-                    <h2 className="text-sm sm:text-xl font-bold text-foreground capitalize tracking-tight truncate min-w-0">
+                    <h2 className="min-w-0 truncate text-sm font-bold capitalize tracking-tight text-foreground sm:text-base">
                         {dateLabel}
                     </h2>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                    {/* View Switcher */}
-                    <div className="flex items-center bg-secondary/50 rounded-lg p-0.5 sm:p-1">
+                <div className="flex min-w-0 flex-1 items-center gap-2 xl:ml-4 xl:max-w-xl">
+                    <div className="relative group min-w-0 flex-1 sm:max-w-sm xl:max-w-none">
+                        <div className="sm:hidden">
+                            {showMobileSearch ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-q-text-muted" />
+                                        <input
+                                            type="text"
+                                            placeholder={t('appointments.searchPlaceholder', 'Buscar citas...')}
+                                            value={searchQuery}
+                                            onChange={(e) => onSearch(e.target.value)}
+                                            autoFocus
+                                            className="h-8 w-full rounded-full border-none bg-secondary/30 pl-9 pr-4 text-sm outline-none transition-all focus:bg-secondary/50"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => { setShowMobileSearch(false); onSearch(''); }}
+                                        className="p-1.5 text-q-text-muted hover:text-foreground touch-manipulation"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setShowMobileSearch(true)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/30 text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground touch-manipulation"
+                                >
+                                    <Search size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="hidden sm:block">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-q-text-muted transition-colors group-focus-within:text-foreground" />
+                            <input
+                                type="text"
+                                placeholder={t('appointments.searchPlaceholder', 'Buscar citas...')}
+                                value={searchQuery}
+                                onChange={(e) => onSearch(e.target.value)}
+                                className="h-8 w-full rounded-full border-none bg-secondary/30 pl-9 pr-4 text-sm outline-none transition-all focus:bg-secondary/50"
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onToggleFilters}
+                        className={cn(
+                            "flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-transparent px-3 text-xs font-medium transition-colors touch-manipulation",
+                            showFilters
+                                ? "border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text"
+                                : "bg-secondary/30 text-foreground hover:bg-secondary/50"
+                        )}
+                    >
+                        <Filter size={14} />
+                        <span>{t('appointments.filters', 'Filtros')}</span>
+                    </button>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                    <div className="flex items-center rounded-lg bg-secondary/50 p-0.5">
                         {viewOptions.map((view) => (
                             <button
                                 key={view.id}
                                 onClick={() => onViewModeChange(view.id as any)}
                                 className={cn(
-                                    "px-2 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all touch-manipulation",
+                                    "rounded-md px-2.5 py-1 text-xs font-medium transition-all touch-manipulation sm:px-3",
                                     viewMode === view.id
                                         ? "bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text"
-                                        : "text-q-text-muted hover:text-foreground hover:bg-q-bg/50"
+                                        : "text-q-text-muted hover:bg-q-bg/50 hover:text-foreground"
                                 )}
                             >
                                 {view.label}
@@ -111,105 +166,40 @@ export const CalendarToolbar: React.FC<CalendarToolbarProps> = ({
                         onClick={onRefresh}
                         disabled={isLoading}
                         className={cn(
-                            "hidden sm:flex p-2 sm:p-2.5 rounded-full text-q-text-muted hover:bg-secondary hover:text-foreground transition-colors",
+                            "hidden h-8 w-8 items-center justify-center rounded-full text-q-text-muted transition-colors hover:bg-secondary hover:text-foreground sm:flex",
                             isLoading && "opacity-50"
                         )}
                     >
-                        {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                        {isLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
                     </button>
 
                     {onBlockClick && (
                         <button
                             onClick={onBlockClick}
-                            className="hidden sm:flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 whitespace-nowrap touch-manipulation"
+                            className="hidden h-8 items-center gap-1 rounded-md border border-destructive/20 bg-destructive/10 px-2 text-xs font-medium text-destructive transition-all hover:bg-destructive/20 sm:flex touch-manipulation"
                         >
-                            <Ban className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <Ban className="h-3.5 w-3.5" />
                             <span className="hidden lg:inline">{t('appointments.blockedDates.block', 'Bloquear')}</span>
                         </button>
                     )}
 
                     <button
                         onClick={onCreateClick}
-                        className="quimera-guide-cta flex items-center gap-1 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap touch-manipulation"
+                        className="quimera-guide-cta flex h-8 items-center gap-1 whitespace-nowrap rounded-md px-2 text-xs font-medium sm:px-3 touch-manipulation"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="h-4 w-4" />
                         <span className="hidden sm:inline">{t('appointments.new', 'Nueva Cita')}</span>
                     </button>
-                </div>
-            </div>
 
-            {/* Row 2: Search & Filters */}
-            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 pb-2 sm:pb-3">
-                {/* Mobile: search toggle icon / Desktop: search input */}
-                <div className="relative group flex-1 sm:flex-none">
-                    {/* Mobile search - toggleable */}
-                    <div className="sm:hidden">
-                        {showMobileSearch ? (
-                            <div className="flex items-center gap-2">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted w-4 h-4" />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar..."
-                                        value={searchQuery}
-                                        onChange={(e) => onSearch(e.target.value)}
-                                        autoFocus
-                                        className="h-9 w-full bg-secondary/30 focus:bg-secondary/50 border-none outline-none rounded-full pl-9 pr-4 text-sm transition-all"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => { setShowMobileSearch(false); onSearch(''); }}
-                                    className="p-2 text-q-text-muted hover:text-foreground touch-manipulation"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowMobileSearch(true)}
-                                className="h-9 w-9 flex items-center justify-center bg-secondary/30 hover:bg-secondary/50 rounded-full text-q-text-muted hover:text-foreground transition-colors touch-manipulation"
-                            >
-                                <Search size={16} />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Desktop search - always visible */}
-                    <div className="hidden sm:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted w-4 h-4 group-focus-within:text-foreground transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Buscar cita o cliente..."
-                            value={searchQuery}
-                            onChange={(e) => onSearch(e.target.value)}
-                            className="h-9 w-64 bg-secondary/30 focus:bg-secondary/50 border-none outline-none rounded-full pl-9 pr-4 text-sm transition-all"
-                        />
-                    </div>
-                </div>
-
-                {/* Filter Toggle */}
-                <button
-                    onClick={onToggleFilters}
-                    className={cn(
-                        "flex items-center gap-1.5 sm:gap-2 h-9 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-medium transition-colors border border-transparent shrink-0 touch-manipulation",
-                        showFilters
-                            ? "border-[var(--quimera-status-accent-from)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text"
-                            : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
+                    {onBlockClick && (
+                        <button
+                            onClick={onBlockClick}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10 text-destructive transition-all hover:bg-destructive/20 sm:hidden touch-manipulation"
+                        >
+                            <Ban className="h-3.5 w-3.5" />
+                        </button>
                     )}
-                >
-                    <Filter size={14} className="sm:w-4 sm:h-4" />
-                    <span>Filtros</span>
-                </button>
-
-                {/* Mobile-only: Block button (since it's hidden in row 1 on mobile) */}
-                {onBlockClick && (
-                    <button
-                        onClick={onBlockClick}
-                        className="sm:hidden flex items-center gap-1 h-9 px-3 rounded-full text-xs font-medium transition-all bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 shrink-0 touch-manipulation"
-                    >
-                        <Ban className="w-3.5 h-3.5" />
-                    </button>
-                )}
+                </div>
             </div>
         </div>
     );

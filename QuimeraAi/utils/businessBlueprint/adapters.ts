@@ -23,20 +23,20 @@ import type {
 import {
     BUSINESS_BLUEPRINT_SCHEMA_VERSION,
     BUSINESS_BLUEPRINT_VERSION,
-} from '../../types/businessBlueprint';
+} from '../../types/businessBlueprint.js';
 import type { WebsitePlan } from '../../types/websitePlan';
 import type { PageSection } from '../../types/ui';
 import {
     getStorefrontCatalogSize,
     getStorefrontCatalogSizeRule,
-} from '../storefrontTheme';
-import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
-import { createWebsiteEcommerceBlockSeedsFromSections } from '../websiteEcommerceBlocks';
-import { createStarterEcommerceContent } from './starterEcommerceContent';
+} from '../storefrontTheme/index.js';
+import { isRetiredDesignSuiteSection } from '../../data/retiredSuites.js';
+import { createWebsiteEcommerceBlockSeedsFromSections } from '../websiteEcommerceBlocks/index.js';
+import { createStarterEcommerceContent } from './starterEcommerceContent.js';
 import {
     createRestaurantBlueprintFromWebsitePlan,
     normalizeRestaurantBlueprint,
-} from './restaurantBlueprint';
+} from './restaurantBlueprint.js';
 
 export interface BusinessBlueprintAdapterOptions {
     projectId?: string;
@@ -48,6 +48,17 @@ export interface BusinessBlueprintAdapterOptions {
 }
 
 type BioPageLinkDraft = Partial<BioPageLinkBlueprint> & Pick<BioPageLinkBlueprint, 'id' | 'title' | 'url' | 'linkType' | 'priority' | 'status'>;
+type ChatbotBlueprintDraftInput = {
+    businessName: string;
+    industry: string;
+    description?: string;
+    tagline?: string;
+    services: Array<{ name?: string; description?: string }>;
+    contactInfo?: Record<string, any>;
+    hasEcommerce?: boolean;
+    sections?: PageSection[];
+    now: string;
+};
 
 const ECOMMERCE_SECTIONS = new Set<PageSection>([
     'announcementBar',
@@ -69,6 +80,10 @@ const ECOMMERCE_SECTIONS = new Set<PageSection>([
 
 function ready(warnings: string[] = [], blockers: string[] = []): BlueprintReadiness {
     return { isReady: blockers.length === 0, blockers, warnings };
+}
+
+function bi(es: string, en: string): string {
+    return `ES: ${es}\nEN: ${en}`;
 }
 
 function metadata(now: string, generatedBy: BlueprintEditableMetadata['generatedBy'] = 'ai'): BlueprintEditableMetadata {
@@ -283,6 +298,111 @@ function createBioPageMediaItems(plan: WebsitePlan): Array<Record<string, unknow
     return items.slice(0, 9);
 }
 
+function readContentString(item: unknown, keys: string[], maxLength = 240): string {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return '';
+    const record = item as Record<string, unknown>;
+    for (const key of keys) {
+        const value = record[key];
+        if (typeof value === 'string' && value.trim()) return value.trim().slice(0, maxLength);
+    }
+    return '';
+}
+
+function readContentRating(item: unknown): number | undefined {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return undefined;
+    const value = (item as Record<string, unknown>).rating;
+    const rating = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+    if (!Number.isFinite(rating)) return undefined;
+    return Math.min(Math.max(Math.round(rating), 1), 5);
+}
+
+function createBioPageTestimonialItems(plan: WebsitePlan): Array<Record<string, unknown>> {
+    return (plan.contentMap.testimonials || [])
+        .map((item, index): Record<string, unknown> | null => {
+            const quote = readContentString(item, ['quote', 'text', 'content', 'body', 'testimonial', 'review'], 360);
+            if (!quote) return null;
+            const author = readContentString(item, ['author', 'name', 'customerName', 'clientName'], 120);
+            const role = readContentString(item, ['role', 'title', 'source', 'company'], 140);
+            const rating = readContentRating(item);
+            return {
+                id: `bio-testimonial-${index + 1}`,
+                quote,
+                ...(author ? { author } : {}),
+                ...(role ? { role } : {}),
+                ...(rating ? { rating } : {}),
+                source: 'websitePlan.contentMap.testimonials',
+            };
+        })
+        .filter((item): item is Record<string, unknown> => Boolean(item))
+        .slice(0, 6);
+}
+
+function createBioPageFaqItems(plan: WebsitePlan): Array<Record<string, unknown>> {
+    return (plan.contentMap.faqs || [])
+        .map((item, index): Record<string, unknown> | null => {
+            const question = readContentString(item, ['question', 'q', 'title'], 180);
+            const answer = readContentString(item, ['answer', 'a', 'response', 'content', 'summary'], 420);
+            if (!question || !answer) return null;
+            return {
+                id: `bio-faq-${index + 1}`,
+                question,
+                answer,
+                source: 'websitePlan.contentMap.faqs',
+            };
+        })
+        .filter((item): item is Record<string, unknown> => Boolean(item))
+        .slice(0, 6);
+}
+
+function createBioPageContactBlockPayload(contactInfo: Record<string, any> = {}): {
+    data: Record<string, unknown>;
+    sourceMap: Record<string, string | string[]>;
+} | null {
+    const email = stringValue(contactInfo.email || contactInfo.contactEmail);
+    const phone = stringValue(contactInfo.phone || contactInfo.telephone || contactInfo.mobile);
+    const whatsapp = stringValue(contactInfo.whatsapp || contactInfo.whatsApp);
+    const website = normalizeUrlLike(stringValue(contactInfo.website || contactInfo.url));
+    const addressParts = [
+        contactInfo.address,
+        contactInfo.street,
+        contactInfo.city,
+        contactInfo.state || contactInfo.region,
+        contactInfo.country,
+    ]
+        .map(value => stringValue(value))
+        .filter(Boolean);
+    const address = Array.from(new Set(addressParts)).join(', ');
+    const data: Record<string, unknown> = {
+        ...(email ? { email } : {}),
+        ...(phone ? { phone } : {}),
+        ...(whatsapp ? { whatsapp } : {}),
+        ...(website ? { url: website } : {}),
+        ...(address ? { address } : {}),
+    };
+
+    if (!Object.keys(data).length) return null;
+
+    const sourceMap: Record<string, string | string[]> = {};
+    Object.keys(data).forEach(key => {
+        if (key === 'url') {
+            sourceMap[key] = 'websitePlan.businessProfile.contactInfo.website';
+            return;
+        }
+        if (key === 'address') {
+            sourceMap[key] = [
+                'websitePlan.businessProfile.contactInfo.address',
+                'websitePlan.businessProfile.contactInfo.city',
+                'websitePlan.businessProfile.contactInfo.state',
+                'websitePlan.businessProfile.contactInfo.country',
+            ];
+            return;
+        }
+        sourceMap[key] = `websitePlan.businessProfile.contactInfo.${key}`;
+    });
+
+    return { data, sourceMap };
+}
+
 function defaultAppointmentWeeklyHours() {
     return [
         { day: 'monday', enabled: true, startTime: '09:00', endTime: '17:00' },
@@ -413,21 +533,651 @@ function createEcommerceBlueprint(plan: WebsitePlan, now: string): EcommerceBlue
     };
 }
 
-function createChatbotBlueprint(plan: WebsitePlan, now: string): ChatbotBlueprint {
+function chatbotKnowledgeSource(
+    input: {
+        id: string;
+        name: string;
+        type: ChatbotBlueprint['knowledgeSources'][number]['type'];
+        ownerModule: ChatbotBlueprint['knowledgeSources'][number]['ownerModule'];
+        visibility?: ChatbotBlueprint['knowledgeSources'][number]['visibility'];
+        status?: ChatbotBlueprint['knowledgeSources'][number]['status'];
+        warnings?: string[];
+        blockers?: string[];
+        sourceEntityIds?: string[];
+        sourceMap?: Record<string, string | string[]>;
+    },
+): ChatbotBlueprint['knowledgeSources'][number] {
     return {
-        ...createBlueprintModuleState(now, {
+        id: input.id,
+        name: input.name,
+        type: input.type,
+        ownerModule: input.ownerModule,
+        visibility: input.visibility || 'public',
+        status: input.status || 'needs_review',
+        freshness: 'unknown',
+        confidence: input.status === 'ready' ? 0.85 : 0.55,
+        sourceEntityIds: input.sourceEntityIds || [],
+        readiness: ready(input.warnings || [bi(
+            'La fuente debe revisarse antes de que ChatCore la use como conocimiento de producción.',
+            'Source must be reviewed before ChatCore can use it as production knowledge.',
+        )], input.blockers || []),
+        needsReview: input.status !== 'ready',
+        generatedByAI: true,
+        userModified: false,
+        lockedFromRegeneration: false,
+        sourceMap: input.sourceMap,
+    };
+}
+
+function chatbotAction(
+    actionType: ChatbotBlueprint['actions'][number]['actionType'],
+    ownerModule: ChatbotBlueprint['actions'][number]['ownerModule'],
+    options: Partial<Pick<ChatbotBlueprint['actions'][number],
+        'publicAllowed' |
+        'requiresConfirmation' |
+        'requiresAuth' |
+        'requiresConsent' |
+        'idempotencyRequired' |
+        'auditLogRequired'
+    >> & { warnings?: string[]; blockers?: string[] } = {},
+): ChatbotBlueprint['actions'][number] {
+    return {
+        id: `chatbot-action-${actionType}`,
+        actionType,
+        ownerModule,
+        enabled: false,
+        publicAllowed: options.publicAllowed || false,
+        requiresConfirmation: options.requiresConfirmation !== false,
+        requiresAuth: options.requiresAuth || false,
+        requiresConsent: options.requiresConsent || false,
+        requiresReview: true,
+        idempotencyRequired: options.idempotencyRequired !== false,
+        auditLogRequired: options.auditLogRequired !== false,
+        status: 'needs_review',
+        readiness: ready(options.warnings || [bi(
+            'La acción permanece desactivada hasta revisarse en el Action Registry del Chatbot Engine.',
+            'Action is disabled until reviewed in the Chatbot Engine Action Registry.',
+        )], options.blockers || []),
+        needsReview: true,
+    };
+}
+
+function chatbotSurface(
+    sourceSurface: ChatbotBlueprint['channels']['webWidget']['sourceSurface'],
+    enabled: boolean,
+    contextKeys: string[],
+    routePattern?: string,
+): ChatbotBlueprint['channels']['webWidget'] {
+    return {
+        enabled,
+        status: enabled ? 'test' : 'draft',
+        sourceSurface,
+        routePattern,
+        contextKeys,
+        readiness: enabled
+            ? ready([bi(
+                'La superficie queda preparada para revisión; el despliegue a producción sigue siendo explícito.',
+                'Surface is prepared for review; production deployment remains explicit.',
+            )])
+            : ready([], [bi(
+                'El despliegue de esta superficie está desactivado hasta configurarse.',
+                'Surface deployment is disabled until configured.',
+            )]),
+        needsReview: true,
+    };
+}
+
+function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): ChatbotBlueprint {
+    const normalizedIndustry = normalizeIndustry(input.industry);
+    const wantsBooking = hasAppointmentSignal({
+        source: 'chat',
+        generationMode: 'from-scratch',
+        businessProfile: {
+            businessName: input.businessName,
+            industry: input.industry,
+            description: input.description || '',
+            tagline: input.tagline,
+            services: input.services,
+            contactInfo: input.contactInfo || {},
+            hasEcommerce: input.hasEcommerce,
+        },
+        brandProfile: { colors: {} },
+        contentMap: { pages: [] },
+        componentPlan: (input.sections || []).map(section => ({ component: section, reason: 'existing section', confidence: 0.8 })),
+        assetPlan: [],
+        qualityGoals: [],
+    } as WebsitePlan, input.sections || []);
+    const hasEcommerce = Boolean(input.hasEcommerce);
+    const hasRestaurant = normalizedIndustry === 'restaurant';
+    const hasRealEstate = normalizedIndustry === 'real-estate';
+    const serviceNames = input.services.map(service => service.name).filter((name): name is string => Boolean(name));
+    const hasFinance = hasEcommerce || hasRealEstate || serviceNames.length > 0;
+    const businessKnowledge = [
+        input.businessName,
+        input.industry,
+        input.description,
+        input.tagline,
+        ...serviceNames,
+    ].filter((item): item is string => Boolean(item && item.trim()));
+
+    return {
+        ...createBlueprintModuleState(input.now, {
+            status: 'needs_review',
             needsReview: true,
-            readiness: ready(['Chatbot policy and product knowledge should be reviewed before publishing.']),
+            readiness: ready([
+                bi(
+                    'ChatbotBlueprint V2 se generó como infraestructura en borrador.',
+                    'ChatbotBlueprint V2 was generated as draft infrastructure.',
+                ),
+                bi(
+                    'Las fuentes de conocimiento, acciones públicas, superficies de despliegue y ajustes de voz requieren revisión antes de activarse.',
+                    'Knowledge sources, public actions, deployment surfaces, and voice settings require review before activation.',
+                ),
+            ], [
+                bi('Action Registry no está revisado.', 'Action Registry is not reviewed.'),
+                bi('Las fuentes del Knowledge Center no están aprobadas.', 'Knowledge Center sources are not approved.'),
+            ]),
+            sourceMap: {
+                agentProfile: 'websitePlan.businessProfile',
+                knowledgeSources: 'businessBlueprint.crossModuleSources',
+                actions: 'chatbotEngine.actionRegistry',
+                deployment: 'chatbotEngine.deploySettings',
+            },
         }),
-        businessKnowledge: [
-            plan.businessProfile.businessName,
-            plan.businessProfile.industry,
-            plan.businessProfile.description,
-            ...plan.businessProfile.services.map(service => service.name),
-        ].filter(Boolean),
-        productKnowledge: plan.businessProfile.hasEcommerce ? ['categories', 'featured products', 'shipping policy', 'return policy'] : [],
-        policyKnowledge: ['business hours', 'contact information'],
+        engineVersion: 'v2',
+        agentProfile: {
+            agentName: input.businessName ? `${input.businessName} AI Agent` : 'Quimera AI Agent',
+            role: 'AI Business Agent',
+            personality: bi(
+                'útil, conciso, cuidadoso y consciente del contexto comercial',
+                'helpful, concise, careful, and commercially aware',
+            ),
+            tone: bi('profesional', 'professional'),
+            languageMode: 'visitor_language',
+            supportedLanguages: ['es', 'en'],
+            brandVoice: input.tagline || input.description || bi(
+                'Usa la voz de marca del proyecto y evita afirmaciones no verificadas.',
+                'Use the project brand voice and avoid unsupported claims.',
+            ),
+            welcomeMessage: bi(
+                `Hola. Puedo ayudarte con ${input.businessName || 'este negocio'} y dirigir solicitudes al equipo correcto cuando esté configurado.`,
+                `Hi. I can help with ${input.businessName || 'this business'} and route requests to the right team when configured.`,
+            ),
+            fallbackMessage: bi(
+                'No tengo suficiente información revisada para responder eso con seguridad. Puedo recopilar tus datos o pasar esto a un humano.',
+                'I do not have enough reviewed information to answer that safely. I can collect your details or hand this to a human.',
+            ),
+            escalationMessage: bi(
+                'Puedo conectar esta conversación con un humano para revisión.',
+                'I can connect this conversation with a human for review.',
+            ),
+            sourceMap: { agentName: 'websitePlan.businessProfile.businessName' },
+            needsReview: true,
+        },
+        knowledgeSources: [
+            chatbotKnowledgeSource({
+                id: 'knowledge-business-blueprint',
+                name: bi('BusinessBlueprint del proyecto', 'Project BusinessBlueprint'),
+                type: 'business_blueprint',
+                ownerModule: 'business-blueprint',
+                sourceEntityIds: ['businessBlueprint'],
+                sourceMap: { source: 'businessBlueprint' },
+            }),
+            chatbotKnowledgeSource({
+                id: 'knowledge-website-content',
+                name: bi('Contenido web y secciones visibles', 'Website content and visible sections'),
+                type: 'website_content',
+                ownerModule: 'website-builder',
+                sourceEntityIds: input.sections || [],
+                sourceMap: { sections: 'websiteBlueprint.sections' },
+            }),
+            ...(hasEcommerce ? [
+                chatbotKnowledgeSource({
+                    id: 'knowledge-ecommerce-products',
+                    name: bi('Productos y categorías de ecommerce', 'Ecommerce products and categories'),
+                    type: 'ecommerce_products',
+                    ownerModule: 'ecommerce',
+                    sourceMap: { products: 'ecommerceBlueprint.starterProducts' },
+                    warnings: [bi(
+                        'Usar solo productos publicados del Ecommerce Engine; los productos iniciales de AI siguen como borradores hasta revisión del comercio.',
+                        'Use published Ecommerce Engine products only; AI starter products remain drafts until merchant review.',
+                    )],
+                }),
+                chatbotKnowledgeSource({
+                    id: 'knowledge-ecommerce-policies',
+                    name: bi('Políticas de envío, devoluciones, pago y tienda', 'Shipping, returns, payment, and store policies'),
+                    type: 'ecommerce_policies',
+                    ownerModule: 'ecommerce',
+                    warnings: [bi(
+                        'No inventar detalles de políticas de envío, devoluciones, pagos, impuestos, descuentos o inventario.',
+                        'Do not invent shipping, return, payment, tax, discount, or inventory policy details.',
+                    )],
+                }),
+                chatbotKnowledgeSource({
+                    id: 'knowledge-ecommerce-orders-private',
+                    name: bi('Contexto privado de estado de órdenes', 'Private order status context'),
+                    type: 'ecommerce_orders_private',
+                    ownerModule: 'ecommerce',
+                    visibility: 'private',
+                    status: 'disabled',
+                    blockers: [bi(
+                        'La consulta de órdenes requiere verificación de identidad del cliente e integración canónica con Ecommerce Engine.',
+                        'Order lookup requires customer identity verification and canonical Ecommerce Engine integration.',
+                    )],
+                }),
+            ] : []),
+            ...(wantsBooking ? [
+                chatbotKnowledgeSource({
+                    id: 'knowledge-appointments-services',
+                    name: bi('Servicios de citas y reglas de disponibilidad', 'Appointments services and availability rules'),
+                    type: 'appointments_services',
+                    ownerModule: 'appointments',
+                    warnings: [bi(
+                        'Disponibilidad, buffers, horarios bloqueados, zona horaria y modo de confirmación deben revisarse.',
+                        'Availability, buffers, blocked times, timezone, and confirmation mode must be reviewed.',
+                    )],
+                }),
+            ] : []),
+            ...(hasRestaurant ? [
+                chatbotKnowledgeSource({
+                    id: 'knowledge-restaurant-menu',
+                    name: bi('Menú, horarios, reservas, catering y eventos del restaurante', 'Restaurant menu, hours, reservations, catering, and events'),
+                    type: 'restaurant_menu',
+                    ownerModule: 'restaurants',
+                    warnings: [bi(
+                        'Usar solo datos activos de restaurante/menu; no inventar platos, precios, disponibilidad ni garantías de alérgenos.',
+                        'Use active restaurant/menu data only; do not invent menu items, prices, availability, or allergen guarantees.',
+                    )],
+                }),
+            ] : []),
+            ...(hasRealEstate ? [
+                chatbotKnowledgeSource({
+                    id: 'knowledge-realty-listings',
+                    name: bi('Listados, páginas de propiedad, showings y open houses', 'Realty listings, property pages, showings, and open houses'),
+                    type: 'realty_listings',
+                    ownerModule: 'real-estate',
+                    warnings: [bi(
+                        'Usar solo listados públicos activos y evitar asesoría legal, financiera o de mercado no sustentada.',
+                        'Use public active listings only and avoid legal, financial, or unsupported market advice.',
+                    )],
+                }),
+            ] : []),
+            ...(hasFinance ? [
+                chatbotKnowledgeSource({
+                    id: 'knowledge-finance-invoices-private',
+                    name: bi('Facturas, cotizaciones y solicitudes de pago privadas', 'Private invoices, quotes, and payment requests'),
+                    type: 'finance_invoices_private',
+                    ownerModule: 'finance',
+                    visibility: 'private',
+                    status: 'disabled',
+                    blockers: [bi(
+                        'Las facturas y solicitudes de pago requieren revisión humana; el chatbot solo puede crear borradores internos.',
+                        'Invoices and payment requests require human review; the chatbot can only create internal drafts.',
+                    )],
+                    warnings: [bi(
+                        'No crear enlaces de pago, cargos de Stripe, asientos contables ni reglas fiscales desde ChatCore.',
+                        'Do not create payment links, Stripe charges, ledger entries, or tax rules from ChatCore.',
+                    )],
+                }),
+            ] : []),
+            chatbotKnowledgeSource({
+                id: 'knowledge-bio-page',
+                name: bi('Bloques visibles, enlaces, productos, reservas y formularios de Bio Page', 'Bio Page visible blocks, links, products, booking, and lead forms'),
+                type: 'bio_page',
+                ownerModule: 'bio-page',
+                warnings: [bi(
+                    'Solo bloques visibles y publicados de Bio Page pueden exponerse públicamente.',
+                    'Only published visible Bio Page blocks can be exposed publicly.',
+                )],
+            }),
+        ],
+        actions: [
+            chatbotAction('answer_from_knowledge', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('save_conversation', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false }),
+            chatbotAction('save_message', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('analyze_intent', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('create_lead', 'crm', { publicAllowed: true, requiresConfirmation: false, requiresConsent: true }),
+            chatbotAction('update_lead', 'crm', { requiresAuth: true }),
+            chatbotAction('score_lead', 'crm', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('link_conversation_to_lead', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false }),
+            chatbotAction('create_appointment', 'appointments', { publicAllowed: true, requiresConsent: true, blockers: [bi(
+                'La disponibilidad debe validarse del lado servidor antes de reservar.',
+                'Availability must be checked server-side before booking.',
+            )] }),
+            chatbotAction('check_availability', 'appointments', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('request_restaurant_reservation', 'restaurants', { publicAllowed: true, requiresConsent: true }),
+            chatbotAction('request_realty_showing', 'real-estate', { publicAllowed: true, requiresConsent: true }),
+            chatbotAction('register_open_house', 'real-estate', { publicAllowed: true, requiresConsent: true }),
+            chatbotAction('search_products', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('recommend_products', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('check_order_status', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false, warnings: [bi(
+                'El runtime solo devuelve estado de orden cuando el cliente valida email o token de acceso.',
+                'Runtime returns order status only after the customer verifies email or access token.',
+            )] }),
+            chatbotAction('explain_shipping', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('explain_returns', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+            chatbotAction('create_product_inquiry', 'ecommerce', { publicAllowed: true, requiresConsent: true }),
+            chatbotAction('back_in_stock_request', 'ecommerce', { publicAllowed: true, requiresConfirmation: false, requiresConsent: true, warnings: [bi(
+                'El runtime solo registra el interes del comprador; no promete inventario ni activa emails sin revision.',
+                'Runtime only records buyer interest; it does not promise inventory or activate emails without review.',
+            )] }),
+            chatbotAction('start_checkout', 'ecommerce', { publicAllowed: true, warnings: [bi(
+                'El runtime prepara el carrito y redirige al checkout real; no crea pagos desde ChatCore.',
+                'Runtime prepares the cart and redirects to real checkout; it does not create payments from ChatCore.',
+            )] }),
+            chatbotAction('subscribe_email_audience', 'email-marketing', { publicAllowed: true, requiresConsent: true, warnings: [bi(
+                'El runtime valida consentimiento de marketing y supresiones antes de suscribir.',
+                'Runtime validates marketing consent and suppressions before subscribing.',
+            )] }),
+            chatbotAction('queue_email_follow_up', 'email-marketing', { publicAllowed: true, requiresConsent: true, warnings: [bi(
+                'El runtime crea un borrador en revision; no envia emails sin aprobacion humana.',
+                'Runtime creates a review draft; it does not send emails without human approval.',
+            )] }),
+            chatbotAction('create_finance_quote_request', 'finance', { publicAllowed: true, requiresConsent: true, warnings: [bi(
+                'El runtime crea una factura/cotizacion borrador en Finance; no crea enlaces de pago ni cargos de Stripe.',
+                'Runtime creates a draft invoice/quote in Finance; it does not create payment links or Stripe charges.',
+            )] }),
+            chatbotAction('send_internal_alert', 'email-marketing', { requiresAuth: true }),
+            chatbotAction('handoff_to_human', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false }),
+            chatbotAction('create_support_ticket', 'chatbot-engine', { publicAllowed: true, requiresConsent: true }),
+            chatbotAction('record_analytics_event', 'analytics', { publicAllowed: true, requiresConfirmation: false, idempotencyRequired: false }),
+        ],
+        leadCapture: {
+            enabled: true,
+            mode: 'hybrid',
+            requiredFields: ['email'],
+            optionalFields: ['name', 'phone', 'message', 'company'],
+            triggerAfterMessages: 3,
+            highIntentKeywords: ['pricing', 'price', 'quote', 'buy', 'book', 'schedule', 'demo', 'precio', 'cotizacion', 'comprar', 'agendar'],
+            scoringRules: ['contact_info', 'message_count', 'high_intent_keywords', 'source_surface'],
+            tags: ['chatbot', 'chatcore', ...(hasEcommerce ? ['product-interest'] : []), ...(wantsBooking ? ['appointment-interest'] : [])],
+            leadSource: 'chatcore',
+            transcriptStorageEnabled: true,
+            aiIntentAnalysisEnabled: true,
+            emailMarketingFollowUpEnabled: false,
+            needsReview: true,
+        },
+        handoff: {
+            enabled: true,
+            handoffReasons: ['human_requested', 'low_confidence', 'unsupported_request', 'negative_sentiment', 'payment_or_order_issue', 'repeated_unanswered_question', 'high_value_lead'],
+            fallbackMessage: bi(
+                'Un humano puede revisar esta conversación y dar seguimiento.',
+                'A human can review this conversation and follow up.',
+            ),
+            assignmentStrategy: 'unassigned',
+            inboxEnabled: true,
+            internalNotesEnabled: true,
+            aiSummaryEnabled: true,
+            suggestedRepliesEnabled: true,
+            needsReview: true,
+        },
+        appointments: {
+            enabled: wantsBooking,
+            source: 'appointments',
+            allowedServices: serviceNames,
+            availabilitySource: 'appointments_engine',
+            confirmationMode: 'manual',
+            bookingChannels: ['chatcore_form', 'chatcore_ai_confirmation', 'chatcore_voice'],
+            minNoticeHours: 2,
+            maxAdvanceDays: 30,
+            requiresEmail: true,
+            requiresPhone: false,
+            needsReview: wantsBooking,
+        },
+        ecommerce: {
+            enabled: hasEcommerce,
+            source: 'ecommerce',
+            canSearchProducts: hasEcommerce,
+            canRecommendProducts: hasEcommerce,
+            canCheckOrderStatus: hasEcommerce,
+            canExplainShipping: hasEcommerce,
+            canExplainReturns: hasEcommerce,
+            canCreateProductInquiry: hasEcommerce,
+            canStartCheckout: hasEcommerce,
+            productDataSource: 'ecommerce_engine',
+            orderDataSource: 'ecommerce_engine_verified_only',
+            inventoryVisibility: 'in_stock_only',
+            needsReview: hasEcommerce,
+        },
+        restaurants: {
+            enabled: hasRestaurant,
+            source: 'restaurants',
+            canAnswerMenu: hasRestaurant,
+            canExplainHours: hasRestaurant,
+            canCaptureReservationRequest: false,
+            canPromoteGiftCards: false,
+            canPromoteCatering: false,
+            needsReview: hasRestaurant,
+        },
+        realEstate: {
+            enabled: hasRealEstate,
+            source: 'realEstate',
+            canAnswerListings: hasRealEstate,
+            canCapturePropertyInquiry: hasRealEstate,
+            canRequestShowing: false,
+            canRegisterOpenHouse: false,
+            canExplainNeighborhoods: false,
+            canRouteSellerLead: hasRealEstate,
+            needsReview: hasRealEstate,
+        },
+        bioPage: {
+            enabled: true,
+            source: 'bioPage',
+            canExplainLinks: true,
+            canOpenBooking: wantsBooking,
+            canOpenShop: hasEcommerce,
+            canCaptureLead: true,
+            canSubscribe: false,
+            needsReview: true,
+        },
+        channels: {
+            webWidget: chatbotSurface('website', true, ['surface', 'route', 'visibleSections', 'pageData', 'utm'], '/'),
+            embeddedWidget: chatbotSurface('website', false, ['surface', 'embedId', 'route']),
+            bioPage: chatbotSurface('bio_page', true, ['surface', 'bioPageBlock', 'bioPageLink'], '/bio/:slug'),
+            storefront: chatbotSurface('storefront', hasEcommerce, ['surface', 'activeProduct', 'activeCart', 'storefrontRoute'], '/store'),
+            checkout: chatbotSurface('checkout', false, ['surface', 'activeCart', 'checkoutStep'], '/checkout'),
+            bookingPage: chatbotSurface('booking_page', wantsBooking, ['surface', 'bookingService', 'bookingStep', 'availabilityWindow'], '/booking/:serviceId'),
+            restaurantMenu: chatbotSurface('restaurant_menu', hasRestaurant, ['surface', 'activeRestaurant', 'activeMenuItem'], '/menu/:restaurantId'),
+            realtyPropertyPage: chatbotSurface('realty_property_page', hasRealEstate, ['surface', 'activeProperty', 'route'], '/listados/:slug'),
+            adminPreview: chatbotSurface('admin_preview', true, ['surface', 'persona', 'testMode']),
+            voice: chatbotSurface('voice', false, ['surface', 'voiceSessionId', 'language']),
+            whatsappReadiness: ready([], [bi('El canal WhatsApp no está configurado.', 'WhatsApp channel is not configured.')]),
+            smsReadiness: ready([], [bi('El canal SMS no está configurado.', 'SMS channel is not configured.')]),
+            emailReadiness: ready([], [bi('El canal de handoff por email no está configurado.', 'Email handoff channel is not configured.')]),
+        },
+        testing: {
+            testScenarios: [
+                {
+                    id: 'chatbot-test-visitor-basic',
+                    name: bi('Visitante anónimo pregunta sobre el negocio', 'Anonymous visitor asks about the business'),
+                    persona: 'anonymous_visitor',
+                    prompt: bi(
+                        `Qué ofrece ${input.businessName || 'este negocio'}?`,
+                        `What does ${input.businessName || 'this business'} offer?`,
+                    ),
+                    expectedActions: ['answer_from_knowledge'],
+                    expectedSources: ['business_blueprint', 'website_content'],
+                    status: 'draft',
+                    needsReview: true,
+                },
+                ...(hasEcommerce ? [{
+                    id: 'chatbot-test-product-search',
+                    name: bi('Comprador ecommerce busca productos', 'Ecommerce buyer searches products'),
+                    persona: 'ecommerce_buyer',
+                    prompt: bi('Qué productos recomiendas?', 'What products do you recommend?'),
+                    expectedActions: ['search_products', 'recommend_products'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['ecommerce_products'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
+            ],
+            regressionQuestions: [
+                bi('En qué puedes ayudarme?', 'What can you help me with?'),
+                bi('Cómo puedo contactar al negocio?', 'How can I contact the business?'),
+            ],
+            blockedAnswerRules: [
+                bi(
+                    'No inventar precios, políticas, inventario, asesoría legal/financiera, estado de órdenes, platos de menú, reservas, disponibilidad de propiedades ni testimonios.',
+                    'Do not invent prices, policies, inventory, legal advice, financial advice, order status, menu items, reservations, listing availability, or testimonials.',
+                ),
+                bi(
+                    'No ejecutar acciones públicas a menos que Action Registry las marque como habilitadas y listas.',
+                    'Do not execute public actions unless the Action Registry marks them enabled and ready.',
+                ),
+            ],
+            expectedActions: ['answer_from_knowledge', 'create_lead', 'handoff_to_human'],
+            evaluationStatus: 'not_run',
+            readiness: ready([bi(
+                'Los escenarios de prueba son borradores hasta ejecutarse en Test Lab.',
+                'Test scenarios are drafts until run in Test Lab.',
+            )]),
+        },
+        analytics: {
+            events: [
+                'chatbot_widget_viewed',
+                'chatbot_opened',
+                'chatbot_message_sent',
+                'chatbot_message_received',
+                'chatbot_high_intent_detected',
+                'chatbot_lead_created',
+                'chatbot_handoff_requested',
+                'chatbot_action_executed',
+                'chatbot_action_blocked',
+                'chatbot_knowledge_gap_detected',
+            ],
+            metrics: ['conversations', 'messages', 'lead_captures', 'handoff_rate', 'resolution_rate', 'knowledge_gaps', 'action_success_rate'],
+            conversionGoals: ['lead_created', ...(wantsBooking ? ['appointment_requested'] : []), ...(hasEcommerce ? ['product_inquiry'] : [])],
+            attributionRules: { sourceModule: 'chatcore', sourceSurfaceRequired: true },
+            needsReview: true,
+        },
+        deployment: {
+            status: 'draft',
+            deployedSurfaces: [],
+            embedSettings: { publicWidgetApi: 'api/widget/[project]/[resource].ts', requirePublishedProject: true },
+            appearanceSettings: { source: 'aiAssistantConfig.appearance', useQuimeraTokens: true },
+            voiceSettings: {
+                enabled: false,
+                provider: 'none',
+                languageMode: 'visitor_language',
+                consentRequired: true,
+            },
+            safetySettings: {
+                requireActionRegistry: true,
+                requireKnowledgeReview: true,
+                requireOrderVerification: true,
+                requireEmailConsent: true,
+                noDraftDataPublicly: true,
+            },
+            readiness: ready([], [
+                bi('Ninguna superficie pública está marcada como desplegada.', 'No public deployment surface is marked deployed.'),
+                bi(
+                    'El agent ID del proveedor de voz debe configurarse por proyecto antes de habilitar voz.',
+                    'Voice provider agent ID must be configured per project before voice is enabled.',
+                ),
+            ]),
+        },
+        businessKnowledge,
+        productKnowledge: hasEcommerce
+            ? [
+                bi('categorías', 'categories'),
+                bi('productos destacados', 'featured products'),
+                bi('política de envío', 'shipping policy'),
+                bi('política de devoluciones', 'return policy'),
+            ]
+            : [],
+        policyKnowledge: [
+            bi('horario comercial', 'business hours'),
+            bi('información de contacto', 'contact information'),
+        ],
         eventIntents: ['lead_created', 'chatbot_product_question'],
+    };
+}
+
+function createChatbotBlueprint(plan: WebsitePlan, now: string): ChatbotBlueprint {
+    return createChatbotBlueprintFromInput({
+        businessName: plan.businessProfile.businessName,
+        industry: plan.businessProfile.industry,
+        description: plan.businessProfile.description,
+        tagline: plan.businessProfile.tagline,
+        services: plan.businessProfile.services,
+        contactInfo: plan.businessProfile.contactInfo || {},
+        hasEcommerce: plan.businessProfile.hasEcommerce,
+        sections: getPlannedSections(plan),
+        now,
+    });
+}
+
+export function normalizeChatbotBlueprint(
+    value: unknown,
+    input: ChatbotBlueprintDraftInput,
+): ChatbotBlueprint {
+    const base = createChatbotBlueprintFromInput(input);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return base;
+
+    const existing = value as Partial<ChatbotBlueprint>;
+    const existingKnowledgeSources = Array.isArray(existing.knowledgeSources) ? existing.knowledgeSources : [];
+    const existingActions = Array.isArray(existing.actions) ? existing.actions : [];
+    const mergedKnowledgeSources = existingKnowledgeSources.length
+        ? [
+            ...existingKnowledgeSources,
+            ...base.knowledgeSources.filter(source => !existingKnowledgeSources.some(existingSource => existingSource.id === source.id)),
+        ]
+        : base.knowledgeSources;
+    const mergedActions = existingActions.length
+        ? [
+            ...existingActions,
+            ...base.actions.filter(action => !existingActions.some(existingAction => existingAction.actionType === action.actionType)),
+        ]
+        : base.actions;
+
+    return {
+        ...base,
+        ...existing,
+        enabled: existing.enabled ?? base.enabled,
+        status: existing.status || base.status,
+        needsReview: existing.needsReview ?? base.needsReview,
+        readiness: existing.readiness || base.readiness,
+        metadata: {
+            ...base.metadata,
+            ...(existing.metadata || {}),
+        },
+        sourceMap: {
+            ...(base.sourceMap || {}),
+            ...(existing.sourceMap || {}),
+        },
+        engineVersion: 'v2',
+        agentProfile: {
+            ...base.agentProfile,
+            ...(existing.agentProfile || {}),
+            sourceMap: {
+                ...(base.agentProfile.sourceMap || {}),
+                ...(existing.agentProfile?.sourceMap || {}),
+            },
+        },
+        knowledgeSources: mergedKnowledgeSources,
+        actions: mergedActions,
+        leadCapture: { ...base.leadCapture, ...(existing.leadCapture || {}) },
+        handoff: { ...base.handoff, ...(existing.handoff || {}) },
+        appointments: { ...base.appointments, ...(existing.appointments || {}) },
+        ecommerce: { ...base.ecommerce, ...(existing.ecommerce || {}) },
+        restaurants: { ...base.restaurants, ...(existing.restaurants || {}) },
+        realEstate: { ...base.realEstate, ...(existing.realEstate || {}) },
+        bioPage: { ...base.bioPage, ...(existing.bioPage || {}) },
+        channels: { ...base.channels, ...(existing.channels || {}) },
+        testing: { ...base.testing, ...(existing.testing || {}) },
+        analytics: { ...base.analytics, ...(existing.analytics || {}) },
+        deployment: {
+            ...base.deployment,
+            ...(existing.deployment || {}),
+            voiceSettings: {
+                ...base.deployment.voiceSettings,
+                ...(existing.deployment?.voiceSettings || {}),
+            },
+        },
+        businessKnowledge: existing.businessKnowledge || base.businessKnowledge,
+        productKnowledge: existing.productKnowledge || base.productKnowledge,
+        policyKnowledge: existing.policyKnowledge || base.policyKnowledge,
+        eventIntents: existing.eventIntents || base.eventIntents,
     };
 }
 
@@ -687,6 +1437,9 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
     const serviceNames = plan.businessProfile.services.map(service => service.name).filter(Boolean);
     const colors = plan.brandProfile.colors as Record<string, string>;
     const socialLinks = createBioPageSocialLinks(plan.businessProfile.contactInfo || {});
+    const testimonialItems = createBioPageTestimonialItems(plan);
+    const faqItems = createBioPageFaqItems(plan);
+    const contactBlockPayload = createBioPageContactBlockPayload(plan.businessProfile.contactInfo || {});
     const leadCaptureFields = [
         { id: 'name', label: 'Name', type: 'text' as const, required: true },
         { id: 'email', label: 'Email', type: 'email' as const, required: true },
@@ -741,8 +1494,22 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
                 sourceMap: { title: 'appointmentsBlueprint.services' },
             }]
             : []),
+        {
+            id: 'bio-link-chatbot',
+            title: 'Ask AI',
+            url: '',
+            linkType: 'chatbot' as const,
+            priority: 4,
+            status: 'needs_review' as const,
+            sourceMap: { chatbot: 'chatbotBlueprint' },
+        },
     ];
     const links: BioPageLinkDraft[] = [...baseLinks, ...socialLinks];
+    const featuredBannerLink = baseLinks.find(link => link.linkType === 'booking')
+        || baseLinks.find(link => link.linkType === 'collection')
+        || baseLinks.find(link => link.id === 'bio-link-services')
+        || baseLinks[0];
+    const featuredBannerDescription = plan.businessProfile.tagline || plan.businessProfile.description || '';
 
     const blocks: BioPageBlueprint['blocks'] = [];
     const nextBlockOrder = () => blocks.length;
@@ -797,6 +1564,36 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
         userModified: false,
         sourceMap: { links: 'bioPageBlueprint.links' },
     });
+
+    if (featuredBannerLink && featuredBannerDescription) {
+        blocks.push({
+            id: 'bio-block-featured-banner',
+            type: 'featured_banner',
+            title: featuredBannerLink.linkType === 'booking'
+                ? (industry === 'restaurant' ? 'Reserve now' : 'Book now')
+                : featuredBannerLink.linkType === 'collection'
+                  ? 'Shop featured products'
+                  : serviceNames[0] || 'Start here',
+            description: featuredBannerDescription.slice(0, 180),
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'ai-studio',
+            data: {
+                url: featuredBannerLink.url,
+                ctaLabel: featuredBannerLink.title,
+                source: 'bioPageBlueprint.links',
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: {
+                title: featuredBannerLink.sourceMap?.title || 'bioPageBlueprint.links',
+                description: plan.businessProfile.tagline ? 'websitePlan.businessProfile.tagline' : 'websitePlan.businessProfile.description',
+                url: featuredBannerLink.sourceMap?.url || 'bioPageBlueprint.links',
+            },
+        });
+    }
 
     if (hasEcommerce) {
         blocks.push({
@@ -875,6 +1672,24 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
         sourceMap: { source: 'emailMarketingBlueprint.audiences' },
     });
 
+    if (contactBlockPayload) {
+        blocks.push({
+            id: 'bio-block-contact',
+            type: 'contact',
+            title: 'Direct contact',
+            description: 'Use the verified contact details provided for this project.',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'crm',
+            data: contactBlockPayload.data,
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: contactBlockPayload.sourceMap,
+        });
+    }
+
     if (wantsMedia) {
         blocks.push({
             id: 'bio-block-featured-media',
@@ -892,6 +1707,26 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
                 items: mediaItems.slice(0, 1),
                 assetTargets: mediaAssetTargets,
                 extractedImages: (plan.contentMap.extractedImages || []).slice(0, 6).map(image => image.url).filter(Boolean),
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { media: 'mediaBlueprint.imageNeeds' },
+        });
+
+        blocks.push({
+            id: 'bio-block-media-grid',
+            type: 'media_grid',
+            title: 'Media grid',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'media-ai',
+            data: {
+                source: 'media-ai',
+                items: mediaItems.slice(0, 9),
+                assetTargets: mediaAssetTargets,
+                extractedImages: (plan.contentMap.extractedImages || []).slice(0, 9).map(image => image.url).filter(Boolean),
             },
             needsReview: true,
             generatedByAI: true,
@@ -918,6 +1753,47 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
             generatedByAI: true,
             userModified: false,
             sourceMap: { media: 'websitePlan.assetPlan' },
+        });
+    }
+
+    if (testimonialItems.length) {
+        blocks.push({
+            id: 'bio-block-testimonials',
+            type: 'testimonials',
+            title: 'Proof',
+            description: 'Imported testimonials for review.',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'crm',
+            data: {
+                items: testimonialItems,
+                source: 'websitePlan.contentMap.testimonials',
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { testimonials: 'websitePlan.contentMap.testimonials' },
+        });
+    }
+
+    if (faqItems.length) {
+        blocks.push({
+            id: 'bio-block-faq',
+            type: 'faq',
+            title: 'FAQ',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'ai-studio',
+            data: {
+                items: faqItems,
+                source: 'websitePlan.contentMap.faqs',
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { faqs: 'websitePlan.contentMap.faqs' },
         });
     }
 
@@ -1115,6 +1991,8 @@ function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprin
             needsReview: true,
         },
         integrations: {
+            businessBlueprint: true,
+            designSystem: true,
             ecommerce: hasEcommerce,
             appointments: wantsBooking,
             crm: true,
@@ -1909,11 +2787,64 @@ export function isBusinessBlueprint(value: unknown): value is BusinessBlueprint 
     );
 }
 
+function isCurrentRestaurantBlueprint(value: unknown): value is RestaurantBlueprint {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const blueprint = value as Partial<RestaurantBlueprint>;
+    return Boolean(
+        blueprint.profile &&
+        blueprint.menuDraft &&
+        blueprint.reservations &&
+        blueprint.publicMenu &&
+        blueprint.ecommerceOffers &&
+        !Array.isArray(blueprint.ecommerceOffers) &&
+        blueprint.integrations &&
+        Array.isArray(blueprint.menuSignals) &&
+        Array.isArray(blueprint.reservationRules) &&
+        Array.isArray(blueprint.legacyEcommerceOffers)
+    );
+}
+
+function isCurrentChatbotBlueprint(value: unknown): value is ChatbotBlueprint {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const blueprint = value as Partial<ChatbotBlueprint>;
+    return Boolean(
+        blueprint.engineVersion === 'v2' &&
+        blueprint.agentProfile &&
+        Array.isArray(blueprint.knowledgeSources) &&
+        Array.isArray(blueprint.actions) &&
+        blueprint.leadCapture &&
+        blueprint.handoff &&
+        blueprint.appointments &&
+        blueprint.ecommerce &&
+        blueprint.restaurants &&
+        blueprint.realEstate &&
+        blueprint.bioPage &&
+        blueprint.channels &&
+        blueprint.channels.webWidget &&
+        blueprint.channels.embeddedWidget &&
+        blueprint.channels.bioPage &&
+        blueprint.channels.storefront &&
+        blueprint.channels.checkout &&
+        blueprint.channels.bookingPage &&
+        blueprint.channels.restaurantMenu &&
+        blueprint.channels.realtyPropertyPage &&
+        blueprint.channels.adminPreview &&
+        blueprint.channels.voice &&
+        blueprint.testing &&
+        blueprint.analytics &&
+        blueprint.deployment &&
+        blueprint.deployment.voiceSettings &&
+        Array.isArray(blueprint.businessKnowledge) &&
+        Array.isArray(blueprint.productKnowledge) &&
+        Array.isArray(blueprint.policyKnowledge) &&
+        Array.isArray(blueprint.eventIntents)
+    );
+}
+
 export function migrateBusinessBlueprint(value: unknown): BusinessBlueprint | null {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
     if (isBusinessBlueprint(value)) {
-        const restaurantBlueprint = value.restaurantBlueprint as unknown as Record<string, unknown> | undefined;
-        const normalizedRestaurantBlueprint = restaurantBlueprint?.profile && !Array.isArray(restaurantBlueprint.ecommerceOffers)
+        const normalizedRestaurantBlueprint = isCurrentRestaurantBlueprint(value.restaurantBlueprint)
             ? value.restaurantBlueprint
             : normalizeRestaurantBlueprint(value.restaurantBlueprint, {
                 businessName: value.businessProfile.businessName,
@@ -1935,16 +2866,31 @@ export function migrateBusinessBlueprint(value: unknown): BusinessBlueprint | nu
             visualStyle: value.brandProfile.visualStyle,
             now: value.updatedAt || value.generatedAt,
         });
+        const normalizedChatbotBlueprint = isCurrentChatbotBlueprint(value.chatbotBlueprint)
+            ? value.chatbotBlueprint
+            : normalizeChatbotBlueprint(value.chatbotBlueprint, {
+                businessName: value.businessProfile.businessName,
+                industry: value.businessProfile.industry,
+                description: value.businessProfile.description,
+                tagline: value.businessProfile.tagline,
+                services: value.businessProfile.services,
+                contactInfo: value.businessProfile.contactInfo,
+                hasEcommerce: value.ecommerceBlueprint.enabled,
+                sections: value.websiteBlueprint.sections,
+                now: value.updatedAt || value.generatedAt,
+            });
 
         if (
             normalizedRestaurantBlueprint === value.restaurantBlueprint &&
-            normalizedRealEstateBlueprint === value.realEstateBlueprint
+            normalizedRealEstateBlueprint === value.realEstateBlueprint &&
+            normalizedChatbotBlueprint === value.chatbotBlueprint
         ) {
             return value;
         }
 
         return {
             ...value,
+            chatbotBlueprint: normalizedChatbotBlueprint,
             restaurantBlueprint: normalizedRestaurantBlueprint,
             realEstateBlueprint: normalizedRealEstateBlueprint,
         };

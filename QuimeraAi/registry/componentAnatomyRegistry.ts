@@ -714,6 +714,40 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         ],
         mediaOptions: ['iconSet'],
     }),
+    bioFeaturedBanner: anatomy({
+        componentId: 'bioFeaturedBanner',
+        family: 'bio_page_block',
+        description: 'Promotional Bio Page banner for one reviewed offer or announcement.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content', true, 'bioPageBlueprint.blocks.featured_banner.title'),
+            slot('subtitle', 'Subtitle', 'content'),
+            slot('media', 'Banner media', 'media'),
+            slot('cta', 'CTA', 'cta'),
+        ],
+        layoutVariants: [
+            variant('compactBanner', 'Compact Banner', 'Small high-priority campaign card.', ['headline', 'subtitle', 'cta'], ['bio_page'], ['all'], 'priorityContent'),
+            variant('imageBanner', 'Image Banner', 'Image-backed banner with concise copy.', ['headline', 'media', 'cta'], ['bio_page'], ['creator', 'ecommerce'], 'stackedMobile'),
+        ],
+        mediaOptions: ['none', 'singleImage'],
+        backgroundOptions: ['surface', 'brandTint', 'image', 'gradient'],
+        antiPatterns: ['Do not invent discount claims, launch dates, scarcity, or guarantees.'],
+    }),
+    bioFeaturedMedia: anatomy({
+        componentId: 'bioFeaturedMedia',
+        family: 'bio_page_block',
+        description: 'Single featured media asset for Bio Page storytelling.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('media', 'Featured media', 'media', true, 'bioPageBlueprint.blocks.featured_media.data.url'),
+            slot('caption', 'Caption', 'content'),
+        ],
+        layoutVariants: [
+            variant('singleMediaCard', 'Single Media Card', 'One image or video card with optional caption.', ['headline', 'media', 'caption'], ['bio_page'], ['creator', 'portfolio'], 'stackedMobile'),
+        ],
+        mediaOptions: ['singleImage', 'video'],
+        backgroundOptions: ['plain', 'surface', 'brandTint'],
+        antiPatterns: ['Do not render unsafe embeds, broken URLs, or unrelated stock-like imagery.'],
+    }),
     bioShop: anatomy({
         componentId: 'bioShop',
         family: 'bio_page_block',
@@ -729,6 +763,22 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         ],
         mediaOptions: ['productMedia'],
         antiPatterns: ['Do not render fake products, draft products, fake prices, or fake ratings.'],
+    }),
+    bioProductCollection: anatomy({
+        componentId: 'bioProductCollection',
+        family: 'bio_page_block',
+        description: 'Bio Page product collection grid from Ecommerce categories.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('collections', 'Collections', 'data', true, 'ecommerceEngine.store_categories'),
+            slot('products', 'Products', 'data', true, 'ecommerceEngine.store_products'),
+        ],
+        layoutVariants: [
+            variant('compactCollectionGrid', 'Compact Collection Grid', 'Two-column mobile grid filtered by selected category.', ['headline', 'collections', 'products'], ['bio_page', 'product_collection'], ['ecommerce'], 'stackedMobile'),
+            variant('editorialCollection', 'Editorial Collection', 'Curated category feature with product cards.', ['headline', 'collections', 'products'], ['bio_page'], ['creator', 'ecommerce'], 'priorityContent'),
+        ],
+        mediaOptions: ['productMedia'],
+        antiPatterns: ['Do not render fake collections, draft products, fake prices, or empty public collection claims.'],
     }),
     bioBooking: anatomy({
         componentId: 'bioBooking',
@@ -778,7 +828,7 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         description: 'Media grid for Bio Page assets.',
         availableSlots: [
             slot('headline', 'Headline', 'content'),
-            slot('media', 'Media items', 'media', true),
+            slot('media', 'Media items', 'media', true, 'bioPageBlueprint.blocks.media_grid.data.items'),
         ],
         layoutVariants: [
             variant('squareGrid', 'Square Grid', 'Compact square media grid.', ['headline', 'media'], ['bio_page'], ['creator', 'portfolio'], 'stackedMobile'),
@@ -799,6 +849,52 @@ export const componentAnatomyRegistry: Record<ComponentId, ComponentAnatomyEntry
         ],
         mediaOptions: ['imageGrid', 'singleImage'],
         antiPatterns: ['Do not invent clients, awards, or fake project proof.'],
+    }),
+    bioTestimonials: anatomy({
+        componentId: 'bioTestimonials',
+        family: 'bio_page_block',
+        description: 'Reviewed proof quotes for Bio Page conversion.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('quotes', 'Quotes', 'data', true, 'bioPageBlueprint.blocks.testimonials.data.items'),
+            slot('rating', 'Rating', 'data'),
+        ],
+        layoutVariants: [
+            variant('quoteStack', 'Quote Stack', 'Stacked proof quotes optimized for mobile.', ['headline', 'quotes'], ['bio_page'], ['all'], 'stackedMobile'),
+            variant('singleProofCard', 'Single Proof Card', 'One strong manually reviewed testimonial.', ['headline', 'quotes', 'rating'], ['bio_page'], ['services', 'creator'], 'priorityContent'),
+        ],
+        antiPatterns: ['Do not fabricate testimonials, reviews, ratings, customer names, or proof claims.'],
+    }),
+    bioFaq: anatomy({
+        componentId: 'bioFaq',
+        family: 'bio_page_block',
+        description: 'Compact Bio Page FAQ for common high-intent questions.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('questions', 'Questions', 'data', true, 'bioPageBlueprint.blocks.faq.data.items'),
+        ],
+        layoutVariants: [
+            variant('compactAccordion', 'Compact Accordion', 'Small stacked Q&A list for mobile.', ['headline', 'questions'], ['bio_page'], ['all'], 'stackedMobile'),
+        ],
+        antiPatterns: ['Do not invent legal, medical, pricing, refund, availability, or guarantee claims.'],
+    }),
+    bioContact: anatomy({
+        componentId: 'bioContact',
+        family: 'bio_page_block',
+        description: 'Direct contact methods for a public Bio Page.',
+        availableSlots: [
+            slot('headline', 'Headline', 'content'),
+            slot('email', 'Email', 'data'),
+            slot('phone', 'Phone', 'data'),
+            slot('whatsapp', 'WhatsApp', 'data'),
+            slot('address', 'Address', 'data'),
+            slot('cta', 'CTA', 'cta'),
+        ],
+        layoutVariants: [
+            variant('contactButtons', 'Contact Buttons', 'Stacked direct-contact CTAs.', ['headline', 'email', 'phone', 'whatsapp', 'cta'], ['bio_page', 'lead_capture'], ['all'], 'stackedMobile'),
+            variant('localContactCard', 'Local Contact Card', 'Address-forward contact card for local businesses.', ['headline', 'address', 'phone', 'cta'], ['bio_page'], ['local_business', 'restaurant'], 'priorityContent'),
+        ],
+        antiPatterns: ['Do not invent email addresses, phone numbers, WhatsApp numbers, locations, or map links.'],
     }),
     bioChatCTA: anatomy({
         componentId: 'bioChatCTA',

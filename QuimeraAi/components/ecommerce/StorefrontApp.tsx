@@ -5,12 +5,13 @@
  * server (SSR) and client (hydration). Used for custom domains.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import StorefrontLayout from './StorefrontLayout';
 import ProductDetailPageWithCart from './ProductDetailPageWithCart';
 import CheckoutPageEnhanced from './CheckoutPageEnhanced';
 import OrderConfirmation from './OrderConfirmation';
 import MyAccountPage from './account/MyAccountPage';
+import ChatbotWidget from '../ChatbotWidget';
 import { Loader2 } from 'lucide-react';
 import { useStorefrontCart } from './context';
 
@@ -24,6 +25,7 @@ import {
 } from '../../utils/storefrontRenderer';
 import { mapSupabaseRowToProject } from '../../utils/mapSupabaseProject';
 import { parseStorefrontUrl, type StorefrontRouteState } from '../../utils/storefrontRouter';
+import { buildChatbotEngineSurfaceContext } from '../../utils/chatbotEngine/surfaceContext';
 import { supabase } from '../../supabase';
 import type { ProductCardVariant } from '../../types/productCard';
 
@@ -491,6 +493,48 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
     const resolvedProjectData = projectData
         ? applyResolvedStorefrontEditorConfig(projectData, { mode: storefrontConfigMode })
         : projectData;
+    const storefrontAiAssistantConfig = resolvedProjectData?.aiAssistantConfig
+        || resolvedProjectData?.data?.aiAssistantConfig
+        || resolvedProjectData?.data?.chatbot
+        || null;
+    const storefrontChatbotContext = useMemo(() => {
+        const routePath = serverUrl || (typeof window !== 'undefined' ? window.location.pathname : undefined);
+        const isCheckout = route.view === 'checkout';
+        const entityType = route.view === 'product'
+            ? 'product'
+            : route.view === 'category'
+                ? 'category'
+                : route.view === 'order-confirmation'
+                    ? 'order'
+                    : isCheckout
+                        ? 'checkout'
+                        : 'storefront';
+
+        return buildChatbotEngineSurfaceContext({
+            sourceSurface: isCheckout ? 'checkout' : 'storefront',
+            sourceModule: 'ecommerce',
+            route: routePath,
+            entityType,
+            entityId: route.params.orderId,
+            entitySlug: route.params.productSlug || route.params.categorySlug,
+            contextKeys: [
+                'storefront',
+                `storefront:${route.view}`,
+                isCheckout ? 'checkout' : '',
+                route.params.productSlug ? 'product' : '',
+                route.params.categorySlug ? 'category' : '',
+            ].filter(Boolean),
+            metadata: {
+                routeView: route.view,
+                projectId,
+                hostname,
+                productSlug: route.params.productSlug,
+                categorySlug: route.params.categorySlug,
+                orderId: route.params.orderId,
+                storefrontConfigMode,
+            },
+        });
+    }, [hostname, projectId, route, serverUrl, storefrontConfigMode]);
     const globalColors = resolvedProjectData?.theme?.globalColors || {};
     const productDetailColors = {
         background: resolvedProjectData?.theme?.pageBackground || globalColors.background,
@@ -623,6 +667,21 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
             projectData={resolvedProjectData}
         >
             {renderContent()}
+            {storefrontAiAssistantConfig && (
+                <ChatbotWidget
+                    standaloneConfig={storefrontAiAssistantConfig}
+                    standaloneProject={{
+                        ...(resolvedProjectData || {}),
+                        id: resolvedProjectData?.id || projectId,
+                        name: resolvedProjectData?.name || resolvedProjectData?.data?.businessName || 'Storefront',
+                        data: resolvedProjectData?.data || resolvedProjectData || {},
+                        theme: resolvedProjectData?.theme,
+                        componentOrder: resolvedProjectData?.componentOrder || resolvedProjectData?.component_order || [],
+                        sectionVisibility: resolvedProjectData?.sectionVisibility || resolvedProjectData?.section_visibility || {},
+                    }}
+                    chatbotEngineContext={storefrontChatbotContext}
+                />
+            )}
         </StorefrontLayout>
     );
 };

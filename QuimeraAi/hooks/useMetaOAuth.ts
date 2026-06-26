@@ -94,17 +94,23 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
             const result = await supabase.functions.invoke('onboarding-api', {
                 body: { action: 'getConnection', projectId }
             });
-            const data = result.data?.data || result.data;
+            if (result.error) throw result.error;
 
-            if (data.connected) {
+            const data = result.data?.data ?? result.data ?? null;
+
+            if (data?.connected) {
+                const pages = Array.isArray(data.pages) ? data.pages : [];
+                const whatsappAccounts = Array.isArray(data.whatsappAccounts) ? data.whatsappAccounts : [];
+                const instagramAccounts = Array.isArray(data.instagramAccounts) ? data.instagramAccounts : [];
+
                 setState(prev => ({
                     ...prev,
                     status: data.status || 'connected',
                     isLoading: false,
                     connection: data,
-                    pages: data.pages || [],
-                    whatsappAccounts: data.whatsappAccounts || [],
-                    instagramAccounts: data.instagramAccounts || [],
+                    pages,
+                    whatsappAccounts,
+                    instagramAccounts,
                     selectedPageId: data.selectedPageId || null,
                     selectedWhatsAppPhoneNumberId: data.selectedWhatsAppPhoneNumberId || null,
                     selectedInstagramAccountId: data.selectedInstagramAccountId || null,
@@ -293,7 +299,7 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
     // COMPUTED VALUES
     // ==========================================================================
 
-    const isConnected = state.status === 'connected';
+    const isConnected = state.status === 'connected' || state.status === 'token_expired' || Boolean(state.connection?.connected);
     const hasPages = state.pages.length > 0;
     const hasWhatsApp = state.whatsappAccounts.length > 0;
     const hasInstagram = state.instagramAccounts.length > 0;
@@ -317,7 +323,6 @@ export const useMetaOAuth = (projectId: string): UseMetaOAuthReturn => {
 };
 
 export default useMetaOAuth;
-
 
 
 

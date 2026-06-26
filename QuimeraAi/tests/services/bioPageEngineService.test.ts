@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
     applyProjectBioPageBlueprintDraft,
     buildBioPageTrackedUrl,
@@ -17,10 +17,13 @@ import {
     getBioPageAnalytics,
     getBioPageById,
     getBioPageEligibleStorefrontProducts,
+    generateBioPageQrCode,
     getSafeBioBlockMediaUrl,
     getSafeBioBlockUrl,
     getBioPagePublishIssues,
     getBioPageAnonymousVisitorId,
+    getBioPageTrafficSource,
+    getBioPageUtm,
     getPublicBioPageBySlug,
     isBioSlugAvailable,
     mapStorefrontProductToBioPageProduct,
@@ -28,6 +31,7 @@ import {
     parseBioPageAppointmentPaymentReturn,
     prioritizeBioPageBlock,
     prioritizeBioPageLink,
+    recordBioPageEvent,
     recordBioPageClick,
     recordBioPageView,
     sanitizeBioMediaUrl,
@@ -39,6 +43,7 @@ import {
     toggleLinkVisibility,
     trackBioPageAppointmentPaymentReturn,
     trackBioPageBookingCompleted,
+    trackBioPageProductClick,
     trackBioPageQrScan,
     trackBioPageShare,
     trackBioPageTabChange,
@@ -54,6 +59,7 @@ import { createBusinessBlueprintFromWebsitePlan } from '../../utils/businessBlue
 import type { WebsitePlan } from '../../types/websitePlan';
 import type { PublicStorefrontProduct } from '../../utils/ecommerce/publicStorefrontCatalog';
 import type { BusinessBlueprint } from '../../types/businessBlueprint';
+import { getBioSlugFromPathname } from '../../utils/bioPageRouting';
 
 function buildPlan(): WebsitePlan {
     return {
@@ -217,6 +223,17 @@ describe('bioPageEngineService', () => {
     it('validates reserved slugs and normalizes allowed slugs', () => {
         expect(validateBioSlug('Admin').ok).toBe(false);
         expect(validateBioSlug('Creator Shop!')).toMatchObject({ ok: true, slug: 'creator-shop' });
+    });
+
+    it('extracts canonical public Bio Page slugs from route paths', () => {
+        expect(getBioSlugFromPathname('/bio/creator-shop')).toBe('creator-shop');
+        expect(getBioSlugFromPathname('/bio/creator-shop/')).toBe('creator-shop');
+        expect(getBioSlugFromPathname('/bio/creator-shop/extra')).toBe('creator-shop');
+        expect(getBioSlugFromPathname('/bio/creator%20shop?utm_source=qr#contact')).toBe('creator shop');
+        expect(getBioSlugFromPathname('/bio/creator%2Fextra')).toBe('creator');
+        expect(getBioSlugFromPathname('/bio/?utm_source=qr')).toBe('');
+        expect(getBioSlugFromPathname('/bio/%E0%A4%A')).toBe('');
+        expect(getBioSlugFromPathname('/store/bio/creator-shop')).toBe('');
     });
 
     it('handles Bio Page slug availability before create, update, and publish', async () => {
@@ -393,6 +410,77 @@ describe('bioPageEngineService', () => {
         })).toBe(
             'https://quimera.test/bio/creator-shop?utm_source=qr&utm_medium=bio_page&utm_campaign=Override-Campaign&utm_content=Poster-A',
         );
+    });
+
+    it('generates QR code metadata with a sanitized optional logo', async () => {
+        const upserts: Array<{ table: string; row: any; options: any }> = [];
+        const client = {
+            from(table: string) {
+                return {
+                    upsert(row: any, options: any) {
+                        upserts.push({ table, row, options });
+                        return { error: null };
+                    },
+                };
+            },
+        };
+        const page = {
+            id: 'bio-qr-1',
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            slug: 'creator-shop',
+            settings: {
+                qrUtmSource: 'print flyer',
+                qrUtmMedium: 'qr code',
+                qrUtmCampaign: 'Retail Drop 01',
+                qrLogoUrl: 'javascript:alert(1)',
+            },
+            theme: {
+                buttonColor: '#0f172a',
+            },
+            profile: {
+                logoUrl: 'https://cdn.example.com/profile-logo.png',
+                avatarUrl: 'https://cdn.example.com/avatar.png',
+            },
+        } as any;
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+        let qr: Awaited<ReturnType<typeof generateBioPageQrCode>> | null = null;
+        try {
+            qr = await generateBioPageQrCode({
+                page,
+                origin: 'https://quimera.test',
+                color: '#123456',
+                backgroundColor: '#f8fafc',
+                logoUrl: 'https://cdn.example.com/qr-logo.png',
+                logoLoadTimeoutMs: 1,
+                width: 192,
+            }, client as any);
+        } finally {
+            warnSpy.mockRestore();
+        }
+        if (!qr) throw new Error('QR code was not generated.');
+
+        expect(qr.url).toBe('https://quimera.test/bio/creator-shop?utm_source=print-flyer&utm_medium=qr-code&utm_campaign=Retail-Drop-01');
+        expect(qr.dataUrl).toMatch(/^data:image\/png;base64,/);
+        expect(upserts).toHaveLength(1);
+        expect(upserts[0]).toMatchObject({
+            table: 'bio_page_qr_codes',
+            options: { onConflict: 'bio_page_id' },
+            row: {
+                tenant_id: 'tenant-1',
+                project_id: 'project-1',
+                bio_page_id: 'bio-qr-1',
+                url: qr.url,
+                color: '#123456',
+                background_color: '#f8fafc',
+                logo_url: 'https://cdn.example.com/qr-logo.png',
+                metadata: {
+                    generatedBy: 'bio-page-engine',
+                    logoEmbedded: false,
+                },
+            },
+        });
     });
 
     it('persists custom slug, SEO, and QR settings on draft updates', async () => {
@@ -764,15 +852,37 @@ describe('bioPageEngineService', () => {
         expect(blueprint.status).toBe('needs_review');
         expect(blueprint.seo.noIndex).toBe(true);
         expect(blueprint.analytics.events).toContain('bio_booking_completed');
+        expect(blueprint.links.find(link => link.linkType === 'chatbot')).toMatchObject({
+            title: 'Ask AI',
+            url: '',
+            sourceMap: { chatbot: 'chatbotBlueprint' },
+        });
+        expect(draft.blocks?.some(block => block.type === 'featured_banner')).toBe(true);
         expect(draft.blocks?.some(block => block.type === 'product_grid')).toBe(true);
         expect(draft.blocks?.some(block => block.type === 'booking')).toBe(true);
+        expect(draft.blocks?.some(block => block.type === 'contact')).toBe(true);
         expect(draft.blocks?.some(block => block.type === 'social_links')).toBe(true);
         expect(draft.blocks?.some(block => block.type === 'featured_media')).toBe(true);
+        expect(draft.blocks?.some(block => block.type === 'media_grid')).toBe(true);
         expect(draft.blocks?.some(block => block.type === 'portfolio_grid')).toBe(true);
+        expect(draft.blocks?.some(block => block.type === 'testimonials')).toBe(false);
+        expect(draft.blocks?.some(block => block.type === 'faq')).toBe(false);
+        expect(draft.blocks?.find(block => block.type === 'featured_banner')).toMatchObject({
+            status: 'needs_review',
+            generatedByAI: true,
+            data: expect.objectContaining({ source: 'bioPageBlueprint.links' }),
+        });
+        expect(draft.blocks?.find(block => block.type === 'contact')?.data).toMatchObject({
+            address: 'San Juan, Puerto Rico',
+        });
         expect(draft.blocks?.find(block => block.type === 'featured_media')?.data).toMatchObject({
             url: 'https://cdn.creator.test/hero.jpg',
             mediaType: 'image',
         });
+        expect(draft.blocks?.find(block => block.type === 'media_grid')?.data?.items).toEqual(expect.arrayContaining([
+            expect.objectContaining({ url: 'https://cdn.creator.test/hero.jpg', title: 'Creator workspace' }),
+            expect.objectContaining({ url: 'https://cdn.creator.test/project.jpg', title: 'Digital product preview' }),
+        ]));
         expect(draft.blocks?.find(block => block.type === 'portfolio_grid')?.data?.items).toEqual(expect.arrayContaining([
             expect.objectContaining({ url: 'https://cdn.creator.test/hero.jpg', title: 'Creator workspace' }),
             expect.objectContaining({ url: 'https://cdn.creator.test/project.jpg', title: 'Digital product preview' }),
@@ -790,12 +900,132 @@ describe('bioPageEngineService', () => {
             consentText: blueprint.emailSubscribe.consentText,
             successMessage: blueprint.emailSubscribe.successMessage,
         });
+        expect(draft.settings?.sourceMap).toMatchObject({
+            profile: 'websitePlan.businessProfile',
+            bioPageBlueprint: 'businessBlueprint.bioPageBlueprint',
+        });
+        expect(blueprint.integrations).toMatchObject({
+            businessBlueprint: true,
+            designSystem: true,
+        });
+        expect(draft.blocks?.find(block => block.type === 'lead_form')?.sourceMap).toMatchObject({
+            source: 'leadBlueprint.leadSources',
+        });
+        expect(draft.blocks?.find(block => block.type === 'lead_form')?.settings).toMatchObject({
+            sourceMap: { source: 'leadBlueprint.leadSources' },
+            blueprintStatus: 'needs_review',
+        });
         expect(draft.links?.find(link => link.platform === 'instagram')).toMatchObject({
             linkType: 'social',
             url: 'https://instagram.com/creator_shop',
             openInNewTab: true,
+            sourceMap: { url: 'websitePlan.businessProfile.contactInfo.instagram' },
+            metadata: {
+                sourceMap: { url: 'websitePlan.businessProfile.contactInfo.instagram' },
+                blueprintStatus: 'needs_review',
+            },
+        });
+        expect(draft.links?.find(link => link.linkType === 'chatbot')).toMatchObject({
+            title: 'Ask AI',
+            url: '',
+            enabled: true,
+            visible: true,
+            sourceMap: { chatbot: 'chatbotBlueprint' },
+            metadata: {
+                sourceMap: { chatbot: 'chatbotBlueprint' },
+                blueprintStatus: 'needs_review',
+            },
         });
         expect(draft.settings?.emailSignupEnabled).toBe(true);
+    });
+
+    it('generates Bio Page proof and FAQ blocks only from explicit WebsitePlan content', () => {
+        const plan = buildPlan();
+        plan.contentMap = {
+            ...plan.contentMap,
+            testimonials: [
+                {
+                    quote: 'The guide helped us launch faster with fewer revisions.',
+                    author: 'Ana Rivera',
+                    role: 'Founder',
+                    rating: 5,
+                },
+                { text: 'Second verified quote', name: 'Luis', rating: '4' },
+                { author: 'Missing quote should be ignored' },
+            ],
+            faqs: [
+                {
+                    question: 'Can I book a strategy session?',
+                    answer: 'Yes. Use the booking block after the draft is reviewed.',
+                },
+                { q: 'Do you sell digital products?', a: 'Yes. Active Ecommerce products can appear in the shop tab.' },
+                { question: 'Missing answer should be ignored' },
+            ],
+        };
+        plan.businessProfile.contactInfo = {
+            ...plan.businessProfile.contactInfo,
+            email: 'hello@creator.test',
+            phone: '+1 787 555 0101',
+            whatsapp: '+17875550101',
+            website: 'https://creator.test',
+        };
+
+        const blueprint = createBusinessBlueprintFromWebsitePlan(plan, {
+            now: '2026-06-25T20:00:00.000Z',
+            projectId: '00000000-0000-4000-8000-000000000001',
+            tenantId: '00000000-0000-4000-8000-000000000002',
+            createdBy: '00000000-0000-4000-8000-000000000003',
+        }).bioPageBlueprint!;
+        const draft = createBioPageFromBlueprint({
+            projectId: '00000000-0000-4000-8000-000000000001',
+            tenantId: '00000000-0000-4000-8000-000000000002',
+            userId: '00000000-0000-4000-8000-000000000003',
+            blueprint,
+        });
+
+        const testimonialsBlock = draft.blocks?.find(block => block.type === 'testimonials');
+        expect(testimonialsBlock).toMatchObject({
+            title: 'Proof',
+            status: 'needs_review',
+            sourceMap: { testimonials: 'websitePlan.contentMap.testimonials' },
+        });
+        expect(testimonialsBlock?.data?.items).toEqual([
+            expect.objectContaining({
+                quote: 'The guide helped us launch faster with fewer revisions.',
+                author: 'Ana Rivera',
+                role: 'Founder',
+                rating: 5,
+            }),
+            expect.objectContaining({
+                quote: 'Second verified quote',
+                author: 'Luis',
+                rating: 4,
+            }),
+        ]);
+
+        const faqBlock = draft.blocks?.find(block => block.type === 'faq');
+        expect(faqBlock).toMatchObject({
+            title: 'FAQ',
+            status: 'needs_review',
+            sourceMap: { faqs: 'websitePlan.contentMap.faqs' },
+        });
+        expect(faqBlock?.data?.items).toEqual([
+            expect.objectContaining({
+                question: 'Can I book a strategy session?',
+                answer: 'Yes. Use the booking block after the draft is reviewed.',
+            }),
+            expect.objectContaining({
+                question: 'Do you sell digital products?',
+                answer: 'Yes. Active Ecommerce products can appear in the shop tab.',
+            }),
+        ]);
+
+        expect(draft.blocks?.find(block => block.type === 'contact')?.data).toMatchObject({
+            email: 'hello@creator.test',
+            phone: '+1 787 555 0101',
+            whatsapp: '+17875550101',
+            url: 'https://creator.test',
+        });
     });
 
     it('applies an AI Studio BioPageBlueprint into a canonical draft without publishing', async () => {
@@ -830,6 +1060,17 @@ describe('bioPageEngineService', () => {
         expect(client.tables.bio_page_blocks.some(row => row.type === 'product_grid')).toBe(true);
         expect(client.tables.bio_page_blocks.some(row => row.type === 'booking')).toBe(true);
         expect(client.tables.bio_page_links.length).toBeGreaterThan(0);
+        expect(client.tables.bio_pages[0].settings.sourceMap).toMatchObject({
+            bioPageBlueprint: 'businessBlueprint.bioPageBlueprint',
+        });
+        expect(client.tables.bio_page_blocks.find(row => row.type === 'lead_form')?.settings).toMatchObject({
+            sourceMap: { source: 'leadBlueprint.leadSources' },
+            blueprintStatus: 'needs_review',
+        });
+        expect(client.tables.bio_page_links.find(row => row.platform === 'instagram')?.metadata).toMatchObject({
+            sourceMap: { url: 'websitePlan.businessProfile.contactInfo.instagram' },
+            blueprintStatus: 'needs_review',
+        });
     });
 
     it('skips disabled or missing BioPageBlueprints during AI Studio handoff', async () => {
@@ -1094,6 +1335,113 @@ describe('bioPageEngineService', () => {
         await expect(getPublicBioPageBySlug('draft-shop', client as any)).resolves.toBeNull();
     });
 
+    it('serves a complete published public demo Bio Page when the demo slug has no DB record', async () => {
+        const client = createBioPageSupabaseMock();
+        const page = await getPublicBioPageBySlug('demo', client as any);
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+        expect(page).toMatchObject({
+            slug: 'demo',
+            status: 'published',
+            isPublished: true,
+            emailSignupEnabled: true,
+            settings: expect.objectContaining({
+                shopEnabled: true,
+                bookingEnabled: true,
+                leadCaptureEnabled: true,
+                emailSignupEnabled: true,
+                chatbotEnabled: true,
+                analyticsEnabled: false,
+            }),
+        });
+        expect(page?.id).toMatch(uuidRe);
+        expect(page?.projectId).toMatch(uuidRe);
+        expect(page?.links.every(link => uuidRe.test(link.id))).toBe(true);
+        expect(page?.blocks.every(block => uuidRe.test(block.id))).toBe(true);
+        expect(page?.blocks.map(block => block.type)).toEqual(expect.arrayContaining([
+            'profile',
+            'social_links',
+            'link',
+            'featured_banner',
+            'product_grid',
+            'media_grid',
+            'portfolio_grid',
+            'booking',
+            'email_subscribe',
+            'lead_form',
+            'contact',
+            'chatbot_cta',
+        ]));
+        expect(page?.links.map(link => link.linkType)).toEqual(expect.arrayContaining([
+            'internal',
+            'product',
+            'booking',
+            'chatbot',
+            'social',
+        ]));
+        expect(page?.products).toHaveLength(2);
+        expect(page?.seo).toMatchObject({ noIndex: true, canonicalUrl: '/bio/demo' });
+    });
+
+    it('does not persist analytics for the fallback demo Bio Page', async () => {
+        const client = createBioPageSupabaseMock();
+        const page = await getPublicBioPageBySlug('demo', client as any);
+        const storageState: Record<string, string> = {};
+        const storage = {
+            getItem: (key: string) => storageState[key] || null,
+            setItem: (key: string, value: string) => {
+                storageState[key] = value;
+            },
+        };
+
+        await recordBioPageView(page!, client as any, storage as any);
+        await trackBioPageShare(page!, client as any);
+
+        expect(client.tables.bio_page_events).toHaveLength(0);
+    });
+
+    it('uses a real published demo slug over the public demo fallback', async () => {
+        const client = createBioPageSupabaseMock();
+        client.tables.bio_pages.push({
+            id: 'bio-real-demo',
+            project_id: 'project-real',
+            tenant_id: 'tenant-1',
+            user_id: 'user-1',
+            slug: 'demo',
+            title: 'Real Published Demo',
+            description: 'Real tenant-owned page',
+            profile: { displayName: 'Real Demo', handle: 'demo', bio: 'Database page wins' },
+            theme: {},
+            seo: {},
+            settings: {},
+            status: 'published',
+            published_at: '2026-06-26T01:00:00.000Z',
+            updated_at: '2026-06-26T01:00:00.000Z',
+        });
+        client.tables.bio_page_links.push({
+            id: 'real-demo-link',
+            bio_page_id: 'bio-real-demo',
+            project_id: 'project-real',
+            tenant_id: 'tenant-1',
+            title: 'Real link',
+            url: 'https://real-demo.example.com/',
+            link_type: 'external',
+            order_index: 0,
+            visible: true,
+            click_tracking_enabled: true,
+            metadata: {},
+        });
+
+        const page = await getPublicBioPageBySlug('demo', client as any);
+
+        expect(page).toMatchObject({
+            id: 'bio-real-demo',
+            projectId: 'project-real',
+            title: 'Real Published Demo',
+        });
+        expect(page?.links.map(link => link.id)).toEqual(['real-demo-link']);
+    });
+
     it('publishes and unpublishes Bio Pages with public URL gating', async () => {
         const client = createBioPageSupabaseMock();
         client.tables.bio_pages.push({
@@ -1319,6 +1667,14 @@ describe('bioPageEngineService', () => {
                     data: { url: 'mailto:hello@example.com', mediaType: 'image' },
                 },
                 {
+                    id: 'media-grid-sms',
+                    type: 'media_grid',
+                    title: 'Media grid',
+                    visible: true,
+                    status: 'configured',
+                    data: { items: [{ url: 'sms:+15555555555', type: 'image' }] },
+                },
+                {
                     id: 'portfolio-tel',
                     type: 'portfolio_grid',
                     title: 'Portfolio',
@@ -1331,6 +1687,7 @@ describe('bioPageEngineService', () => {
 
         expect(getBioPagePublishIssues(page)).toEqual(expect.arrayContaining([
             'Block "Featured media" needs a safe media URL.',
+            'Block "Media grid" needs at least one safe media item.',
             'Block "Portfolio" needs at least one safe portfolio item.',
         ]));
     });
@@ -1478,13 +1835,6 @@ describe('bioPageEngineService', () => {
                 return {
                     insert(row: any) {
                         inserts.push({ table, row });
-                        if (table === 'leads') {
-                            return {
-                                select: () => ({
-                                    single: async () => ({ data: { id: 'lead-1' }, error: null }),
-                                }),
-                            };
-                        }
                         return { error: null };
                     },
                 };
@@ -1507,10 +1857,11 @@ describe('bioPageEngineService', () => {
             },
         }, client as any);
 
-        expect(leadId).toBe('lead-1');
+        expect(leadId).toMatch(/^[0-9a-f-]{36}$/);
         expect(inserts[0]).toMatchObject({
             table: 'leads',
             row: {
+                id: leadId,
                 source: 'bio_page',
                 custom_data: {
                     bioPageId: 'bio-1',
@@ -1544,6 +1895,61 @@ describe('bioPageEngineService', () => {
         expect(inserts[1].row.metadata).not.toHaveProperty('leadId');
     });
 
+    it('allows public lead capture for project-scoped Bio Pages without a tenant', async () => {
+        const inserts: Array<{ table: string; row: any }> = [];
+        const client = {
+            from(table: string) {
+                return {
+                    insert(row: any) {
+                        inserts.push({ table, row });
+                        return { error: null };
+                    },
+                };
+            },
+        };
+
+        const leadId = await submitBioPageLead({
+            page: {
+                id: 'bio-1',
+                projectId: 'project-1',
+                tenantId: null,
+                slug: 'creator-shop',
+            } as any,
+            blockId: 'block-lead',
+            lead: {
+                name: 'Ana',
+                email: 'ana@example.com',
+            },
+        }, client as any);
+
+        expect(leadId).toMatch(/^[0-9a-f-]{36}$/);
+        expect(inserts[0]).toMatchObject({
+            table: 'leads',
+            row: {
+                id: leadId,
+                tenant_id: null,
+                project_id: 'project-1',
+                source: 'bio_page',
+            },
+        });
+        expect(inserts[1]).toMatchObject({
+            table: 'bio_page_events',
+            row: {
+                tenant_id: null,
+                project_id: 'project-1',
+                event_type: 'bio_lead_submitted',
+                source: 'bio_page',
+                metadata: {
+                    bioPageId: 'bio-1',
+                    bioSlug: 'creator-shop',
+                    blockId: 'block-lead',
+                    sourceModule: 'bio-page-engine',
+                    crmWrite: 'created',
+                },
+            },
+        });
+    });
+
     it('treats repeated Bio Page lead submissions as idempotent CRM duplicates', async () => {
         const inserts: Array<{ table: string; row: any }> = [];
         const client = {
@@ -1553,15 +1959,10 @@ describe('bioPageEngineService', () => {
                         inserts.push({ table, row });
                         if (table === 'leads') {
                             return {
-                                select: () => ({
-                                    single: async () => ({
-                                        data: null,
-                                        error: {
-                                            code: '23505',
-                                            message: 'duplicate key value violates unique constraint "leads_bio_page_project_email_source_unique_idx"',
-                                        },
-                                    }),
-                                }),
+                                error: {
+                                    code: '23505',
+                                    message: 'duplicate key value violates unique constraint "leads_bio_page_project_email_source_unique_idx"',
+                                },
                             };
                         }
                         return { error: null };
@@ -1741,6 +2142,7 @@ describe('bioPageEngineService', () => {
             { id: 'event-view-2', event_type: 'bio_page_viewed', source: null, block_id: null, link_id: null, referrer: null, utm: {}, user_agent: 'Mozilla/5.0 (iPhone)', metadata: { visitorId: 'visitor-1' } },
             { id: 'event-view-3', event_type: 'bio_page_viewed', source: null, block_id: null, link_id: null, referrer: null, utm: {}, user_agent: 'Mozilla/5.0 (iPad)', metadata: { visitorId: 'visitor-2' } },
             { event_type: 'bio_link_clicked', source: 'instagram', block_id: null, link_id: null, referrer: 'https://instagram.com/reel/1', utm: { utm_source: 'instagram', utm_campaign: 'launch' }, user_agent: 'Mozilla/5.0 (Macintosh)', metadata: { blockId: 'block-links', linkId: 'link-1' } },
+            { event_type: 'bio_link_clicked', source: null, block_id: null, link_id: null, referrer: 'https://youtube.com/watch/1', utm: { utm_source: 'youtube', utm_campaign: 'launch' }, user_agent: 'Mozilla/5.0 (Macintosh)', metadata: { blockId: 'block-links', linkId: 'link-1' } },
             { event_type: 'bio_email_subscribed', source: 'email_subscribe', block_id: 'block-email', link_id: null, referrer: 'https://mail.example.com/newsletter', utm: { utm_source: 'email', utm_campaign: 'newsletter' }, user_agent: 'Mozilla/5.0 (Android)', metadata: {} },
         ];
         const query = {
@@ -1764,38 +2166,51 @@ describe('bioPageEngineService', () => {
             views: 3,
             uniqueViews: 2,
             returningViews: 1,
-            clicks: 1,
+            clicks: 2,
             subscribers: 1,
             conversions: 1,
             conversionRate: 33.3,
             sourceBreakdown: {
                 direct: 3,
                 instagram: 1,
+                youtube: 1,
                 email_subscribe: 1,
             },
             utmSourceBreakdown: {
                 instagram: 1,
+                youtube: 1,
                 email: 1,
             },
             utmCampaignBreakdown: {
-                launch: 1,
+                launch: 2,
                 newsletter: 1,
             },
             referrerBreakdown: {
                 direct: 3,
                 'instagram.com': 1,
+                'youtube.com': 1,
                 'mail.example.com': 1,
             },
             deviceBreakdown: {
                 mobile: 3,
                 tablet: 1,
-                desktop: 1,
+                desktop: 2,
             },
             blockBreakdown: {
-                'block-links': 1,
+                'block-links': 2,
                 'block-email': 1,
             },
-            topLinks: [{ id: 'link-1', title: 'Instagram', clicks: 1 }],
+            topLinks: [{ id: 'link-1', title: 'Instagram', clicks: 2 }],
+            linkSourceBreakdown: [{
+                id: 'link-1',
+                title: 'Instagram',
+                clicks: 2,
+                topSource: 'instagram',
+                sources: {
+                    instagram: 1,
+                    youtube: 1,
+                },
+            }],
         });
     });
 
@@ -1829,7 +2244,7 @@ describe('bioPageEngineService', () => {
         });
     });
 
-    it('records link click analytics with block attribution', async () => {
+    it('sanitizes public traffic attribution before storing Bio Page events', async () => {
         const client = createBioPageSupabaseMock();
         const page = {
             id: 'bio-1',
@@ -1837,28 +2252,133 @@ describe('bioPageEngineService', () => {
             tenantId: 'tenant-1',
         } as any;
 
-        await recordBioPageClick(page, {
-            id: 'link-1',
-            title: 'Consultation',
-            url: 'https://example.com/book',
-            enabled: true,
-            clicks: 0,
-            linkType: 'booking',
-            platform: 'calendar',
-        }, 'block-links', client as any);
+        expect(getBioPageUtm('?utm_source=instagram%20story&utm_campaign=ana@example.com&utm_content=Poster%20A%20/%20Q3')).toEqual({
+            utm_source: 'instagram-story',
+            utm_content: 'Poster-A-Q3',
+        });
+
+        await recordBioPageEvent({
+            page,
+            eventType: 'bio_page_viewed',
+            source: ' Instagram Ads! ',
+            referrer: 'https://instagram.com/reel/1?email=ana@example.com#lead',
+            utm: {
+                utm_source: ' newsletter list ',
+                utm_campaign: 'ana@example.com',
+                utm_content: 'Poster A / Q3?',
+            },
+        }, client as any);
+
+        expect(client.tables.bio_page_events[0]).toMatchObject({
+            event_type: 'bio_page_viewed',
+            source: 'Instagram-Ads',
+            referrer: 'https://instagram.com/reel/1',
+            utm: {
+                utm_source: 'newsletter-list',
+                utm_content: 'Poster-A-Q3',
+            },
+        });
+        expect(client.tables.bio_page_events[0].utm).not.toHaveProperty('utm_campaign');
+        expect(JSON.stringify(client.tables.bio_page_events[0])).not.toContain('ana@example.com');
+    });
+
+    it('records link click analytics with persisted block attribution', async () => {
+        const client = createBioPageSupabaseMock();
+        const blockId = '11111111-1111-4111-8111-111111111111';
+        const linkId = '22222222-2222-4222-8222-222222222222';
+        const page = {
+            id: 'bio-1',
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+        } as any;
+        const originalPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        window.history.replaceState({}, '', '/bio/demo?utm_source=qr&utm_medium=bio_page&utm_campaign=poster_launch');
+
+        try {
+            expect(getBioPageTrafficSource()).toBe('qr');
+            await recordBioPageClick(page, {
+                id: linkId,
+                title: 'Consultation',
+                url: 'https://example.com/book',
+                enabled: true,
+                clicks: 0,
+                linkType: 'booking',
+                platform: 'calendar',
+            }, blockId, client as any);
+        } finally {
+            window.history.replaceState({}, '', originalPath || '/');
+        }
 
         expect(client.tables.bio_page_events[0]).toMatchObject({
             bio_page_id: 'bio-1',
             project_id: 'project-1',
-            block_id: null,
-            link_id: null,
+            block_id: blockId,
+            link_id: linkId,
             event_type: 'bio_link_clicked',
-            source: 'calendar',
+            source: 'qr',
+            utm: {
+                utm_source: 'qr',
+                utm_medium: 'bio_page',
+                utm_campaign: 'poster_launch',
+            },
             metadata: {
                 title: 'Consultation',
+                platform: 'calendar',
+                linkDestination: 'calendar',
                 linkType: 'booking',
-                blockId: 'block-links',
-                linkId: 'link-1',
+                blockId,
+                linkId,
+            },
+        });
+    });
+
+    it('does not write public click events that cannot satisfy persisted attribution policies', async () => {
+        const client = createBioPageSupabaseMock();
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const page = {
+            id: 'bio-1',
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+        } as any;
+
+        try {
+            await recordBioPageClick(page, {
+                id: 'legacy-link-id',
+                title: 'Consultation',
+                url: 'https://example.com/book',
+                enabled: true,
+                clicks: 0,
+                linkType: 'booking',
+                platform: 'calendar',
+            }, 'legacy-block-id', client as any);
+            await trackBioPageProductClick(page, 'product-1', 'legacy-product-block', client as any);
+        } finally {
+            warnSpy.mockRestore();
+        }
+
+        expect(client.tables.bio_page_events).toHaveLength(0);
+    });
+
+    it('records product clicks with persisted Bio Page block attribution', async () => {
+        const client = createBioPageSupabaseMock();
+        const blockId = '33333333-3333-4333-8333-333333333333';
+        const page = {
+            id: 'bio-1',
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+        } as any;
+
+        await trackBioPageProductClick(page, 'store-product-1', blockId, client as any);
+
+        expect(client.tables.bio_page_events[0]).toMatchObject({
+            bio_page_id: 'bio-1',
+            project_id: 'project-1',
+            block_id: blockId,
+            link_id: null,
+            event_type: 'bio_product_clicked',
+            source: 'ecommerce',
+            metadata: {
+                productId: 'store-product-1',
             },
         });
     });

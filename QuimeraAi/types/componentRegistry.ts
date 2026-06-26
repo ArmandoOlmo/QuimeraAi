@@ -112,12 +112,18 @@ export type ComponentId =
     | 'bioProfile'
     | 'bioLinks'
     | 'bioSocialLinks'
+    | 'bioFeaturedBanner'
+    | 'bioFeaturedMedia'
     | 'bioShop'
+    | 'bioProductCollection'
     | 'bioBooking'
     | 'bioLeadCapture'
     | 'bioEmailSubscribe'
     | 'bioMediaGrid'
     | 'bioPortfolio'
+    | 'bioTestimonials'
+    | 'bioFaq'
+    | 'bioContact'
     | 'bioChatCTA';
 
 export interface ComponentDataRequirement {

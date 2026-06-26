@@ -11,6 +11,7 @@ import { useCustomDomain, DomainNotConfiguredPage, DomainLoadingPage } from './h
 import { detectSubdomain, SubdomainInfo } from './utils/subdomainUtils';
 import { lazyWithRetry } from './utils/lazyWithRetry';
 import { consumeStoredPostAuthRedirect } from './utils/authRedirect';
+import { getBioSlugFromPathname } from './utils/bioPageRouting';
 
 // Lazy-loaded components for code-splitting with retry logic
 // Using lazyWithRetry to handle chunk loading failures after deployments
@@ -268,11 +269,11 @@ const App: React.FC = () => {
 
   // Public Bio Page route - no providers needed
   if (isBioRoute()) {
-    const username = window.location.pathname.split('/bio/')[1];
+    const bioSlug = getBioSlugFromPathname(window.location.pathname);
     return (
       <ErrorBoundary>
         <Suspense fallback={<MinimalLoader />}>
-          <PublicBioPage username={username} />
+          <PublicBioPage slug={bioSlug} />
         </Suspense>
       </ErrorBoundary>
     );

@@ -30,6 +30,7 @@ import {
   resolveRealtyDetailPath,
   resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
+import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
@@ -1738,6 +1739,63 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     if (!slug) return null;
     return chatbotRealEstateProperties.find(property => property.slug === slug) || null;
   }, [activePage?.slug, chatbotRealEstateProperties, getLogicalPath, getRealtyListingsRouteData]);
+  const activePageHasBookingSurface = useMemo(
+    () => Boolean(activePage?.sections?.includes('appointmentBooking')),
+    [activePage],
+  );
+  const websiteChatbotEngineContext = useMemo(() => {
+    const route = typeof window !== 'undefined' ? getLogicalPath(window.location.pathname) : undefined;
+    const isRealtyProperty = Boolean(currentPropertyForChatbot);
+    const isBookingPage = !isRealtyProperty && activePageHasBookingSurface && Boolean(activePage);
+    const entityType = isRealtyProperty
+      ? 'realty_property'
+      : isBookingPage
+        ? 'booking_page'
+      : activePage
+        ? 'site_page'
+        : activePost
+          ? 'blog_post'
+          : activeCategorySlug
+            ? 'blog_category'
+            : 'website';
+
+    return buildChatbotEngineSurfaceContext({
+      sourceSurface: isRealtyProperty ? 'realty_property_page' : isBookingPage ? 'booking_page' : 'website',
+      sourceModule: isRealtyProperty ? 'real-estate' : isBookingPage ? 'appointments' : 'website-builder',
+      route,
+      entityType,
+      entityId: currentPropertyForChatbot?.id || activePage?.id || activePost?.id || project?.id || storeProjectId || undefined,
+      entitySlug: currentPropertyForChatbot?.slug || activePage?.slug || activePost?.slug || activeCategorySlug || undefined,
+      contextKeys: [
+        'website',
+        isRealtyProperty ? 'realty_property_page' : '',
+        isBookingPage ? 'booking_page' : '',
+        isBookingPage ? 'appointments' : '',
+        activePage ? 'site_page' : '',
+        activePost ? 'blog_post' : '',
+        activeCategorySlug ? 'blog_category' : '',
+      ].filter(Boolean),
+      metadata: {
+        projectId: project?.id || storeProjectId,
+        activePageSlug: activePage?.slug,
+        activePostSlug: activePost?.slug,
+        activeCategorySlug,
+        activePageHasBookingSurface: isBookingPage,
+        propertyId: currentPropertyForChatbot?.id,
+        propertySlug: currentPropertyForChatbot?.slug,
+        propertyTitle: currentPropertyForChatbot?.title,
+      },
+    });
+  }, [
+    activePageHasBookingSurface,
+    activeCategorySlug,
+    activePage,
+    activePost,
+    currentPropertyForChatbot,
+    getLogicalPath,
+    project?.id,
+    storeProjectId,
+  ]);
 
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
@@ -2102,7 +2160,22 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             ownerId={project?.userId || undefined}
           />
         );
-      case 'appointmentBooking':
+      case 'appointmentBooking': {
+        const bookingContext = buildChatbotEngineSurfaceContext({
+          sourceSurface: 'booking_page',
+          sourceModule: 'appointments',
+          route: typeof window !== 'undefined' ? getLogicalPath(window.location.pathname) : undefined,
+          entityType: 'booking_page',
+          entityId: storeProjectId || project?.id || undefined,
+          contextKeys: ['website', 'booking_page', 'appointments'],
+          metadata: {
+            projectId: storeProjectId || project?.id,
+            ownerId: project?.userId,
+            activePageId: activePage?.id,
+            activePageSlug: activePage?.slug,
+            sourceComponent: 'WebsiteAppointmentBookingSection',
+          },
+        });
         return withBackground(
           <AppointmentBooking
             {...compData}
@@ -2111,8 +2184,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             buttonBorderRadius={compData.buttonBorderRadius || buttonBorderRadius}
             projectId={storeProjectId || undefined}
             ownerId={project?.userId || undefined}
+            sourceComponent="WebsiteAppointmentBookingSection"
+            sourceModule="appointments"
+            sourceSurface="booking_page"
+            chatbotEngineContext={bookingContext}
           />
         );
+      }
       case 'realEstateListings':
         return withBackground(
           <RealEstateListingsSection
@@ -2549,9 +2627,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         </div>
       )}
 
-      {/* Chatbot Widget - Always rendered to support programmatic triggers via open-quimera-chat event */}
-      <ChatbotWidget
-        isPreview={false}
+      {/* Chatbot Widget - rendered outside store views; StorefrontApp owns storefront/checkout chat context */}
+      {!isStoreViewActive && (
+        <ChatbotWidget
+          isPreview={false}
           hidePoweredBy={hasWhiteLabelBranding}
           standaloneConfig={enrichedStandaloneChatbotConfig}
           standaloneProject={{
@@ -2563,7 +2642,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             componentOrder: project.componentOrder,
             sectionVisibility: project.sectionVisibility,
           }}
-      />
+          chatbotEngineContext={websiteChatbotEngineContext}
+        />
+      )}
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
       {mergedData.signupFloat && componentOrder?.includes('signupFloat') && (sectionVisibility?.signupFloat !== false) && (

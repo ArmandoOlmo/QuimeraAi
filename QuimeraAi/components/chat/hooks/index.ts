@@ -10,7 +10,18 @@ export type {
     ShippingInfo,
     ReturnPolicy,
     EcommerceChatContext,
+    EcommerceChatOptions,
+    OrderVerification,
+    BackInStockRequest,
 } from './useEcommerceChat';
+
+export { useChatbotBusinessActions } from './useChatbotBusinessActions';
+export type {
+    ChatbotBusinessActionOptions,
+    ChatbotHandoffPriority,
+    HumanHandoffRequest,
+    HumanHandoffResult,
+} from './useChatbotBusinessActions';
 
 export { useSocialChat } from './useSocialChat';
 export type {
@@ -30,4 +41,3 @@ export type {
     ChatAnalyticsSummary,
     AnalyticsPeriod,
 } from './useSocialChatAnalytics';
-

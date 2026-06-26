@@ -168,6 +168,7 @@ describe('appointmentEngineService', () => {
             participantEmail: 'ana@example.com',
             sourceConversationId: 'conversation-1',
             correlationId: 'correlation-1',
+            notes: 'Resumen de solicitud del cliente / Customer request summary\nLo que desea el cliente / What the customer wants: Ana wants a consultation package.',
             conversationTranscript: 'The client asked ChatCore to book a consultation.',
             locale: 'es',
             allowConflicts: true,
@@ -188,11 +189,20 @@ describe('appointmentEngineService', () => {
             created_by_system: true,
             correlation_id: 'correlation-1',
         });
+        expect(appointmentInsert?.row.notes).toEqual([
+            expect.objectContaining({
+                content: expect.stringContaining('What the customer wants: Ana wants a consultation package.'),
+                isPrivate: false,
+                aiGenerated: true,
+                pinned: true,
+            }),
+        ]);
         expect(appointmentInsert?.row.metadata).toMatchObject({
             source: 'chatbot',
             sourceComponent: 'ChatCore',
             sourceModule: 'chatcore',
             conversationTranscript: 'The client asked ChatCore to book a consultation.',
+            customerRequestSummary: expect.stringContaining('Ana wants a consultation package.'),
             locale: 'es',
         });
         expect(emailInsert?.row).toMatchObject({
@@ -203,7 +213,7 @@ describe('appointmentEngineService', () => {
         });
         expect(emailInsert?.row.metadata).toMatchObject({
             triggeredBy: 'appointments-engine',
-            sourceModule: 'appointments',
+            sourceModule: 'chatcore',
             sourceConversationId: 'conversation-1',
             locale: 'es',
         });

@@ -15,7 +15,7 @@ New dashboard, public widget, Website Builder lead forms, and ChatCore flows mus
 ## Runtime entry points
 
 - Dashboard creates and updates appointments through `services/appointments/appointmentEngineService.ts`.
-- Public booking uses `api/widget/[...path].ts`, which calls the same canonical engine.
+- Public booking uses the explicit `api/widget/[project]/...` route files, which call the same canonical engine.
 - ChatCore uses the `onCreateAppointment` callback from `ChatbotWidget` and `ChatSimulator`; both callback implementations call `createAppointmentFromChat`.
 - Website Builder lead forms submit public leads through the widget API when no editor CRM context exists.
 

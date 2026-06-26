@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     MessageCircle, Phone, Instagram, Facebook, Save, Loader2,
-    Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink, Copy,
-    Shield, Webhook, Key, Building2, Globe, HelpCircle, RefreshCw,
+    Eye, EyeOff, CheckCircle, ExternalLink, Copy,
+    Shield, Webhook, Key, HelpCircle,
     Sparkles, Settings2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { AiSocialChannelsConfig, WhatsAppChannelConfig, FacebookMessengerChannelConfig, InstagramChannelConfig } from '../../../types/ai-assistant';
@@ -21,7 +21,6 @@ interface SocialChannelsSettingsProps {
 }
 
 type ChannelTab = 'whatsapp' | 'facebook' | 'instagram';
-type ConfigMode = 'auto' | 'manual';
 
 const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     config,
@@ -29,7 +28,6 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     onSave
 }) => {
     const { t } = useTranslation();
-    const [configMode, setConfigMode] = useState<ConfigMode>('auto');
     const [showManualConfig, setShowManualConfig] = useState(false);
     const [activeChannel, setActiveChannel] = useState<ChannelTab>('whatsapp');
     const [isSaving, setIsSaving] = useState(false);
@@ -108,9 +106,9 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
     };
 
     const channels: { id: ChannelTab; name: string; icon: React.ReactNode; color: string; enabled: boolean }[] = [
-        { id: 'whatsapp', name: 'WhatsApp Business', icon: <Phone size={20} />, color: 'bg-q-success', enabled: whatsappConfig.enabled },
-        { id: 'facebook', name: 'Facebook Messenger', icon: <Facebook size={20} />, color: 'bg-q-accent', enabled: facebookConfig.enabled },
-        { id: 'instagram', name: 'Instagram DMs', icon: <Instagram size={20} />, color: 'bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning', enabled: instagramConfig.enabled },
+        { id: 'whatsapp', name: t('aiAssistant.socialChannels.channels.whatsapp'), icon: <Phone size={20} />, color: 'bg-q-success', enabled: whatsappConfig.enabled },
+        { id: 'facebook', name: t('aiAssistant.socialChannels.channels.facebook'), icon: <Facebook size={20} />, color: 'bg-q-accent', enabled: facebookConfig.enabled },
+        { id: 'instagram', name: t('aiAssistant.socialChannels.channels.instagram'), icon: <Instagram size={20} />, color: 'bg-gradient-to-br from-q-accent via-q-accent/80 to-q-warning', enabled: instagramConfig.enabled },
     ];
 
     const renderWhatsAppSettings = () => (
@@ -123,7 +121,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                     </div>
                     <div>
                         <h4 className="font-semibold text-foreground">WhatsApp Business API</h4>
-                        <p className="text-sm text-q-text-muted">Conecta tu número de WhatsApp Business</p>
+                        <p className="text-sm text-q-text-muted">{t('aiAssistant.socialChannels.forms.whatsappDescription')}</p>
                     </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -141,11 +139,11 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="p-4 bg-secondary/30 border border-q-border rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
                     <Webhook size={16} className="text-primary" />
-                    <span className="font-medium text-sm">Webhook Configuration</span>
+                    <span className="font-medium text-sm">{t('aiAssistant.socialChannels.forms.webhookConfiguration')}</span>
                 </div>
                 <div className="space-y-3">
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Webhook URL</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.webhookUrl')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -162,7 +160,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Verify Token</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.verifyToken')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -185,42 +183,42 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="space-y-4">
                 <h4 className="font-semibold flex items-center gap-2">
                     <Key size={16} className="text-primary" />
-                    API Credentials
+                    {t('aiAssistant.socialChannels.forms.apiCredentials')}
                 </h4>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Phone Number ID</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.phoneNumberId')}</label>
                     <input
                         type="text"
                         value={whatsappConfig.phoneNumberId}
                         onChange={(e) => setWhatsappConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-                        placeholder="Ej: 123456789012345"
+                        placeholder={t('aiAssistant.socialChannels.forms.idExample')}
                         className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     />
                     <p className="text-xs text-q-text-muted mt-1">
-                        Encuéntralo en Meta Business Suite → WhatsApp → API Setup
+                        {t('aiAssistant.socialChannels.forms.whatsappPhoneHelp')}
                     </p>
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Business Account ID</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.businessAccountId')}</label>
                     <input
                         type="text"
                         value={whatsappConfig.businessAccountId}
                         onChange={(e) => setWhatsappConfig(prev => ({ ...prev, businessAccountId: e.target.value }))}
-                        placeholder="Ej: 123456789012345"
+                        placeholder={t('aiAssistant.socialChannels.forms.idExample')}
                         className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     />
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Access Token</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.accessToken')}</label>
                     <div className="relative">
                         <input
                             type={showSecrets['wa-token'] ? 'text' : 'password'}
                             value={whatsappConfig.accessToken}
                             onChange={(e) => setWhatsappConfig(prev => ({ ...prev, accessToken: e.target.value }))}
-                            placeholder="Token de acceso permanente"
+                            placeholder={t('aiAssistant.socialChannels.forms.permanentTokenPlaceholder')}
                             className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                         />
                         <button
@@ -242,7 +240,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
             >
                 <HelpCircle size={14} />
-                Guía de configuración de WhatsApp Business API
+                {t('aiAssistant.socialChannels.help.whatsapp')}
                 <ExternalLink size={12} />
             </a>
         </div>
@@ -258,7 +256,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                     </div>
                     <div>
                         <h4 className="font-semibold text-foreground">Facebook Messenger</h4>
-                        <p className="text-sm text-q-text-muted">Conecta tu página de Facebook</p>
+                        <p className="text-sm text-q-text-muted">{t('aiAssistant.socialChannels.forms.facebookDescription')}</p>
                     </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -276,11 +274,11 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="p-4 bg-secondary/30 border border-q-border rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
                     <Webhook size={16} className="text-primary" />
-                    <span className="font-medium text-sm">Webhook Configuration</span>
+                    <span className="font-medium text-sm">{t('aiAssistant.socialChannels.forms.webhookConfiguration')}</span>
                 </div>
                 <div className="space-y-3">
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Callback URL</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.callbackUrl')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -297,7 +295,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Verify Token</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.verifyToken')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -320,28 +318,28 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="space-y-4">
                 <h4 className="font-semibold flex items-center gap-2">
                     <Key size={16} className="text-primary" />
-                    API Credentials
+                    {t('aiAssistant.socialChannels.forms.apiCredentials')}
                 </h4>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Page ID</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.pageId')}</label>
                     <input
                         type="text"
                         value={facebookConfig.pageId}
                         onChange={(e) => setFacebookConfig(prev => ({ ...prev, pageId: e.target.value }))}
-                        placeholder="ID de tu página de Facebook"
+                        placeholder={t('aiAssistant.socialChannels.forms.pageIdPlaceholder')}
                         className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     />
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Page Access Token</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.pageAccessToken')}</label>
                     <div className="relative">
                         <input
                             type={showSecrets['fb-token'] ? 'text' : 'password'}
                             value={facebookConfig.pageAccessToken}
                             onChange={(e) => setFacebookConfig(prev => ({ ...prev, pageAccessToken: e.target.value }))}
-                            placeholder="Token de acceso de la página"
+                            placeholder={t('aiAssistant.socialChannels.forms.pageTokenPlaceholder')}
                             className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                         />
                         <button
@@ -363,7 +361,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
             >
                 <HelpCircle size={14} />
-                Guía de configuración de Messenger Platform
+                {t('aiAssistant.socialChannels.help.facebook')}
                 <ExternalLink size={12} />
             </a>
         </div>
@@ -379,7 +377,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                     </div>
                     <div>
                         <h4 className="font-semibold text-foreground">Instagram Direct Messages</h4>
-                        <p className="text-sm text-q-text-muted">Conecta tu cuenta de Instagram Business</p>
+                        <p className="text-sm text-q-text-muted">{t('aiAssistant.socialChannels.forms.instagramDescription')}</p>
                     </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -397,11 +395,11 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="p-4 bg-secondary/30 border border-q-border rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
                     <Webhook size={16} className="text-primary" />
-                    <span className="font-medium text-sm">Webhook Configuration</span>
+                    <span className="font-medium text-sm">{t('aiAssistant.socialChannels.forms.webhookConfiguration')}</span>
                 </div>
                 <div className="space-y-3">
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Callback URL</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.callbackUrl')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -418,7 +416,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs text-q-text-muted mb-1 block">Verify Token</label>
+                        <label className="text-xs text-q-text-muted mb-1 block">{t('aiAssistant.socialChannels.forms.verifyToken')}</label>
                         <div className="flex items-center gap-2">
                             <input
                                 type="text"
@@ -441,31 +439,31 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="space-y-4">
                 <h4 className="font-semibold flex items-center gap-2">
                     <Key size={16} className="text-primary" />
-                    API Credentials
+                    {t('aiAssistant.socialChannels.forms.apiCredentials')}
                 </h4>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Instagram Account ID</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.instagramAccountId')}</label>
                     <input
                         type="text"
                         value={instagramConfig.accountId}
                         onChange={(e) => setInstagramConfig(prev => ({ ...prev, accountId: e.target.value }))}
-                        placeholder="ID de tu cuenta de Instagram Business"
+                        placeholder={t('aiAssistant.socialChannels.forms.instagramAccountPlaceholder')}
                         className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     />
                     <p className="text-xs text-q-text-muted mt-1">
-                        Tu cuenta debe ser una cuenta de Instagram Business conectada a una página de Facebook
+                        {t('aiAssistant.socialChannels.forms.instagramAccountHelp')}
                     </p>
                 </div>
 
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Access Token</label>
+                    <label className="text-sm font-medium mb-2 block">{t('aiAssistant.socialChannels.forms.accessToken')}</label>
                     <div className="relative">
                         <input
                             type={showSecrets['ig-token'] ? 'text' : 'password'}
                             value={instagramConfig.accessToken}
                             onChange={(e) => setInstagramConfig(prev => ({ ...prev, accessToken: e.target.value }))}
-                            placeholder="Token de acceso"
+                            placeholder={t('aiAssistant.socialChannels.forms.accessTokenPlaceholder')}
                             className="w-full bg-q-bg border border-q-border rounded-lg px-4 py-3 pr-12 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                         />
                         <button
@@ -487,23 +485,23 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
             >
                 <HelpCircle size={14} />
-                Guía de configuración de Instagram Messaging API
+                {t('aiAssistant.socialChannels.help.instagram')}
                 <ExternalLink size={12} />
             </a>
         </div>
     );
 
     return (
-        <div className="space-y-6 pb-24">
+        <div className="max-w-3xl space-y-5 pb-24">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
                         <MessageCircle className="text-primary" size={24} />
-                        Social Channels
+                        {t('aiAssistant.socialChannels.title')}
                     </h3>
                     <p className="text-sm text-q-text-muted mt-1">
-                        Conecta tus redes sociales para responder automáticamente con IA
+                        {t('aiAssistant.socialChannels.subtitle')}
                     </p>
                 </div>
                 {showManualConfig && (
@@ -513,7 +511,7 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
                     >
                         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                        {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                        {isSaving ? t('aiAssistant.socialChannels.saving') : t('aiAssistant.socialChannels.saveChanges')}
                     </button>
                 )}
             </div>
@@ -534,11 +532,10 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                 <div className="p-4 bg-q-success/10 border border-q-success/20 rounded-xl">
                     <div className="flex items-center gap-2">
                         <Sparkles size={18} className="text-q-success" />
-                        <span className="font-medium text-q-success">Canales configurados automáticamente</span>
+                        <span className="font-medium text-q-success">{t('aiAssistant.socialChannels.autoConfiguredTitle')}</span>
                     </div>
                     <p className="text-sm text-q-text-muted mt-1">
-                        Tus credenciales fueron configuradas mediante la conexión con Meta.
-                        Los webhooks están listos para recibir mensajes.
+                        {t('aiAssistant.socialChannels.autoConfiguredDescription')}
                     </p>
                 </div>
             )}
@@ -551,9 +548,11 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
                 <div className="flex items-center gap-3">
                     <Settings2 size={18} className="text-q-text-muted" />
                     <div className="text-left">
-                        <span className="font-medium text-sm">Configuración Manual</span>
+                        <span className="font-medium text-sm">{t('aiAssistant.socialChannels.manual.title')}</span>
                         <p className="text-xs text-q-text-muted">
-                            {showManualConfig ? 'Ocultar configuración avanzada' : 'Mostrar configuración avanzada (opcional)'}
+                            {showManualConfig
+                                ? t('aiAssistant.socialChannels.manual.hide')
+                                : t('aiAssistant.socialChannels.manual.show')}
                         </p>
                     </div>
                 </div>
@@ -598,10 +597,9 @@ const SocialChannelsSettings: React.FC<SocialChannelsSettingsProps> = ({
             <div className="flex items-start gap-3 p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl">
                 <Shield size={20} className="text-q-accent shrink-0 mt-0.5" />
                 <div>
-                    <h4 className="font-semibold text-foreground text-sm">Seguridad de Credenciales</h4>
+                    <h4 className="font-semibold text-foreground text-sm">{t('aiAssistant.socialChannels.security.title')}</h4>
                     <p className="text-xs text-q-text-muted mt-1">
-                        Tus tokens de acceso se almacenan de forma segura y nunca se exponen públicamente.
-                        Te recomendamos usar tokens con permisos mínimos necesarios y rotarlos periódicamente.
+                        {t('aiAssistant.socialChannels.security.description')}
                     </p>
                 </div>
             </div>

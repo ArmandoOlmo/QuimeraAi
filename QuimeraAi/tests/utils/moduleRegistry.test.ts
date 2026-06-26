@@ -50,6 +50,7 @@ describe('moduleRegistry', () => {
 
         expect(accessibleIds).toContain('ai-business-blueprint');
         expect(accessibleIds).toContain('website-builder');
+        expect(accessibleIds).toContain('design-system');
         expect(accessibleIds).not.toContain('ecommerce-engine');
         expect(accessible.length).toBeLessThan(quimeraModuleRegistry.length);
     });
@@ -62,5 +63,83 @@ describe('moduleRegistry', () => {
         expect(ecommerceRelated).toContain('storefront-builder');
         expect(ecommerceRelated).toContain('email-marketing');
         expect(ecommerceRelated).toContain('finance');
+    });
+
+    it('declares Bio Page Engine ecosystem ownership and AI generation dependencies', () => {
+        const blueprint = getModuleRegistryItem('ai-business-blueprint');
+        const websiteBuilder = getModuleRegistryItem('website-builder');
+        const designSystem = getModuleRegistryItem('design-system');
+        const bioPage = getModuleRegistryItem('bio-page-engine');
+
+        expect(blueprint).toMatchObject({
+            canonicalSystem: 'businessBlueprint',
+            ownerSystem: 'ai-studio',
+        });
+        expect(blueprint?.writesTo).toEqual(expect.arrayContaining(['websiteBuilder', 'designSystem', 'bioPage']));
+
+        expect(websiteBuilder).toMatchObject({
+            canonicalSystem: 'websiteBuilder',
+            ownerSystem: 'website-builder',
+        });
+        expect(websiteBuilder?.readsFrom).toEqual(expect.arrayContaining(['businessBlueprint', 'designSystem', 'bioPage']));
+
+        expect(designSystem).toMatchObject({
+            canonicalSystem: 'designSystem',
+            ownerSystem: 'design-system',
+        });
+        expect(designSystem?.writesTo).toEqual(expect.arrayContaining(['websiteBuilder', 'bioPage']));
+
+        expect(bioPage).toMatchObject({
+            canonicalSystem: 'bioPage',
+            ownerSystem: 'bio-page-engine',
+        });
+        expect(bioPage?.editableBy).toEqual(expect.arrayContaining(['bio-page-engine', 'ai-studio', 'website-builder']));
+        expect(bioPage?.readsFrom).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'websiteBuilder',
+            'designSystem',
+            'ecommerce',
+            'appointments',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'media',
+            'analytics',
+        ]));
+        expect(getModulesByCanonicalSystem('bioPage').map(item => item.id)).toEqual(expect.arrayContaining([
+            'ai-business-blueprint',
+            'website-builder',
+            'design-system',
+            'bio-page-engine',
+        ]));
+    });
+
+    it('defines Chatbot Engine as the canonical AI Business Agent integration surface', () => {
+        const chatbot = getModuleRegistryItem('chatbot-engine');
+
+        expect(chatbot).toMatchObject({
+            canonicalSystem: 'chatbot',
+            ownerSystem: 'chatbot-engine',
+            requiredService: 'chatbot',
+            requiredFeature: 'chatbotEnabled',
+        });
+        expect(chatbot?.description).toContain('ES:');
+        expect(chatbot?.description).toContain('EN:');
+        expect(chatbot?.readsFrom).toEqual(expect.arrayContaining([
+            'ecommerce',
+            'crm',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'emailMarketing',
+            'bioPage',
+            'analytics',
+        ]));
+        expect(chatbot?.writesTo).toEqual(expect.arrayContaining([
+            'crm',
+            'appointments',
+            'emailMarketing',
+            'analytics',
+        ]));
     });
 });

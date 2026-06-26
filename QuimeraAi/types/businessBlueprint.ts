@@ -230,7 +230,329 @@ export interface EcommerceBlueprint extends BlueprintModuleState {
     starterContentSummary?: EcommerceStarterContentSummary;
 }
 
+export type ChatbotBlueprintVersion = 'v2';
+
+export type ChatbotKnowledgeSourceType =
+    | 'business_blueprint'
+    | 'website_content'
+    | 'ecommerce_products'
+    | 'ecommerce_policies'
+    | 'ecommerce_orders_private'
+    | 'appointments_services'
+    | 'restaurant_menu'
+    | 'restaurant_reservations'
+    | 'realty_listings'
+    | 'finance_invoices_private'
+    | 'bio_page'
+    | 'crm_leads_private'
+    | 'email_marketing_flows'
+    | 'cms_articles'
+    | 'uploaded_document'
+    | 'website_url'
+    | 'youtube'
+    | 'manual_snippet'
+    | 'faq';
+
+export type ChatbotKnowledgeVisibility = 'public' | 'private' | 'internal';
+export type ChatbotKnowledgeSourceStatus = 'draft' | 'syncing' | 'ready' | 'needs_review' | 'failed' | 'disabled';
+export type ChatbotSourceFreshness = 'fresh' | 'stale' | 'unknown';
+export type ChatbotReviewStatus = 'draft' | 'needs_review' | 'configured' | 'disabled';
+
+export type ChatbotActionType =
+    | 'create_lead'
+    | 'update_lead'
+    | 'create_appointment'
+    | 'request_restaurant_reservation'
+    | 'request_realty_showing'
+    | 'register_open_house'
+    | 'check_order_status'
+    | 'search_products'
+    | 'recommend_products'
+    | 'create_product_inquiry'
+    | 'start_checkout'
+    | 'back_in_stock_request'
+    | 'subscribe_email_audience'
+    | 'queue_email_follow_up'
+    | 'create_finance_quote_request'
+    | 'send_internal_alert'
+    | 'handoff_to_human'
+    | 'create_support_ticket'
+    | 'answer_from_knowledge'
+    | 'save_conversation'
+    | 'save_message'
+    | 'analyze_intent'
+    | 'score_lead'
+    | 'link_conversation_to_lead'
+    | 'check_availability'
+    | 'explain_shipping'
+    | 'explain_returns'
+    | 'record_analytics_event';
+
+export type ChatbotBlueprintOwnerModule =
+    | 'ai-studio'
+    | 'business-blueprint'
+    | 'website-builder'
+    | 'storefront-builder'
+    | 'ecommerce'
+    | 'crm'
+    | 'email-marketing'
+    | 'appointments'
+    | 'restaurants'
+    | 'real-estate'
+    | 'bio-page'
+    | 'cms'
+    | 'media-ai'
+    | 'finance'
+    | 'analytics'
+    | 'chatbot-engine';
+
+export type ChatbotLeadCaptureMode = 'conversational' | 'pre_chat' | 'exit_intent' | 'hybrid';
+export type ChatbotAppointmentConfirmationMode = 'manual' | 'ai_suggested' | 'auto_after_review';
+export type ChatbotDeploymentStatus = 'draft' | 'test' | 'deployed' | 'paused' | 'disabled';
+export type ChatbotSurface =
+    | 'website'
+    | 'storefront'
+    | 'checkout'
+    | 'bio_page'
+    | 'booking_page'
+    | 'restaurant_menu'
+    | 'realty_property_page'
+    | 'admin_preview'
+    | 'voice';
+
+export interface ChatbotAgentProfileBlueprint {
+    agentName: string;
+    avatarUrl?: string;
+    role: string;
+    personality: string;
+    tone: string;
+    languageMode: 'project_default' | 'visitor_language' | 'fixed';
+    supportedLanguages: string[];
+    brandVoice: string;
+    welcomeMessage: string;
+    fallbackMessage: string;
+    escalationMessage: string;
+    sourceMap?: BlueprintSourceMap;
+    needsReview: boolean;
+}
+
+export interface ChatbotKnowledgeSourceBlueprint {
+    id: string;
+    name: string;
+    type: ChatbotKnowledgeSourceType;
+    ownerModule: ChatbotBlueprintOwnerModule;
+    visibility: ChatbotKnowledgeVisibility;
+    status: ChatbotKnowledgeSourceStatus;
+    lastSyncedAt?: string;
+    freshness: ChatbotSourceFreshness;
+    confidence: number;
+    contentHash?: string;
+    sourceEntityIds: string[];
+    readiness: BlueprintReadiness;
+    needsReview: boolean;
+    generatedByAI: boolean;
+    userModified: boolean;
+    lockedFromRegeneration?: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface ChatbotActionBlueprint {
+    id: string;
+    actionType: ChatbotActionType;
+    ownerModule: ChatbotBlueprintOwnerModule;
+    enabled: boolean;
+    publicAllowed: boolean;
+    requiresConfirmation: boolean;
+    requiresAuth: boolean;
+    requiresConsent: boolean;
+    requiresReview: boolean;
+    idempotencyRequired: boolean;
+    auditLogRequired: boolean;
+    status: ChatbotReviewStatus;
+    readiness: BlueprintReadiness;
+    needsReview: boolean;
+    sourceMap?: BlueprintSourceMap;
+}
+
+export interface ChatbotLeadCaptureBlueprint {
+    enabled: boolean;
+    mode: ChatbotLeadCaptureMode;
+    requiredFields: string[];
+    optionalFields: string[];
+    triggerAfterMessages: number;
+    highIntentKeywords: string[];
+    scoringRules: string[];
+    tags: string[];
+    leadSource: string;
+    transcriptStorageEnabled: boolean;
+    aiIntentAnalysisEnabled: boolean;
+    emailMarketingFollowUpEnabled: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotHandoffBlueprint {
+    enabled: boolean;
+    handoffReasons: string[];
+    businessHours?: Record<string, unknown>;
+    fallbackMessage: string;
+    assignmentStrategy: 'unassigned' | 'round_robin' | 'owner' | 'team_queue';
+    inboxEnabled: boolean;
+    internalNotesEnabled: boolean;
+    aiSummaryEnabled: boolean;
+    suggestedRepliesEnabled: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotAppointmentBlueprint {
+    enabled: boolean;
+    source: 'appointments';
+    allowedServices: string[];
+    availabilitySource: 'appointments_engine';
+    confirmationMode: ChatbotAppointmentConfirmationMode;
+    bookingChannels: string[];
+    minNoticeHours: number;
+    maxAdvanceDays: number;
+    requiresEmail: boolean;
+    requiresPhone: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotEcommerceBlueprint {
+    enabled: boolean;
+    source: 'ecommerce';
+    canSearchProducts: boolean;
+    canRecommendProducts: boolean;
+    canCheckOrderStatus: boolean;
+    canExplainShipping: boolean;
+    canExplainReturns: boolean;
+    canCreateProductInquiry: boolean;
+    canStartCheckout: boolean;
+    productDataSource: 'ecommerce_engine';
+    orderDataSource: 'ecommerce_engine_verified_only';
+    inventoryVisibility: 'hidden' | 'in_stock_only' | 'exact_after_review';
+    needsReview: boolean;
+}
+
+export interface ChatbotRestaurantBlueprint {
+    enabled: boolean;
+    source: 'restaurants';
+    canAnswerMenu: boolean;
+    canExplainHours: boolean;
+    canCaptureReservationRequest: boolean;
+    canPromoteGiftCards: boolean;
+    canPromoteCatering: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotRealEstateBlueprint {
+    enabled: boolean;
+    source: 'realEstate';
+    canAnswerListings: boolean;
+    canCapturePropertyInquiry: boolean;
+    canRequestShowing: boolean;
+    canRegisterOpenHouse: boolean;
+    canExplainNeighborhoods: boolean;
+    canRouteSellerLead: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotBioPageBlueprint {
+    enabled: boolean;
+    source: 'bioPage';
+    canExplainLinks: boolean;
+    canOpenBooking: boolean;
+    canOpenShop: boolean;
+    canCaptureLead: boolean;
+    canSubscribe: boolean;
+    needsReview: boolean;
+}
+
+export interface ChatbotSurfaceChannelBlueprint {
+    enabled: boolean;
+    status: ChatbotDeploymentStatus;
+    sourceSurface: ChatbotSurface;
+    routePattern?: string;
+    contextKeys: string[];
+    readiness: BlueprintReadiness;
+    needsReview: boolean;
+}
+
+export interface ChatbotChannelBlueprint {
+    webWidget: ChatbotSurfaceChannelBlueprint;
+    embeddedWidget: ChatbotSurfaceChannelBlueprint;
+    bioPage: ChatbotSurfaceChannelBlueprint;
+    storefront: ChatbotSurfaceChannelBlueprint;
+    checkout: ChatbotSurfaceChannelBlueprint;
+    bookingPage: ChatbotSurfaceChannelBlueprint;
+    restaurantMenu: ChatbotSurfaceChannelBlueprint;
+    realtyPropertyPage: ChatbotSurfaceChannelBlueprint;
+    adminPreview: ChatbotSurfaceChannelBlueprint;
+    voice: ChatbotSurfaceChannelBlueprint;
+    whatsappReadiness: BlueprintReadiness;
+    smsReadiness: BlueprintReadiness;
+    emailReadiness: BlueprintReadiness;
+}
+
+export interface ChatbotTestScenarioBlueprint {
+    id: string;
+    name: string;
+    persona: string;
+    prompt: string;
+    expectedActions: ChatbotActionType[];
+    expectedSources: ChatbotKnowledgeSourceType[];
+    status: 'draft' | 'passed' | 'failed' | 'needs_review';
+    needsReview: boolean;
+}
+
+export interface ChatbotTestingBlueprint {
+    testScenarios: ChatbotTestScenarioBlueprint[];
+    regressionQuestions: string[];
+    blockedAnswerRules: string[];
+    expectedActions: ChatbotActionType[];
+    evaluationStatus: 'not_run' | 'passing' | 'failing' | 'needs_review';
+    readiness: BlueprintReadiness;
+}
+
+export interface ChatbotAnalyticsBlueprint {
+    events: IntegrationEventType[];
+    metrics: string[];
+    conversionGoals: string[];
+    attributionRules: Record<string, unknown>;
+    needsReview: boolean;
+}
+
+export interface ChatbotDeploymentBlueprint {
+    status: ChatbotDeploymentStatus;
+    deployedSurfaces: ChatbotSurface[];
+    embedSettings: Record<string, unknown>;
+    appearanceSettings: Record<string, unknown>;
+    voiceSettings: {
+        enabled: boolean;
+        provider?: 'elevenlabs' | 'none';
+        agentId?: string;
+        languageMode: 'project_default' | 'visitor_language' | 'fixed';
+        consentRequired: boolean;
+    };
+    safetySettings: Record<string, unknown>;
+    readiness: BlueprintReadiness;
+}
+
 export interface ChatbotBlueprint extends BlueprintModuleState {
+    engineVersion: ChatbotBlueprintVersion;
+    agentProfile: ChatbotAgentProfileBlueprint;
+    knowledgeSources: ChatbotKnowledgeSourceBlueprint[];
+    actions: ChatbotActionBlueprint[];
+    leadCapture: ChatbotLeadCaptureBlueprint;
+    handoff: ChatbotHandoffBlueprint;
+    appointments: ChatbotAppointmentBlueprint;
+    ecommerce: ChatbotEcommerceBlueprint;
+    restaurants: ChatbotRestaurantBlueprint;
+    realEstate: ChatbotRealEstateBlueprint;
+    bioPage: ChatbotBioPageBlueprint;
+    channels: ChatbotChannelBlueprint;
+    testing: ChatbotTestingBlueprint;
+    analytics: ChatbotAnalyticsBlueprint;
+    deployment: ChatbotDeploymentBlueprint;
     businessKnowledge: string[];
     productKnowledge: string[];
     policyKnowledge: string[];
@@ -411,6 +733,7 @@ export type BioPageBlockType =
     | 'social_links'
     | 'featured_banner'
     | 'featured_media'
+    | 'media_grid'
     | 'product_grid'
     | 'product_collection'
     | 'booking'
@@ -434,7 +757,8 @@ export type BioPageLinkType =
     | 'email_subscribe'
     | 'file'
     | 'video'
-    | 'social';
+    | 'social'
+    | 'chatbot';
 export type BioPageLayoutVariant =
     | 'classic'
     | 'creator'
@@ -620,6 +944,8 @@ export interface BioPageQrCodeBlueprint {
 }
 
 export interface BioPageIntegrationsBlueprint {
+    businessBlueprint: boolean;
+    designSystem: boolean;
     ecommerce: boolean;
     appointments: boolean;
     crm: boolean;

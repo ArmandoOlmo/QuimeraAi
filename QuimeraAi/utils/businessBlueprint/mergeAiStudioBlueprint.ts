@@ -39,7 +39,7 @@ import type {
 } from '../aiStudio';
 import type { DesignCriticResult } from '../aiStudio/designCritic';
 import { getComponentDefinition } from '../../registry/componentRegistry';
-import { createBusinessBlueprintFromWebsitePlan, createBlueprintModuleState, shouldProtectFromRegeneration } from './adapters';
+import { createBusinessBlueprintFromWebsitePlan, createBlueprintModuleState, normalizeChatbotBlueprint, shouldProtectFromRegeneration } from './adapters';
 import { mergeRenderableSectionVariantSettings } from './renderableSectionVariants';
 
 export interface MergeAiStudioBlueprintOptions {
@@ -484,6 +484,17 @@ function mergeChatbotBlueprint(
     derived: AiStudioCrossModuleBlueprints['chatbotBlueprint'],
     now: string,
 ): ChatbotBlueprint {
+    if (existing && shouldProtectFromRegeneration(existing)) {
+        return normalizeChatbotBlueprint(existing, {
+            businessName: base.agentProfile.agentName,
+            industry: base.businessKnowledge[1] || '',
+            description: base.businessKnowledge[2] || '',
+            services: base.businessKnowledge.slice(3).map(name => ({ name })),
+            hasEcommerce: base.ecommerce.enabled,
+            now,
+        });
+    }
+
     const next: ChatbotBlueprint = {
         ...base,
         enabled: derived.enabled,
@@ -498,7 +509,14 @@ function mergeChatbotBlueprint(
         eventIntents: derived.eventIntents,
     };
 
-    return protectedOrMerged(existing, next);
+    return normalizeChatbotBlueprint(next, {
+        businessName: base.agentProfile.agentName,
+        industry: base.businessKnowledge[1] || '',
+        description: base.businessKnowledge[2] || '',
+        services: base.businessKnowledge.slice(3).map(name => ({ name })),
+        hasEcommerce: base.ecommerce.enabled,
+        now,
+    });
 }
 
 function mergeLeadBlueprint(

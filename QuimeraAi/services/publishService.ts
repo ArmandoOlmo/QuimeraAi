@@ -15,6 +15,7 @@ import { Project } from '../types/project';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
 import { resolveProjectName } from '../utils/resolveProjectName';
 import { buildStoreIdentityOrFilter, getStoreIdentityQueryIds } from '../utils/ecommerce/storeIdentity';
+import { resolveProjectAiAssistantConfig } from '../utils/chatbotEngine/projectAiAssistantConfig';
 
 // =============================================================================
 // TYPES
@@ -112,6 +113,11 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
                 throw new Error(`Project ${projectId} not found in Supabase.`);
             }
 
+            const aiAssistantConfig = resolveProjectAiAssistantConfig({
+                ai_assistant_config: projectData.ai_assistant_config ?? null,
+                data: projectData.data,
+            });
+
             // Map Supabase columns to Project type
             project = {
                 id: projectData.id,
@@ -126,7 +132,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
                 componentStyles: (projectData as any).component_styles,
                 menus: projectData.menus,
                 seoConfig: projectData.seo_config,
-                aiAssistantConfig: projectData.ai_assistant_config,
+                aiAssistantConfig: aiAssistantConfig || projectData.ai_assistant_config,
                 designTokens: (projectData as any).design_tokens,
                 responsiveStyles: (projectData as any).responsive_styles,
                 abTests: (projectData as any).ab_tests,

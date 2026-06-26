@@ -8,6 +8,7 @@ export type BioPageBlockType =
     | 'social_links'
     | 'featured_banner'
     | 'featured_media'
+    | 'media_grid'
     | 'product_grid'
     | 'product_collection'
     | 'booking'
@@ -107,6 +108,7 @@ export interface BioPageLink {
     generatedByAI?: boolean;
     userModified?: boolean;
     lockedFromRegeneration?: boolean;
+    sourceMap?: Record<string, unknown>;
     metadata?: Record<string, unknown>;
 }
 
@@ -139,6 +141,7 @@ export interface BioPageBlock {
     generatedByAI?: boolean;
     userModified?: boolean;
     lockedFromRegeneration?: boolean;
+    sourceMap?: Record<string, unknown>;
 }
 
 export interface BioPageSEO {
@@ -212,6 +215,7 @@ export interface BioPageAnalyticsSummary {
     chatOpens: number;
     tabChanges: number;
     topLinks: Array<{ id: string; title: string; clicks: number }>;
+    linkSourceBreakdown: Array<{ id: string; title: string; clicks: number; topSource: string; sources: Record<string, number> }>;
     sourceBreakdown: Record<string, number>;
     utmSourceBreakdown: Record<string, number>;
     utmCampaignBreakdown: Record<string, number>;

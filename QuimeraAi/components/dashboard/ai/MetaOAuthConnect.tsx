@@ -6,9 +6,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Facebook, Instagram, Phone, Loader2, CheckCircle, XCircle,
+    Facebook, Instagram, Phone, Loader2, CheckCircle,
     RefreshCw, LogOut, ChevronRight, User, AlertTriangle,
-    ExternalLink, Shield, Sparkles, ArrowRight, Globe
+    Shield, Sparkles, ArrowRight, Globe
 } from 'lucide-react';
 import { useMetaOAuth } from '../../../hooks/useMetaOAuth';
 
@@ -50,6 +50,30 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
         instagramAccountId?: string;
     }>({});
 
+    const platformTiles = [
+        {
+            icon: <Phone size={18} />,
+            label: 'WhatsApp',
+            tone: 'text-q-success',
+            bg: 'bg-q-success/10',
+            border: 'border-q-success/20',
+        },
+        {
+            icon: <Facebook size={18} />,
+            label: 'Messenger',
+            tone: 'text-q-accent',
+            bg: 'bg-q-accent/10',
+            border: 'border-q-accent/20',
+        },
+        {
+            icon: <Instagram size={18} />,
+            label: 'Instagram',
+            tone: 'text-q-warning',
+            bg: 'bg-q-warning/10',
+            border: 'border-q-warning/20',
+        },
+    ];
+
     // Handle asset selection save
     const handleSaveSelections = async () => {
         await selectAssets(selectedAssets);
@@ -70,81 +94,92 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
     // Render disconnected state
     if (!isConnected && status !== 'connecting') {
         return (
-            <div className="bg-gradient-to-br from-q-accent via-q-accent/80 to-q-accent border border-q-accent/20 rounded-2xl p-6 animate-fade-in-up">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-gradient-to-br from-q-accent to-q-accent rounded-xl shadow-lg">
-                        <Globe className="text-white" size={24} />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-foreground">Conectar con Meta</h3>
-                        <p className="text-sm text-q-text-muted">WhatsApp, Facebook e Instagram en un clic</p>
-                    </div>
-                </div>
-
-                {/* Features */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-q-success/10 border border-q-success/20 rounded-xl p-3 text-center">
-                        <Phone className="mx-auto mb-2 text-q-success" size={20} />
-                        <span className="text-xs font-medium text-q-success">WhatsApp</span>
-                    </div>
-                    <div className="bg-q-accent/10 border border-q-accent/20 rounded-xl p-3 text-center">
-                        <Facebook className="mx-auto mb-2 text-q-accent" size={20} />
-                        <span className="text-xs font-medium text-q-accent">Messenger</span>
-                    </div>
-                    <div className="bg-gradient-to-br from-q-accent/10 via-q-accent/10 to-q-warning/10 border border-q-accent/20 rounded-xl p-3 text-center">
-                        <Instagram className="mx-auto mb-2 text-q-accent" size={20} />
-                        <span className="text-xs font-medium text-q-accent">Instagram</span>
+            <div className="rounded-lg border border-q-border bg-q-surface/80 p-5 shadow-sm animate-fade-in-up">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-q-accent/25 bg-q-accent/10">
+                            <Globe className="text-q-accent" size={22} />
+                        </div>
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-base font-semibold text-foreground">
+                                    {t('aiAssistant.socialChannels.meta.title')}
+                                </h3>
+                                <span className="rounded-full border border-q-success/20 bg-q-success/10 px-2 py-0.5 text-[11px] font-medium text-q-success">
+                                    {t('aiAssistant.socialChannels.meta.recommended')}
+                                </span>
+                            </div>
+                            <p className="mt-1 max-w-xl text-sm leading-relaxed text-q-text-muted">
+                                {t('aiAssistant.socialChannels.meta.subtitle')}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                {/* Benefits */}
-                <div className="space-y-2 mb-6">
-                    <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <CheckCircle size={14} className="text-q-success" />
-                        <span>Configuración automática sin copiar tokens</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <CheckCircle size={14} className="text-q-success" />
-                        <span>Selecciona tus páginas y números con un clic</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-q-text-muted">
-                        <Shield size={14} className="text-q-accent" />
-                        <span>Conexión segura con OAuth de Meta</span>
-                    </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {platformTiles.map((platform) => (
+                        <div
+                            key={platform.label}
+                            className={`flex min-h-16 items-center gap-3 rounded-lg border ${platform.border} ${platform.bg} px-3 py-3`}
+                        >
+                            <span className={platform.tone}>{platform.icon}</span>
+                            <span className="text-sm font-medium text-foreground">{platform.label}</span>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Error display */}
+                <div className="mt-5 space-y-2 border-t border-q-border pt-4">
+                    {[
+                        t('aiAssistant.socialChannels.meta.benefitTokens'),
+                        t('aiAssistant.socialChannels.meta.benefitAssets'),
+                        t('aiAssistant.socialChannels.meta.benefitOAuth'),
+                    ].map((benefit, index) => (
+                        <div key={benefit} className="flex items-center gap-2 text-sm text-q-text-muted">
+                            {index === 2 ? (
+                                <Shield size={14} className="text-q-accent" />
+                            ) : (
+                                <CheckCircle size={14} className="text-q-success" />
+                            )}
+                            <span>{benefit}</span>
+                        </div>
+                    ))}
+                </div>
+
                 {error && (
-                    <div className="mb-4 p-3 bg-q-error/10 border border-q-error/20 rounded-lg text-q-error text-sm flex items-center gap-2">
-                        <AlertTriangle size={16} />
-                        {error}
+                    <div className="mt-4 flex gap-3 rounded-lg border border-q-error/20 bg-q-error/10 p-3 text-sm text-q-error">
+                        <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                        <div>
+                            <p className="font-medium">{t('aiAssistant.socialChannels.meta.errorTitle')}</p>
+                            <p className="mt-0.5 text-xs text-q-text-muted">
+                                {t('aiAssistant.socialChannels.meta.errorDescription')}
+                            </p>
+                        </div>
                     </div>
                 )}
 
-                {/* Connect Button */}
-                <button
-                    onClick={connect}
-                    disabled={isLoading || status === 'connecting'}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-q-accent to-q-accent hover:from-q-accent hover:to-q-accent text-q-text-on-accent font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                    {status === 'connecting' ? (
-                        <>
-                            <Loader2 size={18} className="animate-spin" />
-                            Conectando...
-                        </>
-                    ) : (
-                        <>
-                            <Facebook size={18} />
-                            Conectar con Meta
-                            <ArrowRight size={18} />
-                        </>
-                    )}
-                </button>
-
-                <p className="text-[10px] text-q-text-muted text-center mt-3">
-                    Serás redirigido a Meta para autorizar el acceso
-                </p>
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-q-text-muted">
+                        {t('aiAssistant.socialChannels.meta.redirectNote')}
+                    </p>
+                    <button
+                        onClick={connect}
+                        disabled={isLoading || status === 'connecting'}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-q-accent px-4 py-2.5 text-sm font-semibold text-q-text-on-accent shadow-sm transition-colors hover:bg-q-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {status === 'connecting' ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" />
+                                {t('aiAssistant.socialChannels.meta.connecting')}
+                            </>
+                        ) : (
+                            <>
+                                <Facebook size={18} />
+                                {t('aiAssistant.socialChannels.meta.connectButton')}
+                                <ArrowRight size={18} />
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         );
     }
@@ -162,7 +197,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 
     // Render connected state
     return (
-        <div className="bg-q-surface border border-q-border rounded-2xl overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-q-border bg-q-surface">
             {/* Connected Header */}
             <div className="p-4 bg-gradient-to-r from-q-success/10 to-q-success/10 border-b border-q-success/20">
                 <div className="flex items-center justify-between">
@@ -180,10 +215,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                         )}
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="font-semibold">{connection?.metaUserName || 'Meta Account'}</span>
+                                <span className="font-semibold">{connection?.metaUserName || t('aiAssistant.socialChannels.meta.defaultAccount')}</span>
                                 <CheckCircle size={14} className="text-q-success" />
                             </div>
-                            <span className="text-xs text-q-text-muted">Conectado con Meta</span>
+                            <span className="text-xs text-q-text-muted">{t('aiAssistant.socialChannels.meta.connected')}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -191,7 +226,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                             <button
                                 onClick={refreshToken}
                                 className="p-2 text-q-accent hover:bg-q-accent/10 rounded-lg transition-colors"
-                                title="Token expirado - Renovar"
+                                title={t('aiAssistant.socialChannels.meta.refreshToken')}
                             >
                                 <RefreshCw size={16} />
                             </button>
@@ -200,7 +235,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                             onClick={disconnect}
                             disabled={isLoading}
                             className="p-2 text-q-error hover:bg-q-error/10 rounded-lg transition-colors"
-                            title="Desconectar"
+                            title={t('aiAssistant.socialChannels.meta.disconnect')}
                         >
                             <LogOut size={16} />
                         </button>
@@ -210,7 +245,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 {status === 'token_expired' && (
                     <div className="mt-3 p-2 bg-q-accent/10 border border-q-accent/20 rounded-lg text-q-accent text-xs flex items-center gap-2">
                         <AlertTriangle size={14} />
-                        Tu token ha expirado. Haz clic en renovar para continuar.
+                        {t('aiAssistant.socialChannels.meta.tokenExpired')}
                     </div>
                 )}
             </div>
@@ -228,10 +263,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <span className="text-sm font-medium">Facebook Messenger</span>
                                 {selectedPageId ? (
                                     <p className="text-xs text-q-text-muted">
-                                        {pages.find(p => p.id === selectedPageId)?.name || 'Página seleccionada'}
+                                        {pages.find(p => p.id === selectedPageId)?.name || t('aiAssistant.socialChannels.meta.selectedPage')}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-q-accent">{pages.length} página(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{t('aiAssistant.socialChannels.meta.availablePages', { count: pages.length })}</p>
                                 )}
                             </div>
                         </div>
@@ -242,7 +277,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 onClick={openAssetSelector}
                                 className="text-xs text-q-accent hover:underline"
                             >
-                                Configurar
+                                {t('aiAssistant.socialChannels.meta.configure')}
                             </button>
                         )}
                     </div>
@@ -259,10 +294,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <span className="text-sm font-medium">WhatsApp Business</span>
                                 {selectedWhatsAppPhoneNumberId ? (
                                     <p className="text-xs text-q-text-muted">
-                                        {whatsappAccounts.find(w => w.phoneNumberId === selectedWhatsAppPhoneNumberId)?.displayPhoneNumber || 'Número seleccionado'}
+                                        {whatsappAccounts.find(w => w.phoneNumberId === selectedWhatsAppPhoneNumberId)?.displayPhoneNumber || t('aiAssistant.socialChannels.meta.selectedNumber')}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-q-accent">{whatsappAccounts.length} número(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{t('aiAssistant.socialChannels.meta.availableNumbers', { count: whatsappAccounts.length })}</p>
                                 )}
                             </div>
                         </div>
@@ -273,7 +308,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 onClick={openAssetSelector}
                                 className="text-xs text-q-success hover:underline"
                             >
-                                Configurar
+                                {t('aiAssistant.socialChannels.meta.configure')}
                             </button>
                         )}
                     </div>
@@ -290,10 +325,10 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <span className="text-sm font-medium">Instagram DMs</span>
                                 {selectedInstagramAccountId ? (
                                     <p className="text-xs text-q-text-muted">
-                                        @{instagramAccounts.find(i => i.id === selectedInstagramAccountId)?.username || 'Cuenta seleccionada'}
+                                        @{instagramAccounts.find(i => i.id === selectedInstagramAccountId)?.username || t('aiAssistant.socialChannels.meta.selectedAccount')}
                                     </p>
                                 ) : (
-                                    <p className="text-xs text-q-accent">{instagramAccounts.length} cuenta(s) disponibles</p>
+                                    <p className="text-xs text-q-accent">{t('aiAssistant.socialChannels.meta.availableAccounts', { count: instagramAccounts.length })}</p>
                                 )}
                             </div>
                         </div>
@@ -304,7 +339,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 onClick={openAssetSelector}
                                 className="text-xs text-q-accent hover:underline"
                             >
-                                Configurar
+                                {t('aiAssistant.socialChannels.meta.configure')}
                             </button>
                         )}
                     </div>
@@ -314,9 +349,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                 {!hasPages && !hasWhatsApp && !hasInstagram && (
                     <div className="p-4 bg-q-accent/10 border border-q-accent/20 rounded-xl text-center">
                         <AlertTriangle className="mx-auto mb-2 text-q-accent" size={24} />
-                        <p className="text-sm font-medium text-q-accent">No se encontraron páginas o cuentas</p>
+                        <p className="text-sm font-medium text-q-accent">{t('aiAssistant.socialChannels.meta.noAssetsTitle')}</p>
                         <p className="text-xs text-q-text-muted mt-1">
-                            Asegúrate de tener una página de Facebook con permisos de administrador
+                            {t('aiAssistant.socialChannels.meta.noAssetsDescription')}
                         </p>
                     </div>
                 )}
@@ -328,7 +363,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                         className="w-full py-2.5 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
                     >
                         <Sparkles size={16} />
-                        Configurar canales
+                        {t('aiAssistant.socialChannels.meta.configureChannels')}
                         <ChevronRight size={16} />
                     </button>
                 )}
@@ -340,9 +375,9 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                     <div className="bg-q-surface border border-q-border rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden animate-fade-in-up">
                         {/* Modal Header */}
                         <div className="p-4 border-b border-q-border">
-                            <h3 className="font-bold text-lg">Seleccionar canales</h3>
+                            <h3 className="font-bold text-lg">{t('aiAssistant.socialChannels.meta.selectChannelsTitle')}</h3>
                             <p className="text-sm text-q-text-muted">
-                                Elige qué páginas y cuentas usar para este proyecto
+                                {t('aiAssistant.socialChannels.meta.selectChannelsDescription')}
                             </p>
                         </div>
 
@@ -353,7 +388,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
                                         <Facebook size={14} className="text-q-accent" />
-                                        Página de Facebook
+                                        {t('aiAssistant.socialChannels.meta.facebookPage')}
                                     </label>
                                     <div className="space-y-2">
                                         {pages.map(page => (
@@ -400,7 +435,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
                                         <Phone size={14} className="text-q-success" />
-                                        Número de WhatsApp
+                                        {t('aiAssistant.socialChannels.meta.whatsappNumber')}
                                     </label>
                                     <div className="space-y-2">
                                         {whatsappAccounts.map(account => (
@@ -441,7 +476,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 <div>
                                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
                                         <Instagram size={14} className="text-q-accent" />
-                                        Cuenta de Instagram
+                                        {t('aiAssistant.socialChannels.meta.instagramAccount')}
                                     </label>
                                     <div className="space-y-2">
                                         {instagramAccounts.map(account => (
@@ -487,7 +522,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 onClick={() => setShowAssetSelector(false)}
                                 className="flex-1 py-2.5 px-4 border border-q-border hover:bg-secondary rounded-xl transition-colors font-medium"
                             >
-                                Cancelar
+                                {t('aiAssistant.socialChannels.meta.cancel')}
                             </button>
                             <button
                                 onClick={handleSaveSelections}
@@ -499,7 +534,7 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
                                 ) : (
                                     <>
                                         <CheckCircle size={18} />
-                                        Guardar
+                                        {t('aiAssistant.socialChannels.meta.save')}
                                     </>
                                 )}
                             </button>
@@ -512,11 +547,6 @@ const MetaOAuthConnect: React.FC<MetaOAuthConnectProps> = ({
 };
 
 export default MetaOAuthConnect;
-
-
-
-
-
 
 
 

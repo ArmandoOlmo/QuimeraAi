@@ -9,7 +9,7 @@ import {
     ChevronDown, X, Upload, Trash2
 } from 'lucide-react';
 import { ChatAppearanceConfig } from '../../../types';
-import { getDefaultAppearanceConfig, THEME_PRESETS, applyThemePreset, buildProjectPreset } from '../../../utils/chatThemes';
+import { THEME_PRESETS, applyThemePreset, buildProjectPreset, resolveChatAppearanceConfig } from '../../../utils/chatThemes';
 import ChatbotWidget from '../../ChatbotWidget';
 import EcommerceImagePicker from '../ecommerce/components/EcommerceImagePicker';
 import ColorControl from '../../ui/ColorControl';
@@ -67,8 +67,10 @@ const ChatCustomizationSettings: React.FC = () => {
     const { t } = useTranslation();
     const { success, error: showError } = useToast();
 
+    const projectGlobalColors = activeProject?.theme?.globalColors;
+
     const [config, setConfig] = useState<ChatAppearanceConfig>(
-        aiAssistantConfig.appearance || getDefaultAppearanceConfig()
+        () => resolveChatAppearanceConfig(aiAssistantConfig.appearance, projectGlobalColors)
     );
 
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -83,10 +85,8 @@ const ChatCustomizationSettings: React.FC = () => {
     const [showImagePicker, setShowImagePicker] = useState<'logo' | 'buttonIcon' | null>(null);
 
     useEffect(() => {
-        if (aiAssistantConfig.appearance) {
-            setConfig(aiAssistantConfig.appearance);
-        }
-    }, [aiAssistantConfig.appearance]);
+        setConfig(resolveChatAppearanceConfig(aiAssistantConfig.appearance, projectGlobalColors));
+    }, [aiAssistantConfig.appearance, projectGlobalColors]);
 
     // Also sync to EditorContext so the live ChatbotWidget preview updates
     const editorContext = useSafeEditor();
@@ -113,13 +113,17 @@ const ChatCustomizationSettings: React.FC = () => {
     };
 
     // Build project-colors preset from the active project's theme
-    const projectGlobalColors = activeProject?.theme?.globalColors;
     const projectPreset = projectGlobalColors ? buildProjectPreset(projectGlobalColors) : null;
 
     // Build palette colors array for ColorControl popover
-    const projectPaletteColors = projectGlobalColors
-        ? Object.values(projectGlobalColors).filter((c): c is string => typeof c === 'string' && c.startsWith('#'))
-        : undefined;
+    const projectPaletteColors = [
+        ...(Array.isArray(activeProject?.theme?.paletteColors) ? activeProject.theme.paletteColors : []),
+        ...(projectGlobalColors ? Object.values(projectGlobalColors) : []),
+    ].filter((c, index, colors): c is string => (
+        typeof c === 'string'
+        && c.startsWith('#')
+        && colors.indexOf(c) === index
+    ));
 
     const applyProjectPreset = () => {
         if (!projectPreset) return;

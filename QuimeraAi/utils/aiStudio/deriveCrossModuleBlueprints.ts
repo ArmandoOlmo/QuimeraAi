@@ -18,6 +18,10 @@ const ECOMMERCE_EVENTS: IntegrationEventType[] = [
     'product_inquiry',
 ];
 
+function bi(es: string, en: string): string {
+    return `ES: ${es}\nEN: ${en}`;
+}
+
 function businessKnowledge(input: AiStudioBusinessBriefInput): string[] {
     const plan = input.existingWebsitePlan;
     return [
@@ -34,14 +38,32 @@ function contextDrafts(
 ): string[] {
     const signals = classifyCommerceSignals(input);
     const drafts = [
-        'Draft store policies: payment, tax, shipping, returns, and pickup rules must be reviewed.',
-        'Draft product FAQ: answer category, availability, and product inquiry questions only from reviewed catalog data.',
+        bi(
+            'Políticas de tienda en borrador: pagos, impuestos, envíos, devoluciones y recogido deben revisarse.',
+            'Draft store policies: payment, tax, shipping, returns, and pickup rules must be reviewed.',
+        ),
+        bi(
+            'FAQ de productos en borrador: responder categorías, disponibilidad e inquiries solo desde catálogo revisado.',
+            'Draft product FAQ: answer category, availability, and product inquiry questions only from reviewed catalog data.',
+        ),
     ];
 
-    if (ecommerceBlueprint.giftCardsEnabled) drafts.push('Draft gift card FAQ: redemption, delivery, and expiration rules need merchant approval.');
-    if (signals.includes('restaurant')) drafts.push('Restaurant context: reservations, menu, catering, event tickets, and gift cards should be reviewed by the restaurant.');
-    if (signals.includes('real-estate')) drafts.push('Real estate context: buyer guides, seller guides, consultations, and lead capture should stay informational until reviewed.');
-    if (signals.includes('services')) drafts.push('Appointments context: paid consultations, packages, deposits, and add-ons require service availability review.');
+    if (ecommerceBlueprint.giftCardsEnabled) drafts.push(bi(
+        'FAQ de gift cards en borrador: redención, entrega y expiración necesitan aprobación del comercio.',
+        'Draft gift card FAQ: redemption, delivery, and expiration rules need merchant approval.',
+    ));
+    if (signals.includes('restaurant')) drafts.push(bi(
+        'Contexto de restaurante: reservas, menú, catering, tickets de eventos y gift cards deben revisarse por el restaurante.',
+        'Restaurant context: reservations, menu, catering, event tickets, and gift cards should be reviewed by the restaurant.',
+    ));
+    if (signals.includes('real-estate')) drafts.push(bi(
+        'Contexto real estate: guías de compradores/vendedores, consultas y captura de leads deben ser informativas hasta revisión.',
+        'Real estate context: buyer guides, seller guides, consultations, and lead capture should stay informational until reviewed.',
+    ));
+    if (signals.includes('services')) drafts.push(bi(
+        'Contexto de citas: consultas pagadas, paquetes, depósitos y add-ons requieren revisión de disponibilidad del servicio.',
+        'Appointments context: paid consultations, packages, deposits, and add-ons require service availability review.',
+    ));
 
     return drafts;
 }
@@ -54,7 +76,10 @@ export function deriveCrossModuleBlueprints(
     const now = input.now || ecommerceBlueprint.metadata.generatedAt || new Date().toISOString();
     const metadata = createAiStudioMetadata(now);
     const enabled = ecommerceBlueprint.enabled;
-    const categoryKnowledge = ecommerceBlueprint.productCategories.map(category => `Category draft: ${category}`);
+    const categoryKnowledge = ecommerceBlueprint.productCategories.map(category => bi(
+        `Borrador de categoría: ${category}`,
+        `Category draft: ${category}`,
+    ));
     const signals = classifyCommerceSignals(input);
     const leadTags = [
         'ecommerce',
@@ -76,16 +101,27 @@ export function deriveCrossModuleBlueprints(
             productKnowledge: enabled
                 ? [
                     ...categoryKnowledge,
-                    ...ecommerceBlueprint.starterProducts.map(product => `Draft product: ${product.name}`),
+                    ...ecommerceBlueprint.starterProducts.map(product => bi(
+                        `Producto en borrador: ${product.name}`,
+                        `Draft product: ${product.name}`,
+                    )),
                 ]
                 : [],
             policyKnowledge: enabled
-                ? ['Draft shipping policy', 'Draft returns policy', 'Draft payment policy', 'Draft gift card policy']
+                ? [
+                    bi('Política de envío en borrador', 'Draft shipping policy'),
+                    bi('Política de devoluciones en borrador', 'Draft returns policy'),
+                    bi('Política de pago en borrador', 'Draft payment policy'),
+                    bi('Política de gift cards en borrador', 'Draft gift card policy'),
+                ]
                 : [],
             eventIntents: enabled ? ECOMMERCE_EVENTS : ['lead_created'],
             contextDrafts: contextDrafts(input, ecommerceBlueprint),
             readiness: createAiStudioReadiness([
-                'Chatbot ecommerce knowledge is draft-only and should not answer from unreviewed product data.',
+                bi(
+                    'El conocimiento ecommerce del chatbot es solo borrador y no debe responder desde datos de producto sin revisar.',
+                    'Chatbot ecommerce knowledge is draft-only and should not answer from unreviewed product data.',
+                ),
             ]),
             sourceMap: {
                 productKnowledge: 'ecommerceBlueprint.productCategories',

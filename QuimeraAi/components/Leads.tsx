@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
 
-const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',

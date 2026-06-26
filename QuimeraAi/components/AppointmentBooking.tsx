@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, CheckCircle2, Clock, CreditCard, Loader2, Mail, MessageSquare, Phone, User } from 'lucide-react';
 import type { AppointmentBookingData, BorderRadiusSize, FontSize, PaddingSize } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import CornerGradient from './ui/CornerGradient';
+import { mergeChatbotEngineSurfaceContext, type ChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 
-const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || 'https://quimera.ai/api/widget').replace(/\/$/, '');
+const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 const APPOINTMENT_CHECKOUT_API_URL = import.meta.env.VITE_APPOINTMENT_CHECKOUT_API_URL || '/api/appointments/payments/checkout';
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -54,7 +55,9 @@ interface AppointmentBookingProps extends AppointmentBookingData {
   compact?: boolean;
   sourceComponent?: string;
   sourceModule?: string;
+  sourceSurface?: ChatbotEngineSurfaceContext['sourceSurface'];
   sourceBlockId?: string;
+  chatbotEngineContext?: ChatbotEngineSurfaceContext;
   onBookingIntent?: () => void;
   onBookingCompleted?: (result: {
     appointmentId?: string;
@@ -153,14 +156,23 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   ownerId,
   compact = false,
   sourceComponent = 'AppointmentBooking',
-  sourceModule = 'website-builder',
+  sourceModule = 'appointments',
+  sourceSurface = 'booking_page',
   sourceBlockId,
+  chatbotEngineContext,
   onBookingIntent,
   onBookingCompleted,
 }) => {
   const { t, i18n } = useTranslation();
   const { getColor } = useDesignTokens();
   const widgetApiProjectId = ownerId && projectId ? `${ownerId}_${projectId}` : projectId;
+  const isSpanish = i18n.language?.toLowerCase().startsWith('es');
+  const bt = useCallback((key: string, fallbackEn: string, fallbackEs?: string, options: Record<string, unknown> = {}) => (
+    String(t(`appointmentBooking.${key}`, {
+      defaultValue: isSpanish ? (fallbackEs || fallbackEn) : fallbackEn,
+      ...options,
+    }))
+  ), [isSpanish, t]);
 
   const [selectedDate, setSelectedDate] = useState(tomorrowDateInputValue);
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -205,12 +217,15 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
       setSubmitStatus('idle');
       setErrorMessage('');
       try {
-        const url = new URL(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/availability`);
+        const url = new URL(
+          `${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/availability`,
+          window.location.origin,
+        );
         url.searchParams.set('date', selectedDate);
         url.searchParams.set('durationMinutes', String(resolvedDuration));
         url.searchParams.set('maxSlots', '24');
         const response = await fetch(url.toString(), { signal: controller.signal });
-        if (!response.ok) throw new Error(t('appointmentBooking.errors.availability'));
+        if (!response.ok) throw new Error(bt('errors.availability', 'Availability could not be loaded.', 'No se pudo cargar la disponibilidad.'));
         const payload = await response.json();
         const nextSlots = Array.isArray(payload.slots) ? payload.slots : [];
         const nextServices = Array.isArray(payload.services) ? payload.services : [];
@@ -221,7 +236,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
       } catch (error) {
         if ((error as Error).name === 'AbortError') return;
         setSlots([]);
-        setErrorMessage((error as Error).message || t('appointmentBooking.errors.availability'));
+        setErrorMessage((error as Error).message || bt('errors.availability', 'Availability could not be loaded.', 'No se pudo cargar la disponibilidad.'));
       } finally {
         setIsLoadingSlots(false);
       }
@@ -229,7 +244,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
 
     loadAvailability();
     return () => controller.abort();
-  }, [resolvedDuration, selectedDate, selectedServiceId, t, widgetApiProjectId]);
+  }, [bt, resolvedDuration, selectedDate, selectedServiceId, widgetApiProjectId]);
 
   const sectionStyle: React.CSSProperties = {
     backgroundColor: colors.background || getColor('background'),
@@ -248,19 +263,64 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   };
 
   const accentColor = colors.accent || getColor('primary');
-  const heading = title || t('appointmentBooking.title');
-  const body = description || t('appointmentBooking.description');
+  const heading = title || bt('title', 'Book an appointment', 'Reserva una cita');
+  const body = description || bt('description', 'Choose an available time and we will send your request to the team.', 'Elige un horario disponible y enviaremos tu solicitud al equipo.');
+
+  const buildBookingSurfaceContext = useCallback(() => mergeChatbotEngineSurfaceContext(
+    chatbotEngineContext,
+    {
+      sourceSurface: chatbotEngineContext?.sourceSurface || sourceSurface,
+      sourceModule: sourceModule || chatbotEngineContext?.sourceModule,
+      route: chatbotEngineContext?.route || (typeof window !== 'undefined' ? window.location.pathname : undefined),
+      entityType: 'booking_page',
+      entityId: sourceBlockId || projectId || widgetApiProjectId,
+      contextKeys: [
+        'booking_page',
+        'appointments',
+        sourceComponent,
+        sourceBlockId ? `block:${sourceBlockId}` : '',
+      ].filter(Boolean),
+      metadata: {
+        projectId,
+        ownerId,
+        widgetApiProjectId,
+        sourceComponent,
+        sourceBlockId,
+        durationMinutes: resolvedDuration,
+        bookingServiceId: resolvedService?.id,
+        serviceName: resolvedService?.name,
+        paymentMode: resolvedPaymentMode,
+        ecommerceProductId: resolvedService?.ecommerceProductId,
+        locale: i18n.language,
+      },
+    },
+  ), [
+    chatbotEngineContext,
+    i18n.language,
+    ownerId,
+    projectId,
+    resolvedDuration,
+    resolvedPaymentMode,
+    resolvedService?.ecommerceProductId,
+    resolvedService?.id,
+    resolvedService?.name,
+    sourceBlockId,
+    sourceComponent,
+    sourceModule,
+    sourceSurface,
+    widgetApiProjectId,
+  ]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!widgetApiProjectId) {
       setSubmitStatus('error');
-      setErrorMessage(t('appointmentBooking.errors.projectRequired'));
+      setErrorMessage(bt('errors.projectRequired', 'Public booking requires a configured project.', 'La reserva publica requiere un proyecto configurado.'));
       return;
     }
     if (!selectedSlot) {
       setSubmitStatus('error');
-      setErrorMessage(t('appointmentBooking.errors.slotRequired'));
+      setErrorMessage(bt('errors.slotRequired', 'Select an available time.', 'Selecciona un horario disponible.'));
       return;
     }
 
@@ -269,15 +329,18 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     setErrorMessage('');
 
     try {
+      const bookingSurfaceContext = buildBookingSurfaceContext();
       const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source: 'public_booking',
           sourceComponent,
-          sourceModule,
-          publicSubmissionId: `${sourceModule}:${sourceComponent}:${Date.now()}`,
-          idempotencyKey: `${sourceModule}:${sourceComponent}:${widgetApiProjectId}:${formData.email || formData.phone || formData.name}:${selectedSlot.startDate}`,
+          sourceModule: bookingSurfaceContext.sourceModule,
+          sourceSurface: bookingSurfaceContext.sourceSurface,
+          chatbotEngineContext: bookingSurfaceContext,
+          publicSubmissionId: `${bookingSurfaceContext.sourceModule}:${sourceComponent}:${Date.now()}`,
+          idempotencyKey: `${bookingSurfaceContext.sourceModule}:${sourceComponent}:${widgetApiProjectId}:${formData.email || formData.phone || formData.name}:${selectedSlot.startDate}`,
           title: `${resolvedService?.name || heading} - ${formData.name}`,
           description: formData.message,
           type: 'consultation',
@@ -303,12 +366,15 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             currency: resolvedService?.currency || 'USD',
             ecommerceProductId: resolvedService?.ecommerceProductId,
             sourceBlockId,
+            sourceSurface: bookingSurfaceContext.sourceSurface,
+            sourceModule: bookingSurfaceContext.sourceModule,
+            chatbotEngineContext: bookingSurfaceContext,
             locale: i18n.language,
           },
         }),
       });
 
-      if (!response.ok) throw new Error(t('appointmentBooking.errors.submit'));
+      if (!response.ok) throw new Error(bt('errors.submit', 'The appointment request could not be sent.', 'No se pudo enviar la solicitud de cita.'));
       const bookingResult = await response.json();
 
       if (bookingResult.paymentRequired && bookingResult.ecommerceOrderId) {
@@ -334,7 +400,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
         });
         const checkoutResult = await checkoutResponse.json().catch(() => ({}));
         if (!checkoutResponse.ok || !checkoutResult.checkoutUrl) {
-          throw new Error(checkoutResult.error || t('appointmentBooking.errors.payment'));
+          throw new Error(checkoutResult.error || bt('errors.payment', 'The appointment was created, but secure checkout could not be opened.', 'La cita fue creada, pero no se pudo abrir el checkout seguro.'));
         }
         window.location.assign(checkoutResult.checkoutUrl);
         return;
@@ -354,7 +420,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
       setFormData({ name: '', email: '', phone: '', message: '' });
     } catch (error) {
       setSubmitStatus('error');
-      setErrorMessage((error as Error).message || t('appointmentBooking.errors.submit'));
+      setErrorMessage((error as Error).message || bt('errors.submit', 'The appointment request could not be sent.', 'No se pudo enviar la solicitud de cita.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -385,11 +451,11 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
           <div className={`grid max-w-xl gap-3 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
             <div className={`border p-4 ${radiusClasses[cardBorderRadius]}`} style={cardStyle}>
               <CalendarDays size={20} style={{ color: accentColor }} />
-              <p className="mt-2 text-sm font-semibold">{t('appointmentBooking.confirmation')}</p>
+              <p className="mt-2 text-sm font-semibold">{bt('confirmation', 'Request linked to CRM', 'Solicitud vinculada al CRM')}</p>
             </div>
             <div className={`border p-4 ${radiusClasses[cardBorderRadius]}`} style={cardStyle}>
               <Clock size={20} style={{ color: accentColor }} />
-              <p className="mt-2 text-sm font-semibold">{t('appointmentBooking.reviewNotice')}</p>
+              <p className="mt-2 text-sm font-semibold">{bt('reviewNotice', 'Confirmation depends on final availability', 'Confirmacion sujeta a disponibilidad final')}</p>
             </div>
           </div>
         </div>
@@ -404,7 +470,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
           <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
             {services.length > 0 && (
               <label className={compact ? '' : 'sm:col-span-2'}>
-                <span className="mb-1.5 block text-sm font-medium">{serviceLabel || t('appointmentBooking.serviceLabel')}</span>
+                <span className="mb-1.5 block text-sm font-medium">{serviceLabel || bt('serviceLabel', 'Service', 'Servicio')}</span>
                 <select
                   value={selectedServiceId}
                   onChange={(event) => setSelectedServiceId(event.target.value)}
@@ -413,7 +479,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                 >
                   {services.map((service, index) => (
                     <option key={service.id || service.name || index} value={service.id || ''}>
-                      {service.name || t('appointmentBooking.defaultService')}
+                      {service.name || bt('defaultService', 'General appointment', 'Cita general')}
                     </option>
                   ))}
                 </select>
@@ -421,7 +487,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             )}
 
             <label>
-              <span className="mb-1.5 block text-sm font-medium">{dateLabel || t('appointmentBooking.dateLabel')}</span>
+              <span className="mb-1.5 block text-sm font-medium">{dateLabel || bt('dateLabel', 'Date', 'Fecha')}</span>
               <input
                 type="date"
                 value={selectedDate}
@@ -433,7 +499,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             </label>
 
             <label>
-              <span className="mb-1.5 block text-sm font-medium">{slotLabel || t('appointmentBooking.slotLabel')}</span>
+              <span className="mb-1.5 block text-sm font-medium">{slotLabel || bt('slotLabel', 'Available time', 'Horario disponible')}</span>
               <select
                 value={selectedSlotStart}
                 onChange={(event) => setSelectedSlotStart(event.target.value)}
@@ -441,8 +507,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                 style={inputStyle}
                 disabled={isLoadingSlots || slots.length === 0}
               >
-                {isLoadingSlots && <option>{t('appointmentBooking.loadingSlots')}</option>}
-                {!isLoadingSlots && slots.length === 0 && <option>{noSlotsMessage || t('appointmentBooking.noSlots')}</option>}
+                {isLoadingSlots && <option>{bt('loadingSlots', 'Loading times...', 'Cargando horarios...')}</option>}
+                {!isLoadingSlots && slots.length === 0 && <option>{noSlotsMessage || bt('noSlots', 'No times are available for this date.', 'No hay horarios disponibles para esta fecha.')}</option>}
                 {!isLoadingSlots && slots.map(slot => (
                   <option key={slot.startDate} value={slot.startDate}>{slot.label}</option>
                 ))}
@@ -450,14 +516,14 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             </label>
 
             <label>
-              <span className="sr-only">{t('appointmentBooking.nameLabel')}</span>
+              <span className="sr-only">{bt('nameLabel', 'Name', 'Nombre')}</span>
               <div className="relative">
                 <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   required
                   value={formData.name}
                   onChange={(event) => setFormData(prev => ({ ...prev, name: event.target.value }))}
-                  placeholder={namePlaceholder || t('appointmentBooking.namePlaceholder')}
+                  placeholder={namePlaceholder || bt('namePlaceholder', 'Full name', 'Nombre completo')}
                   className={`${fieldClass(inputBorderRadius)} pl-9`}
                   style={inputStyle}
                 />
@@ -465,7 +531,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             </label>
 
             <label>
-              <span className="sr-only">{t('appointmentBooking.emailLabel')}</span>
+              <span className="sr-only">{bt('emailLabel', 'Email', 'Email')}</span>
               <div className="relative">
                 <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
@@ -473,7 +539,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                   type="email"
                   value={formData.email}
                   onChange={(event) => setFormData(prev => ({ ...prev, email: event.target.value }))}
-                  placeholder={emailPlaceholder || t('appointmentBooking.emailPlaceholder')}
+                  placeholder={emailPlaceholder || bt('emailPlaceholder', 'email@example.com', 'email@ejemplo.com')}
                   className={`${fieldClass(inputBorderRadius)} pl-9`}
                   style={inputStyle}
                 />
@@ -481,13 +547,13 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             </label>
 
             <label>
-              <span className="sr-only">{t('appointmentBooking.phoneLabel')}</span>
+              <span className="sr-only">{bt('phoneLabel', 'Phone', 'Telefono')}</span>
               <div className="relative">
                 <Phone size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   value={formData.phone}
                   onChange={(event) => setFormData(prev => ({ ...prev, phone: event.target.value }))}
-                  placeholder={phonePlaceholder || t('appointmentBooking.phonePlaceholder')}
+                  placeholder={phonePlaceholder || bt('phonePlaceholder', 'Phone', 'Telefono')}
                   className={`${fieldClass(inputBorderRadius)} pl-9`}
                   style={inputStyle}
                 />
@@ -495,14 +561,14 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             </label>
 
             <label className={compact ? '' : 'sm:col-span-2'}>
-              <span className="sr-only">{t('appointmentBooking.messageLabel')}</span>
+              <span className="sr-only">{bt('messageLabel', 'Message', 'Mensaje')}</span>
               <div className="relative">
                 <MessageSquare size={16} className="pointer-events-none absolute left-3 top-3.5 opacity-60" />
                 <textarea
                   rows={4}
                   value={formData.message}
                   onChange={(event) => setFormData(prev => ({ ...prev, message: event.target.value }))}
-                  placeholder={messagePlaceholder || t('appointmentBooking.messagePlaceholder')}
+                  placeholder={messagePlaceholder || bt('messagePlaceholder', 'Tell us what we should prepare for the appointment', 'Cuentanos que necesitas preparar para la cita')}
                   className={`${fieldClass(inputBorderRadius)} pl-9`}
                   style={inputStyle}
                 />
@@ -514,7 +580,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             <div className={`mt-4 flex items-start gap-2 border px-3 py-2 text-sm font-medium ${radiusClasses[cardBorderRadius]}`} style={cardStyle}>
               <CreditCard size={18} style={{ color: accentColor }} />
               <span>
-                {t('appointmentBooking.paymentNotice', {
+                {bt('paymentNotice', 'Payment due at booking: {{amount}}', 'Pago requerido al reservar: {{amount}}', {
                   amount: formatPaymentAmount(resolvedPaymentAmount, resolvedService?.currency, i18n.language),
                 })}
               </span>
@@ -532,14 +598,14 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
           >
             {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <CalendarDays size={16} />}
             {submitStatus === 'payment'
-              ? t('appointmentBooking.paymentRedirecting')
-              : buttonText || t('appointmentBooking.buttonText')}
+              ? bt('paymentRedirecting', 'Opening secure checkout...', 'Abriendo checkout seguro...')
+              : buttonText || bt('buttonText', 'Request appointment', 'Solicitar cita')}
           </button>
 
           {submitStatus === 'success' && (
             <div className="mt-4 flex items-start gap-2 text-sm font-medium text-emerald-600">
               <CheckCircle2 size={18} />
-              <span>{successMessage || t('appointmentBooking.successMessage')}</span>
+              <span>{successMessage || bt('successMessage', 'Request received. We will contact you to confirm the appointment.', 'Solicitud recibida. Te contactaremos para confirmar la cita.')}</span>
             </div>
           )}
           {(submitStatus === 'error' || errorMessage) && (

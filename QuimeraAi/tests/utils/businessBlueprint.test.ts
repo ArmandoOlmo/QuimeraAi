@@ -168,6 +168,10 @@ describe('businessBlueprint adapters', () => {
         expect(blueprint.tenantId).toBe('tenant_123');
         expect(blueprint.status).toBe('generated');
         expect(blueprint.sourceMap.businessName).toBe('websitePlan.businessProfile.businessName');
+        expect(blueprint.bioPageBlueprint?.integrations).toMatchObject({
+            businessBlueprint: true,
+            designSystem: true,
+        });
     });
 
     it('creates a complete RealEstateBlueprint V2 with draft guardrails', () => {
@@ -306,6 +310,97 @@ describe('businessBlueprint adapters', () => {
         expect(appointments.websiteBuilderBlocks.map(block => block.componentId)).toEqual(expect.arrayContaining(['appointmentCTA', 'publicBookingForm']));
     });
 
+    it('creates ChatbotBlueprint V2 with bilingual copy, draft guardrails, and disabled public actions', () => {
+        const blueprint = createBusinessBlueprintFromWebsitePlan(buildAppointmentsPlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+        const chatbot = blueprint.chatbotBlueprint;
+        const action = (type: string) => chatbot.actions.find(item => item.actionType === type);
+
+        expect(chatbot.engineVersion).toBe('v2');
+        expect(chatbot.status).toBe('needs_review');
+        expect(chatbot.needsReview).toBe(true);
+        expect(chatbot.readiness.isReady).toBe(false);
+        expect(chatbot.agentProfile.supportedLanguages).toEqual(['es', 'en']);
+        expect(chatbot.agentProfile.welcomeMessage).toContain('ES:');
+        expect(chatbot.agentProfile.welcomeMessage).toContain('EN:');
+        expect(chatbot.knowledgeSources.map(source => source.type)).toEqual(expect.arrayContaining([
+            'business_blueprint',
+            'website_content',
+            'appointments_services',
+            'bio_page',
+        ]));
+        expect(chatbot.knowledgeSources.every(source => source.needsReview)).toBe(true);
+        expect(chatbot.actions.map(item => item.actionType)).toEqual(expect.arrayContaining([
+            'save_conversation',
+            'save_message',
+            'analyze_intent',
+            'back_in_stock_request',
+        ]));
+        expect(action('create_appointment')).toMatchObject({
+            enabled: false,
+            publicAllowed: true,
+            requiresConfirmation: true,
+            idempotencyRequired: true,
+            auditLogRequired: true,
+        });
+        expect(action('check_order_status')).toMatchObject({
+            enabled: false,
+            publicAllowed: true,
+            requiresAuth: false,
+            requiresConfirmation: false,
+            idempotencyRequired: false,
+        });
+        expect(action('back_in_stock_request')).toMatchObject({
+            enabled: false,
+            publicAllowed: true,
+            requiresConsent: true,
+            requiresConfirmation: false,
+            idempotencyRequired: true,
+        });
+        expect(chatbot.deployment.voiceSettings).toMatchObject({
+            enabled: false,
+            provider: 'none',
+        });
+        expect(chatbot.deployment.voiceSettings.agentId).toBeUndefined();
+    });
+
+    it('migrates legacy ChatbotBlueprint data to V2 without losing legacy knowledge fields', () => {
+        const base = createBusinessBlueprintFromWebsitePlan(buildEcommercePlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+        });
+        const legacyBlueprint: BusinessBlueprint = {
+            ...base,
+            chatbotBlueprint: {
+                enabled: true,
+                status: 'generated',
+                needsReview: true,
+                readiness: { isReady: true, blockers: [], warnings: [] },
+                metadata: {
+                    generatedBy: 'ai',
+                    userModified: true,
+                    lockedFromRegeneration: true,
+                    generatedAt: '2026-06-19T12:00:00.000Z',
+                },
+                sourceMap: { legacy: 'test' },
+                businessKnowledge: ['Legacy business'],
+                productKnowledge: ['Legacy product'],
+                policyKnowledge: ['Legacy policy'],
+                eventIntents: ['lead_created'],
+            } as any,
+        };
+
+        const migrated = migrateBusinessBlueprint(legacyBlueprint);
+
+        expect(migrated?.chatbotBlueprint.engineVersion).toBe('v2');
+        expect(migrated?.chatbotBlueprint.businessKnowledge).toEqual(['Legacy business']);
+        expect(migrated?.chatbotBlueprint.productKnowledge).toEqual(['Legacy product']);
+        expect(migrated?.chatbotBlueprint.policyKnowledge).toEqual(['Legacy policy']);
+        expect(migrated?.chatbotBlueprint.metadata.userModified).toBe(true);
+        expect(migrated?.chatbotBlueprint.metadata.lockedFromRegeneration).toBe(true);
+        expect(migrated?.chatbotBlueprint.actions.length).toBeGreaterThan(0);
+    });
+
     it('recognizes current blueprints and ignores unknown schema shapes', () => {
         const blueprint = createBusinessBlueprintFromWebsitePlan(buildEcommercePlan(), {
             now: '2026-06-19T12:00:00.000Z',
@@ -398,6 +493,41 @@ describe('businessBlueprint adapters', () => {
 
         expect(project.businessBlueprint).toBe(blueprint);
         expect(project.tenantId).toBe('tenant_123');
+    });
+
+    it('hydrates loaded project ChatCore config from projects.data.businessBlueprint when legacy config has no documents', () => {
+        const blueprint = createBusinessBlueprintFromWebsitePlan(buildEcommercePlan(), {
+            now: '2026-06-19T12:00:00.000Z',
+            projectId: 'project_chatcore',
+            tenantId: 'tenant_123',
+        });
+
+        const project = mapSupabaseRowToProject({
+            id: 'project_chatcore',
+            name: 'Quimera Fit Store',
+            user_id: 'user_123',
+            tenant_id: 'tenant_123',
+            status: 'Published',
+            ai_assistant_config: {
+                isActive: true,
+                agentName: 'Manual Fit Assistant',
+                knowledgeDocuments: [],
+            },
+            data: {
+                name: 'Quimera Fit Store',
+                data: { hero: { title: 'Quimera Fit Store' } },
+                componentOrder: ['hero', 'footer'],
+                sectionVisibility: { hero: true, footer: true },
+                businessBlueprint: blueprint,
+            },
+        });
+
+        expect(project.aiAssistantConfig?.agentName).toBe('Manual Fit Assistant');
+        expect(project.aiAssistantConfig?.knowledgeDocuments?.[0]).toMatchObject({
+            id: 'ai-studio-chatcore-project-knowledge',
+            source: 'businessBlueprint.chatbotBlueprint',
+        });
+        expect(project.aiAssistantConfig?.knowledgeDocuments?.[0]?.content).toContain('Quimera Fit Store');
     });
 
     it('attaches an AI Studio business blueprint to a generated project preview', () => {

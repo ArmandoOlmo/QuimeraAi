@@ -4,14 +4,14 @@ import { requireSupabaseUser } from '../../_lib/mcpKeys.js';
 import {
   assertGoogleCalendarProjectAccess,
   syncGoogleCalendarIntegration,
-} from '../../../services/appointments/appointmentGoogleCalendarSyncService.ts';
+} from '../../../services/appointments/appointmentGoogleCalendarSyncService.js';
 import {
   JSON_HEADERS,
   normalizeString,
   readBody,
   send,
   sendNoContent,
-} from './_lib.ts';
+} from './_lib.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method === 'OPTIONS') {

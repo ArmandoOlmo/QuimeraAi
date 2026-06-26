@@ -4,7 +4,7 @@ import { AiAssistantConfig, Lead, Project } from '../../../types';
 import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useSafeTenant } from '../../../contexts/tenant';
-import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
+import { resolveChatAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
 import { supabase } from '../../../supabase';
 import { createAppointmentFromChat, getAppointmentsByProject } from '../../../services/appointments/appointmentEngineService';
@@ -26,7 +26,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     const projectId = project?.id;
 
     // Get appearance config with defaults
-    const appearance = config.appearance || getDefaultAppearanceConfig();
+    const appearance = resolveChatAppearanceConfig(config.appearance, project?.theme?.globalColors);
 
     // Load appointments
     useEffect(() => {
@@ -88,9 +88,9 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     };
 
     // Handle updating lead transcript
-    const handleUpdateLeadTranscript = async (leadId: string, transcript: string) => {
+    const handleUpdateLeadTranscript = async (leadId: string, transcript: string, notes?: string) => {
         if (updateLead) {
-            await updateLead(leadId, { conversationTranscript: transcript });
+            await updateLead(leadId, { conversationTranscript: transcript, ...(notes ? { notes } : {}) });
         }
     };
 
@@ -113,6 +113,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 tenantId: currentTenantId,
                 title: appointmentData.title || 'Cita desde Chat',
                 description: appointmentData.description || '',
+                notes: appointmentData.notes,
                 type: appointmentData.type || 'consultation',
                 startDate: appointmentData.startDate,
                 endDate: appointmentData.endDate,
@@ -139,6 +140,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     projectName: project.name,
                     locale: i18n.language,
                     bookingChannel: appointmentData.bookingChannel,
+                    customerRequestSummary: appointmentData.notes,
                 },
             });
 

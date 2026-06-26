@@ -129,6 +129,13 @@ describe('AI Studio ecommerce blueprint derivation', () => {
         expect(websiteEcommerceBlocks.map(block => block.type)).toEqual(expect.arrayContaining(['featuredProducts', 'categoryShowcase']));
         expect(websiteEcommerceBlocks.map(block => block.type)).not.toContain('shopCTA');
         expect(crossModule.chatbotBlueprint.productKnowledge.length).toBeGreaterThan(0);
+        expect(crossModule.chatbotBlueprint.productKnowledge[0]).toContain('ES:');
+        expect(crossModule.chatbotBlueprint.productKnowledge[0]).toContain('EN:');
+        expect(businessBlueprint.chatbotBlueprint.engineVersion).toBe('v2');
+        expect(businessBlueprint.chatbotBlueprint.agentProfile.supportedLanguages).toEqual(['es', 'en']);
+        expect(businessBlueprint.chatbotBlueprint.agentProfile.welcomeMessage).toContain('ES:');
+        expect(businessBlueprint.chatbotBlueprint.agentProfile.welcomeMessage).toContain('EN:');
+        expect(businessBlueprint.chatbotBlueprint.actions.every(action => action.enabled === false)).toBe(true);
         expect(crossModule.leadBlueprint.leadTags).toEqual(expect.arrayContaining(['ecommerce', 'product-interest', 'abandoned-cart', 'high-intent', 'gift-card']));
         expect(crossModule.emailMarketingBlueprint.flows.map(flow => flow.type)).toEqual(expect.arrayContaining([
             'welcome',

@@ -1,2 +1,2 @@
-export * from './registry';
-export * from './controls';
+export * from './registry.js';
+export * from './controls.js';

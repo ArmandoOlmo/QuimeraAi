@@ -127,6 +127,7 @@ function sanitizeBlockData(block: BioPageBlock, visibleLinkIds: Set<string>): Re
                 url: truncate(data.url, 500),
                 ctaLabel: truncate(data.ctaLabel, 120),
             };
+        case 'media_grid':
         case 'portfolio_grid':
             return {
                 items: readRecordArray(data.items, 9).map(item => ({
