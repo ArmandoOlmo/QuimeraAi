@@ -101,13 +101,14 @@ const readString = (value: unknown): string | null => {
 };
 
 const findOperatingLayerNavigation = (result: AssistantLifecycleResult): OperatingLayerNavigation | null => {
+    let latestNavigation: OperatingLayerNavigation | null = null;
     for (const action of result.actions) {
         const lifecycleResult = asRecord(action.metadata?.result);
         const afterSnapshot = asRecord(lifecycleResult.afterSnapshot ?? action.afterSnapshot);
         const navigation = asRecord(afterSnapshot.navigation);
-        if (readString(navigation.view)) return navigation as OperatingLayerNavigation;
+        if (readString(navigation.view)) latestNavigation = navigation as OperatingLayerNavigation;
     }
-    return null;
+    return latestNavigation;
 };
 
 const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');

@@ -32,6 +32,10 @@ const PROJECT_SCOPED_MODULES = new Set([
 const requiresProjectContext = (definition: AssistantActionDefinition): boolean =>
     PROJECT_SCOPED_MODULES.has(definition.module) || Boolean(definition.inputSchema.required?.includes('projectId'));
 
+const shouldUseResolvedProjectId = (definition: AssistantActionDefinition): boolean =>
+    definition.actionType !== 'create_project_from_prompt'
+    && (definition.module === 'project' || requiresProjectContext(definition));
+
 const createId = (prefix: string) => {
     const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
@@ -528,13 +532,16 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
     const previews: AssistantExecutionPreview[] = [];
     const approvals: AssistantApprovalRequest[] = [];
     const blockers: string[] = [];
+    const resolvedProjectId = intent.projectResolution.projectId || context.project.projectId;
+    const hasExplicitProjectSwitch = intent.projectResolution.requiresProjectSwitch
+        && input.actionDefinitions.some(definition => definition.actionType === 'switch_project');
     const intentBlockers = intent.requiresClarification
         ? [`Clarification required: ${intent.clarifyingQuestion || 'More information is needed before planning this request.'}`]
         : [];
 
     for (const definition of input.actionDefinitions) {
-        const projectId = definition.module === 'project'
-            ? input.intent.projectResolution.projectId || context.project.projectId
+        const projectId = shouldUseResolvedProjectId(definition)
+            ? resolvedProjectId
             : context.project.projectId;
         const actionInput = buildActionInput(definition, context, input.request, projectId);
         const permission = checkActionPermission({
@@ -549,7 +556,14 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
             ...getToolReadinessBlockers(definition),
             ...permission.reasons,
             ...permission.missingPermissions.map(permission => `Missing permission: ${permission}.`),
-            ...(requiresProjectContext(definition)
+            ...(requiresProjectContext(definition) && !(
+                definition.actionType === 'switch_project'
+                || (
+                    hasExplicitProjectSwitch
+                    && resolvedProjectId
+                    && actionInput.projectId === resolvedProjectId
+                )
+            )
                 ? assertProjectActionContext(context, actionInput.projectId as string | undefined)
                 : []),
             ...(definition.validate?.(actionInput)?.errors || []),

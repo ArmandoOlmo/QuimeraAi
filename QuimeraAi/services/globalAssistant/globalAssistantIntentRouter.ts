@@ -17,6 +17,23 @@ const normalize = (value: string): string =>
 
 const includesAny = (text: string, terms: string[]) => terms.some(term => text.includes(term));
 
+const PROJECT_SCOPED_MODULES = new Set<AssistantModuleTarget>([
+    'businessBlueprint',
+    'website',
+    'storefront',
+    'ecommerce',
+    'media',
+    'appointments',
+    'restaurants',
+    'realEstate',
+    'bioPage',
+    'crm',
+    'emailMarketing',
+    'chatbot',
+    'analytics',
+    'finance',
+]);
+
 const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
@@ -326,19 +343,24 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
     const intent = inferIntent(text);
     const module = inferModule(text, context);
     const safetyLevel = inferSafety(intent, module, text);
-    const actionCandidates = actionCandidatesFor(intent, module, text);
     const requiresProject = !['admin', 'tenant', 'user'].includes(module);
     const missingProject = requiresProject && !context.project.projectId && !['project', 'aiStudio'].includes(module);
     const availableProjects = Array.isArray(context.snapshot?.availableProjects)
         ? context.snapshot.availableProjects as any[]
         : [];
-    const projectResolution = module === 'project'
+    const shouldResolveProjectFromRequest = module === 'project' || PROJECT_SCOPED_MODULES.has(module);
+    const projectResolution = shouldResolveProjectFromRequest
         ? resolveProjectByNameOrId(availableProjects, request)
         : {
             projectId: context.project.projectId,
             ambiguous: false,
             matches: [],
         };
+    const requiresProjectSwitch = Boolean(projectResolution.projectId && projectResolution.projectId !== context.project.projectId);
+    const moduleActionCandidates = actionCandidatesFor(intent, module, text);
+    const actionCandidates = requiresProjectSwitch && module !== 'project' && !moduleActionCandidates.includes('switch_project')
+        ? ['switch_project', ...moduleActionCandidates]
+        : moduleActionCandidates;
 
     return {
         intent,
@@ -346,7 +368,7 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
         confidence: actionCandidates.length > 0 ? 0.72 : 0.45,
         projectResolution: {
             projectId: projectResolution.projectId || context.project.projectId,
-            requiresProjectSwitch: Boolean(projectResolution.projectId && projectResolution.projectId !== context.project.projectId),
+            requiresProjectSwitch,
             ambiguous: projectResolution.ambiguous,
         },
         actionCandidates,

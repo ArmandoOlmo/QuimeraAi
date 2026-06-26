@@ -207,6 +207,42 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(assertPlanIsPreviewFirst(plan)).toEqual([]);
     });
 
+    it('plans cross-project module navigation with an explicit project switch confirmation', () => {
+        const switchProject = globalAssistantActionRegistry.get('switch_project');
+        const openOrders = globalAssistantActionRegistry.get('open_orders');
+        expect(switchProject).toBeDefined();
+        expect(openOrders).toBeDefined();
+
+        const plan = buildExecutionPlan({
+            context: makeContext(),
+            intent: {
+                intent: 'open',
+                module: 'ecommerce',
+                confidence: 0.9,
+                projectResolution: {
+                    projectId: 'project-2',
+                    requiresProjectSwitch: true,
+                    ambiguous: false,
+                },
+                actionCandidates: ['switch_project', 'open_orders'],
+                requiresClarification: false,
+                safetyLevel: 'low',
+            },
+            actionDefinitions: [switchProject!, openOrders!],
+            request: 'Abre ecommerce de Ocean Clinic',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+
+        expect(plan.status).toBe('preview');
+        expect(plan.requiresConfirmation).toBe(true);
+        expect(plan.blockers).toEqual([]);
+        expect(plan.actions.map(action => action.actionType)).toEqual(['switch_project', 'open_orders']);
+        expect(plan.actions.map(action => action.input.projectId)).toEqual(['project-2', 'project-2']);
+        expect(plan.approvals).toHaveLength(1);
+        expect(plan.approvals[0].actionId).toBe(plan.actions[0].id);
+    });
+
     it('blocks actions when required services or feature flags are unavailable', () => {
         const definition = globalAssistantActionRegistry.get('update_price');
         expect(definition).toBeDefined();

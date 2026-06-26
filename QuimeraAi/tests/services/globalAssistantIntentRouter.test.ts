@@ -368,6 +368,29 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('resolves named project targets for module actions before opening modules', () => {
+        expect(routeAssistantIntent('Abre ecommerce de Ocean Clinic', context)).toMatchObject({
+            module: 'ecommerce',
+            intent: 'open',
+            actionCandidates: ['switch_project', 'open_orders'],
+            projectResolution: {
+                projectId: 'project-2',
+                requiresProjectSwitch: true,
+                ambiguous: false,
+            },
+        });
+
+        expect(routeAssistantIntent('Crea una campana de email para Ocean Clinic', context)).toMatchObject({
+            module: 'emailMarketing',
+            actionCandidates: ['switch_project', 'create_email_campaign'],
+            projectResolution: {
+                projectId: 'project-2',
+                requiresProjectSwitch: true,
+                ambiguous: false,
+            },
+        });
+    });
+
     it('routes project search and metadata edits to project actions only', () => {
         expect(routeAssistantIntent('Busca proyectos Casa', context)).toMatchObject({
             module: 'project',
