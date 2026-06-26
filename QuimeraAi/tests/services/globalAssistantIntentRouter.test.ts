@@ -65,6 +65,21 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes ChatCore test and deployment commands to Chatbot Engine actions', () => {
+        expect(routeAssistantIntent('Prueba ChatCore con un cliente que pregunta por reservas', context)).toMatchObject({
+            module: 'chatbot',
+            intent: 'analyze',
+            actionCandidates: ['test_chatbot'],
+        });
+
+        expect(routeAssistantIntent('Despliega ChatCore en la Bio Page', context)).toMatchObject({
+            module: 'chatbot',
+            intent: 'publish',
+            actionCandidates: ['deploy_chatbot_to_surface'],
+            safetyLevel: 'critical',
+        });
+    });
+
     it('keeps explicit AI Studio creation separate from ChatCore and module assistants', () => {
         const intent = routeAssistantIntent('Usa AI Studio para crear un sitio nuevo para una clinica', context);
 

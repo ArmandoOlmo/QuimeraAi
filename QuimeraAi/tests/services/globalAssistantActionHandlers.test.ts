@@ -2259,6 +2259,113 @@ describe('Global Assistant default action handlers', () => {
         expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
 
+    it('runs ChatCore Test Lab from the global assistant without creating visitor chat rows', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['chatbot'], ['chatbotEnabled']);
+        const businessBlueprint = buildBusinessBlueprint();
+        fakeSupabase.rowsByTable.projects = [{
+            id: 'project-1',
+            data: { businessBlueprint },
+        }];
+        const originalEvaluationStatus = businessBlueprint.chatbotBlueprint.testing.evaluationStatus;
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Prueba ChatCore con un cliente que pregunta por reservas',
+            enabledServices: ['chatbot'],
+            enabledFeatures: ['chatbotEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['test_chatbot']);
+        expect(planned.plan.actions[0].input).toMatchObject({
+            projectId: 'project-1',
+            prompt: 'Prueba ChatCore con un cliente que pregunta por reservas',
+        });
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const nextTesting = fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.chatbotBlueprint.testing;
+        const chatbotEvents = fakeSupabase.rowsByTable.chatbot_engine_events;
+
+        expect(applied.task.status).toBe('completed');
+        expect(nextTesting.evaluationStatus).toBe('failing');
+        expect(chatbotEvents.map(event => event.event_type)).toEqual([
+            'chatbot_configuration_updated',
+            'chatbot_test_lab_run',
+        ]);
+        expect(chatbotEvents[1]).toMatchObject({
+            project_id: 'project-1',
+            source_module: 'global-assistant-operating-layer',
+            actor_id: 'user-1',
+        });
+        expect(fakeSupabase.rowsByTable.chatbot_conversations || []).toHaveLength(0);
+        expect(fakeSupabase.rowsByTable.chatbot_messages || []).toHaveLength(0);
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.chatbotBlueprint.testing.evaluationStatus).toBe(originalEvaluationStatus);
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('deploys ChatCore to a surface through Deploy Settings and rolls it back', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['chatbot'], ['chatbotEnabled']);
+        const businessBlueprint = buildBusinessBlueprint();
+        fakeSupabase.rowsByTable.projects = [{
+            id: 'project-1',
+            data: { businessBlueprint },
+        }];
+        const previousStatus = businessBlueprint.chatbotBlueprint.channels.bioPage.status;
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Despliega ChatCore en la Bio Page',
+            enabledServices: ['chatbot'],
+            enabledFeatures: ['chatbotEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['deploy_chatbot_to_surface']);
+        expect(planned.plan.actions[0].input).toMatchObject({
+            projectId: 'project-1',
+            surface: 'bioPage',
+            status: 'deployed',
+        });
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const chatbotBlueprint = fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.chatbotBlueprint;
+
+        expect(applied.task.status).toBe('completed');
+        expect(chatbotBlueprint.channels.bioPage).toMatchObject({
+            enabled: true,
+            status: 'deployed',
+            needsReview: false,
+            readiness: { isReady: true, blockers: [], warnings: [] },
+        });
+        expect(chatbotBlueprint.deployment.deployedSurfaces).toContain('bio_page');
+        expect(fakeSupabase.rowsByTable.chatbot_engine_events[0]).toMatchObject({
+            event_type: 'chatbot_configuration_updated',
+            source_module: 'chatbot-engine-dashboard',
+            actor_id: 'user-1',
+            metadata: {
+                configurationType: 'deploySettings',
+                targetId: 'bioPage',
+                operation: 'surface_deployed',
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.chatbotBlueprint.channels.bioPage.status).toBe(previousStatus);
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
     it('creates a finance invoice draft without creating payments or ledger entries', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime(['finance'], []);
         const planned = await runtime.planRequest({

@@ -4,8 +4,8 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance'],
-            enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot'],
+            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled'],
         });
 
         const analytics = catalog.modules.find(module => module.module === 'analytics');
@@ -20,6 +20,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const admin = catalog.modules.find(module => module.module === 'admin');
         const finance = catalog.modules.find(module => module.module === 'finance');
         const bioPage = catalog.modules.find(module => module.module === 'bioPage');
+        const chatbot = catalog.modules.find(module => module.module === 'chatbot');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -29,6 +30,8 @@ describe('globalAssistantCapabilityCatalog', () => {
         const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
         const publishBioPage = catalog.actions.find(action => action.actionType === 'publish_bio_page');
         const publishWebsite = catalog.actions.find(action => action.actionType === 'publish_website');
+        const testChatbot = catalog.actions.find(action => action.actionType === 'test_chatbot');
+        const deployChatbot = catalog.actions.find(action => action.actionType === 'deploy_chatbot_to_surface');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -106,6 +109,12 @@ describe('globalAssistantCapabilityCatalog', () => {
             'add_bio_block',
             'publish_bio_page',
         ]));
+        expect(chatbot?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_chatbot_knowledge',
+            'sync_chatbot_knowledge',
+            'test_chatbot',
+            'deploy_chatbot_to_surface',
+        ]));
         expect(createEmail).toMatchObject({
             executable: true,
             availableInContext: true,
@@ -161,6 +170,22 @@ describe('globalAssistantCapabilityCatalog', () => {
             safetyLevel: 'critical',
             requiresConfirmation: true,
             rollbackExecutable: true,
+        });
+        expect(testChatbot).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            safetyLevel: 'high',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+            requiredService: 'chatbot',
+        });
+        expect(deployChatbot).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+            requiredFeature: 'chatbotEnabled',
         });
     });
 

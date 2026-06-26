@@ -124,7 +124,12 @@ const getToolReadinessBlockers = (definition: AssistantActionDefinition): string
 };
 
 const normalizeContextToken = (value: string | null | undefined): string =>
-    (value || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
 
 const readSnapshotText = (context: AssistantContextSnapshot, keys: string[]): string | undefined => {
     for (const key of keys) {
@@ -182,6 +187,31 @@ const isBioPageEntityType = (entityType: string | null | undefined): boolean => 
         'bio',
         'link_in_bio_page',
     ].includes(normalized);
+};
+
+const inferChatbotSurfaceFromRequest = (request: string): string | undefined => {
+    const normalized = normalizeContextToken(request);
+    if (normalized.includes('embed')) return 'embeddedWidget';
+    if (normalized.includes('bio')) return 'bioPage';
+    if (normalized.includes('storefront') || normalized.includes('store') || normalized.includes('tienda')) return 'storefront';
+    if (normalized.includes('checkout')) return 'checkout';
+    if (normalized.includes('booking') || normalized.includes('appointment') || normalized.includes('cita') || normalized.includes('reserva') || normalized.includes('calendar')) return 'bookingPage';
+    if (normalized.includes('restaurant') || normalized.includes('restaurante') || normalized.includes('menu')) return 'restaurantMenu';
+    if (normalized.includes('realty') || normalized.includes('real_estate') || normalized.includes('property') || normalized.includes('propiedad') || normalized.includes('listing')) return 'realtyPropertyPage';
+    if (normalized.includes('voice') || normalized.includes('voz')) return 'voice';
+    if (normalized.includes('admin') || normalized.includes('preview') || normalized.includes('test_lab') || normalized.includes('laboratorio')) return 'adminPreview';
+    if (normalized.includes('website') || normalized.includes('web') || normalized.includes('site') || normalized.includes('pagina')) return 'webWidget';
+    return undefined;
+};
+
+const inferChatbotDeploymentStatusFromRequest = (request: string): string | undefined => {
+    const normalized = normalizeContextToken(request);
+    if (normalized.includes('test') || normalized.includes('prueba') || normalized.includes('laboratorio')) return 'test';
+    if (normalized.includes('pausa') || normalized.includes('pause')) return 'paused';
+    if (normalized.includes('desactiva') || normalized.includes('disable') || normalized.includes('apaga')) return 'disabled';
+    if (normalized.includes('draft') || normalized.includes('borrador')) return 'draft';
+    if (normalized.includes('deploy') || normalized.includes('despliega') || normalized.includes('publica') || normalized.includes('activar') || normalized.includes('activa')) return 'deployed';
+    return undefined;
 };
 
 const buildActionInput = (
@@ -253,6 +283,28 @@ const buildActionInput = (
                 'bioPageId',
             ]);
         if (bioPageId) actionInput.bioPageId = bioPageId;
+    }
+
+    if (definition.actionType === 'test_chatbot') {
+        actionInput.prompt = readSnapshotText(context, ['chatbotTestPrompt', 'testPrompt', 'prompt'])
+            || request;
+    }
+
+    if (definition.actionType === 'deploy_chatbot_to_surface') {
+        const surface = readSnapshotText(context, [
+            'chatbotSurface',
+            'chatbotDeploymentSurface',
+            'deploymentSurface',
+            'surface',
+        ]) || inferChatbotSurfaceFromRequest(request);
+        if (surface) actionInput.surface = surface;
+
+        const status = readSnapshotText(context, [
+            'chatbotDeploymentStatus',
+            'deploymentStatus',
+            'targetStatus',
+        ]) || inferChatbotDeploymentStatusFromRequest(request);
+        if (status) actionInput.status = status;
     }
 
     return actionInput;

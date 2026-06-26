@@ -20,6 +20,7 @@ const includesAny = (text: string, terms: string[]) => terms.some(term => text.i
 const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
+    if (includesAny(text, ['despliega', 'desplegar', 'deploy'])) return 'publish';
     if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar', 'show', 'visibilidad', 'visible', 'invisible', 'reordena', 'reorder', 'orden de secciones', 'move section'])) return 'edit';
     if (includesAny(text, ['adjunta', 'adjuntar', 'attach', 'coloca', 'pon la imagen', 'poner imagen', 'usa este asset', 'usar este asset', 'replace image', 'reemplaza imagen', 'actualiza imagen', 'actualiza la imagen'])) return 'edit';
@@ -27,7 +28,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['abre', 'abrir', 'open', 've a', 'go to', 'muestra'])) return 'open';
     if (includesAny(text, ['busca', 'search', 'encuentra', 'find'])) return 'search';
     if (includesAny(text, ['reporte', 'report'])) return 'report';
-    if (includesAny(text, ['analiza', 'review', 'revisa', 'identifica', 'identify'])) return 'analyze';
+    if (includesAny(text, ['analiza', 'review', 'revisa', 'identifica', 'identify', 'prueba', 'testea', 'laboratorio'])) return 'analyze';
     if (includesAny(text, ['imagen', 'image', 'foto', 'hero image'])) return 'generate_image';
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
@@ -152,6 +153,14 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             return ['create_lead'];
         }
         if (intent === 'edit') return ['update_lead'];
+    }
+
+    if (module === 'chatbot') {
+        if (intent === 'open') return ['open_chatbot_dashboard'];
+        if (intent === 'publish' || includesAny(text, ['deploy', 'despliega', 'desplegar', 'superficie', 'surface', 'widget'])) return ['deploy_chatbot_to_surface'];
+        if (intent === 'sync') return ['sync_chatbot_knowledge'];
+        if (intent === 'analyze' || includesAny(text, ['prueba', 'test', 'testea', 'laboratorio'])) return ['test_chatbot'];
+        if (intent === 'create') return ['create_chatbot_knowledge'];
     }
 
     if (module === 'analytics') {

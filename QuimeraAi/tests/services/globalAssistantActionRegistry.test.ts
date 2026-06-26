@@ -43,6 +43,8 @@ describe('GlobalAssistantActionRegistry', () => {
         const sendCampaign = globalAssistantActionRegistry.get('send_email_campaign');
         const updatePrice = globalAssistantActionRegistry.get('update_price');
         const updateServiceAvailability = globalAssistantActionRegistry.get('update_service_availability');
+        const testChatbot = globalAssistantActionRegistry.get('test_chatbot');
+        const deployChatbot = globalAssistantActionRegistry.get('deploy_chatbot_to_surface');
 
         expect(sendCampaign).toMatchObject({
             safetyLevel: 'critical',
@@ -59,6 +61,20 @@ describe('GlobalAssistantActionRegistry', () => {
             module: 'admin',
             safetyLevel: 'critical',
             requiresConfirmation: true,
+        });
+        expect(testChatbot).toMatchObject({
+            module: 'chatbot',
+            safetyLevel: 'high',
+            requiresConfirmation: true,
+            previewSupported: true,
+            rollbackSupported: true,
+        });
+        expect(deployChatbot).toMatchObject({
+            module: 'chatbot',
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            previewSupported: true,
+            rollbackSupported: true,
         });
         expect(typeof globalAssistantActionRegistry.get('edit_website_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_section_copy')?.execute).toBe('function');
@@ -97,6 +113,10 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('edit_bio_link')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('publish_bio_page')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('publish_bio_page')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('test_chatbot')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('test_chatbot')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('deploy_chatbot_to_surface')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('deploy_chatbot_to_surface')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.rollback).toBe('function');
