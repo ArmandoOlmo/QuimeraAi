@@ -3,10 +3,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
     createGlobalAssistantEntryPayload,
+    getDashboardAssistantQuickActions,
     routeDashboardAssistantEntry,
 } from '../../services/globalAssistant/globalAssistantEntryBridge.ts';
 
 describe('globalAssistantEntryBridge', () => {
+    const getTranslation = (tree: Record<string, unknown>, key: string): unknown =>
+        key.split('.').reduce<unknown>((node, segment) => {
+            if (!node || typeof node !== 'object') return undefined;
+            return (node as Record<string, unknown>)[segment];
+        }, tree);
+
     it('ignores empty dashboard submissions instead of opening AI Studio implicitly', () => {
         expect(routeDashboardAssistantEntry('   ')).toEqual({
             destination: 'none',
@@ -43,19 +50,79 @@ describe('globalAssistantEntryBridge', () => {
 
     it('builds a typed dashboard payload for the assistant drawer', () => {
         const payload = createGlobalAssistantEntryPayload('  Abre ecommerce  ', {
-            source: 'dashboard_welcome',
+            source: 'dashboard_quick_action',
             surface: 'dashboard',
-            metadata: { projectCount: 3 },
+            metadata: { projectCount: 3, activeModule: 'ecommerce' },
         });
 
         expect(payload).toMatchObject({
             request: 'Abre ecommerce',
-            source: 'dashboard_welcome',
+            source: 'dashboard_quick_action',
             surface: 'dashboard',
             autoSubmit: true,
-            metadata: { projectCount: 3 },
+            metadata: { projectCount: 3, activeModule: 'ecommerce' },
         });
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
+    });
+
+    it('exposes dashboard quick actions as Global Assistant command-center entries', () => {
+        const withoutProjects = getDashboardAssistantQuickActions({
+            hasProjects: false,
+            canUseAdminMode: false,
+        });
+
+        expect(withoutProjects.map(action => action.id)).toEqual([
+            'create_website',
+        ]);
+        expect(withoutProjects[0]).toMatchObject({
+            module: 'aiStudio',
+            requiresProject: false,
+        });
+
+        const ownerWithoutProjects = getDashboardAssistantQuickActions({
+            hasProjects: false,
+            canUseAdminMode: true,
+        });
+        expect(ownerWithoutProjects.map(action => action.id)).toEqual([
+            'create_website',
+            'review_platform_errors',
+        ]);
+
+        const ownerActions = getDashboardAssistantQuickActions({
+            hasProjects: true,
+            canUseAdminMode: true,
+        });
+
+        expect(ownerActions.map(action => action.id)).toEqual([
+            'create_website',
+            'generate_hero_image',
+            'review_leads',
+            'create_email',
+            'open_ecommerce',
+            'review_platform_errors',
+        ]);
+        expect(ownerActions.every(action => action.promptKey.startsWith('dashboard.assistantQuickActions.'))).toBe(true);
+        expect(ownerActions.find(action => action.id === 'review_platform_errors')).toMatchObject({
+            module: 'admin',
+            adminOnly: true,
+        });
+    });
+
+    it('keeps dashboard quick action labels and prompts translated in English and Spanish', () => {
+        const en = JSON.parse(readFileSync(resolve(process.cwd(), 'locales/en/translation.json'), 'utf8')) as Record<string, unknown>;
+        const es = JSON.parse(readFileSync(resolve(process.cwd(), 'locales/es/translation.json'), 'utf8')) as Record<string, unknown>;
+        const actions = getDashboardAssistantQuickActions({
+            hasProjects: true,
+            canUseAdminMode: true,
+            limit: 10,
+        });
+
+        for (const action of actions) {
+            for (const key of [action.labelKey, action.promptKey]) {
+                expect(getTranslation(en, key), `Missing English translation for ${key}`).toEqual(expect.any(String));
+                expect(getTranslation(es, key), `Missing Spanish translation for ${key}`).toEqual(expect.any(String));
+            }
+        }
     });
 
     it('keeps website creation out of empty-argument dashboard fast paths', () => {

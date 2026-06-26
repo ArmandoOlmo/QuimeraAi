@@ -350,6 +350,25 @@
     "selected": "sélectionnés",
     "settings": "Paramètres"
   },
+  "dashboard": {
+    "createWithAI": "Créer avec l'IA",
+    "aiPromptPlaceholder": "Demandez à Quimera de créer, modifier, ouvrir, analyser ou exécuter n'importe quoi...",
+    "webDesignStudio": "Web Design Studio",
+    "assistantQuickActions": {
+      "createWebsite": "Créer un site",
+      "createWebsitePrompt": "Utilisez AI Studio pour créer un nouveau projet de site web avec contexte métier, sections, textes, images et prochaines étapes.",
+      "generateHeroImage": "Générer une image",
+      "generateHeroImagePrompt": "Générez un brouillon d'image hero pour le projet actif et gardez-le en révision avant de l'appliquer.",
+      "reviewLeads": "Examiner les leads",
+      "reviewLeadsPrompt": "Examinez les leads récents et proposez des relances priorisées.",
+      "createEmail": "Créer un email",
+      "createEmailPrompt": "Créez un brouillon de campagne email pour le projet actif en utilisant son contexte de marque.",
+      "openEcommerce": "Ouvrir ecommerce",
+      "openEcommercePrompt": "Ouvrez l'espace ecommerce et résumez ce qui demande de l'attention.",
+      "reviewPlatformErrors": "Examiner erreurs",
+      "reviewPlatformErrorsPrompt": "Examinez les erreurs de plateforme en Owner Mode et résumez les problèmes les plus prioritaires."
+    }
+  },
   "adminEmail": {
     "hubTitle": "Hub Email Marketing",
     "back": "Retour",

@@ -14,12 +14,14 @@ import { ROUTES } from '../../routes/config';
 import {
     createGlobalAssistantEntryPayload,
     dispatchGlobalAssistantEntryRequest,
+    getDashboardAssistantQuickActions,
+    type DashboardAssistantQuickAction,
     routeDashboardAssistantEntry,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles, Globe2, Image, Mail, ShoppingBag, Users, ShieldAlert } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -48,6 +50,13 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const [aiPrompt, setAiPrompt] = useState('');
 
     const toggleUpgradeMinimized = () => setUpgradeMinimized((prev) => !prev);
+    const userRole = String(userDocument?.role || '').toLowerCase();
+    const tenantRole = String(tenantContext?.currentMembership?.role || '').toLowerCase();
+    const canUseAdminQuickActions = canAccessSuperAdmin
+        || userRole === 'owner'
+        || userRole === 'superadmin'
+        || userRole === 'super_admin'
+        || tenantRole === 'agency_owner';
 
     // Determine next plan for upgrade button
     const currentPlanId = usage?.planId || 'free';
@@ -61,6 +70,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         }
         return null;
     }, [plansArray, currentPlanId, currentPlan]);
+    const quickActions = useMemo(() => getDashboardAssistantQuickActions({
+        hasProjects: allUserProjectsCount > 0,
+        canUseAdminMode: canUseAdminQuickActions,
+    }), [allUserProjectsCount, canUseAdminQuickActions]);
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -106,6 +119,32 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         }
 
         setAiPrompt('');
+    };
+
+    const quickActionIcon = (action: DashboardAssistantQuickAction) => {
+        if (action.id === 'create_website') return <Globe2 size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'generate_hero_image') return <Image size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'review_leads') return <Users size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'create_email') return <Mail size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_ecommerce') return <ShoppingBag size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'review_platform_errors') return <ShieldAlert size={13} className="text-q-accent" aria-hidden="true" />;
+        return <Sparkles size={13} className="text-q-accent" aria-hidden="true" />;
+    };
+
+    const handleQuickAction = (action: DashboardAssistantQuickAction) => {
+        const request = t(action.promptKey, action.promptFallback);
+        dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
+            source: 'dashboard_quick_action',
+            surface: action.module === 'admin' ? 'admin' : 'dashboard',
+            metadata: {
+                route: 'dashboard',
+                projectCount: allUserProjectsCount,
+                quickActionId: action.id,
+                quickActionCategory: action.category,
+                activeModule: action.module,
+                routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
+            },
+        }));
     };
 
     const showUpgradeButton = !canAccessSuperAdmin && nextPlan && currentPlanId !== 'enterprise';
@@ -322,6 +361,23 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             </AppButton>
                         </div>
                     </div>
+                    {quickActions.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 pt-3">
+                            {quickActions.map(action => (
+                                <AppButton
+                                    key={action.id}
+                                    variant="outline"
+                                    type="button"
+                                    onClick={() => handleQuickAction(action)}
+                                    className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/50 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/40 hover:bg-q-accent/10 hover:!text-q-text"
+                                    title={t(action.promptKey, action.promptFallback)}
+                                >
+                                    {quickActionIcon(action)}
+                                    <span className="truncate">{t(action.labelKey, action.labelFallback)}</span>
+                                </AppButton>
+                            ))}
+                        </div>
+                    )}
                 </form>
 
                 {/* Status Cards */}

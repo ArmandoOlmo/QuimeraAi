@@ -3861,6 +3861,20 @@
     "createWithAIDesc": "Deja que la IA cree tu sitio desde una conversación",
     "aiPromptPlaceholder": "Pide a Quimera crear, editar, abrir, analizar o ejecutar cualquier cosa...",
     "webDesignStudio": "Web Design Studio",
+    "assistantQuickActions": {
+      "createWebsite": "Crear sitio web",
+      "createWebsitePrompt": "Usa AI Studio para crear un nuevo proyecto web con contexto de negocio, secciones, textos, imágenes y próximos pasos.",
+      "generateHeroImage": "Generar imagen",
+      "generateHeroImagePrompt": "Genera un borrador de imagen hero para el proyecto activo y mantenlo en revisión antes de aplicarlo.",
+      "reviewLeads": "Revisar leads",
+      "reviewLeadsPrompt": "Revisa los leads recientes y propone seguimientos priorizados.",
+      "createEmail": "Crear email",
+      "createEmailPrompt": "Crea un borrador de campaña de email para el proyecto activo usando su contexto de marca.",
+      "openEcommerce": "Abrir ecommerce",
+      "openEcommercePrompt": "Abre el área de ecommerce y resume lo que necesita atención.",
+      "reviewPlatformErrors": "Revisar errores",
+      "reviewPlatformErrorsPrompt": "Revisa los errores de plataforma en Owner Mode y resume los problemas de mayor prioridad."
+    },
     "heroSubtitlePart1": "Tienes",
     "heroSubtitlePart2": "proyectos",
     "helpGuide": {

@@ -1,8 +1,11 @@
+import type { AssistantModuleTarget } from '../../types/globalAssistant';
+
 export const GLOBAL_ASSISTANT_ENTRY_EVENT = 'quimera:global-assistant-entry';
 export const GLOBAL_ASSISTANT_ENTRY_STORAGE_KEY = 'quimera_global_assistant_entry_request';
 
 export type GlobalAssistantEntrySource =
     | 'dashboard_welcome'
+    | 'dashboard_quick_action'
     | 'command_palette'
     | 'global_assistant'
     | 'system';
@@ -20,6 +23,18 @@ export interface DashboardAssistantEntryRoute {
     destination: 'global_assistant' | 'ai_studio' | 'none';
     reason: string;
     forwardPromptToAiStudio: boolean;
+}
+
+export interface DashboardAssistantQuickAction {
+    id: string;
+    module: AssistantModuleTarget;
+    labelKey: string;
+    labelFallback: string;
+    promptKey: string;
+    promptFallback: string;
+    category: 'create' | 'open' | 'analyze' | 'admin';
+    requiresProject: boolean;
+    adminOnly?: boolean;
 }
 
 const normalize = (value: string): string =>
@@ -55,6 +70,82 @@ const AI_STUDIO_CREATION_TERMS = [
     'usa ai studio',
     'use ai studio',
 ];
+
+const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
+    {
+        id: 'create_website',
+        module: 'aiStudio',
+        labelKey: 'dashboard.assistantQuickActions.createWebsite',
+        labelFallback: 'Create website',
+        promptKey: 'dashboard.assistantQuickActions.createWebsitePrompt',
+        promptFallback: 'Use AI Studio to create a new website project with business context, sections, copy, images, and next steps.',
+        category: 'create',
+        requiresProject: false,
+    },
+    {
+        id: 'generate_hero_image',
+        module: 'media',
+        labelKey: 'dashboard.assistantQuickActions.generateHeroImage',
+        labelFallback: 'Generate image',
+        promptKey: 'dashboard.assistantQuickActions.generateHeroImagePrompt',
+        promptFallback: 'Generate a hero image draft for the active project and keep it in review before applying it.',
+        category: 'create',
+        requiresProject: true,
+    },
+    {
+        id: 'review_leads',
+        module: 'crm',
+        labelKey: 'dashboard.assistantQuickActions.reviewLeads',
+        labelFallback: 'Review leads',
+        promptKey: 'dashboard.assistantQuickActions.reviewLeadsPrompt',
+        promptFallback: 'Review recent leads and propose prioritized follow-ups.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
+        id: 'create_email',
+        module: 'emailMarketing',
+        labelKey: 'dashboard.assistantQuickActions.createEmail',
+        labelFallback: 'Create email',
+        promptKey: 'dashboard.assistantQuickActions.createEmailPrompt',
+        promptFallback: 'Create an email campaign draft for the active project using its brand context.',
+        category: 'create',
+        requiresProject: true,
+    },
+    {
+        id: 'open_ecommerce',
+        module: 'ecommerce',
+        labelKey: 'dashboard.assistantQuickActions.openEcommerce',
+        labelFallback: 'Open ecommerce',
+        promptKey: 'dashboard.assistantQuickActions.openEcommercePrompt',
+        promptFallback: 'Open the ecommerce area and summarize what needs attention.',
+        category: 'open',
+        requiresProject: true,
+    },
+    {
+        id: 'review_platform_errors',
+        module: 'admin',
+        labelKey: 'dashboard.assistantQuickActions.reviewPlatformErrors',
+        labelFallback: 'Review platform errors',
+        promptKey: 'dashboard.assistantQuickActions.reviewPlatformErrorsPrompt',
+        promptFallback: 'Review platform errors in Owner Mode and summarize the highest-priority issues.',
+        category: 'admin',
+        requiresProject: false,
+        adminOnly: true,
+    },
+];
+
+export function getDashboardAssistantQuickActions(input: {
+    hasProjects: boolean;
+    canUseAdminMode?: boolean;
+    limit?: number;
+}): DashboardAssistantQuickAction[] {
+    const limit = input.limit ?? 6;
+    return DASHBOARD_ASSISTANT_QUICK_ACTIONS
+        .filter(action => !action.requiresProject || input.hasProjects)
+        .filter(action => !action.adminOnly || input.canUseAdminMode === true)
+        .slice(0, limit);
+}
 
 export function routeDashboardAssistantEntry(request: string): DashboardAssistantEntryRoute {
     const text = normalize(request);
