@@ -6,6 +6,7 @@ import type {
 } from '../../types/globalAssistant';
 import type { GlobalAssistantRuntimeResult } from './globalAssistantRuntime';
 import { resolveCurrentAssistantContext } from './globalAssistantContextResolver';
+import { buildGlobalAssistantCapabilityCatalog } from './globalAssistantCapabilityCatalog';
 
 export const GLOBAL_ASSISTANT_KNOWN_FEATURE_FLAGS = [
     'websiteBuilder',
@@ -102,6 +103,10 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
         snapshot: {
             view: input.view || null,
             availableProjects,
+            toolCatalog: buildGlobalAssistantCapabilityCatalog({
+                enabledServices: input.activeServices,
+                enabledFeatures: input.featureFlags,
+            }),
             ...input.snapshot,
         },
     });

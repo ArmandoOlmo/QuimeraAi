@@ -71,6 +71,7 @@ const createAction = (
         previewSupported: definition.previewSupported,
         rollbackSupported: definition.rollbackSupported,
         mutatesData: definition.mutatesData,
+        executable: typeof definition.execute === 'function',
     },
     createdAt: nowIso(),
 });
@@ -115,6 +116,13 @@ const createApproval = (
     createdAt: nowIso(),
 });
 
+const getToolReadinessBlockers = (definition: AssistantActionDefinition): string[] => {
+    if (typeof definition.execute === 'function') return [];
+    return [
+        `No execute handler registered for ${definition.actionType}. This action is catalogued but not yet available for real execution.`,
+    ];
+};
+
 export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExecutionPlan {
     const { context, intent } = input;
     const actions: AssistantAction[] = [];
@@ -142,6 +150,7 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): AssistantExe
         });
         const actionBlockers = [
             ...intentBlockers,
+            ...getToolReadinessBlockers(definition),
             ...permission.reasons,
             ...permission.missingPermissions.map(permission => `Missing permission: ${permission}.`),
             ...(requiresProjectContext(definition)

@@ -67,6 +67,16 @@ describe('globalAssistantCommandCenter', () => {
         expect(context.snapshot.availableProjects).toEqual([
             { id: 'project-1', name: 'Tienda Demo', status: 'Draft' },
         ]);
+        expect((context.snapshot.toolCatalog as any).modules).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                module: 'finance',
+                executableActionTypes: expect.arrayContaining(['create_finance_record']),
+            }),
+            expect.objectContaining({
+                module: 'ecommerce',
+                unavailableActionTypes: expect.arrayContaining(['create_product']),
+            }),
+        ]));
     });
 
     it('formats runtime plans in Spanish and English with safety context', () => {
