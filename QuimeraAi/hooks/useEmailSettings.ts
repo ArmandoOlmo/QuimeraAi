@@ -7,30 +7,50 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import {
     EmailSettings,
+    EmailSocialLinks,
     TransactionalEmailSettings,
     MarketingEmailSettings,
-    EmailSocialLinks,
 } from '../types/email';
+import {
+    getEmailAnalytics,
+    type CanonicalEmailAnalytics,
+} from '../services/email/emailAnalyticsService.ts';
 
 // Default settings
 const defaultTransactionalSettings: TransactionalEmailSettings = {
-    orderConfirmation: true,
-    orderShipped: true,
-    orderDelivered: true,
-    orderCancelled: true,
-    orderRefunded: true,
-    reviewRequest: true,
+    orderConfirmation: false,
+    orderShipped: false,
+    orderDelivered: false,
+    orderCancelled: false,
+    orderRefunded: false,
+    paymentFailed: false,
+    reviewRequest: false,
     reviewRequestDelayDays: 3,
-    newOrderNotification: true,
-    lowStockNotification: true,
-    appointments: true,
-    appointmentEmails: true,
-    appointmentRequestReceived: true,
-    appointmentConfirmation: true,
-    appointmentCancellation: true,
-    appointmentFollowUp: true,
-    appointmentReminder: true,
+    newOrderNotification: false,
+    lowStockNotification: false,
+    appointments: false,
+    appointmentEmails: false,
+    appointmentRequestReceived: false,
+    appointmentConfirmation: false,
+    appointmentCancellation: false,
+    appointmentFollowUp: false,
+    appointmentReminder: false,
     appointmentTemplates: {},
+    restaurants: false,
+    restaurantReservations: false,
+    reservationReceived: false,
+    crm: false,
+    leadEmails: false,
+    chatcore: false,
+    chatLeadEmails: false,
+    realty: false,
+    realtyPropertyInquiry: false,
+    realtyShowingRequest: false,
+    realtyOpenHouseRegistration: false,
+    websiteBuilder: false,
+    websiteFormEmails: false,
+    aiStudio: false,
+    aiStudioReviewedEmails: false,
 };
 
 const defaultMarketingSettings: MarketingEmailSettings = {
@@ -42,26 +62,65 @@ const defaultMarketingSettings: MarketingEmailSettings = {
     winBackDelayDays: 30,
 };
 
+const defaultComplianceSettings = {
+    requireMarketingConsent: true,
+    consentSources: ['manual', 'newsletter', 'checkout', 'lead-form', 'chatcore', 'realty', 'website-builder'],
+    unsubscribeFooterEnabled: true,
+    suppressionEnabled: true,
+    doubleOptInEnabled: false,
+    privacyNotice: '',
+    complianceRegion: 'global' as const,
+    physicalAddress: '',
+};
+
+const defaultTrackingSettings = {
+    openTracking: false,
+    clickTracking: false,
+    utmDefaults: {},
+};
+
+const defaultRateLimitSettings = {};
+
 const defaultEmailSettings: Partial<EmailSettings> = {
     provider: 'resend',
     apiKeyConfigured: false,
+    providerStatus: 'not_configured',
     fromEmail: '',
     fromName: '',
+    sendingDomain: '',
+    domainStatus: 'not_configured',
+    dkimStatus: 'not_configured',
+    spfStatus: 'not_configured',
+    dmarcStatus: 'not_configured',
+    webhookConfigured: false,
     primaryColor: '#4f46e5',
     transactional: defaultTransactionalSettings,
     marketing: defaultMarketingSettings,
+    compliance: defaultComplianceSettings,
+    tracking: defaultTrackingSettings,
+    rateLimits: defaultRateLimitSettings,
 };
 
 type EmailSettingsRow = Record<string, any>;
 
 const mapEmailSettingsFromRow = (row: EmailSettingsRow | null | undefined): Partial<EmailSettings> => {
     if (!row) return defaultEmailSettings;
+    const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
     return {
         provider: (row.provider || 'resend') as EmailSettings['provider'],
         apiKeyConfigured: Boolean(row.api_key_configured),
+        providerStatus: row.provider_status || (row.api_key_configured ? 'configured' : 'not_configured'),
         fromEmail: row.from_email || '',
         fromName: row.from_name || '',
         replyTo: row.reply_to || '',
+        sendingDomain: row.sending_domain || '',
+        domainStatus: row.domain_status || 'not_configured',
+        dkimStatus: row.dkim_status || 'not_configured',
+        spfStatus: row.spf_status || 'not_configured',
+        dmarcStatus: row.dmarc_status || 'not_configured',
+        webhookConfigured: Boolean(row.webhook_configured),
+        testEmailSentAt: row.test_email_sent_at || null,
+        providerReadiness: metadata.providerReadiness || metadata.provider_readiness || undefined,
         logoUrl: row.logo_url || '',
         primaryColor: row.primary_color || '#4f46e5',
         footerText: row.footer_text || '',
@@ -74,74 +133,163 @@ const mapEmailSettingsFromRow = (row: EmailSettingsRow | null | undefined): Part
             ...defaultMarketingSettings,
             ...(row.marketing || {}),
         },
+        compliance: {
+            ...defaultComplianceSettings,
+            ...(row.compliance || {}),
+        },
+        tracking: {
+            ...defaultTrackingSettings,
+            ...(row.tracking || {}),
+        },
+        rateLimits: metadata.emailRateLimits || metadata.email_rate_limits || metadata.rateLimits || metadata.rate_limits || defaultRateLimitSettings,
+        readiness: row.readiness,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     };
 };
 
-const mapEmailSettingsToRow = (
-    projectId: string,
-    userId: string,
-    updates: Partial<EmailSettings>,
-): EmailSettingsRow => {
-    const row: EmailSettingsRow = {
-        project_id: projectId,
-        store_id: projectId,
-        user_id: userId,
-        updated_at: new Date().toISOString(),
+const mapEmailSettingsFromCanonical = (settings: Record<string, any> | null | undefined): Partial<EmailSettings> => {
+    if (!settings) return defaultEmailSettings;
+    return {
+        provider: (settings.provider || 'resend') as EmailSettings['provider'],
+        apiKeyConfigured: Boolean(settings.providerConfigured),
+        providerStatus: settings.providerStatus || (settings.providerConfigured ? 'configured' : 'not_configured'),
+        fromEmail: settings.fromEmail || '',
+        fromName: settings.fromName || '',
+        replyTo: settings.replyTo || '',
+        sendingDomain: settings.sendingDomain || '',
+        domainStatus: settings.domainStatus || 'not_configured',
+        dkimStatus: settings.dkimStatus || 'not_configured',
+        spfStatus: settings.spfStatus || 'not_configured',
+        dmarcStatus: settings.dmarcStatus || 'not_configured',
+        webhookConfigured: Boolean(settings.webhookConfigured),
+        testEmailSentAt: settings.testEmailSentAt || null,
+        providerReadiness: settings.providerReadiness
+            || settings.provider_readiness
+            || settings.raw?.metadata?.providerReadiness
+            || settings.raw?.metadata?.provider_readiness
+            || undefined,
+        logoUrl: settings.logoUrl || '',
+        primaryColor: settings.primaryColor || '#4f46e5',
+        footerText: settings.footerText || '',
+        socialLinks: settings.socialLinks || undefined,
+        transactional: {
+            ...defaultTransactionalSettings,
+            ...(settings.transactional || {}),
+        },
+        marketing: {
+            ...defaultMarketingSettings,
+            ...(settings.marketing || {}),
+        },
+        compliance: {
+            ...defaultComplianceSettings,
+            ...(settings.compliance || {}),
+        },
+        tracking: {
+            ...defaultTrackingSettings,
+            ...(settings.tracking || {}),
+        },
+        rateLimits: settings.rateLimits || defaultRateLimitSettings,
+        readiness: settings.readiness,
+        createdAt: settings.raw?.created_at,
+        updatedAt: settings.raw?.updated_at,
     };
-
-    if (updates.provider !== undefined) row.provider = updates.provider;
-    if (updates.apiKeyConfigured !== undefined) row.api_key_configured = updates.apiKeyConfigured;
-    if (updates.fromEmail !== undefined) row.from_email = updates.fromEmail;
-    if (updates.fromName !== undefined) row.from_name = updates.fromName;
-    if (updates.replyTo !== undefined) row.reply_to = updates.replyTo;
-    if (updates.logoUrl !== undefined) row.logo_url = updates.logoUrl;
-    if (updates.primaryColor !== undefined) row.primary_color = updates.primaryColor;
-    if (updates.footerText !== undefined) row.footer_text = updates.footerText;
-    if (updates.socialLinks !== undefined) row.social_links = updates.socialLinks;
-    if (updates.transactional !== undefined) row.transactional = updates.transactional;
-    if (updates.marketing !== undefined) row.marketing = updates.marketing;
-
-    return row;
 };
 
 const stripUndefined = <T extends Record<string, any>>(value: T): T =>
     Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined)) as T;
 
-const mapCampaignInputToRow = (campaignData: Record<string, any>) => stripUndefined({
-    name: campaignData.name,
-    subject: campaignData.subject,
-    type: campaignData.type,
-    preview_text: campaignData.previewText ?? campaignData.preview_text,
-    html_content: campaignData.htmlContent ?? campaignData.html_content ?? campaignData.content,
-    email_document: campaignData.emailDocument ?? campaignData.email_document,
-    audience_type: campaignData.audienceType ?? campaignData.audience_type,
-    audience_segment_id: campaignData.audienceSegmentId ?? campaignData.audience_segment_id,
-    custom_recipient_emails: campaignData.customRecipientEmails ?? campaignData.custom_recipient_emails,
-    status: campaignData.status,
-    tags: campaignData.tags,
+const sanitizeEmailSettingsUpdates = (updates: Partial<EmailSettings>): Partial<EmailSettings> => {
+    const {
+        apiKeyConfigured: _apiKeyConfigured,
+        providerStatus: _providerStatus,
+        domainStatus: _domainStatus,
+        dkimStatus: _dkimStatus,
+        spfStatus: _spfStatus,
+        dmarcStatus: _dmarcStatus,
+        webhookConfigured: _webhookConfigured,
+        testEmailSentAt: _testEmailSentAt,
+        readiness: _readiness,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        ...editable
+    } = updates;
+
+    return stripUndefined(editable);
+};
+
+const mapCampaignFromCanonical = (campaign: Record<string, any>) => ({
+    ...campaign,
+    id: campaign.id,
+    name: campaign.name || '',
+    subject: campaign.subject || '',
+    previewText: campaign.previewText ?? campaign.preview_text ?? '',
+    type: campaign.type || 'newsletter',
+    htmlContent: campaign.htmlContent ?? campaign.html_content ?? '',
+    emailDocument: campaign.emailDocument ?? campaign.email_document,
+    audienceType: campaign.audienceType ?? campaign.audience_type ?? 'all',
+    audienceSegmentId: campaign.audienceSegmentId ?? campaign.audience_segment_id,
+    customRecipientEmails: campaign.customRecipientEmails ?? campaign.custom_recipient_emails ?? [],
+    status: campaign.status || 'draft',
+    scheduledAt: campaign.scheduledAt ?? campaign.scheduled_at,
+    sentAt: campaign.sentAt ?? campaign.sent_at,
+    stats: campaign.stats || {},
+    tags: campaign.tags || [],
+    generatedByAI: campaign.generatedByAI ?? campaign.generated_by_ai,
+    needsReview: campaign.needsReview ?? campaign.needs_review,
+    userModified: campaign.userModified ?? campaign.user_modified,
+    safeToEdit: campaign.safeToEdit ?? campaign.safe_to_edit,
+    sourceModule: campaign.sourceModule ?? campaign.source_module,
+    sourceComponent: campaign.sourceComponent ?? campaign.source_component,
+    sourceEvent: campaign.sourceEvent ?? campaign.source_event,
+    sourceEntityType: campaign.sourceEntityType ?? campaign.source_entity_type,
+    sourceEntityId: campaign.sourceEntityId ?? campaign.source_entity_id,
+    correlationId: campaign.correlationId ?? campaign.correlation_id,
+    idempotencyKey: campaign.idempotencyKey ?? campaign.idempotency_key,
+    readiness: campaign.readiness || {},
+    metadata: campaign.metadata || {},
+    userId: campaign.userId ?? campaign.user_id,
+    projectId: campaign.projectId ?? campaign.project_id ?? campaign.store_id,
+    createdBy: campaign.createdBy ?? campaign.created_by,
+    createdAt: campaign.createdAt ?? campaign.created_at,
+    updatedAt: campaign.updatedAt ?? campaign.updated_at,
 });
 
-const mapAudienceInputToRow = (audienceData: Record<string, any>) => stripUndefined({
-    name: audienceData.name,
-    description: audienceData.description,
-    filters: audienceData.filters,
-    accepts_marketing: audienceData.acceptsMarketing ?? audienceData.accepts_marketing,
-    has_ordered: audienceData.hasOrdered ?? audienceData.has_ordered,
-    min_orders: audienceData.minOrders ?? audienceData.min_orders,
-    max_orders: audienceData.maxOrders ?? audienceData.max_orders,
-    min_total_spent: audienceData.minTotalSpent ?? audienceData.min_total_spent,
-    max_total_spent: audienceData.maxTotalSpent ?? audienceData.max_total_spent,
-    tags: audienceData.tags,
-    exclude_tags: audienceData.excludeTags ?? audienceData.exclude_tags,
-    last_order_days_ago: audienceData.lastOrderDaysAgo ?? audienceData.last_order_days_ago,
-    source: audienceData.source,
-    static_members: audienceData.staticMembers ?? audienceData.static_members,
-    static_member_count: audienceData.staticMemberCount ?? audienceData.static_member_count,
-    estimated_count: audienceData.estimatedCount ?? audienceData.estimated_count,
-    is_default: audienceData.isDefault ?? audienceData.is_default,
-});
+const mapAudienceFromCanonical = (audience: Record<string, any>) => {
+    const staticMembers = audience.staticMembers || audience.static_members || {};
+    const members = Array.isArray(staticMembers.members)
+        ? staticMembers.members
+        : Array.isArray(audience.members)
+            ? audience.members
+            : [];
+
+    return {
+        ...audience,
+        id: audience.id,
+        name: audience.name || '',
+        description: audience.description || '',
+        filters: audience.filters || [],
+        acceptsMarketing: audience.acceptsMarketing ?? audience.accepts_marketing,
+        hasOrdered: audience.hasOrdered ?? audience.has_ordered,
+        minOrders: audience.minOrders ?? audience.min_orders,
+        maxOrders: audience.maxOrders ?? audience.max_orders,
+        minTotalSpent: audience.minTotalSpent ?? audience.min_total_spent,
+        maxTotalSpent: audience.maxTotalSpent ?? audience.max_total_spent,
+        tags: audience.tags || [],
+        excludeTags: audience.excludeTags ?? audience.exclude_tags,
+        lastOrderDaysAgo: audience.lastOrderDaysAgo ?? audience.last_order_days_ago,
+        source: audience.source || [],
+        staticMembers,
+        staticMemberCount: audience.staticMemberCount ?? audience.static_member_count ?? members.length,
+        estimatedCount: audience.estimatedCount ?? audience.estimated_count ?? members.length,
+        isDefault: audience.isDefault ?? audience.is_default,
+        members,
+        userId: audience.userId ?? audience.user_id,
+        projectId: audience.projectId ?? audience.project_id ?? audience.store_id,
+        createdAt: audience.createdAt ?? audience.created_at,
+        updatedAt: audience.updatedAt ?? audience.updated_at,
+    };
+};
 
 interface UseEmailSettingsOptions {
     realtime?: boolean;
@@ -238,21 +386,28 @@ export const useEmailSettings = (
             setError(null);
 
             try {
-                const mergedSettings = {
+                const mergedSettings = sanitizeEmailSettingsUpdates({
                     ...defaultEmailSettings,
                     ...settings,
                     ...updates,
-                };
-                const updatedPayload = mapEmailSettingsToRow(projectId, userId, mergedSettings);
+                });
 
-                const { error } = await supabase
-                    .from('email_settings')
-                    .upsert(updatedPayload, { onConflict: 'project_id' });
-
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'updateSettings',
+                        projectId,
+                        updates: mergedSettings,
+                    },
+                });
                 if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Unable to update email settings');
+
+                if (data?.settings) {
+                    setSettings(mapEmailSettingsFromCanonical(data.settings));
+                }
 
                 if (!realtime) {
-                    setSettings((prev) => ({ ...prev, ...updates }));
+                    setSettings((prev) => ({ ...prev, ...sanitizeEmailSettingsUpdates(updates) }));
                 }
             } catch (err: any) {
                 console.error('Error updating email settings:', err);
@@ -264,6 +419,61 @@ export const useEmailSettings = (
         },
         [userId, projectId, realtime, settings]
     );
+
+    const syncProviderReadiness = useCallback(async () => {
+        if (!userId || !projectId || projectId === 'default') return null;
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'syncProviderReadiness',
+                    projectId,
+                },
+            });
+
+            if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to sync provider readiness');
+            if (data?.settings) setSettings(mapEmailSettingsFromCanonical(data.settings));
+            return data?.providerReadiness || null;
+        } catch (err: any) {
+            console.error('Error syncing email provider readiness:', err);
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [userId, projectId]);
+
+    const provisionProviderDomain = useCallback(async (sendingDomain?: string | null) => {
+        if (!userId || !projectId || projectId === 'default') return null;
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'provisionProviderDomain',
+                    projectId,
+                    sendingDomain: sendingDomain || settings?.sendingDomain || undefined,
+                },
+            });
+
+            if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to provision provider domain');
+            if (data?.settings) setSettings(mapEmailSettingsFromCanonical(data.settings));
+            return data?.providerDomain || null;
+        } catch (err: any) {
+            console.error('Error provisioning email provider domain:', err);
+            setError(err.message);
+            throw err;
+        } finally {
+            setIsSaving(false);
+        }
+    }, [userId, projectId, settings?.sendingDomain]);
 
     // Update sender info
     const updateSenderInfo = useCallback(
@@ -351,6 +561,8 @@ export const useEmailSettings = (
         toggleTransactionalEmail,
         toggleMarketing,
         checkApiKeyStatus,
+        syncProviderReadiness,
+        provisionProviderDomain,
 
         // Computed values
         isConfigured: settings?.apiKeyConfigured && settings?.fromEmail,
@@ -377,17 +589,19 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         const fetchCampaigns = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('email_campaigns')
-                    .select('*')
-                    .eq('project_id', projectId)
-                    .order('created_at', { ascending: false });
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getCampaigns',
+                        projectId,
+                    },
+                });
 
                 if (!isMounted) return;
-                
+
                 if (error) throw error;
-                if (data) setCampaigns(data);
-                
+                if (data?.success === false) throw new Error(data.error || 'Unable to fetch email campaigns');
+                setCampaigns((data?.campaigns || []).map(mapCampaignFromCanonical));
+
             } catch (err) {
                 if (!isMounted) return;
                 console.error('Error fetching campaigns:', err);
@@ -433,35 +647,18 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const finalCampaign = {
-                ...mapCampaignInputToRow(campaignData),
-                project_id: projectId,
-                store_id: projectId,
-                user_id: userId,
-                created_by: userId,
-                status: 'draft',
-                stats: {
-                    totalRecipients: 0,
-                    sent: 0,
-                    delivered: 0,
-                    opened: 0,
-                    uniqueOpens: 0,
-                    clicked: 0,
-                    uniqueClicks: 0,
-                    bounced: 0,
-                    complained: 0,
-                    unsubscribed: 0,
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createCampaignDraft',
+                    projectId,
+                    campaign: campaignData,
                 },
-            };
-
-            const { data, error } = await supabase
-                .from('email_campaigns')
-                .insert(finalCampaign)
-                .select()
-                .single();
-
+            });
             if (error) throw error;
-            return data;
+            if (data?.success === false) throw new Error(data.error || 'Unable to create email campaign');
+            const campaign = mapCampaignFromCanonical(data.campaign || {});
+            setCampaigns(prev => [campaign, ...prev.filter(item => item.id !== campaign.id)]);
+            return campaign;
         } catch (err) {
             console.error('Error creating campaign:', err);
             throw err;
@@ -476,14 +673,20 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
 
         setIsSaving(true);
         try {
-            const sanitizedUpdates = mapCampaignInputToRow(updates);
-
-            const { error } = await supabase
-                .from('email_campaigns')
-                .update(sanitizedUpdates)
-                .eq('id', campaignId);
-
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateCampaign',
+                    projectId,
+                    campaignId,
+                    updates,
+                },
+            });
             if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to update email campaign');
+            if (data?.campaign) {
+                const campaign = mapCampaignFromCanonical(data.campaign);
+                setCampaigns(prev => prev.map(item => item.id === campaignId ? campaign : item));
+            }
         } catch (err) {
             console.error('Error updating campaign:', err);
             throw err;
@@ -497,12 +700,16 @@ export const useEmailCampaigns = (userId: string, projectId: string) => {
         if (!userId || !projectId || projectId === 'default') return;
 
         try {
-            const { error } = await supabase
-                .from('email_campaigns')
-                .delete()
-                .eq('id', campaignId);
-            
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'deleteCampaign',
+                    projectId,
+                    campaignId,
+                },
+            });
             if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to delete email campaign');
+            setCampaigns(prev => prev.filter(item => item.id !== campaignId));
         } catch (err) {
             console.error('Error deleting campaign:', err);
             throw err;
@@ -604,6 +811,77 @@ export const useEmailLogs = (userId: string, projectId: string, options?: { limi
     };
 };
 
+export const useCanonicalEmailAnalytics = (
+    userId: string,
+    projectId: string,
+    options?: { timeRange?: '7d' | '30d' | '90d' | '12m'; limit?: number },
+) => {
+    const [analytics, setAnalytics] = useState<CanonicalEmailAnalytics | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchAnalytics = useCallback(async () => {
+        if (!userId || !projectId || projectId === 'default') {
+            setAnalytics(null);
+            setIsLoading(false);
+            setError(null);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const data = await getEmailAnalytics({
+                supabase,
+                projectId,
+                since: getAnalyticsSince(options?.timeRange || '30d'),
+                limit: options?.limit || 500,
+            });
+            setAnalytics(data);
+            setError(null);
+        } catch (err: any) {
+            console.error('❌ [useCanonicalEmailAnalytics] Error fetching canonical analytics:', err);
+            setAnalytics(null);
+            setError(err?.message || 'Failed to load canonical email analytics');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId, projectId, options?.timeRange, options?.limit]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const run = async () => {
+            if (!isMounted) return;
+            await fetchAnalytics();
+        };
+        run();
+
+        if (!userId || !projectId || projectId === 'default') {
+            return () => { isMounted = false; };
+        }
+
+        const channel = supabase
+            .channel(`canonical_email_analytics_${projectId}_${Math.random().toString(36).slice(2)}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'email_logs', filter: `project_id=eq.${projectId}` }, fetchAnalytics)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'email_outbox', filter: `project_id=eq.${projectId}` }, fetchAnalytics)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'email_events', filter: `project_id=eq.${projectId}` }, fetchAnalytics)
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(channel);
+        };
+    }, [userId, projectId, fetchAnalytics]);
+
+    return { analytics, isLoading, error, refresh: fetchAnalytics };
+};
+
+function getAnalyticsSince(range: '7d' | '30d' | '90d' | '12m') {
+    const date = new Date();
+    const days = range === '7d' ? 7 : range === '90d' ? 90 : range === '12m' ? 365 : 30;
+    date.setDate(date.getDate() - days);
+    return date.toISOString();
+}
+
 // Hook for email audiences/segments
 export const useEmailAudiences = (userId: string, projectId: string) => {
     const [audiences, setAudiences] = useState<any[]>([]);
@@ -623,20 +901,20 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
 
         const fetchAudiences = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('email_audiences')
-                    .select('*')
-                    .eq('project_id', projectId)
-                    .order('created_at', { ascending: false });
+                const { data, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'getAudiences',
+                        projectId,
+                    },
+                });
 
                 if (!isMounted) return;
 
                 if (error) throw error;
+                if (data?.success === false) throw new Error(data.error || 'Unable to fetch email audiences');
 
-                if (data) {
-                    setAudiences(data);
-                    setError(null);
-                }
+                setAudiences((data?.audiences || []).map(mapAudienceFromCanonical));
+                setError(null);
             } catch (err: any) {
                 if (!isMounted) return;
                 console.error('❌ [useEmailAudiences] Error fetching audiences:', err);
@@ -689,24 +967,22 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         setError(null);
 
         try {
-            const newAudience = {
-                ...mapAudienceInputToRow(audienceData),
-                estimated_count: 0,
-                is_default: false,
-                project_id: projectId,
-                store_id: projectId,
-                user_id: userId,
-                created_by: userId,
-            };
-
-            const { data, error } = await supabase
-                .from('email_audiences')
-                .insert(newAudience)
-                .select()
-                .single();
-
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAudience',
+                    projectId,
+                    audience: {
+                        ...audienceData,
+                        estimatedCount: 0,
+                        isDefault: false,
+                    },
+                },
+            });
             if (error) throw error;
-            return data;
+            if (data?.success === false) throw new Error(data.error || 'Unable to create email audience');
+            const audience = mapAudienceFromCanonical(data.audience || {});
+            setAudiences(prev => [audience, ...prev.filter(item => item.id !== audience.id)]);
+            return audience;
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error creating audience:', err);
             setError(err.message);
@@ -745,12 +1021,20 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         setError(null);
 
         try {
-            const { error } = await supabase
-                .from('email_audiences')
-                .update(mapAudienceInputToRow(updates))
-                .eq('id', audienceId);
-
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateAudience',
+                    projectId,
+                    audienceId,
+                    updates,
+                },
+            });
             if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to update email audience');
+            if (data?.audience) {
+                const audience = mapAudienceFromCanonical(data.audience);
+                setAudiences(prev => prev.map(item => item.id === audienceId ? audience : item));
+            }
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error updating audience:', err);
             setError(err.message);
@@ -765,12 +1049,16 @@ export const useEmailAudiences = (userId: string, projectId: string) => {
         if (!userId || !projectId || projectId === 'default') return;
 
         try {
-            const { error } = await supabase
-                .from('email_audiences')
-                .delete()
-                .eq('id', audienceId);
-                
+            const { data, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'deleteAudience',
+                    projectId,
+                    audienceId,
+                },
+            });
             if (error) throw error;
+            if (data?.success === false) throw new Error(data.error || 'Unable to delete email audience');
+            setAudiences(prev => prev.filter(item => item.id !== audienceId));
         } catch (err: any) {
             console.error('❌ [useEmailAudiences] Error deleting audience:', err);
             setError(err.message);

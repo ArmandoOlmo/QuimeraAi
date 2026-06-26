@@ -5,15 +5,17 @@ import { FAQItem } from '../../../types';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 
 interface FAQManagerProps {
-    faqs: FAQItem[];
+    faqs?: FAQItem[] | null;
     onFAQsChange: (faqs: FAQItem[]) => void;
 }
 
 const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
     const { t } = useTranslation();
+    const safeFaqs = (Array.isArray(faqs) ? faqs : []).filter(Boolean);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [isAdding, setIsAdding] = useState(false);
-    const [deleteFaqId, setDeleteFaqId] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ id?: string; index: number } | null>(null);
     const [formData, setFormData] = useState<{ question: string; answer: string }>({
         question: '',
         answer: ''
@@ -28,43 +30,51 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             answer: formData.answer.trim()
         };
 
-        onFAQsChange([...faqs, newFAQ]);
+        onFAQsChange([...safeFaqs, newFAQ]);
         setFormData({ question: '', answer: '' });
         setIsAdding(false);
     };
 
-    const handleEdit = (faq: FAQItem) => {
-        setEditingId(faq.id);
-        setFormData({ question: faq.question, answer: faq.answer });
+    const handleEdit = (faq: FAQItem, index: number) => {
+        setEditingId(faq.id || null);
+        setEditingIndex(index);
+        setFormData({
+            question: typeof faq.question === 'string' ? faq.question : '',
+            answer: typeof faq.answer === 'string' ? faq.answer : ''
+        });
     };
 
     const handleUpdate = () => {
-        if (!formData.question.trim() || !formData.answer.trim() || !editingId) return;
+        if (!formData.question.trim() || !formData.answer.trim() || (editingId === null && editingIndex === null)) return;
 
         onFAQsChange(
-            faqs.map(faq =>
-                faq.id === editingId
+            safeFaqs.map((faq, index) =>
+                (editingId ? faq.id === editingId : index === editingIndex)
                     ? { ...faq, question: formData.question.trim(), answer: formData.answer.trim() }
                     : faq
             )
         );
         setEditingId(null);
+        setEditingIndex(null);
         setFormData({ question: '', answer: '' });
     };
 
-    const handleDelete = (id: string) => {
-        setDeleteFaqId(id);
+    const handleDelete = (id: string | undefined, index: number) => {
+        setDeleteTarget({ id, index });
     };
 
     const handleConfirmDelete = () => {
-        if (deleteFaqId) {
-            onFAQsChange(faqs.filter(faq => faq.id !== deleteFaqId));
-            setDeleteFaqId(null);
+        if (deleteTarget) {
+            onFAQsChange(safeFaqs.filter((faq, index) => (
+                deleteTarget.id ? faq.id !== deleteTarget.id : index !== deleteTarget.index
+            )));
+            setDeleteTarget(null);
         }
     };
 
     const handleCancel = () => {
         setEditingId(null);
+        setEditingIndex(null);
         setIsAdding(false);
         setFormData({ question: '', answer: '' });
     };
@@ -83,7 +93,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             )}
 
             {/* Add/Edit Form */}
-            {(isAdding || editingId) && (
+            {(isAdding || editingId !== null || editingIndex !== null) && (
                 <div className="bg-q-surface border border-q-border rounded-xl p-4 space-y-3">
                     <div>
                         <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">
@@ -112,12 +122,12 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                     </div>
                     <div className="flex gap-2">
                         <button
-                            onClick={editingId ? handleUpdate : handleAdd}
+                            onClick={(editingId !== null || editingIndex !== null) ? handleUpdate : handleAdd}
                             disabled={!formData.question.trim() || !formData.answer.trim()}
                             className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             <Save size={16} />
-                            {editingId ? t('aiAssistant.faq.update') : t('aiAssistant.faq.add')} FAQ
+                            {(editingId !== null || editingIndex !== null) ? t('aiAssistant.faq.update') : t('aiAssistant.faq.add')} FAQ
                         </button>
                         <button
                             onClick={handleCancel}
@@ -131,31 +141,35 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             )}
 
             {/* FAQs List */}
-            {faqs.length > 0 && (
+            {safeFaqs.length > 0 && (
                 <div className="space-y-2">
                     <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                        {t('aiAssistant.faq.existingFaqs')} ({faqs.length})
+                        {t('aiAssistant.faq.existingFaqs')} ({safeFaqs.length})
                     </h4>
                     <div className="space-y-2">
-                        {faqs.map((faq) => (
+                        {safeFaqs.map((faq, index) => {
+                            const question = faq.question || 'Untitled question';
+                            const answer = faq.answer || '';
+
+                            return (
                             <div
-                                key={faq.id}
+                                key={faq.id || `${question}-${index}`}
                                 className="bg-q-surface border border-q-border rounded-lg p-4 hover:border-primary/50 transition-colors group"
                             >
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                     <h5 className="text-sm font-semibold text-foreground">
-                                        {faq.question}
+                                        {question}
                                     </h5>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                                         <button
-                                            onClick={() => handleEdit(faq)}
+                                            onClick={() => handleEdit(faq, index)}
                                             className="p-1.5 rounded hover:bg-q-accent/10 dark:hover:bg-q-accent/12 text-q-accent dark:text-q-accent transition-colors"
                                             title={t('aiAssistant.faq.edit')}
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(faq.id)}
+                                            onClick={() => handleDelete(faq.id, index)}
                                             className="p-1.5 rounded hover:bg-q-error/10 dark:hover:bg-q-error/12 text-q-error dark:text-q-error transition-colors"
                                             title={t('aiAssistant.faq.delete')}
                                         >
@@ -164,16 +178,17 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                                     </div>
                                 </div>
                                 <p className="text-xs text-q-text-muted leading-relaxed">
-                                    {faq.answer}
+                                    {answer}
                                 </p>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
             {/* Empty State */}
-            {faqs.length === 0 && !isAdding && (
+            {safeFaqs.length === 0 && !isAdding && editingId === null && editingIndex === null && (
                 <div className="text-center py-8 bg-q-surface/50 rounded-xl border border-dashed border-q-border">
                     <p className="text-sm text-q-text-muted mb-1">{t('aiAssistant.faq.noFaqs')}</p>
                     <p className="text-xs text-q-text-muted">
@@ -183,9 +198,9 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
             )}
             {/* Delete FAQ Confirmation Modal */}
             <ConfirmationModal
-                isOpen={!!deleteFaqId}
+                isOpen={!!deleteTarget}
                 onConfirm={handleConfirmDelete}
-                onCancel={() => setDeleteFaqId(null)}
+                onCancel={() => setDeleteTarget(null)}
                 title={t('aiAssistant.faq.deleteConfirmTitle', '¿Eliminar pregunta?')}
                 message={t('aiAssistant.faq.deleteConfirm', 'Esta acción eliminará la pregunta frecuente permanentemente.')}
                 variant="danger"
@@ -195,4 +210,3 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
 };
 
 export default FAQManager;
-

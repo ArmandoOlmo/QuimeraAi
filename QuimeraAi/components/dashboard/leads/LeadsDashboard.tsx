@@ -18,7 +18,7 @@ import {
     Smile, Table, List, Columns, Download, Upload, Edit, MapPin,
     Globe, Briefcase, Linkedin, BookOpen, Save, Send, Users,
     Settings, Home, Car, Shield, LineChart, Heart, GraduationCap,
-    ChevronDown, Pencil, Check
+    ChevronDown, Pencil, Check, ListChecks
 } from 'lucide-react';
 import { Lead, LeadStatus, CRMIndustryType, CRMCustomStage, CRMConfig } from '../../../types';
 import Modal from '../../ui/Modal';
@@ -33,6 +33,8 @@ import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
 import ImportLeadsModal from './ImportLeadsModal';
 import AddToAudienceModal from '../email/AddToAudienceModal';
+import { buildCanonicalEmailDraftMetadata } from '../../../services/email/emailModuleIntentService.ts';
+import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService.ts';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { logApiCall } from '../../../services/apiLoggingService';
@@ -42,7 +44,6 @@ import { MotionCard } from '../../ui/primitives/Card';
 
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
-import { ROUTES } from '../../../routes/config';
 import AppSelect from '../../ui/AppSelect';
 
 // Helper to clean JSON from markdown code blocks and fix common issues
@@ -979,11 +980,44 @@ const LeadsDashboard: React.FC = () => {
 
             setEmailDraft(responseText);
 
+            const canonicalEmail = buildCanonicalEmailDraftMetadata({
+                sourceModule: 'leads',
+                sourceComponent: 'LeadsDashboard',
+                sourceEvent: 'lead_follow_up_draft_generated',
+                sourceEntityType: 'lead',
+                sourceEntityId: selectedLead.id,
+                projectId: activeProject?.id,
+                recipientEmail: selectedLead.email,
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                consentSource: 'crm-lead-profile',
+                transactionalConsent: null,
+                marketingConsent: null,
+                extra: {
+                    leadStatus: selectedLead.status,
+                    model: 'gemini-2.5-flash',
+                },
+            });
+
             // Persist the draft to the database
-            await updateLead(selectedLead.id, { emailDraft: responseText });
+            await updateLead(selectedLead.id, {
+                emailDraft: responseText,
+                metadata: {
+                    ...(selectedLead.metadata || {}),
+                    canonicalEmail,
+                },
+            });
 
             // Update local state to include the new draft
-            setSelectedLead({ ...selectedLead, emailDraft: responseText });
+            setSelectedLead({
+                ...selectedLead,
+                emailDraft: responseText,
+                metadata: {
+                    ...(selectedLead.metadata || {}),
+                    canonicalEmail,
+                },
+            });
         } catch (e: any) {
             // Log failed API call
             if (user) {
@@ -1016,12 +1050,28 @@ const LeadsDashboard: React.FC = () => {
                     email: selectedLead.email,
                     name: selectedLead.name
                 },
-                leadId: selectedLead.id
+                leadId: selectedLead.id,
+                metadata: {
+                    canonicalEmail: buildCanonicalEmailDraftMetadata({
+                        sourceModule: 'leads',
+                        sourceComponent: 'LeadsDashboard',
+                        sourceEvent: 'lead_follow_up_editor_handoff',
+                        sourceEntityType: 'lead',
+                        sourceEntityId: selectedLead.id,
+                        projectId: activeProject?.id,
+                        recipientEmail: selectedLead.email,
+                        generatedByAI: Boolean(emailDraft),
+                        needsReview: true,
+                        safeToEdit: true,
+                        consentSource: 'crm-lead-profile',
+                        transactionalConsent: null,
+                        marketingConsent: null,
+                    }),
+                }
             };
             localStorage.setItem('pendingEmailDraft', JSON.stringify(draftIntent));
 
-            // Navigate to Email Marketing using URL-based routing to prevent synchronization conflicts in App.tsx
-            navigate(ROUTES.EMAIL);
+            navigate(buildLeadEmailReviewUrl(selectedLead));
 
             // Log action
             if (user) {
@@ -1037,6 +1087,18 @@ const LeadsDashboard: React.FC = () => {
             alert("Error opening email editor");
         }
     };
+
+    const buildLeadEmailReviewUrl = useCallback((lead: Lead) => buildEmailReviewQueueUrl({
+        projectId: activeProject?.id,
+        sourceModule: 'leads',
+        sourceEntityType: 'lead',
+        sourceEntityId: lead.id,
+    }), [activeProject?.id]);
+
+    const handleOpenLeadEmailReview = useCallback(() => {
+        if (!selectedLead) return;
+        navigate(buildLeadEmailReviewUrl(selectedLead));
+    }, [buildLeadEmailReviewUrl, navigate, selectedLead]);
 
 
     const handleAnalyzeConversation = async () => {
@@ -2325,14 +2387,24 @@ const LeadsDashboard: React.FC = () => {
                                 <div className="border-t border-q-border pt-6">
                                     <div className="flex justify-between items-center mb-3">
                                         <label className="text-xs font-bold text-q-text-muted uppercase tracking-wider block">Quick Email Draft</label>
-                                        <button
-                                            onClick={handleDraftEmail}
-                                            disabled={isDrafting}
-                                            className="text-xs text-primary hover:underline font-bold flex items-center disabled:opacity-50"
-                                        >
-                                            {isDrafting ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
-                                            Draft with AI
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handleOpenLeadEmailReview}
+                                                disabled={!activeProject?.id}
+                                                className="text-xs text-primary hover:underline font-bold flex items-center disabled:opacity-50"
+                                            >
+                                                <ListChecks size={12} className="mr-1" />
+                                                Review
+                                            </button>
+                                            <button
+                                                onClick={handleDraftEmail}
+                                                disabled={isDrafting}
+                                                className="text-xs text-primary hover:underline font-bold flex items-center disabled:opacity-50"
+                                            >
+                                                {isDrafting ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
+                                                Draft with AI
+                                            </button>
+                                        </div>
                                     </div>
                                     {emailDraft ? (
                                         <div className="bg-q-surface border border-q-border rounded-lg p-3 relative group">
@@ -2367,7 +2439,7 @@ const LeadsDashboard: React.FC = () => {
                                                     disabled={isSendingEmail}
                                                 >
                                                     {isSendingEmail ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
-                                                    Send
+                                                    Review
                                                 </button>
                                             </div>
                                         </div>

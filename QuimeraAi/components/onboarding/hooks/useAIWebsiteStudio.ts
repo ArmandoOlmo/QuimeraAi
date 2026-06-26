@@ -50,6 +50,7 @@ import {
     validateGeneratedWebsite,
 } from '../../../utils/websitePlanEngine';
 import { attachAiStudioBusinessBlueprint } from '../../../utils/businessBlueprint';
+import { applyProjectBioPageBlueprintDraft } from '../../../services/bioPage';
 import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
 import { getStudioReadiness } from '../../../utils/studioUX';
 
@@ -968,6 +969,24 @@ export function useAIWebsiteStudio() {
                 new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Final save timeout')), 30000)),
             ]);
 
+            try {
+                const bioPageDraft = await applyProjectBioPageBlueprintDraft({
+                    project,
+                    userId: user?.id,
+                    tenantId: currentTenantId,
+                });
+                if (bioPageDraft && isDev) {
+                    console.log('[AIWebsiteStudio] Bio Page draft created from blueprint:', {
+                        projectId: project.id,
+                        bioPageId: bioPageDraft.id,
+                        slug: bioPageDraft.slug,
+                        status: bioPageDraft.status,
+                    });
+                }
+            } catch (bioPageError) {
+                console.warn('[AIWebsiteStudio] Bio Page blueprint draft was not applied:', bioPageError);
+            }
+
             loadProject(project.id, false, true, project);
             setGeneratedProject(null);
             setGenerationPhase(null);
@@ -986,7 +1005,7 @@ export function useAIWebsiteStudio() {
             isSavingGeneratedProjectRef.current = false;
             setIsSavingGeneratedProject(false);
         }
-    }, [addNewProject, loadProject, setIsOnboardingOpen]);
+    }, [addNewProject, currentTenantId, loadProject, setIsOnboardingOpen, user?.id]);
 
     // ═════════════════════════════════════════════════════════════════════════
     // SYSTEM PROMPT

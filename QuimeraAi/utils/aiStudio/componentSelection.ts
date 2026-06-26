@@ -47,6 +47,7 @@ const intentOrder: Record<PageIntent, ComponentId[]> = {
     lead_capture: ['hero', 'services', 'trustBadges', 'leadForm', 'faq', 'footer'],
     local_business_home: ['hero', 'services', 'trustBadges', 'process', 'testimonials', 'contact', 'leadForm', 'footer'],
     gallery_home: ['hero', 'gallery', 'imageWithText', 'testimonials', 'leadForm', 'footer'],
+    bio_page: ['bioProfile', 'bioLinks', 'bioSocialLinks', 'bioShop', 'bioBooking', 'bioLeadCapture', 'bioEmailSubscribe', 'bioChatCTA'],
     ai_saas_landing: ['hero', 'features', 'process', 'pricing', 'testimonials', 'faq', 'leadForm', 'footer'],
 };
 

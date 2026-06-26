@@ -8,6 +8,7 @@ export type RestaurantReservationSource = 'manual' | 'website' | 'qrMenu' | 'aiA
 export interface RestaurantSettings {
   id: string;
   tenantId: string;
+  projectId?: string | null;
   ownerId: string;
   name: string;
   logoUrl?: string;
@@ -40,6 +41,7 @@ export interface RestaurantSettings {
 export interface RestaurantMenuItem {
   id: string;
   tenantId: string;
+  projectId?: string | null;
   restaurantId: string;
   name: string;
   description: string;
@@ -73,6 +75,7 @@ export interface RestaurantMenuItem {
 export interface RestaurantReservation {
   id: string;
   tenantId: string;
+  projectId?: string | null;
   restaurantId: string;
   customerName: string;
   customerEmail: string;

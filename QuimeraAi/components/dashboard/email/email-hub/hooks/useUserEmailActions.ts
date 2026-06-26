@@ -7,10 +7,6 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '../../../../../contexts/core/AuthContext';
-import {
-    db, collection, doc, addDoc, updateDoc, deleteDoc,
-} from '@/utils/compatData';
-import { serverTimestamp } from '@/utils/compatData';
 import { supabase } from '../../../../../supabase';
 import { generateEmailHtml } from '../../../../../utils/emailHtmlGenerator';
 import { DEFAULT_EMAIL_GLOBAL_STYLES } from '../../../../../types/email';
@@ -136,9 +132,6 @@ export function useUserEmailActions(
     const { user } = useAuth();
     const { campaigns, setCampaigns } = data;
 
-    const campaignsPath = `users/${userId}/projects/${projectId}/emailCampaigns`;
-    const automationsPath = `users/${userId}/projects/${projectId}/emailAutomations`;
-
     // Campaign editor state
     const [showEmailEditor, setShowEmailEditor] = useState(false);
     const [showTemplateGallery, setShowTemplateGallery] = useState(false);
@@ -250,18 +243,29 @@ export function useUserEmailActions(
             const htmlContent = generateEmailHtml(document);
 
             if (editingCampaignId) {
-                // Update existing campaign
-                await updateDoc(doc(db, campaignsPath, editingCampaignId), {
-                    name: document.name || '',
-                    subject: document.subject || '',
-                    previewText: document.previewText || '',
-                    htmlContent,
-                    emailDocument: JSON.parse(JSON.stringify(document)),
-                    updatedAt: serverTimestamp(),
+                const { data: result, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'updateCampaign',
+                        projectId,
+                        campaignId: editingCampaignId,
+                        updates: {
+                            name: document.name || '',
+                            subject: document.subject || '',
+                            previewText: document.previewText || '',
+                            htmlContent,
+                            emailDocument: JSON.parse(JSON.stringify(document)),
+                            userModified: true,
+                            needsReview: false,
+                            sendMode: 'reviewed',
+                        },
+                    },
                 });
+                if (error) throw error;
+                if (result?.success === false) throw new Error(result.error || 'Unable to update campaign');
+                const updatedCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
                 setCampaigns(prev => prev.map(c =>
                     c.id === editingCampaignId
-                        ? { ...c, name: document.name, subject: document.subject, previewText: document.previewText, htmlContent, emailDocument: document, updatedAt: new Date() } as any
+                        ? updatedCampaign
                         : c
                 ));
             } else {
@@ -280,15 +284,18 @@ export function useUserEmailActions(
                     stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
                     tags: ['visual-editor'],
                     createdBy: user?.id || userId,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
                 };
-                const docRef = await addDoc(collection(db, campaignsPath), newCampaign);
-                setCampaigns(prev => [{
-                    id: docRef.id, ...newCampaign,
-                    userId, projectId,
-                    createdAt: new Date(), updatedAt: new Date(),
-                } as unknown as UserEmailCampaign, ...prev]);
+                const { data: result, error } = await supabase.functions.invoke('email-api', {
+                    body: {
+                        action: 'createCampaignDraft',
+                        projectId,
+                        campaign: newCampaign,
+                    },
+                });
+                if (error) throw error;
+                if (result?.success === false) throw new Error(result.error || 'Unable to create campaign');
+                const createdCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
+                setCampaigns(prev => [createdCampaign, ...prev.filter(item => item.id !== createdCampaign.id)]);
             }
 
             setShowEmailEditor(false);
@@ -319,15 +326,22 @@ export function useUserEmailActions(
 
     const handleUpdateCampaignStatus = async (campaignId: string, newStatus: CampaignStatus) => {
         try {
-            await updateDoc(doc(db, campaignsPath, campaignId), {
-                status: newStatus,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateCampaign',
+                    projectId,
+                    campaignId,
+                    updates: { status: newStatus },
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to update campaign status');
+            const updatedCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
             setCampaigns(prev => prev.map(c =>
-                c.id === campaignId ? { ...c, status: newStatus, updatedAt: new Date() } as any : c
+                c.id === campaignId ? updatedCampaign : c
             ));
             if (detailCampaign?.id === campaignId) {
-                setDetailCampaign(prev => prev ? { ...prev, status: newStatus } as any : null);
+                setDetailCampaign(updatedCampaign);
             }
         } catch (err) {
             console.error('[UserEmailHub] Error updating campaign status:', err);
@@ -343,7 +357,6 @@ export function useUserEmailActions(
         try {
             const updates: Record<string, any> = {
                 audienceType,
-                updatedAt: serverTimestamp(),
             };
             if (audienceType === 'segment' && audienceSegmentId) {
                 updates.audienceSegmentId = audienceSegmentId;
@@ -352,15 +365,23 @@ export function useUserEmailActions(
                 updates.customRecipientEmails = customRecipientEmails;
             }
 
-            await updateDoc(doc(db, campaignsPath, campaignId), updates);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateCampaign',
+                    projectId,
+                    campaignId,
+                    updates,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to update campaign audience');
 
-            const campaign = campaigns.find(c => c.id === campaignId);
-            const updatedCampaign = { ...campaign!, audienceType, audienceSegmentId: audienceSegmentId || '', customRecipientEmails: customRecipientEmails || [] };
+            const updatedCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
             setCampaigns(prev => prev.map(c =>
-                c.id === campaignId ? { ...c, ...updatedCampaign } as any : c
+                c.id === campaignId ? updatedCampaign : c
             ));
             if (detailCampaign?.id === campaignId) {
-                setDetailCampaign(prev => prev ? { ...prev, ...updatedCampaign } as any : null);
+                setDetailCampaign(updatedCampaign);
             }
         } catch (err) {
             console.error('[UserEmailHub] Error updating campaign audience:', err);
@@ -389,7 +410,7 @@ export function useUserEmailActions(
         try {
             const payload: Record<string, any> = {
                 userId,
-                storeId: projectId,
+                projectId,
                 campaignId: campaignId || 'test',
                 testEmail,
             };
@@ -473,7 +494,7 @@ export function useUserEmailActions(
                 body: {
                     action: 'sendCampaign',
                     userId,
-                    storeId: projectId,
+                    projectId,
                     campaignId: sendingCampaignId,
                 }
             });
@@ -509,7 +530,15 @@ export function useUserEmailActions(
             message: `¿Estás seguro de eliminar la campaña "${campaign.name}"? Esta acción no se puede deshacer.`,
             onConfirm: async () => {
                 try {
-                    await deleteDoc(doc(db, campaignsPath, campaign.id));
+                    const { data: result, error } = await supabase.functions.invoke('email-api', {
+                        body: {
+                            action: 'deleteCampaign',
+                            projectId,
+                            campaignId: campaign.id,
+                        },
+                    });
+                    if (error) throw error;
+                    if (result?.success === false) throw new Error(result.error || 'Unable to delete campaign');
                     setCampaigns(prev => prev.filter(c => c.id !== campaign.id));
                 } catch (err) {
                     console.error('Delete error:', err);
@@ -521,30 +550,17 @@ export function useUserEmailActions(
 
     const handleDuplicateCampaign = async (campaign: UserEmailCampaign) => {
         try {
-            const clonedEmailDoc = (campaign as any).emailDocument
-                ? JSON.parse(JSON.stringify((campaign as any).emailDocument))
-                : null;
-            const dupData = {
-                name: `${campaign.name} (Copia)`,
-                subject: campaign.subject || '',
-                previewText: campaign.previewText || '',
-                type: campaign.type || 'newsletter',
-                htmlContent: campaign.htmlContent || '',
-                emailDocument: clonedEmailDoc,
-                audienceType: 'all' as const,
-                status: 'draft' as CampaignStatus,
-                stats: { totalRecipients: 0, sent: 0, delivered: 0, opened: 0, totalOpens: 0, uniqueOpens: 0, clicked: 0, totalClicks: 0, uniqueClicks: 0, bounced: 0, complained: 0, unsubscribed: 0 },
-                tags: ['duplicate'],
-                createdBy: user?.id || userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            const docRef = await addDoc(collection(db, campaignsPath), dupData);
-            setCampaigns(prev => [{
-                id: docRef.id, ...dupData,
-                userId, projectId,
-                createdAt: new Date(), updatedAt: new Date(),
-            } as unknown as UserEmailCampaign, ...prev]);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'duplicateCampaign',
+                    projectId,
+                    campaignId: campaign.id,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to duplicate campaign');
+            const duplicatedCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
+            setCampaigns(prev => [duplicatedCampaign, ...prev.filter(item => item.id !== duplicatedCampaign.id)]);
         } catch (err) {
             console.error('Duplicate error:', err);
         }
@@ -578,11 +594,17 @@ export function useUserEmailActions(
                 subject: newAutomation.subject || `${selectedTemplate?.name || 'Automatización'} — Auto`,
                 delayMinutes: newAutomation.delayMinutes,
                 stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
             };
 
-            await addDoc(collection(db, automationsPath), automationData);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAutomationDraft',
+                    projectId,
+                    automation: automationData,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to create automation');
             setShowCreateAutomation(false);
             setSelectedTemplate(null);
             setEditingAutomationId(null);
@@ -598,16 +620,25 @@ export function useUserEmailActions(
         try {
             const sanitizedSteps = (newAutomation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
 
-            await updateDoc(doc(db, automationsPath, editingAutomationId), {
-                name: newAutomation.name,
-                description: newAutomation.description || '',
-                category: newAutomation.category || 'lifecycle',
-                subject: newAutomation.subject || '',
-                audienceId: newAutomation.audienceId || '',
-                steps: sanitizedSteps,
-                delayMinutes: newAutomation.delayMinutes,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateAutomation',
+                    projectId,
+                    automationId: editingAutomationId,
+                    updates: {
+                        name: newAutomation.name,
+                        description: newAutomation.description || '',
+                        category: newAutomation.category || 'lifecycle',
+                        subject: newAutomation.subject || '',
+                        audienceId: newAutomation.audienceId || '',
+                        steps: sanitizedSteps,
+                        delayMinutes: newAutomation.delayMinutes,
+                        userModified: true,
+                    },
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to update automation');
 
             setShowCreateAutomation(false);
             setSelectedTemplate(null);
@@ -620,24 +651,15 @@ export function useUserEmailActions(
 
     const duplicateAutomation = async (automation: EmailAutomation) => {
         try {
-            const sanitizedSteps = (automation.steps || []).map(step => JSON.parse(JSON.stringify(step)));
-            const dupData = {
-                name: `${automation.name} (Copia)`,
-                description: automation.description || '',
-                type: automation.type,
-                category: automation.category || 'lifecycle',
-                status: 'draft' as AutomationStatus,
-                triggerConfig: JSON.parse(JSON.stringify(automation.triggerConfig)),
-                audienceId: automation.audienceId || '',
-                steps: sanitizedSteps,
-                templateId: automation.templateId || '',
-                subject: automation.subject || '',
-                delayMinutes: automation.delayMinutes || 0,
-                stats: { triggered: 0, sent: 0, opened: 0, clicked: 0, converted: 0 },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-            await addDoc(collection(db, automationsPath), dupData);
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'duplicateAutomation',
+                    projectId,
+                    automationId: automation.id,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to duplicate automation');
         } catch (err) {
             console.error('[UserEmailHub] Error duplicating automation:', err);
         }
@@ -662,10 +684,16 @@ export function useUserEmailActions(
     const toggleAutomationStatus = async (automation: EmailAutomation) => {
         const newStatus: AutomationStatus = automation.status === 'active' ? 'paused' : 'active';
         try {
-            await updateDoc(doc(db, automationsPath, automation.id), {
-                status: newStatus,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'updateAutomation',
+                    projectId,
+                    automationId: automation.id,
+                    updates: { status: newStatus },
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to update automation status');
         } catch (err) {
             console.error('[UserEmailHub] Error toggling automation:', err);
         }
@@ -673,7 +701,15 @@ export function useUserEmailActions(
 
     const deleteAutomation = async (automationId: string) => {
         try {
-            await deleteDoc(doc(db, automationsPath, automationId));
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'deleteAutomation',
+                    projectId,
+                    automationId,
+                },
+            });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to delete automation');
         } catch (err) {
             console.error('[UserEmailHub] Error deleting automation:', err);
         }
@@ -733,16 +769,22 @@ export function useUserEmailActions(
             automationId,
             automationStepId: stepId,
             createdBy: user?.id || userId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
         };
 
-        const docRef = await addDoc(collection(db, campaignsPath), campaignData);
+        const { data: result, error } = await supabase.functions.invoke('email-api', {
+            body: {
+                action: 'createCampaignDraft',
+                projectId,
+                campaign: campaignData,
+            },
+        });
+        if (error) throw error;
+        if (result?.success === false) throw new Error(result.error || 'Unable to create automation step email');
+        const createdCampaign = mapUserCampaignFromCanonical(result?.campaign || {}, userId, projectId);
 
         // Update the automation step with the link
         if (automationId) {
             try {
-                const automationDocRef = doc(db, automationsPath, automationId);
                 const automation = data.automations.find(a => a.id === automationId);
                 if (automation?.steps) {
                     const updatedSteps = automation.steps.map(s => {
@@ -751,33 +793,37 @@ export function useUserEmailActions(
                                 ...s,
                                 emailConfig: {
                                     ...s.emailConfig,
-                                    campaignId: docRef.id,
-                                    emailDocumentId: docRef.id,
+                                    campaignId: createdCampaign.id,
+                                    emailDocumentId: createdCampaign.id,
                                     emailStatus: 'designed' as const,
                                 },
                             };
                         }
                         return s;
                     });
-                    await updateDoc(automationDocRef, {
-                        steps: updatedSteps.map(s => JSON.parse(JSON.stringify(s))),
-                        updatedAt: serverTimestamp(),
+                    const { data: updateResult, error: updateError } = await supabase.functions.invoke('email-api', {
+                        body: {
+                            action: 'updateAutomation',
+                            projectId,
+                            automationId,
+                            updates: {
+                                steps: updatedSteps.map(s => JSON.parse(JSON.stringify(s))),
+                                userModified: true,
+                            },
+                        },
                     });
+                    if (updateError) throw updateError;
+                    if (updateResult?.success === false) throw new Error(updateResult.error || 'Unable to link email to automation step');
                 }
             } catch (err) {
                 console.error('[UserEmailHub] Error linking email to automation step:', err);
             }
         }
 
-        setCampaigns(prev => [{
-            id: docRef.id,
-            ...campaignData,
-            userId, projectId,
-            createdAt: new Date(), updatedAt: new Date(),
-        } as unknown as UserEmailCampaign, ...prev]);
+        setCampaigns(prev => [createdCampaign, ...prev.filter(item => item.id !== createdCampaign.id)]);
 
         setAutomationStepEmailContext(null);
-        return docRef.id;
+        return createdCampaign.id;
     };
 
     return {
@@ -812,4 +858,61 @@ export function useUserEmailActions(
         openEmailEditorForStep, saveEmailForAutomationStep,
         automationStepEmailContext, setAutomationStepEmailContext,
     };
+}
+
+function mapUserCampaignFromCanonical(
+    campaign: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailCampaign {
+    return {
+        ...campaign,
+        id: String(campaign.id || ''),
+        name: String(campaign.name || ''),
+        subject: String(campaign.subject || ''),
+        previewText: campaign.previewText ?? campaign.preview_text ?? '',
+        type: campaign.type || 'newsletter',
+        htmlContent: campaign.htmlContent ?? campaign.html_content ?? '',
+        emailDocument: campaign.emailDocument ?? campaign.email_document,
+        audienceType: campaign.audienceType ?? campaign.audience_type ?? 'all',
+        audienceSegmentId: campaign.audienceSegmentId ?? campaign.audience_segment_id,
+        customRecipientEmails: campaign.customRecipientEmails ?? campaign.custom_recipient_emails ?? [],
+        status: campaign.status || 'draft',
+        scheduledAt: campaign.scheduledAt ?? campaign.scheduled_at,
+        sentAt: campaign.sentAt ?? campaign.sent_at,
+        stats: {
+            totalRecipients: 0,
+            sent: 0,
+            delivered: 0,
+            opened: 0,
+            totalOpens: 0,
+            uniqueOpens: 0,
+            clicked: 0,
+            totalClicks: 0,
+            uniqueClicks: 0,
+            bounced: 0,
+            complained: 0,
+            unsubscribed: 0,
+            ...(campaign.stats || {}),
+        },
+        tags: Array.isArray(campaign.tags) ? campaign.tags : [],
+        generatedByAI: campaign.generatedByAI ?? campaign.generated_by_ai,
+        needsReview: campaign.needsReview ?? campaign.needs_review,
+        userModified: campaign.userModified ?? campaign.user_modified,
+        safeToEdit: campaign.safeToEdit ?? campaign.safe_to_edit,
+        sourceModule: campaign.sourceModule ?? campaign.source_module,
+        sourceComponent: campaign.sourceComponent ?? campaign.source_component,
+        sourceEvent: campaign.sourceEvent ?? campaign.source_event,
+        sourceEntityType: campaign.sourceEntityType ?? campaign.source_entity_type,
+        sourceEntityId: campaign.sourceEntityId ?? campaign.source_entity_id,
+        correlationId: campaign.correlationId ?? campaign.correlation_id,
+        idempotencyKey: campaign.idempotencyKey ?? campaign.idempotency_key,
+        readiness: campaign.readiness || {},
+        metadata: campaign.metadata || {},
+        createdBy: campaign.createdBy ?? campaign.created_by ?? userId,
+        userId,
+        projectId,
+        createdAt: campaign.createdAt ?? campaign.created_at ?? new Date().toISOString(),
+        updatedAt: campaign.updatedAt ?? campaign.updated_at ?? new Date().toISOString(),
+    } as UserEmailCampaign;
 }

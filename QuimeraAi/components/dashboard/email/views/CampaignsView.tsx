@@ -237,18 +237,24 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
     const campaignStatusCounts = useMemo(() => ({
         all: campaigns.length,
         draft: campaigns.filter((c) => c.status === 'draft').length,
+        pending: campaigns.filter((c) => c.status === 'pending').length,
+        approved: campaigns.filter((c) => c.status === 'approved').length,
         scheduled: campaigns.filter((c) => c.status === 'scheduled').length,
         sending: campaigns.filter((c) => c.status === 'sending').length,
         sent: campaigns.filter((c) => c.status === 'sent').length,
+        failed: campaigns.filter((c) => c.status === 'failed').length,
         paused: campaigns.filter((c) => c.status === 'paused').length,
     }), [campaigns]);
 
     const statusFilterOptions = useMemo<FilterChipOption<CampaignStatus | 'all'>[]>(() => [
         { id: 'all', label: t('email.allStatuses', 'Todos los estados'), count: campaignStatusCounts.all },
         { id: 'draft', label: t('email.draft', 'Borrador'), count: campaignStatusCounts.draft, color: 'gray' },
+        { id: 'pending', label: t('email.pending', 'Pendiente'), count: campaignStatusCounts.pending, color: 'gray' },
+        { id: 'approved', label: t('email.approved', 'Aprobada'), count: campaignStatusCounts.approved, color: 'green' },
         { id: 'scheduled', label: t('email.scheduled', 'Programada'), count: campaignStatusCounts.scheduled },
         { id: 'sending', label: t('email.sending', 'Enviando'), count: campaignStatusCounts.sending },
         { id: 'sent', label: t('email.sent', 'Enviada'), count: campaignStatusCounts.sent, color: 'green' },
+        { id: 'failed', label: t('email.failed', 'Fallida'), count: campaignStatusCounts.failed, color: 'gray' },
         { id: 'paused', label: t('email.paused', 'Pausada'), count: campaignStatusCounts.paused, color: 'gray' },
     ], [t, campaignStatusCounts]);
 
@@ -260,6 +266,9 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
             sent: { label: 'Enviada', color: 'bg-q-success/20 text-q-success', icon: CheckCircle },
             cancelled: { label: 'Cancelada', color: 'bg-q-error/20 text-q-error', icon: XCircle },
             paused: { label: 'Pausada', color: 'bg-q-warning/20 text-q-warning', icon: Pause },
+            approved: { label: 'Aprobada', color: 'bg-q-success/20 text-q-success', icon: CheckCircle },
+            pending: { label: 'Pendiente', color: 'bg-q-surface-overlay/20 text-q-text-muted', icon: Clock },
+            failed: { label: 'Fallida', color: 'bg-q-error/20 text-q-error', icon: AlertTriangle },
         };
 
         const config = statusConfig[status || 'draft'];
@@ -400,6 +409,25 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
     const handleSaveFromEditor = async (document: EmailDocument) => {
         try {
             const htmlContent = generateEmailHtml(document);
+            const pendingDraftRaw = localStorage.getItem('pendingEmailDraft');
+            const pendingDraft = pendingDraftRaw ? JSON.parse(pendingDraftRaw) : null;
+            const pendingCanonicalEmail = pendingDraft?.metadata?.canonicalEmail || null;
+            const pendingSourceModule = pendingCanonicalEmail?.sourceModule || 'leads';
+            const pendingSourceEvent = pendingCanonicalEmail?.sourceEvent || 'lead_follow_up_editor_handoff';
+            const pendingEmailMetadata = pendingCanonicalEmail ? {
+                generatedByAI: Boolean(pendingCanonicalEmail.generatedByAI),
+                needsReview: true,
+                safeToEdit: true,
+                sendMode: 'draft_only',
+                sourceModule: pendingSourceModule,
+                sourceComponent: pendingCanonicalEmail.sourceComponent || 'CampaignsView',
+                sourceEvent: pendingSourceEvent,
+                sourceEntityType: pendingCanonicalEmail.sourceEntityType,
+                sourceEntityId: pendingCanonicalEmail.sourceEntityId,
+                correlationId: pendingCanonicalEmail.idempotencyKey,
+                idempotencyKey: pendingCanonicalEmail.idempotencyKey,
+                metadata: { canonicalEmail: pendingCanonicalEmail },
+            } : {};
 
             if (editingCampaignId) {
                 console.log("CampaignsView: Updating existing campaign", editingCampaignId);
@@ -410,6 +438,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                     previewText: document.previewText,
                     htmlContent,
                     emailDocument: document,
+                    ...pendingEmailMetadata,
                 });
                 setSendSuccess(t('email.campaignUpdated', 'Campaña actualizada exitosamente'));
             } else {
@@ -424,6 +453,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                     audienceType: newCampaign.audienceType || 'all',
                     audienceSegmentId: newCampaign.audienceSegmentId || '',
                     emailDocument: document,
+                    ...pendingEmailMetadata,
                 });
                 console.log("CampaignsView: Campaign created successfully", created?.id);
                 setSendSuccess(t('email.campaignCreated', 'Campaña creada exitosamente'));
@@ -651,7 +681,7 @@ const CampaignsView: React.FC<CampaignsViewProps> = ({ onCreateTrigger }) => {
                     <FilterChipRow
                         options={statusFilterOptions}
                         value={statusFilter}
-                        onChange={setStatusFilter}
+                        onChange={(value: string) => setStatusFilter(value as CampaignStatus | 'all')}
                     />
                 }
             />

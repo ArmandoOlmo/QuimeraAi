@@ -9,25 +9,43 @@ import {
     db,
     doc,
     getDoc,
-    setDoc,
-    updateDoc,
-    collection,
-    getDocs,
-    query,
-    orderBy,
-    serverTimestamp,
 } from '@/utils/compatData';
 import { useAuth } from '../core/AuthContext';
 import { useSafeTenant } from '../tenant';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import { useSafeUndo } from '../undo/UndoContext';
+import {
+    createBioPageDraft,
+    createDefaultBlocks,
+    DEFAULT_BIO_PROFILE,
+    DEFAULT_BIO_THEME,
+    duplicateBioPageBlockDraft,
+    duplicateBioPageLinkDraft,
+    getBioPageByProject,
+    normalizeBioSlug,
+    prioritizeBioPageBlockDraft,
+    prioritizeBioPageLinkDraft,
+    publishBioPage as publishCanonicalBioPage,
+    unpublishBioPage as unpublishCanonicalBioPage,
+    updateBioPageDraft,
+} from '../../services/bioPage';
+import type { BioPageBlock, BioPageSEO, BioPageSettings } from '../../services/bioPage';
 
 export interface BioPageUndoState {
     links: BioLink[];
+    blocks: BioPageBlock[];
     profile: BioProfile;
     theme: BioTheme;
     products: BioProduct[];
     emailSignupEnabled: boolean;
+    slug: string;
+    seo: BioPageSEO;
+    settings: BioPageSettings;
+}
+
+export interface BioPagePublishResult {
+    ok: boolean;
+    error?: string;
 }
 
 // Helper to get the correct projects collection path
@@ -50,24 +68,40 @@ export interface BioLink {
     url: string;
     enabled: boolean;
     clicks: number;
-    linkType?: 'link' | 'collection' | 'product' | 'form' | 'social' | 'embed' | 'chatbot';
+    linkType?: 'link' | 'external' | 'internal' | 'collection' | 'product' | 'form' | 'lead_form' | 'email_subscribe' | 'social' | 'embed' | 'video' | 'file' | 'booking' | 'chatbot';
     platform?: string;
     icon?: string;
     thumbnail?: string;
+    imageUrl?: string;
+    description?: string;
     order?: number;
+    openInNewTab?: boolean;
+    visible?: boolean;
+    clickTrackingEnabled?: boolean;
+    needsReview?: boolean;
+    generatedByAI?: boolean;
+    userModified?: boolean;
+    lockedFromRegeneration?: boolean;
+    metadata?: Record<string, unknown>;
 }
 
 export interface BioProfile {
     name: string;
+    displayName?: string;
+    handle?: string;
     bio: string;
     avatarUrl?: string;
+    coverImageUrl?: string;
+    category?: string;
+    location?: string;
     logoUrl?: string; // Logo to display instead of text name when titleStyle is 'logo'
+    verifiedBadgeEnabled?: boolean;
 }
 
 export interface BioTheme {
     preset: string;
     backgroundColor: string;
-    backgroundType: 'solid' | 'gradient' | 'blur' | 'pattern' | 'image' | 'video';
+    backgroundType: 'solid' | 'gradient' | 'blur' | 'pattern' | 'image' | 'video' | 'glass';
     backgroundGradient?: string;
     gradientColor?: string;
     backgroundImage?: string;
@@ -75,7 +109,7 @@ export interface BioTheme {
     backgroundPattern?: string;
     patternColor?: string;
     patternSize?: number;
-    buttonStyle: 'fill' | 'outline' | 'soft' | 'glass';
+    buttonStyle: 'fill' | 'solid' | 'outline' | 'soft' | 'glass' | 'shadow';
     buttonShape: 'square' | 'rounded' | 'rounder' | 'pill' | 'full' | 'lg' | 'xl';
     buttonShadow: 'none' | 'soft' | 'strong' | 'hard';
     buttonColor: string;
@@ -103,48 +137,40 @@ export interface BioProduct {
     price: number;
     imageUrl: string;
     url: string;
+    slug?: string;
+    status?: string;
+    categoryId?: string;
+    categoryName?: string;
+    categorySlug?: string;
 }
 
 export interface BioPageData {
     id: string;
     projectId?: string;
+    tenantId?: string | null;
+    userId?: string | null;
     username: string;
+    slug?: string;
+    title?: string;
+    description?: string;
     profile: BioProfile;
     theme: BioTheme;
     links: BioLink[];
+    blocks: BioPageBlock[];
     products: BioProduct[];
     emailSignupEnabled: boolean;
     isPublished: boolean;
+    status?: 'draft' | 'published' | 'archived';
+    seo?: BioPageSEO;
+    settings?: BioPageSettings;
     createdAt?: string;
     updatedAt?: string;
+    publishedAt?: string | null;
 }
 
 // Default values
-const DEFAULT_PROFILE: BioProfile = {
-    name: '',
-    bio: '',
-    avatarUrl: '',
-};
-
-const DEFAULT_THEME: BioTheme = {
-    preset: 'default',
-    backgroundColor: '#0f0f0f',
-    backgroundType: 'solid',
-    gradientColor: '#1a1a2e',
-    buttonStyle: 'fill',
-    buttonShape: 'rounded',
-    buttonShadow: 'none',
-    buttonColor: '#facc15',
-    buttonTextColor: '#000000',
-    textColor: '#ffffff',
-    titleFont: 'Inter',
-    titleColor: '#ffffff',
-    bodyFont: 'Inter',
-    bodyColor: '#ffffff',
-    profileLayout: 'circle',
-    profileSize: 'small',
-    titleStyle: 'text',
-};
+const DEFAULT_PROFILE: BioProfile = DEFAULT_BIO_PROFILE;
+const DEFAULT_THEME: BioTheme = DEFAULT_BIO_THEME as BioTheme;
 
 // =============================================================================
 // CONTEXT TYPE
@@ -169,6 +195,18 @@ interface BioPageContextType {
     deleteLink: (linkId: string) => void;
     reorderLinks: (linkIds: string[]) => void;
     toggleLink: (linkId: string) => void;
+    duplicateLink: (linkId: string) => void;
+    prioritizeLink: (linkId: string) => void;
+
+    // Block Operations
+    blocks: BioPageBlock[];
+    addBlock: (block: Partial<BioPageBlock> & Pick<BioPageBlock, 'type'>) => void;
+    updateBlock: (blockId: string, updates: Partial<BioPageBlock>) => void;
+    deleteBlock: (blockId: string) => void;
+    reorderBlocks: (blockIds: string[]) => void;
+    toggleBlock: (blockId: string) => void;
+    duplicateBlock: (blockId: string) => void;
+    prioritizeBlock: (blockId: string) => void;
 
     // Profile Operations
     profile: BioProfile;
@@ -185,9 +223,16 @@ interface BioPageContextType {
     // Settings
     emailSignupEnabled: boolean;
     setEmailSignupEnabled: (enabled: boolean) => void;
+    slug: string;
+    updateSlug: (value: string) => void;
+    seo: BioPageSEO;
+    updateSEO: (updates: Partial<BioPageSEO>) => void;
+    settings: BioPageSettings;
+    updateSettings: (updates: Partial<BioPageSettings>) => void;
 
     // Publish
-    publishBioPage: () => Promise<boolean>;
+    publishBioPage: () => Promise<BioPagePublishResult>;
+    unpublishBioPage: () => Promise<boolean>;
 
     // Undo support
     pushBioPageUndoAction: (description: string, newState: BioPageUndoState, prevState?: BioPageUndoState) => void;
@@ -200,35 +245,6 @@ const BioPageContext = createContext<BioPageContextType | undefined>(undefined);
 // HELPERS
 // =============================================================================
 
-// Helper to get the correct bioPages collection path
-const getBioPagesCollectionPath = (userId: string, tenantId?: string | null): string[] => {
-    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-
-    if (tenantId && !isPersonalTenant) {
-        return ['tenants', tenantId, 'bioPages'];
-    }
-    return ['users', userId, 'bioPages'];
-};
-
-const getBioPageDocRef = (userId: string, tenantId: string | null | undefined, projectId: string) => {
-    const isPersonalTenant = tenantId && tenantId.startsWith(`tenant_${userId}`);
-    if (tenantId && !isPersonalTenant) {
-        return doc(db, 'tenants', tenantId, 'bioPages', projectId);
-    }
-    return doc(db, 'users', userId, 'bioPages', projectId);
-};
-
-// Helper to remove undefined values (Supabase doesn't accept undefined)
-const removeUndefinedValues = <T extends Record<string, any>>(obj: T): Partial<T> => {
-    const result: Partial<T> = {};
-    for (const key of Object.keys(obj) as (keyof T)[]) {
-        if (obj[key] !== undefined) {
-            result[key] = obj[key];
-        }
-    }
-    return result;
-};
-
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -240,22 +256,31 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // State
     const [bioPage, setBioPage] = useState<BioPageData | null>(null);
+    const bioPageRef = useRef<BioPageData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // Editable state (local until saved)
     const [links, setLinks] = useState<BioLink[]>([]);
+    const [blocks, setBlocks] = useState<BioPageBlock[]>([]);
     const [profile, setProfile] = useState<BioProfile>(DEFAULT_PROFILE);
     const [theme, setTheme] = useState<BioTheme>(DEFAULT_THEME);
     const [products, setProducts] = useState<BioProduct[]>([]);
     const [emailSignupEnabled, setEmailSignupEnabled] = useState(false);
+    const [slug, setSlug] = useState('');
+    const [seo, setSeo] = useState<BioPageSEO>({});
+    const [settings, setSettings] = useState<BioPageSettings>({});
 
     // Auto-save ref
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoadRef = useRef(true);
     // Prevent re-marking unsaved after save
     const postSaveProtectionRef = useRef(false);
+
+    useEffect(() => {
+        bioPageRef.current = bioPage;
+    }, [bioPage]);
 
     // Helper to safely mark unsaved changes (respects post-save protection)
     const markUnsaved = useCallback(() => {
@@ -271,10 +296,14 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const restoreBioPageState = useCallback((state: BioPageUndoState) => {
         setLinks(state.links);
+        setBlocks(state.blocks);
         setProfile(state.profile);
         setTheme(state.theme);
         setProducts(state.products);
         setEmailSignupEnabled(state.emailSignupEnabled);
+        setSlug(state.slug);
+        setSeo(state.seo);
+        setSettings(state.settings);
         markUnsaved();
     }, [markUnsaved]);
 
@@ -306,8 +335,8 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, [registerModule, unregisterModule, undo, redo]);
 
     const getCurrentBioPageState = useCallback((): BioPageUndoState => {
-        return { links, profile, theme, products, emailSignupEnabled };
-    }, [links, profile, theme, products, emailSignupEnabled]);
+        return { links, blocks, profile, theme, products, emailSignupEnabled, slug, seo, settings };
+    }, [links, blocks, profile, theme, products, emailSignupEnabled, slug, seo, settings]);
 
     const pushBioPageUndoAction = useCallback((description: string, newState: BioPageUndoState, prevState?: BioPageUndoState) => {
         pushAction({
@@ -324,27 +353,35 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         setIsLoading(true);
         try {
-            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, projectId);
-            const bioPageSnap = await getDoc(bioPageRef);
+            const data = await getBioPageByProject(projectId);
 
-            if (bioPageSnap.exists()) {
-                const data = { id: bioPageSnap.id, ...bioPageSnap.data() } as BioPageData;
+            if (data) {
                 setBioPage(data);
+                bioPageRef.current = data;
                 setLinks(data.links || []);
+                setBlocks(data.blocks || createDefaultBlocks({ links: data.links || [], profile: data.profile || DEFAULT_PROFILE, settings: data.settings }));
                 setProfile(data.profile || DEFAULT_PROFILE);
                 setTheme(data.theme || DEFAULT_THEME);
                 setProducts(data.products || []);
                 setEmailSignupEnabled(data.emailSignupEnabled || false);
-                console.log('[BioPageContext] Loaded bio page:', data.username);
+                setSlug(data.slug || data.username || '');
+                setSeo(data.seo || {});
+                setSettings(data.settings || {});
+                console.log('[BioPageContext] Loaded bio page:', data.slug || data.username);
             } else {
                 // No bio page exists for this project - reset to defaults
                 console.log('[BioPageContext] No bio page found for project:', projectId);
                 setBioPage(null);
+                bioPageRef.current = null;
                 setLinks([]);
+                setBlocks(createDefaultBlocks({ links: [], profile: DEFAULT_PROFILE, settings: {} }));
                 setProfile(DEFAULT_PROFILE);
                 setTheme(DEFAULT_THEME);
                 setProducts([]);
                 setEmailSignupEnabled(false);
+                setSlug('');
+                setSeo({});
+                setSettings({});
             }
 
             clearHistory(); // Clear history when loading a new page
@@ -364,30 +401,37 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
     const createBioPage = useCallback(async (projectId: string, username: string): Promise<string> => {
         if (!user) throw new Error('User not authenticated');
 
-        const bioPageRef = getBioPageDocRef(user.id, currentTenantId, projectId);
+        const tenantId = currentTenantId && !currentTenantId.startsWith(`tenant_${user.id}`) ? currentTenantId : null;
 
-        const newBioPage: BioPageData = {
-            id: projectId,
+        const newBioPage = await createBioPageDraft({
             projectId,
-            username,
+            tenantId,
+            userId: user.id,
+            slug: username,
             profile: DEFAULT_PROFILE,
             theme: DEFAULT_THEME,
             links: [],
-            products: [],
-            emailSignupEnabled: false,
-            isPublished: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-
-        await setDoc(bioPageRef, removeUndefinedValues(newBioPage));
+            blocks: createDefaultBlocks({ links: [], profile: DEFAULT_PROFILE, settings: {} }),
+            settings: {
+                emailSignupEnabled: false,
+                leadCaptureEnabled: false,
+                chatbotEnabled: false,
+                shopEnabled: false,
+                bookingEnabled: false,
+            },
+        });
 
         setBioPage(newBioPage);
+        bioPageRef.current = newBioPage;
         setLinks([]);
+        setBlocks(newBioPage.blocks || []);
         setProfile(DEFAULT_PROFILE);
         setTheme(DEFAULT_THEME);
         setProducts([]);
         setEmailSignupEnabled(false);
+        setSlug(newBioPage.slug || username);
+        setSeo(newBioPage.seo || {});
+        setSettings(newBioPage.settings || {});
 
         clearHistory(); // Clear history when creating a new page
 
@@ -397,27 +441,47 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Save bio page
     const saveBioPage = useCallback(async () => {
-        if (!user || !bioPage) return;
+        const currentBioPage = bioPageRef.current || bioPage;
+        if (!user || !currentBioPage) return;
 
         setIsSaving(true);
         // Enable post-save protection
         postSaveProtectionRef.current = true;
 
         try {
-            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, bioPage.id);
-
-            const updatedData = removeUndefinedValues({
+            const nextSettings: BioPageSettings = {
+                ...(currentBioPage.settings || {}),
+                ...settings,
+                emailSignupEnabled,
+                leadCaptureEnabled: blocks.some(block => block.type === 'lead_form' && block.visible),
+                chatbotEnabled: blocks.some(block => block.type === 'chatbot_cta' && block.visible),
+                shopEnabled: blocks.some(block => ['product_grid', 'product_collection'].includes(block.type) && block.visible),
+                bookingEnabled: blocks.some(block => block.type === 'booking' && block.visible),
+            };
+            const updatedData = await updateBioPageDraft({
+                page: currentBioPage as any,
+                slug: slug || currentBioPage.slug || currentBioPage.username,
                 profile,
                 theme,
                 links,
+                blocks,
                 products,
                 emailSignupEnabled,
-                updatedAt: new Date().toISOString(),
+                seo,
+                settings: nextSettings,
             });
 
-            await updateDoc(bioPageRef, updatedData);
-
-            setBioPage(prev => prev ? { ...prev, ...updatedData } : null);
+            setBioPage(updatedData);
+            bioPageRef.current = updatedData;
+            setLinks(updatedData.links || links);
+            setBlocks(updatedData.blocks || blocks);
+            setProfile(updatedData.profile || profile);
+            setTheme(updatedData.theme || theme);
+            setProducts(updatedData.products || products);
+            setEmailSignupEnabled(updatedData.emailSignupEnabled || false);
+            setSlug(updatedData.slug || updatedData.username || slug);
+            setSeo(updatedData.seo || seo);
+            setSettings(updatedData.settings || nextSettings);
             setHasUnsavedChanges(false);
 
             console.log('[BioPageContext] Saved bio page');
@@ -433,7 +497,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         } finally {
             setIsSaving(false);
         }
-    }, [user, bioPage, profile, theme, links, products, emailSignupEnabled, currentTenantId]);
+    }, [user, bioPage, profile, theme, links, blocks, products, emailSignupEnabled, slug, seo, settings, currentTenantId]);
 
     // ==========================================================================
     // LINK OPERATIONS
@@ -441,27 +505,30 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const addLink = useCallback((linkData: Partial<BioLink>) => {
         const newLink: BioLink = {
-            id: Date.now().toString(),
+            id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `link_${Date.now()}`,
             title: linkData.title || 'New Link',
             url: linkData.url || '',
             enabled: true,
             clicks: 0,
             linkType: linkData.linkType || 'link',
             platform: linkData.platform,
-            order: links.length,
+            order: linkData.order ?? 0,
             ...linkData,
         };
 
-        const newLinks = [newLink, ...links];
+        const newLinks = [
+            { ...newLink, order: 0 },
+            ...links.map((link, index) => ({ ...link, order: index + 1 })),
+        ];
         setLinks(newLinks);
-        
+
         pushBioPageUndoAction('Añadió un enlace', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
     }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
 
     const updateLink = useCallback((linkId: string, updates: Partial<BioLink>) => {
         setLinks(prev => prev.map(link =>
-            link.id === linkId ? { ...link, ...updates } : link
+            link.id === linkId ? { ...link, ...updates, userModified: true } : link
         ));
         markUnsaved();
     }, [markUnsaved]);
@@ -479,7 +546,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
             const link = linkMap.get(id);
             return link ? { ...link, order: index } : null;
         }).filter(Boolean) as BioLink[];
-        
+
         setLinks(newLinks);
         pushBioPageUndoAction('Reordenó los enlaces', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
@@ -493,6 +560,101 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         pushBioPageUndoAction('Alternó visibilidad de enlace', { ...getCurrentBioPageState(), links: newLinks });
         markUnsaved();
     }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
+
+    const duplicateLink = useCallback((linkId: string) => {
+        if (!links.some(link => link.id === linkId)) return;
+        const newLinks = duplicateBioPageLinkDraft(links, linkId);
+        setLinks(newLinks);
+        pushBioPageUndoAction('Duplicó un enlace', { ...getCurrentBioPageState(), links: newLinks });
+        markUnsaved();
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
+
+    const prioritizeLink = useCallback((linkId: string) => {
+        if (!links.some(link => link.id === linkId)) return;
+        const newLinks = prioritizeBioPageLinkDraft(links, linkId);
+        setLinks(newLinks);
+        pushBioPageUndoAction('Priorizó un enlace', { ...getCurrentBioPageState(), links: newLinks });
+        markUnsaved();
+    }, [links, markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
+
+    // ==========================================================================
+    // BLOCK OPERATIONS
+    // ==========================================================================
+
+    const addBlock = useCallback((blockData: Partial<BioPageBlock> & Pick<BioPageBlock, 'type'>) => {
+        const newBlock: BioPageBlock = {
+            id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `block_${Date.now()}`,
+            type: blockData.type,
+            title: blockData.title || blockData.type.replace(/_/g, ' '),
+            description: blockData.description,
+            order: blocks.length,
+            visible: blockData.visible !== false,
+            status: blockData.status || 'draft',
+            sourceModule: blockData.sourceModule || 'bio-page-engine',
+            sourceEntityId: blockData.sourceEntityId,
+            data: blockData.data || {},
+            settings: blockData.settings || {},
+            needsReview: blockData.needsReview,
+            generatedByAI: blockData.generatedByAI,
+            userModified: true,
+            lockedFromRegeneration: blockData.lockedFromRegeneration,
+        };
+        const newBlocks = [...blocks, newBlock];
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Añadió un bloque', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
+
+    const updateBlock = useCallback((blockId: string, updates: Partial<BioPageBlock>) => {
+        setBlocks(prev => prev.map(block =>
+            block.id === blockId ? { ...block, ...updates, userModified: true } : block
+        ));
+        markUnsaved();
+    }, [markUnsaved]);
+
+    const deleteBlock = useCallback((blockId: string) => {
+        const newBlocks = blocks.filter(block => block.id !== blockId).map((block, index) => ({ ...block, order: index }));
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Eliminó un bloque', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
+
+    const reorderBlocks = useCallback((blockIds: string[]) => {
+        const blockMap = new Map(blocks.map(block => [block.id, block]));
+        const newBlocks = blockIds.map((id, index) => {
+            const block = blockMap.get(id);
+            return block ? { ...block, order: index } : null;
+        }).filter(Boolean) as BioPageBlock[];
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Reordenó los bloques', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
+
+    const toggleBlock = useCallback((blockId: string) => {
+        const newBlocks = blocks.map(block =>
+            block.id === blockId ? { ...block, visible: !block.visible, status: block.visible ? 'hidden' as const : 'configured' as const, userModified: true } : block
+        );
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Alternó visibilidad de bloque', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
+
+    const duplicateBlock = useCallback((blockId: string) => {
+        const source = blocks.find(block => block.id === blockId);
+        if (!source || source.type === 'profile' || source.type === 'link') return;
+        const newBlocks = duplicateBioPageBlockDraft(blocks, blockId);
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Duplicó un bloque', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
+
+    const prioritizeBlock = useCallback((blockId: string) => {
+        if (!blocks.some(block => block.id === blockId)) return;
+        const newBlocks = prioritizeBioPageBlockDraft(blocks, blockId);
+        setBlocks(newBlocks);
+        pushBioPageUndoAction('Priorizó un bloque', { ...getCurrentBioPageState(), blocks: newBlocks });
+        markUnsaved();
+    }, [blocks, getCurrentBioPageState, markUnsaved, pushBioPageUndoAction]);
 
     // ==========================================================================
     // PROFILE OPERATIONS
@@ -520,42 +682,53 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const handleSetEmailSignupEnabled = useCallback((enabled: boolean) => {
         setEmailSignupEnabled(enabled);
+        setSettings(prev => ({ ...prev, emailSignupEnabled: enabled }));
         pushBioPageUndoAction(enabled ? 'Habilitó captura de leads' : 'Deshabilitó captura de leads', { ...getCurrentBioPageState(), emailSignupEnabled: enabled });
         markUnsaved();
     }, [markUnsaved, pushBioPageUndoAction, getCurrentBioPageState]);
+
+    const updateSlug = useCallback((value: string) => {
+        const nextSlug = normalizeBioSlug(value);
+        setSlug(nextSlug);
+        setBioPage(prev => prev ? { ...prev, slug: nextSlug, username: nextSlug } : prev);
+        markUnsaved();
+    }, [markUnsaved]);
+
+    const updateSEO = useCallback((updates: Partial<BioPageSEO>) => {
+        setSeo(prev => ({ ...prev, ...updates }));
+        markUnsaved();
+    }, [markUnsaved]);
+
+    const updateSettings = useCallback((updates: Partial<BioPageSettings>) => {
+        setSettings(prev => ({ ...prev, ...updates }));
+        markUnsaved();
+    }, [markUnsaved]);
 
     // ==========================================================================
     // PUBLISH
     // ==========================================================================
 
-    const publishBioPage = useCallback(async (): Promise<boolean> => {
-        if (!user || !bioPage) return false;
+    const publishBioPage = useCallback(async (): Promise<BioPagePublishResult> => {
+        const currentBioPage = bioPageRef.current || bioPage;
+        if (!user || !currentBioPage) return { ok: false, error: 'Bio Page is not ready to publish.' };
 
         try {
             // First save any pending changes
             await saveBioPage();
 
-            // Update isPublished flag in user's bio page
-            const bioPageRef = getBioPageDocRef(user.id, currentTenantId, bioPage.id);
-
-            await updateDoc(bioPageRef, {
-                isPublished: true,
-                updatedAt: new Date().toISOString(),
-            });
-
             // Fetch the project's aiAssistant config if projectId is available
             let aiAssistant = null;
-            if (bioPage.projectId) {
+            if (currentBioPage.projectId) {
                 try {
                     // Try the correct projects collection path based on tenant
                     const projectPathSegments = getProjectsCollectionPath(user.id, currentTenantId);
-                    const projectRef = doc(db, ...projectPathSegments, bioPage.projectId);
+                    const projectRef = doc(db, ...projectPathSegments, currentBioPage.projectId);
                     let projectSnap = await getDoc(projectRef);
 
                     // If not found, try the alternate path (in case project is stored in user path when using tenant)
                     if (!projectSnap.exists() && currentTenantId) {
                         console.log('[BioPageContext] Project not found in tenant path, trying user path...');
-                        const userProjectRef = doc(db, 'users', user.id, 'projects', bioPage.projectId);
+                        const userProjectRef = doc(db, 'users', user.id, 'projects', currentBioPage.projectId);
                         projectSnap = await getDoc(userProjectRef);
                     }
 
@@ -565,46 +738,79 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                         aiAssistant = projectData?.aiAssistant || projectData?.aiAssistantConfig || null;
                         console.log('[BioPageContext] Found aiAssistant config:', !!aiAssistant);
                     } else {
-                        console.warn('[BioPageContext] Project not found for aiAssistant:', bioPage.projectId);
+                        console.warn('[BioPageContext] Project not found for aiAssistant:', currentBioPage.projectId);
                     }
                 } catch (e) {
                     console.warn('[BioPageContext] Could not fetch aiAssistant:', e);
                 }
             }
 
-            // Create/update public bio page for anonymous access
-            // Using username as the document ID for direct URL access
-            const publicBioRef = doc(db, 'publicBioPages', bioPage.username.toLowerCase());
-
-            const publicBioData: Record<string, any> = {
-                username: bioPage.username.toLowerCase(),
-                profile: removeUndefinedValues(bioPage.profile),
-                theme: removeUndefinedValues(bioPage.theme),
-                links: bioPage.links.map(l => removeUndefinedValues(l)),
-                emailSignupEnabled: emailSignupEnabled,
-                isPublished: true,
-                ownerId: user.id,
-                tenantId: currentTenantId || null,
-                projectId: bioPage.projectId || bioPage.id,
-                updatedAt: new Date().toISOString(),
+            const nextSettings: BioPageSettings = {
+                ...(currentBioPage.settings || {}),
+                ...settings,
+                emailSignupEnabled,
+                aiAssistant,
+                chatbotEnabled: Boolean(aiAssistant) || blocks.some(block => block.type === 'chatbot_cta' && block.visible),
+                leadCaptureEnabled: blocks.some(block => block.type === 'lead_form' && block.visible),
+                shopEnabled: blocks.some(block => ['product_grid', 'product_collection'].includes(block.type) && block.visible),
+                bookingEnabled: blocks.some(block => block.type === 'booking' && block.visible),
             };
+            const updatedDraft = await updateBioPageDraft({
+                page: currentBioPage as any,
+                slug: slug || currentBioPage.slug || currentBioPage.username,
+                profile,
+                theme,
+                links,
+                blocks,
+                products,
+                emailSignupEnabled,
+                seo,
+                settings: nextSettings,
+            });
+            const published = await publishCanonicalBioPage(updatedDraft.id);
 
-            // Include aiAssistant if available
-            if (aiAssistant) {
-                publicBioData.aiAssistant = aiAssistant;
-            }
+            setBioPage(published);
+            bioPageRef.current = published;
+            setLinks(published.links || links);
+            setBlocks(published.blocks || blocks);
+            setProfile(published.profile || profile);
+            setTheme(published.theme || theme);
+            setProducts(published.products || products);
+            setEmailSignupEnabled(published.emailSignupEnabled || false);
+            setSlug(published.slug || published.username || slug);
+            setSeo(published.seo || seo);
+            setSettings(published.settings || nextSettings);
 
-            await setDoc(publicBioRef, publicBioData, { merge: true });
-
-            setBioPage(prev => prev ? { ...prev, isPublished: true } : null);
-
-            console.log('[BioPageContext] Published bio page to publicBioPages collection');
-            return true;
+            console.log('[BioPageContext] Published canonical bio page');
+            return { ok: true };
         } catch (error) {
             console.error('[BioPageContext] Error publishing bio page:', error);
+            return { ok: false, error: error instanceof Error ? error.message : 'Failed to publish Bio Page.' };
+        }
+    }, [user, bioPage, saveBioPage, currentTenantId, profile, theme, links, blocks, products, emailSignupEnabled, slug, seo, settings]);
+
+    const unpublishBioPage = useCallback(async (): Promise<boolean> => {
+        const currentBioPage = bioPageRef.current || bioPage;
+        if (!user || !currentBioPage?.id) return false;
+
+        try {
+            await unpublishCanonicalBioPage(currentBioPage.id);
+            const nextBioPage = {
+                ...currentBioPage,
+                isPublished: false,
+                status: 'draft' as const,
+                publishedAt: null,
+            };
+            setBioPage(nextBioPage);
+            bioPageRef.current = nextBioPage;
+            setHasUnsavedChanges(false);
+            console.log('[BioPageContext] Unpublished canonical bio page');
+            return true;
+        } catch (error) {
+            console.error('[BioPageContext] Error unpublishing bio page:', error);
             return false;
         }
-    }, [user, bioPage, saveBioPage, currentTenantId]);
+    }, [bioPage, user]);
 
     // ==========================================================================
     // AUTO-SAVE EFFECT
@@ -626,7 +832,7 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 clearTimeout(autoSaveTimerRef.current);
             }
         };
-    }, [links, profile, theme, products, emailSignupEnabled, bioPage, hasUnsavedChanges, saveBioPage]);
+    }, [links, blocks, profile, theme, products, emailSignupEnabled, slug, seo, settings, bioPage, hasUnsavedChanges, saveBioPage]);
 
     // ==========================================================================
     // CONTEXT VALUE
@@ -648,6 +854,17 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
         deleteLink,
         reorderLinks,
         toggleLink,
+        duplicateLink,
+        prioritizeLink,
+
+        blocks,
+        addBlock,
+        updateBlock,
+        deleteBlock,
+        reorderBlocks,
+        toggleBlock,
+        duplicateBlock,
+        prioritizeBlock,
 
         profile,
         updateProfile,
@@ -660,8 +877,15 @@ export const BioPageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         emailSignupEnabled,
         setEmailSignupEnabled: handleSetEmailSignupEnabled,
+        slug,
+        updateSlug,
+        seo,
+        updateSEO,
+        settings,
+        updateSettings,
 
         publishBioPage,
+        unpublishBioPage,
 
         pushBioPageUndoAction,
         getCurrentBioPageState,

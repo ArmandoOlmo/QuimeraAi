@@ -7,6 +7,8 @@ import type {
     BlueprintModuleState,
     BlueprintReadiness,
     BlueprintSource,
+    BioPageBlueprint,
+    BioPageLinkBlueprint,
     ChatbotBlueprint,
     EcommerceBlueprint,
     EmailMarketingBlueprint,
@@ -44,6 +46,8 @@ export interface BusinessBlueprintAdapterOptions {
     source?: BlueprintSource;
     now?: string;
 }
+
+type BioPageLinkDraft = Partial<BioPageLinkBlueprint> & Pick<BioPageLinkBlueprint, 'id' | 'title' | 'url' | 'linkType' | 'priority' | 'status'>;
 
 const ECOMMERCE_SECTIONS = new Set<PageSection>([
     'announcementBar',
@@ -145,6 +149,138 @@ function toBlueprintId(prefix: string, value: string, index: number): string {
         .slice(0, 48);
 
     return `${prefix}-${slug || index + 1}`;
+}
+
+function stringValue(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeUrlLike(value: string): string {
+    if (/^https?:\/\//i.test(value)) return value;
+    return '';
+}
+
+function normalizeSocialProfileUrl(platform: string, value: unknown): string {
+    const raw = stringValue(value);
+    if (!raw) return '';
+    const asUrl = normalizeUrlLike(raw);
+    if (asUrl && !new RegExp(`^https?:\\/\\/(www\\.)?${platform}\\.com\\/?$`, 'i').test(asUrl)) return asUrl;
+    const handle = raw
+        .replace(/^@/, '')
+        .replace(/^https?:\/\/(www\.)?[^/]+\//i, '')
+        .replace(/\/$/, '')
+        .trim();
+    if (!handle || ['profile', 'username', 'handle'].includes(handle.toLowerCase())) return '';
+
+    const profileBase: Record<string, string> = {
+        instagram: 'https://instagram.com/',
+        facebook: 'https://facebook.com/',
+        twitter: 'https://twitter.com/',
+        tiktok: 'https://tiktok.com/@',
+        linkedin: 'https://linkedin.com/in/',
+        youtube: 'https://youtube.com/@',
+    };
+    return profileBase[platform] ? `${profileBase[platform]}${handle}` : '';
+}
+
+function createBioPageSocialLinks(contactInfo: Record<string, any> = {}): BioPageLinkDraft[] {
+    const socialSources = [
+        { platform: 'instagram', title: 'Instagram', value: contactInfo.instagram || contactInfo.ig },
+        { platform: 'tiktok', title: 'TikTok', value: contactInfo.tiktok },
+        { platform: 'facebook', title: 'Facebook', value: contactInfo.facebook },
+        { platform: 'twitter', title: 'X / Twitter', value: contactInfo.twitter || contactInfo.x },
+        { platform: 'linkedin', title: 'LinkedIn', value: contactInfo.linkedin },
+        { platform: 'youtube', title: 'YouTube', value: contactInfo.youtube },
+    ];
+
+    const socialLinks: BioPageLinkDraft[] = socialSources
+        .map((source, index): BioPageLinkDraft | null => {
+            const url = normalizeSocialProfileUrl(source.platform, source.value);
+            if (!url) return null;
+            return {
+                id: `bio-link-social-${source.platform}`,
+                title: source.title,
+                url,
+                platform: source.platform,
+                linkType: 'social' as const,
+                priority: 20 + index,
+                status: 'needs_review' as const,
+                openInNewTab: true,
+                sourceMap: { url: `websitePlan.businessProfile.contactInfo.${source.platform}` },
+            };
+        })
+        .filter((link): link is BioPageLinkDraft => Boolean(link));
+
+    const whatsappValue = stringValue(contactInfo.whatsapp || contactInfo.whatsApp);
+    const whatsappDigits = whatsappValue.replace(/\D/g, '');
+    if (whatsappDigits.length >= 8) {
+        socialLinks.push({
+            id: 'bio-link-social-whatsapp',
+            title: 'WhatsApp',
+            url: `https://wa.me/${whatsappDigits}`,
+            platform: 'whatsapp',
+            linkType: 'social' as const,
+            priority: 30,
+            status: 'needs_review' as const,
+            openInNewTab: true,
+            sourceMap: { url: 'websitePlan.businessProfile.contactInfo.whatsapp' },
+        });
+    }
+
+    return socialLinks;
+}
+
+function titleFromMediaPath(value: string, fallback: string): string {
+    const cleaned = value
+        .split(/[/.]/)
+        .filter(Boolean)
+        .slice(-2)
+        .join(' ')
+        .replace(/[-_]+/g, ' ')
+        .trim();
+    return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : fallback;
+}
+
+function createBioPageMediaItems(plan: WebsitePlan): Array<Record<string, unknown>> {
+    const seenUrls = new Set<string>();
+    const items: Array<Record<string, unknown>> = [];
+
+    const addItem = (item: Record<string, unknown>) => {
+        const url = typeof item.url === 'string' ? item.url.trim() : '';
+        if (!url || seenUrls.has(url)) return;
+        seenUrls.add(url);
+        items.push(item);
+    };
+
+    (plan.contentMap.extractedImages || []).forEach((image, index) => {
+        addItem({
+            id: `bio-media-import-${index + 1}`,
+            title: image.alt || image.recommendedUse || `Imported media ${index + 1}`,
+            alt: image.alt || '',
+            url: image.url,
+            imageUrl: image.url,
+            type: 'image',
+            source: 'imported-url',
+            sourcePage: image.sourcePage,
+            recommendedUse: image.recommendedUse,
+        });
+    });
+
+    plan.assetPlan.forEach((asset, index) => {
+        if (!asset.existingUrl) return;
+        addItem({
+            id: `bio-media-asset-${index + 1}`,
+            title: titleFromMediaPath(asset.targetPath, `Project media ${index + 1}`),
+            url: asset.existingUrl,
+            imageUrl: asset.existingUrl,
+            type: 'image',
+            source: asset.source,
+            targetPath: asset.targetPath,
+            aspectRatio: asset.aspectRatio,
+        });
+    });
+
+    return items.slice(0, 9);
 }
 
 function defaultAppointmentWeeklyHours() {
@@ -305,11 +441,214 @@ function createLeadBlueprint(plan: WebsitePlan, now: string): LeadBlueprint {
 }
 
 function createEmailMarketingBlueprint(plan: WebsitePlan, now: string): EmailMarketingBlueprint {
+    const hasAppointments = getPlannedSections(plan).some(section => ['appointmentBooking', 'appointmentsQuimera'].includes(section));
+    const hasRestaurant = normalizeIndustry(plan.businessProfile.industry).includes('restaurant');
+    const hasRealEstate = normalizeIndustry(plan.businessProfile.industry).includes('real');
+    const transactionalFlows = [
+        {
+            id: 'lead-nurture-start',
+            type: 'lead_nurture_start',
+            sourceModule: 'crm' as const,
+            triggerEvent: 'lead_created' as const,
+            subjectDraft: 'Thanks for reaching out, {{leadName}}',
+            bodyOutlineDraft: 'Acknowledge the inquiry and introduce the next best action.',
+            variablesNeeded: ['leadName', 'businessName'],
+            templateKey: 'lead_nurture_start',
+            enabled: false,
+            status: 'needs_review' as const,
+            sendMode: 'draft_only' as const,
+            idempotencyRequired: true,
+            needsReview: true,
+            readiness: ready(['Sender, consent, template, and audience review required.']),
+        },
+        ...(plan.businessProfile.hasEcommerce ? [
+            {
+                id: 'ecommerce-order-confirmation',
+                type: 'order_confirmation',
+                sourceModule: 'ecommerce' as const,
+                triggerEvent: 'order_created' as const,
+                subjectDraft: 'Order received: {{orderNumber}}',
+                bodyOutlineDraft: 'Confirm order details using real order data only.',
+                variablesNeeded: ['orderNumber', 'customerName', 'orderSummary'],
+                templateKey: 'order_confirmation',
+                enabled: false,
+                status: 'needs_review' as const,
+                sendMode: 'draft_only' as const,
+                idempotencyRequired: true,
+                needsReview: true,
+                readiness: ready(['Ecommerce transactional flow must be reviewed and explicitly enabled.']),
+            },
+            {
+                id: 'ecommerce-abandoned-cart',
+                type: 'abandoned_cart',
+                sourceModule: 'ecommerce' as const,
+                triggerEvent: 'cart_abandoned' as const,
+                subjectDraft: 'Still thinking it over?',
+                bodyOutlineDraft: 'Recover cart only when consent and cart data are available.',
+                variablesNeeded: ['customerName', 'cartItems', 'checkoutUrl'],
+                templateKey: 'abandoned_cart',
+                enabled: false,
+                status: 'needs_review' as const,
+                sendMode: 'draft_only' as const,
+                idempotencyRequired: true,
+                needsReview: true,
+                readiness: ready(['Marketing consent and unsubscribe are required before activation.']),
+            },
+        ] : []),
+        ...(hasAppointments ? [{
+            id: 'appointment-confirmation',
+            type: 'appointment_confirmation',
+            sourceModule: 'appointments' as const,
+            triggerEvent: 'appointment_created' as const,
+            subjectDraft: 'Your appointment is confirmed',
+            bodyOutlineDraft: 'Confirm appointment details using the appointment source of truth.',
+            variablesNeeded: ['customerName', 'appointmentDate', 'appointmentTime'],
+            templateKey: 'appointment_confirmation',
+            enabled: false,
+            status: 'needs_review' as const,
+            sendMode: 'draft_only' as const,
+            idempotencyRequired: true,
+            needsReview: true,
+            readiness: ready(['Appointments flow remains disabled until reviewed.']),
+        }] : []),
+        ...(hasRestaurant ? [{
+            id: 'restaurant-reservation-confirmation',
+            type: 'reservation_confirmed',
+            sourceModule: 'restaurant' as const,
+            triggerEvent: 'reservation_created' as const,
+            subjectDraft: 'Reservation received for {{restaurantName}}',
+            bodyOutlineDraft: 'Confirm reservation details and next steps.',
+            variablesNeeded: ['restaurantName', 'reservationDate', 'partySize'],
+            templateKey: 'reservation_confirmed',
+            enabled: false,
+            status: 'needs_review' as const,
+            sendMode: 'draft_only' as const,
+            idempotencyRequired: true,
+            needsReview: true,
+            readiness: ready(['Restaurant flow remains disabled until reviewed.']),
+        }] : []),
+        ...(hasRealEstate ? [{
+            id: 'realty-property-inquiry-follow-up',
+            type: 'property_inquiry_received',
+            sourceModule: 'real-estate' as const,
+            triggerEvent: 'realty_property_inquiry' as const,
+            subjectDraft: 'Thanks for your property inquiry',
+            bodyOutlineDraft: 'Follow up on the exact property inquiry with agent next steps.',
+            variablesNeeded: ['leadName', 'propertyTitle', 'agentName'],
+            templateKey: 'property_inquiry_received',
+            enabled: false,
+            status: 'needs_review' as const,
+            sendMode: 'draft_only' as const,
+            idempotencyRequired: true,
+            needsReview: true,
+            readiness: ready(['Realty flow remains disabled until reviewed.']),
+        }] : []),
+    ];
+
     return {
         ...createBlueprintModuleState(now, {
             needsReview: true,
             readiness: ready(['Email flows are drafts until sender, templates, and audiences are configured.']),
         }),
+        sender: {
+            provider: 'unset',
+            providerStatus: 'not_configured',
+            domainStatus: 'not_configured',
+            readiness: ready(['Provider, sender, and domain are not configured.']),
+            needsReview: true,
+        },
+        branding: {
+            primaryColor: plan.brandProfile.colors?.primary,
+            logoUrl: plan.brandProfile.logoUrl,
+            defaultTemplateStyle: plan.brandProfile.visualStyle,
+            unsubscribeFooterEnabled: true,
+            needsReview: true,
+        },
+        consent: {
+            requireMarketingConsent: true,
+            consentSources: ['newsletter_signup', 'checkout', 'lead_form'],
+            unsubscribeEnabled: true,
+            suppressionEnabled: true,
+            doubleOptInEnabled: false,
+            complianceRegion: 'global',
+            needsReview: true,
+        },
+        audiences: [
+            {
+                id: 'newsletter-signups',
+                name: 'Newsletter signups',
+                description: 'Draft audience for contacts who explicitly opt in from website forms.',
+                type: 'cross_module',
+                sourceModules: ['website-builder', 'crm'],
+                filters: [{ event: 'newsletter_signup', consentRequired: true }],
+                tags: ['newsletter'],
+                estimatedCount: 0,
+                status: 'needs_review',
+                needsReview: true,
+                generatedByAI: true,
+                userModified: false,
+            },
+        ],
+        campaigns: [
+            {
+                id: 'newsletter-campaign-draft',
+                name: 'Newsletter campaign draft',
+                type: 'newsletter',
+                subjectDraft: `Latest from ${plan.businessProfile.businessName || 'our team'}`,
+                previewTextDraft: 'A reviewed newsletter draft generated by AI Studio.',
+                audienceId: 'newsletter-signups',
+                blocks: [],
+                status: 'needs_review',
+                generatedByAI: true,
+                needsReview: true,
+                userModified: false,
+                lockedFromRegeneration: false,
+            },
+        ],
+        automations: [
+            {
+                id: 'welcome-flow-draft',
+                name: 'Welcome flow draft',
+                type: 'welcome',
+                category: 'lifecycle',
+                triggerEvent: 'newsletter_signup',
+                sourceModule: 'website-builder',
+                audienceId: 'newsletter-signups',
+                steps: [],
+                status: 'needs_review',
+                readiness: ready(['Sender, audience, template, consent, and unsubscribe must be reviewed.']),
+                generatedByAI: true,
+                needsReview: true,
+                userModified: false,
+            },
+        ],
+        transactionalFlows,
+        providerReadiness: {
+            providerConfigured: false,
+            senderConfigured: false,
+            domainVerified: false,
+            unsubscribeConfigured: true,
+            suppressionConfigured: true,
+            trackingConfigured: false,
+            webhookConfigured: false,
+            testEmailSent: false,
+            readinessBlockers: ['Provider and sender must be configured before any send.'],
+            warnings: ['Domain verification and webhooks should be configured for production deliverability.'],
+        },
+        analytics: {
+            trackedEvents: ['email_flow_queued', 'email_sent'],
+            webhookEvents: ['delivered', 'opened', 'clicked', 'bounced', 'complained', 'unsubscribed'],
+            dashboardMetrics: ['sent', 'delivered', 'opened', 'clicked', 'bounced', 'complained', 'unsubscribed'],
+            needsReview: true,
+        },
+        crossModule: {
+            eventSources: ['crm', 'ecommerce', 'appointments', 'chatbot', 'restaurant', 'real-estate', 'website-builder'],
+            acceptedEvents: transactionalFlows.map(flow => flow.triggerEvent),
+            flowMappings: {},
+            draftFlowMappings: Object.fromEntries(transactionalFlows.map(flow => [flow.triggerEvent, flow.id])),
+            runtimeEnabled: false,
+            needsReview: true,
+        },
         flows: [
             { type: 'welcome', status: 'draft', triggerEvent: 'newsletter_signup' },
             ...(plan.businessProfile.hasEcommerce
@@ -330,6 +669,461 @@ function createMediaBlueprint(plan: WebsitePlan, now: string): MediaBlueprint {
         imageNeeds: plan.assetPlan.filter(asset => asset.source === 'generate').map(asset => asset.targetPath),
         videoNeeds: [],
         brandAssetNeeds: plan.brandProfile.logoUrl ? [] : ['logo'],
+    };
+}
+
+function createBioPageBlueprint(plan: WebsitePlan, now: string): BioPageBlueprint {
+    const sections = getPlannedSections(plan);
+    const industry = normalizeIndustry(plan.businessProfile.industry);
+    const businessName = plan.businessProfile.businessName || 'Bio Page';
+    const slug = toBlueprintId('bio', businessName, 0).replace(/^bio-/, '').slice(0, 48) || 'bio';
+    const hasEcommerce = Boolean(plan.businessProfile.hasEcommerce);
+    const wantsBooking = hasAppointmentSignal(plan, sections);
+    const wantsPortfolio = sections.some(section => ['portfolio', 'gallery', 'realEstateListings'].includes(section));
+    const mediaItems = createBioPageMediaItems(plan);
+    const mediaAssetTargets = plan.assetPlan.map(asset => asset.targetPath).filter(Boolean);
+    const featuredMediaUrl = typeof mediaItems[0]?.url === 'string' ? mediaItems[0].url : '';
+    const wantsMedia = wantsPortfolio || mediaItems.length > 0 || plan.assetPlan.some(asset => asset.source !== 'none') || Boolean(plan.contentMap.extractedImages?.length);
+    const serviceNames = plan.businessProfile.services.map(service => service.name).filter(Boolean);
+    const colors = plan.brandProfile.colors as Record<string, string>;
+    const socialLinks = createBioPageSocialLinks(plan.businessProfile.contactInfo || {});
+    const leadCaptureFields = [
+        { id: 'name', label: 'Name', type: 'text' as const, required: true },
+        { id: 'email', label: 'Email', type: 'email' as const, required: true },
+        { id: 'message', label: 'Message', type: 'textarea' as const, required: false },
+    ];
+    const leadCaptureConsentText = 'I agree to be contacted about this request.';
+    const leadCaptureSuccessMessage = 'Thanks. We will be in touch soon.';
+    const emailSubscribeConsentText = 'I agree to receive marketing emails.';
+    const emailSubscribePlaceholder = 'Email address';
+    const emailSubscribeButtonText = 'Subscribe';
+    const emailSubscribeSuccessMessage = 'Thanks for subscribing.';
+    const baseLinks: BioPageLinkDraft[] = [
+        {
+            id: 'bio-link-website',
+            title: 'Website',
+            url: '/',
+            linkType: 'internal' as const,
+            priority: 0,
+            status: 'needs_review' as const,
+            sourceMap: { url: 'websiteBuilder.homeRoute' },
+        },
+        ...(serviceNames.length
+            ? [{
+                id: 'bio-link-services',
+                title: 'Services',
+                url: '#services',
+                linkType: 'internal' as const,
+                priority: 1,
+                status: 'needs_review' as const,
+                sourceMap: { title: 'websitePlan.businessProfile.services' },
+            }]
+            : []),
+        ...(hasEcommerce
+            ? [{
+                id: 'bio-link-shop',
+                title: 'Shop',
+                url: '/store/:projectId',
+                linkType: 'collection' as const,
+                priority: 2,
+                status: 'needs_review' as const,
+                sourceMap: { url: 'storefrontBlueprint.routeStrategy' },
+            }]
+            : []),
+        ...(wantsBooking
+            ? [{
+                id: 'bio-link-booking',
+                title: industry === 'restaurant' ? 'Reserve' : 'Book now',
+                url: '#booking',
+                linkType: 'booking' as const,
+                priority: 3,
+                status: 'needs_review' as const,
+                sourceMap: { title: 'appointmentsBlueprint.services' },
+            }]
+            : []),
+    ];
+    const links: BioPageLinkDraft[] = [...baseLinks, ...socialLinks];
+
+    const blocks: BioPageBlueprint['blocks'] = [];
+    const nextBlockOrder = () => blocks.length;
+
+    blocks.push({
+        id: 'bio-block-profile',
+        type: 'profile',
+        title: businessName,
+        description: plan.businessProfile.description,
+        order: nextBlockOrder(),
+        visible: true,
+        status: 'needs_review',
+        sourceModule: 'ai-studio',
+        data: { source: 'businessProfile' },
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: {
+            title: 'websitePlan.businessProfile.businessName',
+            description: 'websitePlan.businessProfile.description',
+        },
+    });
+
+    if (socialLinks.length) {
+        blocks.push({
+            id: 'bio-block-social-links',
+            type: 'social_links',
+            title: 'Social icons',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'ai-studio',
+            data: { linkIds: socialLinks.map(link => link.id), layout: 'icons' },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { links: 'websitePlan.businessProfile.contactInfo' },
+        });
+    }
+
+    blocks.push({
+        id: 'bio-block-links',
+        type: 'link',
+        title: 'Featured links',
+        order: nextBlockOrder(),
+        visible: true,
+        status: 'needs_review',
+        sourceModule: 'ai-studio',
+        data: { linkIds: baseLinks.map(link => link.id) },
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: { links: 'bioPageBlueprint.links' },
+    });
+
+    if (hasEcommerce) {
+        blocks.push({
+            id: 'bio-block-shop',
+            type: 'product_grid',
+            title: 'Shop featured products',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'ecommerce',
+            data: { source: 'ecommerce', productIds: [] },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { products: 'ecommerceBlueprint.starterProducts' },
+        });
+    }
+
+    if (wantsBooking) {
+        blocks.push({
+            id: 'bio-block-booking',
+            type: 'booking',
+            title: industry === 'restaurant' ? 'Reserve a table' : 'Book an appointment',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'appointments',
+            data: { serviceIds: [] },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { services: 'appointmentsBlueprint.services' },
+        });
+    }
+
+    blocks.push({
+        id: 'bio-block-lead-capture',
+        type: 'lead_form',
+        title: 'Contact',
+        order: nextBlockOrder(),
+        visible: true,
+        status: 'needs_review',
+        sourceModule: 'crm',
+        data: {
+            tags: ['bio-page', 'link-in-bio'],
+            fields: leadCaptureFields,
+            consentRequired: true,
+            consentText: leadCaptureConsentText,
+            successMessage: leadCaptureSuccessMessage,
+        },
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: { source: 'leadBlueprint.leadSources' },
+    });
+
+    blocks.push({
+        id: 'bio-block-email',
+        type: 'email_subscribe',
+        title: 'Subscribe',
+        order: nextBlockOrder(),
+        visible: true,
+        status: 'needs_review',
+        sourceModule: 'email-marketing',
+        data: {
+            audienceId: null,
+            placeholder: emailSubscribePlaceholder,
+            buttonText: emailSubscribeButtonText,
+            consentRequired: true,
+            consentText: emailSubscribeConsentText,
+            successMessage: emailSubscribeSuccessMessage,
+        },
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: { source: 'emailMarketingBlueprint.audiences' },
+    });
+
+    if (wantsMedia) {
+        blocks.push({
+            id: 'bio-block-featured-media',
+            type: 'featured_media',
+            title: 'Featured media',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'media-ai',
+            data: {
+                source: 'media-ai',
+                mediaType: 'image',
+                url: featuredMediaUrl,
+                imageUrl: featuredMediaUrl,
+                items: mediaItems.slice(0, 1),
+                assetTargets: mediaAssetTargets,
+                extractedImages: (plan.contentMap.extractedImages || []).slice(0, 6).map(image => image.url).filter(Boolean),
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { media: 'mediaBlueprint.imageNeeds' },
+        });
+    }
+
+    if (wantsPortfolio) {
+        blocks.push({
+            id: 'bio-block-portfolio',
+            type: 'portfolio_grid',
+            title: 'Featured work',
+            order: nextBlockOrder(),
+            visible: true,
+            status: 'needs_review',
+            sourceModule: 'media-ai',
+            data: {
+                source: 'media',
+                items: mediaItems,
+                assetTargets: mediaAssetTargets,
+            },
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            sourceMap: { media: 'websitePlan.assetPlan' },
+        });
+    }
+
+    blocks.push({
+        id: 'bio-block-chat',
+        type: 'chatbot_cta',
+        title: 'Ask AI',
+        order: nextBlockOrder(),
+        visible: true,
+        status: 'needs_review',
+        sourceModule: 'chatcore',
+        data: { source: 'chatbotBlueprint' },
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: { chatbot: 'chatbotBlueprint' },
+    });
+
+    const normalizedLinks: BioPageBlueprint['links'] = links.map((link, index): BioPageLinkBlueprint => ({
+        ...link,
+        description: link.description,
+        icon: link.icon,
+        imageUrl: link.imageUrl,
+        platform: link.platform,
+        openInNewTab: link.openInNewTab ?? ((link.linkType as string) === 'external' || (link.linkType as string) === 'social'),
+        priority: link.priority ?? index,
+        visible: link.visible ?? true,
+        clickTrackingEnabled: link.clickTrackingEnabled ?? true,
+        status: link.status ?? 'needs_review',
+        needsReview: link.needsReview ?? true,
+        generatedByAI: link.generatedByAI ?? true,
+        userModified: link.userModified ?? false,
+    }));
+
+    return {
+        ...createBlueprintModuleState(now, {
+            status: 'needs_review',
+            needsReview: true,
+            readiness: ready([
+                'AI-generated Bio Page content must be reviewed before publishing.',
+                'External links, product references, booking availability, and email audience routing must be confirmed by the user.',
+                'Analytics definitions are prepared only; no fake runtime metrics are generated.',
+            ]),
+            sourceMap: {
+                profile: 'websitePlan.businessProfile',
+                brand: 'websitePlan.brandProfile',
+                links: 'websitePlan.componentPlan',
+                ecommerce: 'ecommerceBlueprint',
+                appointments: 'appointmentsBlueprint',
+                crm: 'leadBlueprint',
+                emailMarketing: 'emailMarketingBlueprint',
+                chatbot: 'chatbotBlueprint',
+                media: 'mediaBlueprint',
+            },
+        }),
+        routeStrategy: 'bio_slug',
+        defaultRoute: '/bio/:slug',
+        publicSlug: slug,
+        title: `${businessName} Bio Page`,
+        description: plan.businessProfile.description || plan.businessProfile.tagline || '',
+        profile: {
+            displayName: businessName,
+            handle: slug,
+            avatarUrl: plan.brandProfile.logoUrl,
+            coverImageUrl: undefined,
+            bio: (plan.businessProfile.tagline || plan.businessProfile.description || '').slice(0, 180),
+            category: plan.businessProfile.industry,
+            location: typeof plan.businessProfile.contactInfo?.city === 'string' ? plan.businessProfile.contactInfo.city : undefined,
+            verifiedBadgeEnabled: false,
+            socialProofEnabled: false,
+            followerCountSource: 'none',
+            primaryCTA: links[0] ? { label: links[0].title, url: links[0].url, linkType: links[0].linkType } : undefined,
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+        },
+        blocks,
+        links: normalizedLinks,
+        socialLinks: normalizedLinks.filter(link => link.linkType === 'social'),
+        theme: {
+            layoutVariant: hasEcommerce ? 'storefront' : wantsPortfolio ? 'portfolio' : industry === 'restaurant' ? 'restaurant' : 'creator',
+            backgroundType: 'gradient',
+            colors: {
+                background: colors.background || '#0f172a',
+                surface: colors.surface || '#111827',
+                primary: colors.primary || '#facc15',
+                secondary: colors.secondary || '#111827',
+                accent: colors.accent || '#38bdf8',
+                text: colors.text || '#ffffff',
+            },
+            typography: {
+                heading: plan.brandProfile.fonts?.[0] || 'Inter',
+                body: plan.brandProfile.fonts?.[1] || plan.brandProfile.fonts?.[0] || 'Inter',
+            },
+            buttonStyle: 'solid',
+            buttonRadius: 14,
+            cardRadius: 16,
+            spacing: 'balanced',
+            profileAlignment: 'center',
+            showQuimeraFooter: true,
+            customCssDisabled: true,
+            needsReview: true,
+        },
+        shop: {
+            enabled: hasEcommerce,
+            source: 'ecommerce',
+            featuredProducts: [],
+            collections: [],
+            showPrices: true,
+            showProductImages: true,
+            productCardVariant: 'compact',
+            shopTabEnabled: hasEcommerce,
+            needsReview: hasEcommerce,
+        },
+        booking: {
+            enabled: wantsBooking,
+            source: 'appointments',
+            services: [],
+            bookingCTA: industry === 'restaurant' ? 'Reserve' : 'Book now',
+            bookingBlockEnabled: wantsBooking,
+            confirmationMode: 'manual',
+            needsReview: wantsBooking,
+        },
+        leadCapture: {
+            enabled: true,
+            source: 'crm',
+            formTitle: 'Contact',
+            fields: leadCaptureFields,
+            consentRequired: true,
+            consentText: leadCaptureConsentText,
+            leadTags: ['bio-page', 'link-in-bio'],
+            leadSource: 'bio_page',
+            successMessage: leadCaptureSuccessMessage,
+            needsReview: true,
+        },
+        emailSubscribe: {
+            enabled: true,
+            source: 'emailMarketing',
+            consentText: emailSubscribeConsentText,
+            placeholder: emailSubscribePlaceholder,
+            buttonText: emailSubscribeButtonText,
+            successMessage: emailSubscribeSuccessMessage,
+            doubleOptIn: false,
+            needsReview: true,
+        },
+        chatbot: {
+            enabled: true,
+            source: 'chatbot',
+            floatingChatEnabled: true,
+            inlineCTAEnabled: true,
+            welcomePrompt: `Help visitors learn about ${businessName} and route them to links, products, bookings, or lead capture when configured.`,
+            leadCaptureEnabled: true,
+            needsReview: true,
+        },
+        analytics: {
+            trackViews: true,
+            trackClicks: true,
+            trackCTR: true,
+            trackSubscribers: true,
+            trackLeads: true,
+            trackBookings: true,
+            trackProductClicks: true,
+            trackSourceUTM: true,
+            events: [
+                'bio_page_viewed',
+                'bio_profile_shared',
+                'bio_qr_scanned',
+                'bio_link_clicked',
+                'bio_social_clicked',
+                'bio_product_clicked',
+                'bio_collection_clicked',
+                'bio_booking_started',
+                'bio_booking_completed',
+                'bio_lead_submitted',
+                'bio_email_subscribed',
+                'bio_chat_opened',
+                'bio_tab_changed',
+            ],
+            needsReview: true,
+        },
+        seo: {
+            title: `${businessName} | Bio`,
+            description: (plan.businessProfile.description || plan.businessProfile.tagline || '').slice(0, 160),
+            ogImageUrl: plan.brandProfile.logoUrl,
+            noIndex: true,
+            schemaType: industry === 'local_business' || industry === 'restaurant' ? 'LocalBusiness' : 'Organization',
+            needsReview: true,
+        },
+        qrCode: {
+            enabled: true,
+            status: 'not_generated',
+            color: colors.primary || '#111827',
+            backgroundColor: '#ffffff',
+            logoUrl: plan.brandProfile.logoUrl,
+            needsReview: true,
+        },
+        integrations: {
+            ecommerce: hasEcommerce,
+            appointments: wantsBooking,
+            crm: true,
+            emailMarketing: true,
+            chatbot: true,
+            media: true,
+            analytics: true,
+            websiteBuilder: true,
+        },
     };
 }
 
@@ -1093,6 +1887,7 @@ export function createBusinessBlueprintFromWebsitePlan(
         leadBlueprint: createLeadBlueprint(plan, now),
         emailMarketingBlueprint: createEmailMarketingBlueprint(plan, now),
         mediaBlueprint: createMediaBlueprint(plan, now),
+        bioPageBlueprint: createBioPageBlueprint(plan, now),
         appointmentsBlueprint: createAppointmentsBlueprint(plan, now),
         restaurantBlueprint: createRestaurantBlueprint(plan, now),
         realEstateBlueprint: createRealEstateBlueprint(plan, now),

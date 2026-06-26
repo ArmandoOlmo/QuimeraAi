@@ -57,6 +57,7 @@ export const ROUTES = {
   COOKIE_POLICY: '/cookie-policy',
   HELP_CENTER: '/help-center',
   CHANGELOG: '/changelog',
+  EMAIL_UNSUBSCRIBE: '/email/unsubscribe',
 
   // OAuth Callback Routes
   META_OAUTH_ERROR: '/auth/meta/error',
@@ -237,6 +238,12 @@ export const routeConfigs: RouteConfig[] = [
     path: ROUTES.CHANGELOG,
     type: 'public',
     title: 'Changelog',
+    requiresAuth: false,
+  },
+  {
+    path: ROUTES.EMAIL_UNSUBSCRIBE,
+    type: 'public',
+    title: 'Unsubscribe',
     requiresAuth: false,
   },
   {

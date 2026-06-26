@@ -9,6 +9,7 @@ import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getSh
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
 import { supabase } from '../supabase';
 import { createAppointmentFromChat, getAppointmentsByProject } from '../services/appointments/appointmentEngineService';
+import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
 import { useRouter } from '../hooks/useRouter';
@@ -371,7 +372,29 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             ...leadData,
             source: 'chatbot-widget' as const,
             status: 'new' as const,
-            tags: ['chatbot-widget', ...(leadData.tags || [])]
+            tags: ['chatbot-widget', ...(leadData.tags || [])],
+            metadata: {
+                ...(leadData.metadata || {}),
+                canonicalEmail: (leadData.metadata as Record<string, unknown> | undefined)?.canonicalEmail || buildCanonicalEmailDraftMetadata({
+                    sourceModule: 'chatcore',
+                    sourceComponent: 'ChatbotWidget',
+                    sourceEvent: 'chatbot_widget_lead_capture',
+                    sourceEntityType: 'lead',
+                    sourceEntityId: leadData.email || widgetApiProjectId || projectIdForApi,
+                    projectId: projectIdForApi,
+                    recipientEmail: leadData.email,
+                    needsReview: true,
+                    safeToEdit: true,
+                    generatedByAI: Boolean(leadData.aiAnalysis || leadData.aiScore || leadData.recommendedAction),
+                    consentSource: 'chatbot-widget',
+                    transactionalConsent: null,
+                    marketingConsent: null,
+                    extra: {
+                        widgetApiProjectId,
+                        captureSource: leadData.source || 'chatbot-widget',
+                    },
+                }),
+            },
         };
 
         // If addLead is available (editor context), use it

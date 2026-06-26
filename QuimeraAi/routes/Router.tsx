@@ -35,6 +35,7 @@ const TermsOfServicePage = lazyWithRetry(() => import('../components/legal/Terms
 const CookiePolicyPage = lazyWithRetry(() => import('../components/legal/CookiePolicyPage'));
 const HelpCenterPage = lazyWithRetry(() => import('../components/legal/HelpCenterPage'));
 const ChangelogPage = lazyWithRetry(() => import('../components/ChangelogPage'));
+const PublicEmailUnsubscribePage = lazyWithRetry(() => import('../components/PublicEmailUnsubscribePage'));
 
 // Admin pages
 const SeedArticlesPage = lazyWithRetry(() => import('../components/admin/SeedArticlesPage'));
@@ -549,6 +550,14 @@ const Router: React.FC<RouterProps> = ({
     );
   }
 
+  if (path === '/email/unsubscribe') {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PublicEmailUnsubscribePage />
+      </Suspense>
+    );
+  }
+
   // =========================================================================
   // MARKETING PAGES (Public)
   // =========================================================================
@@ -715,6 +724,5 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
 
 

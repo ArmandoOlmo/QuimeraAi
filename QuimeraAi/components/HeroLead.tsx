@@ -7,6 +7,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
+import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
 
 // ── Utility maps ──────────────────────────────────────────────────────────────
 
@@ -169,6 +170,27 @@ const HeroLead: React.FC<HeroLeadProps> = ({
           hasHighIntent ? 'high-intent' : 'inquiry',
           formData.company ? 'has-company' : 'individual',
         ],
+        metadata: {
+          canonicalEmail: buildCanonicalEmailDraftMetadata({
+            sourceModule: 'website-builder',
+            sourceComponent: 'HeroLead',
+            sourceEvent: 'hero_lead_form_submit',
+            sourceEntityType: 'lead',
+            sourceEntityId: formData.email,
+            projectId: editorContext?.activeProject?.id,
+            recipientEmail: formData.email,
+            generatedByAI: false,
+            needsReview: true,
+            safeToEdit: true,
+            consentSource: 'hero-lead-form',
+            transactionalConsent: true,
+            marketingConsent: null,
+            extra: {
+              highIntent: hasHighIntent,
+              companyProvided: Boolean(formData.company),
+            },
+          }),
+        },
         notes: t('leads.leadCapturedNote', {
           defaultValue: `Lead capturado desde Hero Lead Form.\n\nMensaje:\n{{message}}`,
           message: formData.message,

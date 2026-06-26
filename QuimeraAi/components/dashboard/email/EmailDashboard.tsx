@@ -12,6 +12,7 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
+import { parseEmailReviewQueueParams } from '../../../services/email/emailReviewQueueLinkService.ts';
 import DashboardSidebar from '../DashboardSidebar';
 import QuimeraLoader from '../../ui/QuimeraLoader';
 import EmailProjectSelectorPage from './EmailProjectSelectorPage';
@@ -41,10 +42,11 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
     const { user } = useAuth();
     const { setView } = useUI();
     const { projects, activeProject, activeProjectId } = useProject();
-    const { navigate } = useRouter();
+    const { navigate, query } = useRouter();
     const userId = user?.id || '';
+    const reviewQueueParams = parseEmailReviewQueueParams(query);
 
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(reviewQueueParams.projectId || null);
     const [showAllProjects, setShowAllProjects] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -57,6 +59,12 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
             setSelectedProjectId(activeProjectId);
         }
     }, [activeProjectId]);
+
+    useEffect(() => {
+        if (reviewQueueParams.projectId) {
+            setSelectedProjectId(reviewQueueParams.projectId);
+        }
+    }, [reviewQueueParams.projectId]);
 
     // Loading state
     if (!userId) {
@@ -96,6 +104,9 @@ const EmailDashboard: React.FC<EmailDashboardProps> = ({ projectId: propProjectI
                 userId={userId}
                 projectId={effectiveProjectId}
                 projectName={effectiveProject?.name || ''}
+                initialTab={reviewQueueParams.tab}
+                reviewQueueFilters={reviewQueueParams.filters}
+                hasReviewQueueFilter={reviewQueueParams.hasFilter}
                 onBack={() => setShowAllProjects(true)}
             />
         </EmailDashboardContext.Provider>

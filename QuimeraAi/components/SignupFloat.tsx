@@ -25,6 +25,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from '@/utils/compatData';
+import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
 
 // Map border radius tokens to CSS values
 const borderRadiusMap: Record<BorderRadiusSize, string> = {
@@ -208,6 +209,25 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
     setIsSubmitting(true);
     try {
       const promises: Promise<any>[] = [];
+      const canonicalEmail = buildCanonicalEmailDraftMetadata({
+        sourceModule: 'website-builder',
+        sourceComponent: 'SignupFloat',
+        sourceEvent: 'signup_float_submit',
+        sourceEntityType: 'lead',
+        sourceEntityId: formData.email || resolvedProjectId,
+        projectId: resolvedProjectId,
+        recipientEmail: formData.email,
+        generatedByAI: false,
+        needsReview: true,
+        safeToEdit: true,
+        consentSource: 'signup-float',
+        transactionalConsent: true,
+        marketingConsent: shouldSaveToAudience ? true : null,
+        extra: {
+          saveDestination,
+          targetAudienceId,
+        },
+      });
 
       // 1. Save to CRM
       if (shouldSaveToLeads) {
@@ -223,6 +243,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
               leadScore: 30,
               tags: ['signup-float', 'website'],
               notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+              metadata: { canonicalEmail },
             }).catch((err) => console.error('[SignupFloat] Error saving lead via EditorContext:', err))
           );
         } else if (resolvedOwnerId && resolvedProjectId) {
@@ -238,6 +259,7 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
               leadScore: 30,
               tags: ['signup-float', 'website'],
               notes: formData.message ? `Mensaje del formulario de registro:\n${formData.message}` : '',
+              metadata: { canonicalEmail },
               projectId: resolvedProjectId,
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
@@ -267,7 +289,17 @@ const SignupFloat: React.FC<SignupFloatProps> = ({
               const exists = existingMembers.some((m: any) => m.email?.toLowerCase() === formData.email.toLowerCase());
               
               if (formData.email && !exists) {
-                const newMember = { email: formData.email, name: formData.name || '', source: 'signup-float' };
+                const newMember = {
+                  email: formData.email,
+                  name: formData.name || '',
+                  source: 'signup-float',
+                  consent: {
+                    marketing: true,
+                    source: 'signup-float',
+                    capturedAt: new Date().toISOString(),
+                  },
+                  metadata: { canonicalEmail },
+                };
                 const updatedMembers = [...existingMembers, newMember];
                 
                 await updateDoc(audienceDocRef, {

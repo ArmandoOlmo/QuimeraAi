@@ -6,11 +6,7 @@
  */
 
 import { useState } from 'react';
-import { useAuth } from '../../../../../contexts/core/AuthContext';
-import {
-    db, doc, addDoc, updateDoc, deleteDoc, collection,
-} from '@/utils/compatData';
-import { serverTimestamp } from '@/utils/compatData';
+import { supabase } from '../../../../../supabase';
 import type { UserEmailAudience, ConfirmModalState } from '../types';
 import type { UserEmailDataReturn } from './useUserEmailData';
 
@@ -43,10 +39,7 @@ export function useUserAudienceActions(
     userId: string,
     projectId: string,
 ): UserAudienceActionsReturn {
-    const { user } = useAuth();
     const { audiences, setAudiences } = data;
-
-    const audiencesPath = `users/${userId}/projects/${projectId}/emailAudiences`;
 
     const [showCreateAudience, setShowCreateAudience] = useState(false);
     const [newAudienceForm, setNewAudienceForm] = useState({ name: '', description: '' });
@@ -57,34 +50,31 @@ export function useUserAudienceActions(
     const [audienceMembers, setAudienceMembers] = useState<Record<string, { email: string; name?: string }[]>>({});
 
     const handleCreateAudience = async () => {
-        if (!newAudienceForm.name.trim()) return;
+        if (!userId || !projectId || projectId === 'default' || !newAudienceForm.name.trim()) return;
         try {
-            const docRef = await addDoc(collection(db, audiencesPath), {
-                name: newAudienceForm.name.trim(),
-                description: newAudienceForm.description.trim(),
-                members: [],
-                staticMemberCount: 0,
-                estimatedCount: 0,
-                tags: [],
-                acceptsMarketing: true,
-                source: 'manual',
-                createdBy: user?.id || userId,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'createAudience',
+                    projectId,
+                    audience: {
+                        name: newAudienceForm.name.trim(),
+                        description: newAudienceForm.description.trim(),
+                        members: [],
+                        staticMembers: { emails: [], members: [] },
+                        staticMemberCount: 0,
+                        estimatedCount: 0,
+                        tags: [],
+                        acceptsMarketing: true,
+                        source: 'manual',
+                        sourceModule: 'email-marketing',
+                    },
+                },
             });
-            setAudiences(prev => [{
-                id: docRef.id,
-                name: newAudienceForm.name.trim(),
-                description: newAudienceForm.description.trim(),
-                members: [],
-                staticMemberCount: 0,
-                estimatedCount: 0,
-                tags: [],
-                acceptsMarketing: true,
-                userId,
-                projectId,
-                createdAt: new Date().toISOString(),
-            } as UserEmailAudience, ...prev]);
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to create audience');
+
+            const audience = mapUserAudienceFromCanonical(result.audience || {}, userId, projectId);
+            setAudiences(prev => [audience, ...prev.filter(item => item.id !== audience.id)]);
             setNewAudienceForm({ name: '', description: '' });
             setShowCreateAudience(false);
         } catch (err) {
@@ -93,6 +83,7 @@ export function useUserAudienceActions(
     };
 
     const handleCSVUpload = async (audienceId: string, file: File) => {
+        if (!projectId || projectId === 'default') return;
         setCsvUploading(true);
         try {
             const text = await file.text();
@@ -116,25 +107,32 @@ export function useUserAudienceActions(
                 return;
             }
 
-            const audienceRef = doc(db, audiencesPath, audienceId);
             const audience = audiences.find(a => a.id === audienceId);
-            const existingMembers: any[] = (audience as any)?.members || [];
+            const existingMembers: any[] = readAudienceMembers(audience);
             const existingEmails = new Set(existingMembers.map((m: any) => m.email?.toLowerCase()));
             const uniqueNewMembers = newMembers.filter(m => !existingEmails.has(m.email.toLowerCase()));
-            const updatedMembers = [...existingMembers, ...uniqueNewMembers];
+            if (uniqueNewMembers.length === 0) {
+                setCsvUploading(false);
+                setShowImportCSV(false);
+                return;
+            }
 
-            await updateDoc(audienceRef, {
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'addAudienceMembers',
+                    projectId,
+                    audienceId,
+                    members: uniqueNewMembers,
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to import audience members');
 
+            const updatedAudience = mapUserAudienceFromCanonical(result.audience || {}, userId, projectId);
+            const updatedMembers = readAudienceMembers(updatedAudience);
             setAudiences(prev => prev.map(a => a.id === audienceId ? {
                 ...a,
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
+                ...updatedAudience,
             } as UserEmailAudience : a));
 
             setAudienceMembers(prev => ({ ...prev, [audienceId]: updatedMembers }));
@@ -146,27 +144,29 @@ export function useUserAudienceActions(
     };
 
     const handleAddManualEmail = async (audienceId: string) => {
-        if (!manualEmail.trim() || !manualEmail.includes('@')) return;
+        if (!projectId || projectId === 'default' || !manualEmail.trim() || !manualEmail.includes('@')) return;
         try {
-            const audienceRef = doc(db, audiencesPath, audienceId);
             const audience = audiences.find(a => a.id === audienceId);
-            const existingMembers: any[] = (audience as any)?.members || [];
+            const existingMembers: any[] = readAudienceMembers(audience);
             const exists = existingMembers.some((m: any) => m.email?.toLowerCase() === manualEmail.trim().toLowerCase());
             if (exists) { setManualEmail(''); return; }
 
-            const updatedMembers = [...existingMembers, { email: manualEmail.trim(), source: 'manual' }];
-            await updateDoc(audienceRef, {
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'addAudienceMembers',
+                    projectId,
+                    audienceId,
+                    members: [{ email: manualEmail.trim(), source: 'manual' }],
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to add audience member');
 
+            const updatedAudience = mapUserAudienceFromCanonical(result.audience || {}, userId, projectId);
+            const updatedMembers = readAudienceMembers(updatedAudience);
             setAudiences(prev => prev.map(a => a.id === audienceId ? {
                 ...a,
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
+                ...updatedAudience,
             } as UserEmailAudience : a));
 
             setAudienceMembers(prev => ({ ...prev, [audienceId]: updatedMembers }));
@@ -184,7 +184,15 @@ export function useUserAudienceActions(
             message: `¿Estás seguro de eliminar la audiencia "${audience?.name || ''}"? Se perderán todos los contactos asociados.`,
             onConfirm: async () => {
                 try {
-                    await deleteDoc(doc(db, audiencesPath, audienceId));
+                    const { data: result, error } = await supabase.functions.invoke('email-api', {
+                        body: {
+                            action: 'deleteAudience',
+                            projectId,
+                            audienceId,
+                        },
+                    });
+                    if (error) throw error;
+                    if (result?.success === false) throw new Error(result.error || 'Unable to delete audience');
                     setAudiences(prev => prev.filter(a => a.id !== audienceId));
                 } catch (err) {
                     console.error('[UserEmailHub] Error deleting audience:', err);
@@ -196,23 +204,25 @@ export function useUserAudienceActions(
 
     const handleRemoveMember = async (audienceId: string, memberEmail: string) => {
         try {
-            const audienceRef = doc(db, audiencesPath, audienceId);
             const audience = audiences.find(a => a.id === audienceId);
-            const existingMembers: any[] = (audience as any)?.members || [];
-            const updatedMembers = existingMembers.filter((m: any) => m.email?.toLowerCase() !== memberEmail.toLowerCase());
+            if (!audience || !projectId || projectId === 'default') return;
 
-            await updateDoc(audienceRef, {
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
-                updatedAt: serverTimestamp(),
+            const { data: result, error } = await supabase.functions.invoke('email-api', {
+                body: {
+                    action: 'removeAudienceMembers',
+                    projectId,
+                    audienceId,
+                    emails: [memberEmail],
+                },
             });
+            if (error) throw error;
+            if (result?.success === false) throw new Error(result.error || 'Unable to remove audience member');
 
+            const updatedAudience = mapUserAudienceFromCanonical(result.audience || {}, userId, projectId);
+            const updatedMembers = readAudienceMembers(updatedAudience);
             setAudiences(prev => prev.map(a => a.id === audienceId ? {
                 ...a,
-                members: updatedMembers,
-                staticMemberCount: updatedMembers.length,
-                estimatedCount: updatedMembers.length,
+                ...updatedAudience,
             } as UserEmailAudience : a));
 
             setAudienceMembers(prev => ({ ...prev, [audienceId]: updatedMembers }));
@@ -235,4 +245,48 @@ export function useUserAudienceActions(
         handleAddManualEmail,
         handleRemoveMember,
     };
+}
+
+function readAudienceMembers(audience: UserEmailAudience | undefined) {
+    const anyAudience = audience as any;
+    if (Array.isArray(anyAudience?.members)) return anyAudience.members;
+    if (Array.isArray(anyAudience?.staticMembers?.members)) return anyAudience.staticMembers.members;
+    if (Array.isArray(anyAudience?.static_members?.members)) return anyAudience.static_members.members;
+    if (Array.isArray(anyAudience?.staticMembers?.emails)) {
+        return anyAudience.staticMembers.emails.map((email: string) => ({ email, source: 'audience-static' }));
+    }
+    if (Array.isArray(anyAudience?.static_members?.emails)) {
+        return anyAudience.static_members.emails.map((email: string) => ({ email, source: 'audience-static' }));
+    }
+    return [];
+}
+
+function mapUserAudienceFromCanonical(
+    audience: Record<string, any>,
+    userId: string,
+    projectId: string,
+): UserEmailAudience {
+    const staticMembers = audience.staticMembers || audience.static_members || {};
+    const members = Array.isArray(staticMembers.members)
+        ? staticMembers.members
+        : Array.isArray(audience.members)
+            ? audience.members
+            : [];
+
+    return {
+        id: String(audience.id || ''),
+        name: String(audience.name || ''),
+        description: audience.description || '',
+        estimatedCount: Number(audience.estimatedCount ?? audience.estimated_count ?? members.length ?? 0),
+        userId,
+        projectId,
+        createdAt: audience.createdAt || audience.created_at || new Date().toISOString(),
+        filters: Array.isArray(audience.filters) ? audience.filters : [],
+        tags: Array.isArray(audience.tags) ? audience.tags : [],
+        acceptsMarketing: audience.acceptsMarketing ?? audience.accepts_marketing,
+        hasOrdered: audience.hasOrdered ?? audience.has_ordered,
+        staticMemberCount: Number(audience.staticMemberCount ?? audience.static_member_count ?? members.length ?? 0),
+        members,
+        ...(staticMembers ? { staticMembers } : {}),
+    } as UserEmailAudience;
 }

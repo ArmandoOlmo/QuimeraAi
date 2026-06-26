@@ -10,10 +10,11 @@ export type ComponentRegistryFamily =
     | 'appointment_block'
     | 'restaurant_block'
     | 'real_estate_block'
+    | 'bio_page_block'
     | 'lead_block'
     | 'global_layout';
 
-export type ComponentBuilder = 'website' | 'storefront' | 'ecommerce';
+export type ComponentBuilder = 'website' | 'storefront' | 'ecommerce' | 'bio-page';
 
 export type PageIntent =
     | 'website_home'
@@ -30,6 +31,7 @@ export type PageIntent =
     | 'lead_capture'
     | 'local_business_home'
     | 'gallery_home'
+    | 'bio_page'
     | 'ai_saas_landing';
 
 export type BusinessCapability =
@@ -48,7 +50,8 @@ export type BusinessCapability =
     | 'premiumRetail'
     | 'subscription'
     | 'booking'
-    | 'restaurantReservations';
+    | 'restaurantReservations'
+    | 'bioPage';
 
 export type ConversionRole =
     | 'awareness'
@@ -60,6 +63,9 @@ export type ConversionRole =
     | 'catalog_discovery'
     | 'product_discovery'
     | 'retention'
+    | 'subscribe'
+    | 'share'
+    | 'chat'
     | 'navigation'
     | 'compliance';
 
@@ -102,7 +108,17 @@ export type ComponentId =
     | 'propertySearch'
     | 'neighborhoods'
     | 'storefrontFeaturedProducts'
-    | 'storefrontCategoryGrid';
+    | 'storefrontCategoryGrid'
+    | 'bioProfile'
+    | 'bioLinks'
+    | 'bioSocialLinks'
+    | 'bioShop'
+    | 'bioBooking'
+    | 'bioLeadCapture'
+    | 'bioEmailSubscribe'
+    | 'bioMediaGrid'
+    | 'bioPortfolio'
+    | 'bioChatCTA';
 
 export interface ComponentDataRequirement {
     key: string;
@@ -116,8 +132,8 @@ export interface ComponentDataRequirement {
 export interface ComponentDataAccess {
     reads: string[];
     writes: [];
-    canonicalSystem?: 'business-blueprint' | 'ecommerce-engine' | 'restaurant-engine' | 'real-estate-engine' | 'storefront-blueprint' | 'website-builder';
-    presentationOwner?: 'website-builder' | 'storefront-builder' | 'ecommerce-admin';
+    canonicalSystem?: 'business-blueprint' | 'ecommerce-engine' | 'restaurant-engine' | 'real-estate-engine' | 'storefront-blueprint' | 'website-builder' | 'bio-page-engine';
+    presentationOwner?: 'website-builder' | 'storefront-builder' | 'ecommerce-admin' | 'bio-page-engine';
 }
 
 export interface ComponentRenderTargets {

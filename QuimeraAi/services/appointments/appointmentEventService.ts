@@ -189,6 +189,7 @@ async function queueAppointmentEmailLog(
     const startDate = timestampToIso(appointment.startDate);
     const endDate = timestampToIso(appointment.endDate);
     const idempotencyKey = `appointments:${appointment.id}:${flowType}:${event.id}`;
+    const sourceModule = getEventSourceModule(appointment);
 
     const { data, error } = await client
         .from('email_logs')
@@ -204,9 +205,18 @@ async function queueAppointmentEmailLog(
             provider: 'resend',
             lead_id: appointment.linkedLeadIds?.[0] || appointment.sourceLeadId || null,
             order_id: appointment.ecommerceOrderId || null,
+            email_kind: 'transactional',
+            source_module: sourceModule,
+            source_component: appointment.sourceComponent || null,
+            source_event: event.eventType,
+            source_entity_type: 'appointment',
+            source_entity_id: appointment.id,
+            correlation_id: appointment.correlationId || idempotencyKey,
+            idempotency_key: idempotencyKey,
             metadata: {
                 triggeredBy: 'appointments-engine',
-                sourceModule: 'appointments',
+                sourceModule,
+                sourceComponent: appointment.sourceComponent,
                 eventId: event.id,
                 eventType: event.eventType,
                 appointmentId: appointment.id,
@@ -214,7 +224,6 @@ async function queueAppointmentEmailLog(
                 tenantId: appointment.tenantId,
                 correlationId: appointment.correlationId,
                 source: appointment.source,
-                sourceComponent: appointment.sourceComponent,
                 sourceConversationId: appointment.sourceConversationId,
                 bookingServiceId: appointment.bookingServiceId,
                 ecommerceProductId: appointment.ecommerceProductId,

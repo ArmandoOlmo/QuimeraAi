@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, CheckCircle2, Clock, CreditCard, Loader2, Mail, MessageSquare, Phone, User } from 'lucide-react';
 import type { AppointmentBookingData, BorderRadiusSize, FontSize, PaddingSize } from '../types';
@@ -51,6 +51,21 @@ const descriptionSizeClasses: Record<FontSize, string> = {
 interface AppointmentBookingProps extends AppointmentBookingData {
   projectId?: string;
   ownerId?: string;
+  compact?: boolean;
+  sourceComponent?: string;
+  sourceModule?: string;
+  sourceBlockId?: string;
+  onBookingIntent?: () => void;
+  onBookingCompleted?: (result: {
+    appointmentId?: string;
+    orderId?: string;
+    bookingServiceId?: string;
+    serviceName?: string;
+    startDate?: string;
+    endDate?: string;
+    projectId?: string;
+    paymentRequired?: boolean;
+  }) => void;
 }
 
 interface AvailabilitySlot {
@@ -84,10 +99,17 @@ const tomorrowDateInputValue = (): string => {
 const fieldClass = (radius: BorderRadiusSize) =>
   `w-full border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-offset-0 ${radiusClasses[radius]}`;
 
-const buildPaymentReturnUrl = (status: 'success' | 'cancelled'): string | undefined => {
+const buildPaymentReturnUrl = (
+  status: 'success' | 'cancelled',
+  params: Record<string, string | undefined | null> = {},
+): string | undefined => {
   if (typeof window === 'undefined') return undefined;
   const url = new URL(window.location.href);
   url.searchParams.set('appointmentPayment', status);
+  Object.entries(params).forEach(([key, value]) => {
+    const normalizedValue = typeof value === 'string' ? value.trim() : '';
+    if (normalizedValue) url.searchParams.set(key, normalizedValue);
+  });
   return url.toString();
 };
 
@@ -129,6 +151,12 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   cornerGradient,
   projectId,
   ownerId,
+  compact = false,
+  sourceComponent = 'AppointmentBooking',
+  sourceModule = 'website-builder',
+  sourceBlockId,
+  onBookingIntent,
+  onBookingCompleted,
 }) => {
   const { t, i18n } = useTranslation();
   const { getColor } = useDesignTokens();
@@ -149,6 +177,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     phone: '',
     message: '',
   });
+  const hasTrackedBookingIntentRef = useRef(false);
 
   const resolvedService = useMemo(() => {
     if (!services.length) return null;
@@ -245,10 +274,10 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source: 'public_booking',
-          sourceComponent: 'AppointmentBooking',
-          sourceModule: 'website-builder',
-          publicSubmissionId: `appointment-booking:${Date.now()}`,
-          idempotencyKey: `appointment-booking:${widgetApiProjectId}:${formData.email || formData.phone || formData.name}:${selectedSlot.startDate}`,
+          sourceComponent,
+          sourceModule,
+          publicSubmissionId: `${sourceModule}:${sourceComponent}:${Date.now()}`,
+          idempotencyKey: `${sourceModule}:${sourceComponent}:${widgetApiProjectId}:${formData.email || formData.phone || formData.name}:${selectedSlot.startDate}`,
           title: `${resolvedService?.name || heading} - ${formData.name}`,
           description: formData.message,
           type: 'consultation',
@@ -273,6 +302,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             paymentAmount: resolvedPaymentAmount,
             currency: resolvedService?.currency || 'USD',
             ecommerceProductId: resolvedService?.ecommerceProductId,
+            sourceBlockId,
             locale: i18n.language,
           },
         }),
@@ -290,8 +320,16 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
             projectId: bookingResult.projectId || widgetApiProjectId,
             appointmentId: bookingResult.appointmentId,
             orderId: bookingResult.ecommerceOrderId,
-            successUrl: buildPaymentReturnUrl('success'),
-            cancelUrl: buildPaymentReturnUrl('cancelled'),
+            successUrl: buildPaymentReturnUrl('success', {
+              appointmentId: bookingResult.appointmentId,
+              orderId: bookingResult.ecommerceOrderId,
+              bioBlockId: sourceBlockId,
+            }),
+            cancelUrl: buildPaymentReturnUrl('cancelled', {
+              appointmentId: bookingResult.appointmentId,
+              orderId: bookingResult.ecommerceOrderId,
+              bioBlockId: sourceBlockId,
+            }),
           }),
         });
         const checkoutResult = await checkoutResponse.json().catch(() => ({}));
@@ -303,6 +341,16 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
       }
 
       setSubmitStatus('success');
+      onBookingCompleted?.({
+        appointmentId: bookingResult.appointmentId,
+        orderId: bookingResult.ecommerceOrderId,
+        bookingServiceId: resolvedService?.id,
+        serviceName: resolvedService?.name,
+        startDate: selectedSlot.startDate,
+        endDate: selectedSlot.endDate,
+        projectId: bookingResult.projectId || widgetApiProjectId,
+        paymentRequired: false,
+      });
       setFormData({ name: '', email: '', phone: '', message: '' });
     } catch (error) {
       setSubmitStatus('error');
@@ -312,10 +360,16 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     }
   };
 
+  const handleBookingIntent = () => {
+    if (hasTrackedBookingIntentRef.current) return;
+    hasTrackedBookingIntentRef.current = true;
+    onBookingIntent?.();
+  };
+
   return (
-    <section className={`relative overflow-hidden ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`} style={sectionStyle}>
+    <section className={`relative overflow-hidden ${compact ? 'py-0 px-0' : `${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}`} style={sectionStyle}>
       {cornerGradient?.enabled && <CornerGradient config={cornerGradient} />}
-      <div className="relative z-10 mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+      <div className={`relative z-10 mx-auto grid ${compact ? 'max-w-xl gap-4' : 'max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start'}`}>
         <div className="space-y-4">
           {subtitle && (
             <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: accentColor }}>
@@ -328,7 +382,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
           <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-xl leading-7`} style={{ color: colors.description || colors.text || getColor('text-muted') }}>
             {body}
           </p>
-          <div className="grid max-w-xl gap-3 sm:grid-cols-2">
+          <div className={`grid max-w-xl gap-3 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
             <div className={`border p-4 ${radiusClasses[cardBorderRadius]}`} style={cardStyle}>
               <CalendarDays size={20} style={{ color: accentColor }} />
               <p className="mt-2 text-sm font-semibold">{t('appointmentBooking.confirmation')}</p>
@@ -340,10 +394,16 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className={`border p-4 shadow-sm sm:p-6 ${radiusClasses[cardBorderRadius]}`} style={cardStyle}>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <form
+          onSubmit={handleSubmit}
+          onFocusCapture={handleBookingIntent}
+          onClick={handleBookingIntent}
+          className={`border p-4 shadow-sm ${compact ? '' : 'sm:p-6'} ${radiusClasses[cardBorderRadius]}`}
+          style={cardStyle}
+        >
+          <div className={`grid gap-4 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
             {services.length > 0 && (
-              <label className="sm:col-span-2">
+              <label className={compact ? '' : 'sm:col-span-2'}>
                 <span className="mb-1.5 block text-sm font-medium">{serviceLabel || t('appointmentBooking.serviceLabel')}</span>
                 <select
                   value={selectedServiceId}
@@ -434,7 +494,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
               </div>
             </label>
 
-            <label className="sm:col-span-2">
+            <label className={compact ? '' : 'sm:col-span-2'}>
               <span className="sr-only">{t('appointmentBooking.messageLabel')}</span>
               <div className="relative">
                 <MessageSquare size={16} className="pointer-events-none absolute left-3 top-3.5 opacity-60" />

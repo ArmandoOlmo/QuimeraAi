@@ -11,12 +11,11 @@
  * TODO: Extend the Gemini proxy to support multimodal (file + text) requests
  */
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Upload, FileText, X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { KnowledgeDocument } from '../../../types';
 
 interface KnowledgeDocumentUploaderProps {
-    documents: KnowledgeDocument[];
+    documents?: KnowledgeDocument[] | null;
     onDocumentsChange: (documents: KnowledgeDocument[]) => void;
 }
 
@@ -32,6 +31,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
     const [isUploading, setIsUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [statusMessage, setStatusMessage] = useState('');
+    const safeDocuments = (Array.isArray(documents) ? documents : []).filter(Boolean);
 
     const extractTextFromFile = async (file: File): Promise<string> => {
         const fileType = file.type;
@@ -150,7 +150,7 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             };
 
             // Add to documents list
-            onDocumentsChange([...documents, newDoc]);
+            onDocumentsChange([...safeDocuments, newDoc]);
 
             setUploadStatus('success');
             setStatusMessage(`Successfully uploaded ${file.name}`);
@@ -179,20 +179,27 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
         }
     };
 
-    const handleDeleteDocument = (docId: string) => {
-        onDocumentsChange(documents.filter(doc => doc.id !== docId));
+    const handleDeleteDocument = (docId: string | undefined, docIndex: number) => {
+        onDocumentsChange(safeDocuments.filter((doc, index) => (
+            docId ? doc.id !== docId : index !== docIndex
+        )));
     };
 
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
+    const formatFileSize = (bytes?: number): string => {
+        if (!Number.isFinite(bytes) || !bytes || bytes <= 0) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const formatDate = (timestamp: { seconds: number; nanoseconds: number }): string => {
-        const date = new Date(timestamp.seconds * 1000);
+    const formatDate = (timestamp?: Partial<{ seconds: number; nanoseconds: number }>): string => {
+        const seconds = Number(timestamp?.seconds);
+        if (!Number.isFinite(seconds)) return 'Unknown date';
+
+        const date = new Date(seconds * 1000);
+        if (Number.isNaN(date.getTime())) return 'Unknown date';
+
         return date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -244,35 +251,40 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
             )}
 
             {/* Documents List */}
-            {documents.length > 0 && (
+            {safeDocuments.length > 0 && (
                 <div className="space-y-2">
                     <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                        Uploaded Documents ({documents.length})
+                        Uploaded Documents ({safeDocuments.length})
                     </h4>
                     <div className="space-y-2">
-                        {documents.map((doc) => (
-                            <div
-                                key={doc.id}
-                                className="flex items-start gap-3 p-3 bg-q-surface border border-q-border rounded-lg hover:border-primary/50 transition-colors group"
-                            >
-                                <FileText size={20} className="text-primary mt-0.5 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                        {doc.name}
-                                    </p>
-                                    <p className="text-xs text-q-text-muted">
-                                        {formatFileSize(doc.size)} • {formatDate(doc.extractedAt)} • {doc.content.length} characters
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => handleDeleteDocument(doc.id)}
-                                    className="p-1 rounded-full hover:bg-q-error/10 dark:hover:bg-q-error/12 text-q-text-muted hover:text-q-error dark:hover:text-q-error transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
-                                    title="Remove document"
+                        {safeDocuments.map((doc, index) => {
+                            const contentLength = typeof doc.content === 'string' ? doc.content.length : 0;
+                            const documentName = doc.name || 'Untitled document';
+
+                            return (
+                                <div
+                                    key={doc.id || `${documentName}-${index}`}
+                                    className="flex items-start gap-3 p-3 bg-q-surface border border-q-border rounded-lg hover:border-primary/50 transition-colors group"
                                 >
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        ))}
+                                    <FileText size={20} className="text-primary mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-foreground truncate">
+                                            {documentName}
+                                        </p>
+                                        <p className="text-xs text-q-text-muted">
+                                            {formatFileSize(doc.size)} • {formatDate(doc.extractedAt)} • {contentLength} characters
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteDocument(doc.id, index)}
+                                        className="p-1 rounded-full hover:bg-q-error/10 dark:hover:bg-q-error/12 text-q-text-muted hover:text-q-error dark:hover:text-q-error transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                                        title="Remove document"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -281,4 +293,3 @@ const KnowledgeDocumentUploader: React.FC<KnowledgeDocumentUploaderProps> = ({ d
 };
 
 export default KnowledgeDocumentUploader;
-

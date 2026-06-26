@@ -15,6 +15,7 @@ export async function createReservation(
 
   const ref = await addDoc(collection(db, getReservationsPath(scope, restaurantId)), {
     tenantId: getRestaurantTenantId(scope),
+    projectId: data.projectId || null,
     restaurantId,
     customerName: data.customerName.trim(),
     customerEmail: data.customerEmail.trim(),

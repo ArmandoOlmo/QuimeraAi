@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { queueCrossModuleTransactionalEmail } from "../../../services/email/emailCrossModuleDispatcher.ts";
 
 type ReservationSource = "website" | "qrMenu" | "aiAssistant";
 
@@ -20,6 +21,7 @@ type PublicReservationPayload = {
 type RestaurantRow = {
   id: string;
   tenant_id: string;
+  project_id: string | null;
   owner_id: string;
   name: string;
   reservation_enabled: boolean | null;
@@ -78,6 +80,7 @@ serve(async (req) => {
       .from("restaurant_reservations")
       .insert({
         tenant_id: restaurant.tenant_id,
+        project_id: restaurant.project_id,
         restaurant_id: restaurant.id,
         customer_name: reservation.customerName,
         customer_email: reservation.customerEmail,
@@ -95,6 +98,7 @@ serve(async (req) => {
 
     if (error) throw error;
     await recordAnalyticsEvent(restaurant, data.id, reservation, false);
+    await queueReservationEmail(restaurant, data.id, reservation);
 
     return json({
       reservationId: data.id,
@@ -154,7 +158,7 @@ function normalizeSource(value: unknown): ReservationSource {
 }
 
 async function getRestaurant(restaurantIdOrSlug: string): Promise<RestaurantRow> {
-  const select = "id, tenant_id, owner_id, name, reservation_enabled, max_party_size, reservation_interval, average_table_duration, public_slug, qr_menu_enabled";
+  const select = "id, tenant_id, project_id, owner_id, name, reservation_enabled, max_party_size, reservation_interval, average_table_duration, public_slug, qr_menu_enabled";
   const query = supabase.from("restaurants").select(select);
   const lookup = uuidRegex.test(restaurantIdOrSlug)
     ? query.eq("id", restaurantIdOrSlug)
@@ -248,6 +252,7 @@ async function recordAnalyticsEvent(
     .from("restaurant_analytics_events")
     .insert({
       tenant_id: restaurant.tenant_id,
+      project_id: restaurant.project_id,
       restaurant_id: restaurant.id,
       event_name: "reservation_created",
       metadata: {
@@ -264,4 +269,132 @@ async function recordAnalyticsEvent(
   if (error) {
     console.warn("[create-public-restaurant-reservation] analytics event failed:", error.message);
   }
+}
+
+async function queueReservationEmail(
+  restaurant: RestaurantRow,
+  reservationId: string,
+  reservation: ReturnType<typeof validateReservation>,
+) {
+  if (!restaurant.project_id) {
+    console.warn("[create-public-restaurant-reservation] email skipped: restaurant has no project_id", {
+      restaurantId: restaurant.id,
+      reservationId,
+    });
+    return;
+  }
+
+  try {
+    const skipReason = await getRestaurantEmailSkipReason(restaurant.project_id);
+    const rendered = renderReservationReceivedEmail(restaurant, reservation);
+    const result = await queueCrossModuleTransactionalEmail({
+      supabase,
+      projectId: restaurant.project_id,
+      userId: restaurant.owner_id,
+      type: "restaurant_reservation_received",
+      recipientEmail: reservation.customerEmail,
+      recipientName: reservation.customerName,
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      idempotencyKey: [
+        "restaurants",
+        "reservation_received",
+        restaurant.project_id,
+        reservationId,
+        reservation.customerEmail,
+      ].join(":"),
+      sourceModule: "restaurants",
+      sourceComponent: "public-reservation",
+      sourceEvent: "reservation_created",
+      sourceEntityType: "restaurant_reservation",
+      sourceEntityId: reservationId,
+      metadata: {
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        reservationId,
+        reservationDate: reservation.date,
+        reservationTime: reservation.time,
+        partySize: reservation.partySize,
+        source: reservation.source,
+        publicSlug: restaurant.public_slug,
+        requiresExplicitModuleOptIn: true,
+      },
+      skipReason,
+    });
+
+    if (result.status !== "queued") {
+      console.warn("[create-public-restaurant-reservation] email not queued:", {
+        restaurantId: restaurant.id,
+        reservationId,
+        status: result.status,
+        reason: result.reason,
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("[create-public-restaurant-reservation] email queue failed:", message);
+  }
+}
+
+async function getRestaurantEmailSkipReason(projectId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("email_settings")
+    .select("transactional")
+    .or(`project_id.eq.${projectId},store_id.eq.${projectId}`)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const transactional = readObject(data?.transactional);
+  const enabled = transactional.restaurants === true
+    || transactional.restaurantReservations === true
+    || transactional.reservationReceived === true;
+
+  return enabled ? null : "Restaurant reservation email is not explicitly enabled";
+}
+
+function renderReservationReceivedEmail(
+  restaurant: RestaurantRow,
+  reservation: ReturnType<typeof validateReservation>,
+) {
+  const subject = `Reservation received: ${restaurant.name}`;
+  const text = [
+    `Hi ${reservation.customerName},`,
+    `We received your reservation request for ${restaurant.name}.`,
+    `Date: ${reservation.date}`,
+    `Time: ${reservation.time}`,
+    `Party size: ${reservation.partySize}`,
+    reservation.tablePreference ? `Table preference: ${reservation.tablePreference}` : "",
+    "The restaurant team will review availability and confirm your reservation.",
+  ].filter(Boolean).join("\n");
+
+  const html = [
+    "<!doctype html>",
+    '<html><body style="margin:0;background:#f7f7f8;font-family:Arial,Helvetica,sans-serif;color:#111827;">',
+    '<main style="max-width:640px;margin:0 auto;padding:32px 16px;">',
+    '<section style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:28px;">',
+    `<p style="margin:0 0 8px;color:#6b7280;">${escapeHtml(restaurant.name)}</p>`,
+    `<h1 style="font-size:22px;line-height:1.3;margin:0 0 18px;">${escapeHtml(subject)}</h1>`,
+    ...text.split("\n").map((line) => `<p style="margin:0 0 12px;">${escapeHtml(line)}</p>`),
+    "</section>",
+    "</main>",
+    "</body></html>",
+  ].join("");
+
+  return { subject, text, html };
+}
+
+function readObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

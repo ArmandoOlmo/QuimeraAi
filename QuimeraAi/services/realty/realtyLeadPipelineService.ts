@@ -1,6 +1,7 @@
 import { supabase as defaultSupabase } from '../../supabase';
 import type { LeadStatus } from '../../types/business';
 import type { LeadStage, LeadType, RealtyProperty } from '../../types/realty';
+import { buildCanonicalEmailDraftEvent } from '../email/emailModuleIntentService.ts';
 import { REALTY_LEAD_SOURCE } from '../../utils/realty';
 
 export const REALTY_LEAD_PIPELINE_SOURCE = 'realty-lead-pipeline';
@@ -315,7 +316,23 @@ export const buildRealtyLeadPipelinePayload = (input: RealtyLeadPipelineInput): 
             createDraftEvent(`realty_${input.eventType}`, baseMetadata, 'queued'),
         ],
         emailEvents: [
-            createDraftEvent(emailFlow, { ...baseMetadata, noAutoSend: true }),
+            buildCanonicalEmailDraftEvent(emailFlow, {
+                sourceModule: 'realty',
+                sourceComponent,
+                sourceEvent: emailFlow,
+                sourceEntityType: 'property_lead',
+                sourceEntityId: idempotencyKey,
+                projectId,
+                recipientEmail: email,
+                needsReview: true,
+                safeToEdit: true,
+                generatedByAI: false,
+                transactionalConsent: input.eventType === 'showing_request'
+                    ? input.showing?.consentAccepted === true
+                    : null,
+                consentSource: sourceComponent,
+                extra: { ...baseMetadata, noAutoSend: true },
+            }),
         ],
         analyticsEvents: [
             createDraftEvent(analyticsEvent, { ...baseMetadata, noRuntimeTracking: true }),
