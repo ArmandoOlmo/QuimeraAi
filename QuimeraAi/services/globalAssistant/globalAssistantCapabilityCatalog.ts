@@ -34,6 +34,8 @@ export interface GlobalAssistantModuleCapability {
     executableActionCount: number;
     previewActionCount: number;
     rollbackActionCount: number;
+    rollbackExecutableActionCount: number;
+    rollbackGapActionCount: number;
     safeNavigationActionCount: number;
     highRiskActionCount: number;
     serviceIds: PlatformServiceId[];
@@ -48,6 +50,9 @@ export interface GlobalAssistantCapabilityCatalog {
     generatedAt: string;
     actionCount: number;
     executableActionCount: number;
+    rollbackActionCount: number;
+    rollbackExecutableActionCount: number;
+    rollbackGapActionCount: number;
     modules: GlobalAssistantModuleCapability[];
     actions: GlobalAssistantCapabilityAction[];
 }
@@ -115,6 +120,8 @@ const summarizeModule = (
     executableActionCount: actions.filter(action => action.executable).length,
     previewActionCount: actions.filter(action => action.previewSupported).length,
     rollbackActionCount: actions.filter(action => action.rollbackSupported).length,
+    rollbackExecutableActionCount: actions.filter(action => action.rollbackSupported && action.rollbackExecutable).length,
+    rollbackGapActionCount: actions.filter(action => action.rollbackSupported && !action.rollbackExecutable).length,
     safeNavigationActionCount: actions.filter(action => action.safeNavigation).length,
     highRiskActionCount: actions.filter(action => HIGH_RISK_LEVELS.has(action.safetyLevel)).length,
     serviceIds: unique(actions.map(action => action.requiredService).filter((service): service is PlatformServiceId => Boolean(service))),
@@ -146,6 +153,9 @@ export function buildGlobalAssistantCapabilityCatalog(
         generatedAt: new Date().toISOString(),
         actionCount: actions.length,
         executableActionCount: actions.filter(action => action.executable).length,
+        rollbackActionCount: actions.filter(action => action.rollbackSupported).length,
+        rollbackExecutableActionCount: actions.filter(action => action.rollbackSupported && action.rollbackExecutable).length,
+        rollbackGapActionCount: actions.filter(action => action.rollbackSupported && !action.rollbackExecutable).length,
         modules,
         actions,
     };

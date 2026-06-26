@@ -3,6 +3,7 @@ export * from './globalAssistantActionHandlers';
 export * from './globalAssistantActionPreviews';
 export * from './globalAssistantAuditService';
 export * from './globalAssistantCapabilityCatalog';
+export * from './globalAssistantChatSurfaceRegistry';
 export * from './globalAssistantCommandCenter';
 export * from './globalAssistantConfirmation';
 export * from './globalAssistantConversationService';

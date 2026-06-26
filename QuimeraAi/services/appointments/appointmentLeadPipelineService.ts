@@ -94,7 +94,15 @@ const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, 
     sourceModule: input.sourceModule,
     conversationTranscript: normalizeString(input.conversationTranscript, 20000),
     customerRequestSummary: normalizeString(input.notes, 6000),
-    customerRequestNote: buildReadableChatbotCustomerRequestNote(input.notes),
+    customerRequestNote: buildReadableChatbotCustomerRequestNote(input.notes, null, {
+        customer: {
+            name: input.participantName || null,
+            email: input.participantEmail || null,
+            phone: input.participantPhone || null,
+        },
+        appointmentTitle: input.appointmentTitle || null,
+        appointmentDateTime: input.appointmentStartIso || null,
+    }),
     idempotencyKey: input.idempotencyKey,
     correlationId: input.correlationId,
 });
@@ -110,7 +118,15 @@ export async function createOrLinkLeadForAppointment(
     const source = resolveLeadSource(input.source);
     const metadata = buildLeadMetadata(input);
     const tags = uniqueStrings(['appointment', 'booked', input.source], resolveModuleTags(input, source), input.tags);
-    const readableLeadNotes = buildReadableChatbotCustomerRequestNote(input.notes);
+    const readableLeadNotes = buildReadableChatbotCustomerRequestNote(input.notes, null, {
+        customer: {
+            name: input.participantName || null,
+            email: input.participantEmail || null,
+            phone: input.participantPhone || null,
+        },
+        appointmentTitle: input.appointmentTitle || null,
+        appointmentDateTime: input.appointmentStartIso || null,
+    });
 
     if (!input.linkedLeadId && !email && !phone && !name) {
         return {

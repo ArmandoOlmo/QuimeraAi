@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, X } from 'lucide-react';
 import { AiAssistantConfig, Project, ChatAppearanceConfig } from '../../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../../utils/chatThemes';
-import ChatCore, { ChatAppointmentData, AppointmentSlot } from './ChatCore';
+import ChatCore, { ChatAppointmentData, type ChatAppointmentHandlerResult, AppointmentSlot } from './ChatCore';
 import {
     buildChatCoreAppointmentPayloadNotes,
     buildChatCoreLeadPayloadNotes,
 } from '../../utils/chatbotEngine/chatCorePayloadNotes';
+import { canRenderChatbotSurface } from '../../utils/chatbotEngine/deploymentGuard';
+import { buildChatbotEngineSurfaceContext } from '../../utils/chatbotEngine/surfaceContext';
 
 interface EmbedWidgetProps {
     projectId: string;
@@ -29,6 +31,24 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
     const [appointments, setAppointments] = useState<AppointmentSlot[]>([]);
     const { i18n } = useTranslation();
     const encodedProjectId = encodeURIComponent(projectId);
+    const embeddedChatbotEngineContext = useMemo(() => buildChatbotEngineSurfaceContext({
+        sourceSurface: 'website',
+        sourceModule: 'chatcore',
+        route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        entityType: 'project',
+        entityId: project?.id || projectId,
+        contextKeys: ['embedded-widget', 'website'],
+        metadata: {
+            embeddedWidget: true,
+            widgetApiProjectId: projectId,
+            projectId: project?.id || projectId,
+            tenantId: (project as any)?.tenantId || (project as any)?.tenant_id || null,
+        },
+    }), [project, projectId]);
+    const chatbotSurfaceVisible = useMemo(() => canRenderChatbotSurface(
+        project as any,
+        embeddedChatbotEngineContext.sourceSurface,
+    ), [project, embeddedChatbotEngineContext.sourceSurface]);
 
     // Load configuration from API
     useEffect(() => {
@@ -96,8 +116,9 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
             leadData,
             projectName: project?.name,
             agentName: config?.agentName,
-            sourceSurface: 'website',
-            sourceModule: 'chatcore',
+            sourceSurface: embeddedChatbotEngineContext.sourceSurface,
+            sourceModule: embeddedChatbotEngineContext.sourceModule,
+            chatbotEngineContext: embeddedChatbotEngineContext,
             locale: i18n.language,
         });
 
@@ -116,8 +137,9 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                     metadata: {
                         ...(leadData.metadata || {}),
                         customerRequestSummary: customerRequestNotes,
-                        sourceSurface: 'website',
-                        sourceModule: 'chatcore',
+                        sourceSurface: embeddedChatbotEngineContext.sourceSurface,
+                        sourceModule: embeddedChatbotEngineContext.sourceModule,
+                        chatbotEngineContext: embeddedChatbotEngineContext,
                     },
                 })
             });
@@ -131,13 +153,14 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
         return '';
     };
 
-    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<ChatAppointmentHandlerResult> => {
         const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
             appointmentData: appointmentData as unknown as Record<string, unknown>,
             projectName: project?.name,
             agentName: config?.agentName,
-            sourceSurface: 'website',
-            sourceModule: 'chatcore',
+            sourceSurface: embeddedChatbotEngineContext.sourceSurface,
+            sourceModule: embeddedChatbotEngineContext.sourceModule,
+            chatbotEngineContext: embeddedChatbotEngineContext,
             locale: appointmentData.locale || i18n.language,
         });
 
@@ -162,7 +185,8 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                     sourceConversationId: appointmentData.sourceConversationId,
                     source: 'chatbot',
                     sourceComponent: 'ChatCore',
-                    sourceModule: 'chatcore',
+                    sourceModule: embeddedChatbotEngineContext.sourceModule,
+                    sourceSurface: embeddedChatbotEngineContext.sourceSurface,
                     generatedByAI: appointmentData.generatedByAI,
                     bookingChannel: appointmentData.bookingChannel,
                     locale: appointmentData.locale || i18n.language,
@@ -171,6 +195,9 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                         embeddedWidget: true,
                         bookingChannel: appointmentData.bookingChannel,
                         customerRequestSummary: customerRequestNotes,
+                        sourceSurface: embeddedChatbotEngineContext.sourceSurface,
+                        sourceModule: embeddedChatbotEngineContext.sourceModule,
+                        chatbotEngineContext: embeddedChatbotEngineContext,
                     },
                 }),
             });
@@ -178,7 +205,12 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
             if (!response.ok) return undefined;
             const payload = await response.json();
 
-            return payload.appointmentId;
+            return {
+                appointmentId: payload.appointmentId,
+                leadId: payload.leadId,
+                duplicate: payload.duplicate,
+                warnings: payload.warnings,
+            };
         } catch (err) {
             console.error('Error creating embedded widget appointment:', err);
             return undefined;
@@ -206,6 +238,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 
     // Don't render if not active
     if (!config.isActive) return null;
+    if (!chatbotSurfaceVisible) return null;
 
     const sizeClasses = getSizeClasses(appearance.behavior.width);
 
@@ -236,6 +269,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                         showHeader={true}
                         autoOpen={isOpen}
                         isEmbedded={true}
+                        chatbotEngineContext={embeddedChatbotEngineContext}
                     />
                 )}
             </div>
@@ -277,8 +311,6 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 };
 
 export default EmbedWidget;
-
-
 
 
 

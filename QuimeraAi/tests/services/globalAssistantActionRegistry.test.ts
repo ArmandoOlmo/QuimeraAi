@@ -100,6 +100,16 @@ describe('GlobalAssistantActionRegistry', () => {
             mutatesData: false,
         });
         expect(typeof globalAssistantActionRegistry.get('summarize_business_blueprint')?.execute).toBe('function');
+        expect(globalAssistantActionRegistry.get('summarize_operating_layer_capabilities')).toMatchObject({
+            module: 'project',
+            safetyLevel: 'low',
+            requiresConfirmation: false,
+            previewSupported: false,
+            rollbackSupported: false,
+            mutatesData: false,
+            requiredPermissions: [],
+        });
+        expect(typeof globalAssistantActionRegistry.get('summarize_operating_layer_capabilities')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_product_card_style')?.execute).toBe('function');

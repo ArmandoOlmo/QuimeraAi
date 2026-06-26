@@ -23,7 +23,7 @@ import {
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles, Globe2, Image, Mail, ShoppingBag, Users, ShieldAlert } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles, Globe2, Image, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3 } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -136,6 +136,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         if (action.id === 'review_leads') return <Users size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_email') return <Mail size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'open_ecommerce') return <ShoppingBag size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'train_chatcore') return <Bot size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'create_appointment') return <Calendar size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'improve_bio_page') return <Link2 size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'analyze_project') return <BarChart3 size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'review_platform_errors') return <ShieldAlert size={13} className="text-q-accent" aria-hidden="true" />;
         return <Sparkles size={13} className="text-q-accent" aria-hidden="true" />;
     };

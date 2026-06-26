@@ -14,6 +14,7 @@ import {
     Lock,
     Mic,
     Palette,
+    Plus,
     Radio,
     RefreshCw,
     ShieldCheck,
@@ -41,6 +42,7 @@ import {
     updateProjectChatbotVoiceSettings,
 } from '../../../services/chatbotEngine/chatbotEngineConfigurationService';
 import {
+    addKnowledgeSource,
     deployChatbotToSurface,
     getChatbotEngineRuntimeSnapshot,
     runProjectChatbotTestLab,
@@ -51,6 +53,8 @@ import type {
     ChatbotActionBlueprint,
     ChatbotBlueprint,
     ChatbotKnowledgeSourceBlueprint,
+    ChatbotKnowledgeSourceType,
+    ChatbotKnowledgeVisibility,
 } from '../../../types/businessBlueprint';
 import type { Project } from '../../../types/project';
 import {
@@ -149,6 +153,16 @@ const InlineTag: React.FC<{ children: React.ReactNode; muted?: boolean }> = ({ c
         {children}
     </span>
 );
+
+const USER_KNOWLEDGE_SOURCE_TYPES: ChatbotKnowledgeSourceType[] = [
+    'manual_snippet',
+    'faq',
+    'website_url',
+    'youtube',
+    'uploaded_document',
+];
+
+const KNOWLEDGE_VISIBILITIES: ChatbotKnowledgeVisibility[] = ['internal', 'public', 'private'];
 
 const RowText: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
     <div className="flex min-w-0 flex-col gap-0.5">
@@ -275,6 +289,12 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
     const [runtimeError, setRuntimeError] = useState<string | null>(null);
     const [mutatingActionType, setMutatingActionType] = useState<string | null>(null);
     const [mutatingKnowledgeSourceId, setMutatingKnowledgeSourceId] = useState<string | null>(null);
+    const [isAddingKnowledgeSource, setIsAddingKnowledgeSource] = useState(false);
+    const [newKnowledgeName, setNewKnowledgeName] = useState('');
+    const [newKnowledgeType, setNewKnowledgeType] = useState<ChatbotKnowledgeSourceType>('manual_snippet');
+    const [newKnowledgeVisibility, setNewKnowledgeVisibility] = useState<ChatbotKnowledgeVisibility>('internal');
+    const [newKnowledgeSourceUrl, setNewKnowledgeSourceUrl] = useState('');
+    const [newKnowledgeContent, setNewKnowledgeContent] = useState('');
     const [mutatingSurfaceId, setMutatingSurfaceId] = useState<string | null>(null);
     const [mutatingTestScenarioId, setMutatingTestScenarioId] = useState<string | null>(null);
     const [isRunningTestLab, setIsRunningTestLab] = useState(false);
@@ -381,6 +401,60 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
             setMutatingActionType(null);
         }
     }, [actorId, onProjectRefresh, project, showBlockedReview, showMutationError, success, t, tokenLabel]);
+
+    const handleAddKnowledgeSource = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const name = newKnowledgeName.trim();
+        const sourceUrl = newKnowledgeSourceUrl.trim();
+        const content = newKnowledgeContent.trim();
+        if (!name) {
+            showMutationError(t('aiAssistant.chatbotEngine.runtime.knowledgeSourceNameRequired'));
+            return;
+        }
+        if (!sourceUrl && !content) {
+            showMutationError(t('aiAssistant.chatbotEngine.runtime.knowledgeSourceContentRequired'));
+            return;
+        }
+
+        setIsAddingKnowledgeSource(true);
+        setConfigurationMutationError(null);
+        try {
+            const result = await addKnowledgeSource(project.id, {
+                name,
+                type: newKnowledgeType,
+                visibility: newKnowledgeVisibility,
+                sourceUrl: sourceUrl || null,
+                content: content || null,
+                generatedByAI: false,
+                actorId,
+                sync: sourceUrl.length > 0,
+            });
+            await onProjectRefresh?.(buildProjectOverride(project, result));
+            setNewKnowledgeName('');
+            setNewKnowledgeSourceUrl('');
+            setNewKnowledgeContent('');
+            success(t('aiAssistant.chatbotEngine.runtime.knowledgeSourceAdded', {
+                source: result.knowledgeSource.name,
+            }));
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'knowledge_source_add_failed';
+            showMutationError(message, 'aiAssistant.chatbotEngine.runtime.knowledgeSourceAddFailed');
+        } finally {
+            setIsAddingKnowledgeSource(false);
+        }
+    }, [
+        actorId,
+        newKnowledgeContent,
+        newKnowledgeName,
+        newKnowledgeSourceUrl,
+        newKnowledgeType,
+        newKnowledgeVisibility,
+        onProjectRefresh,
+        project,
+        showMutationError,
+        success,
+        t,
+    ]);
 
     const handleReviewKnowledgeSource = useCallback(async (source: ChatbotKnowledgeSourceBlueprint, enabled: boolean) => {
         if (enabled && source.readiness.blockers.length > 0) {
@@ -708,6 +782,68 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                     title={t('aiAssistant.chatbotEngine.knowledgeCenter')}
                     action={<InlineTag>{summary.knowledge.ready}/{summary.knowledge.total} {t('aiAssistant.chatbotEngine.ready')}</InlineTag>}
                 />
+                <form onSubmit={handleAddKnowledgeSource} className="mt-4 grid gap-3 border-b border-q-border/60 pb-4 lg:grid-cols-[minmax(0,1fr)_180px_140px]">
+                    <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-q-text-muted">
+                        {t('aiAssistant.chatbotEngine.fields.sourceName')}
+                        <input
+                            value={newKnowledgeName}
+                            onChange={(event) => setNewKnowledgeName(event.target.value)}
+                            placeholder={t('aiAssistant.chatbotEngine.fields.sourceNamePlaceholder')}
+                            className="h-10 rounded-lg border border-q-border/60 bg-q-surface/50 px-3 text-sm font-medium text-foreground outline-none transition-colors placeholder:text-q-text-muted/70 focus:border-q-accent/50"
+                        />
+                    </label>
+                    <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-q-text-muted">
+                        {t('aiAssistant.chatbotEngine.fields.sourceType')}
+                        <select
+                            value={newKnowledgeType}
+                            onChange={(event) => setNewKnowledgeType(event.target.value as ChatbotKnowledgeSourceType)}
+                            className="h-10 rounded-lg border border-q-border/60 bg-q-surface/50 px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-q-accent/50"
+                        >
+                            {USER_KNOWLEDGE_SOURCE_TYPES.map(type => (
+                                <option key={type} value={type}>{tokenLabel('knowledgeTypes', type)}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-q-text-muted">
+                        {t('aiAssistant.chatbotEngine.fields.visibility')}
+                        <select
+                            value={newKnowledgeVisibility}
+                            onChange={(event) => setNewKnowledgeVisibility(event.target.value as ChatbotKnowledgeVisibility)}
+                            className="h-10 rounded-lg border border-q-border/60 bg-q-surface/50 px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-q-accent/50"
+                        >
+                            {KNOWLEDGE_VISIBILITIES.map(visibility => (
+                                <option key={visibility} value={visibility}>{tokenLabel('visibility', visibility)}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-q-text-muted lg:col-span-2">
+                        {t('aiAssistant.chatbotEngine.fields.sourceUrl')}
+                        <input
+                            value={newKnowledgeSourceUrl}
+                            onChange={(event) => setNewKnowledgeSourceUrl(event.target.value)}
+                            placeholder={t('aiAssistant.chatbotEngine.fields.sourceUrlPlaceholder')}
+                            className="h-10 rounded-lg border border-q-border/60 bg-q-surface/50 px-3 text-sm font-medium text-foreground outline-none transition-colors placeholder:text-q-text-muted/70 focus:border-q-accent/50"
+                        />
+                    </label>
+                    <button
+                        type="submit"
+                        disabled={isAddingKnowledgeSource}
+                        className="mt-auto inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-q-accent/35 bg-q-accent/10 px-3 text-sm font-semibold text-q-accent transition-colors hover:bg-q-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {isAddingKnowledgeSource ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                        {t('aiAssistant.chatbotEngine.actions.addKnowledgeSource')}
+                    </button>
+                    <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold text-q-text-muted lg:col-span-3">
+                        {t('aiAssistant.chatbotEngine.fields.sourceContent')}
+                        <textarea
+                            value={newKnowledgeContent}
+                            onChange={(event) => setNewKnowledgeContent(event.target.value)}
+                            placeholder={t('aiAssistant.chatbotEngine.fields.sourceContentPlaceholder')}
+                            rows={3}
+                            className="min-h-24 resize-y rounded-lg border border-q-border/60 bg-q-surface/50 px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors placeholder:text-q-text-muted/70 focus:border-q-accent/50"
+                        />
+                    </label>
+                </form>
                 <div className="mt-4 divide-y divide-q-border/60">
                     {knowledgeSources.map(source => {
                         const status = readinessFromSource(source);
@@ -715,7 +851,7 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                         const sourceEnabled = source.status === 'ready';
                         const canEnable = source.readiness.blockers.length === 0;
                         return (
-                            <div key={source.id} className="grid gap-3 py-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_auto_auto] md:items-center">
+                            <div key={source.id} className="grid gap-3 py-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto] md:items-center">
                                 <div className="min-w-0">
                                     <div className="truncate text-sm font-semibold text-foreground">{source.name}</div>
                                     <div className="mt-1 flex flex-wrap gap-1.5">
@@ -723,8 +859,12 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                                         <InlineTag muted>{tokenLabel('ownerModules', source.ownerModule)}</InlineTag>
                                         <InlineTag muted>{tokenLabel('visibility', source.visibility)}</InlineTag>
                                     </div>
+                                    {source.contentPreview && (
+                                        <p className="mt-2 line-clamp-2 text-xs leading-5 text-q-text-muted">{source.contentPreview}</p>
+                                    )}
                                 </div>
                                 <RowText label={t('aiAssistant.chatbotEngine.fields.confidence')} value={`${Math.round(source.confidence * 100)}%`} />
+                                <RowText label={t('aiAssistant.chatbotEngine.fields.lastSync')} value={formatDateTime(source.lastSyncedAt)} />
                                 <ReadinessPill status={status} label={statusLabel(status)} />
                                 <div className="flex flex-wrap items-center gap-2">
                                     <button

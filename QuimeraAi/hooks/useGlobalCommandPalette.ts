@@ -28,6 +28,10 @@ export function useGlobalCommandPalette() {
     const tenantContext = useSafeTenant();
     const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
     const router = useRouter();
+    const canAccessOwnerMode = Boolean(
+        canAccessSuperAdmin
+        || tenantContext?.currentMembership?.role === 'agency_owner'
+    );
 
     const open = useCallback(() => {
         setIsOpen(true);
@@ -66,7 +70,7 @@ export function useGlobalCommandPalette() {
                 query,
                 projects: Array.isArray(projects) ? projects : [],
                 activeProjectId,
-                canAccessAdmin: canAccessSuperAdmin,
+                canAccessAdmin: canAccessOwnerMode,
                 canAccessService: serviceId => isLoadingServices || canAccessService(serviceId),
             });
         } catch (error) {
@@ -79,7 +83,7 @@ export function useGlobalCommandPalette() {
                 canAccessService: () => true,
             });
         }
-    }, [activeProjectId, canAccessService, canAccessSuperAdmin, isLoadingServices, projects, query]);
+    }, [activeProjectId, canAccessOwnerMode, canAccessService, isLoadingServices, projects, query]);
 
     useEffect(() => {
         setSelectedIndex(0);

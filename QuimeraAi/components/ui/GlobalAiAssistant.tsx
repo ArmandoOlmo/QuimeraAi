@@ -32,7 +32,9 @@ import {
 import type { PlatformServiceId } from '../../types/serviceAvailability';
 import {
     clearStoredGlobalAssistantEntryRequest,
+    createGlobalAssistantEntryPayload,
     GLOBAL_ASSISTANT_ENTRY_EVENT,
+    inferGlobalAssistantEntryModule,
     readStoredGlobalAssistantEntryRequest,
     type GlobalAssistantEntryPayload,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
@@ -3615,10 +3617,36 @@ const GlobalAiAssistant: React.FC = () => {
         });
     };
 
+    const buildManualOperatingLayerEntry = (request: string): GlobalAssistantEntryPayload => {
+        const project = activeProjectRef.current;
+        const tenantContext = tenantContextRef.current;
+        const activeModule = inferGlobalAssistantEntryModule(request);
+
+        return createGlobalAssistantEntryPayload(request, {
+            source: 'global_assistant',
+            surface: 'app',
+            autoSubmit: true,
+            metadata: {
+                route: path,
+                entryPoint: 'global_assistant_input',
+                sourceComponent: 'GlobalAiAssistant',
+                assistantLayer: 'global_operating_layer',
+                commandCenter: true,
+                memoryScopeHint: 'user_tenant_project_module_session_task',
+                activeModule,
+                activeProjectId: project?.id || null,
+                activeProjectName: typeof project?.name === 'string' ? project.name : null,
+                activeTenantId: tenantContext?.currentTenant?.id || project?.tenantId || null,
+                activeTenantName: tenantContext?.currentTenant?.name || null,
+            },
+        });
+    };
+
     const shouldRouteEntryToOperatingLayer = (entry?: GlobalAssistantEntryPayload): entry is GlobalAssistantEntryPayload =>
         Boolean(entry && (
             entry.source === 'dashboard_welcome' ||
             entry.source === 'command_palette' ||
+            entry.source === 'global_assistant' ||
             entry.surface === 'dashboard' ||
             entry.surface === 'admin'
         ));
@@ -3681,16 +3709,17 @@ const GlobalAiAssistant: React.FC = () => {
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
         const userMsg = request.trim();
         if (!userMsg) return;
+        const operatingLayerEntry = entry || buildManualOperatingLayerEntry(userMsg);
 
-        await ensureAssistantConversation(userMsg, entry);
+        await ensureAssistantConversation(userMsg, operatingLayerEntry);
         setInput('');
         setMessages(prev => [...prev, {
             role: 'user',
             text: userMsg,
             metadata: {
-                source: entry?.source || 'manual_global_assistant',
-                surface: entry?.surface || 'authenticated_app',
-                entryMetadata: entry?.metadata || {},
+                source: operatingLayerEntry.source,
+                surface: operatingLayerEntry.surface,
+                entryMetadata: operatingLayerEntry.metadata || {},
                 pendingTaskId: pendingOperatingLayerTaskRef.current?.taskId || null,
             },
         }]);
@@ -3698,10 +3727,10 @@ const GlobalAiAssistant: React.FC = () => {
         if (!isLiveActive) {
             setIsThinking(true);
             try {
-                console.log('[Global Assistant] Processing message:', userMsg, entry ? {
-                    source: entry.source,
-                    surface: entry.surface,
-                    metadata: entry.metadata,
+                console.log('[Global Assistant] Processing message:', userMsg, operatingLayerEntry ? {
+                    source: operatingLayerEntry.source,
+                    surface: operatingLayerEntry.surface,
+                    metadata: operatingLayerEntry.metadata,
                 } : undefined);
 
                 const pendingOperatingLayer = pendingOperatingLayerTaskRef.current;
@@ -3750,8 +3779,8 @@ const GlobalAiAssistant: React.FC = () => {
                     return;
                 }
 
-                if (shouldRouteEntryToOperatingLayer(entry)) {
-                    const operatingLayerPlan = await planOperatingLayerRequest(userMsg, entry);
+                if (shouldRouteEntryToOperatingLayer(operatingLayerEntry)) {
+                    const operatingLayerPlan = await planOperatingLayerRequest(userMsg, operatingLayerEntry);
                     syncAssistantConversationTask(operatingLayerPlan);
                     rememberPendingOperatingLayerTask(operatingLayerPlan);
                     setMessages(prev => [...prev, {

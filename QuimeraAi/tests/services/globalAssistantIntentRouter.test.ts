@@ -55,8 +55,33 @@ const context = resolveCurrentAssistantContext({
 });
 
 describe('globalAssistantIntentRouter', () => {
+    it('routes Operating Layer capability questions to the tool-aware project surface', () => {
+        const intent = routeAssistantIntent('Que puedes hacer como Operating Layer y que herramientas tienes disponibles?', context);
+
+        expect(intent).toMatchObject({
+            module: 'project',
+            intent: 'explain',
+            actionCandidates: ['summarize_operating_layer_capabilities'],
+            safetyLevel: 'low',
+        });
+        expect(intent.requiresClarification).toBe(false);
+    });
+
     it('keeps ChatCore requests on the chatbot operating surface even when blueprint is mentioned', () => {
         const intent = routeAssistantIntent('Entrena ChatCore con el Business Blueprint del proyecto', context);
+
+        expect(intent).toMatchObject({
+            module: 'chatbot',
+            intent: 'sync',
+            actionCandidates: ['sync_chatbot_knowledge'],
+        });
+    });
+
+    it('prioritizes ChatCore training over review wording in dashboard quick actions', () => {
+        const intent = routeAssistantIntent(
+            'Entrena ChatCore para el proyecto activo sincronizando conocimiento revisado del proyecto y manteniendo separada la memoria del chat visitante.',
+            context,
+        );
 
         expect(intent).toMatchObject({
             module: 'chatbot',

@@ -109,6 +109,7 @@ import HeaderBackButton from '../ui/HeaderBackButton';
 import ImagePicker from '../ui/ImagePicker';
 import ColorControl from '../ui/ColorControl';
 import ChatCore from '../chat/ChatCore';
+import { buildChatbotEngineSurfaceContext } from '../../utils/chatbotEngine/surfaceContext';
 import { hexToRgba } from '../../utils/colorUtils';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import AppSelect from '../ui/AppSelect';
@@ -5501,6 +5502,20 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                 onClose={() => setIsChatbotPreviewOpen(false)}
                                 autoOpen={true}
                                 isEmbedded={true}
+                                chatbotEngineContext={buildChatbotEngineSurfaceContext({
+                                    sourceSurface: 'admin_preview',
+                                    sourceModule: 'bio-page',
+                                    route: 'bio-page-builder/chatbot-preview',
+                                    entityType: 'bio_page',
+                                    entityId: bioPage?.id || activeProject.id,
+                                    entitySlug: slug || bioPage?.slug,
+                                    contextKeys: ['bio_page_builder', 'chatbot_preview'],
+                                    metadata: {
+                                        projectId: activeProject.id,
+                                        bioPageId: bioPage?.id,
+                                        preview: true,
+                                    },
+                                })}
                                 className="h-full"
                             />
                         </div>

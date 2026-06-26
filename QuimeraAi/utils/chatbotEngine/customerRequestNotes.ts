@@ -34,6 +34,12 @@ export interface BuildChatbotCustomerRequestNotesInput {
     generatedAt?: Date;
 }
 
+export interface BuildReadableChatbotCustomerRequestNoteOptions {
+    customer?: ChatbotCustomerRequestContact | null;
+    appointmentTitle?: string | null;
+    appointmentDateTime?: string | null;
+}
+
 const MAX_NOTE_LENGTH = 6000;
 const MAX_SNIPPET_LENGTH = 700;
 
@@ -170,9 +176,26 @@ const conversationContextFromSummary = (lines: string[]): string => {
         .join(' | ');
 };
 
+const cleanSentencePart = (value: string): string => cleanText(value, 1400).replace(/\.+$/g, '').trim();
+
+const finishSentence = (value: string): string => {
+    const trimmed = value.replace(/\s+/g, ' ').trim();
+    if (!trimmed) return '';
+    return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+};
+
+const compactParagraph = (sentences: string[]): string => (
+    sentences
+        .map(finishSentence)
+        .filter(Boolean)
+        .join(' ')
+        .slice(0, MAX_NOTE_LENGTH)
+);
+
 export const buildReadableChatbotCustomerRequestNote = (
     customerRequestNotes?: string | null,
     fallback?: string | null,
+    options: BuildReadableChatbotCustomerRequestNoteOptions = {},
 ): string => {
     const raw = cleanNoteBlock(customerRequestNotes);
     if (!raw) return cleanNoteBlock(fallback);
@@ -182,25 +205,54 @@ export const buildReadableChatbotCustomerRequestNote = (
         .split('\n')
         .map(line => line.trim())
         .filter(Boolean);
-    const customer = valueAfterAnyLabel(lines, ['Cliente / Customer: ']);
+    const optionCustomer = uniqueNonEmpty([
+        options.customer?.name,
+        options.customer?.email,
+        options.customer?.phone,
+    ]).join(' | ');
+    const customer = valueAfterAnyLabel(lines, ['Cliente / Customer: ']) || optionCustomer;
     const request = valueAfterAnyLabel(lines, ['Lo que desea el cliente / What the customer wants: ']);
-    const appointment = valueAfterAnyLabel(lines, ['Cita / Appointment: ']);
-    const requestedTime = valueAfterAnyLabel(lines, ['Fecha solicitada / Requested time: ']);
+    const appointment = valueAfterAnyLabel(lines, ['Cita / Appointment: ']) || cleanText(options.appointmentTitle, 250);
+    const requestedTime = valueAfterAnyLabel(lines, ['Fecha solicitada / Requested time: ']) || cleanText(options.appointmentDateTime, 250);
     const urgency = valueAfterAnyLabel(lines, ['Urgencia / Urgency: ']);
     const recommendedAction = valueAfterAnyLabel(lines, ['Accion recomendada / Recommended action: ']);
     const latestMessage = valueAfterAnyLabel(lines, ['Ultimo mensaje del cliente / Latest customer message: ']);
     const context = conversationContextFromSummary(lines) || latestMessage;
 
-    const readableLines = [
-        'Resumen para seguimiento / Follow-up summary',
-        customer ? `Cliente / Customer: ${customer}` : '',
-        request ? `Solicitud / Request: ${request}` : '',
-        appointment ? `Cita / Appointment: ${appointment}` : '',
-        requestedTime ? `Fecha solicitada / Requested time: ${requestedTime}` : '',
-        urgency && urgency !== 'unknown' ? `Prioridad / Priority: ${urgency}` : '',
-        recommendedAction ? `Siguiente paso sugerido / Suggested next step: ${recommendedAction}` : '',
-        context ? `Contexto / Context: ${context}` : '',
-    ].filter(Boolean);
+    const customerLabel = cleanSentencePart(customer);
+    const requestLabel = cleanSentencePart(request);
+    const appointmentLabel = cleanSentencePart(appointment);
+    const requestedTimeLabel = cleanSentencePart(requestedTime);
+    const urgencyLabel = cleanSentencePart(urgency);
+    const recommendedActionLabel = cleanSentencePart(recommendedAction);
+    const contextLabel = cleanSentencePart(context);
 
-    return (readableLines.length > 1 ? readableLines.join('\n') : raw).slice(0, MAX_NOTE_LENGTH);
+    const spanishSummary = compactParagraph([
+        requestLabel
+            ? `${customerLabel ? `El cliente ${customerLabel}` : 'El cliente'} solicito: ${requestLabel}`
+            : `${customerLabel ? `El cliente ${customerLabel}` : 'El cliente'} necesita seguimiento desde ChatCore`,
+        appointmentLabel || requestedTimeLabel
+            ? `La cita relacionada es ${appointmentLabel || 'sin titulo'}${requestedTimeLabel ? ` para ${requestedTimeLabel}` : ''}`
+            : '',
+        urgencyLabel && urgencyLabel !== 'unknown' ? `Prioridad detectada: ${urgencyLabel}` : '',
+        recommendedActionLabel ? `Proximo paso sugerido: ${recommendedActionLabel}` : '',
+        contextLabel ? `Contexto de la conversacion: ${contextLabel}` : '',
+    ]);
+    const englishSummary = compactParagraph([
+        requestLabel
+            ? `${customerLabel ? `The customer ${customerLabel}` : 'The customer'} requested: ${requestLabel}`
+            : `${customerLabel ? `The customer ${customerLabel}` : 'The customer'} needs follow-up from ChatCore`,
+        appointmentLabel || requestedTimeLabel
+            ? `The related appointment is ${appointmentLabel || 'untitled'}${requestedTimeLabel ? ` for ${requestedTimeLabel}` : ''}`
+            : '',
+        urgencyLabel && urgencyLabel !== 'unknown' ? `Detected priority: ${urgencyLabel}` : '',
+        recommendedActionLabel ? `Suggested next step: ${recommendedActionLabel}` : '',
+        contextLabel ? `Conversation context: ${contextLabel}` : '',
+    ]);
+
+    return [
+        'Resumen de seguimiento / Follow-up summary',
+        spanishSummary ? `ES: ${spanishSummary}` : '',
+        englishSummary ? `EN: ${englishSummary}` : '',
+    ].filter(Boolean).join('\n').slice(0, MAX_NOTE_LENGTH);
 };

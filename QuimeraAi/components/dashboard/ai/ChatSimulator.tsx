@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AiAssistantConfig, Lead, Project } from '../../../types';
 import { useCRM } from '../../../contexts/crm';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useSafeTenant } from '../../../contexts/tenant';
 import { resolveChatAppearanceConfig } from '../../../utils/chatThemes';
-import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
+import ChatCore, { ChatAppointmentData, type ChatAppointmentHandlerResult, AppointmentSlot } from '../../chat/ChatCore';
 import { supabase } from '../../../supabase';
 import { createAppointmentFromChat, getAppointmentsByProject } from '../../../services/appointments/appointmentEngineService';
 import {
     buildChatCoreAppointmentPayloadNotes,
     buildChatCoreLeadPayloadNotes,
 } from '../../../utils/chatbotEngine/chatCorePayloadNotes';
+import { buildChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -28,6 +29,20 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
     // Use project.id from props (more reliable than activeProjectId)
     const projectId = project?.id;
+    const simulatorChatbotEngineContext = useMemo(() => buildChatbotEngineSurfaceContext({
+        sourceSurface: 'admin_preview',
+        sourceModule: 'chatcore',
+        route: 'chatbot-engine/test-lab',
+        entityType: 'project',
+        entityId: projectId,
+        contextKeys: ['test_lab', 'chat_simulator'],
+        metadata: {
+            projectId,
+            tenantId: currentTenantId,
+            testLab: true,
+            simulator: 'ChatSimulator',
+        },
+    }), [currentTenantId, projectId]);
 
     // Get appearance config with defaults
     const appearance = resolveChatAppearanceConfig(config.appearance, project?.theme?.globalColors);
@@ -68,8 +83,9 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             leadData: leadData as Record<string, unknown>,
             projectName: project.name,
             agentName: config.agentName,
-            sourceSurface: 'test_lab',
-            sourceModule: 'chatcore',
+            sourceSurface: simulatorChatbotEngineContext.sourceSurface,
+            sourceModule: simulatorChatbotEngineContext.sourceModule,
+            chatbotEngineContext: simulatorChatbotEngineContext,
             locale: i18n.language,
         });
 
@@ -90,8 +106,9 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
             metadata: {
                 ...(leadData.metadata || {}),
                 customerRequestSummary: customerRequestNotes,
-                sourceSurface: 'test_lab',
-                sourceModule: 'chatcore',
+                sourceSurface: simulatorChatbotEngineContext.sourceSurface,
+                sourceModule: simulatorChatbotEngineContext.sourceModule,
+                chatbotEngineContext: simulatorChatbotEngineContext,
             },
         } as Omit<Lead, 'id' | 'createdAt' | 'projectId'>;
 
@@ -115,15 +132,16 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     };
 
     // Handle creating appointment from chat
-    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<ChatAppointmentHandlerResult> => {
         console.log('[ChatSimulator] 📅 handleCreateAppointment called with:', appointmentData);
         console.log('[ChatSimulator] 📅 user:', user?.id, 'projectId:', projectId);
         const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
             appointmentData: appointmentData as unknown as Record<string, unknown>,
             projectName: project.name,
             agentName: config.agentName,
-            sourceSurface: 'test_lab',
-            sourceModule: 'chatcore',
+            sourceSurface: simulatorChatbotEngineContext.sourceSurface,
+            sourceModule: simulatorChatbotEngineContext.sourceModule,
+            chatbotEngineContext: simulatorChatbotEngineContext,
             locale: appointmentData.locale || i18n.language,
         });
 
@@ -167,13 +185,21 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     simulated: true,
                     projectName: project.name,
                     locale: i18n.language,
+                    sourceSurface: simulatorChatbotEngineContext.sourceSurface,
+                    sourceModule: simulatorChatbotEngineContext.sourceModule,
+                    chatbotEngineContext: simulatorChatbotEngineContext,
                     bookingChannel: appointmentData.bookingChannel,
                     customerRequestSummary: customerRequestNotes,
                 },
             });
 
             console.log('[ChatSimulator] ✅ Canonical appointment created:', result.appointmentId);
-            return result.appointmentId;
+            return {
+                appointmentId: result.appointmentId,
+                leadId: result.leadId,
+                duplicate: result.duplicate,
+                warnings: result.warnings,
+            };
         } catch (error) {
             console.error('[ChatSimulator] ❌ Error creating appointment:', error);
             return undefined;
@@ -198,6 +224,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     existingAppointments={appointments}
                     className="h-full"
                     showHeader={true}
+                    chatbotEngineContext={simulatorChatbotEngineContext}
                 />
             </div>
         </div>

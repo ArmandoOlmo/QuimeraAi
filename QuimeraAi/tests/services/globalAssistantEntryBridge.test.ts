@@ -174,6 +174,14 @@ describe('globalAssistantEntryBridge', () => {
         });
         expect(ownerWithoutActiveProject.map(action => action.id)).toEqual([
             'create_website',
+            'generate_hero_image',
+            'review_leads',
+            'create_email',
+            'open_ecommerce',
+            'train_chatcore',
+            'create_appointment',
+            'improve_bio_page',
+            'analyze_project',
             'review_platform_errors',
         ]);
 
@@ -189,9 +197,41 @@ describe('globalAssistantEntryBridge', () => {
             'review_leads',
             'create_email',
             'open_ecommerce',
+            'train_chatcore',
+            'create_appointment',
+            'improve_bio_page',
+            'analyze_project',
             'review_platform_errors',
         ]);
+        expect(ownerActions.map(action => action.module)).toEqual(expect.arrayContaining([
+            'aiStudio',
+            'media',
+            'crm',
+            'emailMarketing',
+            'ecommerce',
+            'chatbot',
+            'appointments',
+            'bioPage',
+            'analytics',
+            'admin',
+        ]));
         expect(ownerActions.every(action => action.promptKey.startsWith('dashboard.assistantQuickActions.'))).toBe(true);
+        expect(ownerActions.find(action => action.id === 'train_chatcore')).toMatchObject({
+            module: 'chatbot',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'create_appointment')).toMatchObject({
+            module: 'appointments',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'improve_bio_page')).toMatchObject({
+            module: 'bioPage',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'analyze_project')).toMatchObject({
+            module: 'analytics',
+            requiresProject: true,
+        });
         expect(ownerActions.find(action => action.id === 'review_platform_errors')).toMatchObject({
             module: 'admin',
             adminOnly: true,
@@ -230,6 +270,18 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('conversationId: assistantConversationIdRef.current');
         expect(source).toContain("source: 'operating_layer_plan'");
         expect(source).toContain('clearAssistantConversation');
+    });
+
+    it('routes manual Global Assistant drawer messages through the Operating Layer by default', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('buildManualOperatingLayerEntry');
+        expect(source).toContain("source: 'global_assistant'");
+        expect(source).toContain("entryPoint: 'global_assistant_input'");
+        expect(source).toContain('inferGlobalAssistantEntryModule(request)');
+        expect(source).toContain('const operatingLayerEntry = entry || buildManualOperatingLayerEntry(userMsg)');
+        expect(source).toContain("entry.source === 'global_assistant'");
+        expect(source).toContain('planOperatingLayerRequest(userMsg, operatingLayerEntry)');
     });
 
     it('wires dashboard global requests to tenant/workspace-aware context', () => {

@@ -18,6 +18,7 @@ import {
     type ChatbotEngineAuditEvent,
 } from '../../utils/chatbotEngine/actionRegistry';
 import {
+    addProjectChatbotKnowledgeSource,
     disableAction,
     enableAction,
     getActionRegistry,
@@ -26,6 +27,7 @@ import {
     updateProjectChatbotKnowledgeSourceReview,
     updateProjectChatbotSurfaceDeployment,
     updateProjectChatbotTestScenarioStatus,
+    type ChatbotKnowledgeSourceCreateInput,
     type ChatbotEngineConfigResult,
     type ChatbotEngineKnowledgeConfigurationResult,
     type ChatbotEngineSurfaceConfigurationResult,
@@ -109,6 +111,8 @@ export interface ChatbotKnowledgeSourceMutationInput {
     actorId?: string | null;
     now?: string;
 }
+
+export type ChatbotKnowledgeSourceAddInput = ChatbotKnowledgeSourceCreateInput;
 
 export interface ChatbotEventInput {
     tenantId?: string | null;
@@ -483,6 +487,14 @@ export function disableKnowledgeSource(
         ...input,
         enabled: false,
     }, client);
+}
+
+export function addKnowledgeSource(
+    projectId: string,
+    input: ChatbotKnowledgeSourceAddInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotEngineKnowledgeConfigurationResult> {
+    return addProjectChatbotKnowledgeSource(projectId, input, client);
 }
 
 export function recordChatbotEvent(

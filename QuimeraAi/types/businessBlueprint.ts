@@ -347,6 +347,9 @@ export interface ChatbotKnowledgeSourceBlueprint {
     freshness: ChatbotSourceFreshness;
     confidence: number;
     contentHash?: string;
+    contentLength?: number;
+    contentPreview?: string;
+    sourceUrl?: string;
     sourceEntityIds: string[];
     readiness: BlueprintReadiness;
     needsReview: boolean;

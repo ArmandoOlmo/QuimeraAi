@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GlobalAssistantRuntimeResult } from '../../services/globalAssistant/globalAssistantRuntime.ts';
+import { buildGlobalAssistantChatSurfaceMap } from '../../services/globalAssistant/globalAssistantChatSurfaceRegistry.ts';
 import {
     buildGlobalAssistantPlanMemoryMetadata,
     defaultGlobalAssistantFeatureFlags,
@@ -88,6 +89,75 @@ describe('globalAssistantCommandCenter', () => {
                 module: 'ecommerce',
                 unavailableActionTypes: expect.arrayContaining(['create_product']),
             }),
+        ]));
+        expect(context.snapshot.assistantSurfaces).toMatchObject({
+            currentSurfaceId: 'global-operating-layer',
+            globalActionSurfaceId: 'global-operating-layer',
+        });
+        expect((context.snapshot.assistantSurfaces as any).surfaces).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: 'global-operating-layer',
+                canExecuteGlobalActions: true,
+                memoryScope: 'global_assistant_memory',
+            }),
+            expect.objectContaining({
+                id: 'project-chatcore',
+                canExecuteGlobalActions: false,
+                memoryScope: 'project_chat_config',
+            }),
+        ]));
+    });
+
+    it('maps chat surfaces without mixing ChatCore, Studio, and the Operating Layer', () => {
+        const dashboardMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'dashboard',
+            activeRoute: '/dashboard',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+        const chatCoreMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'chatcore',
+            activeRoute: '/ai-assistant',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+        const globalDrawerOverChatCoreMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'app',
+            activeRoute: '/ai-assistant',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+        const commandPaletteOverEcommerceMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'command palette',
+            activeRoute: '/ecommerce',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+        const adminDrawerMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'admin',
+            activeRoute: '/admin/service-availability',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+        const studioMap = buildGlobalAssistantChatSurfaceMap({
+            currentSurface: 'website studio',
+            activeRoute: '/ai-studio',
+            generatedAt: '2026-06-26T00:00:00.000Z',
+        });
+
+        expect(dashboardMap.currentSurfaceId).toBe('global-operating-layer');
+        expect(chatCoreMap.currentSurfaceId).toBe('project-chatcore');
+        expect(globalDrawerOverChatCoreMap.currentSurfaceId).toBe('global-operating-layer');
+        expect(commandPaletteOverEcommerceMap.currentSurfaceId).toBe('global-operating-layer');
+        expect(adminDrawerMap.currentSurfaceId).toBe('global-operating-layer');
+        expect(studioMap.currentSurfaceId).toBe('ai-website-studio');
+        expect(dashboardMap.surfaces.find(surface => surface.id === 'global-operating-layer')).toMatchObject({
+            canExecuteGlobalActions: true,
+            memoryScope: 'global_assistant_memory',
+        });
+        expect(dashboardMap.surfaces.find(surface => surface.id === 'project-chatcore')).toMatchObject({
+            canExecuteGlobalActions: false,
+            memoryScope: 'project_chat_config',
+            module: 'chatbot',
+        });
+        expect(dashboardMap.guardrails).toEqual(expect.arrayContaining([
+            expect.stringContaining('Only global-operating-layer'),
+            expect.stringContaining('Project ChatCore'),
         ]));
     });
 
@@ -488,6 +558,18 @@ describe('globalAssistantCommandCenter', () => {
                 ...navigationResult.plan,
                 actions: [
                     {
+                        actionType: 'summarize_operating_layer_capabilities',
+                        metadata: { mutatesData: false, executable: true },
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                actions: [
+                    {
                         actionType: 'summarize_analytics',
                         metadata: { mutatesData: false, executable: true },
                     },
@@ -562,6 +644,64 @@ describe('globalAssistantCommandCenter', () => {
         expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('Requieren revision: websiteBlueprint, chatbotBlueprint.');
         expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Modules evaluated: 16; enabled: 14; ready: 9; needs review: 5.');
         expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Next step: Review AI-generated module drafts before they are exposed publicly or sent to customers.');
+    });
+
+    it('formats auto-applied Operating Layer capability diagnostics with tool coverage', () => {
+        const result = {
+            task: { status: 'completed' },
+            plan: { blockers: [] },
+            actions: [{
+                module: 'project',
+                actionType: 'summarize_operating_layer_capabilities',
+                status: 'applied',
+                metadata: { rollbackSupported: false },
+                afterSnapshot: {
+                    kind: 'operating_layer_capability_summary',
+                    summary: {
+                        actionCount: 52,
+                        availableActionCount: 45,
+                        executableActionCount: 49,
+                        previewActionCount: 34,
+                        rollbackActionCount: 28,
+                        rollbackExecutableActionCount: 24,
+                        rollbackGapActionCount: 4,
+                        rollbackGapActionTypes: ['create_email_campaign', 'create_product'],
+                        confirmationActionCount: 30,
+                        highRiskActionCount: 27,
+                        unavailableActionCount: 7,
+                    },
+                    modules: [
+                        { module: 'website' },
+                        { module: 'ecommerce' },
+                        { module: 'chatbot' },
+                    ],
+                    blockedBy: {
+                        services: ['ecommerce'],
+                        features: ['ecommerceEnabled'],
+                    },
+                    assistantSurfaces: {
+                        currentSurfaceId: 'global-operating-layer',
+                        globalActionSurfaceId: 'global-operating-layer',
+                        surfaceCount: 7,
+                    },
+                    recommendations: ['Enable missing services or feature flags before offering blocked module actions.'],
+                },
+            }],
+        } as any;
+
+        const spanish = formatOperatingLayerApplyMessage(result, 'es');
+        expect(spanish).toContain('Operating Layer: 3 modulos; 52 acciones; 45 disponibles en este contexto.');
+        expect(spanish).toContain('Ejecutables: 49; preview: 34; rollback declarado: 28; rollback ejecutable: 24; confirmacion: 30; alto riesgo: 27.');
+        expect(spanish).toContain('Gaps de rollback: 4 (create_email_campaign, create_product).');
+        expect(spanish).toContain('Servicios requeridos no activos: ecommerce.');
+        expect(spanish).toContain('Superficies de chat: 7; activa: global-operating-layer; acciones globales: global-operating-layer.');
+
+        const english = formatOperatingLayerApplyMessage(result, 'en');
+        expect(english).toContain('Operating Layer: 3 modules; 52 actions; 45 available in this context.');
+        expect(english).toContain('declared rollback: 28; executable rollback: 24');
+        expect(english).toContain('Rollback gaps: 4 (create_email_campaign, create_product).');
+        expect(english).toContain('Required feature flags: ecommerceEnabled.');
+        expect(english).toContain('Chat surfaces: 7; active: global-operating-layer; global actions: global-operating-layer.');
     });
 
     it('formats auto-applied analytics and lead summaries without losing module evidence', () => {

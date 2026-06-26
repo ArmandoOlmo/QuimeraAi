@@ -72,6 +72,16 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('project', 'search_projects', 'Search projects available to the current user or tenant.', objectSchema({
         query: stringSchema('Project search query.'),
     }, ['query']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
+    action('project', 'summarize_operating_layer_capabilities', 'Summarize the current Operating Layer module/tool coverage, availability, permissions, preview, confirmation, and rollback support without mutating data.', objectSchema({
+        module: stringSchema('Optional module to focus on.'),
+        includeUnavailable: booleanSchema('Whether unavailable or blocked actions should be included in the summary.'),
+        includeActions: booleanSchema('Whether to include representative action type lists for each module.'),
+    }), 'low', {
+        requiredPermissions: [],
+        mutatesData: false,
+        previewSupported: false,
+        rollbackSupported: false,
+    }),
     action('project', 'create_project_from_prompt', 'Create a new project through AI Studio generation.', objectSchema({
         prompt: stringSchema('Business or website creation brief.'),
         tenantId: stringSchema('Tenant/workspace id.'),

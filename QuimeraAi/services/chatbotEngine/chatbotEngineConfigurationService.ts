@@ -8,7 +8,11 @@ import type {
     ChatbotChannelBlueprint,
     ChatbotDeploymentBlueprint,
     ChatbotDeploymentStatus,
+    ChatbotBlueprintOwnerModule,
     ChatbotKnowledgeSourceBlueprint,
+    ChatbotKnowledgeSourceStatus,
+    ChatbotKnowledgeSourceType,
+    ChatbotKnowledgeVisibility,
     ChatbotSurfaceChannelBlueprint,
     ChatbotTestScenarioBlueprint,
 } from '../../types/businessBlueprint';
@@ -37,6 +41,22 @@ export interface ChatbotActionReviewInput {
 export interface ChatbotKnowledgeSourceReviewInput extends ChatbotConfigurationMutationInput {
     sourceId: string;
     enabled: boolean;
+}
+
+export interface ChatbotKnowledgeSourceCreateInput extends ChatbotConfigurationMutationInput {
+    id?: string;
+    name: string;
+    type?: ChatbotKnowledgeSourceType;
+    ownerModule?: ChatbotBlueprintOwnerModule;
+    visibility?: ChatbotKnowledgeVisibility;
+    status?: Extract<ChatbotKnowledgeSourceStatus, 'draft' | 'needs_review' | 'syncing'>;
+    content?: string | null;
+    sourceUrl?: string | null;
+    sourceEntityIds?: string[];
+    contentHash?: string;
+    confidence?: number;
+    generatedByAI?: boolean;
+    sync?: boolean;
 }
 
 export interface ChatbotTestScenarioStatusInput extends ChatbotConfigurationMutationInput {
@@ -179,6 +199,39 @@ function cleanKeyPart(value: unknown): string {
         .slice(0, 80) || 'none';
 }
 
+function cleanString(value: unknown, maxLength = 2000): string {
+    return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+}
+
+function uniqueStrings(values: unknown[], maxItems = 50): string[] {
+    return Array.from(new Set(values.map(value => cleanString(value, 500)).filter(Boolean))).slice(0, maxItems);
+}
+
+function hashString(value: string): string {
+    let hash = 5381;
+    for (let index = 0; index < value.length; index += 1) {
+        hash = ((hash << 5) + hash) ^ value.charCodeAt(index);
+    }
+    return `h${(hash >>> 0).toString(16).padStart(8, '0')}`;
+}
+
+function buildKnowledgeSourceId(input: ChatbotKnowledgeSourceCreateInput, contentHash: string): string {
+    const explicitId = cleanString(input.id, 120);
+    if (explicitId) return explicitId;
+    return [
+        'knowledge',
+        input.type || 'manual_snippet',
+        input.sourceUrl || input.name,
+        contentHash.slice(0, 10),
+    ].map(cleanKeyPart).join('-').slice(0, 160);
+}
+
+function buildKnowledgePreview(content: string, sourceUrl: string): string | undefined {
+    const source = content || sourceUrl;
+    if (!source) return undefined;
+    return source.replace(/\s+/g, ' ').trim().slice(0, 500) || undefined;
+}
+
 function getBusinessBlueprintTenantId(blueprint: BusinessBlueprint): string | null {
     const metadata: Record<string, unknown> = isRecord(blueprint.metadata)
         ? blueprint.metadata as unknown as Record<string, unknown>
@@ -272,6 +325,102 @@ function ensureConfigurableKnowledgeSource(source: ChatbotKnowledgeSourceBluepri
             blockers,
         });
     }
+}
+
+function createKnowledgeSourceBlueprint(
+    input: ChatbotKnowledgeSourceCreateInput,
+    now: string,
+): ChatbotKnowledgeSourceBlueprint {
+    const name = cleanString(input.name, 240);
+    if (!name) {
+        throw Object.assign(new Error('Chatbot knowledge source name is required.'), {
+            code: 'CHATBOT_KNOWLEDGE_SOURCE_NAME_REQUIRED',
+        });
+    }
+
+    const content = cleanString(input.content, 12000);
+    const sourceUrl = cleanString(input.sourceUrl, 2000);
+    const contentHash = cleanString(input.contentHash, 120)
+        || hashString([input.type || 'manual_snippet', name, sourceUrl, content].join('\n'));
+    const id = buildKnowledgeSourceId(input, contentHash);
+    const sync = input.sync === true;
+    const status = input.status || 'needs_review';
+    const preview = buildKnowledgePreview(content, sourceUrl);
+
+    return {
+        id,
+        name,
+        type: input.type || 'manual_snippet',
+        ownerModule: input.ownerModule || 'chatbot-engine',
+        visibility: input.visibility || 'internal',
+        status,
+        lastSyncedAt: sync ? now : undefined,
+        freshness: sync ? 'fresh' : 'unknown',
+        confidence: Math.min(Math.max(input.confidence ?? 0.72, 0), 1),
+        contentHash,
+        contentLength: content.length || sourceUrl.length || undefined,
+        contentPreview: preview,
+        sourceUrl: sourceUrl || undefined,
+        sourceEntityIds: uniqueStrings([id, sourceUrl, ...(input.sourceEntityIds || [])]),
+        readiness: {
+            isReady: false,
+            blockers: [],
+            warnings: [
+                'ES: Fuente agregada al Knowledge Center y pendiente de revisión humana antes de usarla en producción.',
+                'EN: Source added to the Knowledge Center and pending human review before production use.',
+            ],
+        },
+        needsReview: true,
+        generatedByAI: input.generatedByAI === true,
+        userModified: true,
+        lockedFromRegeneration: true,
+        sourceMap: {
+            knowledgeCenter: 'chatbotEngine.knowledgeCenter',
+            sourceKind: input.type || 'manual_snippet',
+            ...(sourceUrl ? { sourceUrl } : {}),
+            ...(preview ? { contentPreview: preview } : {}),
+        },
+    };
+}
+
+export function addChatbotKnowledgeSourceToBlueprint(
+    blueprint: ChatbotBlueprint,
+    input: ChatbotKnowledgeSourceCreateInput,
+): { blueprint: ChatbotBlueprint; knowledgeSource: ChatbotKnowledgeSourceBlueprint; duplicate: boolean } {
+    const now = input.now || new Date().toISOString();
+    const knowledgeSource = createKnowledgeSourceBlueprint(input, now);
+    const existing = blueprint.knowledgeSources.find(source => source.id === knowledgeSource.id);
+    if (existing) {
+        return {
+            blueprint,
+            knowledgeSource: existing,
+            duplicate: true,
+        };
+    }
+
+    const nextBlueprint: ChatbotBlueprint = {
+        ...blueprint,
+        status: 'needs_review',
+        needsReview: true,
+        knowledgeSources: [...blueprint.knowledgeSources, knowledgeSource],
+        readiness: {
+            ...blueprint.readiness,
+            isReady: false,
+            warnings: Array.from(new Set([
+                ...(blueprint.readiness?.warnings || []),
+                'ES: Knowledge Center tiene una fuente nueva pendiente de revisión.',
+                'EN: Knowledge Center has a new source pending review.',
+            ])),
+        },
+        metadata: updateChatbotBlueprintMetadata(blueprint, input, now),
+        sourceMap: updateChatbotBlueprintSourceMap(blueprint, 'knowledgeCenter', 'chatbotEngine.knowledgeCenter'),
+    };
+
+    return {
+        blueprint: nextBlueprint,
+        knowledgeSource,
+        duplicate: false,
+    };
 }
 
 function updateChatbotBlueprintMetadata(
@@ -814,6 +963,50 @@ export async function updateProjectChatbotKnowledgeSourceReview(
         projectId,
         ...persisted,
         knowledgeSource,
+        ...audit,
+    };
+}
+
+export async function addProjectChatbotKnowledgeSource(
+    projectId: string,
+    input: ChatbotKnowledgeSourceCreateInput,
+    client: SupabaseLike = supabase,
+): Promise<ChatbotEngineKnowledgeConfigurationResult> {
+    const now = input.now || new Date().toISOString();
+    const loaded = await loadProjectChatbotConfig(projectId, client);
+    const result = addChatbotKnowledgeSourceToBlueprint(loaded.chatbotBlueprint, {
+        ...input,
+        now,
+    });
+    const persisted = result.duplicate
+        ? {
+            businessBlueprint: loaded.businessBlueprint,
+            chatbotBlueprint: loaded.chatbotBlueprint,
+            data: loaded.projectData,
+        }
+        : await persistProjectChatbotBlueprint(projectId, loaded.projectData, result.blueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'knowledgeCenter',
+        targetId: result.knowledgeSource.id,
+        targetLabel: result.knowledgeSource.name,
+        operation: result.duplicate ? 'knowledge_source_duplicate' : 'add_knowledge_source',
+        before: null,
+        after: {
+            id: result.knowledgeSource.id,
+            type: result.knowledgeSource.type,
+            status: result.knowledgeSource.status,
+            visibility: result.knowledgeSource.visibility,
+            needsReview: result.knowledgeSource.needsReview,
+            contentLength: result.knowledgeSource.contentLength || 0,
+            sourceUrl: result.knowledgeSource.sourceUrl || null,
+            duplicate: result.duplicate,
+        },
+    });
+
+    return {
+        projectId,
+        ...persisted,
+        knowledgeSource: result.knowledgeSource,
         ...audit,
     };
 }

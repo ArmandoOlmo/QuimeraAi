@@ -17,6 +17,42 @@ const normalize = (value: string): string =>
 
 const includesAny = (text: string, terms: string[]) => terms.some(term => text.includes(term));
 
+const isOperatingLayerCapabilityRequest = (text: string): boolean => {
+    const explicitCapabilityAsk = includesAny(text, [
+        'que puedes hacer',
+        'what can you do',
+        'capacidades',
+        'capabilities',
+        'herramientas disponibles',
+        'available tools',
+        'acciones disponibles',
+        'available actions',
+        'cobertura del operating layer',
+        'operating layer coverage',
+        'modulos disponibles',
+        'available modules',
+    ]);
+    const operatingLayerAsk = includesAny(text, [
+        'operating layer',
+        'ai operating layer',
+        'command center',
+        'centro de comando',
+        'global assistant',
+        'asistente global',
+    ]) && includesAny(text, [
+        'status',
+        'estado',
+        'cobertura',
+        'coverage',
+        'capacidades',
+        'capabilities',
+        'herramientas',
+        'tools',
+    ]);
+
+    return explicitCapabilityAsk || operatingLayerAsk;
+};
+
 const isNewWebsiteCreationRequest = (text: string): boolean => {
     const hasCreationIntent = includesAny(text, [
         'crea',
@@ -100,6 +136,7 @@ const PROJECT_SCOPED_MODULES = new Set<AssistantModuleTarget>([
 ]);
 
 const inferIntent = (text: string): AssistantIntentCategory => {
+    if (isOperatingLayerCapabilityRequest(text)) return 'explain';
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
     if (includesAny(text, ['despliega', 'desplegar', 'deploy'])) return 'publish';
@@ -110,10 +147,10 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['abre', 'abrir', 'open', 've a', 'go to', 'muestra'])) return 'open';
     if (includesAny(text, ['busca', 'search', 'encuentra', 'find'])) return 'search';
     if (includesAny(text, ['reporte', 'report'])) return 'report';
+    if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['analiza', 'review', 'revisa', 'identifica', 'identify', 'prueba', 'testea', 'laboratorio'])) return 'analyze';
     if (includesAny(text, ['imagen', 'image', 'foto', 'hero image'])) return 'generate_image';
     if (includesAny(text, ['video'])) return 'generate_video';
-    if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
     if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'activa', 'activar', 'desactiva', 'desactivar', 'enable', 'disable', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar', 'marca', 'marcar', 'pagada', 'pagado', 'paid', 'vencida', 'vencido'])) return 'edit';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
@@ -125,6 +162,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
 };
 
 const inferModule = (text: string, context: AssistantContextSnapshot): AssistantModuleTarget => {
+    if (isOperatingLayerCapabilityRequest(text)) return 'project';
     if (includesAny(text, [
         'admin',
         'tenant',
@@ -181,6 +219,10 @@ const inferSafety = (intent: AssistantIntentCategory, module: AssistantModuleTar
 };
 
 const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantModuleTarget, text = ''): string[] => {
+    if (module === 'project' && isOperatingLayerCapabilityRequest(text)) {
+        return ['summarize_operating_layer_capabilities'];
+    }
+
     if (module === 'emailMarketing' && (intent === 'create' || intent === 'schedule')) {
         if (includesAny(text, ['audiencia', 'audience', 'segmento', 'segment'])) return ['create_audience'];
         if (includesAny(text, ['automation', 'automatizacion', 'automacion', 'workflow', 'flow'])) return ['create_email_automation'];

@@ -40,6 +40,7 @@ import {
 import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
 import { getBioSlugFromPathname } from '../utils/bioPageRouting';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import { canRenderChatbotSurface } from '../utils/chatbotEngine/deploymentGuard';
 import type { BioPageData, BioPageLink, BioPageProfile, BioPageTheme } from '../services/bioPage';
 import type { AiAssistantConfig } from '../types/ai-assistant';
 import type { Lead } from '../types';
@@ -477,6 +478,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
 
         // Handle chatbot links
         if (link.linkType === 'chatbot') {
+            if (!bioPageChatbotSurfaceVisible) return;
             setActiveChatBlockId(blockId);
             void trackBioPageChatOpen(bioPageData, blockId);
             setIsChatbotOpen(true);
@@ -735,6 +737,33 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
             },
         }) : undefined
     ), [activeChatBlockId, bioPageData]);
+    const bioPageChatbotBlueprint = (bioPageData as any)?.businessBlueprint
+        || (bioPageData?.settings as any)?.businessBlueprint
+        || (bioPageData?.settings as any)?.projectData?.businessBlueprint
+        || (bioPageData?.settings as any)?.project?.businessBlueprint
+        || null;
+    const bioPageChatbotProject = useMemo(() => (
+        bioPageData ? {
+            id: bioPageData.projectId || bioPageData.id,
+            name: bioPageData.profile.name || tp('chat.fallbackName', 'Chat'),
+            businessBlueprint: bioPageChatbotBlueprint || undefined,
+            data: {
+                ...(bioPageChatContext?.pageData || {}),
+                ...(bioPageChatbotBlueprint ? { businessBlueprint: bioPageChatbotBlueprint } : {}),
+            },
+        } : null
+    ), [bioPageChatContext, bioPageChatbotBlueprint, bioPageData, tp]);
+    const bioPageChatbotSurfaceVisible = useMemo(() => canRenderChatbotSurface(
+        bioPageChatbotProject as any,
+        bioPageChatbotEngineContext?.sourceSurface || 'bio_page',
+    ), [bioPageChatbotEngineContext?.sourceSurface, bioPageChatbotProject]);
+
+    useEffect(() => {
+        if (!bioPageChatbotSurfaceVisible && isChatbotOpen) {
+            setIsChatbotOpen(false);
+            setActiveChatBlockId(null);
+        }
+    }, [bioPageChatbotSurfaceVisible, isChatbotOpen]);
 
     if (isLoading) {
         return (
@@ -1301,6 +1330,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
                         <div className="mt-6 space-y-3">
                             {visibleBlocksForActiveTab.map(block => {
                                 if (block.type === 'chatbot_cta') {
+                                    if (!bioPageChatbotSurfaceVisible) return null;
                                     return (
                                         <button
                                             key={block.id}
@@ -1733,7 +1763,7 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
             </div>
 
             {/* Chatbot Modal */}
-            {isChatbotOpen && (
+            {isChatbotOpen && bioPageChatbotSurfaceVisible && (
                 <div
                     className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
                     onClick={() => {
@@ -1764,11 +1794,12 @@ const PublicBioPage: React.FC<PublicBioPageProps> = ({ slug, username }) => {
                             <ChatCore
                                 config={bioPageData.aiAssistant}
                                 project={{
-                                    id: bioPageData.projectId || bioPageData.id,
-                                    name: bioPageData.profile.name || tp('chat.fallbackName', 'Chat'),
+                                    id: bioPageChatbotProject?.id || bioPageData.projectId || bioPageData.id,
+                                    name: bioPageChatbotProject?.name || bioPageData.profile.name || tp('chat.fallbackName', 'Chat'),
                                     description: bioPageData.profile.bio || '',
                                     userId: bioPageData.userId || undefined,
-                                    data: bioPageChatContext?.pageData || {},
+                                    businessBlueprint: (bioPageChatbotProject as any)?.businessBlueprint,
+                                    data: bioPageChatbotProject?.data || bioPageChatContext?.pageData || {},
                                 } as any}
                                 appearance={bioPageData.aiAssistant.appearance || {
                                     branding: {

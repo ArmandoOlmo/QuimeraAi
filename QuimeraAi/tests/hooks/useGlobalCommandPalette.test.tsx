@@ -10,9 +10,21 @@ const loadProjectMock = vi.hoisted(() => vi.fn());
 const setViewMock = vi.hoisted(() => vi.fn());
 const setAdminViewMock = vi.hoisted(() => vi.fn());
 const navigateToViewMock = vi.hoisted(() => vi.fn());
+const authStateMock = vi.hoisted(() => ({
+    canAccessSuperAdmin: true,
+}));
+const tenantStateMock = vi.hoisted(() => ({
+    currentTenant: {
+        id: 'tenant_1',
+        name: 'Workspace Uno',
+    },
+    currentMembership: {
+        role: 'agency_member',
+    },
+}));
 
 vi.mock('../../contexts/core/AuthContext', () => ({
-    useAuth: () => ({ canAccessSuperAdmin: true }),
+    useAuth: () => ({ canAccessSuperAdmin: authStateMock.canAccessSuperAdmin }),
 }));
 
 vi.mock('../../contexts/project', () => ({
@@ -29,12 +41,7 @@ vi.mock('../../contexts/project', () => ({
 }));
 
 vi.mock('../../contexts/tenant/TenantContext', () => ({
-    useSafeTenant: () => ({
-        currentTenant: {
-            id: 'tenant_1',
-            name: 'Workspace Uno',
-        },
-    }),
+    useSafeTenant: () => tenantStateMock,
 }));
 
 vi.mock('../../contexts/core/UIContext', () => ({
@@ -80,6 +87,8 @@ describe('useGlobalCommandPalette', () => {
         setViewMock.mockClear();
         setAdminViewMock.mockClear();
         navigateToViewMock.mockClear();
+        authStateMock.canAccessSuperAdmin = true;
+        tenantStateMock.currentMembership.role = 'agency_member';
     });
 
     it('falls back to the raw prompt when command prompt translation throws', async () => {
@@ -160,5 +169,40 @@ describe('useGlobalCommandPalette', () => {
                 activeModule: 'crm',
             }),
         }));
+    });
+
+    it('exposes Owner Mode admin commands for agency owners without requiring global superadmin', async () => {
+        authStateMock.canAccessSuperAdmin = false;
+        tenantStateMock.currentMembership.role = 'agency_owner';
+        const { useGlobalCommandPalette } = await import('../../hooks/useGlobalCommandPalette');
+        const { result } = renderHook(() => useGlobalCommandPalette());
+
+        await act(async () => {
+            result.current.setQuery('service availability');
+        });
+
+        expect(result.current.items).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: 'admin:service-availability',
+                type: 'admin',
+            }),
+        ]));
+    });
+
+    it('keeps admin commands hidden for non-owner workspace members', async () => {
+        authStateMock.canAccessSuperAdmin = false;
+        tenantStateMock.currentMembership.role = 'agency_member';
+        const { useGlobalCommandPalette } = await import('../../hooks/useGlobalCommandPalette');
+        const { result } = renderHook(() => useGlobalCommandPalette());
+
+        await act(async () => {
+            result.current.setQuery('service availability');
+        });
+
+        expect(result.current.items.some(item => item.id === 'admin:service-availability')).toBe(false);
+        expect(result.current.items[0]).toMatchObject({
+            id: 'assistant:request',
+            type: 'assistant_request',
+        });
     });
 });

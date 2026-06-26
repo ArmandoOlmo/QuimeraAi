@@ -191,7 +191,7 @@ describe('appointmentEngineService', () => {
         });
         expect(appointmentInsert?.row.notes).toEqual([
             expect.objectContaining({
-                content: expect.stringContaining('Solicitud / Request: Ana wants a consultation package.'),
+                content: expect.stringContaining('ES: El cliente Ana Client | ana@example.com solicito: Ana wants a consultation package.'),
                 isPrivate: false,
                 aiGenerated: true,
                 pinned: true,
@@ -203,7 +203,7 @@ describe('appointmentEngineService', () => {
             sourceModule: 'chatcore',
             conversationTranscript: 'The client asked ChatCore to book a consultation.',
             customerRequestSummary: expect.stringContaining('Ana wants a consultation package.'),
-            customerRequestNote: expect.stringContaining('Solicitud / Request: Ana wants a consultation package.'),
+            customerRequestNote: expect.stringContaining('EN: The customer Ana Client | ana@example.com requested: Ana wants a consultation package.'),
             locale: 'es',
         });
         expect(emailInsert?.row).toMatchObject({
@@ -259,7 +259,7 @@ describe('appointmentEngineService', () => {
         expect(result.leadId).toBe('leads-inserted-1');
         expect(appointmentInsert?.row.notes).toEqual([
             expect.objectContaining({
-                content: expect.stringContaining('Solicitud / Request: Maria wants a property showing after 3pm and needs parking details.'),
+                content: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 solicito: Maria wants a property showing after 3pm and needs parking details.'),
                 aiGenerated: true,
                 pinned: true,
             }),
@@ -267,7 +267,7 @@ describe('appointmentEngineService', () => {
         expect(appointmentInsert?.row.notes[0].content).not.toContain('Generado en / Generated at');
         expect(appointmentInsert?.row.metadata).toMatchObject({
             customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
-            customerRequestNote: expect.stringContaining('Solicitud / Request: Maria wants a property showing after 3pm and needs parking details.'),
+            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 requested: Maria wants a property showing after 3pm and needs parking details.'),
             conversationTranscript: 'Cliente: Quiero ver la propiedad despues de las 3pm.',
             sourceModule: 'realty',
             sourceConversationId: 'conversation-1',
@@ -278,7 +278,7 @@ describe('appointmentEngineService', () => {
             name: 'Maria Gomez',
             email: 'maria@example.com',
             source: 'chatbot-widget',
-            notes: expect.stringContaining('Solicitud / Request: Maria wants a property showing after 3pm and needs parking details.'),
+            notes: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 solicito: Maria wants a property showing after 3pm and needs parking details.'),
         });
         expect(leadInsert?.row.notes).not.toContain('Generado en / Generated at');
         expect(leadInsert?.row.custom_data).toMatchObject({
@@ -287,7 +287,7 @@ describe('appointmentEngineService', () => {
             sourceModule: 'realty',
             sourceConversationId: 'conversation-1',
             customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
-            customerRequestNote: expect.stringContaining('Solicitud / Request: Maria wants a property showing after 3pm and needs parking details.'),
+            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 requested: Maria wants a property showing after 3pm and needs parking details.'),
         });
     });
 

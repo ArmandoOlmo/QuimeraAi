@@ -284,6 +284,46 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         requiresProject: true,
     },
     {
+        id: 'train_chatcore',
+        module: 'chatbot',
+        labelKey: 'dashboard.assistantQuickActions.trainChatCore',
+        labelFallback: 'Train ChatCore',
+        promptKey: 'dashboard.assistantQuickActions.trainChatCorePrompt',
+        promptFallback: 'Train ChatCore for the active project by syncing reviewed project knowledge, keeping visitor chat memory separate.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
+        id: 'create_appointment',
+        module: 'appointments',
+        labelKey: 'dashboard.assistantQuickActions.createAppointment',
+        labelFallback: 'Create appointment',
+        promptKey: 'dashboard.assistantQuickActions.createAppointmentPrompt',
+        promptFallback: 'Create an appointment draft for the active project and ask for any missing service, date, time, contact, and consent details.',
+        category: 'create',
+        requiresProject: true,
+    },
+    {
+        id: 'improve_bio_page',
+        module: 'bioPage',
+        labelKey: 'dashboard.assistantQuickActions.improveBioPage',
+        labelFallback: 'Improve Bio Page',
+        promptKey: 'dashboard.assistantQuickActions.improveBioPagePrompt',
+        promptFallback: 'Review the active project Bio Page and propose safe link, block, lead capture, booking, and ChatCore improvements.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
+        id: 'analyze_project',
+        module: 'analytics',
+        labelKey: 'dashboard.assistantQuickActions.analyzeProject',
+        labelFallback: 'Analyze project',
+        promptKey: 'dashboard.assistantQuickActions.analyzeProjectPrompt',
+        promptFallback: 'Analyze the active project readiness, analytics, blockers, and next best actions across modules.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
         id: 'review_platform_errors',
         module: 'admin',
         labelKey: 'dashboard.assistantQuickActions.reviewPlatformErrors',
@@ -302,8 +342,8 @@ export function getDashboardAssistantQuickActions(input: {
     canUseAdminMode?: boolean;
     limit?: number;
 }): DashboardAssistantQuickAction[] {
-    const limit = input.limit ?? 6;
-    const hasProjectTarget = input.hasActiveProject ?? input.hasProjects;
+    const limit = input.limit ?? 10;
+    const hasProjectTarget = input.hasProjects || input.hasActiveProject === true;
     return DASHBOARD_ASSISTANT_QUICK_ACTIONS
         .filter(action => !action.requiresProject || hasProjectTarget)
         .filter(action => !action.adminOnly || input.canUseAdminMode === true)

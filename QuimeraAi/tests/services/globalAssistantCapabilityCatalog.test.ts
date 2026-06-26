@@ -31,6 +31,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const createProject = catalog.actions.find(action => action.actionType === 'create_project_from_prompt');
         const createWebsite = catalog.actions.find(action => action.actionType === 'create_website_from_prompt');
         const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
+        const operatingLayerCapabilities = catalog.actions.find(action => action.actionType === 'summarize_operating_layer_capabilities');
         const searchTenants = catalog.actions.find(action => action.actionType === 'search_tenants');
         const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
         const publishBioPage = catalog.actions.find(action => action.actionType === 'publish_bio_page');
@@ -44,6 +45,13 @@ describe('globalAssistantCapabilityCatalog', () => {
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
+        expect(catalog.rollbackActionCount).toBeGreaterThan(0);
+        expect(catalog.rollbackExecutableActionCount).toBeGreaterThan(0);
+        expect(catalog.rollbackExecutableActionCount).toBeLessThanOrEqual(catalog.rollbackActionCount);
+        expect(catalog.rollbackGapActionCount).toBe(catalog.rollbackActionCount - catalog.rollbackExecutableActionCount);
+        expect(catalog.rollbackGapActionCount).toBe(
+            catalog.actions.filter(action => action.rollbackSupported && !action.rollbackExecutable).length,
+        );
         expect(analytics?.executableActionTypes).toEqual(expect.arrayContaining([
             'run_project_report',
             'summarize_analytics',
@@ -95,6 +103,9 @@ describe('globalAssistantCapabilityCatalog', () => {
             'publish_website',
             'unpublish_website',
         ]));
+        expect(website?.rollbackActionCount).toBeGreaterThan(0);
+        expect(website?.rollbackExecutableActionCount).toBeGreaterThan(0);
+        expect(website?.rollbackExecutableActionCount).toBeLessThanOrEqual(website?.rollbackActionCount || 0);
         expect(storefront?.executableActionTypes).toEqual(expect.arrayContaining([
             'add_storefront_section',
             'edit_storefront_theme',
@@ -104,6 +115,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'open_project',
             'switch_project',
             'search_projects',
+            'summarize_operating_layer_capabilities',
             'create_project_from_prompt',
             'update_project_metadata',
         ]));
@@ -194,6 +206,15 @@ describe('globalAssistantCapabilityCatalog', () => {
             requiresConfirmation: true,
             previewSupported: true,
             rollbackSupported: true,
+        });
+        expect(operatingLayerCapabilities).toMatchObject({
+            executable: true,
+            mutatesData: false,
+            safeNavigation: true,
+            requiresConfirmation: false,
+            previewSupported: false,
+            rollbackSupported: false,
+            requiredPermissions: [],
         });
         expect(searchTenants).toMatchObject({
             executable: true,

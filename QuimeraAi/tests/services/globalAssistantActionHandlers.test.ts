@@ -6,6 +6,7 @@ import {
     GlobalAssistantAuditService,
     GlobalAssistantMemoryService,
     GlobalAssistantRuntime,
+    resolveGlobalAssistantAppContext,
     GlobalAssistantTaskService,
     resolveCurrentAssistantContext,
 } from '../../services/globalAssistant';
@@ -476,6 +477,189 @@ describe('Global Assistant default action handlers', () => {
             'assistant_action_applied',
             'assistant_memory_updated',
         ]));
+    });
+
+    it('summarizes Operating Layer capabilities from the dashboard tool catalog without mutating data', async () => {
+        const { fakeSupabase, runtime, auditService } = buildRuntime(
+            ['emailMarketing', 'chatbot', 'analytics'] as any,
+            ['emailMarketing', 'chatbotEnabled'],
+        );
+        const context = resolveGlobalAssistantAppContext({
+            conversationId: 'conversation-capabilities',
+            userId: 'user-1',
+            role: 'owner',
+            mode: 'owner',
+            tenantId: 'tenant-1',
+            tenantRole: 'agency_owner',
+            activeServices: ['emailMarketing', 'chatbot', 'analytics'] as any,
+            featureFlags: ['emailMarketing', 'chatbotEnabled'],
+            activeProject,
+            activeRoute: '/dashboard',
+            activeModule: 'project',
+            currentSurface: 'dashboard',
+            locale: 'es',
+        });
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Que puedes hacer como Operating Layer y que herramientas tienes disponibles?',
+            enabledServices: ['emailMarketing', 'chatbot', 'analytics'],
+            enabledFeatures: ['emailMarketing', 'chatbotEnabled'],
+        });
+
+        expect(planned.plan.intent).toMatchObject({
+            module: 'project',
+            intent: 'explain',
+            actionCandidates: ['summarize_operating_layer_capabilities'],
+        });
+        expect(planned.plan.requiresConfirmation).toBe(false);
+        expect(planned.plan.previews).toEqual([]);
+        expect(planned.plan.actions[0]).toMatchObject({
+            actionType: 'summarize_operating_layer_capabilities',
+            metadata: {
+                mutatesData: false,
+                executable: true,
+            },
+        });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const snapshot = applied.actions[0].afterSnapshot as Record<string, any>;
+
+        expect(applied.task.status).toBe('completed');
+        expect(snapshot).toMatchObject({
+            kind: 'operating_layer_capability_summary',
+            catalogAvailable: true,
+            context: {
+                mode: 'owner',
+                tenantId: 'tenant-1',
+                projectId: 'project-1',
+            },
+            summary: {
+                moduleCount: expect.any(Number),
+                actionCount: expect.any(Number),
+                executableActionCount: expect.any(Number),
+                rollbackActionCount: expect.any(Number),
+                rollbackExecutableActionCount: expect.any(Number),
+                rollbackGapActionCount: expect.any(Number),
+                rollbackGapActionTypes: expect.any(Array),
+                unavailableActionCount: expect.any(Number),
+            },
+            assistantSurfaces: {
+                currentSurfaceId: 'global-operating-layer',
+                globalActionSurfaceId: 'global-operating-layer',
+                surfaceCount: expect.any(Number),
+            },
+        });
+        expect(snapshot.summary.actionCount).toBeGreaterThan(40);
+        expect(snapshot.summary.executableActionCount).toBeGreaterThan(10);
+        expect(snapshot.summary.rollbackActionCount).toBeGreaterThan(0);
+        expect(snapshot.summary.rollbackExecutableActionCount).toBeGreaterThan(0);
+        expect(snapshot.summary.rollbackExecutableActionCount).toBeLessThanOrEqual(snapshot.summary.rollbackActionCount);
+        expect(snapshot.summary.rollbackGapActionCount).toBe(
+            snapshot.summary.rollbackActionCount - snapshot.summary.rollbackExecutableActionCount,
+        );
+        expect(snapshot.assistantSurfaces.surfaces).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: 'project-chatcore',
+                module: 'chatbot',
+                canExecuteGlobalActions: false,
+                memoryScope: 'project_chat_config',
+            }),
+            expect.objectContaining({
+                id: 'global-operating-layer',
+                canExecuteGlobalActions: true,
+                memoryScope: 'global_assistant_memory',
+            }),
+        ]));
+        expect(snapshot.modules.map((module: any) => module.module)).toEqual(expect.arrayContaining([
+            'project',
+            'website',
+            'chatbot',
+            'emailMarketing',
+        ]));
+        expect(snapshot.blockedBy.features).toContain('ecommerceEnabled');
+        expect(fakeSupabase.rowsByTable.projects || []).toHaveLength(0);
+        expect(auditService.listEvents().map(event => event.type)).toEqual(expect.arrayContaining([
+            'assistant_action_applied',
+            'assistant_memory_updated',
+        ]));
+    });
+
+    it('filters Operating Layer capability summaries from ChatCore text aliases', async () => {
+        const { runtime } = buildRuntime(
+            ['chatbot'] as any,
+            ['chatbotEnabled'],
+        );
+        const context = resolveGlobalAssistantAppContext({
+            conversationId: 'conversation-chatcore-capabilities',
+            userId: 'user-1',
+            role: 'owner',
+            mode: 'owner',
+            tenantId: 'tenant-1',
+            tenantRole: 'agency_owner',
+            activeServices: ['chatbot'] as any,
+            featureFlags: ['chatbotEnabled'],
+            activeProject,
+            activeRoute: '/dashboard',
+            activeModule: 'project',
+            currentSurface: 'dashboard',
+            locale: 'es',
+        });
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Que puedes hacer en ChatCore desde el Operating Layer?',
+            enabledServices: ['chatbot'],
+            enabledFeatures: ['chatbotEnabled'],
+        });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const snapshot = applied.actions[0].afterSnapshot as Record<string, any>;
+
+        expect(snapshot.requestedModule).toBe('chatbot');
+        expect(snapshot.summary.moduleCount).toBe(1);
+        expect(snapshot.summary.actionCount).toBeGreaterThan(0);
+        expect(snapshot.summary.executableActionCount).toBeGreaterThan(0);
+        expect(snapshot.modules.map((module: any) => module.module)).toEqual(['chatbot']);
+    });
+
+    it('returns zero Operating Layer coverage for an unknown module filter', async () => {
+        const { runtime } = buildRuntime(
+            ['emailMarketing', 'chatbot', 'analytics'] as any,
+            ['emailMarketing', 'chatbotEnabled'],
+        );
+        const context = resolveGlobalAssistantAppContext({
+            conversationId: 'conversation-unknown-capabilities',
+            userId: 'user-1',
+            role: 'owner',
+            mode: 'owner',
+            tenantId: 'tenant-1',
+            tenantRole: 'agency_owner',
+            activeServices: ['emailMarketing', 'chatbot', 'analytics'] as any,
+            featureFlags: ['emailMarketing', 'chatbotEnabled'],
+            activeProject,
+            activeRoute: '/dashboard',
+            activeModule: 'project',
+            currentSurface: 'dashboard',
+            locale: 'es',
+        });
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Que puedes hacer como Operating Layer?',
+            enabledServices: ['emailMarketing', 'chatbot', 'analytics'],
+            enabledFeatures: ['emailMarketing', 'chatbotEnabled'],
+        });
+        planned.plan.actions[0].input.module = 'modulo fantasma';
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const snapshot = applied.actions[0].afterSnapshot as Record<string, any>;
+
+        expect(snapshot.requestedModule).toBe('modulofantasma');
+        expect(snapshot.summary.moduleCount).toBe(0);
+        expect(snapshot.summary.actionCount).toBe(0);
+        expect(snapshot.summary.executableActionCount).toBe(0);
+        expect(snapshot.summary.availableActionCount).toBe(0);
+        expect(snapshot.modules).toEqual([]);
     });
 
     it('creates a review-gated Website Builder intake draft on the active project and rolls it back', async () => {

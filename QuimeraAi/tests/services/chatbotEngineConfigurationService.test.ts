@@ -3,6 +3,8 @@ import type { ChatbotBlueprint } from '../../types/businessBlueprint';
 import type { WebsitePlan } from '../../types/websitePlan';
 import { createBusinessBlueprintFromWebsitePlan } from '../../utils/businessBlueprint';
 import {
+    addChatbotKnowledgeSourceToBlueprint,
+    addProjectChatbotKnowledgeSource,
     disableAction,
     enableAction,
     getChatbotConfig,
@@ -221,6 +223,54 @@ describe('chatbotEngineConfigurationService', () => {
         });
     });
 
+    it('adds manual Knowledge Center sources as review-gated locked project knowledge', () => {
+        const result = addChatbotKnowledgeSourceToBlueprint(buildBlueprint(), {
+            name: 'Refund FAQ',
+            type: 'faq',
+            visibility: 'public',
+            content: 'ES: Los reembolsos se revisan caso a caso. EN: Refunds are reviewed case by case.',
+            actorId: 'user_knowledge',
+            now: '2026-06-26T13:30:00.000Z',
+        });
+
+        expect(result.duplicate).toBe(false);
+        expect(result.knowledgeSource).toMatchObject({
+            name: 'Refund FAQ',
+            type: 'faq',
+            visibility: 'public',
+            status: 'needs_review',
+            needsReview: true,
+            generatedByAI: false,
+            userModified: true,
+            lockedFromRegeneration: true,
+            contentLength: expect.any(Number),
+            contentPreview: expect.stringContaining('Refunds are reviewed'),
+        });
+        expect(result.blueprint.knowledgeSources).toContainEqual(result.knowledgeSource);
+        expect(result.blueprint.metadata).toMatchObject({
+            userModified: true,
+            lockedFromRegeneration: true,
+            lastEditedAt: '2026-06-26T13:30:00.000Z',
+            lastEditedBy: 'user_knowledge',
+        });
+    });
+
+    it('keeps manual Knowledge Center source creation idempotent by generated source hash', () => {
+        const input = {
+            name: 'Refund FAQ',
+            type: 'faq' as const,
+            visibility: 'public' as const,
+            content: 'ES: Los reembolsos se revisan caso a caso. EN: Refunds are reviewed case by case.',
+            now: '2026-06-26T13:30:00.000Z',
+        };
+        const first = addChatbotKnowledgeSourceToBlueprint(buildBlueprint(), input);
+        const second = addChatbotKnowledgeSourceToBlueprint(first.blueprint, input);
+
+        expect(second.duplicate).toBe(true);
+        expect(second.knowledgeSource.id).toBe(first.knowledgeSource.id);
+        expect(second.blueprint.knowledgeSources.filter(source => source.id === first.knowledgeSource.id)).toHaveLength(1);
+    });
+
     it('does not enable Knowledge Center sources while readiness blockers are present', () => {
         expect(() => reviewChatbotKnowledgeSourceInBlueprint(buildBlueprint(), {
             sourceId: 'knowledge-ecommerce-orders-private',
@@ -266,6 +316,48 @@ describe('chatbotEngineConfigurationService', () => {
         expect(updatedData.businessBlueprint.chatbotBlueprint.knowledgeSources.find((item: any) => item.id === 'knowledge-business-blueprint')).toMatchObject({
             status: 'ready',
             needsReview: false,
+        });
+    });
+
+    it('persists added Knowledge Center sources into project data with audit evidence', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const client = createProjectClient({ businessBlueprint });
+
+        const result = await addProjectChatbotKnowledgeSource('project_chatbot', {
+            name: 'Public FAQ',
+            type: 'faq',
+            visibility: 'public',
+            content: 'ES: Pregunta frecuente revisable. EN: Reviewable frequently asked question.',
+            actorId: 'user_knowledge',
+            now: '2026-06-26T13:45:00.000Z',
+        }, client as any);
+
+        expect(result.knowledgeSource).toMatchObject({
+            name: 'Public FAQ',
+            status: 'needs_review',
+            needsReview: true,
+            contentPreview: expect.stringContaining('Reviewable frequently asked question'),
+        });
+        expect(result.auditEventId).toBe('event-1');
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'knowledgeCenter',
+            targetId: result.knowledgeSource.id,
+            operation: 'add_knowledge_source',
+            after: {
+                id: result.knowledgeSource.id,
+                type: 'faq',
+                status: 'needs_review',
+                visibility: 'public',
+                needsReview: true,
+                contentLength: expect.any(Number),
+                duplicate: false,
+            },
+        });
+        const updatePayload = client.getUpdatePayload();
+        const updatedData = updatePayload?.data as any;
+        expect(updatedData.businessBlueprint.chatbotBlueprint.knowledgeSources.find((item: any) => item.id === result.knowledgeSource.id)).toMatchObject({
+            name: 'Public FAQ',
+            status: 'needs_review',
         });
     });
 

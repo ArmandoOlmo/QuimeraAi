@@ -124,6 +124,15 @@ export interface ChatAppointmentData {
     metadata?: Record<string, unknown>;
 }
 
+export interface ChatAppointmentResult {
+    appointmentId?: string;
+    leadId?: string;
+    duplicate?: boolean;
+    warnings?: string[];
+}
+
+export type ChatAppointmentHandlerResult = string | ChatAppointmentResult | undefined;
+
 // Simplified appointment info for availability checking
 export interface AppointmentSlot {
     id: string;
@@ -139,7 +148,7 @@ export interface ChatCoreProps {
     appearance: ChatAppearanceConfig;
     onLeadCapture?: (leadData: Partial<Lead>) => Promise<string | undefined>;
     onUpdateLeadTranscript?: (leadId: string, transcript: string, notes?: string) => Promise<void>;
-    onCreateAppointment?: (appointmentData: ChatAppointmentData) => Promise<string | undefined>;
+    onCreateAppointment?: (appointmentData: ChatAppointmentData) => Promise<ChatAppointmentHandlerResult>;
     existingAppointments?: AppointmentSlot[];
     className?: string;
     showHeader?: boolean;
@@ -276,6 +285,11 @@ const toPlainText = (value: unknown): string => {
         }
     }
     return String(value);
+};
+
+const normalizeChatAppointmentResult = (result: ChatAppointmentHandlerResult): ChatAppointmentResult => {
+    if (typeof result === 'string') return result ? { appointmentId: result } : {};
+    return result || {};
 };
 
 const truncateText = (value: unknown, maxLength: number): string => {
@@ -1168,6 +1182,16 @@ ${suggestAvailableSlots()}
         return conversationIdRef.current || undefined;
     };
 
+    const registerAppointmentResult = async (rawResult: ChatAppointmentHandlerResult): Promise<ChatAppointmentResult> => {
+        const result = normalizeChatAppointmentResult(rawResult);
+        if (result.leadId) {
+            capturedLeadIdRef.current = result.leadId;
+            setLeadCaptured(true);
+            await linkToLead(result.leadId);
+        }
+        return result;
+    };
+
     const buildChatCoreAppointmentMetadata = (
         bookingChannel: ChatCoreBookingChannel,
         extra: Record<string, unknown> = {},
@@ -1885,8 +1909,9 @@ ${suggestAvailableSlots()}
             };
 
             console.log('[ChatCore] 📅 Calling onCreateAppointment...');
-            const appointmentId = await onCreateAppointment(appointmentData);
-            console.log('[ChatCore] 📅 onCreateAppointment returned:', appointmentId);
+            const appointmentResult = await registerAppointmentResult(await onCreateAppointment(appointmentData));
+            const appointmentId = appointmentResult.appointmentId;
+            console.log('[ChatCore] 📅 onCreateAppointment returned:', appointmentResult);
 
             if (appointmentId) {
                 console.log('[ChatCore] ✅ Appointment created successfully!');
@@ -2112,9 +2137,10 @@ ${suggestAvailableSlots()}
             });
 
             try {
-                const appointmentId = await onCreateAppointment(appointmentData);
+                const appointmentResult = await registerAppointmentResult(await onCreateAppointment(appointmentData));
+                const appointmentId = appointmentResult.appointmentId;
                 if (appointmentId) {
-                    console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId);
+                    console.log('[ChatCore] 📅 ✅ Appointment created! ID:', appointmentId, 'Lead ID:', appointmentResult.leadId);
                     return {
                         cleanedResponse: `${response}\n\n${t('chatbotWidget.appointments.autoRegistered')}`,
                         appointmentCreated: true
@@ -2211,11 +2237,12 @@ ${suggestAvailableSlots()}
         };
 
         try {
-            const appointmentId = await onCreateAppointment(appointmentData);
+            const appointmentResult = await registerAppointmentResult(await onCreateAppointment(appointmentData));
+            const appointmentId = appointmentResult.appointmentId;
             const cleanedResponse = response.replace(appointmentRegex, '').trim();
             
             if (appointmentId) {
-                console.log('[ChatCore] 📅 Appointment created:', appointmentId);
+                console.log('[ChatCore] 📅 Appointment created:', appointmentId, 'Lead ID:', appointmentResult.leadId);
                 return {
                     cleanedResponse: `${cleanedResponse}\n\n${t('chatbotWidget.appointments.createdShort')}`,
                     appointmentCreated: true
@@ -2871,9 +2898,10 @@ ${suggestAvailableSlots()}
                 };
 
                 try {
-                    const appointmentId = await onCreateAppointment(appointmentData);
+                    const appointmentResult = await registerAppointmentResult(await onCreateAppointment(appointmentData));
+                    const appointmentId = appointmentResult.appointmentId;
                     if (appointmentId) {
-                        console.log('[ChatCore] 🎙️📅 ✅ Voice appointment created:', appointmentId);
+                        console.log('[ChatCore] 🎙️📅 ✅ Voice appointment created:', appointmentId, 'Lead ID:', appointmentResult.leadId);
                         setMessages(prev => [...prev, {
                             role: 'model',
                             text: t('chatbotWidget.appointments.voiceRegistered', {

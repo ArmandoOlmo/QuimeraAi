@@ -9,6 +9,7 @@ import type {
 import type { AssistantLifecycleResult, GlobalAssistantRuntimeResult } from './globalAssistantRuntime';
 import { resolveCurrentAssistantContext } from './globalAssistantContextResolver';
 import { buildGlobalAssistantCapabilityCatalog } from './globalAssistantCapabilityCatalog';
+import { buildGlobalAssistantChatSurfaceMap } from './globalAssistantChatSurfaceRegistry';
 
 export const GLOBAL_ASSISTANT_KNOWN_FEATURE_FLAGS = [
     'websiteBuilder',
@@ -265,6 +266,10 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
                 enabledServices: input.activeServices,
                 enabledFeatures: input.featureFlags,
             }),
+            assistantSurfaces: buildGlobalAssistantChatSurfaceMap({
+                currentSurface: input.currentSurface,
+                activeRoute: input.activeRoute,
+            }),
             ...input.snapshot,
         },
     });
@@ -447,6 +452,81 @@ const formatAnalyticsResultLines = (
     return lines;
 };
 
+const formatOperatingLayerCapabilityResultLines = (
+    snapshot: Record<string, unknown>,
+    spanish: boolean,
+): string[] => {
+    const summary = asRecord(snapshot.summary);
+    const blockedBy = asRecord(snapshot.blockedBy);
+    const assistantSurfaces = asRecord(snapshot.assistantSurfaces);
+    const modules = asArray(snapshot.modules).map(asRecord);
+    const moduleNames = modules
+        .map(module => asText(module.module))
+        .filter(Boolean)
+        .slice(0, 8)
+        .join(', ');
+    const actionCount = asNumber(summary.actionCount) ?? 0;
+    const availableActionCount = asNumber(summary.availableActionCount) ?? 0;
+    const executableActionCount = asNumber(summary.executableActionCount) ?? 0;
+    const previewActionCount = asNumber(summary.previewActionCount) ?? 0;
+    const rollbackActionCount = asNumber(summary.rollbackActionCount) ?? 0;
+    const rollbackExecutableActionCount = asNumber(summary.rollbackExecutableActionCount) ?? rollbackActionCount;
+    const rollbackGapActionCount = asNumber(summary.rollbackGapActionCount) ?? 0;
+    const confirmationActionCount = asNumber(summary.confirmationActionCount) ?? 0;
+    const highRiskActionCount = asNumber(summary.highRiskActionCount) ?? 0;
+    const unavailableActionCount = asNumber(summary.unavailableActionCount) ?? 0;
+    const blockedServices = formatValueList(blockedBy.services, 5);
+    const blockedFeatures = formatValueList(blockedBy.features, 5);
+    const currentSurfaceId = asText(assistantSurfaces.currentSurfaceId);
+    const globalActionSurfaceId = asText(assistantSurfaces.globalActionSurfaceId);
+    const surfaceCount = asNumber(assistantSurfaces.surfaceCount) ?? asArray(assistantSurfaces.surfaces).length;
+    const recommendation = formatValueList(snapshot.recommendations, 1);
+
+    const lines = [
+        spanish
+            ? `Operating Layer: ${modules.length} modulos; ${actionCount} acciones; ${availableActionCount} disponibles en este contexto.`
+            : `Operating Layer: ${modules.length} modules; ${actionCount} actions; ${availableActionCount} available in this context.`,
+        spanish
+            ? `Ejecutables: ${executableActionCount}; preview: ${previewActionCount}; rollback declarado: ${rollbackActionCount}; rollback ejecutable: ${rollbackExecutableActionCount}; confirmacion: ${confirmationActionCount}; alto riesgo: ${highRiskActionCount}.`
+            : `Executable: ${executableActionCount}; preview: ${previewActionCount}; declared rollback: ${rollbackActionCount}; executable rollback: ${rollbackExecutableActionCount}; confirmation: ${confirmationActionCount}; high risk: ${highRiskActionCount}.`,
+        moduleNames
+            ? (spanish ? `Modulos cubiertos: ${moduleNames}.` : `Covered modules: ${moduleNames}.`)
+            : '',
+    ].filter(Boolean);
+
+    if (unavailableActionCount > 0) {
+        lines.push(spanish
+            ? `Acciones bloqueadas por contexto: ${unavailableActionCount}.`
+            : `Actions blocked by context: ${unavailableActionCount}.`);
+    }
+    if (rollbackGapActionCount > 0) {
+        const gapActions = formatValueList(summary.rollbackGapActionTypes, 5);
+        lines.push(spanish
+            ? `Gaps de rollback: ${rollbackGapActionCount}${gapActions ? ` (${gapActions})` : ''}.`
+            : `Rollback gaps: ${rollbackGapActionCount}${gapActions ? ` (${gapActions})` : ''}.`);
+    }
+    if (blockedServices) {
+        lines.push(spanish
+            ? `Servicios requeridos no activos: ${blockedServices}.`
+            : `Required inactive services: ${blockedServices}.`);
+    }
+    if (blockedFeatures) {
+        lines.push(spanish
+            ? `Feature flags requeridos: ${blockedFeatures}.`
+            : `Required feature flags: ${blockedFeatures}.`);
+    }
+    if (surfaceCount > 0) {
+        lines.push(spanish
+            ? `Superficies de chat: ${surfaceCount}; activa: ${currentSurfaceId || 'sin detectar'}; acciones globales: ${globalActionSurfaceId || 'global-operating-layer'}.`
+            : `Chat surfaces: ${surfaceCount}; active: ${currentSurfaceId || 'not detected'}; global actions: ${globalActionSurfaceId || 'global-operating-layer'}.`);
+    }
+    if (recommendation) {
+        lines.push(spanish ? `Siguiente paso: ${recommendation}.` : `Next step: ${recommendation}.`);
+    }
+
+    return lines;
+};
+
 const formatLeadSummaryResultLines = (
     snapshot: Record<string, unknown>,
     spanish: boolean,
@@ -508,6 +588,8 @@ const formatAppliedActionResultLines = (
 
         if (kind === 'business_blueprint_summary') {
             lines.push(...formatBusinessBlueprintResultLines(snapshot, spanish));
+        } else if (kind === 'operating_layer_capability_summary') {
+            lines.push(...formatOperatingLayerCapabilityResultLines(snapshot, spanish));
         } else if (['summary', 'blockers', 'report', 'export'].includes(kind) && snapshot.analytics) {
             lines.push(...formatAnalyticsResultLines(snapshot, spanish));
         } else if (kind === 'lead_summary') {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ChatbotBlueprint } from '../../types/businessBlueprint';
 import type { WebsitePlan } from '../../types/websitePlan';
 import {
+    addKnowledgeSource,
     executeChatbotAction,
     getChatbotReadiness,
     getOrCreateConversation,
@@ -228,6 +229,36 @@ describe('canonical chatbotEngineService facade', () => {
             project_id: 'project_chatbot',
             event_type: 'chatbot_configuration_updated',
             source_module: 'chatbot-engine-dashboard',
+        });
+    });
+
+    it('adds manual Knowledge Center sources through the canonical service contract', async () => {
+        const projectData = { businessBlueprint: buildBusinessBlueprint() };
+        const client = createProjectClient(projectData);
+
+        const result = await addKnowledgeSource('project_chatbot', {
+            name: 'Pricing FAQ',
+            type: 'faq',
+            visibility: 'public',
+            content: 'ES: Los precios deben confirmarse antes de cotizar. EN: Prices must be confirmed before quoting.',
+            actorId: 'user_knowledge',
+            now: '2026-06-26T14:05:00.000Z',
+        }, client as any);
+
+        expect(result.knowledgeSource).toMatchObject({
+            name: 'Pricing FAQ',
+            status: 'needs_review',
+            generatedByAI: false,
+            contentPreview: expect.stringContaining('Prices must be confirmed'),
+        });
+        expect(client.getEvents()[0]).toMatchObject({
+            project_id: 'project_chatbot',
+            event_type: 'chatbot_configuration_updated',
+            source_module: 'chatbot-engine-dashboard',
+        });
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'knowledgeCenter',
+            operation: 'add_knowledge_source',
         });
     });
 

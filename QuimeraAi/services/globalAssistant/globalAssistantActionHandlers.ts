@@ -10,6 +10,7 @@ import type {
 } from '../../types/globalAssistant';
 import { createAppointmentCanonical, timestampFromIso, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
 import {
+    addProjectChatbotKnowledgeSource,
     applyChatbotBlueprintToProjectData,
     type ChatbotSurfaceDeploymentKey,
 } from '../chatbotEngine/chatbotEngineConfigurationService';
@@ -769,6 +770,255 @@ const createSearchProjectsHandler = (deps: GlobalAssistantActionHandlerDependenc
                 searched: ['projects'],
                 mutatesData: false,
                 actionType: action.actionType,
+            },
+        };
+    },
+});
+
+const normalizeModuleFilter = (value: unknown): string =>
+    normalizeForSearch(readDisplayText(value) || '')
+        .replace(/[^a-z0-9]+/g, '')
+        .trim();
+
+const moduleMatchesCapabilityFilter = (
+    moduleRecord: Record<string, unknown>,
+    normalizedFilter: string,
+): boolean => {
+    if (!normalizedFilter) return true;
+    const candidates = [
+        readString(moduleRecord.module),
+        readDisplayText(moduleRecord.label),
+        ...readStringList(moduleRecord.actionTypes),
+        ...readStringList(moduleRecord.executableActionTypes),
+    ].map(item => normalizeModuleFilter(item));
+
+    return candidates.some(candidate => candidate === normalizedFilter || candidate.includes(normalizedFilter));
+};
+
+const CAPABILITY_MODULE_ALIASES: Partial<Record<AssistantModuleTarget, string[]>> = {
+    aiStudio: ['ai studio', 'studio', 'generador inicial'],
+    businessBlueprint: ['business blueprint', 'blueprint', 'plan de negocio'],
+    website: ['website builder', 'website', 'sitio web', 'pagina web', 'web builder'],
+    storefront: ['storefront builder', 'storefront', 'catalogo', 'tienda publica'],
+    ecommerce: ['ecommerce', 'e-commerce', 'commerce', 'checkout', 'orders', 'ordenes', 'productos'],
+    media: ['media ai', 'media', 'imagenes', 'videos', 'assets'],
+    appointments: ['appointments', 'citas', 'reservas', 'agenda'],
+    restaurants: ['restaurants', 'restaurantes', 'menu', 'reservaciones'],
+    realEstate: ['realty', 'real estate', 'inmobiliaria', 'propiedades', 'listings'],
+    bioPage: ['bio page', 'bio pages', 'biopage', 'link in bio'],
+    crm: ['crm', 'leads', 'contactos', 'pipeline'],
+    emailMarketing: ['email marketing', 'email', 'emails', 'campanas', 'campañas', 'audiencias'],
+    chatbot: ['chatcore', 'chat core', 'chatbot', 'ai assistant project', 'asistente del proyecto'],
+    analytics: ['analytics', 'analitica', 'analítica', 'metricas', 'métricas'],
+    finance: ['finance', 'finanzas', 'facturas', 'invoices', 'accounting'],
+    admin: ['admin', 'super admin', 'owner mode', 'modo owner'],
+    settings: ['settings', 'configuracion', 'configuración'],
+    project: ['project', 'proyecto', 'workspace command center'],
+    tenant: ['tenant', 'workspace', 'agencia'],
+    user: ['user', 'usuario', 'profile'],
+    designSystem: ['design system', 'design star', 'sistema de diseno', 'sistema de diseño'],
+};
+
+const buildCapabilityModuleTerms = (moduleRecord: Record<string, unknown>): string[] => {
+    const moduleName = readString(moduleRecord.module) as AssistantModuleTarget | undefined;
+    return uniqueStringList([
+        readString(moduleRecord.module),
+        readDisplayText(moduleRecord.label),
+        ...(moduleName ? CAPABILITY_MODULE_ALIASES[moduleName] || [] : []),
+    ].filter((item): item is string => Boolean(item)));
+};
+
+const inferCapabilityModuleFilter = (
+    input: Record<string, unknown>,
+    rawModules: Record<string, unknown>[],
+): string => {
+    const explicitFilter = normalizeModuleFilter(input.module || input.targetModule || input.moduleTarget);
+    if (explicitFilter) return explicitFilter;
+
+    const request = readString(input.request);
+    if (!request) return '';
+    const compactRequest = normalizeModuleFilter(request);
+    if (!compactRequest) return '';
+
+    const matches = rawModules
+        .map(module => {
+            const moduleName = readString(module.module);
+            if (!moduleName) return '';
+            const matched = buildCapabilityModuleTerms(module).some(term => {
+                const normalizedTerm = normalizeModuleFilter(term);
+                return normalizedTerm.length >= 3 && compactRequest.includes(normalizedTerm);
+            });
+            return matched ? normalizeModuleFilter(moduleName) : '';
+        })
+        .filter(Boolean);
+    const uniqueMatches = uniqueStringList(matches);
+
+    return uniqueMatches.length === 1 ? uniqueMatches[0] : '';
+};
+
+const createOperatingLayerCapabilitySummaryHandler = (): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { context }) => {
+        const catalog = asRecord(context?.snapshot?.toolCatalog);
+        const rawModules = asArray(catalog.modules).map(asRecord);
+        const rawActions = asArray(catalog.actions).map(asRecord);
+        const assistantSurfaceMap = asRecord(context?.snapshot?.assistantSurfaces);
+        const assistantSurfaces = asArray(assistantSurfaceMap.surfaces).map(asRecord);
+        const generatedAt = readString(catalog.generatedAt) || new Date().toISOString();
+        const normalizedFilter = inferCapabilityModuleFilter(input, rawModules);
+        const includeUnavailable = readBoolean(input.includeUnavailable) ?? true;
+        const includeActions = readBoolean(input.includeActions) ?? true;
+        const filteredModules = rawModules.filter(module => moduleMatchesCapabilityFilter(module, normalizedFilter));
+        const selectedModuleNames = new Set(filteredModules.map(module => readString(module.module)).filter((item): item is string => Boolean(item)));
+        const selectedActions = rawActions.filter(candidate => {
+            const moduleName = readString(candidate.module);
+            if (normalizedFilter && selectedModuleNames.size === 0) return false;
+            if (selectedModuleNames.size > 0 && moduleName && !selectedModuleNames.has(moduleName)) return false;
+            if (!includeUnavailable && candidate.availableInContext === false) return false;
+            return true;
+        });
+        const blockedBy = uniqueStringList(selectedActions.flatMap(candidate =>
+            readStringList(candidate.blockedBy),
+        ));
+        const blockedServices = blockedBy
+            .filter(item => item.startsWith('service:'))
+            .map(item => item.replace(/^service:/, ''));
+        const blockedFeatures = blockedBy
+            .filter(item => item.startsWith('feature:'))
+            .map(item => item.replace(/^feature:/, ''));
+        const moduleSummaries = filteredModules.map(module => {
+            const actionTypes = readStringList(module.actionTypes);
+            const executableActionTypes = readStringList(module.executableActionTypes);
+            const unavailableActionTypes = readStringList(module.unavailableActionTypes);
+
+            return {
+                module: readString(module.module) || 'unknown',
+                actionCount: readNumber(module.actionCount) ?? actionTypes.length,
+                executableActionCount: readNumber(module.executableActionCount) ?? executableActionTypes.length,
+                previewActionCount: readNumber(module.previewActionCount) ?? 0,
+                rollbackActionCount: readNumber(module.rollbackActionCount) ?? 0,
+                rollbackExecutableActionCount: readNumber(module.rollbackExecutableActionCount) ?? 0,
+                rollbackGapActionCount: readNumber(module.rollbackGapActionCount) ?? 0,
+                safeNavigationActionCount: readNumber(module.safeNavigationActionCount) ?? 0,
+                highRiskActionCount: readNumber(module.highRiskActionCount) ?? 0,
+                unavailableActionCount: unavailableActionTypes.length,
+                serviceIds: readStringList(module.serviceIds),
+                featureFlags: readStringList(module.featureFlags),
+                ...(includeActions
+                    ? {
+                        actionTypes: actionTypes.slice(0, 12),
+                        executableActionTypes: executableActionTypes.slice(0, 12),
+                        unavailableActionTypes: includeUnavailable ? unavailableActionTypes.slice(0, 12) : [],
+                    }
+                    : {}),
+            };
+        });
+        const availableActionCount = selectedActions.filter(candidate => candidate.availableInContext !== false).length;
+        const executableActionCount = selectedActions.filter(candidate => candidate.executable === true).length;
+        const previewActionCount = selectedActions.filter(candidate => candidate.previewSupported === true).length;
+        const rollbackActionCount = selectedActions.filter(candidate => candidate.rollbackSupported === true).length;
+        const rollbackExecutableActionCount = selectedActions.filter(candidate =>
+            candidate.rollbackSupported === true && candidate.rollbackExecutable === true,
+        ).length;
+        const rollbackGapActions = selectedActions.filter(candidate =>
+            candidate.rollbackSupported === true && candidate.rollbackExecutable !== true,
+        );
+        const rollbackGapActionTypes = rollbackGapActions
+            .map(candidate => readString(candidate.actionType))
+            .filter((item): item is string => Boolean(item));
+        const confirmationActionCount = selectedActions.filter(candidate => candidate.requiresConfirmation === true).length;
+        const highRiskActionCount = selectedActions.filter(candidate => ['high', 'critical'].includes(readString(candidate.safetyLevel) || '')).length;
+        const safeNavigationActionCount = selectedActions.filter(candidate => candidate.safeNavigation === true).length;
+        const unavailableActionCount = selectedActions.filter(candidate => candidate.availableInContext === false).length;
+        const catalogMissing = rawModules.length === 0 || rawActions.length === 0;
+        const useCatalogTotals = !normalizedFilter && includeUnavailable && rawActions.length > 0 && selectedActions.length === rawActions.length;
+
+        const afterSnapshot = {
+            kind: 'operating_layer_capability_summary',
+            generatedAt,
+            catalogAvailable: !catalogMissing,
+            requestedModule: normalizedFilter || null,
+            context: {
+                mode: context?.actor.mode || 'user',
+                userId: context?.actor.userId || null,
+                tenantId: context?.tenant.tenantId || null,
+                tenantRole: context?.tenant.role || null,
+                projectId: context?.project.projectId || null,
+                activeModule: context?.activeModule || null,
+                activeServices: context?.tenant.activeServices || [],
+                featureFlags: context?.tenant.featureFlags || [],
+            },
+            summary: {
+                moduleCount: moduleSummaries.length,
+                catalogModuleCount: rawModules.length,
+                actionCount: useCatalogTotals
+                    ? readNumber(catalog.actionCount) ?? selectedActions.length
+                    : selectedActions.length,
+                availableActionCount,
+                unavailableActionCount,
+                executableActionCount: useCatalogTotals
+                    ? readNumber(catalog.executableActionCount) ?? executableActionCount
+                    : executableActionCount,
+                previewActionCount,
+                rollbackActionCount,
+                rollbackExecutableActionCount: useCatalogTotals
+                    ? readNumber(catalog.rollbackExecutableActionCount) ?? rollbackExecutableActionCount
+                    : rollbackExecutableActionCount,
+                rollbackGapActionCount: useCatalogTotals
+                    ? readNumber(catalog.rollbackGapActionCount) ?? rollbackGapActions.length
+                    : rollbackGapActions.length,
+                rollbackGapActionTypes: rollbackGapActionTypes.slice(0, 12),
+                confirmationActionCount,
+                highRiskActionCount,
+                safeNavigationActionCount,
+                blockedServiceCount: blockedServices.length,
+                blockedFeatureCount: blockedFeatures.length,
+            },
+            modules: moduleSummaries,
+            blockedBy: {
+                services: blockedServices,
+                features: blockedFeatures,
+                raw: blockedBy,
+            },
+            assistantSurfaces: {
+                currentSurfaceId: readString(assistantSurfaceMap.currentSurfaceId) || null,
+                surfaceCount: readNumber(assistantSurfaceMap.surfaceCount) ?? assistantSurfaces.length,
+                globalActionSurfaceId: readString(assistantSurfaceMap.globalActionSurfaceId) || 'global-operating-layer',
+                surfaces: assistantSurfaces.map(surface => ({
+                    id: readString(surface.id) || 'unknown',
+                    label: readString(surface.label) || 'Unknown assistant surface',
+                    kind: readString(surface.kind) || 'unknown',
+                    module: readString(surface.module) || 'project',
+                    canExecuteGlobalActions: surface.canExecuteGlobalActions === true,
+                    memoryScope: readString(surface.memoryScope) || 'unknown',
+                    guardrail: readString(surface.guardrail) || '',
+                })),
+                guardrails: readStringList(assistantSurfaceMap.guardrails),
+            },
+            guardrails: [
+                'Read-only capability summaries never mutate project, tenant, or admin data.',
+                'Mutating actions stay preview-first and require confirmation when safety metadata is high or critical.',
+                'Unavailable actions are marked by required service and feature flag gates.',
+                'Admin actions remain restricted to Owner, Super Admin, or system modes.',
+                'Rollback support is exposed per action and executable rollback is counted only when the handler implements rollback.',
+            ],
+            recommendations: catalogMissing
+                ? ['Resolve the dashboard Operating Layer context with toolCatalog before answering capability requests.']
+                : rollbackGapActions.length > 0
+                    ? ['Add rollback handlers before presenting rollback-gapped actions as fully reversible.']
+                : unavailableActionCount > 0
+                    ? ['Enable missing services or feature flags before offering blocked module actions.']
+                    : ['The current Operating Layer tool catalog has no service or feature blockers in the selected scope.'],
+        };
+
+        return {
+            afterSnapshot,
+            diff: {
+                analyzed: ['assistant.toolCatalog'],
+                mutatesData: false,
+                moduleCount: moduleSummaries.length,
+                actionCount: selectedActions.length,
+                unavailableActionCount,
             },
         };
     },
@@ -6221,16 +6471,24 @@ const createChatbotKnowledgeHandler = (
             throw new Error('BusinessBlueprint V2 is required before configuring ChatCore knowledge.');
         }
         const source = buildChatbotKnowledgeSource(input, action, context, { sync: options.sync, now });
-        const chatbotBlueprint = upsertChatbotKnowledgeSource(
-            businessBlueprint.chatbotBlueprint,
-            source,
-            input,
-            action,
-            context,
+        const document = requireObject(input, 'document');
+        const canonicalResult = await addProjectChatbotKnowledgeSource(projectId, {
+            id: source.id,
+            name: source.name,
+            type: source.type,
+            ownerModule: source.ownerModule,
+            visibility: source.visibility,
+            status: 'needs_review',
+            content: readString(document.content) || readString(document.text) || readString(input.content) || readString(input.snippet) || readString(input.request) || null,
+            sourceUrl: readString(document.url) || readString(document.sourceUrl) || readString(input.url) || null,
+            sourceEntityIds: source.sourceEntityIds,
+            contentHash: source.contentHash,
+            confidence: source.confidence,
+            generatedByAI: source.generatedByAI,
+            sync: options.sync,
+            actorId: action.userId || context?.actor.userId || null,
             now,
-        );
-        const nextData = applyChatbotBlueprintToProjectData(projectData, chatbotBlueprint);
-        await updateProjectData(client, projectId, nextData, now);
+        }, client as any);
 
         return {
             beforeSnapshot: {
@@ -6242,11 +6500,12 @@ const createChatbotKnowledgeHandler = (
             afterSnapshot: {
                 table: 'projects',
                 id: projectId,
-                row: { projectId, knowledgeSource: source },
+                row: { projectId, knowledgeSource: canonicalResult.knowledgeSource },
             },
             diff: {
                 updated: [`projects.${projectId}.data.businessBlueprint.chatbotBlueprint.knowledgeSources`],
                 reviewRequired: true,
+                auditEventId: canonicalResult.auditEventId || null,
                 rollback: 'restore_previous_project_data',
             },
         };
@@ -7830,6 +8089,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_project: () => createNavigationHandler('editor', { label: 'Open project in Website Builder.', requiresProject: true }),
     switch_project: () => createNavigationHandler('dashboard', { label: 'Switch active project context.', requiresProject: true }),
     search_projects: createSearchProjectsHandler,
+    summarize_operating_layer_capabilities: createOperatingLayerCapabilitySummaryHandler,
     create_project_from_prompt: createProjectFromPromptHandler,
     update_project_metadata: createUpdateProjectMetadataHandler,
     summarize_business_blueprint: createBusinessBlueprintSummaryHandler,

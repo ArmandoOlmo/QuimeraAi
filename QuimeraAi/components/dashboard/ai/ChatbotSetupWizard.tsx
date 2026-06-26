@@ -25,6 +25,7 @@ import { useProject } from '../../../contexts/project';
 import { INDUSTRY_TEMPLATES, getIndustryTemplate } from '../../../data/chatbotIndustryTemplates';
 import ChatCore from '../../chat/ChatCore';
 import { getDefaultAppearanceConfig } from '../../../utils/chatThemes';
+import { buildChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
 // =============================================================================
 // TYPES
@@ -521,6 +522,18 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
                                 showHeader={true}
                                 isEmbedded={false}
                                 autoOpen={true}
+                                chatbotEngineContext={buildChatbotEngineSurfaceContext({
+                                    sourceSurface: 'admin_preview',
+                                    sourceModule: 'chatcore',
+                                    route: 'chatbot-setup-wizard',
+                                    entityType: 'project',
+                                    entityId: activeProject.id,
+                                    contextKeys: ['setup_wizard', 'preview'],
+                                    metadata: {
+                                        projectId: activeProject.id,
+                                        wizardPreview: true,
+                                    },
+                                })}
                             />
                         )}
                     </div>
@@ -667,7 +680,6 @@ const ChatbotSetupWizard: React.FC<ChatbotSetupWizardProps> = ({
 };
 
 export default ChatbotSetupWizard;
-
 
 
 

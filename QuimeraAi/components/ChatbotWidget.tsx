@@ -6,7 +6,7 @@ import { useSafeEditor } from '../contexts/EditorContext';
 import { useSafeProject } from '../contexts/project/ProjectContext';
 import { Lead, AiAssistantConfig, PageSection } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
-import ChatCore, { ChatAppointmentData, AppointmentSlot } from './chat/ChatCore';
+import ChatCore, { ChatAppointmentData, type ChatAppointmentHandlerResult, AppointmentSlot } from './chat/ChatCore';
 import { supabase } from '../supabase';
 import { createAppointmentFromChat, getAppointmentsByProject } from '../services/appointments/appointmentEngineService';
 import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
@@ -542,9 +542,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     };
 
     // Handle creating appointment from chat
-    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+    const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<ChatAppointmentHandlerResult> => {
         const projectId = activeProject?.id || standaloneProject?.id;
         const ownerId = activeProject?.userId || standaloneProject?.userId;
+        const resolvedTenantId = currentTenantId
+            || (activeProject as any)?.tenantId
+            || (activeProject as any)?.tenant_id
+            || (standaloneProject as any)?.tenantId
+            || (standaloneProject as any)?.tenant_id
+            || null;
         const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
             appointmentData: appointmentData as unknown as Record<string, unknown>,
             projectName: activeProject?.name || standaloneProject?.name,
@@ -561,11 +567,11 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         }
 
         // If user is authenticated and matches ownerId (e.g. inside Editor)
-        if (user && user.id === ownerId) {
+        if (user && user.id === ownerId && resolvedTenantId) {
             try {
                 const result = await createAppointmentFromChat(supabase, {
                     projectId,
-                    tenantId: currentTenantId,
+                    tenantId: resolvedTenantId,
                     title: appointmentData.title,
                     description: appointmentData.description,
                     notes: customerRequestNotes,
@@ -602,7 +608,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 });
                 if (result.leadId) setLeadCaptured(true);
                 console.log('[ChatbotWidget] ✅ Canonical appointment created:', result.appointmentId);
-                return result.appointmentId;
+                return {
+                    appointmentId: result.appointmentId,
+                    leadId: result.leadId,
+                    duplicate: result.duplicate,
+                    warnings: result.warnings,
+                };
             } catch (error) {
                 console.error('[ChatbotWidget] ❌ Error creating canonical appointment:', error);
                 return undefined;
@@ -670,7 +681,12 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 if (data.leadId || appointmentData.participantName || appointmentData.participantEmail) {
                     setLeadCaptured(true);
                 }
-                return data.appointmentId;
+                return {
+                    appointmentId: data.appointmentId,
+                    leadId: data.leadId,
+                    duplicate: data.duplicate,
+                    warnings: data.warnings,
+                };
             } else {
                 console.error('[ChatbotWidget] ❌ API Error for appointment:', await response.text());
                 return undefined;

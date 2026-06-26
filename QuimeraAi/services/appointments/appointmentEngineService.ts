@@ -556,7 +556,15 @@ export async function createAppointmentCanonical(
     const source = input.source || 'dashboard';
     const linkedLeadIds = uniqueStrings(input.linkedLeadIds, [input.linkedLeadId, input.sourceLeadId]);
     const appointmentNotes = normalizeString(input.notes, 6000);
-    const readableAppointmentNotes = buildReadableChatbotCustomerRequestNote(appointmentNotes, input.description);
+    const readableAppointmentNotes = buildReadableChatbotCustomerRequestNote(appointmentNotes, input.description, {
+        customer: {
+            name: input.participantName || null,
+            email: input.participantEmail || null,
+            phone: input.participantPhone || null,
+        },
+        appointmentTitle: input.title || null,
+        appointmentDateTime: startIso,
+    });
     const initialNotes = buildInitialMeetingNotes(input, readableAppointmentNotes, source);
     const metadata = {
         ...(input.metadata || {}),
