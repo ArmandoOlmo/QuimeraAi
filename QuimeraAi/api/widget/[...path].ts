@@ -7,6 +7,7 @@ import {
   getAvailableAppointmentSlots,
   getAppointmentsByProject,
 } from '../../services/appointments/appointmentEngineService';
+import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig';
 
 type ProjectRow = {
   id: string;
@@ -183,7 +184,7 @@ function isPublished(project: ProjectRow): boolean {
 }
 
 function isAssistantActive(project: ProjectRow): boolean {
-  return project.ai_assistant_config?.isActive === true;
+  return resolveProjectAiAssistantConfig(project)?.isActive === true;
 }
 
 async function getAuthenticatedUserId(req: IncomingMessage): Promise<string | null> {
@@ -299,13 +300,13 @@ function publicProject(project: ProjectRow): Record<string, any> {
     sectionVisibility: project.section_visibility || {},
     pages: project.pages || [],
     menus: project.menus || [],
-    aiAssistantConfig: sanitizeAssistantConfig(project.ai_assistant_config),
+    aiAssistantConfig: sanitizeAssistantConfig(resolveProjectAiAssistantConfig(project)),
   };
 }
 
 async function handleGetWidget(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
   const project = await loadProject(parsed, req, true, { requireAssistant: true });
-  const config = sanitizeAssistantConfig(project.ai_assistant_config);
+  const config = sanitizeAssistantConfig(resolveProjectAiAssistantConfig(project));
   send(res, 200, { config, project: publicProject(project) });
 }
 

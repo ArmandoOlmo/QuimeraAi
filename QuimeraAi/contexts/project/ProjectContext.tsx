@@ -1606,6 +1606,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
         };
+        const aiAssistantConfigToSave = (normalizedProjectData as any).aiAssistantConfig;
 
         if ((normalizedProjectData as any).vercelProjectId) {
             dataToSave.vercelProjectId = (normalizedProjectData as any).vercelProjectId;
@@ -1635,6 +1636,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
+                ...(aiAssistantConfigToSave && { ai_assistant_config: aiAssistantConfigToSave }),
             });
             if (insertErr) throw insertErr;
             finalId = providedId;
@@ -1653,6 +1655,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                 thumbnail_url: project.thumbnailUrl || null,
                 last_updated: dataToSave.lastUpdated,
                 ...(projectMenus.length > 0 && { menus: projectMenus }),
+                ...(aiAssistantConfigToSave && { ai_assistant_config: aiAssistantConfigToSave }),
             }).select().single();
             if (insertErr) throw insertErr;
             finalId = docRef.id;
