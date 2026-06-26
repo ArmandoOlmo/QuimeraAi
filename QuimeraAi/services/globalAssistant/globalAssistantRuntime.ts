@@ -3,6 +3,7 @@ import type {
     AssistantActionLog,
     AssistantContextSnapshot,
     AssistantExecutionPlan,
+    AssistantMemoryContextManifest,
     AssistantRollbackSnapshot,
     AssistantRuntimeEvent,
     AssistantTask,
@@ -44,6 +45,7 @@ export interface GlobalAssistantRuntimeResult {
     task: AssistantTask;
     plan: AssistantExecutionPlan;
     memoryUsed: GlobalAssistantMemory[];
+    memoryContext: AssistantMemoryContextManifest;
     modelId: string;
 }
 
@@ -125,18 +127,26 @@ export class GlobalAssistantRuntime {
             metadata: { request: input.request },
         });
 
-        const memoryUsed = await this.memoryService.queryRelevantMemory({
+        const memoryContextResult = await this.memoryService.resolveMemoryContext({
             context: input.context,
             text: input.request,
             limit: 12,
         });
+        const memoryUsed = memoryContextResult.memories;
+        const memoryContext = memoryContextResult.manifest;
 
         this.recordEvent({
             type: 'assistant_memory_loaded',
             userId: input.context.actor.userId,
             tenantId: input.context.tenant.tenantId,
             projectId: input.context.project.projectId,
-            metadata: { count: memoryUsed.length, memoryIds: memoryUsed.map(memory => memory.id) },
+            metadata: {
+                count: memoryUsed.length,
+                memoryIds: memoryContext.memoryIds,
+                scopeCounts: memoryContext.scopeCounts,
+                moduleCounts: memoryContext.moduleCounts,
+                guardrails: memoryContext.guardrails,
+            },
         });
 
         const intent = routeAssistantIntent(input.request, input.context);
@@ -197,6 +207,7 @@ export class GlobalAssistantRuntime {
             task,
             plan,
             memoryUsed,
+            memoryContext,
             modelId: model.modelId,
         };
     }

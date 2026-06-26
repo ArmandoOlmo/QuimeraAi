@@ -240,4 +240,166 @@ describe('GlobalAssistantMemoryService', () => {
         });
         expect(withoutTask).toHaveLength(0);
     });
+
+    it('builds a segmented memory context without loading inactive project or admin memory', async () => {
+        const service = new GlobalAssistantMemoryService();
+        await service.createMemory({
+            scope: 'user',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            title: 'User visual preference',
+            summary: 'Prefers compact dashboard copy.',
+            source: 'test',
+            sourceEntityType: 'preference',
+            sourceEntityId: 'user-pref-1',
+            importance: 0.8,
+        });
+        await service.createMemory({
+            scope: 'tenant',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            title: 'Tenant services',
+            summary: 'Email Marketing and Ecommerce are active.',
+            source: 'test',
+            sourceEntityType: 'tenant_summary',
+            sourceEntityId: 'tenant-summary-1',
+            importance: 0.6,
+        });
+        await service.createMemory({
+            scope: 'project',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            title: 'Project brand profile',
+            summary: 'Casa Luna uses bilingual hospitality copy.',
+            source: 'test',
+            sourceEntityType: 'project_summary',
+            sourceEntityId: 'project-summary-1',
+            importance: 0.9,
+        });
+        await service.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'emailMarketing',
+            title: 'Email cadence',
+            summary: 'Reservation follow-ups go out weekly.',
+            source: 'test',
+            sourceEntityType: 'module_summary',
+            sourceEntityId: 'email-summary-1',
+            importance: 0.7,
+        });
+        await service.createMemory({
+            scope: 'project',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-2',
+            title: 'Other project memory',
+            summary: 'Should not load for Casa Luna.',
+            source: 'test',
+            sourceEntityType: 'project_summary',
+            sourceEntityId: 'project-summary-2',
+            importance: 1,
+        });
+        await service.createMemory({
+            scope: 'admin',
+            tenantId: 'tenant-1',
+            title: 'Owner-only billing note',
+            summary: 'Should not load in user mode.',
+            source: 'test',
+            sourceEntityType: 'admin_note',
+            sourceEntityId: 'admin-note-1',
+            importance: 1,
+        });
+
+        const result = await service.resolveMemoryContext({
+            context: context({ activeModule: 'emailMarketing' }),
+            text: 'copy email services billing',
+        });
+
+        expect(result.memories.map(memory => memory.title)).toEqual([
+            'Project brand profile',
+            'User visual preference',
+            'Email cadence',
+            'Tenant services',
+        ]);
+        expect(result.manifest.scopeCounts).toMatchObject({
+            user: 1,
+            tenant: 1,
+            project: 1,
+            module: 1,
+        });
+        expect(result.manifest.moduleCounts).toMatchObject({ emailMarketing: 1 });
+        expect(result.manifest.guardrails.adminMemoryVisible).toBe(false);
+        expect(result.manifest.explanation.join(' ')).toContain('Admin memory is hidden in user mode');
+    });
+
+    it('does not load project memory without an active project', async () => {
+        const service = new GlobalAssistantMemoryService();
+        await service.createMemory({
+            scope: 'project',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            title: 'Project-only memory',
+            summary: 'Requires active project.',
+            source: 'test',
+            sourceEntityType: 'project_summary',
+            sourceEntityId: 'project-summary-1',
+        });
+
+        const result = await service.resolveMemoryContext({
+            context: context({ activeProject: null }),
+            text: 'project',
+        });
+
+        expect(result.memories).toHaveLength(0);
+        expect(result.manifest.guardrails.projectIsolation).toContain('hidden until a project is active');
+    });
+
+    it('limits owner admin memory to the active or targeted tenant', async () => {
+        const service = new GlobalAssistantMemoryService();
+        await service.createMemory({
+            scope: 'admin',
+            tenantId: 'tenant-1',
+            title: 'Tenant one admin memory',
+            summary: 'Visible to tenant one owner mode.',
+            source: 'test',
+            sourceEntityType: 'admin_note',
+            sourceEntityId: 'admin-note-1',
+        });
+        await service.createMemory({
+            scope: 'admin',
+            tenantId: 'tenant-2',
+            title: 'Tenant two admin memory',
+            summary: 'Must not leak into tenant one owner mode.',
+            source: 'test',
+            sourceEntityType: 'admin_note',
+            sourceEntityId: 'admin-note-2',
+        });
+
+        const ownerResult = await service.resolveMemoryContext({
+            context: context({ role: 'owner', mode: 'owner' }),
+            text: 'admin memory',
+        });
+
+        expect(ownerResult.memories.map(memory => memory.title)).toEqual(['Tenant one admin memory']);
+        expect(ownerResult.manifest.scopeCounts).toMatchObject({ admin: 1 });
+        expect(ownerResult.manifest.guardrails.adminMemoryVisible).toBe(true);
+
+        const targetedResult = await service.resolveMemoryContext({
+            context: {
+                ...context({ role: 'owner', mode: 'owner' }),
+                admin: {
+                    enabled: true,
+                    targetTenantId: 'tenant-2',
+                },
+            },
+            text: 'admin memory',
+        });
+
+        expect(targetedResult.memories.map(memory => memory.title)).toEqual(['Tenant two admin memory']);
+        expect(targetedResult.manifest.tenantId).toBe('tenant-2');
+    });
 });

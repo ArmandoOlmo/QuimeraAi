@@ -204,6 +204,39 @@ export interface GlobalAssistantMemory {
     updatedAt: string;
 }
 
+export interface AssistantMemoryScopeSegment {
+    scope: GlobalAssistantScope;
+    module?: AssistantModuleTarget | null;
+    count: number;
+    memoryIds: string[];
+    titles: string[];
+    sources: string[];
+    highestImportance: number;
+}
+
+export interface AssistantMemoryContextManifest {
+    userId: string | null;
+    tenantId: string | null;
+    projectId: string | null;
+    mode: GlobalAssistantMode;
+    activeModule: AssistantModuleTarget | null;
+    sessionId: string | null;
+    taskId: string | null;
+    totalCount: number;
+    memoryIds: string[];
+    scopeCounts: Partial<Record<GlobalAssistantScope, number>>;
+    moduleCounts: Partial<Record<AssistantModuleTarget, number>>;
+    segments: AssistantMemoryScopeSegment[];
+    explanation: string[];
+    guardrails: {
+        tenantIsolation: string;
+        projectIsolation: string;
+        adminMemoryVisible: boolean;
+        adminMemoryReason: string;
+    };
+    createdAt: string;
+}
+
 export interface AssistantConversation {
     id: string;
     userId: string | null;

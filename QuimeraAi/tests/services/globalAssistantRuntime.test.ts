@@ -94,12 +94,27 @@ describe('GlobalAssistantRuntime', () => {
         expect(result.memoryUsed.map(memory => memory.title)).toContain('Email brand voice');
         expect(result.plan.actions.map(action => action.actionType)).toContain('create_email_campaign');
         expect(result.plan.approvals.length).toBeGreaterThan(0);
+        expect(result.memoryContext.scopeCounts).toMatchObject({ project: 1 });
+        expect(result.memoryContext.segments).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                scope: 'project',
+                memoryIds: expect.arrayContaining([expect.any(String)]),
+                titles: expect.arrayContaining(['Email brand voice']),
+            }),
+        ]));
         expect(auditService.listEvents().map(event => event.type)).toEqual([
             'assistant_request_started',
             'assistant_memory_loaded',
             'assistant_intent_classified',
             'assistant_action_previewed',
         ]);
+        expect(auditService.listEvents()[1].metadata).toMatchObject({
+            count: 1,
+            scopeCounts: { project: 1 },
+            guardrails: {
+                adminMemoryVisible: false,
+            },
+        });
     });
 
     it('blocks project-scoped actions when no project is active', async () => {

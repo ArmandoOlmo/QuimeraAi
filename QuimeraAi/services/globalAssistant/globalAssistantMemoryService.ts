@@ -1,11 +1,12 @@
 import type {
     AssistantContextSnapshot,
+    AssistantMemoryContextManifest,
     AssistantMemoryItem,
     AssistantModuleTarget,
     GlobalAssistantMemory,
     GlobalAssistantScope,
 } from '../../types/globalAssistant';
-import { checkMemoryAccess } from './globalAssistantPermissionService';
+import { canUseAdminMode, checkMemoryAccess } from './globalAssistantPermissionService';
 
 const nowIso = () => new Date().toISOString();
 
@@ -44,6 +45,11 @@ export interface MemoryQuery {
     limit?: number;
 }
 
+export interface AssistantMemoryContextResult {
+    memories: GlobalAssistantMemory[];
+    manifest: AssistantMemoryContextManifest;
+}
+
 export interface GlobalAssistantMemoryAdapter {
     upsertMemory(memory: GlobalAssistantMemory): Promise<GlobalAssistantMemory>;
     listMemories(): Promise<GlobalAssistantMemory[]>;
@@ -73,12 +79,40 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 const asText = (value: unknown): string | null =>
     typeof value === 'string' && value.trim() ? value.trim() : null;
 
+const getContextTenantId = (context: AssistantContextSnapshot): string | null =>
+    context.admin.targetTenantId
+    ?? context.tenant.tenantId
+    ?? context.actor.tenantId
+    ?? context.project.tenantId
+    ?? null;
+
+const getContextProjectId = (context: AssistantContextSnapshot): string | null =>
+    context.admin.targetProjectId ?? context.project.projectId ?? null;
+
+const getContextUserId = (context: AssistantContextSnapshot): string | null =>
+    context.admin.targetUserId ?? context.actor.userId ?? null;
+
+const getSessionId = (query: MemoryQuery): string | null =>
+    query.sessionId
+    ?? query.context.conversationId
+    ?? asText(query.context.snapshot?.sessionId)
+    ?? null;
+
+const getTaskId = (query: MemoryQuery): string | null =>
+    query.taskId
+    ?? asText(query.context.snapshot?.activeTaskId)
+    ?? asText(query.context.snapshot?.taskId)
+    ?? null;
+
 const matchesScopedId = (memory: GlobalAssistantMemory, targetId: string | null, keys: string[]): boolean => {
     if (!targetId) return false;
     if (memory.sourceEntityId === targetId) return true;
     const data = asRecord(memory.data);
     return keys.some(key => data[key] === targetId);
 };
+
+const formatScope = (scope: GlobalAssistantScope, count: number): string =>
+    `${scope}:${count}`;
 
 export class GlobalAssistantMemoryService {
     constructor(private readonly adapter: GlobalAssistantMemoryAdapter = new InMemoryGlobalAssistantMemoryAdapter()) {}
@@ -181,6 +215,7 @@ export class GlobalAssistantMemoryService {
                 if (query.scopes && !query.scopes.includes(memory.scope)) return false;
                 if (query.module && memory.module !== query.module) return false;
                 if (query.projectId !== undefined && memory.projectId !== query.projectId) return false;
+                if (!this.matchesOperationalBoundary(memory, query)) return false;
 
                 const access = checkMemoryAccess({
                     item: memory,
@@ -192,18 +227,12 @@ export class GlobalAssistantMemoryService {
                 if (memory.scope === 'module' && activeModule && memory.module !== activeModule) return false;
 
                 if (memory.scope === 'session') {
-                    const sessionId = query.sessionId
-                        ?? query.context.conversationId
-                        ?? asText(query.context.snapshot?.sessionId)
-                        ?? null;
+                    const sessionId = getSessionId(query);
                     if (!matchesScopedId(memory, sessionId, ['conversationId', 'sessionId'])) return false;
                 }
 
                 if (memory.scope === 'task') {
-                    const taskId = query.taskId
-                        ?? asText(query.context.snapshot?.activeTaskId)
-                        ?? asText(query.context.snapshot?.taskId)
-                        ?? null;
+                    const taskId = getTaskId(query);
                     if (!matchesScopedId(memory, taskId, ['taskId', 'activeTaskId'])) return false;
                 }
 
@@ -213,6 +242,98 @@ export class GlobalAssistantMemoryService {
             })
             .sort((a, b) => b.importance - a.importance || b.updatedAt.localeCompare(a.updatedAt))
             .slice(0, query.limit || 20);
+    }
+
+    async resolveMemoryContext(query: MemoryQuery): Promise<AssistantMemoryContextResult> {
+        const memories = await this.queryRelevantMemory(query);
+        return {
+            memories,
+            manifest: this.buildMemoryContextManifest(query, memories),
+        };
+    }
+
+    buildMemoryContextManifest(query: MemoryQuery, memories: GlobalAssistantMemory[]): AssistantMemoryContextManifest {
+        const context = query.context;
+        const scopeCounts: Partial<Record<GlobalAssistantScope, number>> = {};
+        const moduleCounts: Partial<Record<AssistantModuleTarget, number>> = {};
+        const segments = new Map<string, AssistantMemoryContextManifest['segments'][number]>();
+
+        for (const memory of memories) {
+            scopeCounts[memory.scope] = (scopeCounts[memory.scope] || 0) + 1;
+            if (memory.module) {
+                moduleCounts[memory.module] = (moduleCounts[memory.module] || 0) + 1;
+            }
+
+            const key = `${memory.scope}:${memory.module || 'global'}`;
+            const existing = segments.get(key);
+            const nextSource = `${memory.source}:${memory.sourceEntityType}`;
+            if (existing) {
+                existing.count += 1;
+                existing.memoryIds.push(memory.id);
+                existing.titles.push(memory.title);
+                if (!existing.sources.includes(nextSource)) existing.sources.push(nextSource);
+                existing.highestImportance = Math.max(existing.highestImportance, memory.importance);
+            } else {
+                segments.set(key, {
+                    scope: memory.scope,
+                    module: memory.module ?? null,
+                    count: 1,
+                    memoryIds: [memory.id],
+                    titles: [memory.title],
+                    sources: [nextSource],
+                    highestImportance: memory.importance,
+                });
+            }
+        }
+
+        const activeModule = query.module || context.activeModule || null;
+        const tenantId = getContextTenantId(context);
+        const projectId = getContextProjectId(context);
+        const userId = getContextUserId(context);
+        const adminMemoryVisible = canUseAdminMode(context);
+        const scopeSummary = Object.entries(scopeCounts)
+            .map(([scope, count]) => formatScope(scope as GlobalAssistantScope, count || 0))
+            .join(', ');
+        const explanation = [
+            `Loaded ${memories.length} memory item${memories.length === 1 ? '' : 's'} for user ${userId || 'none'}, tenant ${tenantId || 'none'}, project ${projectId || 'none'}.`,
+            scopeSummary ? `Scopes used: ${scopeSummary}.` : 'No prior memory matched this request and context.',
+            activeModule
+                ? `Module memory was limited to ${activeModule}.`
+                : 'No active module-specific memory filter was applied.',
+            adminMemoryVisible
+                ? 'Admin memory is visible only for the active or targeted tenant in Owner/Super Admin mode.'
+                : 'Admin memory is hidden in user mode.',
+        ];
+
+        return {
+            userId,
+            tenantId,
+            projectId,
+            mode: context.actor.mode,
+            activeModule,
+            sessionId: getSessionId(query),
+            taskId: getTaskId(query),
+            totalCount: memories.length,
+            memoryIds: memories.map(memory => memory.id),
+            scopeCounts,
+            moduleCounts,
+            segments: Array.from(segments.values())
+                .sort((a, b) => b.highestImportance - a.highestImportance || a.scope.localeCompare(b.scope)),
+            explanation,
+            guardrails: {
+                tenantIsolation: tenantId
+                    ? `Only memories for tenant ${tenantId} or permitted global/system scopes are eligible.`
+                    : 'Tenant-scoped memories require an active or targeted tenant.',
+                projectIsolation: projectId
+                    ? `Project/module memories require project ${projectId}.`
+                    : 'Project/module memories are hidden until a project is active or targeted.',
+                adminMemoryVisible,
+                adminMemoryReason: adminMemoryVisible
+                    ? 'Actor can use Owner/Super Admin memory gates.'
+                    : 'Actor is in user mode or lacks admin privileges.',
+            },
+            createdAt: nowIso(),
+        };
     }
 
     async deleteMemory(memoryId: string, context: AssistantContextSnapshot): Promise<boolean> {
@@ -226,5 +347,53 @@ export class GlobalAssistantMemoryService {
         }
         await this.adapter.deleteMemory(memoryId);
         return true;
+    }
+
+    private matchesOperationalBoundary(memory: GlobalAssistantMemory, query: MemoryQuery): boolean {
+        const context = query.context;
+        const tenantId = getContextTenantId(context);
+        const projectId = query.projectId ?? getContextProjectId(context);
+        const userId = getContextUserId(context);
+        const adminAllowed = canUseAdminMode(context);
+
+        if (memory.scope === 'user') {
+            return Boolean(memory.userId && userId && memory.userId === userId);
+        }
+
+        if (memory.scope === 'tenant') {
+            return Boolean(memory.tenantId && tenantId && memory.tenantId === tenantId);
+        }
+
+        if (memory.scope === 'project' || memory.scope === 'module') {
+            if (!memory.projectId || !projectId || memory.projectId !== projectId) return false;
+            if (memory.scope === 'module') {
+                const activeModule = query.module || context.activeModule || null;
+                if (!memory.module || !activeModule || memory.module !== activeModule) return false;
+            }
+            return true;
+        }
+
+        if (memory.scope === 'session') {
+            if (memory.userId && (!userId || memory.userId !== userId)) return false;
+            if (memory.tenantId && (!tenantId || memory.tenantId !== tenantId)) return false;
+            return Boolean(getSessionId(query));
+        }
+
+        if (memory.scope === 'task') {
+            if (memory.tenantId && (!tenantId || memory.tenantId !== tenantId)) return false;
+            if (memory.projectId && (!projectId || memory.projectId !== projectId)) return false;
+            return Boolean(getTaskId(query));
+        }
+
+        if (memory.scope === 'admin') {
+            return Boolean(adminAllowed && memory.tenantId && tenantId && memory.tenantId === tenantId);
+        }
+
+        if (memory.scope === 'system') {
+            if (!adminAllowed && context.actor.mode !== 'system') return false;
+            return !memory.tenantId || Boolean(tenantId && memory.tenantId === tenantId);
+        }
+
+        return false;
     }
 }

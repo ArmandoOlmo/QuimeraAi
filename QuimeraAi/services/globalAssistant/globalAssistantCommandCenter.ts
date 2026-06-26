@@ -281,6 +281,18 @@ const AUTO_APPLY_NAVIGATION_ACTIONS = new Set([
     'open_tenant',
 ]);
 
+const formatMemoryContextSummary = (result: GlobalAssistantRuntimeResult): string => {
+    const manifest = result.memoryContext;
+    if (!manifest || manifest.totalCount === 0) return String(result.memoryUsed.length);
+
+    const scopes = Object.entries(manifest.scopeCounts)
+        .filter(([, count]) => Number(count) > 0)
+        .map(([scope, count]) => `${scope}:${count}`)
+        .join(', ');
+
+    return scopes ? `${manifest.totalCount} (${scopes})` : String(manifest.totalCount);
+};
+
 export function shouldAutoApplyOperatingLayerPlan(result: GlobalAssistantRuntimeResult): boolean {
     if (result.plan.status === 'blocked' || result.plan.requiresConfirmation) return false;
     if (result.plan.actions.length === 0) return false;
@@ -305,7 +317,7 @@ export function formatGlobalAssistantPlanMessage(
     const blocked = result.plan.blockers.length > 0;
     const approvals = result.plan.approvals.length;
     const previews = result.plan.previews.length;
-    const memoryCount = result.memoryUsed.length;
+    const memorySummary = formatMemoryContextSummary(result);
     const previewNeedsApplyConfirmation = !blocked
         && previews > 0
         && result.plan.status === 'preview'
@@ -320,7 +332,7 @@ export function formatGlobalAssistantPlanMessage(
             `Proyecto: ${projectName}`,
             `Modelo planificado: ${result.modelId}`,
             `Tarea: ${result.task.id}`,
-            `Memoria usada: ${memoryCount}`,
+            `Memoria usada: ${memorySummary}`,
         ];
 
         if (actionLabels.length > 0) {
@@ -355,7 +367,7 @@ export function formatGlobalAssistantPlanMessage(
         `Project: ${projectName}`,
         `Planned model: ${result.modelId}`,
         `Task: ${result.task.id}`,
-        `Memory used: ${memoryCount}`,
+        `Memory used: ${memorySummary}`,
     ];
 
     if (actionLabels.length > 0) {
