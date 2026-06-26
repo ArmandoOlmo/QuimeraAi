@@ -193,7 +193,7 @@ function resolveChatAppearance(
     config: AiAssistantConfig,
 ): ChatAppearanceConfig {
     const input = appearanceInput || {};
-    const messages = input.messages || {};
+    const messages: Partial<ChatAppearanceConfig['messages']> = input.messages || {};
 
     return {
         branding: {
@@ -2318,15 +2318,40 @@ ${suggestAvailableSlots()}
                     phone: '',
                 });
                 const transcriptForLead = [buildConversationTranscript(), fullConversation].filter(Boolean).join('\n\n');
+                const voiceMessagesForNotes: Message[] = [
+                    ...messagesRef.current,
+                    ...transcript.map(item => ({
+                        role: item.role,
+                        text: item.role === 'model' ? cleanVoiceTranscript(item.text) : item.text,
+                        isVoiceMessage: true,
+                    })),
+                ].filter(item => item.text.trim().length > 0);
+                const participantName = nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient');
+                const participantEmail = emailMatch?.[1] || '';
+                const appointmentTitle = t('chatbotWidget.appointments.voiceTitle', { name: participantName });
+                const intentAnalysis = voiceMessagesForNotes.some(message => message.role === 'user')
+                    ? await analyzeCustomerIntent(voiceMessagesForNotes, project?.id || 'chatbot', user?.id)
+                    : null;
+                const customerRequestNotes = buildCustomerRequestNotes(voiceMessagesForNotes, {
+                    intentAnalysis,
+                    customer: {
+                        name: participantName,
+                        email: participantEmail,
+                    },
+                    customerProvidedNotes: fullConversation,
+                    appointmentTitle,
+                    appointmentDateTime: startDate.toISOString(),
+                });
 
                 const appointmentData: ChatAppointmentData = {
-                    title: t('chatbotWidget.appointments.voiceTitle', { name: nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient') }),
+                    title: appointmentTitle,
                     description: t('chatbotWidget.appointments.voiceDescription'),
+                    notes: customerRequestNotes,
                     type: 'consultation',
                     startDate,
                     endDate,
-                    participantName: nameMatch?.[1]?.trim() || t('chatbotWidget.appointments.voiceClient'),
-                    participantEmail: emailMatch?.[1] || '',
+                    participantName,
+                    participantEmail,
                     linkedLeadId: capturedLeadIdRef.current || undefined,
                     conversationTranscript: transcriptForLead,
                     sourceConversationId: convId,
@@ -2335,7 +2360,8 @@ ${suggestAvailableSlots()}
                     locale: i18n.language,
                     metadata: buildChatCoreAppointmentMetadata('chatcore_voice', {
                         voiceTranscript: fullConversation,
-                        extractionConfidence: emailMatch?.[1] ? 'medium' : 'low',
+                        extractionConfidence: participantEmail ? 'medium' : 'low',
+                        customerRequestSummary: customerRequestNotes,
                     }),
                 };
 

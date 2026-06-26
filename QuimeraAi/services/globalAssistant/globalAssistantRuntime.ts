@@ -289,7 +289,9 @@ export class GlobalAssistantRuntime {
                     action,
                     context: input.context,
                 }));
-                const beforeSnapshot = action.beforeSnapshot || buildDefaultBeforeSnapshot(action);
+                const beforeSnapshot = hasRecordField(result, 'beforeSnapshot')
+                    ? asRecord(result.beforeSnapshot)
+                    : action.beforeSnapshot || buildDefaultBeforeSnapshot(action);
                 const afterSnapshot = hasRecordField(result, 'afterSnapshot')
                     ? asRecord(result.afterSnapshot)
                     : result;
