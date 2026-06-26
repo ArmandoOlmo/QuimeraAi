@@ -41,6 +41,7 @@ import {
 import { evaluateChatbotSurfaceDeployment } from '../../utils/chatbotEngine/deploymentGuard.js';
 import { classifyChatbotMessageIntent } from '../../utils/chatbotEngine/intentClassifier.js';
 import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig.js';
+import { appendWidgetCustomerRequestNotes } from '../../utils/chatbotEngine/widgetCustomerRequestNotes.js';
 
 type ProjectRow = {
   id: string;
@@ -762,6 +763,21 @@ async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parse
       reason: leadAction.reason,
     },
   };
+  const customerRequestNotes = appendWidgetCustomerRequestNotes(notes || message || null, {
+    body,
+    projectName: project.name,
+    agentName: normalizeString(body.agentName, 160) || normalizeString(project.ai_assistant_config?.agentName, 160),
+    sourceSurface: getWidgetSourceSurface(body),
+    sourceModule: getWidgetSourceModule(body),
+    customer: {
+      name: leadName,
+      email: leadEmail,
+      phone: leadPhone,
+    },
+    conversationId: normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120),
+    leadId: normalizeString(body.leadId, 120),
+    locale: normalizeString(body.locale, 16),
+  });
 
   const payload = {
     tenant_id: tenantId,
@@ -774,8 +790,11 @@ async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parse
     source: normalizeString(body.source, 120) || 'chatbot-widget',
     value: normalizeNumber(body.value) || 0,
     tags: Array.from(new Set(['chatbot-widget', ...normalizeStringArray(body.tags)])),
-    notes: notes || message || null,
-    custom_data: customData,
+    notes: customerRequestNotes || notes || message || null,
+    custom_data: {
+      ...customData,
+      customerRequestSummary: customerRequestNotes || null,
+    },
   };
 
   const data = await runAuditedWidgetAction(leadAction, async () => {
@@ -820,6 +839,7 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
   const bookingChannel = normalizeString(body.bookingChannel, 120);
   const participantEmail = normalizeString(body.participantEmail, 320);
   const participantName = normalizeString(body.participantName, 200);
+  const participantPhone = normalizeString(body.participantPhone, 80);
   const providedSourceModule = normalizeString(body.sourceModule, 120)
     || normalizeString(normalizeMetadata(body.metadata).sourceModule, 120)
     || normalizeString(getWidgetContextRecord(body).sourceModule, 120);
@@ -827,10 +847,31 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
     || (source === 'chatbot' ? getWidgetSourceModule(body) : 'website-builder');
   const appointmentSourceSurface = getWidgetSourceSurface(body);
   const appointmentMetadata = normalizeMetadata(body.metadata);
-  const appointmentNotes = normalizeString(body.notes, 6000)
+  const rawAppointmentNotes = normalizeString(body.notes, 6000)
     || normalizeString(body.customerRequestSummary, 6000)
     || normalizeString(appointmentMetadata.customerRequestSummary, 6000)
     || normalizeString(body.description, 5000);
+  const appointmentTitle = normalizeString(body.title, 250) || (source === 'chatbot' ? 'Cita desde Chatbot' : 'Reserva desde sitio web');
+  const linkedLeadId = normalizeString(body.linkedLeadId, 80);
+  const sourceConversationId = normalizeString(body.sourceConversationId, 120);
+  const appointmentNotes = appendWidgetCustomerRequestNotes(rawAppointmentNotes, {
+    body,
+    projectName: project.name,
+    agentName: normalizeString(body.agentName, 160) || normalizeString(project.ai_assistant_config?.agentName, 160),
+    sourceSurface: appointmentSourceSurface,
+    sourceModule: appointmentSourceModule,
+    customer: {
+      name: participantName,
+      email: participantEmail,
+      phone: participantPhone,
+    },
+    customerProvidedNotes: rawAppointmentNotes,
+    appointmentTitle,
+    appointmentDateTime: startDate.toISOString(),
+    conversationId: sourceConversationId || normalizeString(body.conversationId, 120),
+    leadId: linkedLeadId,
+    locale: normalizeString(body.locale, 16),
+  });
   const appointmentIdempotencyKey = normalizeString(body.idempotencyKey, 240)
     || `${source}:${project.id}:${participantEmail || participantName || 'guest'}:${startDate.toISOString()}`;
   const appointmentAction = source === 'chatbot'
@@ -855,7 +896,7 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
   const appointmentPayload: CanonicalAppointmentInput = {
     tenantId,
     projectId: project.id,
-    title: normalizeString(body.title, 250) || (source === 'chatbot' ? 'Cita desde Chatbot' : 'Reserva desde sitio web'),
+    title: appointmentTitle,
     description: normalizeString(body.description, 5000) || '',
     notes: appointmentNotes,
     type: normalizeString(body.type, 80) || 'consultation',
@@ -868,12 +909,12 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
     organizerName: project.name,
     participantName,
     participantEmail,
-    participantPhone: normalizeString(body.participantPhone, 80),
-    linkedLeadId: normalizeString(body.linkedLeadId, 80),
+    participantPhone,
+    linkedLeadId,
     conversationTranscript: normalizeString(body.conversationTranscript, 20000),
     sourceComponent: normalizeString(body.sourceComponent, 120) || (source === 'chatbot' ? 'ChatCore' : 'PublicBooking'),
     sourceModule: appointmentSourceModule,
-    sourceConversationId: normalizeString(body.sourceConversationId, 120),
+    sourceConversationId,
     publicSubmissionId: normalizeString(body.publicSubmissionId, 120),
     idempotencyKey: appointmentIdempotencyKey,
     bookingServiceId: normalizeString(body.bookingServiceId, 120),

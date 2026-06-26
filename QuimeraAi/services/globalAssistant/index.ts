@@ -8,4 +8,5 @@ export * from './globalAssistantModelRouter';
 export * from './globalAssistantPermissionService';
 export * from './globalAssistantProjectResolver';
 export * from './globalAssistantRuntime';
+export * from './globalAssistantSupabaseStore';
 export * from './globalAssistantTaskService';
