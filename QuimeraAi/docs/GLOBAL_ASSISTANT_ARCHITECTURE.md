@@ -2,7 +2,7 @@
 
 ## Current scope
 
-GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. GA2 adds the Supabase persistence layer for memory, conversations, tasks, actions, runtime events, summaries, preferences, and admin events.
+GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. GA2 adds the Supabase persistence layer for memory, conversations, tasks, actions, runtime events, summaries, preferences, and admin events. GA4 starts moving the dashboard request input from AI-Studio-only routing to the Global Assistant entry path.
 
 This work does not replace existing chats, does not add heavy UI, and does not apply real module mutations yet.
 
@@ -10,6 +10,7 @@ The current PR-level scope adds:
 
 - `types/globalAssistant.ts` as the shared TypeScript contract.
 - `services/globalAssistant/*` for context resolution, memory, intent routing, action registry, permission checks, execution planning, audit events, task tracking, project resolution, and OpenRouter model metadata.
+- `services/globalAssistant/globalAssistantEntryBridge.ts` for dashboard-to-assistant entry routing and lazy-load-safe request handoff.
 - `services/globalAssistant/globalAssistantSupabaseStore.ts` for injectable Supabase persistence repositories.
 - `supabase/migrations/20260626120743_global_assistant_memory_store.sql` for `assistant_*` tables, RLS, grants, triggers, and helper functions.
 - Preview-first execution plans with confirmation requirements for high and critical actions.
@@ -22,7 +23,7 @@ Quimera currently has several chat or assistant surfaces. They must remain conce
 | Surface | Current role | Global Assistant relationship |
 | --- | --- | --- |
 | `components/ui/GlobalAiAssistant.tsx` | Authenticated app assistant with app/project/admin context and tool execution. | Closest existing surface; GA1 formalizes the platform contract underneath it. |
-| `components/dashboard/DashboardWelcome.tsx` | Dashboard request input. Today it routes initial prompts to AI Studio. | Future GA4 entry point for global requests; unchanged in GA1. |
+| `components/dashboard/DashboardWelcome.tsx` | Dashboard command input. Submit/Enter now routes non-empty requests to the Global Assistant entry event; the explicit Web Design Studio button still opens AI Studio. | GA4 entry point for global operating requests while preserving the AI Studio creation surface. |
 | `components/onboarding/AIWebsiteStudio.tsx` and `components/onboarding/hooks/useAIWebsiteStudio.ts` | AI Studio for initial business, website, and BusinessBlueprint generation. | Connector/source for project creation, not the daily operating assistant. |
 | `components/chat/ChatCore.tsx` | Visitor/customer chatbot runtime with lead capture, ecommerce, appointments, voice, and knowledge. | Operated by Global Assistant only through ChatCore connector actions; raw visitor memory stays separate. |
 | `components/ChatbotWidget.tsx` and `components/chat/EmbedWidget.tsx` | Public/project website wrappers for ChatCore. | Public widget context must not inherit owner/admin assistant memory. |
@@ -42,6 +43,7 @@ Rule: Global Assistant can orchestrate these surfaces, open them, or create draf
 GA1 introduces these layers:
 
 - `globalAssistantContextResolver`: creates an `AssistantContextSnapshot` from user, tenant, active route, active project, admin mode, selected entity, and surface metadata.
+- `globalAssistantEntryBridge`: classifies dashboard requests, keeps explicit AI Studio opens on the AI Studio surface, and dispatches typed Global Assistant entry payloads through `quimera:global-assistant-entry` with a `localStorage` fallback.
 - `globalAssistantMemoryService`: validates and queries segmented memory through an adapter. GA1 uses an in-memory adapter; GA2 adds an injectable Supabase adapter and RLS-backed tables.
 - `globalAssistantIntentRouter`: returns structured GA1 intent output. It is intentionally rule-based until the OpenRouter structured tool loop is added.
 - `globalAssistantActionRegistry`: declares module actions, schemas, service gates, feature gates, safety level, preview support, rollback support, and required permissions.
@@ -53,7 +55,13 @@ GA1 introduces these layers:
 
 ## Execution flow
 
-GA1 flow:
+GA4 dashboard entry handoff:
+
+1. Dashboard request submit dispatches a Global Assistant entry payload unless the user explicitly asks to open/use AI Studio.
+2. The authenticated app assistant consumes the entry event, opens the drawer, and processes the request in the same chat/tool pipeline as manual assistant input.
+3. Website creation no longer uses the old empty-argument fast path; model/tool execution must provide `businessName`, `industry`, and `description` before headless generation.
+
+GA1-GA2 planning flow:
 
 1. Build context snapshot.
 2. Load relevant memory for that context.
@@ -95,7 +103,7 @@ Model metadata was verified against OpenRouter model availability on 2026-06-26 
 
 - GA2: Supabase assistant tables, adapters, RLS, and persistence tests. Done as an additive persistence layer; live runtime switchover remains separate.
 - GA3: project switcher and richer context snapshots.
-- GA4: dashboard request bar routes to Global Assistant runtime.
+- GA4: dashboard request bar routes to Global Assistant runtime. Started with the dashboard entry bridge and GlobalAiAssistant event handoff; durable runtime persistence and full structured tool-loop handoff still remain.
 - GA5: global command palette.
 - GA6: OpenRouter structured outputs and tool loop.
 - GA7-GA10: module connectors, preview/apply, rollback, and admin mode.

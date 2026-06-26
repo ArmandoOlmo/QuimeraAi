@@ -1,6 +1,7 @@
 export * from './globalAssistantActionRegistry';
 export * from './globalAssistantAuditService';
 export * from './globalAssistantContextResolver';
+export * from './globalAssistantEntryBridge';
 export * from './globalAssistantExecutionEngine';
 export * from './globalAssistantIntentRouter';
 export * from './globalAssistantMemoryService';

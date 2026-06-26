@@ -49,7 +49,7 @@ export interface ChatbotEngineSurfaceSummary {
 }
 
 export interface ChatbotEngineCapabilitySummary {
-    id: 'leadCapture' | 'handoff' | 'appointments' | 'ecommerce' | 'restaurants' | 'realEstate' | 'bioPage' | 'voice';
+    id: 'leadCapture' | 'handoff' | 'appointments' | 'ecommerce' | 'restaurants' | 'realEstate' | 'bioPage' | 'finance' | 'voice';
     enabled: boolean;
     needsReview: boolean;
     status: ChatbotEngineReadinessStatus;

@@ -29,6 +29,12 @@ import {
     createCanonicalEmailIdempotencyKey,
 } from '../../services/email/emailModuleIntentService.ts';
 import type { PlatformServiceId } from '../../types/serviceAvailability';
+import {
+    clearStoredGlobalAssistantEntryRequest,
+    GLOBAL_ASSISTANT_ENTRY_EVENT,
+    readStoredGlobalAssistantEntryRequest,
+    type GlobalAssistantEntryPayload,
+} from '../../services/globalAssistant/globalAssistantEntryBridge';
 // ... existing imports ...
 
 // --- Types ---
@@ -1070,6 +1076,7 @@ const GlobalAiAssistant: React.FC = () => {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const processTextRequestRef = useRef<((request: string, entry?: GlobalAssistantEntryPayload) => Promise<void>) | null>(null);
 
     // Audio Refs
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -1776,6 +1783,13 @@ const GlobalAiAssistant: React.FC = () => {
             }
             else if (name === 'create_website') {
                 const { businessName, industry, description, tone } = args;
+                if (!businessName || !industry || !description) {
+                    const result = {
+                        error: "I need businessName, industry, and description before creating a website draft.",
+                    };
+                    console.log(`[Tool Result] ${name}`, result);
+                    return result;
+                }
                 await performHeadlessGeneration(businessName, industry, description, tone);
                 const result = { result: `Website '${businessName}' created.` };
                 console.log(`[Tool Result] ${name}`, result);
@@ -3282,8 +3296,8 @@ const GlobalAiAssistant: React.FC = () => {
         if ((norm.includes('sitio') || norm.includes('website') || norm.includes('pagina web') || norm.includes('landing')) &&
             !norm.includes('seccion')) {
             if (isCreate) {
-                console.log('[InferTool] Fast-path: create_website');
-                return { name: 'create_website', args: {} };
+                console.log('[InferTool] Website creation request requires LLM argument extraction.');
+                return null;
             }
         }
 
@@ -3314,16 +3328,21 @@ const GlobalAiAssistant: React.FC = () => {
         return null;
     };
 
-    const handleTextSend = async () => {
-        if (!input.trim()) return;
-        const userMsg = input;
+    const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
+        const userMsg = request.trim();
+        if (!userMsg) return;
+
         setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
 
         if (!isLiveActive) {
             setIsThinking(true);
             try {
-                console.log('[Global Assistant] Processing message:', userMsg);
+                console.log('[Global Assistant] Processing message:', userMsg, entry ? {
+                    source: entry.source,
+                    surface: entry.surface,
+                    metadata: entry.metadata,
+                } : undefined);
 
                 // ============================================================
                 // STEP 1: Fast-path tool inference from user text
@@ -3505,6 +3524,50 @@ Usuario: ${userMsg}`;
             }
         }
     };
+
+    const handleTextSend = async () => {
+        await processTextRequest(input);
+    };
+
+    useEffect(() => {
+        processTextRequestRef.current = processTextRequest;
+    });
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const openAssistantWithEntry = (entry: GlobalAssistantEntryPayload | null) => {
+            const request = entry?.request?.trim();
+            if (!request) return;
+
+            clearStoredGlobalAssistantEntryRequest();
+            setIsMinimized(false);
+            setIsOpen(true);
+
+            if (entry.autoSubmit === false) {
+                setInput(request);
+                window.setTimeout(() => inputRef.current?.focus(), 80);
+                return;
+            }
+
+            void processTextRequestRef.current?.(request, entry);
+        };
+
+        const handleEntryRequest = (event: Event) => {
+            openAssistantWithEntry((event as CustomEvent<GlobalAssistantEntryPayload>).detail || null);
+        };
+
+        window.addEventListener(GLOBAL_ASSISTANT_ENTRY_EVENT, handleEntryRequest);
+
+        const storedEntry = readStoredGlobalAssistantEntryRequest();
+        if (storedEntry) {
+            window.setTimeout(() => openAssistantWithEntry(storedEntry), 80);
+        }
+
+        return () => {
+            window.removeEventListener(GLOBAL_ASSISTANT_ENTRY_EVENT, handleEntryRequest);
+        };
+    }, []);
 
     useEffect(() => { return () => stopLiveSession(); }, []);
 

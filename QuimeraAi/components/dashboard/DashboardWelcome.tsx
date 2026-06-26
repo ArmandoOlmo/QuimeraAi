@@ -11,6 +11,11 @@ import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { useAppLogo } from '../../hooks/useAppLogo';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
+import {
+    createGlobalAssistantEntryPayload,
+    dispatchGlobalAssistantEntryRequest,
+    routeDashboardAssistantEntry,
+} from '../../services/globalAssistant/globalAssistantEntryBridge';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
@@ -78,7 +83,23 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const handlePromptSubmit = (event?: React.FormEvent) => {
         event?.preventDefault();
-        handleOpenAIStudio(aiPrompt);
+        const request = aiPrompt.trim();
+        const route = routeDashboardAssistantEntry(request);
+
+        if (route.destination === 'ai_studio') {
+            handleOpenAIStudio(route.forwardPromptToAiStudio ? request : undefined);
+        } else {
+            dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
+                source: 'dashboard_welcome',
+                surface: 'dashboard',
+                metadata: {
+                    route: 'dashboard',
+                    projectCount: allUserProjectsCount,
+                    routingReason: route.reason,
+                },
+            }));
+        }
+
         setAiPrompt('');
     };
 
@@ -259,7 +280,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             rows={2}
                             placeholder={t(
                                 'dashboard.aiPromptPlaceholder',
-                                'Describe el website que quieres crear...',
+                                'Ask Quimera to create, edit, open, analyze, or run anything...',
                             )}
                             className="min-h-[64px] flex-1 resize-none bg-transparent px-1 py-2 text-sm sm:text-base text-q-text placeholder:text-q-text-secondary/65 focus:outline-none"
                         />
@@ -272,7 +293,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/60 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/40 hover:bg-q-accent/10 hover:!text-q-text"
                         >
                             <Sparkles size={13} className="text-q-accent" />
-                            <span className="truncate">Web Design Studio</span>
+                            <span className="truncate">{t('dashboard.webDesignStudio', 'Web Design Studio')}</span>
                         </AppButton>
                         <div className="flex flex-shrink-0 items-center gap-2">
                             <AppButton

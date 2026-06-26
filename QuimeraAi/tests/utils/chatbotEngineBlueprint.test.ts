@@ -116,6 +116,16 @@ describe('chatbotEngine blueprint dashboard summary', () => {
             'bioPage',
             'voice',
         ]));
+        expect(summary.capabilities.map(capability => capability.id)).toEqual(expect.arrayContaining([
+            'leadCapture',
+            'ecommerce',
+            'finance',
+            'voice',
+        ]));
+        expect(summary.capabilities.find(capability => capability.id === 'finance')).toMatchObject({
+            enabled: true,
+            status: 'review',
+        });
         expect(summary.testLab.scenarioCount).toBeGreaterThan(0);
         expect(summary.eventLog.events).toContain('chatbot_action_blocked');
         expect(summary.deployment.voiceEnabled).toBe(false);

@@ -3845,6 +3845,8 @@
     "startBuilding": "Start building your dream website",
     "createWithAI": "Create with AI",
     "createWithAIDesc": "Let AI build your site from a conversation",
+    "aiPromptPlaceholder": "Ask Quimera to create, edit, open, analyze, or run anything...",
+    "webDesignStudio": "Web Design Studio",
     "heroSubtitlePart1": "You have",
     "heroSubtitlePart2": "projects",
     "heroSubtitlePart3": "created.",

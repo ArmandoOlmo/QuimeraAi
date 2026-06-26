@@ -44,6 +44,21 @@ Last focused run on 2026-06-26:
 - 6 files passed.
 - 21 tests passed.
 
+## Automated coverage added in GA4 entry bridge
+
+Run:
+
+```bash
+npm run test:run -- tests/services/globalAssistant*.test.ts tests/utils/globalAssistantMemoryMigration.test.ts
+```
+
+Coverage:
+
+- Dashboard prompts route to the Global Assistant by default, including website creation, image generation, and CRM/lead requests.
+- Explicit AI Studio open/create requests stay on the AI Studio surface.
+- Dashboard entry payloads are typed, trimmed, source-tagged, and auto-submit by default.
+- The Global Assistant no longer fast-paths website creation with empty arguments.
+
 ## GA1 manual checks
 
 - Confirm no dashboard UI behavior changed.
@@ -81,6 +96,8 @@ When GA4-GA10 land, manually verify:
 
 - Dashboard request: "crea un website para X".
 - Dashboard request: "genera una imagen para el hero".
+- Dashboard request opens the Global Assistant drawer instead of only opening AI Studio.
+- Explicit "Abre AI Studio" still opens AI Studio.
 - Switch project by chat.
 - Edit website section by chat.
 - Create product by chat.
