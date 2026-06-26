@@ -299,7 +299,15 @@ export interface AssistantActionDefinition<Input = Record<string, unknown>, Outp
     idempotencyKeyStrategy: 'none' | 'user_project_action' | 'target_hash' | 'explicit';
     validate?: (input: Input) => { valid: boolean; errors: string[] };
     preview?: (input: Input) => Promise<AssistantExecutionPreview>;
-    execute?: (input: Input) => Promise<Output>;
+    execute?: (input: Input, context: {
+        action: AssistantAction;
+        context?: AssistantContextSnapshot;
+    }) => Promise<Output>;
+    rollback?: (input: Input, context: {
+        action: AssistantAction;
+        snapshot: AssistantRollbackSnapshot;
+        context?: AssistantContextSnapshot;
+    }) => Promise<Output>;
 }
 
 export interface AssistantAction {
@@ -376,6 +384,7 @@ export interface AssistantRuntimeEvent {
         | 'assistant_action_confirmed'
         | 'assistant_action_applied'
         | 'assistant_action_failed'
+        | 'assistant_action_rolled_back'
         | 'assistant_project_switched'
         | 'assistant_admin_action_requested'
         | 'assistant_model_call'

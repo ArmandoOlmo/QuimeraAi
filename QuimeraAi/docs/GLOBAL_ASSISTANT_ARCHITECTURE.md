@@ -92,6 +92,14 @@ GA1-GA2 planning flow:
 
 GA1 does not run module connectors or apply changes. Future connector PRs must implement `previewAction` and `applyAction` against canonical module services.
 
+Execution lifecycle:
+
+1. `planRequest` creates a task, planned actions, previews, approval requests, and audit events.
+2. `confirmPlan` marks selected approval requests/actions as confirmed and moves the task into `running` only when all required confirmations are present.
+3. `applyTask` executes only actions whose registry definitions include an explicit `execute` handler. If a module connector has not registered execution yet, the action fails safely and records `assistant_action_failed`.
+4. Successful applies update the action log, record `assistant_action_applied`, store a task-scoped memory summary, and create a rollback snapshot when the action supports rollback.
+5. `rollbackAction` requires `rollbackSupported`, a stored snapshot, and an explicit rollback handler before marking an action as `rolled_back`.
+
 ## OpenRouter notes
 
 Model metadata was verified against OpenRouter model availability on 2026-06-26 before hardcoding IDs in `globalAssistantModelRouter.ts`.

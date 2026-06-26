@@ -1,6 +1,7 @@
 import type {
     AssistantAction,
     AssistantActionLog,
+    AssistantRollbackSnapshot,
     AssistantRuntimeEvent,
 } from '../../types/globalAssistant';
 
@@ -16,6 +17,7 @@ const createId = (prefix: string) => {
 export class GlobalAssistantAuditService {
     private readonly actionLogs: AssistantActionLog[] = [];
     private readonly events: AssistantRuntimeEvent[] = [];
+    private readonly rollbackSnapshots = new Map<string, AssistantRollbackSnapshot>();
 
     recordAction(action: AssistantAction, metadata: Partial<AssistantActionLog> = {}): AssistantActionLog {
         const log: AssistantActionLog = {
@@ -26,8 +28,29 @@ export class GlobalAssistantAuditService {
                 ...(metadata.metadata || {}),
             },
         };
-        this.actionLogs.push(log);
+        const index = this.actionLogs.findIndex(entry => entry.id === log.id);
+        if (index >= 0) {
+            this.actionLogs[index] = log;
+        } else {
+            this.actionLogs.push(log);
+        }
         return log;
+    }
+
+    recordRollbackSnapshot(snapshot: AssistantRollbackSnapshot): AssistantRollbackSnapshot {
+        this.rollbackSnapshots.set(snapshot.actionId, snapshot);
+        return snapshot;
+    }
+
+    getRollbackSnapshot(actionId: string): AssistantRollbackSnapshot | undefined {
+        return this.rollbackSnapshots.get(actionId);
+    }
+
+    listRollbackSnapshots(filters: { actionId?: string } = {}): AssistantRollbackSnapshot[] {
+        return Array.from(this.rollbackSnapshots.values()).filter(snapshot => {
+            if (filters.actionId && snapshot.actionId !== filters.actionId) return false;
+            return true;
+        });
     }
 
     recordEvent(event: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'>): AssistantRuntimeEvent {

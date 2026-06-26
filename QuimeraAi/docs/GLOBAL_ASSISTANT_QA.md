@@ -18,6 +18,7 @@ Coverage:
 - Mutating actions require preview.
 - Service and feature gates block unavailable modules.
 - Runtime creates task, loads memory, selects model, builds preview plan, and writes audit events.
+- Runtime can confirm previewed plans, apply actions with registered handlers, fail safely without connectors, create task memory after apply, and roll back supported actions with snapshots.
 - Project-scoped actions are blocked without active project context.
 - OpenRouter model role metadata supports tool-loop checks.
 
