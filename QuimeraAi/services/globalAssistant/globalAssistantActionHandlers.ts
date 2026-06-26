@@ -1,5 +1,6 @@
 import { supabase as defaultSupabase } from '../../supabase';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
+import { initialData } from '../../data/initialData';
 import type {
     AssistantAction,
     AssistantActionDefinition,
@@ -9,10 +10,12 @@ import type {
 import { createAppointmentCanonical, timestampFromIso, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
 import {
     applyChatbotBlueprintToProjectData,
-    updateProjectChatbotSurfaceDeployment,
     type ChatbotSurfaceDeploymentKey,
 } from '../chatbotEngine/chatbotEngineConfigurationService';
-import { runProjectChatbotTestLab } from '../chatbotEngine/chatbotEngineTestLabService';
+import {
+    deployChatbotToSurface,
+    runProjectChatbotTestLab,
+} from '../chatbot/chatbotEngineService';
 import { createAudience } from '../email/emailAudienceService';
 import { createAutomationDraft } from '../email/emailAutomationService';
 import { createCampaignDraft, loadCampaign, updateCampaign } from '../email/emailCampaignService';
@@ -1548,6 +1551,359 @@ const readBrandIdentity = (projectRow: Record<string, unknown>, projectData: Rec
     if (Object.keys(dataBrandIdentity).length) return dataBrandIdentity as unknown as BrandIdentity;
     return undefined;
 };
+
+const inferProjectDraftName = (input: Record<string, unknown>, request: string): string => {
+    const explicitName = readDisplayText(input.name)
+        || readDisplayText(input.businessName)
+        || readDisplayText(input.projectName)
+        || readDisplayText(asRecord(input.business).name);
+    if (explicitName) return titleFromRequest(explicitName, 'AI website draft');
+
+    const cleanedRequest = request
+        .replace(/\b(crea|crear|create|genera|generar|build|website|sitio|web|proyecto|project|para|for|de|del|una|un|nuevo|nueva)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return titleFromRequest(cleanedRequest || request, 'AI website draft');
+};
+
+const inferProjectDraftIndustry = (input: Record<string, unknown>, request: string): string => (
+    readDisplayText(input.industry)
+    || readDisplayText(asRecord(input.business).industry)
+    || (includesAny(normalizeForSearch(request), ['restaurant', 'restaurante', 'menu', 'reservation', 'reserva', 'cita']) ? 'restaurant' : undefined)
+    || (includesAny(normalizeForSearch(request), ['real estate', 'realty', 'inmobiliaria', 'propiedad', 'listing']) ? 'real estate' : undefined)
+    || (includesAny(normalizeForSearch(request), ['ecommerce', 'store', 'tienda', 'product', 'producto']) ? 'ecommerce' : undefined)
+    || 'general'
+);
+
+const inferProjectDraftHasEcommerce = (input: Record<string, unknown>, request: string): boolean => (
+    readBoolean(input.hasEcommerce)
+    ?? readBoolean(asRecord(input.business).hasEcommerce)
+    ?? includesAny(normalizeForSearch(request), ['ecommerce', 'store', 'tienda', 'product', 'producto', 'checkout', 'cart'])
+);
+
+const buildAssistantProjectDraft = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    options: { now: string; projectId?: string },
+) => {
+    const request = readString(input.prompt) || readString(input.request) || '';
+    const projectName = inferProjectDraftName(input, request);
+    const industry = inferProjectDraftIndustry(input, request);
+    const hasEcommerce = inferProjectDraftHasEcommerce(input, request);
+    const userId = getAssistantUserId(action, context);
+    const tenantId = readString(input.tenantId) || getRequiredTenantId(action, context);
+    const isRestaurant = normalizeForSearch(industry).includes('restaurant');
+    const componentOrder = uniqueStringList([
+        'header',
+        'hero',
+        'features',
+        ...(isRestaurant ? ['menu'] : []),
+        'cta',
+        'chatbot',
+        ...(hasEcommerce ? ['featuredProducts', 'categoryGrid'] : []),
+        'footer',
+    ]) as PageSection[];
+    const sectionVisibility = componentOrder.reduce<Record<PageSection, boolean>>((acc, section) => {
+        acc[section] = true;
+        return acc;
+    }, {} as Record<PageSection, boolean>);
+    const theme = cloneValue(DEFAULT_WEBSITE_THEME);
+    const brandIdentity = {
+        ...(cloneValue(initialData.brandIdentity) as Record<string, unknown>),
+        name: projectName,
+        industry,
+        source: 'global-assistant',
+    } as unknown as BrandIdentity;
+    const basePageData = cloneValue(initialData.data) as Record<string, unknown>;
+    const hero = {
+        ...asRecord(basePageData.hero),
+        headline: projectName,
+        subheadline: request || 'AI website draft created by the Global Assistant Operating Layer.',
+        ctaText: 'Review draft',
+    };
+    const pageData = {
+        ...basePageData,
+        hero,
+        features: {
+            ...asRecord(basePageData.features),
+            title: `${projectName} draft`,
+            subtitle: request || 'Generated intake ready for review.',
+        },
+        cta: {
+            ...asRecord(basePageData.cta),
+            title: 'Ready for review',
+            description: 'This project was created as a draft and will not publish automatically.',
+        },
+    } as PageData;
+    const pages: SitePage[] = [{
+        id: 'home',
+        title: 'Home',
+        slug: '/',
+        type: 'static',
+        sections: componentOrder,
+        sectionData: componentOrder.reduce<Record<string, unknown>>((acc, section) => {
+            acc[section] = (pageData as Record<string, unknown>)[section];
+            return acc;
+        }, {}),
+        seo: {
+            title: projectName,
+            description: request || `${projectName} draft`,
+        },
+        isHomePage: true,
+        showInNavigation: true,
+        navigationOrder: 0,
+        createdAt: options.now,
+        updatedAt: options.now,
+    }];
+    const assistantDrafts = {
+        projectCreation: {
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            noAutoPublish: true,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+            createdAt: options.now,
+            prompt: request,
+            metadata: buildBaseMetadata(input, action, context),
+        },
+        website: {
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            noAutoPublish: true,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+            updatedAt: options.now,
+            prompt: request,
+            metadata: buildBaseMetadata(input, action, context),
+        },
+    };
+    const businessBlueprint = options.projectId
+        ? syncWebsiteBlueprintFromEditor({
+            businessBlueprint: null,
+            projectId: options.projectId,
+            projectName,
+            userId,
+            data: pageData,
+            theme,
+            brandIdentity,
+            componentOrder,
+            sectionVisibility,
+            pages,
+            action: 'save_project',
+            now: options.now,
+        })
+        : null;
+    const projectData = {
+        ...(options.projectId ? { id: options.projectId } : {}),
+        name: projectName,
+        userId,
+        tenantId,
+        status: 'Draft',
+        data: pageData,
+        theme,
+        brandIdentity,
+        componentOrder,
+        sectionVisibility,
+        pages,
+        aiAssistantConfig: {},
+        assistantDrafts,
+        ...(businessBlueprint ? { businessBlueprint: {
+            ...businessBlueprint,
+            needsReview: true,
+            metadata: {
+                ...businessBlueprint.metadata,
+                generatedBy: 'global-assistant',
+                needsReview: true,
+                noAutoPublish: true,
+            },
+            websiteBlueprint: {
+                ...businessBlueprint.websiteBlueprint,
+                needsReview: true,
+            },
+        } } : {}),
+        globalAssistant: {
+            actionType: action.actionType,
+            actionId: action.id,
+            taskId: action.taskId || null,
+            contextSnapshotId: context?.id || null,
+            generatedByAI: true,
+            needsReview: true,
+            noAutoPublish: true,
+        },
+        createdAt: options.now,
+        lastUpdated: options.now,
+    };
+
+    return {
+        projectName,
+        tenantId,
+        userId,
+        pageData,
+        projectData,
+        theme,
+        brandIdentity,
+        componentOrder,
+        sectionVisibility,
+        pages,
+        businessBlueprint,
+        prompt: request,
+    };
+};
+
+const createProjectFromPromptHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        if (!readString(input.prompt) && !readString(input.request)) {
+            errors.push('prompt is required before creating a project draft.');
+        }
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const now = getNow(deps);
+        const draft = buildAssistantProjectDraft(input, action, context, { now });
+        const inserted = asRecord(await insertRow(client, 'projects', {
+            name: draft.projectName,
+            status: 'Draft',
+            user_id: draft.userId,
+            tenant_id: draft.tenantId,
+            data: draft.projectData,
+            theme: draft.theme,
+            brand_identity: draft.brandIdentity,
+            component_order: draft.componentOrder,
+            section_visibility: draft.sectionVisibility,
+            pages: draft.pages,
+            thumbnail_url: null,
+            ai_assistant_config: {},
+            last_updated: now,
+        }));
+        const projectId = readString(inserted.id);
+        if (!projectId) throw new Error('Project draft was created without a project id.');
+
+        const finalizedDraft = buildAssistantProjectDraft(input, action, context, { now, projectId });
+        let row: Record<string, unknown>;
+        try {
+            const result = await selectSingle(client.from('projects').update({
+                data: finalizedDraft.projectData,
+                theme: finalizedDraft.theme,
+                brand_identity: finalizedDraft.brandIdentity,
+                component_order: finalizedDraft.componentOrder,
+                section_visibility: finalizedDraft.sectionVisibility,
+                pages: finalizedDraft.pages,
+                last_updated: now,
+            }).eq('id', projectId));
+            if (result?.error) throw result.error;
+            row = asRecord(result?.data);
+            if (!readString(row.id)) throw new Error(`Project draft ${projectId} could not be finalized.`);
+        } catch (error) {
+            await deleteRowById(client, 'projects', projectId).catch(() => null);
+            throw error;
+        }
+
+        return {
+            beforeSnapshot: {
+                table: 'projects',
+                id: null,
+                created: false,
+            },
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row,
+                projectName: finalizedDraft.projectName,
+                tenantId: finalizedDraft.tenantId,
+                userId: finalizedDraft.userId,
+                prompt: finalizedDraft.prompt,
+                reviewRequired: true,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+            diff: {
+                created: [`projects.${projectId}`],
+                updated: [`projects.${projectId}.data.businessBlueprint`, `projects.${projectId}.data.assistantDrafts`],
+                reviewRequired: true,
+                noAutoPublish: true,
+                rollback: 'delete_created_project_draft',
+            },
+        };
+    },
+    rollback: rollbackCreatedRow('projects', deps),
+});
+
+const createWebsiteFromPromptHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const errors: string[] = [];
+        if (!readString(input.prompt) && !readString(input.request)) {
+            errors.push('prompt is required before creating a website draft.');
+        }
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const now = getNow(deps);
+        const prompt = readString(input.prompt) || readString(input.request) || '';
+        const nextProjectData = {
+            ...state.projectData,
+            assistantDrafts: {
+                ...asRecord(state.projectData.assistantDrafts),
+                websiteGeneration: {
+                    generatedByAI: true,
+                    needsReview: true,
+                    safeToEdit: true,
+                    noAutoPublish: true,
+                    prompt,
+                    sourceModule: 'global-assistant',
+                    sourceComponent: 'OperatingLayer',
+                    sourceEntityType: 'assistant_action',
+                    sourceEntityId: action.id,
+                    updatedAt: now,
+                    metadata: buildBaseMetadata(input, action, context),
+                },
+            },
+            lastUpdated: now,
+        };
+        const result = await selectSingle(client.from('projects').update({
+            data: nextProjectData,
+            last_updated: now,
+        }).eq('id', projectId));
+        if (result?.error) throw result.error;
+        const row = asRecord(result?.data);
+        if (!readString(row.id)) throw new Error(`Project ${projectId} website draft could not be updated.`);
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row,
+                prompt,
+                reviewRequired: true,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.assistantDrafts.websiteGeneration`],
+                reviewRequired: true,
+                noAutoPublish: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
 
 const loadProjectWebsiteState = async (
     client: SupabaseClientLike,
@@ -5814,7 +6170,7 @@ const createDeployChatbotToSurfaceHandler = (deps: GlobalAssistantActionHandlerD
         const projectData = await loadProjectData(client, projectId);
         const surfaceId = readChatbotSurfaceDeploymentKey(input);
         const status = readChatbotDeploymentStatus(input);
-        const result = await updateProjectChatbotSurfaceDeployment(projectId, {
+        const result = await deployChatbotToSurface(projectId, {
             surfaceId,
             status,
             actorId: action.userId || context?.actor.userId || null,
@@ -7230,8 +7586,10 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_project: () => createNavigationHandler('editor', { label: 'Open project in Website Builder.', requiresProject: true }),
     switch_project: () => createNavigationHandler('dashboard', { label: 'Switch active project context.', requiresProject: true }),
     search_projects: createSearchProjectsHandler,
+    create_project_from_prompt: createProjectFromPromptHandler,
     update_project_metadata: createUpdateProjectMetadataHandler,
     open_website_builder: () => createNavigationHandler('editor', { label: 'Open Website Builder.', requiresProject: true }),
+    create_website_from_prompt: createWebsiteFromPromptHandler,
     open_storefront_builder: () => createNavigationHandler('ecommerce', { label: 'Open Storefront Builder.', requiresProject: true, moduleItem: 'storefront' }),
     open_orders: () => createNavigationHandler('ecommerce', { label: 'Open ecommerce orders.', requiresProject: true, moduleItem: 'orders' }),
     open_email_hub: () => createNavigationHandler('email', { label: 'Open Email Hub.', requiresProject: true }),

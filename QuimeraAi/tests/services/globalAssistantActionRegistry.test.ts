@@ -76,6 +76,10 @@ describe('GlobalAssistantActionRegistry', () => {
             previewSupported: true,
             rollbackSupported: true,
         });
+        expect(typeof globalAssistantActionRegistry.get('create_project_from_prompt')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_project_from_prompt')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_website_from_prompt')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_website_from_prompt')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_website_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_section_copy')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_section_image')?.execute).toBe('function');

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+    coerceCommandText,
     sanitizeCommandTranslationParams,
     translateCommandTextSafe,
 } from '../../services/globalAssistant/globalCommandTranslations';
@@ -34,6 +35,17 @@ describe('globalCommandTranslations', () => {
             query: '$t(project.detail, {"id":"1"})',
             count: 2,
         });
+    });
+
+    it('coerces runtime command text values before translation fallback rendering', () => {
+        expect(coerceCommandText(42)).toBe('42');
+        expect(coerceCommandText(false)).toBe('false');
+        expect(coerceCommandText(null, 'Fallback')).toBe('Fallback');
+        expect(translateCommandTextSafe(
+            vi.fn(() => ({ unsafe: true })),
+            'globalCommandPalette.bad',
+            null as any,
+        )).toBe('');
     });
 
     it('falls back when i18n cannot translate a command string', () => {

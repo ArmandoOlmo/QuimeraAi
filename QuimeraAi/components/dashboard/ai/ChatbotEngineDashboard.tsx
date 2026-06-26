@@ -24,14 +24,12 @@ import {
 import {
     assignChatbotEngineHandoff,
     createEmptyChatbotEngineRuntimeSnapshot,
-    getChatbotEngineRuntimeSnapshot,
     resolveChatbotEngineHandoff,
     type ChatbotEngineRuntimeConversation,
     type ChatbotEngineRuntimeEvent,
     type ChatbotEngineRuntimeHandoff,
 } from '../../../services/chatbotEngine/chatbotEngineDashboardService';
 import {
-    runProjectChatbotTestLab,
     type ChatbotTestLabRunResult,
 } from '../../../services/chatbotEngine/chatbotEngineTestLabService';
 import {
@@ -39,10 +37,14 @@ import {
     type ChatbotEngineConfigResult,
     updateProjectChatbotActionReview,
     updateProjectChatbotKnowledgeSourceReview,
-    updateProjectChatbotSurfaceDeployment,
     updateProjectChatbotTestScenarioStatus,
     updateProjectChatbotVoiceSettings,
 } from '../../../services/chatbotEngine/chatbotEngineConfigurationService';
+import {
+    deployChatbotToSurface,
+    getChatbotEngineRuntimeSnapshot,
+    runProjectChatbotTestLab,
+} from '../../../services/chatbot/chatbotEngineService';
 import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService';
 import { useToast } from '../../../contexts/ToastContext';
 import type {
@@ -437,7 +439,7 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
         setMutatingSurfaceId(surfaceId);
         setConfigurationMutationError(null);
         try {
-            const result = await updateProjectChatbotSurfaceDeployment(project.id, {
+            const result = await deployChatbotToSurface(project.id, {
                 surfaceId,
                 status,
                 actorId,

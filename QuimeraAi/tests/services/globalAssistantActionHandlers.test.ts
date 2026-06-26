@@ -335,6 +335,123 @@ const buildAssistantAction = (actionType: string, input: Row): any => ({
 });
 
 describe('Global Assistant default action handlers', () => {
+    it('creates and rolls back a review-gated AI Studio project draft from a dashboard request', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], ['websiteBuilder']);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea un website para un restaurante con menu y citas',
+            enabledFeatures: ['websiteBuilder'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_project_from_prompt']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const projects = fakeSupabase.rowsByTable.projects;
+
+        expect(applied.task.status).toBe('completed');
+        expect(projects).toHaveLength(1);
+        expect(projects[0]).toMatchObject({
+            name: 'restaurante con menu y citas',
+            status: 'Draft',
+            tenant_id: 'tenant-1',
+            user_id: 'user-1',
+            last_updated: '2026-06-26T13:30:00.000Z',
+        });
+        expect(projects[0].data).toMatchObject({
+            id: projects[0].id,
+            status: 'Draft',
+            assistantDrafts: {
+                projectCreation: {
+                    generatedByAI: true,
+                    needsReview: true,
+                    noAutoPublish: true,
+                    sourceComponent: 'OperatingLayer',
+                },
+                website: {
+                    generatedByAI: true,
+                    needsReview: true,
+                    noAutoPublish: true,
+                    sourceComponent: 'OperatingLayer',
+                },
+            },
+            businessBlueprint: {
+                projectId: projects[0].id,
+                needsReview: true,
+                websiteBlueprint: {
+                    needsReview: true,
+                },
+            },
+            globalAssistant: {
+                actionType: 'create_project_from_prompt',
+                generatedByAI: true,
+                needsReview: true,
+                noAutoPublish: true,
+            },
+        });
+        expect(projects[0].data.componentOrder).toEqual(expect.arrayContaining(['hero', 'menu', 'chatbot', 'footer']));
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            table: 'projects',
+            id: projects[0].id,
+            projectId: projects[0].id,
+            reviewRequired: true,
+            noAutoPublish: true,
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects).toHaveLength(0);
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('creates a review-gated Website Builder intake draft on the active project and rolls it back', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Agrega una seccion de testimonios al website',
+            enabledFeatures: ['websiteBuilder'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_website_from_prompt']);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const project = fakeSupabase.rowsByTable.projects[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(project.data.assistantDrafts.websiteGeneration).toMatchObject({
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            noAutoPublish: true,
+            prompt: 'Agrega una seccion de testimonios al website',
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+        });
+        expect(applied.actions[0].beforeSnapshot).toMatchObject({
+            table: 'projects',
+            id: 'project-1',
+            projectId: 'project-1',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.assistantDrafts?.websiteGeneration).toBeUndefined();
+        expect(fakeSupabase.rowsByTable.projects[0].data.data.hero.headline).toBe('Original headline');
+    });
+
     it('creates and rolls back a review-gated email campaign draft', async () => {
         const { fakeSupabase, runtime, context, auditService } = buildRuntime(['emailMarketing'], ['emailMarketing']);
         const planned = await runtime.planRequest({

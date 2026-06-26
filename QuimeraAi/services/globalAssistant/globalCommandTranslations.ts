@@ -5,6 +5,12 @@ type TranslateFunction = (key: string, options?: Record<string, unknown>) => unk
 const reservedTranslationParamKeys = new Set(['defaultValue', 'interpolation', 'nest']);
 const i18nextNestingPrefixPattern = /\$t\(/g;
 
+export const coerceCommandText = (value: unknown, fallback = ''): string => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return fallback;
+};
+
 const maskI18nextNestingSyntax = (
     value: string,
     masks: Array<[string, string]>,
@@ -69,20 +75,22 @@ export const translateCommandTextSafe = (
     fallback: string,
     params?: CommandTranslationParams | null,
 ): string => {
-    if (!key) return fallback;
+    const safeKey = coerceCommandText(key).trim();
+    const safeFallback = coerceCommandText(fallback);
+    if (!safeKey) return safeFallback;
     const masks: Array<[string, string]> = [];
     try {
         const safeParams = maskCommandTranslationParams(sanitizeCommandTranslationParams(params), masks);
-        const safeFallback = maskI18nextNestingSyntax(fallback, masks);
-        const translated = translate(key, {
+        const maskedFallback = maskI18nextNestingSyntax(safeFallback, masks);
+        const translated = translate(safeKey, {
             ...safeParams,
-            defaultValue: safeFallback,
+            defaultValue: maskedFallback,
             interpolation: { skipOnVariables: true },
             nest: false,
         });
-        const resolved = typeof translated === 'string' ? translated : safeFallback;
+        const resolved = typeof translated === 'string' ? translated : maskedFallback;
         return restoreI18nextNestingSyntax(resolved, masks);
     } catch {
-        return fallback;
+        return safeFallback;
     }
 };

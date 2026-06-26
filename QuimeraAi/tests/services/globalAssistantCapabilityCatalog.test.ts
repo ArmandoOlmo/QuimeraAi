@@ -5,7 +5,7 @@ describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
             enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate'],
-            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule'],
+            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule', 'websiteBuilder'],
         });
 
         const analytics = catalog.modules.find(module => module.module === 'analytics');
@@ -28,6 +28,8 @@ describe('globalAssistantCapabilityCatalog', () => {
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
         const generateImage = catalog.actions.find(action => action.actionType === 'generate_image');
         const createAsset = catalog.actions.find(action => action.actionType === 'create_asset_from_prompt');
+        const createProject = catalog.actions.find(action => action.actionType === 'create_project_from_prompt');
+        const createWebsite = catalog.actions.find(action => action.actionType === 'create_website_from_prompt');
         const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
         const searchTenants = catalog.actions.find(action => action.actionType === 'search_tenants');
         const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
@@ -84,6 +86,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'attach_asset_to_section',
         ]));
         expect(website?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_website_from_prompt',
             'edit_website_section',
             'update_section_copy',
             'update_section_image',
@@ -101,6 +104,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'open_project',
             'switch_project',
             'search_projects',
+            'create_project_from_prompt',
             'update_project_metadata',
         ]));
         expect(admin?.executableActionTypes).toEqual(expect.arrayContaining([
@@ -169,6 +173,20 @@ describe('globalAssistantCapabilityCatalog', () => {
             availableInContext: true,
             requiredService: 'aiFeatures',
             rollbackExecutable: true,
+        });
+        expect(createProject).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredFeature: 'websiteBuilder',
+            rollbackExecutable: true,
+            requiresConfirmation: true,
+        });
+        expect(createWebsite).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredFeature: 'websiteBuilder',
+            rollbackExecutable: true,
+            requiresConfirmation: true,
         });
         expect(updateProjectMetadata).toMatchObject({
             executable: true,

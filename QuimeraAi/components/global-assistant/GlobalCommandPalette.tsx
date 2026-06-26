@@ -28,7 +28,7 @@ import { Input } from '../ui/input';
 import { AppButton } from '../ui/system/AppButton';
 import { useGlobalCommandPalette } from '../../hooks/useGlobalCommandPalette';
 import type { GlobalCommandItem } from '../../services/globalAssistant/globalCommandSearch';
-import { translateCommandTextSafe } from '../../services/globalAssistant/globalCommandTranslations';
+import { coerceCommandText, translateCommandTextSafe } from '../../services/globalAssistant/globalCommandTranslations';
 
 const iconForCommand = (item: GlobalCommandItem) => {
     if (item.type === 'assistant_request' || item.type === 'action') return Sparkles;
@@ -75,11 +75,20 @@ const typeFallback: Record<GlobalCommandItem['type'], string> = {
     admin: 'Admin',
 };
 
+const renderableCommandTypes = new Set<GlobalCommandItem['type']>([
+    'assistant_request',
+    'navigation',
+    'project',
+    'module',
+    'action',
+    'admin',
+]);
+
 const isRenderableCommandItem = (item: unknown): item is GlobalCommandItem =>
     !!item
     && typeof item === 'object'
     && typeof (item as GlobalCommandItem).id === 'string'
-    && typeof (item as GlobalCommandItem).type === 'string';
+    && renderableCommandTypes.has((item as GlobalCommandItem).type);
 
 function GlobalCommandPalette(): React.ReactElement {
     const { t } = useTranslation();
@@ -166,16 +175,19 @@ function GlobalCommandPalette(): React.ReactElement {
                             const isSelected = index === safeSelectedIndex;
                             const typeKey = typeLabelKey[item.type] || typeLabelKey.action;
                             const fallbackType = typeFallback[item.type] || typeFallback.action;
+                            const fallbackLabel = coerceCommandText(item.label)
+                                || translateCommandTextSafe(t, 'globalCommandPalette.untitledCommand', 'Untitled command');
                             const label = translateCommandTextSafe(
                                 t,
                                 item.labelKey,
-                                item.label || translateCommandTextSafe(t, 'globalCommandPalette.untitledCommand', 'Untitled command'),
+                                fallbackLabel,
                                 item.labelParams,
                             );
+                            const fallbackDescription = coerceCommandText(item.description);
                             const description = translateCommandTextSafe(
                                 t,
                                 item.descriptionKey,
-                                item.description || '',
+                                fallbackDescription,
                                 item.descriptionParams,
                             );
 
