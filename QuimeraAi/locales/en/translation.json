@@ -165,10 +165,13 @@
     "downloadCalendar": "Download calendar (.ics)",
     "copyDetails": "Copy details to share",
     "appointments": "Appointments",
+    "filters": "Filters",
     "analyticsEngine": {
       "eyebrow": "Canonical Appointments Engine",
       "title": "Booking analytics",
       "description": "Live funnel from project appointments, ChatCore, public booking, CRM, Email and Ecommerce metadata.",
+      "collapse": "Minimize booking analytics",
+      "expand": "Expand booking analytics",
       "chatCoreBookings": "ChatCore",
       "chatCoreHint": "AI booked",
       "publicBookings": "Public",
@@ -204,6 +207,8 @@
       "eyebrow": "Engine health",
       "title": "Appointments readiness",
       "score": "{{ready}}/{{total}} ready",
+      "collapse": "Minimize appointments readiness",
+      "expand": "Expand appointments readiness",
       "states": {
         "ready": "Ready",
         "review": "Review",

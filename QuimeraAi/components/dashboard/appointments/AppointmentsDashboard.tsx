@@ -591,7 +591,7 @@ const AppointmentsDashboard: React.FC = () => {
 
             <div className="flex-1 flex flex-col min-h-0">
                 {/* Header */}
- <header className="quimera-dashboard-header-bar h-14 sm:h-16 px-3 sm:px-6 flex items-center justify-between z-20 shrink-0">
+ <header className="quimera-dashboard-header-bar h-12 px-3 sm:px-5 flex items-center justify-between z-20 shrink-0">
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
@@ -603,25 +603,25 @@ const AppointmentsDashboard: React.FC = () => {
                         <div className="flex items-center gap-2 sm:gap-3">
                             <Calendar className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <div>
-                                <h1 className="text-base sm:text-lg font-bold text-foreground">{t('appointments.title')}</h1>
+                                <h1 className="text-base font-bold text-foreground">{t('appointments.title')}</h1>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
                         {/* Quick Stats */}
-                        <div className="hidden lg:flex items-center gap-6 mr-4 pr-4 border-r border-q-border">
+                        <div className="hidden lg:flex items-center gap-5 mr-3 pr-3 border-r border-q-border">
                             <div className="text-right">
                                 <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
                                     {t('appointments.completedLabel')}
                                 </p>
-                                <p className="text-lg font-bold text-q-success">{analytics.completedAppointments}</p>
+                                <p className="text-base font-bold leading-tight text-q-success">{analytics.completedAppointments}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] text-q-text-muted uppercase font-semibold tracking-wider">
                                     {t('appointments.successRate')}
                                 </p>
-                                <p className="text-lg font-bold text-foreground">{analytics.completionRate.toFixed(0)}%</p>
+                                <p className="text-base font-bold leading-tight text-foreground">{analytics.completionRate.toFixed(0)}%</p>
                             </div>
                         </div>
 
@@ -629,7 +629,7 @@ const AppointmentsDashboard: React.FC = () => {
                         <button
                             onClick={() => setShowGoogleCalendar(!showGoogleCalendar)}
                             className={`
-                                hidden md:flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors
+                                hidden md:flex items-center gap-2 h-8 px-3 rounded-lg text-sm font-medium transition-colors
                                 ${isGoogleConnected
                                     ? 'bg-q-success/10 text-q-success hover:bg-q-success/20'
                                     : 'bg-secondary text-q-text-muted hover:text-foreground hover:bg-secondary/80'

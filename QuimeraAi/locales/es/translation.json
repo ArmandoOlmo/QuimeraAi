@@ -166,10 +166,13 @@
     "downloadCalendar": "Descargar calendario (.ics)",
     "copyDetails": "Copiar detalles para compartir",
     "appointments": "Citas",
+    "filters": "Filtros",
     "analyticsEngine": {
       "eyebrow": "Appointments Engine canónico",
       "title": "Analíticas de reservas",
       "description": "Funnel en vivo desde citas del proyecto, ChatCore, booking público, CRM, Email y metadata de Ecommerce.",
+      "collapse": "Minimizar analíticas de reservas",
+      "expand": "Expandir analíticas de reservas",
       "chatCoreBookings": "ChatCore",
       "chatCoreHint": "Reservas AI",
       "publicBookings": "Públicas",
@@ -205,6 +208,8 @@
       "eyebrow": "Salud del engine",
       "title": "Preparación de citas",
       "score": "{{ready}}/{{total}} listo",
+      "collapse": "Minimizar preparación de citas",
+      "expand": "Expandir preparación de citas",
       "states": {
         "ready": "Listo",
         "review": "Revisión",
