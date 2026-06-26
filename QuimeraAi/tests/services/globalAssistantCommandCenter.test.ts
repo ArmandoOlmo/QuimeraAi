@@ -117,6 +117,43 @@ describe('globalAssistantCommandCenter', () => {
         expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('I will not apply changes');
     });
 
+    it('tells users to confirm preview-first plans even without critical approvals', () => {
+        const result = {
+            modelId: 'google/gemini-3-pro-image',
+            memoryUsed: [],
+            context: {
+                project: { projectId: 'project-1', projectName: 'Tienda Demo' },
+            },
+            task: { id: 'task-1' },
+            plan: {
+                status: 'preview',
+                safetyLevel: 'medium',
+                requiresConfirmation: false,
+                blockers: [],
+                approvals: [],
+                previews: [{
+                    actionId: 'action-1',
+                    module: 'media',
+                    actionType: 'generate_image',
+                    diff: { createdLabel: 'Media AI image draft', reviewRequired: true },
+                    after: { status: 'draft' },
+                }],
+                intent: { module: 'media', intent: 'generate_image' },
+                actions: [
+                    {
+                        module: 'media',
+                        actionType: 'generate_image',
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult;
+
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Preview listo');
+        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Responde "confirmar"');
+        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Preview ready');
+        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Reply "confirm"');
+    });
+
     it('only lets low-risk non-mutating plans continue to legacy execution', () => {
         const baseResult = {
             plan: {

@@ -273,6 +273,81 @@ describe('Global Assistant default action handlers', () => {
         expect(products[0].data.metadata.globalAssistant.actionType).toBe('create_product');
     });
 
+    it('creates and rolls back a Media AI image generation draft asset', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['aiFeatures'], []);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Genera una imagen hero 16:9 para Casa Luna',
+            enabledServices: ['aiFeatures'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['generate_image']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.blockers).toEqual([]);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const assets = fakeSupabase.rowsByTable.media_assets;
+
+        expect(applied.task.status).toBe('completed');
+        expect(assets).toHaveLength(1);
+        expect(assets[0]).toMatchObject({
+            category: 'ai_generated',
+            type: 'image/svg+xml',
+            is_ai_generated: true,
+            is_system_asset: false,
+            usage_count: 0,
+        });
+        expect(assets[0].url).toContain('data:image/svg+xml');
+        expect(assets[0].metadata).toMatchObject({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            mediaKind: 'image',
+            generationStatus: 'draft_prompt',
+            generatedByAI: true,
+            needsReview: true,
+            readyForMediaAI: true,
+            noAutoPublish: true,
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.media_assets).toHaveLength(0);
+    });
+
+    it('creates a Media AI video generation draft without invoking provider jobs', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['aiFeatures'], []);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Genera un video promocional corto para Casa Luna',
+            enabledServices: ['aiFeatures'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['generate_video']);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const assets = fakeSupabase.rowsByTable.media_assets;
+
+        expect(applied.task.status).toBe('completed');
+        expect(assets).toHaveLength(1);
+        expect(assets[0]).toMatchObject({
+            category: 'ai_generated',
+            is_ai_generated: true,
+        });
+        expect(assets[0].metadata).toMatchObject({
+            mediaKind: 'video',
+            generationStatus: 'draft_prompt',
+            generationMode: 'draft_prompt',
+            noAutoPublish: true,
+        });
+        expect(fakeSupabase.rowsByTable.video_generation_jobs || []).toHaveLength(0);
+    });
+
     it('applies safe navigation handlers without mutating module data', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
         const planned = await runtime.planRequest({

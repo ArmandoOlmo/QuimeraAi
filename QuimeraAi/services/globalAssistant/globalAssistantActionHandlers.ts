@@ -521,6 +521,115 @@ const createProductHandler = (deps: GlobalAssistantActionHandlerDependencies): H
     rollback: rollbackCreatedRow('store_products', deps),
 });
 
+const readMediaCategory = (value: unknown): string => {
+    const category = readString(value);
+    const allowed = new Set([
+        'brand',
+        'template',
+        'article',
+        'hero',
+        'background',
+        'icon',
+        'component',
+        'people',
+        'product',
+        'ai_generated',
+        'other',
+    ]);
+    return category && allowed.has(category) ? category : 'ai_generated';
+};
+
+const buildMediaDraftPlaceholderUrl = (kind: 'image' | 'video' | 'image_edit', title: string): string => {
+    const label = kind === 'video'
+        ? 'AI video draft'
+        : kind === 'image_edit'
+            ? 'AI image edit draft'
+            : 'AI image draft';
+    const safeTitle = escapeHtml(title);
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">',
+        '<rect width="1280" height="720" fill="#101828"/>',
+        '<rect x="72" y="72" width="1136" height="576" rx="32" fill="#182230" stroke="#344054" stroke-width="3"/>',
+        '<text x="108" y="178" fill="#f9fafb" font-family="Arial, sans-serif" font-size="48" font-weight="700">',
+        label,
+        '</text>',
+        '<text x="108" y="258" fill="#d0d5dd" font-family="Arial, sans-serif" font-size="30">',
+        safeTitle.slice(0, 96),
+        '</text>',
+        '<text x="108" y="574" fill="#98a2b3" font-family="Arial, sans-serif" font-size="24">',
+        'Pending generation and human review in Quimera Media AI',
+        '</text>',
+        '</svg>',
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+
+const createMediaDraftAssetHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+    kind: 'image' | 'video' | 'image_edit',
+): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const prompt = readString(input.prompt) || readString(input.request) || 'AI media generation draft';
+        const now = getNow(deps);
+        const title = titleFromRequest(prompt, kind === 'video' ? 'AI video generation draft' : 'AI image generation draft');
+        const category = readMediaCategory(input.category);
+        const aspectRatio = readString(input.aspectRatio) || (kind === 'video' ? '16:9' : '1:1');
+        const tags = Array.from(new Set([
+            'global-assistant',
+            'ai-generated',
+            `media:${kind}`,
+            aspectRatio,
+            ...asArray(input.tags).map(String),
+        ].filter(Boolean)));
+        const row = await insertRow(client, 'media_assets', {
+            name: title,
+            url: buildMediaDraftPlaceholderUrl(kind, title),
+            size: 0,
+            type: 'image/svg+xml',
+            category,
+            folder_path: `media/${category}/global-assistant/${action.id}`,
+            tags,
+            description: prompt,
+            is_ai_generated: true,
+            ai_prompt: prompt,
+            is_system_asset: false,
+            used_in: [],
+            usage_count: 0,
+            metadata: {
+                ...buildBaseMetadata(input, action, context),
+                projectId,
+                tenantId: getTenantId(action, context),
+                mediaKind: kind,
+                generationStatus: 'draft_prompt',
+                generationMode: readString(input.mode) || (kind === 'video' ? 'draft_prompt' : 'generate_if_available'),
+                aspectRatio,
+                style: readString(input.style) || null,
+                model: readString(input.model) || null,
+                sourceAssetId: readString(input.sourceAssetId) || null,
+                negativePrompt: readString(input.negativePrompt) || null,
+                referenceAssetIds: asArray(input.referenceAssetIds).map(String),
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                readyForMediaAI: true,
+                noAutoPublish: true,
+            },
+            created_by: getAssistantUserId(action, context),
+            created_at: now,
+            updated_at: now,
+        });
+        const id = readString((row as Record<string, unknown>).id) || action.id;
+        return {
+            afterSnapshot: { table: 'media_assets', id, row },
+            diff: { created: [`media_assets.${id}`], reviewRequired: true },
+        };
+    },
+    rollback: rollbackCreatedRow('media_assets', deps),
+});
+
 const createAppointmentHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: input => {
         const appointment = requireObject(input, 'appointment');
@@ -1294,6 +1403,9 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_email_automation: createEmailAutomationHandler,
     create_lead: createLeadHandler,
     create_product: createProductHandler,
+    generate_image: deps => createMediaDraftAssetHandler(deps, 'image'),
+    edit_image: deps => createMediaDraftAssetHandler(deps, 'image_edit'),
+    generate_video: deps => createMediaDraftAssetHandler(deps, 'video'),
     create_appointment: createAppointmentHandler,
     create_bio_page: createBioPageHandler,
     add_bio_block: createBioPageBlockHandler,

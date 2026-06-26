@@ -128,17 +128,17 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         prompt: stringSchema(),
         aspectRatio: stringSchema(undefined, ['1:1', '16:9', '9:16', '4:3', '3:4']),
         style: stringSchema(),
-    }, ['prompt']), 'medium', { requiredService: 'aiFeatures', rollbackSupported: false }),
+    }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
     action('media', 'edit_image', 'Create an edited image draft from an existing asset.', objectSchema({
         projectId: stringSchema(),
         sourceAssetId: stringSchema(),
         prompt: stringSchema(),
-    }, ['sourceAssetId', 'prompt']), 'medium', { requiredService: 'aiFeatures', rollbackSupported: false }),
+    }, ['sourceAssetId', 'prompt']), 'medium', { requiredService: 'aiFeatures' }),
     action('media', 'generate_video', 'Create a video draft or video prompt task.', objectSchema({
         projectId: stringSchema(),
         prompt: stringSchema(),
         mode: stringSchema(undefined, ['draft_prompt', 'generate_if_available']),
-    }, ['prompt']), 'medium', { requiredService: 'aiFeatures', rollbackSupported: false }),
+    }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
     action('media', 'attach_asset_to_section', 'Attach a media asset to a website or Bio Page section.', objectSchema({
         projectId: stringSchema(),
         module: stringSchema(),

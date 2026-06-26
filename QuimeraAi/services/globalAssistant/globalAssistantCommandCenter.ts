@@ -153,6 +153,10 @@ export function formatGlobalAssistantPlanMessage(
     const approvals = result.plan.approvals.length;
     const previews = result.plan.previews.length;
     const memoryCount = result.memoryUsed.length;
+    const previewNeedsApplyConfirmation = !blocked
+        && previews > 0
+        && result.plan.status === 'preview'
+        && !result.plan.requiresConfirmation;
 
     if (spanish) {
         const lines = [
@@ -181,6 +185,9 @@ export function formatGlobalAssistantPlanMessage(
         }
         if (result.plan.requiresConfirmation) {
             lines.push('No voy a aplicar cambios hasta que confirmes el preview.');
+            lines.push('Responde "confirmar" para aplicar o "cancelar" para descartarlo.');
+        } else if (previewNeedsApplyConfirmation) {
+            lines.push('Preview listo. No voy a aplicar cambios hasta que confirmes.');
             lines.push('Responde "confirmar" para aplicar o "cancelar" para descartarlo.');
         }
 
@@ -213,6 +220,9 @@ export function formatGlobalAssistantPlanMessage(
     }
     if (result.plan.requiresConfirmation) {
         lines.push('I will not apply changes until you confirm the preview.');
+        lines.push('Reply "confirm" to apply or "cancel" to discard it.');
+    } else if (previewNeedsApplyConfirmation) {
+        lines.push('Preview ready. I will not apply changes until you confirm.');
         lines.push('Reply "confirm" to apply or "cancel" to discard it.');
     }
 

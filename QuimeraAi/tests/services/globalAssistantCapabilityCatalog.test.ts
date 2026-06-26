@@ -4,15 +4,17 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
         });
 
         const email = catalog.modules.find(module => module.module === 'emailMarketing');
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
+        const media = catalog.modules.find(module => module.module === 'media');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
+        const generateImage = catalog.actions.find(action => action.actionType === 'generate_image');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -23,6 +25,11 @@ describe('globalAssistantCapabilityCatalog', () => {
         ]));
         expect(email?.previewOnlyActionTypes).toContain('send_email_campaign');
         expect(ecommerce?.executableActionTypes).toContain('create_product');
+        expect(media?.executableActionTypes).toEqual(expect.arrayContaining([
+            'generate_image',
+            'edit_image',
+            'generate_video',
+        ]));
         expect(createEmail).toMatchObject({
             executable: true,
             availableInContext: true,
@@ -37,6 +44,11 @@ describe('globalAssistantCapabilityCatalog', () => {
             executable: true,
             availableInContext: true,
             requiredService: 'ecommerce',
+        });
+        expect(generateImage).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredService: 'aiFeatures',
         });
     });
 
