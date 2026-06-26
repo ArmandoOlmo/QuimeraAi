@@ -104,4 +104,140 @@ describe('GlobalAssistantMemoryService', () => {
         });
         expect(ownerResults).toHaveLength(1);
     });
+
+    it('keeps module memory scoped to the active module', async () => {
+        const service = new GlobalAssistantMemoryService();
+        await service.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'emailMarketing',
+            title: 'Email module memory',
+            summary: 'Use reservation copy for campaigns.',
+            source: 'test',
+            sourceEntityType: 'module_note',
+            sourceEntityId: 'email-note',
+        });
+        await service.createMemory({
+            scope: 'module',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'ecommerce',
+            title: 'Ecommerce module memory',
+            summary: 'Use bundle copy for product cards.',
+            source: 'test',
+            sourceEntityType: 'module_note',
+            sourceEntityId: 'ecommerce-note',
+        });
+
+        const emailResults = await service.queryRelevantMemory({
+            context: context({ activeModule: 'emailMarketing' }),
+            text: 'copy',
+        });
+        expect(emailResults.map(memory => memory.title)).toEqual(['Email module memory']);
+
+        const ecommerceResults = await service.queryRelevantMemory({
+            context: context({ activeModule: 'ecommerce' }),
+            text: 'copy',
+        });
+        expect(ecommerceResults.map(memory => memory.title)).toEqual(['Ecommerce module memory']);
+    });
+
+    it('keeps session memory isolated by conversation/session id', async () => {
+        const service = new GlobalAssistantMemoryService();
+        const expiresAt = new Date(Date.now() + 60_000).toISOString();
+
+        await service.createMemory({
+            scope: 'session',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            title: 'Current session draft',
+            summary: 'The user is reviewing a campaign preview.',
+            data: { conversationId: 'conversation-1' },
+            source: 'test',
+            sourceEntityType: 'assistant_conversation',
+            sourceEntityId: 'conversation-1',
+            expiresAt,
+        });
+        await service.createMemory({
+            scope: 'session',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            title: 'Other session draft',
+            summary: 'This belongs to another drawer session.',
+            data: { conversationId: 'conversation-2' },
+            source: 'test',
+            sourceEntityType: 'assistant_conversation',
+            sourceEntityId: 'conversation-2',
+            expiresAt,
+        });
+
+        const visible = await service.queryRelevantMemory({
+            context: context({ conversationId: 'conversation-1' }),
+            scopes: ['session'],
+            text: 'draft',
+        });
+        expect(visible.map(memory => memory.title)).toEqual(['Current session draft']);
+
+        const withoutSession = await service.queryRelevantMemory({
+            context: context(),
+            scopes: ['session'],
+            text: 'draft',
+        });
+        expect(withoutSession).toHaveLength(0);
+    });
+
+    it('keeps task memory isolated by active task id', async () => {
+        const service = new GlobalAssistantMemoryService();
+        await service.createMemory({
+            scope: 'task',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'emailMarketing',
+            title: 'Task one action',
+            summary: 'Created campaign draft.',
+            data: { taskId: 'task-1', actionId: 'action-1' },
+            source: 'test',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: 'action-1',
+        });
+        await service.createMemory({
+            scope: 'task',
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            module: 'emailMarketing',
+            title: 'Task two action',
+            summary: 'Created another campaign draft.',
+            data: { taskId: 'task-2', actionId: 'action-2' },
+            source: 'test',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: 'action-2',
+        });
+
+        const taskOneResults = await service.queryRelevantMemory({
+            context: context({ snapshot: { activeTaskId: 'task-1' } }),
+            scopes: ['task'],
+            text: 'campaign',
+        });
+        expect(taskOneResults.map(memory => memory.title)).toEqual(['Task one action']);
+
+        const explicitTaskTwo = await service.queryRelevantMemory({
+            context: context({ snapshot: { activeTaskId: 'task-1' } }),
+            scopes: ['task'],
+            taskId: 'task-2',
+            text: 'campaign',
+        });
+        expect(explicitTaskTwo.map(memory => memory.title)).toEqual(['Task two action']);
+
+        const withoutTask = await service.queryRelevantMemory({
+            context: context(),
+            scopes: ['task'],
+            text: 'campaign',
+        });
+        expect(withoutTask).toHaveLength(0);
+    });
 });

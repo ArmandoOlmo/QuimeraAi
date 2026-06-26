@@ -73,9 +73,11 @@ export function resolveModuleFromRoute(route?: string | null): AssistantModuleTa
 export function resolveCurrentAssistantContext(input: ResolveAssistantContextInput): AssistantContextSnapshot {
     const activeProject = input.activeProject || null;
     const role = input.role || null;
-    const isOwner = role === 'owner';
-    const isSuperAdmin = role === 'superadmin' || role === 'super_admin';
-    const mode = input.mode || (isOwner ? 'owner' : isSuperAdmin ? 'super_admin' : 'user');
+    const isOwnerRole = role === 'owner';
+    const isSuperAdminRole = role === 'superadmin' || role === 'super_admin';
+    const mode = input.mode || (isOwnerRole ? 'owner' : isSuperAdminRole ? 'super_admin' : 'user');
+    const isOwner = isOwnerRole || mode === 'owner';
+    const isSuperAdmin = isSuperAdminRole || mode === 'super_admin';
     const activeModule = input.activeModule || resolveModuleFromRoute(input.activeRoute);
     const admin: AssistantAdminContext = {
         enabled: mode === 'owner' || mode === 'super_admin' || activeModule === 'admin',

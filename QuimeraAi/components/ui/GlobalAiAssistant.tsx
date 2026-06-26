@@ -4,6 +4,7 @@ import { useEditor } from '../../contexts/EditorContext';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useProject } from '../../contexts/project';
+import { useSafeTenant } from '../../contexts/tenant/TenantContext';
 import { useCRM } from '../../contexts/crm';
 import { useCMS } from '../../contexts/cms';
 import { useAI } from '../../contexts/ai';
@@ -40,6 +41,8 @@ import {
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
+    resolveOperatingLayerAccessContext,
+    resolveOperatingLayerTenantContext,
     shouldAutoApplyOperatingLayerPlan,
     shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter';
@@ -1115,15 +1118,15 @@ const buildConversationTitle = (request: string): string => {
     return normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
 };
 
-const resolveAssistantModeFromRole = (role?: string | null): GlobalAssistantMode => {
-    if (role === 'superadmin' || role === 'super_admin') return 'super_admin';
-    if (role === 'owner') return 'owner';
-    if (role === 'support') return 'support';
-    return 'user';
-};
-
 const toStoredAssistantMessageRole = (role: Message['role']): AssistantMessageRole =>
     role === 'user' ? 'user' : 'assistant';
+
+const formatOperatingLayerAccessLabel = (mode: GlobalAssistantMode): string => {
+    if (mode === 'super_admin') return 'Admin';
+    if (mode === 'owner') return 'Owner';
+    if (mode === 'support') return 'Support';
+    return 'Usuario';
+};
 
 const GlobalAiAssistant: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -1137,6 +1140,7 @@ const GlobalAiAssistant: React.FC = () => {
     } = useEditor();
 
     const { user } = useAuth();
+    const tenantContext = useSafeTenant();
     const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
     const { navigate, navigateToEditor, navigateToView, path } = useRouter();
     const {
@@ -1250,6 +1254,7 @@ const GlobalAiAssistant: React.FC = () => {
     const archiveTemplateRef = useRef(archiveTemplate);
     const duplicateTemplateRef = useRef(duplicateTemplate);
     const globalAssistantConfigRef = useRef(globalAssistantConfig);
+    const tenantContextRef = useRef(tenantContext);
 
     // Sync Refs
     useEffect(() => { dataRef.current = data; }, [data]);
@@ -1299,6 +1304,7 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { archiveTemplateRef.current = archiveTemplate; }, [archiveTemplate]);
     useEffect(() => { duplicateTemplateRef.current = duplicateTemplate; }, [duplicateTemplate]);
     useEffect(() => { globalAssistantConfigRef.current = globalAssistantConfig; }, [globalAssistantConfig]);
+    useEffect(() => { tenantContextRef.current = tenantContext; }, [tenantContext]);
     useEffect(() => { pendingOperatingLayerTaskRef.current = pendingOperatingLayerTask; }, [pendingOperatingLayerTask]);
 
     useEffect(() => {
@@ -1351,13 +1357,25 @@ const GlobalAiAssistant: React.FC = () => {
         const project = activeProjectRef.current;
         const userDoc = userDocumentRef.current as any;
         const role = userDoc?.role || null;
+        const tenantContext = tenantContextRef.current;
+        const tenant = resolveOperatingLayerTenantContext({
+            activeProject: project,
+            currentTenant: tenantContext?.currentTenant,
+            currentMembership: tenantContext?.currentMembership,
+            userDocument: userDoc,
+        });
+        const access = resolveOperatingLayerAccessContext({
+            userRole: role,
+            tenantRole: tenant.tenantRole,
+            tenantPermissions: tenantContext?.currentMembership?.permissions,
+        });
 
         try {
             const conversation = await globalAssistantConversationService.createConversation({
                 userId: user?.id || userDoc?.id || null,
-                tenantId: project?.tenantId || userDoc?.tenantId || null,
+                tenantId: tenant.tenantId,
                 projectId: project?.id || null,
-                mode: resolveAssistantModeFromRole(role),
+                mode: access.mode,
                 title: buildConversationTitle(request),
                 metadata: {
                     source: entry?.source || 'global_assistant',
@@ -1366,6 +1384,12 @@ const GlobalAiAssistant: React.FC = () => {
                     activeRoute: path,
                     activeView: viewRef.current || null,
                     activeProjectId: project?.id || null,
+                    activeTenantId: tenant.tenantId,
+                    activeTenantName: tenant.tenantName,
+                    tenantRole: tenant.tenantRole,
+                    tenantPlan: tenant.tenantPlan,
+                    assistantMode: access.mode,
+                    assistantPermissions: access.userPermissions,
                     chatKind: 'global_assistant_operating_layer',
                     separatedFrom: ['chatcore_visitor_chat', 'module_specific_chats'],
                 },
@@ -1414,7 +1438,13 @@ const GlobalAiAssistant: React.FC = () => {
         mode: 'chat' | 'voice'
     ): { allowed: boolean; scopeId?: string; error?: string } => {
         const role = userDocumentRef.current?.role;
-        if (role === 'owner' || role === 'superadmin') return { allowed: true };
+        const tenantContext = tenantContextRef.current;
+        const access = resolveOperatingLayerAccessContext({
+            userRole: role,
+            tenantRole: tenantContext?.currentMembership?.role || null,
+            tenantPermissions: tenantContext?.currentMembership?.permissions,
+        });
+        if (access.mode === 'owner' || access.mode === 'super_admin') return { allowed: true };
 
         const config = globalAssistantConfigRef.current;
         const permissions = config?.permissions || {};
@@ -2744,11 +2774,17 @@ const GlobalAiAssistant: React.FC = () => {
         const permissions = config.permissions || {};
         const allowedScopes = Object.keys(permissions).filter(key => permissions[key]?.[mode] === true);
         const userRole = userDocumentRef.current?.role;
-        const hasFullAccess = userRole === 'owner' || userRole === 'superadmin';
+        const tenantContext = tenantContextRef.current;
+        const access = resolveOperatingLayerAccessContext({
+            userRole,
+            tenantRole: tenantContext?.currentMembership?.role || null,
+            tenantPermissions: tenantContext?.currentMembership?.permissions,
+        });
+        const hasFullAccess = access.mode === 'owner' || access.mode === 'super_admin';
 
         let scopeText = "";
         if (hasFullAccess) {
-            scopeText = userRole === 'owner' ? `ACCESS: OWNER (FULL CONTROL).` : `ACCESS: SUPER ADMIN.`;
+            scopeText = access.mode === 'owner' ? `ACCESS: OWNER (FULL CONTROL).` : `ACCESS: SUPER ADMIN.`;
         } else {
             if (Object.keys(permissions).length > 0) {
                 if (allowedScopes.length > 0) scopeText = `ACCESS: RESTRICTED. Allowed: ${allowedScopes.join(', ')}.`;
@@ -3556,16 +3592,35 @@ const GlobalAiAssistant: React.FC = () => {
     const planOperatingLayerRequest = async (request: string, entry: GlobalAssistantEntryPayload) => {
         const project = activeProjectRef.current;
         const userDoc = userDocumentRef.current as any;
+        const tenantContext = tenantContextRef.current;
+        const tenant = resolveOperatingLayerTenantContext({
+            activeProject: project,
+            currentTenant: tenantContext?.currentTenant,
+            currentMembership: tenantContext?.currentMembership,
+            userDocument: userDoc,
+        });
+        const access = resolveOperatingLayerAccessContext({
+            userRole: userDoc?.role || null,
+            tenantRole: tenant.tenantRole,
+            tenantPermissions: tenantContext?.currentMembership?.permissions,
+        });
         const enabledServices = isLoadingServices
             ? listEnabledPlatformServices(() => true)
             : listEnabledPlatformServices(canAccessService);
         const featureFlags = defaultGlobalAssistantFeatureFlags();
         const entryMetadata = entry.metadata || {};
+        const activeTaskId = pendingOperatingLayerTaskRef.current?.taskId
+            || assistantConversationRef.current?.activeTaskId
+            || null;
         const context = resolveGlobalAssistantAppContext({
             userId: user?.id || userDoc?.id || null,
             email: user?.email || userDoc?.email || null,
             role: userDoc?.role || null,
-            tenantId: project?.tenantId || userDoc?.tenantId || null,
+            mode: access.mode,
+            tenantId: tenant.tenantId,
+            tenantName: tenant.tenantName,
+            tenantRole: tenant.tenantRole,
+            tenantPlan: tenant.tenantPlan,
             activeProject: project ? {
                 id: project.id,
                 name: project.name,
@@ -3589,12 +3644,20 @@ const GlobalAiAssistant: React.FC = () => {
                 entrySource: entry.source,
                 entryMetadata,
                 activeProjectId: project?.id || null,
+                activeTaskId,
+                activeTenantId: tenant.tenantId,
+                activeTenantName: tenant.tenantName,
+                tenantRole: tenant.tenantRole,
+                tenantPlan: tenant.tenantPlan,
+                assistantMode: access.mode,
+                assistantPermissions: access.userPermissions,
             },
         });
 
         return globalAssistantRuntime.planRequest({
             request,
             context,
+            userPermissions: access.userPermissions,
             enabledServices,
             enabledFeatures: featureFlags,
         });
@@ -4284,10 +4347,22 @@ Usuario: ${userMsg}`;
                         {activeProject ? `Activo: ${activeProject.name}` : 'Dashboard Mode'}
                     </p>
                     <div className="flex items-center gap-2">
-                        {(userDocument?.role === 'owner' || userDocument?.role === 'superadmin') && <Shield size={10} className="text-q-accent" />}
-                        <p className="text-[10px] text-q-text-muted">
-                            {userDocument?.role === 'owner' ? 'Owner' : userDocument?.role === 'superadmin' ? 'Admin' : 'Usuario'}
-                        </p>
+                        {(() => {
+                            const access = resolveOperatingLayerAccessContext({
+                                userRole: userDocument?.role || null,
+                                tenantRole: tenantContext?.currentMembership?.role || null,
+                                tenantPermissions: tenantContext?.currentMembership?.permissions,
+                            });
+                            const privileged = access.mode === 'owner' || access.mode === 'super_admin';
+                            return (
+                                <>
+                                    {privileged && <Shield size={10} className="text-q-accent" />}
+                                    <p className="text-[10px] text-q-text-muted">
+                                        {formatOperatingLayerAccessLabel(access.mode)}
+                                    </p>
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

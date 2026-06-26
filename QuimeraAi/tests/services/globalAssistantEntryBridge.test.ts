@@ -74,4 +74,19 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain("source: 'operating_layer_plan'");
         expect(source).toContain('clearAssistantConversation');
     });
+
+    it('wires dashboard global requests to tenant/workspace-aware context', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('useSafeTenant');
+        expect(source).toContain('tenantContextRef');
+        expect(source).toContain('resolveOperatingLayerAccessContext');
+        expect(source).toContain('resolveOperatingLayerTenantContext');
+        expect(source).toContain('activeTenantId: tenant.tenantId');
+        expect(source).toContain('activeTenantName: tenant.tenantName');
+        expect(source).toContain('tenantPlan: tenant.tenantPlan');
+        expect(source).toContain('activeTaskId');
+        expect(source).toContain('mode: access.mode');
+        expect(source).toContain('userPermissions: access.userPermissions');
+    });
 });

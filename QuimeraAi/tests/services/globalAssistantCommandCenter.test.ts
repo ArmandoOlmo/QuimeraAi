@@ -5,6 +5,8 @@ import {
     formatGlobalAssistantPlanMessage,
     listEnabledPlatformServices,
     resolveGlobalAssistantAppContext,
+    resolveOperatingLayerAccessContext,
+    resolveOperatingLayerTenantContext,
     shouldAutoApplyOperatingLayerPlan,
     shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter.ts';
@@ -85,6 +87,112 @@ describe('globalAssistantCommandCenter', () => {
                 unavailableActionTypes: expect.arrayContaining(['create_product']),
             }),
         ]));
+    });
+
+    it('resolves tenant/workspace context without mixing mismatched project tenants', () => {
+        expect(resolveOperatingLayerTenantContext({
+            activeProject: null,
+            currentTenant: {
+                id: 'tenant-dashboard',
+                name: 'Dashboard Workspace',
+                subscriptionPlan: 'agency_pro',
+            },
+            currentMembership: { role: 'agency_owner' },
+            userDocument: { tenantId: 'tenant-legacy', tenantRole: 'client' },
+        })).toEqual({
+            tenantId: 'tenant-dashboard',
+            tenantName: 'Dashboard Workspace',
+            tenantRole: 'agency_owner',
+            tenantPlan: 'agency_pro',
+        });
+
+        expect(resolveOperatingLayerTenantContext({
+            activeProject: { tenantId: 'tenant-project' },
+            currentTenant: {
+                id: 'tenant-dashboard',
+                name: 'Dashboard Workspace',
+                subscriptionPlan: 'agency_pro',
+            },
+            currentMembership: { role: 'agency_owner' },
+            userDocument: { tenantId: 'tenant-legacy', tenantRole: 'client' },
+        })).toEqual({
+            tenantId: 'tenant-project',
+            tenantName: null,
+            tenantRole: 'client',
+            tenantPlan: null,
+        });
+
+        expect(resolveOperatingLayerTenantContext({
+            activeProject: null,
+            currentTenant: null,
+            currentMembership: null,
+            userDocument: { tenantId: 'tenant-legacy', tenantRole: 'client' },
+        })).toEqual({
+            tenantId: 'tenant-legacy',
+            tenantName: null,
+            tenantRole: 'client',
+            tenantPlan: null,
+        });
+    });
+
+    it('derives Operating Layer mode and action permissions from tenant membership', () => {
+        const ownerAccess = resolveOperatingLayerAccessContext({
+            userRole: 'member',
+            tenantRole: 'agency_owner',
+            tenantPermissions: {
+                canManageProjects: true,
+                canManageBilling: true,
+                canManageSettings: true,
+            },
+        });
+
+        expect(ownerAccess.mode).toBe('owner');
+        expect(ownerAccess.userPermissions).toEqual(expect.arrayContaining([
+            'assistant:admin:use',
+            'assistant:admin:write',
+            'assistant:admin:billing',
+            'assistant:ecommerce:use',
+            'assistant:website:use',
+        ]));
+
+        const context = resolveGlobalAssistantAppContext({
+            userId: 'user-1',
+            role: 'member',
+            mode: ownerAccess.mode,
+            tenantId: 'tenant-1',
+            tenantRole: 'agency_owner',
+            currentSurface: 'dashboard',
+        });
+
+        expect(context.actor).toMatchObject({
+            mode: 'owner',
+            isOwner: true,
+        });
+        expect(context.admin.enabled).toBe(true);
+
+        const memberAccess = resolveOperatingLayerAccessContext({
+            userRole: 'member',
+            tenantRole: 'agency_member',
+            tenantPermissions: {
+                canManageProjects: true,
+                canManageLeads: true,
+                canManageEcommerce: false,
+                canManageBilling: false,
+                canManageSettings: false,
+            },
+        });
+
+        expect(memberAccess.mode).toBe('user');
+        expect(memberAccess.userPermissions).toEqual(expect.arrayContaining([
+            'assistant:project:use',
+            'assistant:website:use',
+            'assistant:crm:use',
+            'assistant:emailMarketing:use',
+            'assistant:appointments:use',
+        ]));
+        expect(memberAccess.userPermissions).not.toContain('assistant:ecommerce:use');
+        expect(memberAccess.userPermissions).not.toContain('assistant:admin:write');
+        expect(memberAccess.userPermissions).not.toContain('assistant:finance:use');
     });
 
     it('formats runtime plans in Spanish and English with safety context', () => {

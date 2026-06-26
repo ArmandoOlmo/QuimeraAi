@@ -37,6 +37,8 @@ export interface MemoryQuery {
     scopes?: GlobalAssistantScope[];
     module?: AssistantModuleTarget;
     projectId?: string | null;
+    sessionId?: string | null;
+    taskId?: string | null;
     text?: string;
     includeExpired?: boolean;
     limit?: number;
@@ -64,6 +66,19 @@ export class InMemoryGlobalAssistantMemoryAdapter implements GlobalAssistantMemo
         this.memories.delete(memoryId);
     }
 }
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const asText = (value: unknown): string | null =>
+    typeof value === 'string' && value.trim() ? value.trim() : null;
+
+const matchesScopedId = (memory: GlobalAssistantMemory, targetId: string | null, keys: string[]): boolean => {
+    if (!targetId) return false;
+    if (memory.sourceEntityId === targetId) return true;
+    const data = asRecord(memory.data);
+    return keys.some(key => data[key] === targetId);
+};
 
 export class GlobalAssistantMemoryService {
     constructor(private readonly adapter: GlobalAssistantMemoryAdapter = new InMemoryGlobalAssistantMemoryAdapter()) {}
@@ -172,6 +187,25 @@ export class GlobalAssistantMemoryService {
                     context: query.context,
                 });
                 if (!access.allowed) return false;
+
+                const activeModule = query.module || query.context.activeModule || null;
+                if (memory.scope === 'module' && activeModule && memory.module !== activeModule) return false;
+
+                if (memory.scope === 'session') {
+                    const sessionId = query.sessionId
+                        ?? query.context.conversationId
+                        ?? asText(query.context.snapshot?.sessionId)
+                        ?? null;
+                    if (!matchesScopedId(memory, sessionId, ['conversationId', 'sessionId'])) return false;
+                }
+
+                if (memory.scope === 'task') {
+                    const taskId = query.taskId
+                        ?? asText(query.context.snapshot?.activeTaskId)
+                        ?? asText(query.context.snapshot?.taskId)
+                        ?? null;
+                    if (!matchesScopedId(memory, taskId, ['taskId', 'activeTaskId'])) return false;
+                }
 
                 if (!searchText) return true;
                 const haystack = `${memory.title} ${memory.summary} ${JSON.stringify(memory.data)}`.toLowerCase();

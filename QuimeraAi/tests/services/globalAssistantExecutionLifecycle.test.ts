@@ -141,6 +141,7 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
         const taskMemory = await memoryService.queryRelevantMemory({
             context,
             scopes: ['task'],
+            taskId: planned.task.id,
             text: 'create_email_campaign',
         });
         expect(taskMemory.map(memory => memory.title)).toContain('create_email_campaign applied');

@@ -1,6 +1,8 @@
 import type { Project } from '../../types/project';
+import type { TenantPermissions } from '../../types/multiTenant';
 import { PLATFORM_SERVICES, type PlatformServiceId } from '../../types/serviceAvailability';
 import type {
+    AssistantModuleTarget,
     AssistantContextSnapshot,
     GlobalAssistantMode,
 } from '../../types/globalAssistant';
@@ -41,6 +43,40 @@ export interface ResolveGlobalAssistantAppContextInput {
     snapshot?: Record<string, unknown>;
 }
 
+export interface ResolveOperatingLayerTenantContextInput {
+    activeProject?: Pick<Project, 'tenantId'> | null;
+    currentTenant?: {
+        id?: string | null;
+        name?: unknown;
+        subscriptionPlan?: string | null;
+    } | null;
+    currentMembership?: {
+        role?: string | null;
+    } | null;
+    userDocument?: {
+        tenantId?: string | null;
+        tenantRole?: string | null;
+    } | null;
+}
+
+export interface OperatingLayerTenantContext {
+    tenantId: string | null;
+    tenantName: string | null;
+    tenantRole: string | null;
+    tenantPlan: string | null;
+}
+
+export interface ResolveOperatingLayerAccessInput {
+    userRole?: string | null;
+    tenantRole?: string | null;
+    tenantPermissions?: Partial<TenantPermissions> | null;
+}
+
+export interface OperatingLayerAccessContext {
+    mode: GlobalAssistantMode;
+    userPermissions: string[];
+}
+
 const isSpanish = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
 
 const asText = (value: unknown): string => {
@@ -54,6 +90,109 @@ const asText = (value: unknown): string => {
 
 const asRecord = (value: unknown): Record<string, unknown> =>
     value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const ALL_ASSISTANT_MODULES: AssistantModuleTarget[] = [
+    'aiStudio',
+    'businessBlueprint',
+    'website',
+    'storefront',
+    'ecommerce',
+    'media',
+    'appointments',
+    'restaurants',
+    'realEstate',
+    'bioPage',
+    'crm',
+    'emailMarketing',
+    'chatbot',
+    'analytics',
+    'finance',
+    'admin',
+    'settings',
+    'project',
+    'tenant',
+    'user',
+    'designSystem',
+];
+
+const addModulePermissions = (permissions: Set<string>, modules: AssistantModuleTarget[]) => {
+    modules.forEach(module => permissions.add(`assistant:${module}:use`));
+};
+
+export function resolveOperatingLayerTenantContext(input: ResolveOperatingLayerTenantContextInput): OperatingLayerTenantContext {
+    const projectTenantId = asText(input.activeProject?.tenantId).trim() || null;
+    const currentTenantId = asText(input.currentTenant?.id).trim() || null;
+    const fallbackTenantId = asText(input.userDocument?.tenantId).trim() || null;
+    const tenantId = projectTenantId || currentTenantId || fallbackTenantId;
+    const canUseCurrentTenantDetails = Boolean(tenantId && currentTenantId && tenantId === currentTenantId);
+
+    return {
+        tenantId,
+        tenantName: canUseCurrentTenantDetails
+            ? (asText(input.currentTenant?.name).trim() || null)
+            : null,
+        tenantRole: canUseCurrentTenantDetails
+            ? (asText(input.currentMembership?.role).trim() || null)
+            : (asText(input.userDocument?.tenantRole).trim() || null),
+        tenantPlan: canUseCurrentTenantDetails
+            ? (asText(input.currentTenant?.subscriptionPlan).trim() || null)
+            : null,
+    };
+}
+
+export function resolveOperatingLayerAssistantMode(input: Pick<ResolveOperatingLayerAccessInput, 'userRole' | 'tenantRole'>): GlobalAssistantMode {
+    const userRole = asText(input.userRole).trim();
+    const tenantRole = asText(input.tenantRole).trim();
+
+    if (userRole === 'superadmin' || userRole === 'super_admin') return 'super_admin';
+    if (userRole === 'owner' || tenantRole === 'agency_owner') return 'owner';
+    if (userRole === 'support') return 'support';
+    return 'user';
+}
+
+export function resolveOperatingLayerAccessContext(input: ResolveOperatingLayerAccessInput): OperatingLayerAccessContext {
+    const mode = resolveOperatingLayerAssistantMode(input);
+    const permissions = new Set<string>();
+    const tenantPermissions = input.tenantPermissions || {};
+
+    if (mode === 'owner' || mode === 'super_admin' || mode === 'system') {
+        addModulePermissions(permissions, ALL_ASSISTANT_MODULES);
+        permissions.add('assistant:admin:use');
+        permissions.add('assistant:admin:write');
+        permissions.add('assistant:admin:billing');
+        return { mode, userPermissions: Array.from(permissions).sort() };
+    }
+
+    if (tenantPermissions.canManageProjects) {
+        addModulePermissions(permissions, ['aiStudio', 'businessBlueprint', 'project', 'website', 'designSystem']);
+    }
+    if (tenantPermissions.canManageCMS) {
+        addModulePermissions(permissions, ['website', 'bioPage', 'chatbot']);
+    }
+    if (tenantPermissions.canManageEcommerce) {
+        addModulePermissions(permissions, ['ecommerce', 'storefront']);
+    }
+    if (tenantPermissions.canManageLeads) {
+        addModulePermissions(permissions, ['crm', 'emailMarketing', 'appointments']);
+    }
+    if (tenantPermissions.canManageRealEstate) {
+        addModulePermissions(permissions, ['realEstate']);
+    }
+    if (tenantPermissions.canManageFiles) {
+        addModulePermissions(permissions, ['media']);
+    }
+    if (tenantPermissions.canViewAnalytics) {
+        addModulePermissions(permissions, ['analytics']);
+    }
+    if (tenantPermissions.canManageBilling) {
+        addModulePermissions(permissions, ['finance']);
+    }
+    if (tenantPermissions.canManageSettings) {
+        addModulePermissions(permissions, ['settings', 'tenant', 'user']);
+    }
+
+    return { mode, userPermissions: Array.from(permissions).sort() };
+}
 
 const previewLine = (preview: GlobalAssistantRuntimeResult['plan']['previews'][number], spanish: boolean): string => {
     const diff = asRecord(preview.diff);
