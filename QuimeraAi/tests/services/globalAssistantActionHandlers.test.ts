@@ -2985,4 +2985,247 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.realEstateBlueprint.showingRequests.status).toBe(originalStatus);
         expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
+
+    it('updates service availability with audit evidence and rollback', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.settings = [{
+            id: 'serviceAvailability',
+            config: {
+                services: {
+                    emailMarketing: {
+                        status: 'public',
+                        updatedAt: '2026-06-01T00:00:00.000Z',
+                        updatedBy: 'admin-1',
+                    },
+                },
+                lastUpdated: '2026-06-01T00:00:00.000Z',
+                updatedBy: 'admin-1',
+            },
+            updated_at: '2026-06-01T00:00:00.000Z',
+            updated_by: 'admin-1',
+        }];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Cambia service availability de emailMarketing a development por mantenimiento',
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_service_availability']);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                table: 'settings',
+                id: 'serviceAvailability',
+                serviceId: 'emailMarketing',
+                status: 'development',
+            },
+        });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.settings[0].config.services.emailMarketing).toMatchObject({
+            status: 'development',
+            updatedAt: '2026-06-26T13:30:00.000Z',
+            updatedBy: 'user-1',
+        });
+        expect(fakeSupabase.rowsByTable.service_audit_logs[0]).toMatchObject({
+            service_id: 'emailMarketing',
+            previous_status: 'public',
+            new_status: 'development',
+            source: 'global-assistant',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.settings[0].config.services.emailMarketing.status).toBe('public');
+        expect(fakeSupabase.rowsByTable.service_audit_logs).toHaveLength(1);
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('updates tenant feature flags with confirmation and rollback', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'tenant-1',
+            name: 'Casa Luna Workspace',
+            settings: { enabledFeatures: ['emailMarketing'] },
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Activa feature flag realEstateModule para tenant tenant-1',
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_feature_flag']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(fakeSupabase.rowsByTable.tenants[0].settings.enabledFeatures).toEqual(['emailMarketing', 'realEstateModule']);
+        expect(fakeSupabase.rowsByTable.tenants[0].settings.globalAssistantLastFeatureFlagUpdate).toMatchObject({
+            featureFlag: 'realEstateModule',
+            enabled: true,
+            updatedBy: 'user-1',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.tenants[0].settings).toEqual({ enabledFeatures: ['emailMarketing'] });
+        expect(fakeSupabase.rowsByTable.tenants[0].updated_at).toBe('2026-06-01T00:00:00.000Z');
+    });
+
+    it('updates tenant plan metadata without mutating Stripe and rolls back', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'tenant-1',
+            subscription_plan: 'starter',
+            limits: { maxProjects: 1 },
+            billing_info: { stripeCustomerId: 'cus_123' },
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Actualiza plan tenant tenant-1 a pro',
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_plan']);
+        expect(planned.plan.previews[0].diff).toMatchObject({ noStripeMutation: true });
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(fakeSupabase.rowsByTable.tenants[0]).toMatchObject({
+            subscription_plan: 'pro',
+            billing_info: {
+                stripeCustomerId: 'cus_123',
+                lastPlanChangeSource: 'global-assistant',
+                noStripeMutation: true,
+            },
+        });
+        expect(applied.actions[0].afterSnapshot).toMatchObject({ noStripeMutation: true });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.tenants[0]).toMatchObject({
+            subscription_plan: 'starter',
+            limits: { maxProjects: 1 },
+            billing_info: { stripeCustomerId: 'cus_123' },
+        });
+    });
+
+    it('reviews AI logs and platform errors without mutating rows', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.api_logs = [
+            { id: 'log-1', user_id: 'user-1', project_id: 'project-1', feature: 'email', model: 'gemini', success: true, total_tokens: 120, created_at: '2026-06-26T13:00:00.000Z' },
+            { id: 'log-2', user_id: 'user-1', project_id: 'project-1', feature: 'chatcore', model: 'gemini', success: false, error: 'Timeout', total_tokens: 20, created_at: '2026-06-26T13:10:00.000Z' },
+        ];
+
+        const logsPlan = await runtime.planRequest({
+            context,
+            request: 'Revisa ai logs de gemini',
+        });
+        expect(logsPlan.plan.actions.map(action => action.actionType)).toEqual(['review_ai_logs']);
+        expect(logsPlan.plan.requiresConfirmation).toBe(false);
+        const logsApplied = await runtime.applyTask({ taskId: logsPlan.task.id, context });
+        expect(logsApplied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'ai_log_review',
+            summary: {
+                total: 2,
+                failures: 1,
+            },
+        });
+
+        const errorsPlan = await runtime.planRequest({
+            context,
+            request: 'Revisa errores plataforma',
+        });
+        expect(errorsPlan.plan.actions.map(action => action.actionType)).toEqual(['review_errors']);
+        const errorsApplied = await runtime.applyTask({ taskId: errorsPlan.task.id, context });
+        expect(errorsApplied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'platform_error_review',
+            summary: {
+                total: 1,
+                failures: 1,
+                byErrorFeature: { chatcore: 1 },
+            },
+        });
+        expect(fakeSupabase.rowsByTable.api_logs).toHaveLength(2);
+    });
+
+    it('updates global assistant and ChatCore prompt settings without touching visitor chat memory', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.settings = [
+            {
+                id: 'global_assistant',
+                config: { model: 'default', customInstructions: 'Original assistant prompt' },
+                updated_at: '2026-06-01T00:00:00.000Z',
+                updated_by: 'admin-1',
+            },
+            {
+                id: 'chatbotPrompts',
+                config: { welcomeMessage: 'Original ChatCore prompt' },
+                updated_at: '2026-06-01T00:00:00.000Z',
+                updated_by: 'admin-1',
+            },
+        ];
+
+        const assistantPlan = await runtime.planRequest({
+            context,
+            request: 'Actualiza prompt global assistant para exigir preview y confirmacion',
+        });
+        expect(assistantPlan.plan.actions.map(action => action.actionType)).toEqual(['manage_global_prompts']);
+        runtime.confirmPlan({ taskId: assistantPlan.task.id, confirmedBy: 'user-1' });
+        const assistantApplied = await runtime.applyTask({ taskId: assistantPlan.task.id, context });
+
+        expect(fakeSupabase.rowsByTable.settings[0].config).toMatchObject({
+            model: 'default',
+            customInstructions: 'Actualiza prompt global assistant para exigir preview y confirmacion',
+            globalAssistantLastPromptUpdate: {
+                scope: 'global_assistant',
+            },
+        });
+        expect(assistantApplied.actions[0].afterSnapshot).toMatchObject({
+            chatCoreVisitorMemoryAffected: false,
+        });
+
+        await runtime.rollbackAction({
+            taskId: assistantPlan.task.id,
+            actionId: assistantApplied.actions[0].id,
+            context,
+        });
+        expect(fakeSupabase.rowsByTable.settings[0].config.customInstructions).toBe('Original assistant prompt');
+
+        const chatCorePlan = await runtime.planRequest({
+            context,
+            request: 'Actualiza ChatCore prompts globales para recordar separar visitor chat memory',
+        });
+        runtime.confirmPlan({ taskId: chatCorePlan.task.id, confirmedBy: 'user-1' });
+        const chatCoreApplied = await runtime.applyTask({ taskId: chatCorePlan.task.id, context });
+
+        expect(chatCorePlan.plan.actions[0].input.promptId).toBe('chatbotPrompts');
+        expect(fakeSupabase.rowsByTable.settings[1].config).toMatchObject({
+            welcomeMessage: 'Original ChatCore prompt',
+            customInstructions: 'Actualiza ChatCore prompts globales para recordar separar visitor chat memory',
+            globalAssistantLastPromptUpdate: {
+                scope: 'chatcore_global_prompts',
+            },
+        });
+        expect(chatCoreApplied.actions[0].afterSnapshot).toMatchObject({
+            chatCoreVisitorMemoryAffected: false,
+        });
+    });
 });

@@ -34,6 +34,10 @@ describe('globalAssistantCapabilityCatalog', () => {
         const publishWebsite = catalog.actions.find(action => action.actionType === 'publish_website');
         const testChatbot = catalog.actions.find(action => action.actionType === 'test_chatbot');
         const deployChatbot = catalog.actions.find(action => action.actionType === 'deploy_chatbot_to_surface');
+        const updateServiceAvailability = catalog.actions.find(action => action.actionType === 'update_service_availability');
+        const updatePlan = catalog.actions.find(action => action.actionType === 'update_plan');
+        const reviewErrors = catalog.actions.find(action => action.actionType === 'review_errors');
+        const manageGlobalPrompts = catalog.actions.find(action => action.actionType === 'manage_global_prompts');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -100,7 +104,14 @@ describe('globalAssistantCapabilityCatalog', () => {
         expect(admin?.executableActionTypes).toEqual(expect.arrayContaining([
             'open_tenant',
             'search_tenants',
+            'update_feature_flag',
+            'update_service_availability',
+            'update_plan',
+            'review_ai_logs',
+            'review_errors',
+            'manage_global_prompts',
         ]));
+        expect(admin?.previewOnlyActionTypes).toEqual([]);
         expect(finance?.executableActionTypes).toEqual(expect.arrayContaining([
             'create_finance_record',
             'update_finance_record',
@@ -202,6 +213,32 @@ describe('globalAssistantCapabilityCatalog', () => {
             requiresConfirmation: true,
             rollbackExecutable: true,
             requiredFeature: 'chatbotEnabled',
+        });
+        expect(updateServiceAvailability).toMatchObject({
+            executable: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+            requiredPermissions: ['assistant:admin:write'],
+        });
+        expect(updatePlan).toMatchObject({
+            executable: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+            requiredPermissions: ['assistant:admin:billing'],
+        });
+        expect(reviewErrors).toMatchObject({
+            executable: true,
+            mutatesData: false,
+            safeNavigation: true,
+            requiredPermissions: ['assistant:admin:use'],
+        });
+        expect(manageGlobalPrompts).toMatchObject({
+            executable: true,
+            rollbackExecutable: true,
+            safetyLevel: 'critical',
+            requiredPermissions: ['assistant:admin:write'],
         });
     });
 

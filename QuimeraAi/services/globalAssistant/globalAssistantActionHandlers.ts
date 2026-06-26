@@ -1057,11 +1057,30 @@ const apiLogSample = (row: Record<string, unknown>) => ({
     latencyMs: readNumber(row.latency_ms) ?? readNumber(row.latencyMs) ?? null,
 });
 
+const API_LOG_REVIEW_STOP_WORDS = new Set([
+    'admin',
+    'api',
+    'error',
+    'errores',
+    'failed',
+    'fallo',
+    'fallos',
+    'ia',
+    'logs',
+    'plataforma',
+    'platform',
+    'revisa',
+    'review',
+]);
+
 const readApiLogs = async (client: SupabaseClientLike, input: Record<string, unknown>): Promise<Record<string, unknown>[]> => {
     const result = await client.from('api_logs').select('*');
     if (result?.error) throw result.error;
     const query = normalizeForSearch(readString(input.query) || readString(input.request) || '');
-    const terms = query.split(/\s+/).map(term => term.trim()).filter(term => term.length > 2);
+    const terms = query
+        .split(/\s+/)
+        .map(term => term.trim())
+        .filter(term => term.length > 2 && !API_LOG_REVIEW_STOP_WORDS.has(term));
     return asArray(result?.data)
         .map(row => cloneRecord(asRecord(row)))
         .filter(row => {

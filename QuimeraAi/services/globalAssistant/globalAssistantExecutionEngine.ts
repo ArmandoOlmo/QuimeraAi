@@ -7,6 +7,8 @@ import type {
     AssistantExecutionPreview,
     AssistantIntent,
 } from '../../types/globalAssistant';
+import { PLATFORM_SERVICES } from '../../types/serviceAvailability';
+import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import { checkActionPermission, assertProjectActionContext } from './globalAssistantPermissionService';
 import { enrichAssistantExecutionPreview } from './globalAssistantActionPreviews';
 
@@ -263,6 +265,82 @@ const inferChatbotDeploymentStatusFromRequest = (request: string): string | unde
     return undefined;
 };
 
+const compactToken = (value: string | null | undefined): string =>
+    normalizeContextToken(value).replace(/_/g, '');
+
+const inferAdminTenantId = (context: AssistantContextSnapshot, request: string): string | undefined => {
+    const snapshotTenant = readSnapshotText(context, ['targetTenantId', 'tenantId', 'selectedTenantId', 'adminTenantId']);
+    if (snapshotTenant) return snapshotTenant;
+    const match = request.match(/\b(?:tenant|workspace)\s+([a-z0-9_-]+)/i);
+    return match?.[1] || context.admin.targetTenantId || context.tenant.tenantId || context.project.tenantId || undefined;
+};
+
+const inferAdminServiceId = (context: AssistantContextSnapshot, request: string): string | undefined => {
+    const snapshotService = readSnapshotText(context, ['serviceId', 'targetServiceId', 'adminServiceId']);
+    if (snapshotService) return snapshotService;
+    const requestCompact = compactToken(request);
+    return PLATFORM_SERVICES.find(service => requestCompact.includes(compactToken(service.id)))?.id;
+};
+
+const inferAdminServiceStatus = (request: string): string | undefined => {
+    const normalized = normalizeContextToken(request);
+    if (normalized.includes('development') || normalized.includes('desarrollo') || normalized.includes('testing')) return 'development';
+    if (
+        normalized.includes('not_public')
+        || normalized.includes('no_publico')
+        || normalized.includes('oculta')
+        || normalized.includes('hide')
+        || normalized.includes('disabled')
+        || normalized.includes('desactiva')
+        || normalized.includes('apaga')
+    ) return 'not_public';
+    if (
+        normalized.includes('public')
+        || normalized.includes('publico')
+        || normalized.includes('enabled')
+        || normalized.includes('activa')
+        || normalized.includes('mostrar')
+        || normalized.includes('show')
+    ) return 'public';
+    return undefined;
+};
+
+const inferAdminFeatureFlag = (context: AssistantContextSnapshot, request: string): string | undefined => {
+    const snapshotFlag = readSnapshotText(context, ['featureFlag', 'feature_flag', 'targetFeatureFlag']);
+    if (snapshotFlag) return snapshotFlag;
+    const requestCompact = compactToken(request);
+    const knownFlags = [
+        ...(context.tenant.featureFlags || []),
+        ...Object.keys(SUBSCRIPTION_PLANS).flatMap(planId => Object.keys(SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS].features || {})),
+    ];
+    const matchedKnown = knownFlags.find(flag => requestCompact.includes(compactToken(flag)));
+    if (matchedKnown) return matchedKnown;
+    const match = request.match(/\b(?:feature flag|feature|flag)\s+([a-zA-Z0-9_.:-]+)/i);
+    return match?.[1];
+};
+
+const inferAdminEnabled = (request: string): boolean | undefined => {
+    const normalized = normalizeContextToken(request);
+    if (normalized.includes('desactiva') || normalized.includes('disable') || normalized.includes('off') || normalized.includes('quita')) return false;
+    if (normalized.includes('activa') || normalized.includes('enable') || normalized.includes('on') || normalized.includes('agrega')) return true;
+    return undefined;
+};
+
+const inferAdminPlanId = (context: AssistantContextSnapshot, request: string): string | undefined => {
+    const snapshotPlan = readSnapshotText(context, ['planId', 'plan_id', 'targetPlanId']);
+    if (snapshotPlan) return snapshotPlan;
+    const requestCompact = compactToken(request);
+    return Object.keys(SUBSCRIPTION_PLANS).find(planId => requestCompact.includes(compactToken(planId)));
+};
+
+const inferAdminPromptId = (context: AssistantContextSnapshot, request: string): string | undefined => {
+    const snapshotPromptId = readSnapshotText(context, ['promptId', 'prompt_id', 'settingId']);
+    if (snapshotPromptId) return snapshotPromptId;
+    const normalized = normalizeContextToken(request);
+    if (normalized.includes('chatcore') || normalized.includes('chatbot')) return 'chatbotPrompts';
+    return 'global_assistant';
+};
+
 const buildActionInput = (
     definition: AssistantActionDefinition,
     context: AssistantContextSnapshot,
@@ -397,6 +475,48 @@ const buildActionInput = (
 
     if (definition.actionType === 'create_showing_request_flow') {
         actionInput.flow = inferRealtyShowingFlowFromRequest(request);
+    }
+
+    if (definition.module === 'admin') {
+        const tenantId = inferAdminTenantId(context, request);
+        if (tenantId) actionInput.tenantId = tenantId;
+    }
+
+    if (definition.actionType === 'update_service_availability') {
+        const serviceId = inferAdminServiceId(context, request);
+        if (serviceId) actionInput.serviceId = serviceId;
+        const status = readSnapshotText(context, ['serviceStatus', 'targetServiceStatus'])
+            || inferAdminServiceStatus(request);
+        if (status) actionInput.status = status;
+        const enabled = inferAdminEnabled(request);
+        if (enabled !== undefined) actionInput.enabled = enabled;
+        actionInput.reason = request;
+    }
+
+    if (definition.actionType === 'update_feature_flag') {
+        const featureFlag = inferAdminFeatureFlag(context, request);
+        if (featureFlag) actionInput.featureFlag = featureFlag;
+        const enabled = inferAdminEnabled(request);
+        if (enabled !== undefined) actionInput.enabled = enabled;
+    }
+
+    if (definition.actionType === 'update_plan') {
+        const planId = inferAdminPlanId(context, request);
+        if (planId) actionInput.planId = planId;
+    }
+
+    if (definition.actionType === 'manage_global_prompts') {
+        actionInput.promptId = inferAdminPromptId(context, request);
+        const snapshotUpdates = context.snapshot?.promptUpdates;
+        if (snapshotUpdates && typeof snapshotUpdates === 'object' && !Array.isArray(snapshotUpdates)) {
+            actionInput.updates = snapshotUpdates;
+        } else {
+            actionInput.updates = { customInstructions: request };
+        }
+    }
+
+    if (definition.actionType === 'review_ai_logs' || definition.actionType === 'review_errors') {
+        actionInput.query = request;
     }
 
     return actionInput;

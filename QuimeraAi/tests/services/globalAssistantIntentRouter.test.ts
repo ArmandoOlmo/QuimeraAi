@@ -231,6 +231,44 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes Owner Mode and Super Admin requests to specific admin actions', () => {
+        expect(routeAssistantIntent('Revisa ai logs de gemini en admin', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['review_ai_logs'],
+            safetyLevel: 'low',
+        });
+
+        expect(routeAssistantIntent('Revisa errores plataforma del admin', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['review_errors'],
+            safetyLevel: 'low',
+        });
+
+        expect(routeAssistantIntent('Actualiza plan tenant tenant-1 a pro', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['update_plan'],
+            safetyLevel: 'critical',
+        });
+
+        expect(routeAssistantIntent('Cambia service availability de emailMarketing a development', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['update_service_availability'],
+            safetyLevel: 'critical',
+        });
+
+        expect(routeAssistantIntent('Activa feature flag realEstateModule para tenant tenant-1', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['update_feature_flag'],
+            safetyLevel: 'critical',
+        });
+
+        expect(routeAssistantIntent('Actualiza ChatCore prompts globales', context)).toMatchObject({
+            module: 'admin',
+            actionCandidates: ['manage_global_prompts'],
+            safetyLevel: 'critical',
+        });
+    });
+
     it('routes CRM search, summaries, lead updates, and follow-up tasks to CRM actions', () => {
         expect(routeAssistantIntent('Busca Maria en CRM', context)).toMatchObject({
             module: 'crm',

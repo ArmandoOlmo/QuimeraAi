@@ -33,7 +33,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
-    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar', 'marca', 'marcar', 'pagada', 'pagado', 'paid', 'vencida', 'vencido'])) return 'edit';
+    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'activa', 'activar', 'desactiva', 'desactivar', 'enable', 'disable', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar', 'marca', 'marcar', 'pagada', 'pagado', 'paid', 'vencida', 'vencido'])) return 'edit';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
     if (includesAny(text, ['configura', 'configurar', 'configure', 'availability', 'disponibilidad', 'horario'])) return 'edit';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
@@ -43,7 +43,24 @@ const inferIntent = (text: string): AssistantIntentCategory => {
 };
 
 const inferModule = (text: string, context: AssistantContextSnapshot): AssistantModuleTarget => {
-    if (includesAny(text, ['admin', 'tenant', 'usuario', 'plan', 'feature flag', 'service availability', 'super admin'])) return 'admin';
+    if (includesAny(text, [
+        'admin',
+        'tenant',
+        'usuario',
+        'plan',
+        'feature flag',
+        'service availability',
+        'super admin',
+        'ai log',
+        'api log',
+        'logs',
+        'errores plataforma',
+        'global prompt',
+        'prompt global',
+        'prompts globales',
+        'chatbot prompts',
+        'chatcore prompts',
+    ])) return 'admin';
     if (includesAny(text, ['ai studio', 'studio', 'website nuevo', 'sitio nuevo'])) return 'aiStudio';
     if (includesAny(text, ['chatcore', 'chatbot', 'knowledge', 'entrena', 'train bot'])) return 'chatbot';
     if (includesAny(text, ['business blueprint', 'blueprint'])) return 'businessBlueprint';
@@ -180,6 +197,17 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             if (includesAny(text, ['blocker', 'bloqueo', 'bloqueos', 'faltan', 'falta', 'readiness', 'listo'])) return ['identify_blockers'];
             return ['summarize_analytics'];
         }
+    }
+
+    if (module === 'admin') {
+        if (includesAny(text, ['ai log', 'api log', 'logs', 'registro', 'registros'])) return ['review_ai_logs'];
+        if (includesAny(text, ['error', 'errores', 'fallo', 'fallos', 'failed', 'crash'])) return ['review_errors'];
+        if (includesAny(text, ['plan', 'billing', 'suscripcion', 'subscription'])) return ['update_plan'];
+        if (includesAny(text, ['service availability', 'disponibilidad', 'servicio', 'servicios', 'publico', 'public', 'development'])) return ['update_service_availability'];
+        if (includesAny(text, ['feature flag', 'feature', 'flag'])) return ['update_feature_flag'];
+        if (includesAny(text, ['prompt', 'prompts', 'global assistant', 'asistente global', 'chatbot prompts', 'chatcore prompts'])) return ['manage_global_prompts'];
+        if (intent === 'search') return ['search_tenants'];
+        if (intent === 'open') return ['open_tenant'];
     }
 
     if (module === 'aiStudio' && intent === 'create') {
