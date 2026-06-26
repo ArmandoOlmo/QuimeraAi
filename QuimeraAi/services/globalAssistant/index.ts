@@ -1,5 +1,6 @@
 export * from './globalAssistantActionRegistry';
 export * from './globalAssistantAuditService';
+export * from './globalAssistantCommandCenter';
 export * from './globalAssistantContextResolver';
 export * from './globalAssistantEntryBridge';
 export * from './globalAssistantExecutionEngine';

@@ -11,6 +11,7 @@ The current PR-level scope adds:
 - `types/globalAssistant.ts` as the shared TypeScript contract.
 - `services/globalAssistant/*` for context resolution, memory, intent routing, action registry, permission checks, execution planning, audit events, task tracking, project resolution, and OpenRouter model metadata.
 - `services/globalAssistant/globalAssistantEntryBridge.ts` for dashboard-to-assistant entry routing and lazy-load-safe request handoff.
+- `services/globalAssistant/globalAssistantCommandCenter.ts` for app-context resolution, enabled-service projection, plan formatting, and preview-vs-continue decisions.
 - `services/globalAssistant/globalAssistantSupabaseStore.ts` for injectable Supabase persistence repositories.
 - `supabase/migrations/20260626120743_global_assistant_memory_store.sql` for `assistant_*` tables, RLS, grants, triggers, and helper functions.
 - Preview-first execution plans with confirmation requirements for high and critical actions.
@@ -44,6 +45,7 @@ GA1 introduces these layers:
 
 - `globalAssistantContextResolver`: creates an `AssistantContextSnapshot` from user, tenant, active route, active project, admin mode, selected entity, and surface metadata.
 - `globalAssistantEntryBridge`: classifies dashboard requests, keeps explicit AI Studio opens on the AI Studio surface, and dispatches typed Global Assistant entry payloads through `quimera:global-assistant-entry` with a `localStorage` fallback.
+- `globalAssistantCommandCenter`: turns app state into an `AssistantContextSnapshot`, formats runtime plans for the assistant drawer, and blocks mutating or confirmation-required dashboard requests from falling through to legacy execution.
 - `globalAssistantMemoryService`: validates and queries segmented memory through an adapter. GA1 uses an in-memory adapter; GA2 adds an injectable Supabase adapter and RLS-backed tables.
 - `globalAssistantIntentRouter`: returns structured GA1 intent output. It is intentionally rule-based until the OpenRouter structured tool loop is added.
 - `globalAssistantActionRegistry`: declares module actions, schemas, service gates, feature gates, safety level, preview support, rollback support, and required permissions.
@@ -58,8 +60,10 @@ GA1 introduces these layers:
 GA4 dashboard entry handoff:
 
 1. Dashboard request submit dispatches a Global Assistant entry payload unless the user explicitly asks to open/use AI Studio.
-2. The authenticated app assistant consumes the entry event, opens the drawer, and processes the request in the same chat/tool pipeline as manual assistant input.
-3. Website creation no longer uses the old empty-argument fast path; model/tool execution must provide `businessName`, `industry`, and `description` before headless generation.
+2. The authenticated app assistant consumes the entry event, opens the drawer, resolves app/project/service context, and calls `globalAssistantRuntime.planRequest`.
+3. The drawer shows an Operating Layer plan with module, intent, task id, model, previews, blockers, and confirmation requirements.
+4. Mutating, blocked, high-risk, or confirmation-required dashboard requests stop at preview. Only low-risk non-mutating plans continue into the legacy tool execution path.
+5. Website creation no longer uses the old empty-argument fast path; model/tool execution must provide `businessName`, `industry`, and `description` before headless generation.
 
 GA1-GA2 planning flow:
 
@@ -103,7 +107,7 @@ Model metadata was verified against OpenRouter model availability on 2026-06-26 
 
 - GA2: Supabase assistant tables, adapters, RLS, and persistence tests. Done as an additive persistence layer; live runtime switchover remains separate.
 - GA3: project switcher and richer context snapshots.
-- GA4: dashboard request bar routes to Global Assistant runtime. Started with the dashboard entry bridge and GlobalAiAssistant event handoff; durable runtime persistence and full structured tool-loop handoff still remain.
+- GA4: dashboard request bar routes to Global Assistant runtime. Started with the dashboard entry bridge, runtime planning preview, and GlobalAiAssistant event handoff; durable runtime persistence and full structured tool-loop handoff still remain.
 - GA5: global command palette.
 - GA6: OpenRouter structured outputs and tool loop.
 - GA7-GA10: module connectors, preview/apply, rollback, and admin mode.

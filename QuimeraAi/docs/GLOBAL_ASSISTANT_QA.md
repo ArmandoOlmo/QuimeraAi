@@ -58,6 +58,9 @@ Coverage:
 - Explicit AI Studio open/create requests stay on the AI Studio surface.
 - Dashboard entry payloads are typed, trimmed, source-tagged, and auto-submit by default.
 - The Global Assistant no longer fast-paths website creation with empty arguments.
+- Command Center context includes the active project, dashboard surface, enabled services, feature flags, and a bounded project list.
+- Mutating or confirmation-required dashboard requests produce an Operating Layer preview and do not continue into legacy execution.
+- Blocked plans surface blockers in the assistant drawer.
 
 ## GA1 manual checks
 
@@ -97,6 +100,7 @@ When GA4-GA10 land, manually verify:
 - Dashboard request: "crea un website para X".
 - Dashboard request: "genera una imagen para el hero".
 - Dashboard request opens the Global Assistant drawer instead of only opening AI Studio.
+- Mutating dashboard request displays an Operating Layer plan and does not apply changes without confirmation.
 - Explicit "Abre AI Studio" still opens AI Studio.
 - Switch project by chat.
 - Edit website section by chat.

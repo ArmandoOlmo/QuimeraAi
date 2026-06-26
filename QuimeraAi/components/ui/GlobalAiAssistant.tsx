@@ -35,6 +35,14 @@ import {
     readStoredGlobalAssistantEntryRequest,
     type GlobalAssistantEntryPayload,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
+import {
+    defaultGlobalAssistantFeatureFlags,
+    formatGlobalAssistantPlanMessage,
+    listEnabledPlatformServices,
+    resolveGlobalAssistantAppContext,
+    shouldContinueAfterRuntimePlan,
+} from '../../services/globalAssistant/globalAssistantCommandCenter';
+import { globalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime';
 // ... existing imports ...
 
 // --- Types ---
@@ -3328,6 +3336,47 @@ const GlobalAiAssistant: React.FC = () => {
         return null;
     };
 
+    const planOperatingLayerRequest = async (request: string, entry: GlobalAssistantEntryPayload) => {
+        const project = activeProjectRef.current;
+        const userDoc = userDocumentRef.current as any;
+        const enabledServices = isLoadingServices
+            ? listEnabledPlatformServices(() => true)
+            : listEnabledPlatformServices(canAccessService);
+        const featureFlags = defaultGlobalAssistantFeatureFlags();
+        const context = resolveGlobalAssistantAppContext({
+            userId: user?.id || userDoc?.id || null,
+            email: user?.email || userDoc?.email || null,
+            role: userDoc?.role || null,
+            tenantId: project?.tenantId || userDoc?.tenantId || null,
+            activeProject: project ? {
+                id: project.id,
+                name: project.name,
+                status: project.status,
+                tenantId: project.tenantId,
+                userId: project.userId,
+            } : null,
+            activeRoute: path,
+            currentSurface: entry.surface,
+            locale: i18n.language,
+            view: viewRef.current || 'dashboard',
+            activeServices: enabledServices,
+            featureFlags,
+            availableProjects: projectsRef.current,
+            snapshot: {
+                entrySource: entry.source,
+                entryMetadata: entry.metadata || {},
+                activeProjectId: project?.id || null,
+            },
+        });
+
+        return globalAssistantRuntime.planRequest({
+            request,
+            context,
+            enabledServices,
+            enabledFeatures: featureFlags,
+        });
+    };
+
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
         const userMsg = request.trim();
         if (!userMsg) return;
@@ -3343,6 +3392,19 @@ const GlobalAiAssistant: React.FC = () => {
                     surface: entry.surface,
                     metadata: entry.metadata,
                 } : undefined);
+
+                if (entry?.source === 'dashboard_welcome' || entry?.surface === 'dashboard') {
+                    const operatingLayerPlan = await planOperatingLayerRequest(userMsg, entry);
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: formatGlobalAssistantPlanMessage(operatingLayerPlan, i18n.language),
+                    }]);
+
+                    if (!shouldContinueAfterRuntimePlan(operatingLayerPlan)) {
+                        setIsThinking(false);
+                        return;
+                    }
+                }
 
                 // ============================================================
                 // STEP 1: Fast-path tool inference from user text
