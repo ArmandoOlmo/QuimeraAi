@@ -230,6 +230,8 @@ export function inferDashboardAssistantModule(request: string): AssistantModuleT
     return match?.module || null;
 }
 
+export const inferGlobalAssistantEntryModule = inferDashboardAssistantModule;
+
 const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
     {
         id: 'create_website',

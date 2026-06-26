@@ -1,6 +1,7 @@
 import type { Project } from '../../types/project';
 import type { AdminView, View } from '../../types/ui';
 import type { PlatformServiceId } from '../../types/serviceAvailability';
+import type { AssistantModuleTarget } from '../../types/globalAssistant';
 
 export type GlobalCommandType =
     | 'assistant_request'
@@ -27,6 +28,7 @@ export interface GlobalCommandItem {
     promptKey?: string;
     promptParams?: Record<string, string | number | boolean | null | undefined>;
     serviceId?: PlatformServiceId;
+    assistantModule?: AssistantModuleTarget;
     requiresAdmin?: boolean;
     requiresProject?: boolean;
     isActiveProject?: boolean;
@@ -139,77 +141,77 @@ const ACTION_COMMANDS: GlobalCommandItem[] = [
         'Create website',
         'Start a website or business build request with the Global Assistant.',
         'Create a new website. Ask me for any missing business details before generating.',
-        { keywords: ['create website', 'new website', 'ai studio', 'business', 'landing page', 'crear sitio', 'crear web'] },
+        { assistantModule: 'aiStudio', keywords: ['create website', 'new website', 'ai studio', 'business', 'landing page', 'crear sitio', 'crear web'] },
     ),
     actionCommand(
         'action:edit-website',
         'Edit website section',
         'Plan a Website Builder edit for the active project.',
         'Help me edit a website section in the active project. Ask which section if it is not clear.',
-        { serviceId: 'aiFeatures', requiresProject: true, keywords: ['edit website', 'hero', 'section', 'copy', 'page', 'editar web', 'seccion'] },
+        { assistantModule: 'website', serviceId: 'aiFeatures', requiresProject: true, keywords: ['edit website', 'hero', 'section', 'copy', 'page', 'editar web', 'seccion'] },
     ),
     actionCommand(
         'action:generate-image',
         'Generate image',
         'Create a draft image asset for the active project.',
         'Generate a draft image asset for the active project. Ask for style, subject, and placement if missing.',
-        { serviceId: 'aiFeatures', keywords: ['image', 'hero image', 'asset', 'media', 'photo', 'imagen', 'foto'] },
+        { assistantModule: 'media', serviceId: 'aiFeatures', keywords: ['image', 'hero image', 'asset', 'media', 'photo', 'imagen', 'foto'] },
     ),
     actionCommand(
         'action:create-video',
         'Create video',
         'Create a video prompt or video asset task.',
         'Create a video asset draft or video generation prompt for the active project.',
-        { serviceId: 'aiFeatures', keywords: ['video', 'media', 'reel', 'ad', 'anuncio'] },
+        { assistantModule: 'media', serviceId: 'aiFeatures', keywords: ['video', 'media', 'reel', 'ad', 'anuncio'] },
     ),
     actionCommand(
         'action:create-email',
         'Create email campaign',
         'Draft an email campaign for review.',
         'Create an email campaign draft for review. Do not send it without explicit confirmation.',
-        { serviceId: 'emailMarketing', requiresProject: true, keywords: ['email', 'campaign', 'audience', 'automation', 'correo', 'campana'] },
+        { assistantModule: 'emailMarketing', serviceId: 'emailMarketing', requiresProject: true, keywords: ['email', 'campaign', 'audience', 'automation', 'correo', 'campana'] },
     ),
     actionCommand(
         'action:create-product',
         'Create product',
         'Draft a new ecommerce product.',
         'Create an ecommerce product draft for the active project. Ask for missing product details.',
-        { serviceId: 'ecommerce', requiresProject: true, keywords: ['product', 'ecommerce', 'store', 'price', 'inventory', 'producto', 'tienda'] },
+        { assistantModule: 'ecommerce', serviceId: 'ecommerce', requiresProject: true, keywords: ['product', 'ecommerce', 'store', 'price', 'inventory', 'producto', 'tienda'] },
     ),
     actionCommand(
         'action:create-appointment',
         'Create appointment',
         'Plan a new appointment or booking.',
         'Create an appointment draft for the active project. Ask for date, time, contact, and service if missing.',
-        { serviceId: 'appointments', requiresProject: true, keywords: ['appointment', 'booking', 'calendar', 'cita', 'reserva'] },
+        { assistantModule: 'appointments', serviceId: 'appointments', requiresProject: true, keywords: ['appointment', 'booking', 'calendar', 'cita', 'reserva'] },
     ),
     actionCommand(
         'action:review-leads',
         'Review leads',
         'Summarize and prioritize CRM leads.',
         'Review the active project leads, summarize priorities, and suggest follow-up actions.',
-        { serviceId: 'crm', requiresProject: true, keywords: ['leads', 'crm', 'follow up', 'prospects', 'clientes potenciales'] },
+        { assistantModule: 'crm', serviceId: 'crm', requiresProject: true, keywords: ['leads', 'crm', 'follow up', 'prospects', 'clientes potenciales'] },
     ),
     actionCommand(
         'action:create-bio-page',
         'Create Bio Page',
         'Create or improve a Bio Page draft.',
         'Create a Bio Page draft for the active project with links, CTA, booking, lead capture, and ChatCore context.',
-        { requiresProject: true, keywords: ['bio page', 'link in bio', 'creator page', 'pagina bio'] },
+        { assistantModule: 'bioPage', requiresProject: true, keywords: ['bio page', 'link in bio', 'creator page', 'pagina bio'] },
     ),
     actionCommand(
         'action:train-chatcore',
         'Train ChatCore',
         'Create or sync project knowledge for ChatCore.',
         'Train ChatCore for the active project by creating or syncing knowledge. Keep visitor chat memory separate.',
-        { serviceId: 'chatbot', requiresProject: true, keywords: ['chatcore', 'chatbot', 'knowledge', 'train', 'entrenar', 'conocimiento'] },
+        { assistantModule: 'chatbot', serviceId: 'chatbot', requiresProject: true, keywords: ['chatcore', 'chatbot', 'knowledge', 'train', 'entrenar', 'conocimiento'] },
     ),
     actionCommand(
         'action:analyze-project',
         'Analyze project',
         'Review project readiness, analytics, and blockers.',
         'Analyze the active project readiness, analytics, blockers, and next best actions.',
-        { serviceId: 'analytics', requiresProject: true, keywords: ['analytics', 'report', 'readiness', 'blockers', 'analiticas', 'reporte'] },
+        { assistantModule: 'analytics', serviceId: 'analytics', requiresProject: true, keywords: ['analytics', 'report', 'readiness', 'blockers', 'analiticas', 'reporte'] },
     ),
 ];
 

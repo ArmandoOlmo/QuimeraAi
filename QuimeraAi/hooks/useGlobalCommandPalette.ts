@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/core/AuthContext';
 import { useProject } from '../contexts/project';
 import { useUI } from '../contexts/core/UIContext';
+import { useSafeTenant } from '../contexts/tenant/TenantContext';
 import { useServiceAvailability } from './useServiceAvailability';
 import { useRouter } from './useRouter';
 import {
     createGlobalAssistantEntryPayload,
     dispatchGlobalAssistantEntryRequest,
+    inferGlobalAssistantEntryModule,
 } from '../services/globalAssistant/globalAssistantEntryBridge';
 import {
     buildGlobalCommandItems,
@@ -21,8 +23,9 @@ export function useGlobalCommandPalette() {
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const { canAccessSuperAdmin } = useAuth();
-    const { projects, activeProjectId, loadProject } = useProject();
+    const { projects, activeProjectId, activeProject, loadProject } = useProject();
     const { setView, setAdminView } = useUI();
+    const tenantContext = useSafeTenant();
     const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
     const router = useRouter();
 
@@ -95,13 +98,22 @@ export function useGlobalCommandPalette() {
         if (item.type === 'assistant_request' || item.type === 'action') {
             const prompt = translateCommandTextSafe(t, item.promptKey, item.prompt || query.trim(), item.promptParams);
             if (!prompt) return;
+            const activeModule = item.assistantModule || inferGlobalAssistantEntryModule(prompt);
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt, {
                 source: 'command_palette',
                 surface: item.requiresAdmin ? 'admin' : 'app',
                 metadata: {
                     commandId: item.id,
                     commandType: item.type,
+                    sourceComponent: 'GlobalCommandPalette',
+                    assistantLayer: 'global_operating_layer',
+                    commandCenter: true,
+                    memoryScopeHint: 'user_tenant_project_module_session_task',
+                    activeModule,
                     activeProjectId,
+                    activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
+                    activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
+                    activeTenantName: tenantContext?.currentTenant?.name || null,
                 },
             }));
             close();
@@ -120,7 +132,7 @@ export function useGlobalCommandPalette() {
             router.navigateToView(item.view, item.adminView);
             close();
         }
-    }, [activeProjectId, close, loadProject, query, router, setAdminView, setView, t]);
+    }, [activeProject, activeProjectId, close, loadProject, query, router, setAdminView, setView, t, tenantContext]);
 
     return {
         isOpen,

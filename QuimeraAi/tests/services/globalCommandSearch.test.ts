@@ -51,7 +51,9 @@ describe('globalCommandSearch', () => {
             type: 'assistant_request',
             prompt: 'genera una imagen para el hero',
         });
-        expect(items.map(item => item.id)).toContain('action:generate-image');
+        expect(items.find(item => item.id === 'action:generate-image')).toMatchObject({
+            assistantModule: 'media',
+        });
     });
 
     it('filters disabled services and admin commands', () => {
@@ -159,6 +161,9 @@ describe('globalCommandSearch', () => {
 
         expect(items.some(item => item.id === 'action:train-chatcore')).toBe(true);
         expect(items.some(item => item.id === 'assistant:request')).toBe(true);
+        expect(items.find(item => item.id === 'action:train-chatcore')).toMatchObject({
+            assistantModule: 'chatbot',
+        });
 
         for (const item of items) {
             if (item.labelKey) expectTranslatedKey(item.labelKey);

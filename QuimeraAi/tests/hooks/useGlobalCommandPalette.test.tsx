@@ -19,7 +19,21 @@ vi.mock('../../contexts/project', () => ({
     useProject: () => ({
         projects: [],
         activeProjectId: 'project_1',
+        activeProject: {
+            id: 'project_1',
+            name: 'Casa Luna',
+            tenantId: 'tenant_1',
+        },
         loadProject: loadProjectMock,
+    }),
+}));
+
+vi.mock('../../contexts/tenant/TenantContext', () => ({
+    useSafeTenant: () => ({
+        currentTenant: {
+            id: 'tenant_1',
+            name: 'Workspace Uno',
+        },
     }),
 }));
 
@@ -44,6 +58,7 @@ vi.mock('../../hooks/useRouter', () => ({
 vi.mock('../../services/globalAssistant/globalAssistantEntryBridge', () => ({
     createGlobalAssistantEntryPayload: createGlobalAssistantEntryPayloadMock,
     dispatchGlobalAssistantEntryRequest: dispatchGlobalAssistantEntryRequestMock,
+    inferGlobalAssistantEntryModule: (prompt: string) => prompt.includes('leads') ? 'crm' : null,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -87,14 +102,63 @@ describe('useGlobalCommandPalette', () => {
         expect(createGlobalAssistantEntryPayloadMock).toHaveBeenCalledWith('Use the fallback prompt.', expect.objectContaining({
             source: 'command_palette',
             surface: 'app',
-            metadata: expect.objectContaining({
-                commandId: 'action:bad',
-                activeProjectId: 'project_1',
-            }),
-        }));
+                metadata: expect.objectContaining({
+                    commandId: 'action:bad',
+                    commandType: 'action',
+                    sourceComponent: 'GlobalCommandPalette',
+                    assistantLayer: 'global_operating_layer',
+                    commandCenter: true,
+                    memoryScopeHint: 'user_tenant_project_module_session_task',
+                    activeProjectId: 'project_1',
+                    activeProjectName: 'Casa Luna',
+                    activeTenantId: 'tenant_1',
+                    activeTenantName: 'Workspace Uno',
+                }),
+            }));
         expect(dispatchGlobalAssistantEntryRequestMock).toHaveBeenCalledWith({
             prompt: 'Use the fallback prompt.',
             options: expect.objectContaining({ source: 'command_palette' }),
         });
+    });
+
+    it('adds explicit command modules and infers modules for freeform assistant requests', async () => {
+        const { useGlobalCommandPalette } = await import('../../hooks/useGlobalCommandPalette');
+        const { result } = renderHook(() => useGlobalCommandPalette());
+
+        await act(async () => {
+            await result.current.executeCommand({
+                id: 'action:create-product',
+                type: 'action',
+                label: 'Create product',
+                description: 'Draft a new ecommerce product.',
+                prompt: 'Create an ecommerce product draft.',
+                assistantModule: 'ecommerce',
+                keywords: ['product'],
+            });
+        });
+
+        expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Create an ecommerce product draft.', expect.objectContaining({
+            metadata: expect.objectContaining({
+                commandId: 'action:create-product',
+                activeModule: 'ecommerce',
+            }),
+        }));
+
+        await act(async () => {
+            await result.current.executeCommand({
+                id: 'assistant:request',
+                type: 'assistant_request',
+                label: 'Ask Quimera',
+                prompt: 'Revisa mis leads y prepara follow ups',
+                keywords: ['assistant'],
+            });
+        });
+
+        expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Revisa mis leads y prepara follow ups', expect.objectContaining({
+            metadata: expect.objectContaining({
+                commandId: 'assistant:request',
+                activeModule: 'crm',
+            }),
+        }));
     });
 });
