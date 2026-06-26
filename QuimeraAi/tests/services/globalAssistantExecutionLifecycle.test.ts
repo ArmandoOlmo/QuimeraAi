@@ -80,6 +80,8 @@ const emailCampaignDefinition: AssistantActionDefinition = {
     }),
 };
 
+const { execute: _execute, rollback: _rollback, ...emailCampaignDefinitionWithoutHandler } = emailCampaignDefinition;
+
 describe('GlobalAssistantRuntime execution lifecycle', () => {
     it('confirms, applies, records memory, and rolls back actions with registered handlers', async () => {
         const registry = new GlobalAssistantActionRegistry([emailCampaignDefinition]);
@@ -145,7 +147,7 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
     });
 
     it('fails safely instead of applying when a module connector has no execute handler', async () => {
-        const registry = new GlobalAssistantActionRegistry();
+        const registry = new GlobalAssistantActionRegistry([emailCampaignDefinitionWithoutHandler]);
         const { runtime, auditService } = buildRuntime(registry);
 
         const planned = await runtime.planRequest({
@@ -169,8 +171,6 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
         expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_failed');
         expect(auditService.listActionLogs({ status: 'failed' }).map(action => action.actionType)).toEqual([
             'create_email_campaign',
-            'create_audience',
-            'create_email_automation',
         ]);
     });
 });

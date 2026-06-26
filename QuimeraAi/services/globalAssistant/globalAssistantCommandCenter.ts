@@ -133,6 +133,7 @@ export function formatGlobalAssistantPlanMessage(
         }
         if (result.plan.requiresConfirmation) {
             lines.push('No voy a aplicar cambios hasta que confirmes el preview.');
+            lines.push('Responde "confirmar" para aplicar o "cancelar" para descartarlo.');
         }
 
         return lines.join('\n');
@@ -163,6 +164,7 @@ export function formatGlobalAssistantPlanMessage(
     }
     if (result.plan.requiresConfirmation) {
         lines.push('I will not apply changes until you confirm the preview.');
+        lines.push('Reply "confirm" to apply or "cancel" to discard it.');
     }
 
     return lines.join('\n');

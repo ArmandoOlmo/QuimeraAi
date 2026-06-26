@@ -42,7 +42,12 @@ import {
     resolveGlobalAssistantAppContext,
     shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter';
-import { globalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime';
+import {
+    isAssistantPlanCancellation,
+    isAssistantPlanConfirmation,
+} from '../../services/globalAssistant/globalAssistantConfirmation';
+import { globalAssistantRuntime, type AssistantLifecycleResult } from '../../services/globalAssistant/globalAssistantRuntime';
+import type { AssistantContextSnapshot } from '../../types/globalAssistant';
 // ... existing imports ...
 
 // --- Types ---
@@ -51,6 +56,42 @@ interface Message {
     text: string;
     isToolOutput?: boolean;
 }
+
+interface PendingOperatingLayerTask {
+    taskId: string;
+    context: AssistantContextSnapshot;
+    actionLabels: string[];
+}
+
+const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
+
+const formatOperatingLayerApplyMessage = (
+    result: AssistantLifecycleResult,
+    locale?: string | null,
+): string => {
+    const spanish = isSpanishLocale(locale);
+    const actionLabels = result.actions.map(action => `${action.module}.${action.actionType} (${action.status})`);
+    const rollbackCount = result.actions.filter(action => action.metadata?.rollbackSupported === true).length;
+    const blockers = result.plan.blockers || [];
+
+    if (spanish) {
+        return [
+            'Resultado del Operating Layer',
+            `Estado: ${result.task.status}`,
+            actionLabels.length ? `Acciones: ${actionLabels.join(', ')}` : 'Acciones: ninguna',
+            `Rollback disponible: ${rollbackCount}`,
+            ...(blockers.length ? [`Bloqueos: ${blockers.join(' | ')}`] : []),
+        ].join('\n');
+    }
+
+    return [
+        'Operating Layer result',
+        `Status: ${result.task.status}`,
+        actionLabels.length ? `Actions: ${actionLabels.join(', ')}` : 'Actions: none',
+        `Rollback available: ${rollbackCount}`,
+        ...(blockers.length ? [`Blockers: ${blockers.join(' | ')}`] : []),
+    ].join('\n');
+};
 
 // --- Tools Definition ---
 const EDITOR_SECTION_IDS = [
@@ -1069,6 +1110,7 @@ const GlobalAiAssistant: React.FC = () => {
     const [isThinking, setIsThinking] = useState(false);
     const [isExecutingCommands, setIsExecutingCommands] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false); // New state for minimize mode
+    const [pendingOperatingLayerTask, setPendingOperatingLayerTask] = useState<PendingOperatingLayerTask | null>(null);
 
     // Auto-minimize on mobile for specific routes (e.g., biopage)
     useEffect(() => {
@@ -1085,6 +1127,7 @@ const GlobalAiAssistant: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const processTextRequestRef = useRef<((request: string, entry?: GlobalAssistantEntryPayload) => Promise<void>) | null>(null);
+    const pendingOperatingLayerTaskRef = useRef<PendingOperatingLayerTask | null>(null);
 
     // Audio Refs
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -1190,6 +1233,7 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { archiveTemplateRef.current = archiveTemplate; }, [archiveTemplate]);
     useEffect(() => { duplicateTemplateRef.current = duplicateTemplate; }, [duplicateTemplate]);
     useEffect(() => { globalAssistantConfigRef.current = globalAssistantConfig; }, [globalAssistantConfig]);
+    useEffect(() => { pendingOperatingLayerTaskRef.current = pendingOperatingLayerTask; }, [pendingOperatingLayerTask]);
 
     const isToolAllowed = (
         toolName: string,
@@ -3377,6 +3421,27 @@ const GlobalAiAssistant: React.FC = () => {
         });
     };
 
+    const shouldRouteEntryToOperatingLayer = (entry?: GlobalAssistantEntryPayload): entry is GlobalAssistantEntryPayload =>
+        Boolean(entry && (
+            entry.source === 'dashboard_welcome' ||
+            entry.source === 'command_palette' ||
+            entry.surface === 'dashboard' ||
+            entry.surface === 'admin'
+        ));
+
+    const rememberPendingOperatingLayerTask = (result: Awaited<ReturnType<typeof planOperatingLayerRequest>>) => {
+        if (result.plan.status === 'blocked' || shouldContinueAfterRuntimePlan(result)) {
+            setPendingOperatingLayerTask(null);
+            return;
+        }
+
+        setPendingOperatingLayerTask({
+            taskId: result.task.id,
+            context: result.context,
+            actionLabels: result.plan.actions.map(action => `${action.module}.${action.actionType}`),
+        });
+    };
+
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
         const userMsg = request.trim();
         if (!userMsg) return;
@@ -3393,8 +3458,40 @@ const GlobalAiAssistant: React.FC = () => {
                     metadata: entry.metadata,
                 } : undefined);
 
-                if (entry?.source === 'dashboard_welcome' || entry?.surface === 'dashboard') {
+                const pendingOperatingLayer = pendingOperatingLayerTaskRef.current;
+                if (pendingOperatingLayer && isAssistantPlanCancellation(userMsg)) {
+                    setPendingOperatingLayerTask(null);
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: isSpanishLocale(i18n.language)
+                            ? `Plan cancelado: ${pendingOperatingLayer.actionLabels.join(', ')}`
+                            : `Plan cancelled: ${pendingOperatingLayer.actionLabels.join(', ')}`,
+                    }]);
+                    setIsThinking(false);
+                    return;
+                }
+
+                if (pendingOperatingLayer && isAssistantPlanConfirmation(userMsg)) {
+                    globalAssistantRuntime.confirmPlan({
+                        taskId: pendingOperatingLayer.taskId,
+                        confirmedBy: user?.id || userDocumentRef.current?.id || null,
+                    });
+                    const applied = await globalAssistantRuntime.applyTask({
+                        taskId: pendingOperatingLayer.taskId,
+                        context: pendingOperatingLayer.context,
+                    });
+                    setPendingOperatingLayerTask(null);
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: formatOperatingLayerApplyMessage(applied, i18n.language),
+                    }]);
+                    setIsThinking(false);
+                    return;
+                }
+
+                if (shouldRouteEntryToOperatingLayer(entry)) {
                     const operatingLayerPlan = await planOperatingLayerRequest(userMsg, entry);
+                    rememberPendingOperatingLayerTask(operatingLayerPlan);
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: formatGlobalAssistantPlanMessage(operatingLayerPlan, i18n.language),

@@ -4,6 +4,7 @@ import type {
     AssistantModuleTarget,
     AssistantSafetyLevel,
 } from '../../types/globalAssistant';
+import { attachDefaultGlobalAssistantActionHandlers } from './globalAssistantActionHandlers';
 
 const objectSchema = (
     properties: Record<string, AssistantJsonSchema> = {},
@@ -392,7 +393,7 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
 export class GlobalAssistantActionRegistry {
     private readonly actions = new Map<string, AssistantActionDefinition>();
 
-    constructor(definitions: AssistantActionDefinition[] = GLOBAL_ASSISTANT_ACTIONS) {
+    constructor(definitions: AssistantActionDefinition[] = attachDefaultGlobalAssistantActionHandlers(GLOBAL_ASSISTANT_ACTIONS)) {
         definitions.forEach(definition => this.register(definition));
     }
 

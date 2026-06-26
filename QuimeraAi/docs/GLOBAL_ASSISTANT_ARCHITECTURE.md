@@ -2,15 +2,17 @@
 
 ## Current scope
 
-GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. GA2 adds the Supabase persistence layer for memory, conversations, tasks, actions, runtime events, summaries, preferences, and admin events. GA4 starts moving the dashboard request input from AI-Studio-only routing to the Global Assistant entry path.
+GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. GA2 adds the Supabase persistence layer for memory, conversations, tasks, actions, runtime events, summaries, preferences, and admin events. GA4 starts moving the dashboard request input from AI-Studio-only routing to the Global Assistant entry path. GA5 adds the first command center surface. GA7 starts review-gated module execution for selected draft-safe actions.
 
-This work does not replace existing chats, does not add heavy UI, and does not apply real module mutations yet.
+This work does not replace existing chats and does not merge their memory. Selected module actions can now apply review-gated drafts only after preview and explicit confirmation.
 
 The current PR-level scope adds:
 
 - `types/globalAssistant.ts` as the shared TypeScript contract.
 - `services/globalAssistant/*` for context resolution, memory, intent routing, action registry, permission checks, execution planning, audit events, task tracking, project resolution, and OpenRouter model metadata.
 - `services/globalAssistant/globalAssistantEntryBridge.ts` for dashboard-to-assistant entry routing and lazy-load-safe request handoff.
+- `services/globalAssistant/globalAssistantActionHandlers.ts` for draft-safe execute/rollback handlers on selected canonical modules.
+- `services/globalAssistant/globalAssistantConfirmation.ts` for explicit confirm/cancel detection.
 - `services/globalAssistant/globalCommandSearch.ts`, `hooks/useGlobalCommandPalette.ts`, and `components/global-assistant/GlobalCommandPalette.tsx` for the first global command palette surface.
 - `services/globalAssistant/globalAssistantCommandCenter.ts` for app-context resolution, enabled-service projection, plan formatting, and preview-vs-continue decisions.
 - `services/globalAssistant/globalAssistantSupabaseStore.ts` for injectable Supabase persistence repositories.
@@ -63,6 +65,8 @@ GA1 introduces these layers:
 - `globalAssistantMemoryService`: validates and queries segmented memory through an adapter. GA1 uses an in-memory adapter; GA2 adds an injectable Supabase adapter and RLS-backed tables.
 - `globalAssistantIntentRouter`: returns structured GA1 intent output. It is intentionally rule-based until the OpenRouter structured tool loop is added.
 - `globalAssistantActionRegistry`: declares module actions, schemas, service gates, feature gates, safety level, preview support, rollback support, and required permissions.
+- `globalAssistantActionHandlers`: attaches default execute/rollback handlers for selected draft-safe actions: email campaign, email audience, email automation, CRM lead, ecommerce product, and structured appointment creation.
+- `globalAssistantConfirmation`: detects explicit confirm/cancel messages before a pending plan is applied.
 - `globalAssistantPermissionService`: centralizes user/admin mode checks, service availability checks, feature flag checks, memory access checks, and project-context checks.
 - `globalAssistantExecutionEngine`: converts intent and action definitions into a preview-first `AssistantExecutionPlan`.
 - `globalAssistantAuditService`: records action logs and runtime events in memory for GA1; GA2 adds Supabase repositories for durable action/event logs.
@@ -76,8 +80,9 @@ GA4 dashboard entry handoff:
 1. Dashboard request submit dispatches a Global Assistant entry payload unless the user explicitly asks to open/use AI Studio.
 2. The authenticated app assistant consumes the entry event, opens the drawer, resolves app/project/service context, and calls `globalAssistantRuntime.planRequest`.
 3. The drawer shows an Operating Layer plan with module, intent, task id, model, previews, blockers, and confirmation requirements.
-4. Mutating, blocked, high-risk, or confirmation-required dashboard requests stop at preview. Only low-risk non-mutating plans continue into the legacy tool execution path.
-5. Website creation no longer uses the old empty-argument fast path; model/tool execution must provide `businessName`, `industry`, and `description` before headless generation.
+4. Mutating, blocked, high-risk, or confirmation-required dashboard requests stop at preview. The drawer stores the pending task and accepts explicit "confirmar/confirm/apply" or "cancelar/cancel" follow-up messages.
+5. Confirmed plans run `confirmPlan` then `applyTask`. Only actions with registered execute handlers can apply. Unimplemented connectors fail safely.
+6. Website creation no longer uses the old empty-argument fast path; model/tool execution must provide `businessName`, `industry`, and `description` before headless generation.
 
 GA1-GA2 planning flow:
 
@@ -91,7 +96,7 @@ GA1-GA2 planning flow:
 8. Create an assistant task.
 9. Record audit events and planned action logs.
 
-GA1 does not run module connectors or apply changes. Future connector PRs must implement `previewAction` and `applyAction` against canonical module services.
+Connector rule: module execution must use canonical module services, create review-gated drafts where available, preserve source metadata, and provide rollback when the created row can be safely deleted.
 
 Execution lifecycle:
 
@@ -100,6 +105,15 @@ Execution lifecycle:
 3. `applyTask` executes only actions whose registry definitions include an explicit `execute` handler. If a module connector has not registered execution yet, the action fails safely and records `assistant_action_failed`.
 4. Successful applies update the action log, record `assistant_action_applied`, store a task-scoped memory summary, and create a rollback snapshot when the action supports rollback.
 5. `rollbackAction` requires `rollbackSupported`, a stored snapshot, and an explicit rollback handler before marking an action as `rolled_back`.
+
+Default draft-safe handlers:
+
+- `create_email_campaign`: creates an `email_campaigns` draft with `generated_by_ai`, `needs_review`, source metadata, and rollback delete.
+- `create_audience`: creates an `email_audiences` draft with review/source metadata and rollback delete.
+- `create_email_automation`: creates an `email_automations` draft with `sendMode: draft_only`, review/source metadata, and rollback delete.
+- `create_lead`: creates a CRM lead draft in `leads` with assistant metadata and rollback delete.
+- `create_product`: creates a `store_products` draft row with assistant metadata and rollback delete.
+- `create_appointment`: uses the canonical appointment engine only when structured start/end fields are present; otherwise apply fails safely.
 
 Global command palette flow:
 
@@ -123,7 +137,8 @@ Model metadata was verified against OpenRouter model availability on 2026-06-26 
 
 ## Guardrails
 
-- No action applies changes in GA1.
+- No mutating action applies without preview and explicit confirmation.
+- Default handlers create review-gated drafts; they do not send emails, publish websites, activate automations, charge payments, or deploy ChatCore.
 - Mutating actions must support preview.
 - High and critical actions require confirmation.
 - Admin actions require Owner/Super Admin/system mode.
@@ -140,4 +155,4 @@ Model metadata was verified against OpenRouter model availability on 2026-06-26 
 - GA4: dashboard request bar routes to Global Assistant runtime. Started with the dashboard entry bridge, runtime planning preview, and GlobalAiAssistant event handoff; durable runtime persistence and full structured tool-loop handoff still remain.
 - GA5: global command palette.
 - GA6: OpenRouter structured outputs and tool loop.
-- GA7-GA10: module connectors, preview/apply, rollback, and admin mode.
+- GA7-GA10: expand module connectors, structured previews, rollback, and admin mode. GA7 is started for draft-safe Email, CRM, Ecommerce, and Appointments actions.

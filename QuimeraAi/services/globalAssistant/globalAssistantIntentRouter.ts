@@ -25,6 +25,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['analiza', 'review', 'revisa', 'reporte', 'report'])) return 'analyze';
     if (includesAny(text, ['imagen', 'image', 'foto', 'hero image'])) return 'generate_image';
     if (includesAny(text, ['video'])) return 'generate_video';
+    if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
     if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia'])) return 'edit';
@@ -68,7 +69,30 @@ const inferSafety = (intent: AssistantIntentCategory, module: AssistantModuleTar
     return 'low';
 };
 
-const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantModuleTarget): string[] => {
+const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantModuleTarget, text = ''): string[] => {
+    if (module === 'emailMarketing' && (intent === 'create' || intent === 'schedule')) {
+        if (includesAny(text, ['audiencia', 'audience', 'segmento', 'segment'])) return ['create_audience'];
+        if (includesAny(text, ['automation', 'automatizacion', 'automacion', 'workflow', 'flow'])) return ['create_email_automation'];
+        return ['create_email_campaign'];
+    }
+
+    if (module === 'ecommerce') {
+        if (intent === 'create') {
+            if (includesAny(text, ['categoria', 'category', 'collection', 'coleccion'])) return ['create_category'];
+            if (includesAny(text, ['descuento', 'discount', 'coupon', 'cupon'])) return ['create_discount'];
+            return ['create_product'];
+        }
+        if (intent === 'edit') {
+            if (includesAny(text, ['precio', 'price'])) return ['update_price'];
+            if (includesAny(text, ['inventario', 'inventory', 'stock'])) return ['update_inventory'];
+            return ['edit_product'];
+        }
+    }
+
+    if (module === 'appointments' && intent === 'edit' && includesAny(text, ['availability', 'disponibilidad', 'horario'])) {
+        return ['configure_availability'];
+    }
+
     const map: Partial<Record<AssistantModuleTarget, Partial<Record<AssistantIntentCategory, string[]>>>> = {
         website: {
             open: ['open_website_builder'],
@@ -148,7 +172,7 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
     const intent = inferIntent(text);
     const module = inferModule(text, context);
     const safetyLevel = inferSafety(intent, module, text);
-    const actionCandidates = actionCandidatesFor(intent, module);
+    const actionCandidates = actionCandidatesFor(intent, module, text);
     const requiresProject = !['admin', 'tenant', 'user'].includes(module);
     const missingProject = requiresProject && !context.project.projectId && !['project', 'aiStudio'].includes(module);
 

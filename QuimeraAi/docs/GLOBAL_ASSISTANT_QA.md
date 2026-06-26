@@ -62,7 +62,16 @@ Coverage:
 - The Global Assistant no longer fast-paths website creation with empty arguments.
 - Command Center context includes the active project, dashboard surface, enabled services, feature flags, and a bounded project list.
 - Mutating or confirmation-required dashboard requests produce an Operating Layer preview and do not continue into legacy execution.
+- The Global Assistant can store a pending Operating Layer task and apply it after an explicit confirm message.
+- Confirmation/cancellation phrases are detected before legacy chat execution.
+- Draft-safe handlers can apply and roll back email campaign, email audience, email automation, CRM lead, ecommerce product, and structured appointment actions.
+- Appointment apply fails safely when required structured schedule fields are missing.
 - Blocked plans surface blockers in the assistant drawer.
+
+Last focused run on 2026-06-26:
+
+- 11 files passed.
+- 35 tests passed.
 
 ## GA1 manual checks
 
@@ -72,7 +81,8 @@ Coverage:
 - Confirm `docs/GLOBAL_ASSISTANT_ARCHITECTURE.md` describes each existing chat surface.
 - Confirm `docs/CHAT_SURFACES_INVENTORY.md` is updated when a new chat, assistant, simulator, inbox, or module AI surface is added.
 - Confirm no Supabase migration was added in GA1.
-- Confirm no module connector applies changes yet.
+- Confirm no module connector applies changes without preview and explicit confirmation.
+- Confirm default module connectors create review-gated drafts only.
 
 ## GA2 local Supabase checks
 
@@ -106,6 +116,8 @@ When GA4-GA10 land, manually verify:
 - Cmd/Ctrl+K opens the global command palette from dashboard, editor, and module pages.
 - Command palette can open modules, open a project, and send freeform/action requests to the Global Assistant drawer.
 - Mutating dashboard request displays an Operating Layer plan and does not apply changes without confirmation.
+- Reply "confirmar" to a pending draft-safe plan and verify it applies through the Operating Layer result message.
+- Reply "cancelar" to a pending plan and verify the pending task is discarded in the drawer.
 - Explicit "Abre AI Studio" still opens AI Studio.
 - Requests that mention "chat" resolve the correct owner surface before planning: Global Assistant, ChatCore public runtime, Chatbot Engine config/test, landing chatbot, module assistant, or human support chat.
 - Switch project by chat.

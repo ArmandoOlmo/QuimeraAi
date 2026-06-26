@@ -60,6 +60,9 @@ describe('GlobalAssistantActionRegistry', () => {
             safetyLevel: 'critical',
             requiresConfirmation: true,
         });
+        expect(typeof globalAssistantActionRegistry.get('create_email_campaign')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_product')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_lead')?.execute).toBe('function');
     });
 
     it('blocks admin actions outside owner or super admin mode', () => {
