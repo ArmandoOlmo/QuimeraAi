@@ -4,15 +4,18 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
         });
 
         const analytics = catalog.modules.find(module => module.module === 'analytics');
+        const appointments = catalog.modules.find(module => module.module === 'appointments');
         const email = catalog.modules.find(module => module.module === 'emailMarketing');
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
         const crm = catalog.modules.find(module => module.module === 'crm');
         const media = catalog.modules.find(module => module.module === 'media');
+        const website = catalog.modules.find(module => module.module === 'website');
+        const storefront = catalog.modules.find(module => module.module === 'storefront');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -26,10 +29,16 @@ describe('globalAssistantCapabilityCatalog', () => {
             'identify_blockers',
             'export_report',
         ]));
+        expect(appointments?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_appointment',
+            'update_appointment',
+            'configure_availability',
+        ]));
         expect(email?.executableActionTypes).toEqual(expect.arrayContaining([
             'create_email_campaign',
             'create_email_automation',
             'create_audience',
+            'generate_email_copy',
         ]));
         expect(email?.previewOnlyActionTypes).toContain('send_email_campaign');
         expect(ecommerce?.executableActionTypes).toEqual(expect.arrayContaining([
@@ -52,6 +61,17 @@ describe('globalAssistantCapabilityCatalog', () => {
             'generate_image',
             'edit_image',
             'generate_video',
+        ]));
+        expect(website?.executableActionTypes).toEqual(expect.arrayContaining([
+            'edit_website_section',
+            'update_section_copy',
+            'reorder_sections',
+            'toggle_section_visibility',
+        ]));
+        expect(storefront?.executableActionTypes).toEqual(expect.arrayContaining([
+            'add_storefront_section',
+            'edit_storefront_theme',
+            'update_product_card_style',
         ]));
         expect(createEmail).toMatchObject({
             executable: true,

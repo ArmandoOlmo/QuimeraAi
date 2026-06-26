@@ -19,6 +19,10 @@ import {
     type ChatbotEngineSurfaceContext,
 } from '../utils/chatbotEngine/surfaceContext';
 import { canRenderChatbotSurface } from '../utils/chatbotEngine/deploymentGuard';
+import {
+    buildChatCoreAppointmentPayloadNotes,
+    buildChatCoreLeadPayloadNotes,
+} from '../utils/chatbotEngine/chatCorePayloadNotes';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
@@ -426,13 +430,24 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
     // Handle lead capture
     const handleLeadCapture = async (leadData: Partial<Lead>): Promise<string | undefined> => {
+        const customerRequestNotes = buildChatCoreLeadPayloadNotes({
+            leadData: leadData as Record<string, unknown>,
+            projectName: activeProject?.name || standaloneProject?.name,
+            agentName: aiAssistantConfig.agentName,
+            sourceSurface: effectiveChatbotEngineContext.sourceSurface,
+            sourceModule: effectiveChatbotEngineContext.sourceModule,
+            chatbotEngineContext: effectiveChatbotEngineContext,
+            locale: i18n.language,
+        });
         const fullLeadData = {
             ...leadData,
+            notes: customerRequestNotes,
             source: 'chatbot-widget' as const,
             status: 'new' as const,
             tags: ['chatbot-widget', ...(leadData.tags || [])],
             metadata: {
                 ...(leadData.metadata || {}),
+                customerRequestSummary: customerRequestNotes,
                 canonicalEmail: (leadData.metadata as Record<string, unknown> | undefined)?.canonicalEmail || buildCanonicalEmailDraftMetadata({
                     sourceModule: 'chatcore',
                     sourceComponent: 'ChatbotWidget',
@@ -530,6 +545,15 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
         const projectId = activeProject?.id || standaloneProject?.id;
         const ownerId = activeProject?.userId || standaloneProject?.userId;
+        const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
+            appointmentData: appointmentData as unknown as Record<string, unknown>,
+            projectName: activeProject?.name || standaloneProject?.name,
+            agentName: aiAssistantConfig.agentName,
+            sourceSurface: effectiveChatbotEngineContext.sourceSurface,
+            sourceModule: effectiveChatbotEngineContext.sourceModule,
+            chatbotEngineContext: effectiveChatbotEngineContext,
+            locale: i18n.language,
+        });
 
         if (!projectId) {
             console.error('[ChatbotWidget] Cannot create appointment: no project ID');
@@ -544,7 +568,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     tenantId: currentTenantId,
                     title: appointmentData.title,
                     description: appointmentData.description,
-                    notes: appointmentData.notes,
+                    notes: customerRequestNotes,
                     type: appointmentData.type || 'consultation',
                     startDate: appointmentData.startDate,
                     endDate: appointmentData.endDate,
@@ -573,7 +597,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         widgetMode: standaloneProject ? 'standalone' : 'editor',
                         locale: i18n.language,
                         bookingChannel: appointmentData.bookingChannel,
-                        customerRequestSummary: appointmentData.notes,
+                        customerRequestSummary: customerRequestNotes,
                     },
                 });
                 if (result.leadId) setLeadCaptured(true);
@@ -592,7 +616,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             const appointmentPayload = {
                 title: appointmentData.title,
                 description: appointmentData.description,
-                notes: appointmentData.notes,
+                notes: customerRequestNotes,
                 type: appointmentData.type,
                 startDate: appointmentData.startDate.toISOString(),
                 endDate: appointmentData.endDate.toISOString(),
@@ -615,7 +639,7 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                     sourceModule: effectiveChatbotEngineContext.sourceModule,
                     chatbotEngineContext: effectiveChatbotEngineContext,
                     bookingChannel: appointmentData.bookingChannel,
-                    customerRequestSummary: appointmentData.notes,
+                    customerRequestSummary: customerRequestNotes,
                     widgetMode: standaloneProject ? 'standalone' : 'editor',
                 },
                 idempotencyKey: `chatbot:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`

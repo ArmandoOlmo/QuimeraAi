@@ -175,11 +175,28 @@ describe('chatbotEngineTestLabService', () => {
 
         expect(result.status).toBe('passing');
         expect(result.passed).toBe(true);
-        expect(result.eventId).toBe('event_1');
+        expect(result.eventId).toBe('event_2');
 
         const updatedData = client.getProjectData() as any;
         expect(updatedData.businessBlueprint.chatbotBlueprint.testing.evaluationStatus).toBe('passing');
-        expect(client.getEvents()[0]).toMatchObject({
+        const configurationEvent = client.getEvents().find(event => event.event_type === 'chatbot_configuration_updated');
+        const runEvent = client.getEvents().find(event => event.event_type === 'chatbot_test_lab_run');
+        expect(configurationEvent).toMatchObject({
+            project_id: 'project_chatbot',
+            event_type: 'chatbot_configuration_updated',
+            action_status: 'executed',
+            source_surface: 'admin_preview',
+            source_module: 'chatbot-engine-dashboard',
+            actor_id: 'qa_1',
+        });
+        expect(configurationEvent.metadata).toMatchObject({
+            configurationType: 'configuration',
+            targetId: 'chatbotBlueprint',
+            operation: 'update',
+            projectScoped: true,
+            idempotent: true,
+        });
+        expect(runEvent).toMatchObject({
             project_id: 'project_chatbot',
             event_type: 'chatbot_test_lab_run',
             action_type: 'record_analytics_event',
@@ -187,7 +204,7 @@ describe('chatbotEngineTestLabService', () => {
             correlation_id: 'run_1',
             actor_id: 'qa_1',
         });
-        expect(client.getEvents()[0].metadata).toMatchObject({
+        expect(runEvent.metadata).toMatchObject({
             runId: 'run_1',
             status: 'passing',
             passedCount: result.scenarioResults.length,

@@ -60,7 +60,15 @@ describe('GlobalAssistantActionRegistry', () => {
             safetyLevel: 'critical',
             requiresConfirmation: true,
         });
+        expect(typeof globalAssistantActionRegistry.get('edit_website_section')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_section_copy')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('reorder_sections')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('toggle_section_visibility')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_product_card_style')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_email_campaign')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('generate_email_copy')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_product')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_product')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_price')?.execute).toBe('function');
@@ -71,6 +79,9 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('update_lead')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('summarize_leads')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_follow_up_task')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_appointment')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('update_appointment')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('configure_availability')?.execute).toBe('function');
     });
 
     it('blocks admin actions outside owner or super admin mode', () => {

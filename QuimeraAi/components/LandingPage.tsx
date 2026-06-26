@@ -846,7 +846,7 @@ const LandingPageContent: React.FC = () => {
 
     return buildChatbotEngineSurfaceContext({
       sourceSurface: isRealtyProperty ? 'realty_property_page' : isCheckout ? 'checkout' : isStorefrontSurface ? 'storefront' : 'website',
-      sourceModule: isRealtyProperty || showRealtyDirectory ? 'real-estate' : isStorefrontSurface ? 'ecommerce' : 'website-builder',
+      sourceModule: isRealtyProperty || showRealtyDirectory ? 'real-estate' : isCheckout ? 'ecommerce' : isStorefrontSurface ? 'storefront-builder' : 'website-builder',
       route,
       entityType,
       entityId: activePage?.id || activePost?.id || activeProjectId || undefined,

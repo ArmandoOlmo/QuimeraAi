@@ -13,6 +13,7 @@ import type {
     ChatbotTestScenarioBlueprint,
 } from '../../types/businessBlueprint';
 import { migrateBusinessBlueprint } from '../../utils/businessBlueprint';
+import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from './chatbotEngineEventService';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type ChatbotTestScenarioStatus = ChatbotTestScenarioBlueprint['status'];
@@ -61,6 +62,9 @@ export interface ChatbotEngineConfigResult {
     businessBlueprint: BusinessBlueprint;
     chatbotBlueprint: ChatbotBlueprint;
     data: Record<string, unknown>;
+    auditEventId?: string;
+    auditWarning?: string;
+    auditDuplicate?: boolean;
 }
 
 export interface ChatbotEngineActionConfigurationResult extends ChatbotEngineConfigResult {
@@ -163,6 +167,85 @@ const SURFACE_DEPLOYMENT_KEYS: ChatbotSurfaceDeploymentKey[] = [
 
 function isRecord(value: unknown): value is Record<string, any> {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function cleanKeyPart(value: unknown): string {
+    if (value === null || value === undefined || value === '') return 'none';
+    return String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80) || 'none';
+}
+
+function getBusinessBlueprintTenantId(blueprint: BusinessBlueprint): string | null {
+    const metadata: Record<string, unknown> = isRecord(blueprint.metadata)
+        ? blueprint.metadata as unknown as Record<string, unknown>
+        : {};
+    const tenantId = metadata.tenantId || metadata.tenant_id || metadata.tenant;
+    return typeof tenantId === 'string' && tenantId.trim() ? tenantId.trim() : null;
+}
+
+function auditFields(result: ChatbotEngineEventResult): Pick<ChatbotEngineConfigResult, 'auditEventId' | 'auditWarning' | 'auditDuplicate'> {
+    return {
+        ...(result.id ? { auditEventId: result.id } : {}),
+        ...(result.warning ? { auditWarning: result.warning } : {}),
+        ...(result.duplicate ? { auditDuplicate: true } : {}),
+    };
+}
+
+async function recordConfigurationMutationEvent(
+    projectId: string,
+    loaded: LoadedProjectChatbotConfig,
+    input: ChatbotConfigurationMutationInput,
+    client: SupabaseLike,
+    event: {
+        configurationType: string;
+        targetId: string;
+        targetLabel?: string | null;
+        operation: string;
+        before?: Record<string, unknown> | null;
+        after?: Record<string, unknown> | null;
+        actionType?: ChatbotActionType | null;
+    },
+): Promise<Pick<ChatbotEngineConfigResult, 'auditEventId' | 'auditWarning' | 'auditDuplicate'>> {
+    const now = input.now || new Date().toISOString();
+    const result = await recordChatbotEngineEvent(client, {
+        tenant_id: getBusinessBlueprintTenantId(loaded.businessBlueprint),
+        project_id: projectId,
+        event_type: 'chatbot_configuration_updated',
+        action_type: event.actionType || null,
+        action_status: 'executed',
+        source_surface: 'admin_preview',
+        source_module: 'chatbot-engine-dashboard',
+        idempotency_key: [
+            'chatbot-engine',
+            projectId,
+            'configuration',
+            event.configurationType,
+            event.targetId,
+            event.operation,
+            now,
+        ].map(cleanKeyPart).join(':').slice(0, 240),
+        actor_type: input.actorId ? 'project_user' : 'system',
+        actor_id: input.actorId || null,
+        metadata: {
+            configurationType: event.configurationType,
+            targetId: event.targetId,
+            targetLabel: event.targetLabel || event.targetId,
+            operation: event.operation,
+            before: event.before || null,
+            after: event.after || null,
+            sourceComponent: 'ChatbotEngineDashboard',
+            projectScoped: true,
+            idempotent: true,
+            auditLogRequired: true,
+        },
+        created_at: now,
+    });
+
+    return auditFields(result);
 }
 
 function getProjectBusinessBlueprint(projectData: Record<string, any>): BusinessBlueprint | null {
@@ -624,16 +707,25 @@ export async function updateChatbotConfig(
 ): Promise<ChatbotEngineConfigResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousMetadata = loaded.chatbotBlueprint.metadata;
     const nextBlueprint: ChatbotBlueprint = {
         ...chatbotBlueprint,
         metadata: updateChatbotBlueprintMetadata(chatbotBlueprint, input, now),
         sourceMap: updateChatbotBlueprintSourceMap(chatbotBlueprint, 'configuration', 'chatbotEngine.configuration'),
     };
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, nextBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'configuration',
+        targetId: 'chatbotBlueprint',
+        operation: 'update',
+        before: { metadata: previousMetadata },
+        after: { metadata: nextBlueprint.metadata },
+    });
 
     return {
         projectId,
         ...persisted,
+        ...audit,
     };
 }
 
@@ -644,6 +736,7 @@ export async function updateProjectChatbotActionReview(
 ): Promise<ChatbotEngineConfigurationResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousAction = loaded.chatbotBlueprint.actions.find(item => item.actionType === input.actionType);
     const chatbotBlueprint = reviewChatbotActionInBlueprint(loaded.chatbotBlueprint, {
         ...input,
         now,
@@ -655,11 +748,29 @@ export async function updateProjectChatbotActionReview(
         });
     }
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, chatbotBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'actionRegistry',
+        targetId: input.actionType,
+        targetLabel: input.actionType,
+        operation: input.enabled ? 'enable_action' : 'disable_action',
+        actionType: input.actionType,
+        before: previousAction ? {
+            enabled: previousAction.enabled,
+            status: previousAction.status,
+            needsReview: previousAction.needsReview,
+        } : null,
+        after: {
+            enabled: action.enabled,
+            status: action.status,
+            needsReview: action.needsReview,
+        },
+    });
 
     return {
         projectId,
         ...persisted,
         action,
+        ...audit,
     };
 }
 
@@ -670,6 +781,7 @@ export async function updateProjectChatbotKnowledgeSourceReview(
 ): Promise<ChatbotEngineKnowledgeConfigurationResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousKnowledgeSource = loaded.chatbotBlueprint.knowledgeSources.find(item => item.id === input.sourceId);
     const chatbotBlueprint = reviewChatbotKnowledgeSourceInBlueprint(loaded.chatbotBlueprint, {
         ...input,
         now,
@@ -681,11 +793,28 @@ export async function updateProjectChatbotKnowledgeSourceReview(
         });
     }
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, chatbotBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'knowledgeCenter',
+        targetId: input.sourceId,
+        targetLabel: knowledgeSource.name,
+        operation: input.enabled ? 'enable_knowledge_source' : 'disable_knowledge_source',
+        before: previousKnowledgeSource ? {
+            status: previousKnowledgeSource.status,
+            needsReview: previousKnowledgeSource.needsReview,
+            confidence: previousKnowledgeSource.confidence,
+        } : null,
+        after: {
+            status: knowledgeSource.status,
+            needsReview: knowledgeSource.needsReview,
+            confidence: knowledgeSource.confidence,
+        },
+    });
 
     return {
         projectId,
         ...persisted,
         knowledgeSource,
+        ...audit,
     };
 }
 
@@ -696,6 +825,7 @@ export async function updateProjectChatbotTestScenarioStatus(
 ): Promise<ChatbotEngineTestConfigurationResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousScenario = loaded.chatbotBlueprint.testing.testScenarios.find(item => item.id === input.scenarioId);
     const chatbotBlueprint = updateChatbotTestScenarioInBlueprint(loaded.chatbotBlueprint, {
         ...input,
         now,
@@ -707,11 +837,28 @@ export async function updateProjectChatbotTestScenarioStatus(
         });
     }
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, chatbotBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'testLab',
+        targetId: input.scenarioId,
+        targetLabel: testScenario.name,
+        operation: `mark_${input.status}`,
+        before: previousScenario ? {
+            status: previousScenario.status,
+            needsReview: previousScenario.needsReview,
+            evaluationStatus: loaded.chatbotBlueprint.testing.evaluationStatus,
+        } : null,
+        after: {
+            status: testScenario.status,
+            needsReview: testScenario.needsReview,
+            evaluationStatus: chatbotBlueprint.testing.evaluationStatus,
+        },
+    });
 
     return {
         projectId,
         ...persisted,
         testScenario,
+        ...audit,
     };
 }
 
@@ -722,18 +869,36 @@ export async function updateProjectChatbotSurfaceDeployment(
 ): Promise<ChatbotEngineSurfaceConfigurationResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousSurface = loaded.chatbotBlueprint.channels[input.surfaceId];
     const chatbotBlueprint = updateChatbotSurfaceDeploymentInBlueprint(loaded.chatbotBlueprint, {
         ...input,
         now,
     });
     const surface = chatbotBlueprint.channels[input.surfaceId];
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, chatbotBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'deploySettings',
+        targetId: input.surfaceId,
+        targetLabel: surface.sourceSurface,
+        operation: `surface_${input.status}`,
+        before: {
+            enabled: previousSurface.enabled,
+            status: previousSurface.status,
+            needsReview: previousSurface.needsReview,
+        },
+        after: {
+            enabled: surface.enabled,
+            status: surface.status,
+            needsReview: surface.needsReview,
+        },
+    });
 
     return {
         projectId,
         ...persisted,
         surface,
         surfaceId: input.surfaceId,
+        ...audit,
     };
 }
 
@@ -744,16 +909,37 @@ export async function updateProjectChatbotVoiceSettings(
 ): Promise<ChatbotEngineVoiceConfigurationResult> {
     const now = input.now || new Date().toISOString();
     const loaded = await loadProjectChatbotConfig(projectId, client);
+    const previousVoiceSettings = loaded.chatbotBlueprint.deployment.voiceSettings;
+    const previousVoiceSurface = loaded.chatbotBlueprint.channels.voice;
     const chatbotBlueprint = updateChatbotVoiceSettingsInBlueprint(loaded.chatbotBlueprint, {
         ...input,
         now,
     });
     const persisted = await persistProjectChatbotBlueprint(projectId, loaded.projectData, chatbotBlueprint, now, client);
+    const audit = await recordConfigurationMutationEvent(projectId, loaded, { ...input, now }, client, {
+        configurationType: 'voiceSettings',
+        targetId: 'voice',
+        targetLabel: 'voice',
+        operation: input.enabled ? 'enable_voice' : 'disable_voice',
+        before: {
+            enabled: previousVoiceSettings.enabled,
+            provider: previousVoiceSettings.provider,
+            agentConfigured: Boolean(previousVoiceSettings.agentId),
+            surfaceStatus: previousVoiceSurface.status,
+        },
+        after: {
+            enabled: chatbotBlueprint.deployment.voiceSettings.enabled,
+            provider: chatbotBlueprint.deployment.voiceSettings.provider,
+            agentConfigured: Boolean(chatbotBlueprint.deployment.voiceSettings.agentId),
+            surfaceStatus: chatbotBlueprint.channels.voice.status,
+        },
+    });
 
     return {
         projectId,
         ...persisted,
         voiceSettings: chatbotBlueprint.deployment.voiceSettings,
+        ...audit,
     };
 }
 

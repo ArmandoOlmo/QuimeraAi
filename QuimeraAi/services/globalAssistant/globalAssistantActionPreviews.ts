@@ -165,6 +165,93 @@ export function enrichAssistantExecutionPreview(
     action: AssistantAction,
     definition: AssistantActionDefinition,
 ): AssistantExecutionPreview {
+    if (['edit_website_section', 'update_section_copy', 'reorder_sections', 'toggle_section_visibility'].includes(action.actionType)) {
+        const sectionId = asText(action.input.sectionId) || '$selected_section';
+        const path = asText(action.input.path);
+        const target = action.actionType === 'reorder_sections'
+            ? 'component_order'
+            : action.actionType === 'toggle_section_visibility'
+                ? `section_visibility.${sectionId}`
+                : `data.${sectionId}${path ? `.${path}` : ''}`;
+
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: target,
+            },
+            after: {
+                operation: 'update_project_website_snapshot',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                path: target,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                generatedByAI: true,
+                needsReview: true,
+            },
+            diff: {
+                updated: [`projects.${action.projectId}.${target}`],
+                synced: ['projects.$current.data.businessBlueprint.websiteBlueprint'],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_website_columns' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Website Builder state and BusinessBlueprint website state are synced from the same project snapshot.',
+                ...(definition.rollbackSupported ? ['Rollback restores previous website project columns.'] : []),
+            ],
+        };
+    }
+
+    if (['add_storefront_section', 'edit_storefront_theme', 'update_product_card_style'].includes(action.actionType)) {
+        const sectionType = asText(action.input.sectionType) || asText(action.input.section_type);
+        const target = action.actionType === 'edit_storefront_theme'
+            ? 'data.storefrontEditor.draft.themeSettings'
+            : action.actionType === 'update_product_card_style'
+                ? 'data.storefrontEditor.draft.sectionSettings.productCards'
+                : `data.storefrontEditor.draft.sections.${sectionType || '$section'}`;
+
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: target,
+            },
+            after: {
+                operation: 'update_storefront_draft',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                path: target,
+                templateState: 'draft',
+                generatedByAI: true,
+                needsReview: true,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`projects.${action.projectId}.${target}`],
+                synced: ['projects.$current.data.businessBlueprint.storefrontBlueprint'],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_storefront_columns' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Storefront Builder changes remain draft-only and do not publish to public_stores.',
+                ...(definition.rollbackSupported ? ['Rollback restores previous project storefront columns.'] : []),
+            ],
+        };
+    }
+
     if (action.actionType === 'update_lead') {
         const leadId = asText(action.input.leadId) || asText(action.input.lead_id) || '$active_lead';
         return {
@@ -194,6 +281,132 @@ export function enrichAssistantExecutionPreview(
                 ...preview.risks,
                 'Updates one project-scoped CRM lead and records Global Assistant metadata.',
                 ...(definition.rollbackSupported ? ['Rollback restores the previous lead row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'generate_email_copy') {
+        const campaignId = asText(action.input.campaignId) || asText(action.input.campaign_id);
+        const hasCampaignTarget = Boolean(campaignId);
+        return {
+            ...preview,
+            before: hasCampaignTarget
+                ? {
+                    table: 'email_campaigns',
+                    id: campaignId,
+                    projectId: action.projectId,
+                }
+                : {
+                    exists: false,
+                    table: 'email_campaigns',
+                    projectId: action.projectId,
+                },
+            after: hasCampaignTarget
+                ? {
+                    operation: 'update_project_scoped_row',
+                    table: 'email_campaigns',
+                    id: campaignId,
+                    projectId: action.projectId,
+                    status: 'draft',
+                    generatedByAI: true,
+                    needsReview: true,
+                    noAutoSend: true,
+                    sourceModule: 'global-assistant',
+                    sourceComponent: 'OperatingLayer',
+                    sourceEntityType: 'assistant_action',
+                    sourceEntityId: action.id,
+                }
+                : draftTarget('email_campaigns', action, 'AI email copy draft'),
+            diff: hasCampaignTarget
+                ? {
+                    updated: [
+                        `email_campaigns.${campaignId}.subject`,
+                        `email_campaigns.${campaignId}.preview_text`,
+                        `email_campaigns.${campaignId}.html_content`,
+                        `email_campaigns.${campaignId}.email_document`,
+                    ],
+                    reviewRequired: true,
+                    noAutoSend: true,
+                    rollback: definition.rollbackSupported ? 'restore_previous_email_campaign_snapshot' : 'not_available',
+                }
+                : {
+                    created: ['email_campaigns.$pending'],
+                    reviewRequired: true,
+                    noAutoSend: true,
+                    rollback: definition.rollbackSupported ? 'delete_created_email_copy_draft' : 'not_available',
+                },
+            risks: [
+                ...preview.risks,
+                'Generated email copy remains draft-only and cannot be sent until reviewed.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous campaign or deletes the created draft.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'update_appointment') {
+        const appointmentId = asText(action.input.appointmentId) || asText(action.input.appointment_id) || '$active_appointment';
+        return {
+            ...preview,
+            before: {
+                table: 'project_appointments',
+                id: appointmentId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_project_scoped_row',
+                table: 'project_appointments',
+                id: appointmentId,
+                projectId: action.projectId,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                generatedByAI: true,
+                needsReview: true,
+            },
+            diff: {
+                updated: [`project_appointments.${appointmentId}`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_appointment_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Updates one project-scoped appointment and records Global Assistant metadata.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous appointment row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'configure_availability') {
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: 'data.businessBlueprint.appointmentsBlueprint.availability',
+            },
+            after: {
+                operation: 'update_business_blueprint_availability',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                path: 'data.businessBlueprint.appointmentsBlueprint.availability',
+                availabilityStatus: 'draft',
+                needsReview: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`projects.${action.projectId}.data.businessBlueprint.appointmentsBlueprint.availability`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_data' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Availability changes remain in BusinessBlueprint draft/review state before public booking relies on them.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous project data snapshot.'] : []),
             ],
         };
     }

@@ -91,6 +91,12 @@ describe('globalAssistantIntentRouter', () => {
             module: 'emailMarketing',
             actionCandidates: ['create_email_campaign'],
         });
+
+        expect(routeAssistantIntent('Genera copy de email para reservas VIP', context)).toMatchObject({
+            module: 'emailMarketing',
+            intent: 'generate_content',
+            actionCandidates: ['generate_email_copy'],
+        });
     });
 
     it('keeps restaurant reservations and realty showings out of generic Appointments', () => {
@@ -128,6 +134,46 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes Website Builder edits to structured website actions', () => {
+        expect(routeAssistantIntent('Oculta la seccion hero del website', context)).toMatchObject({
+            module: 'website',
+            intent: 'edit',
+            actionCandidates: ['toggle_section_visibility'],
+        });
+
+        expect(routeAssistantIntent('Reordena el orden de secciones del website', context)).toMatchObject({
+            module: 'website',
+            intent: 'edit',
+            actionCandidates: ['reorder_sections'],
+        });
+
+        expect(routeAssistantIntent('Actualiza el texto del headline del website', context)).toMatchObject({
+            module: 'website',
+            intent: 'edit',
+            actionCandidates: ['update_section_copy'],
+        });
+    });
+
+    it('routes Storefront Builder requests to structured storefront actions', () => {
+        expect(routeAssistantIntent('Edita el theme del storefront', context)).toMatchObject({
+            module: 'storefront',
+            intent: 'edit',
+            actionCandidates: ['edit_storefront_theme'],
+        });
+
+        expect(routeAssistantIntent('Cambia product cards del storefront a editorial', context)).toMatchObject({
+            module: 'storefront',
+            intent: 'edit',
+            actionCandidates: ['update_product_card_style'],
+        });
+
+        expect(routeAssistantIntent('Agrega una seccion sale countdown al storefront', context)).toMatchObject({
+            module: 'storefront',
+            intent: 'create',
+            actionCandidates: ['add_storefront_section'],
+        });
+    });
+
     it('routes CRM search, summaries, lead updates, and follow-up tasks to CRM actions', () => {
         expect(routeAssistantIntent('Busca Maria en CRM', context)).toMatchObject({
             module: 'crm',
@@ -151,6 +197,32 @@ describe('globalAssistantIntentRouter', () => {
             module: 'crm',
             intent: 'create',
             actionCandidates: ['create_follow_up_task'],
+        });
+    });
+
+    it('routes Appointments create, update, availability, and calendar requests explicitly', () => {
+        expect(routeAssistantIntent('Crea una cita para Ana', context)).toMatchObject({
+            module: 'appointments',
+            intent: 'create',
+            actionCandidates: ['create_appointment'],
+        });
+
+        expect(routeAssistantIntent('Actualiza esta cita a confirmed', context)).toMatchObject({
+            module: 'appointments',
+            intent: 'edit',
+            actionCandidates: ['update_appointment'],
+        });
+
+        expect(routeAssistantIntent('Configura disponibilidad de appointments', context)).toMatchObject({
+            module: 'appointments',
+            intent: 'edit',
+            actionCandidates: ['configure_availability'],
+        });
+
+        expect(routeAssistantIntent('Abre el calendario de citas', context)).toMatchObject({
+            module: 'appointments',
+            intent: 'open',
+            actionCandidates: ['open_calendar'],
         });
     });
 

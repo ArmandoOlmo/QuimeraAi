@@ -512,7 +512,7 @@ const StorefrontApp: React.FC<StorefrontAppProps> = ({
 
         return buildChatbotEngineSurfaceContext({
             sourceSurface: isCheckout ? 'checkout' : 'storefront',
-            sourceModule: 'ecommerce',
+            sourceModule: isCheckout ? 'ecommerce' : 'storefront-builder',
             route: routePath,
             entityType,
             entityId: route.params.orderId,

@@ -4,6 +4,10 @@ import { MessageSquare, X } from 'lucide-react';
 import { AiAssistantConfig, Project, ChatAppearanceConfig } from '../../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from './ChatCore';
+import {
+    buildChatCoreAppointmentPayloadNotes,
+    buildChatCoreLeadPayloadNotes,
+} from '../../utils/chatbotEngine/chatCorePayloadNotes';
 
 interface EmbedWidgetProps {
     projectId: string;
@@ -88,6 +92,15 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 
     // Handle lead capture for embedded widget
     const handleLeadCapture = async (leadData: any): Promise<string> => {
+        const customerRequestNotes = buildChatCoreLeadPayloadNotes({
+            leadData,
+            projectName: project?.name,
+            agentName: config?.agentName,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            locale: i18n.language,
+        });
+
         try {
             const response = await fetch(`${apiUrl}/${encodedProjectId}/leads`, {
                 method: 'POST',
@@ -96,9 +109,16 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                 },
                 body: JSON.stringify({
                     ...leadData,
+                    notes: customerRequestNotes,
                     source: 'embedded-widget',
                     status: 'new',
-                    tags: ['embedded-widget', ...(leadData.tags || [])]
+                    tags: ['embedded-widget', ...(leadData.tags || [])],
+                    metadata: {
+                        ...(leadData.metadata || {}),
+                        customerRequestSummary: customerRequestNotes,
+                        sourceSurface: 'website',
+                        sourceModule: 'chatcore',
+                    },
                 })
             });
             if (response.ok) {
@@ -112,6 +132,15 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
     };
 
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
+        const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
+            appointmentData: appointmentData as unknown as Record<string, unknown>,
+            projectName: project?.name,
+            agentName: config?.agentName,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            locale: appointmentData.locale || i18n.language,
+        });
+
         try {
             const response = await fetch(`${apiUrl}/${encodedProjectId}/appointments`, {
                 method: 'POST',
@@ -121,7 +150,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                 body: JSON.stringify({
                     title: appointmentData.title,
                     description: appointmentData.description,
-                    notes: appointmentData.notes,
+                    notes: customerRequestNotes,
                     type: appointmentData.type,
                     startDate: appointmentData.startDate.toISOString(),
                     endDate: appointmentData.endDate.toISOString(),
@@ -141,7 +170,7 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
                         ...(appointmentData.metadata || {}),
                         embeddedWidget: true,
                         bookingChannel: appointmentData.bookingChannel,
-                        customerRequestSummary: appointmentData.notes,
+                        customerRequestSummary: customerRequestNotes,
                     },
                 }),
             });
@@ -248,7 +277,6 @@ const EmbedWidget: React.FC<EmbedWidgetProps> = ({
 };
 
 export default EmbedWidget;
-
 
 
 

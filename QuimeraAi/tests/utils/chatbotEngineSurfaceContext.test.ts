@@ -31,6 +31,32 @@ describe('chatbotEngine surface context', () => {
         expect(context.metadata).not.toHaveProperty('ignored');
     });
 
+    it('normalizes canonical storefront context with the storefront owner module', () => {
+        const context = buildChatbotEngineSurfaceContext({
+            sourceSurface: 'storefront',
+            sourceModule: 'storefront-builder',
+            route: '/store/project-1/products',
+            entityType: 'storefront',
+            contextKeys: ['storefront', 'storefront:products'],
+            metadata: {
+                projectId: 'project-1',
+                routeView: 'products',
+            },
+        });
+
+        expect(context).toMatchObject({
+            sourceSurface: 'storefront',
+            sourceModule: 'storefront-builder',
+            route: '/store/project-1/products',
+            entityType: 'storefront',
+            contextKeys: ['storefront', 'storefront:products'],
+        });
+        expect(context.metadata).toMatchObject({
+            projectId: 'project-1',
+            routeView: 'products',
+        });
+    });
+
     it('falls back to website/chatcore for unsafe surfaces and merges overlays', () => {
         const context = mergeChatbotEngineSurfaceContext(
             {
@@ -153,6 +179,35 @@ describe('chatbotEngine surface context', () => {
         expect(context.metadata).toMatchObject({
             projectId: 'project-1',
             propertySlug: 'beach-villa',
+        });
+    });
+
+    it('normalizes admin preview context for dashboard and component previews', () => {
+        const context = buildChatbotEngineSurfaceContext({
+            sourceSurface: 'admin_preview',
+            sourceModule: 'chatbot-engine',
+            route: '/dashboard/component-preview/chatbot',
+            entityType: 'component_preview',
+            entityId: 'chatbot',
+            contextKeys: ['admin_preview', 'component_preview', 'component:chatbot'],
+            metadata: {
+                projectId: 'project-1',
+                selectedComponentId: 'chatbot',
+                sourceComponent: 'ComponentPreview',
+            },
+        });
+
+        expect(context).toMatchObject({
+            sourceSurface: 'admin_preview',
+            sourceModule: 'chatbot-engine',
+            route: '/dashboard/component-preview/chatbot',
+            entityType: 'component_preview',
+            entityId: 'chatbot',
+            contextKeys: ['admin_preview', 'component_preview', 'component:chatbot'],
+        });
+        expect(context.metadata).toMatchObject({
+            projectId: 'project-1',
+            sourceComponent: 'ComponentPreview',
         });
     });
 });

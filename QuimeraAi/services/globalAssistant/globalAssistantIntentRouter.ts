@@ -21,6 +21,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
     if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
+    if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar', 'show', 'visibilidad', 'visible', 'invisible', 'reordena', 'reorder', 'orden de secciones', 'move section'])) return 'edit';
     if (includesAny(text, ['exporta', 'export', 'descarga', 'download'])) return 'report';
     if (includesAny(text, ['abre', 'abrir', 'open', 've a', 'go to', 'muestra'])) return 'open';
     if (includesAny(text, ['busca', 'search', 'encuentra', 'find'])) return 'search';
@@ -30,9 +31,10 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
     if (includesAny(text, ['genera', 'generar', 'generate', 'copy', 'contenido'])) return 'generate_content';
-    if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['crea', 'crear', 'create', 'nuevo', 'nueva', 'add', 'agrega'])) return 'create';
-    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia'])) return 'edit';
+    if (includesAny(text, ['edita', 'editar', 'update', 'actualiza', 'modifica', 'cambia', 'confirma', 'confirmar', 'cancela', 'cancelar', 'completa', 'completar', 'reprograma', 'reprogramar'])) return 'edit';
+    if (includesAny(text, ['configura', 'configurar', 'configure', 'availability', 'disponibilidad', 'horario'])) return 'edit';
+    if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva'])) return 'schedule';
     if (includesAny(text, ['rollback', 'deshacer', 'undo'])) return 'rollback';
     if (includesAny(text, ['explica', 'explain', 'que es', 'what is'])) return 'explain';
     return 'explain';
@@ -80,6 +82,11 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['create_email_campaign'];
     }
 
+    if (module === 'emailMarketing' && (intent === 'generate_content' || intent === 'edit')) {
+        if (includesAny(text, ['copy', 'contenido', 'subject', 'asunto', 'newsletter', 'email', 'correo'])) return ['generate_email_copy'];
+        return ['generate_email_copy'];
+    }
+
     if (module === 'ecommerce') {
         if (intent === 'generate_content') {
             if (includesAny(text, ['copy', 'descripcion', 'description', 'contenido', 'product copy'])) return ['generate_product_copy'];
@@ -97,8 +104,19 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         }
     }
 
-    if (module === 'appointments' && intent === 'edit' && includesAny(text, ['availability', 'disponibilidad', 'horario'])) {
-        return ['configure_availability'];
+    if (module === 'storefront') {
+        if (intent === 'open') return ['open_storefront_builder'];
+        if (includesAny(text, ['theme', 'tema', 'colores', 'colors', 'paleta', 'palette'])) return ['edit_storefront_theme'];
+        if (includesAny(text, ['product card', 'product cards', 'card style', 'tarjeta', 'tarjetas', 'cards'])) return ['update_product_card_style'];
+        if (intent === 'create' || includesAny(text, ['section', 'seccion', 'bloque', 'block', 'add', 'agrega', 'anade', 'añade'])) return ['add_storefront_section'];
+        if (intent === 'edit') return ['edit_storefront_theme', 'update_product_card_style'];
+    }
+
+    if (module === 'appointments') {
+        if (includesAny(text, ['availability', 'disponibilidad', 'horario'])) return ['configure_availability'];
+        if (intent === 'open') return ['open_calendar'];
+        if (intent === 'edit') return ['update_appointment'];
+        if (intent === 'create' || intent === 'schedule') return ['create_appointment'];
     }
 
     if (module === 'bioPage' && ['create', 'edit', 'schedule'].includes(intent)) {
@@ -145,6 +163,15 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['create_project_from_prompt'];
     }
 
+    if (module === 'website') {
+        if (includesAny(text, ['reordena', 'reorder', 'orden de secciones', 'move section'])) return ['reorder_sections'];
+        if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar seccion', 'mostrar section', 'show section', 'visibilidad', 'visible', 'invisible'])) return ['toggle_section_visibility'];
+        if (intent === 'edit') {
+            if (includesAny(text, ['copy', 'texto', 'headline', 'titulo', 'subtitulo', 'descripcion', 'description'])) return ['update_section_copy'];
+            return ['edit_website_section', 'update_section_copy'];
+        }
+    }
+
     if (module === 'project' && ['open', 'edit'].includes(intent)) {
         if (includesAny(text, ['cambia proyecto', 'cambia al proyecto', 'cambiar proyecto', 'switch project', 'switch to project'])) {
             return ['switch_project'];
@@ -169,6 +196,11 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             create: ['create_product', 'create_category'],
             edit: ['edit_product'],
             open: ['open_orders'],
+        },
+        storefront: {
+            open: ['open_storefront_builder'],
+            create: ['add_storefront_section'],
+            edit: ['edit_storefront_theme', 'update_product_card_style'],
         },
         emailMarketing: {
             create: ['create_email_campaign', 'create_audience', 'create_email_automation'],

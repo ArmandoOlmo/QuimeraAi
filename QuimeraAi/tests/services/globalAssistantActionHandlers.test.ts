@@ -167,7 +167,7 @@ const buildRuntime = (activeServices: string[], featureFlags: string[]) => {
         featureFlags,
     });
 
-    return { fakeSupabase, runtime, context, auditService };
+    return { fakeSupabase, runtime, registry, context, auditService };
 };
 
 const buildWebsitePlan = (): WebsitePlan => ({
@@ -208,6 +208,97 @@ const buildBusinessBlueprint = () => createBusinessBlueprintFromWebsitePlan(buil
     tenantId: 'tenant-1',
 });
 
+const websiteTheme = {
+    globalColors: {
+        primary: '#0f766e',
+        secondary: '#111827',
+        accent: '#f59e0b',
+        background: '#f8fafc',
+        surface: '#ffffff',
+        text: '#111827',
+    },
+    fontFamilyHeader: 'Inter',
+    fontFamilyBody: 'Inter',
+    fontFamilyButton: 'Inter',
+};
+
+const buildWebsiteProjectRow = (): Row => ({
+    id: 'project-1',
+    name: 'Casa Luna',
+    tenant_id: 'tenant-1',
+    user_id: 'user-1',
+    data: {
+        data: {
+            hero: {
+                headline: 'Original headline',
+                subheadline: 'Original subheadline',
+            },
+            features: {
+                title: 'Original features',
+            },
+        },
+        theme: websiteTheme,
+        brandIdentity: { name: 'Casa Luna', industry: 'hospitality' },
+        componentOrder: ['hero', 'features', 'chatbot'],
+        sectionVisibility: { hero: true, features: true, chatbot: true },
+        pages: [{
+            id: 'home',
+            title: 'Home',
+            slug: '/',
+            sections: ['hero', 'features', 'chatbot'],
+            sectionData: {
+                hero: {
+                    headline: 'Original headline',
+                    subheadline: 'Original subheadline',
+                },
+                features: {
+                    title: 'Original features',
+                },
+            },
+            isHomePage: true,
+        }],
+        businessBlueprint: buildBusinessBlueprint(),
+    },
+    theme: websiteTheme,
+    brand_identity: { name: 'Casa Luna', industry: 'hospitality' },
+    component_order: ['hero', 'features', 'chatbot'],
+    section_visibility: { hero: true, features: true, chatbot: true },
+    pages: [{
+        id: 'home',
+        title: 'Home',
+        slug: '/',
+        sections: ['hero', 'features', 'chatbot'],
+        sectionData: {
+            hero: {
+                headline: 'Original headline',
+                subheadline: 'Original subheadline',
+            },
+            features: {
+                title: 'Original features',
+            },
+        },
+        isHomePage: true,
+    }],
+    last_updated: '2026-06-26T12:00:00.000Z',
+});
+
+const buildAssistantAction = (actionType: string, input: Row): any => ({
+    id: `action-${actionType}`,
+    taskId: 'task-website',
+    actionType,
+    module: 'website',
+    target: { module: 'website' },
+    input,
+    projectId: 'project-1',
+    tenantId: 'tenant-1',
+    userId: 'user-1',
+    safetyLevel: 'high',
+    requiresConfirmation: true,
+    status: 'previewed',
+    createdAt: '2026-06-26T13:00:00.000Z',
+    updatedAt: '2026-06-26T13:00:00.000Z',
+});
+
 describe('Global Assistant default action handlers', () => {
     it('creates and rolls back a review-gated email campaign draft', async () => {
         const { fakeSupabase, runtime, context, auditService } = buildRuntime(['emailMarketing'], ['emailMarketing']);
@@ -243,6 +334,126 @@ describe('Global Assistant default action handlers', () => {
 
         expect(fakeSupabase.rowsByTable.email_campaigns).toHaveLength(0);
         expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('generates review-gated email copy as a draft campaign without queueing sends', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['emailMarketing'], ['emailMarketing']);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Genera copy de email para reservas VIP',
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['generate_email_copy']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const campaigns = fakeSupabase.rowsByTable.email_campaigns;
+
+        expect(applied.task.status).toBe('completed');
+        expect(campaigns).toHaveLength(1);
+        expect(campaigns[0]).toMatchObject({
+            project_id: 'project-1',
+            store_id: 'project-1',
+            status: 'draft',
+            generated_by_ai: true,
+            needs_review: true,
+            safe_to_edit: true,
+            source_module: 'global-assistant',
+            source_component: 'OperatingLayer',
+            source_event: 'generate_email_copy',
+        });
+        expect(campaigns[0].metadata).toMatchObject({
+            noAutoSend: true,
+            globalAssistant: {
+                actionType: 'generate_email_copy',
+                needsReview: true,
+            },
+        });
+        expect(campaigns[0].email_document).toMatchObject({
+            status: 'needs_review',
+            generatedByAI: true,
+            needsReview: true,
+        });
+        expect(fakeSupabase.rowsByTable.email_outbox || []).toHaveLength(0);
+        expect(fakeSupabase.rowsByTable.email_logs || []).toHaveLength(0);
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.email_campaigns).toHaveLength(0);
+    });
+
+    it('updates active email campaign copy and rolls back the previous campaign snapshot', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['emailMarketing'], ['emailMarketing']);
+        fakeSupabase.rowsByTable.email_campaigns = [{
+            id: 'campaign-1',
+            project_id: 'project-1',
+            store_id: 'project-1',
+            name: 'Original campaign',
+            subject: 'Original subject',
+            preview_text: 'Original preview',
+            html_content: '<p>Original body</p>',
+            email_document: { subject: 'Original subject' },
+            status: 'draft',
+            generated_by_ai: false,
+            needs_review: false,
+            safe_to_edit: true,
+            metadata: { source: 'manual' },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const campaignContext = {
+            ...context,
+            activeEntityType: 'email_campaign',
+            activeEntityId: 'campaign-1',
+        };
+        const planned = await runtime.planRequest({
+            context: campaignContext,
+            request: 'Genera copy de email para esta campana con asunto Reservas VIP',
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['generate_email_copy']);
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: campaignContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.email_campaigns[0]).toMatchObject({
+            id: 'campaign-1',
+            status: 'draft',
+            generated_by_ai: true,
+            needs_review: true,
+        });
+        expect(fakeSupabase.rowsByTable.email_campaigns[0].subject).toBe('Reservas VIP');
+        expect(fakeSupabase.rowsByTable.email_campaigns[0].metadata).toMatchObject({
+            noAutoSend: true,
+            globalAssistant: {
+                actionType: 'generate_email_copy',
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: campaignContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.email_campaigns[0]).toMatchObject({
+            subject: 'Original subject',
+            preview_text: 'Original preview',
+            html_content: '<p>Original body</p>',
+            generated_by_ai: false,
+            needs_review: false,
+            updated_at: '2026-06-26T12:00:00.000Z',
+        });
     });
 
     it('creates an ecommerce product draft with assistant review metadata', async () => {
@@ -818,6 +1029,218 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.projects || []).toHaveLength(0);
     });
 
+    it('updates website section copy through project state and rolls it back', async () => {
+        const { fakeSupabase, registry, context } = buildRuntime([], ['websiteBuilder']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const definition = registry.get('update_section_copy');
+        expect(definition?.execute).toBeTypeOf('function');
+        expect(definition?.rollback).toBeTypeOf('function');
+
+        const input = {
+            projectId: 'project-1',
+            sectionId: 'hero',
+            path: 'headline',
+            value: 'Reserva tu experiencia VIP',
+            request: 'Actualiza el headline del hero',
+        };
+        const action = buildAssistantAction('update_section_copy', input);
+        const result = await definition!.execute!(input, { action, context }) as Row;
+        const project = fakeSupabase.rowsByTable.projects[0];
+
+        expect(project.data.data.hero.headline).toBe('Reserva tu experiencia VIP');
+        expect(project.pages[0].sectionData.hero.headline).toBe('Reserva tu experiencia VIP');
+        expect(project.data.assistantDrafts.website).toMatchObject({
+            generatedByAI: true,
+            needsReview: true,
+            sourceModule: 'global-assistant',
+            lastActionType: 'update_section_copy',
+        });
+        const heroBlueprint = project.data.businessBlueprint.websiteBlueprint.sectionBlueprints
+            .find((section: Row) => section.type === 'hero');
+        expect(heroBlueprint.metadata).toMatchObject({
+            userModified: true,
+            lockedFromRegeneration: true,
+            lastEditedBy: 'user-1',
+        });
+        expect(result.diff).toMatchObject({
+            rollback: 'restore_previous_project_website_columns',
+        });
+
+        await definition!.rollback!(input, {
+            action,
+            snapshot: {
+                id: 'rollback-website-copy',
+                actionId: action.id,
+                beforeSnapshot: result.beforeSnapshot,
+                afterSnapshot: result.afterSnapshot,
+                createdAt: '2026-06-26T13:30:00.000Z',
+            },
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.data.hero.headline).toBe('Original headline');
+        expect(fakeSupabase.rowsByTable.projects[0].pages[0].sectionData.hero.headline).toBe('Original headline');
+        expect(fakeSupabase.rowsByTable.projects[0].last_updated).toBe('2026-06-26T12:00:00.000Z');
+    });
+
+    it('updates website section visibility and order in the canonical project columns', async () => {
+        const { fakeSupabase, registry, context } = buildRuntime([], ['websiteBuilder']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const toggleDefinition = registry.get('toggle_section_visibility');
+        const reorderDefinition = registry.get('reorder_sections');
+
+        const toggleInput = {
+            projectId: 'project-1',
+            sectionId: 'hero',
+            visible: false,
+            request: 'Oculta la seccion hero',
+        };
+        await toggleDefinition!.execute!(toggleInput, {
+            action: buildAssistantAction('toggle_section_visibility', toggleInput),
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].section_visibility.hero).toBe(false);
+        expect(fakeSupabase.rowsByTable.projects[0].data.sectionVisibility.hero).toBe(false);
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.websiteBlueprint.sectionVisibility.hero).toBe(false);
+
+        const reorderInput = {
+            projectId: 'project-1',
+            newOrder: ['features', 'hero'],
+            request: 'Reordena las secciones: features primero y hero segundo',
+        };
+        await reorderDefinition!.execute!(reorderInput, {
+            action: buildAssistantAction('reorder_sections', reorderInput),
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].component_order).toEqual(['features', 'hero', 'chatbot']);
+        expect(fakeSupabase.rowsByTable.projects[0].data.componentOrder).toEqual(['features', 'hero', 'chatbot']);
+        expect(fakeSupabase.rowsByTable.projects[0].pages[0].sections).toEqual(['features', 'hero', 'chatbot']);
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.websiteBlueprint.componentOrder).toEqual(['features', 'hero', 'chatbot']);
+    });
+
+    it('updates Storefront Builder draft sections and rolls back without publishing', async () => {
+        const { fakeSupabase, registry, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const definition = registry.get('add_storefront_section');
+        expect(definition?.execute).toBeTypeOf('function');
+        expect(definition?.rollback).toBeTypeOf('function');
+
+        const input = {
+            projectId: 'project-1',
+            sectionType: 'saleCountdown',
+            data: {
+                title: 'Oferta VIP',
+                endDate: '2026-07-31T23:59:00.000Z',
+                variant: 'banner',
+            },
+            request: 'Agrega un sale countdown al storefront',
+        };
+        const action = buildAssistantAction('add_storefront_section', input);
+        const result = await definition!.execute!(input, { action, context }) as Row;
+        const project = fakeSupabase.rowsByTable.projects[0];
+
+        expect(project.component_order).toEqual(['hero', 'features', 'chatbot']);
+        expect(project.section_visibility.saleCountdown).toBeUndefined();
+        expect(project.data.componentOrder).toEqual(['hero', 'features', 'chatbot']);
+        expect(project.data.sectionVisibility.saleCountdown).toBeUndefined();
+        expect(project.data.data.storefrontEditor).toMatchObject({
+            templateState: 'draft',
+            source: 'global-assistant',
+            needsReview: true,
+            safeToEdit: true,
+        });
+        expect(project.data.data.storefrontEditor.draft.componentOrder).toContain('saleCountdown');
+        expect(project.data.data.storefrontEditor.draft.sectionVisibility.saleCountdown).toBe(true);
+        expect(project.data.data.storefrontEditor.draft.sectionSettings.saleCountdown).toMatchObject({
+            title: 'Oferta VIP',
+            endDate: '2026-07-31T23:59:00.000Z',
+            variant: 'banner',
+        });
+        const saleCountdownBlueprint = project.data.businessBlueprint.storefrontBlueprint.sections
+            .find((section: Row) => section.type === 'saleCountdown');
+        expect(saleCountdownBlueprint).toMatchObject({
+            status: 'needs_review',
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+        });
+        expect(project.data.assistantDrafts.storefront).toMatchObject({
+            noAutoPublish: true,
+            sourceModule: 'global-assistant',
+            lastActionType: 'add_storefront_section',
+        });
+        expect(fakeSupabase.rowsByTable.public_stores || []).toHaveLength(0);
+
+        await definition!.rollback!(input, {
+            action,
+            snapshot: {
+                id: 'rollback-storefront-section',
+                actionId: action.id,
+                beforeSnapshot: result.beforeSnapshot,
+                afterSnapshot: result.afterSnapshot,
+                createdAt: '2026-06-26T13:30:00.000Z',
+            },
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.data.storefrontEditor).toBeUndefined();
+        expect(fakeSupabase.rowsByTable.projects[0].component_order).toEqual(['hero', 'features', 'chatbot']);
+        expect(fakeSupabase.rowsByTable.public_stores || []).toHaveLength(0);
+    });
+
+    it('updates Storefront theme and product-card style as review-gated drafts', async () => {
+        const { fakeSupabase, registry, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        const themeDefinition = registry.get('edit_storefront_theme');
+        const cardDefinition = registry.get('update_product_card_style');
+
+        const themeInput = {
+            projectId: 'project-1',
+            updates: {
+                primaryColor: '#123456',
+                backgroundColor: '#f7f3ed',
+                headingColor: '#111111',
+            },
+            request: 'Cambia colores del theme del storefront',
+        };
+        await themeDefinition!.execute!(themeInput, {
+            action: buildAssistantAction('edit_storefront_theme', themeInput),
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.data.storefrontEditor.draft.themeSettings).toMatchObject({
+            primaryColor: '#123456',
+            backgroundColor: '#f7f3ed',
+            headingColor: '#111111',
+        });
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.storefrontBlueprint).toMatchObject({
+            status: 'needs_review',
+            needsReview: true,
+        });
+
+        const cardInput = {
+            projectId: 'project-1',
+            updates: {
+                productCardVariant: 'editorial',
+            },
+            request: 'Cambia product cards del storefront a editorial',
+        };
+        await cardDefinition!.execute!(cardInput, {
+            action: buildAssistantAction('update_product_card_style', cardInput),
+            context,
+        });
+
+        const editorSettings = fakeSupabase.rowsByTable.projects[0].data.data.storefrontEditor.draft.sectionSettings;
+        expect(editorSettings.featuredProducts).toMatchObject({
+            cardStyle: 'editorial',
+            productCardVariant: 'editorial',
+        });
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.storefrontBlueprint.productCardVariant).toBe('editorial');
+        expect(fakeSupabase.rowsByTable.public_stores || []).toHaveLength(0);
+    });
+
     it('requires confirmation before switching to another resolved project', async () => {
         const { runtime, context } = buildRuntime([], []);
         const projectAwareContext = {
@@ -886,6 +1309,156 @@ describe('Global Assistant default action handlers', () => {
                 reviewRequired: true,
             },
         });
+    });
+
+    it('creates and rolls back a canonical appointment from a scheduled request', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['appointments'], []);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea una cita para Ana el 2026-07-01T14:00:00.000Z hasta 2026-07-01T15:00:00.000Z',
+            enabledServices: ['appointments'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['create_appointment']);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        expect(planned.plan.blockers).toEqual([]);
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const appointments = fakeSupabase.rowsByTable.project_appointments;
+
+        expect(applied.task.status).toBe('completed');
+        expect(appointments).toHaveLength(1);
+        expect(appointments[0]).toMatchObject({
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            start_date: '2026-07-01T14:00:00.000Z',
+            end_date: '2026-07-01T15:00:00.000Z',
+            source: 'dashboard',
+            source_module: 'global-assistant',
+            source_component: 'OperatingLayer',
+            generated_by_ai: true,
+            needs_review: true,
+        });
+        expect(appointments[0].metadata.globalAssistant).toMatchObject({
+            actionType: 'create_appointment',
+            needsReview: true,
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.project_appointments).toHaveLength(0);
+    });
+
+    it('updates and rolls back the active appointment with assistant metadata', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['appointments'], []);
+        fakeSupabase.rowsByTable.project_appointments = [{
+            id: 'appointment-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            title: 'Initial consultation',
+            status: 'scheduled',
+            start_date: '2026-07-01T14:00:00.000Z',
+            end_date: '2026-07-01T15:00:00.000Z',
+            metadata: { source: 'dashboard' },
+            created_at: '2026-06-26T12:00:00.000Z',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        }];
+        const appointmentContext = {
+            ...context,
+            activeEntityType: 'appointment',
+            activeEntityId: 'appointment-1',
+        };
+        const planned = await runtime.planRequest({
+            context: appointmentContext,
+            request: 'Actualiza esta cita a confirmed',
+            enabledServices: ['appointments'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['update_appointment']);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: appointmentContext });
+
+        expect(applied.task.status).toBe('completed');
+        expect(fakeSupabase.rowsByTable.project_appointments[0]).toMatchObject({
+            status: 'confirmed',
+            updated_by: 'user-1',
+            needs_review: true,
+            generated_by_ai: true,
+        });
+        expect(fakeSupabase.rowsByTable.project_appointments[0].metadata.globalAssistant).toMatchObject({
+            actionType: 'update_appointment',
+            needsReview: true,
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: appointmentContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.project_appointments[0]).toMatchObject({
+            status: 'scheduled',
+            updated_at: '2026-06-26T12:00:00.000Z',
+        });
+    });
+
+    it('configures appointment availability in BusinessBlueprint and rolls it back', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['appointments'], []);
+        const businessBlueprint = buildBusinessBlueprint();
+        fakeSupabase.rowsByTable.projects = [{
+            id: 'project-1',
+            data: { businessBlueprint },
+            last_updated: '2026-06-26T12:00:00.000Z',
+        }];
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Configura disponibilidad de appointments para revisar horarios',
+            enabledServices: ['appointments'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['configure_availability']);
+        expect(planned.task.status).toBe('waiting_for_confirmation');
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const appointmentsBlueprint = fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.appointmentsBlueprint;
+
+        expect(applied.task.status).toBe('completed');
+        expect(appointmentsBlueprint).toMatchObject({
+            availabilityStatus: 'draft',
+            needsReview: true,
+        });
+        expect(appointmentsBlueprint.availability).toMatchObject({
+            blockedTimeSource: 'project_appointment_blocks',
+            minimumNoticeMinutes: 120,
+            maxAdvanceDays: 60,
+            intervalMinutes: 30,
+            capacityPerSlot: 1,
+        });
+        expect(appointmentsBlueprint.metadata.globalAssistant).toMatchObject({
+            actionType: 'configure_availability',
+            needsReview: true,
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.appointmentsBlueprint.availabilityStatus).toBe(
+            businessBlueprint.appointmentsBlueprint.availabilityStatus,
+        );
     });
 
     it('creates a Bio Page draft with assistant review metadata', async () => {

@@ -5,11 +5,15 @@ import type {
     AssistantContextSnapshot,
     AssistantRollbackSnapshot,
 } from '../../types/globalAssistant';
-import { createAppointmentCanonical } from '../appointments/appointmentEngineService';
+import { createAppointmentCanonical, type CanonicalAppointmentInput } from '../appointments/appointmentEngineService';
 import { applyChatbotBlueprintToProjectData } from '../chatbotEngine/chatbotEngineConfigurationService';
 import { createAudience } from '../email/emailAudienceService';
 import { createAutomationDraft } from '../email/emailAutomationService';
-import { createCampaignDraft } from '../email/emailCampaignService';
+import { createCampaignDraft, loadCampaign, updateCampaign } from '../email/emailCampaignService';
+import type { BrandIdentity, PageData, PageSection, SitePage, ThemeData } from '../../types';
+import { DEFAULT_STOREFRONT_THEME } from '../../types/ecommerce';
+import type { ProductCardVariant } from '../../types/productCard';
+import type { StorefrontSectionKind } from '../../types/storefrontRenderer';
 import type {
     ChatbotBlueprint,
     ChatbotKnowledgeSourceBlueprint,
@@ -17,8 +21,16 @@ import type {
     ChatbotKnowledgeVisibility,
 } from '../../types/businessBlueprint';
 import type { PropertyCampaign, PropertyOpenHouse, RealtyProperty } from '../../types/realty';
-import { migrateBusinessBlueprint } from '../../utils/businessBlueprint';
+import { migrateBusinessBlueprint, syncWebsiteBlueprintFromEditor } from '../../utils/businessBlueprint';
 import { mapPropertyCampaignToRow, mapPropertyOpenHouseToRow, mapRealtyPropertyToRow, toRealtySlug } from '../../utils/realty';
+import {
+    STOREFRONT_SECTION_KINDS,
+    isStorefrontSectionKind,
+    storefrontSectionRegistry,
+    validateStorefrontSectionSettings,
+} from '../../utils/storefrontRenderer/registry';
+import { resolveStorefrontEditorConfig } from '../../utils/storefrontRenderer/editorConfig';
+import { normalizeStorefrontSectionVisibility } from '../../utils/storefrontRenderer/visibility';
 
 type SupabaseClientLike = {
     from: (table: string) => any;
@@ -392,6 +404,1011 @@ const assistantSourceMap = (
     contextSnapshotId: context?.id || '',
 });
 
+const readStringList = (value: unknown): string[] =>
+    asArray(value).map(item => String(item || '').trim()).filter(Boolean);
+
+const uniqueStringList = (values: string[]): string[] => Array.from(new Set(values.filter(Boolean)));
+
+const DEFAULT_WEBSITE_THEME = {
+    globalColors: {
+        primary: '#111827',
+        secondary: '#374151',
+        accent: '#2563eb',
+        background: '#ffffff',
+        surface: '#f8fafc',
+        text: '#111827',
+    },
+    fontFamilyHeader: 'Inter',
+    fontFamilyBody: 'Inter',
+    fontFamilyButton: 'Inter',
+} as unknown as ThemeData;
+
+type ProjectWebsiteState = {
+    projectId: string;
+    projectName: string;
+    row: Record<string, unknown>;
+    projectData: Record<string, unknown>;
+    pageData: Record<string, unknown>;
+    theme: ThemeData;
+    brandIdentity?: BrandIdentity;
+    componentOrder: PageSection[];
+    sectionVisibility: Record<PageSection, boolean>;
+    pages: SitePage[];
+};
+
+const cloneValue = <T,>(value: T): T => JSON.parse(JSON.stringify(value ?? null)) as T;
+
+const readPageSectionList = (value: unknown): PageSection[] => readStringList(value) as PageSection[];
+
+const readSectionVisibility = (value: unknown): Record<PageSection, boolean> => {
+    const record = asRecord(value);
+    return Object.entries(record).reduce<Record<PageSection, boolean>>((acc, [key, next]) => {
+        const bool = readBoolean(next);
+        if (bool !== undefined) acc[key as PageSection] = bool;
+        return acc;
+    }, {} as Record<PageSection, boolean>);
+};
+
+const readSitePages = (value: unknown): SitePage[] =>
+    asArray(value)
+        .map(page => asRecord(page))
+        .filter(page => readString(page.id) && readString(page.title))
+        .map(page => ({
+            ...(cloneRecord(page) as unknown as SitePage),
+            sections: readPageSectionList(page.sections),
+            sectionData: asRecord(page.sectionData),
+        }));
+
+const readTheme = (projectRow: Record<string, unknown>, projectData: Record<string, unknown>): ThemeData => {
+    const theme = asRecord(projectRow.theme);
+    const dataTheme = asRecord(projectData.theme);
+    return Object.keys(theme).length
+        ? theme as unknown as ThemeData
+        : Object.keys(dataTheme).length
+            ? dataTheme as unknown as ThemeData
+            : DEFAULT_WEBSITE_THEME;
+};
+
+const readBrandIdentity = (projectRow: Record<string, unknown>, projectData: Record<string, unknown>): BrandIdentity | undefined => {
+    const brandIdentity = asRecord(projectRow.brand_identity);
+    const dataBrandIdentity = asRecord(projectData.brandIdentity);
+    if (Object.keys(brandIdentity).length) return brandIdentity as unknown as BrandIdentity;
+    if (Object.keys(dataBrandIdentity).length) return dataBrandIdentity as unknown as BrandIdentity;
+    return undefined;
+};
+
+const loadProjectWebsiteState = async (
+    client: SupabaseClientLike,
+    projectId: string,
+    context?: AssistantContextSnapshot,
+): Promise<ProjectWebsiteState> => {
+    const result = await selectSingle(client.from('projects').select('*').eq('id', projectId));
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) throw new Error(`Project ${projectId} was not found before editing website content.`);
+
+    const projectData = cloneRecord(asRecord(row.data));
+    const nestedPageData = asRecord(projectData.data);
+    const pageData = Object.keys(nestedPageData).length ? cloneRecord(nestedPageData) : cloneRecord(projectData);
+    const componentOrder = readPageSectionList(row.component_order).length
+        ? readPageSectionList(row.component_order)
+        : readPageSectionList(projectData.componentOrder);
+    const sectionVisibility = Object.keys(readSectionVisibility(row.section_visibility)).length
+        ? readSectionVisibility(row.section_visibility)
+        : readSectionVisibility(projectData.sectionVisibility);
+    const pages = readSitePages(row.pages).length
+        ? readSitePages(row.pages)
+        : readSitePages(projectData.pages);
+
+    return {
+        projectId,
+        projectName: readDisplayText(row.name) || context?.project.projectName || projectId,
+        row: cloneRecord(row),
+        projectData,
+        pageData,
+        theme: readTheme(row, projectData),
+        brandIdentity: readBrandIdentity(row, projectData),
+        componentOrder,
+        sectionVisibility,
+        pages,
+    };
+};
+
+const cloneProjectWebsiteColumns = (row: Record<string, unknown>): Record<string, unknown> => {
+    const snapshot: Record<string, unknown> = {};
+    ['data', 'component_order', 'section_visibility', 'pages', 'last_updated'].forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(row, key)) {
+            snapshot[key] = cloneValue(row[key]);
+        }
+    });
+    return snapshot;
+};
+
+const writeProjectWebsiteState = async (
+    client: SupabaseClientLike,
+    state: ProjectWebsiteState,
+    next: Pick<ProjectWebsiteState, 'pageData' | 'componentOrder' | 'sectionVisibility' | 'pages'>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    options: { now: string; touchedSection?: string; syncAction: 'component_reorder' | 'section_visibility' | 'section_settings' },
+) => {
+    const businessBlueprint = syncWebsiteBlueprintFromEditor({
+        businessBlueprint: migrateBusinessBlueprint(state.projectData.businessBlueprint),
+        projectId: state.projectId,
+        projectName: state.projectName,
+        userId: action.userId || context?.actor.userId || undefined,
+        data: next.pageData as PageData,
+        theme: state.theme,
+        brandIdentity: state.brandIdentity,
+        componentOrder: next.componentOrder,
+        sectionVisibility: next.sectionVisibility,
+        pages: next.pages,
+        touchedSection: options.touchedSection as PageSection | undefined,
+        action: options.syncAction,
+        now: options.now,
+    });
+
+    const assistantDrafts = {
+        ...asRecord(state.projectData.assistantDrafts),
+        website: {
+            ...asRecord(asRecord(state.projectData.assistantDrafts).website),
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            lastActionType: action.actionType,
+            lastActionId: action.id,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+            updatedAt: options.now,
+            metadata: buildBaseMetadata(input, action, context),
+        },
+    };
+
+    const nextProjectData = {
+        ...state.projectData,
+        data: next.pageData,
+        theme: state.theme,
+        ...(state.brandIdentity ? { brandIdentity: state.brandIdentity } : {}),
+        componentOrder: next.componentOrder,
+        sectionVisibility: next.sectionVisibility,
+        pages: next.pages,
+        businessBlueprint,
+        assistantDrafts,
+        lastUpdated: options.now,
+    };
+
+    const patch = {
+        data: nextProjectData,
+        component_order: next.componentOrder,
+        section_visibility: next.sectionVisibility,
+        pages: next.pages.length > 0 ? next.pages : null,
+        last_updated: options.now,
+    };
+    const result = await selectSingle(client.from('projects').update(patch).eq('id', state.projectId));
+    if (result?.error) throw result.error;
+    return {
+        row: result?.data || { id: state.projectId, ...patch },
+        patch,
+    };
+};
+
+const createProjectWebsiteBeforeSnapshot = (state: ProjectWebsiteState): Record<string, unknown> => ({
+    table: 'projects',
+    id: state.projectId,
+    projectId: state.projectId,
+    row: cloneProjectWebsiteColumns(state.row),
+});
+
+const rollbackProjectWebsiteColumns = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const projectId = readString(before.projectId) || readString(before.id);
+    const row = asRecord(before.row);
+    if (!projectId || !Object.keys(row).length) {
+        throw new Error('Cannot rollback website edit: previous project website columns were not recorded.');
+    }
+    const result = await selectSingle(getClient(deps).from('projects').update(row).eq('id', projectId));
+    if (result?.error) throw result.error;
+    return {
+        afterSnapshot: {
+            table: 'projects',
+            id: projectId,
+            restored: true,
+            row: result?.data || { id: projectId, ...row },
+        },
+        diff: {
+            restored: [`projects.${projectId}.website`],
+        },
+    };
+};
+
+const dangerousPathSegments = new Set(['__proto__', 'prototype', 'constructor']);
+
+const parseSafePath = (path: unknown): string[] => {
+    const raw = readString(path);
+    if (!raw) return [];
+    return raw
+        .replace(/\[(\d+)\]/g, '.$1')
+        .split('.')
+        .map(segment => segment.trim())
+        .filter(Boolean)
+        .filter(segment => !dangerousPathSegments.has(segment));
+};
+
+const setDeepValue = (
+    root: Record<string, unknown>,
+    path: string[],
+    value: unknown,
+): Record<string, unknown> => {
+    if (path.length === 0) return root;
+    let cursor: any = root;
+    path.forEach((segment, index) => {
+        const isLast = index === path.length - 1;
+        const nextSegment = path[index + 1];
+        const key = Array.isArray(cursor) && /^\d+$/.test(segment) ? Number(segment) : segment;
+        if (isLast) {
+            cursor[key] = value;
+            return;
+        }
+        const current = cursor[key];
+        if (!current || typeof current !== 'object') {
+            cursor[key] = /^\d+$/.test(nextSegment || '') ? [] : {};
+        }
+        cursor = cursor[key];
+    });
+    return root;
+};
+
+const mergeDeepRecords = (
+    base: Record<string, unknown>,
+    patch: Record<string, unknown>,
+): Record<string, unknown> => {
+    const next = cloneRecord(base);
+    Object.entries(patch).forEach(([key, value]) => {
+        if (dangerousPathSegments.has(key)) return;
+        const existing = asRecord(next[key]);
+        const incoming = asRecord(value);
+        next[key] = Object.keys(existing).length && Object.keys(incoming).length
+            ? mergeDeepRecords(existing, incoming)
+            : cloneValue(value);
+    });
+    return next;
+};
+
+const updatePageSectionData = (
+    pages: SitePage[],
+    sectionId: string,
+    nextSectionData: Record<string, unknown>,
+    now: string,
+): SitePage[] => pages.map(page => {
+    const sectionData = asRecord(page.sectionData);
+    const shouldUpdate = page.sections.includes(sectionId as PageSection)
+        || Object.prototype.hasOwnProperty.call(sectionData, sectionId);
+    if (!shouldUpdate) return page;
+    return {
+        ...page,
+        sectionData: {
+            ...sectionData,
+            [sectionId]: cloneRecord(nextSectionData),
+        },
+        updatedAt: now,
+    };
+});
+
+const sortPageSectionsByOrder = (sections: PageSection[], order: PageSection[]): PageSection[] => {
+    const indexBySection = new Map(order.map((section, index) => [section, index]));
+    return [...sections].sort((left, right) => {
+        const leftIndex = indexBySection.get(left);
+        const rightIndex = indexBySection.get(right);
+        if (leftIndex === undefined && rightIndex === undefined) return 0;
+        if (leftIndex === undefined) return 1;
+        if (rightIndex === undefined) return -1;
+        return leftIndex - rightIndex;
+    });
+};
+
+const createWebsiteSectionPatchHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+    mode: 'merge' | 'copy',
+): HandlerPatch => ({
+    validate: input => {
+        const sectionId = readString(input.sectionId);
+        const path = parseSafePath(input.path);
+        const changes = asRecord(input.changes);
+        const errors = [
+            ...(!sectionId ? ['sectionId is required before editing website sections.'] : []),
+            ...(mode === 'copy' && path.length === 0 ? ['path is required before updating website copy.'] : []),
+            ...(mode === 'copy' && input.value === undefined ? ['value is required before updating website copy.'] : []),
+            ...(mode === 'merge' && Object.keys(changes).length === 0 ? ['changes are required before editing website sections.'] : []),
+        ];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const sectionId = readString(input.sectionId) || '';
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const pageData = cloneRecord(state.pageData);
+        const currentSection = cloneRecord(asRecord(pageData[sectionId]));
+        const nextSection = mode === 'copy'
+            ? setDeepValue(currentSection, parseSafePath(input.path), input.value)
+            : mergeDeepRecords(currentSection, asRecord(input.changes));
+        pageData[sectionId] = nextSection;
+        const pages = updatePageSectionData(state.pages, sectionId, nextSection, now);
+        const persisted = await writeProjectWebsiteState(client, state, {
+            pageData,
+            componentOrder: state.componentOrder,
+            sectionVisibility: state.sectionVisibility,
+            pages,
+        }, input, action, context, {
+            now,
+            touchedSection: sectionId,
+            syncAction: 'section_settings',
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                sectionId,
+                path: mode === 'copy' ? readString(input.path) : undefined,
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.${sectionId}`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
+const createToggleWebsiteSectionVisibilityHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const sectionId = readString(input.sectionId);
+        const visible = readBoolean(input.visible);
+        const errors = [
+            ...(!sectionId ? ['sectionId is required before changing website section visibility.'] : []),
+            ...(visible === undefined ? ['visible is required before changing website section visibility.'] : []),
+        ];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const sectionId = readString(input.sectionId) || '';
+        const visible = readBoolean(input.visible);
+        if (visible === undefined) throw new Error('visible is required before changing website section visibility.');
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const sectionVisibility = {
+            ...state.sectionVisibility,
+            [sectionId]: visible,
+        } as Record<PageSection, boolean>;
+        const persisted = await writeProjectWebsiteState(client, state, {
+            pageData: state.pageData,
+            componentOrder: state.componentOrder,
+            sectionVisibility,
+            pages: state.pages,
+        }, input, action, context, {
+            now,
+            touchedSection: sectionId,
+            syncAction: 'section_visibility',
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                sectionId,
+                visible,
+            },
+            diff: {
+                updated: [`projects.${projectId}.section_visibility.${sectionId}`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
+const createReorderWebsiteSectionsHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const newOrder = readPageSectionList(input.newOrder);
+        const errors = newOrder.length > 0 ? [] : ['newOrder is required before reordering website sections.'];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const requestedOrder = readPageSectionList(input.newOrder);
+        const componentOrder = uniqueStringList([
+            ...requestedOrder,
+            ...state.componentOrder.filter(section => !requestedOrder.includes(section)),
+        ]) as PageSection[];
+        const pages = state.pages.map(page => ({
+            ...page,
+            sections: sortPageSectionsByOrder(page.sections, componentOrder),
+            updatedAt: now,
+        }));
+        const persisted = await writeProjectWebsiteState(client, state, {
+            pageData: state.pageData,
+            componentOrder,
+            sectionVisibility: state.sectionVisibility,
+            pages,
+        }, input, action, context, {
+            now,
+            syncAction: 'component_reorder',
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                componentOrder,
+            },
+            diff: {
+                updated: [`projects.${projectId}.component_order`, `projects.${projectId}.pages.sections`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_website_columns',
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
+type StorefrontSectionSettingsMap = Record<StorefrontSectionKind, Record<string, unknown>>;
+
+const PRODUCT_CARD_VARIANTS = new Set<ProductCardVariant>([
+    'minimal',
+    'modern',
+    'elegant',
+    'overlay',
+    'luxury',
+    'marketplace',
+    'editorial',
+    'compact',
+    'imageFirst',
+    'quickBuy',
+    'fitness',
+    'food',
+    'fashion',
+    'digital',
+    'classic',
+    'bordered',
+]);
+
+const readStorefrontSectionKind = (value: unknown): StorefrontSectionKind | undefined => {
+    const section = readString(value);
+    return isStorefrontSectionKind(section) ? section : undefined;
+};
+
+const readStorefrontSectionOrder = (value: unknown): StorefrontSectionKind[] =>
+    readStringList(value).filter(isStorefrontSectionKind);
+
+const readProductCardVariant = (value: unknown): ProductCardVariant | undefined => {
+    const variant = readString(value) as ProductCardVariant | undefined;
+    return variant && PRODUCT_CARD_VARIANTS.has(variant) ? variant : undefined;
+};
+
+const compactStorefrontSettings = (settings: Record<string, unknown>): Record<string, unknown> =>
+    Object.entries(settings).reduce<Record<string, unknown>>((acc, [key, value]) => {
+        if (value !== undefined) acc[key] = value;
+        return acc;
+    }, {});
+
+const buildStorefrontProjectConfigInput = (state: ProjectWebsiteState) => ({
+    data: state.projectData,
+    componentOrder: state.componentOrder,
+    sectionVisibility: state.sectionVisibility,
+});
+
+const getStorefrontDraftConfig = (state: ProjectWebsiteState) =>
+    resolveStorefrontEditorConfig(buildStorefrontProjectConfigInput(state), { mode: 'draft' });
+
+const normalizeStorefrontSettings = (
+    sections: StorefrontSectionKind[],
+    settings: Record<string, Record<string, unknown>>,
+): StorefrontSectionSettingsMap =>
+    sections.reduce<StorefrontSectionSettingsMap>((acc, section) => {
+        acc[section] = compactStorefrontSettings({
+            ...storefrontSectionRegistry[section].defaultSettings,
+            ...asRecord(settings[section]),
+        });
+        return acc;
+    }, {} as StorefrontSectionSettingsMap);
+
+const storefrontDefaultVisibilityBySection = (): Record<string, boolean> =>
+    STOREFRONT_SECTION_KINDS.reduce<Record<string, boolean>>((acc, section) => {
+        acc[section] = storefrontSectionRegistry[section].defaultVisible ?? true;
+        return acc;
+    }, {});
+
+const normalizeStorefrontVisibility = (
+    sections: StorefrontSectionKind[],
+    previousVisibility: Record<string, boolean>,
+): Record<string, boolean> =>
+    normalizeStorefrontSectionVisibility({
+        sections,
+        previousVisibility,
+        defaultVisibleBySection: storefrontDefaultVisibilityBySection(),
+        ensureAtLeastOneVisible: true,
+        fallbackSection: sections.includes('featuredProducts') ? 'featuredProducts' : sections[0],
+    });
+
+const buildStorefrontEditorSnapshot = (
+    sections: StorefrontSectionKind[],
+    sectionSettings: StorefrontSectionSettingsMap,
+    visibility: Record<string, boolean>,
+    themeSettings: Record<string, unknown>,
+    now: string,
+): Record<string, unknown> => ({
+    componentOrder: sections,
+    sectionVisibility: sections.reduce<Record<string, boolean>>((acc, section) => {
+        acc[section] = visibility[section] !== false;
+        return acc;
+    }, {}),
+    themeSettings,
+    sectionSettings,
+    sections: sections.map((section, index) => ({
+        id: `storefront-${section}`,
+        type: section,
+        order: index,
+        enabled: visibility[section] !== false,
+        settings: asRecord(sectionSettings[section]),
+    })),
+    state: 'draft',
+    updatedAt: now,
+});
+
+const getStorefrontBlueprint = (state: ProjectWebsiteState) => {
+    const blueprint = migrateBusinessBlueprint(state.projectData.businessBlueprint || state.pageData.businessBlueprint);
+    return blueprint?.storefrontBlueprint ? blueprint : null;
+};
+
+const buildStorefrontBlueprintSections = (
+    state: ProjectWebsiteState,
+    sections: StorefrontSectionKind[],
+    sectionSettings: StorefrontSectionSettingsMap,
+    visibility: Record<string, boolean>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+) => {
+    const existingSections = asArray(getStorefrontBlueprint(state)?.storefrontBlueprint.sections);
+    return sections.map((section, index) => {
+        const existing = asRecord(existingSections.find(item => asRecord(item).type === section));
+        const settings = asRecord(sectionSettings[section]);
+        const enabled = visibility[section] !== false && settings.enabled !== false;
+        const validation = validateStorefrontSectionSettings(section, settings);
+        const warnings = Array.from(new Set([
+            ...validation.warnings,
+            'Global Assistant storefront change needs review before publishing.',
+        ]));
+
+        return {
+            ...existing,
+            id: readString(existing.id) || `storefront-${section}`,
+            type: section,
+            order: index,
+            enabled,
+            status: enabled ? 'needs_review' : 'disabled',
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            lockedFromRegeneration: false,
+            readiness: {
+                isReady: validation.valid,
+                blockers: validation.errors,
+                warnings,
+            },
+            settings,
+            metadata: {
+                ...asRecord(existing.metadata),
+                generatedBy: 'ai',
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                userModified: false,
+                lockedFromRegeneration: false,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                updatedAt: now,
+                lastEditedAt: now,
+                ...(action.userId || context?.actor.userId ? { lastEditedBy: action.userId || context?.actor.userId } : {}),
+            },
+            sourceMap: {
+                ...asRecord(existing.sourceMap),
+                ...assistantSourceMap(input, action, context),
+                storefrontEditor: `storefrontEditor.draft.sections.${index}`,
+            },
+        };
+    });
+};
+
+const buildNextStorefrontBusinessBlueprint = (
+    state: ProjectWebsiteState,
+    sections: StorefrontSectionKind[],
+    sectionSettings: StorefrontSectionSettingsMap,
+    visibility: Record<string, boolean>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+    options: { productCardVariant?: ProductCardVariant } = {},
+) => {
+    const businessBlueprint = getStorefrontBlueprint(state);
+    if (!businessBlueprint?.storefrontBlueprint) return null;
+    const storefrontBlueprint = businessBlueprint.storefrontBlueprint;
+
+    return {
+        ...businessBlueprint,
+        updatedAt: now,
+        lastSyncedAt: now,
+        storefrontBlueprint: {
+            ...storefrontBlueprint,
+            enabled: true,
+            status: 'needs_review',
+            needsReview: true,
+            sections: buildStorefrontBlueprintSections(state, sections, sectionSettings, visibility, input, action, context, now),
+            ...(options.productCardVariant ? { productCardVariant: options.productCardVariant } : {}),
+            metadata: {
+                ...asRecord(storefrontBlueprint.metadata),
+                generatedBy: 'ai',
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                userModified: false,
+                lockedFromRegeneration: false,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+                updatedAt: now,
+                lastEditedAt: now,
+                ...(action.userId || context?.actor.userId ? { lastEditedBy: action.userId || context?.actor.userId } : {}),
+            },
+            sourceMap: {
+                ...asRecord(storefrontBlueprint.sourceMap),
+                ...assistantSourceMap(input, action, context),
+                storefrontEditor: 'storefrontEditor.draft',
+            },
+        },
+    };
+};
+
+const writeProjectStorefrontState = async (
+    client: SupabaseClientLike,
+    state: ProjectWebsiteState,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    options: {
+        sections: StorefrontSectionKind[];
+        sectionSettings: StorefrontSectionSettingsMap;
+        visibility: Record<string, boolean>;
+        themeSettings: Record<string, unknown>;
+        productCardVariant?: ProductCardVariant;
+        now: string;
+    },
+) => {
+    const hasNestedPageData = Object.keys(asRecord(state.projectData.data)).length > 0;
+    const nextBusinessBlueprint = buildNextStorefrontBusinessBlueprint(
+        state,
+        options.sections,
+        options.sectionSettings,
+        options.visibility,
+        input,
+        action,
+        context,
+        options.now,
+        { productCardVariant: options.productCardVariant },
+    );
+    const existingStorefrontEditor = asRecord(state.pageData.storefrontEditor);
+    const draftSnapshot = buildStorefrontEditorSnapshot(
+        options.sections,
+        options.sectionSettings,
+        options.visibility,
+        options.themeSettings,
+        options.now,
+    );
+    const nextStorefrontEditor = {
+        ...existingStorefrontEditor,
+        templateState: 'draft',
+        previewMode: readString(input.previewMode) || readString(existingStorefrontEditor.previewMode) || 'store',
+        sectionSettings: options.sectionSettings,
+        draft: draftSnapshot,
+        ...(asRecord(existingStorefrontEditor.published).componentOrder ? { published: existingStorefrontEditor.published } : {}),
+        updatedAt: options.now,
+        source: 'global-assistant',
+        generatedByAI: true,
+        needsReview: true,
+        safeToEdit: true,
+        metadata: {
+            ...asRecord(existingStorefrontEditor.metadata),
+            ...buildBaseMetadata(input, action, context),
+        },
+    };
+    const nextPageData = options.sections.reduce<Record<string, unknown>>((acc, section) => {
+        acc[section] = options.sectionSettings[section];
+        return acc;
+    }, {
+        ...state.pageData,
+        storefrontEditor: nextStorefrontEditor,
+    });
+    const assistantDrafts = {
+        ...asRecord(state.projectData.assistantDrafts),
+        storefront: {
+            ...asRecord(asRecord(state.projectData.assistantDrafts).storefront),
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            noAutoPublish: true,
+            lastActionType: action.actionType,
+            lastActionId: action.id,
+            sourceModule: 'global-assistant',
+            sourceComponent: 'OperatingLayer',
+            sourceEntityType: 'assistant_action',
+            sourceEntityId: action.id,
+            updatedAt: options.now,
+            metadata: buildBaseMetadata(input, action, context),
+        },
+    };
+    const nextProjectData = hasNestedPageData
+        ? {
+            ...state.projectData,
+            ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+            data: nextPageData,
+            assistantDrafts,
+            lastUpdated: options.now,
+        }
+        : {
+            ...nextPageData,
+            ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+            assistantDrafts,
+            lastUpdated: options.now,
+        };
+
+    const patch = {
+        data: nextProjectData,
+        last_updated: options.now,
+    };
+    const result = await client.from('projects').update(patch).eq('id', state.projectId);
+    if (result?.error) throw result.error;
+    return {
+        row: result?.data || { id: state.projectId, ...patch },
+        patch,
+    };
+};
+
+const getStorefrontSectionsForEdit = (
+    state: ProjectWebsiteState,
+    preferredSection?: StorefrontSectionKind,
+): StorefrontSectionKind[] => {
+    const config = getStorefrontDraftConfig(state);
+    const fromConfig = config.componentOrder.filter(isStorefrontSectionKind);
+    const fromProject = state.componentOrder.filter(isStorefrontSectionKind);
+    const base = fromConfig.length ? fromConfig : fromProject;
+    return uniqueStringList([
+        ...base,
+        ...(preferredSection ? [preferredSection] : []),
+        ...(base.length ? [] : ['featuredProducts', 'categoryGrid']),
+    ]).filter(isStorefrontSectionKind);
+};
+
+const buildStorefrontEditState = (
+    state: ProjectWebsiteState,
+    preferredSection?: StorefrontSectionKind,
+) => {
+    const config = getStorefrontDraftConfig(state);
+    const sections = getStorefrontSectionsForEdit(state, preferredSection);
+    const sectionSettings = normalizeStorefrontSettings(sections, config.sectionSettings);
+    const visibility = normalizeStorefrontVisibility(sections, config.sectionVisibility);
+    const themeSettings = {
+        ...DEFAULT_STOREFRONT_THEME,
+        ...asRecord(config.themeSettings),
+    };
+
+    return { sections, sectionSettings, visibility, themeSettings };
+};
+
+const validateStorefrontSectionSet = (
+    sections: StorefrontSectionKind[],
+    sectionSettings: StorefrontSectionSettingsMap,
+): string[] => sections.flatMap(section => {
+    const validation = validateStorefrontSectionSettings(section, asRecord(sectionSettings[section]));
+    return validation.errors.map(error => `${section}: ${error}`);
+});
+
+const createAddStorefrontSectionHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const section = readStorefrontSectionKind(input.sectionType);
+        return {
+            valid: Boolean(section),
+            errors: section ? [] : ['sectionType must be a supported storefront section before adding it.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const section = readStorefrontSectionKind(input.sectionType);
+        if (!section) throw new Error('sectionType must be a supported storefront section before adding it.');
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const now = getNow(deps);
+        const draft = buildStorefrontEditState(state, section);
+        const sectionData = {
+            ...draft.sectionSettings[section],
+            ...asRecord(input.data),
+            enabled: true,
+        };
+        draft.sectionSettings[section] = compactStorefrontSettings(sectionData);
+        draft.visibility[section] = true;
+        const validationErrors = validateStorefrontSectionSet(draft.sections, draft.sectionSettings);
+        if (validationErrors.length > 0) throw new Error(validationErrors.join(' '));
+        const persisted = await writeProjectStorefrontState(client, state, input, action, context, {
+            ...draft,
+            now,
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                sectionType: section,
+                row: persisted.row,
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.storefrontEditor.draft`, `projects.${projectId}.data.businessBlueprint.storefrontBlueprint.sections`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_storefront_columns',
+                noAutoPublish: true,
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
+const createEditStorefrontThemeHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const updates = asRecord(input.updates);
+        return {
+            valid: Object.keys(updates).length > 0,
+            errors: Object.keys(updates).length > 0 ? [] : ['updates are required before editing storefront theme.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const now = getNow(deps);
+        const draft = buildStorefrontEditState(state);
+        const themeSettings = compactStorefrontSettings({
+            ...draft.themeSettings,
+            ...asRecord(input.updates),
+        }) as unknown as Record<string, unknown>;
+        const validationErrors = validateStorefrontSectionSet(draft.sections, draft.sectionSettings);
+        if (validationErrors.length > 0) throw new Error(validationErrors.join(' '));
+        const persisted = await writeProjectStorefrontState(client, state, input, action, context, {
+            ...draft,
+            themeSettings,
+            now,
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                themeSettings,
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.storefrontEditor.draft.themeSettings`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_storefront_columns',
+                noAutoPublish: true,
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
+const createUpdateProductCardStyleHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch => ({
+    validate: input => {
+        const updates = asRecord(input.updates);
+        const variant = readProductCardVariant(
+            updates.productCardVariant || updates.cardStyle || updates.variant || input.productCardVariant || input.cardStyle,
+        );
+        return {
+            valid: Boolean(variant),
+            errors: variant ? [] : ['A supported product card variant is required before updating product-card presentation.'],
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const updates = asRecord(input.updates);
+        const variant = readProductCardVariant(
+            updates.productCardVariant || updates.cardStyle || updates.variant || input.productCardVariant || input.cardStyle,
+        );
+        if (!variant) throw new Error('A supported product card variant is required before updating product-card presentation.');
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        const now = getNow(deps);
+        const draft = buildStorefrontEditState(state);
+        const productCardSections = new Set<StorefrontSectionKind>(['featuredProducts', 'recentlyViewed', 'productBundle']);
+        draft.sections.forEach(section => {
+            if (!productCardSections.has(section)) return;
+            draft.sectionSettings[section] = compactStorefrontSettings({
+                ...draft.sectionSettings[section],
+                cardStyle: variant,
+                productCardVariant: variant,
+                ...updates,
+            });
+        });
+        const validationErrors = validateStorefrontSectionSet(draft.sections, draft.sectionSettings);
+        if (validationErrors.length > 0) throw new Error(validationErrors.join(' '));
+        const persisted = await writeProjectStorefrontState(client, state, input, action, context, {
+            ...draft,
+            productCardVariant: variant,
+            now,
+        });
+
+        return {
+            beforeSnapshot: createProjectWebsiteBeforeSnapshot(state),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                row: persisted.row,
+                productCardVariant: variant,
+            },
+            diff: {
+                updated: [
+                    `projects.${projectId}.data.storefrontEditor.draft.sectionSettings`,
+                    `projects.${projectId}.data.businessBlueprint.storefrontBlueprint.productCardVariant`,
+                ],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_storefront_columns',
+                noAutoPublish: true,
+            },
+        };
+    },
+    rollback: rollbackProjectWebsiteColumns(deps),
+});
+
 const createEmailCampaignHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { action, context }) => {
@@ -514,6 +1531,299 @@ const createEmailAutomationHandler = (deps: GlobalAssistantActionHandlerDependen
         };
     },
     rollback: rollbackCreatedRow('email_automations', deps),
+});
+
+const getContextEmailCampaignId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '');
+    if (!context?.activeEntityId) return undefined;
+    if (['email_campaign', 'email-campaign', 'campaign', 'email'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetEmailCampaignId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string | undefined => {
+    const campaign = requireObject(input, 'campaign');
+    const copy = requireObject(input, 'copy');
+    return readString(input.campaignId)
+        || readString(input.campaign_id)
+        || readString(input.targetId)
+        || readString(campaign.id)
+        || readString(copy.campaignId)
+        || readString(copy.campaign_id)
+        || getContextEmailCampaignId(context);
+};
+
+const buildEmailCopyHtml = (input: {
+    subject: string;
+    previewText: string;
+    body: string;
+    ctaLabel?: string;
+    ctaUrl?: string;
+}) => {
+    const paragraphs = input.body
+        .split(/\n{2,}/)
+        .map(paragraph => paragraph.trim())
+        .filter(Boolean)
+        .map(paragraph => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br/>')}</p>`)
+        .join('');
+    const cta = input.ctaLabel
+        ? `<p><a href="${escapeHtml(input.ctaUrl || '#')}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#111827;color:#ffffff;text-decoration:none">${escapeHtml(input.ctaLabel)}</a></p>`
+        : '';
+    return [
+        '<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">',
+        `<h1>${escapeHtml(input.subject)}</h1>`,
+        input.previewText ? `<p style="color:#475467">${escapeHtml(input.previewText)}</p>` : '',
+        paragraphs || `<p>${escapeHtml(input.subject)}</p>`,
+        cta,
+        '</div>',
+    ].join('');
+};
+
+const deriveEmailSubjectFromRequest = (request: unknown): string | undefined => {
+    const text = readString(request);
+    if (!text) return undefined;
+    const match = text.match(/\b(?:asunto|subject)\s+(.+)$/i);
+    if (!match) return undefined;
+    return titleFromRequest(match[1], '');
+};
+
+const buildEmailCopyDraft = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    existingCampaign?: Record<string, unknown> | null,
+) => {
+    const campaign = requireObject(input, 'campaign');
+    const copy = requireObject(input, 'copy');
+    const request = readString(input.request);
+    const subject = readString(input.subject)
+        || readString(copy.subject)
+        || readString(campaign.subject)
+        || deriveEmailSubjectFromRequest(request)
+        || titleFromRequest(request, 'AI email copy draft');
+    const previewText = readString(input.previewText)
+        || readString(input.preview_text)
+        || readString(copy.previewText)
+        || readString(copy.preview_text)
+        || readString(campaign.previewText)
+        || readString(campaign.preview_text)
+        || titleFromRequest(request, '');
+    const body = readString(input.body)
+        || readString(copy.body)
+        || readString(copy.text)
+        || readString(campaign.body)
+        || readString(existingCampaign?.html_content)
+        || request
+        || subject;
+    const ctaLabel = readString(input.ctaLabel)
+        || readString(input.cta_label)
+        || readString(copy.ctaLabel)
+        || readString(copy.cta_label);
+    const ctaUrl = readString(input.ctaUrl)
+        || readString(input.cta_url)
+        || readString(copy.ctaUrl)
+        || readString(copy.cta_url);
+    const htmlContent = readString(input.htmlContent)
+        || readString(input.html_content)
+        || readString(copy.htmlContent)
+        || readString(copy.html_content)
+        || buildEmailCopyHtml({ subject, previewText, body, ctaLabel, ctaUrl });
+    const tags = Array.from(new Set([
+        ...asArray(existingCampaign?.tags).map(String),
+        ...asArray(campaign.tags).map(String),
+        ...asArray(copy.tags).map(String),
+        'global-assistant',
+        'ai-copy',
+    ].filter(Boolean)));
+    const metadata = mergeAssistantMetadata(existingCampaign?.metadata, input, action, context);
+    const emailDocument = {
+        ...asRecord(existingCampaign?.email_document),
+        ...asRecord(campaign.emailDocument || campaign.email_document),
+        ...asRecord(copy.emailDocument || copy.email_document),
+        subject,
+        previewText,
+        body,
+        htmlContent,
+        cta: ctaLabel ? { label: ctaLabel, url: ctaUrl || '#' } : undefined,
+        status: 'needs_review',
+        generatedByAI: true,
+        needsReview: true,
+        sourceMap: assistantSourceMap(input, action, context),
+    };
+
+    return {
+        name: readString(input.name)
+            || readString(campaign.name)
+            || readString(existingCampaign?.name)
+            || subject,
+        subject,
+        previewText,
+        htmlContent,
+        emailDocument,
+        type: readString(input.type)
+            || readString(campaign.type)
+            || readString(existingCampaign?.type)
+            || 'newsletter',
+        audienceType: readString(input.audienceType)
+            || readString(input.audience_type)
+            || readString(campaign.audienceType)
+            || readString(campaign.audience_type)
+            || readString(existingCampaign?.audience_type)
+            || 'all',
+        audienceSegmentId: readString(input.audienceSegmentId)
+            || readString(input.audience_segment_id)
+            || readString(campaign.audienceSegmentId)
+            || readString(campaign.audience_segment_id)
+            || readString(existingCampaign?.audience_segment_id)
+            || null,
+        customRecipientEmails: asArray(input.customRecipientEmails ?? input.custom_recipient_emails ?? campaign.customRecipientEmails ?? campaign.custom_recipient_emails ?? existingCampaign?.custom_recipient_emails),
+        tags,
+        status: 'draft',
+        generatedByAI: true,
+        needsReview: true,
+        safeToEdit: true,
+        userModified: false,
+        sourceModule: 'global-assistant',
+        sourceComponent: 'OperatingLayer',
+        sourceEvent: 'generate_email_copy',
+        sourceEntityType: 'assistant_action',
+        sourceEntityId: action.id,
+        correlationId: action.id,
+        idempotencyKey: `global-assistant:${action.id}:email-copy`,
+        readiness: {
+            ...asRecord(existingCampaign?.readiness),
+            isReady: false,
+            status: 'needs_review',
+            blockers: [
+                ...asArray(asRecord(existingCampaign?.readiness).blockers).map(String),
+                'AI-generated email copy requires review before sending.',
+            ],
+        },
+        metadata: {
+            ...metadata,
+            noAutoSend: true,
+            sendMode: 'manual_send',
+        },
+    };
+};
+
+const generateEmailCopyHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const userId = getAssistantUserId(action, context);
+        const campaignId = getTargetEmailCampaignId(input, context);
+        const existingCampaign = campaignId
+            ? asRecord(await loadCampaign(client, projectId, campaignId))
+            : null;
+
+        if (campaignId && !readString(existingCampaign?.id)) {
+            throw new Error(`email_campaigns.${campaignId} was not found for project ${projectId}.`);
+        }
+
+        const draft = buildEmailCopyDraft(input, action, context, existingCampaign);
+        if (campaignId && existingCampaign) {
+            const previousRow = cloneRecord(existingCampaign);
+            const row = await updateCampaign({
+                supabase: client,
+                projectId,
+                campaignId,
+                updates: {
+                    ...draft,
+                    status: 'draft',
+                    generatedByAI: true,
+                    needsReview: true,
+                    safeToEdit: true,
+                    approved_at: null,
+                    approved_by: null,
+                    scheduledAt: null,
+                    sent_at: null,
+                },
+            });
+            return {
+                beforeSnapshot: { table: 'email_campaigns', id: campaignId, projectId, row: previousRow, mode: 'update' },
+                afterSnapshot: { table: 'email_campaigns', id: campaignId, projectId, row },
+                diff: {
+                    updated: [
+                        `email_campaigns.${campaignId}.subject`,
+                        `email_campaigns.${campaignId}.preview_text`,
+                        `email_campaigns.${campaignId}.html_content`,
+                        `email_campaigns.${campaignId}.email_document`,
+                    ],
+                    reviewRequired: true,
+                    noAutoSend: true,
+                    rollback: 'restore_previous_email_campaign_snapshot',
+                },
+            };
+        }
+
+        const row = await createCampaignDraft({
+            supabase: client,
+            projectId,
+            userId,
+            campaign: draft,
+        });
+        const id = readString((row as Record<string, unknown>).id) || action.id;
+        return {
+            beforeSnapshot: { table: 'email_campaigns', projectId, mode: 'create' },
+            afterSnapshot: { table: 'email_campaigns', id, projectId, row },
+            diff: {
+                created: [`email_campaigns.${id}`],
+                reviewRequired: true,
+                noAutoSend: true,
+                rollback: 'delete_created_email_copy_draft',
+            },
+        };
+    },
+    rollback: async (_input, { snapshot }) => {
+        const before = asRecord(snapshot.beforeSnapshot);
+        const mode = readString(before.mode);
+        const projectId = readString(before.projectId);
+        const id = getSnapshotRowId(snapshot);
+        if (mode === 'create') {
+            if (!id) throw new Error('Cannot rollback email copy draft: created campaign id was not recorded.');
+            const result = await deleteRowById(getClient(deps), 'email_campaigns', id);
+            return {
+                afterSnapshot: {
+                    ...snapshot.beforeSnapshot,
+                    rollback: result,
+                },
+                diff: {
+                    deleted: [`email_campaigns.${id}`],
+                },
+            };
+        }
+
+        const row = asRecord(before.row);
+        const campaignId = readString(before.id) || readString(row.id);
+        if (!projectId || !campaignId || !Object.keys(row).length) {
+            throw new Error('Cannot rollback email copy draft: previous campaign snapshot was not recorded.');
+        }
+        const { id: _id, project_id: _projectId, store_id: _storeId, ...restorePatch } = row;
+        const restored = await updateCampaign({
+            supabase: getClient(deps),
+            projectId,
+            campaignId,
+            updates: restorePatch,
+        });
+        return {
+            afterSnapshot: {
+                table: 'email_campaigns',
+                id: campaignId,
+                projectId,
+                row: restored,
+                restored: true,
+            },
+            diff: {
+                restored: [`email_campaigns.${campaignId}`],
+            },
+        };
+    },
 });
 
 const createLeadHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
@@ -1593,31 +2903,278 @@ const createMediaDraftAssetHandler = (
     rollback: rollbackCreatedRow('media_assets', deps),
 });
 
+const appointmentStatuses = new Set(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']);
+
+const getContextAppointmentId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '');
+    if (!context?.activeEntityId) return undefined;
+    if (['appointment', 'project_appointment', 'project-appointment', 'calendar_event', 'calendar-event'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetAppointmentId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const appointment = requireObject(input, 'appointment');
+    const appointmentId = readString(input.appointmentId)
+        || readString(input.appointment_id)
+        || readString(input.targetId)
+        || readString(updates.appointmentId)
+        || readString(updates.appointment_id)
+        || readString(appointment.id)
+        || getContextAppointmentId(context);
+    if (!appointmentId) throw new Error('appointmentId is required or the active context must point to an appointment.');
+    return appointmentId;
+};
+
+const addMinutesToIso = (value: string, minutes: number): string | undefined => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return new Date(date.getTime() + minutes * 60 * 1000).toISOString();
+};
+
+const readIsoDateString = (value: unknown): string | undefined => {
+    const text = readString(value);
+    if (!text) return undefined;
+    const date = new Date(text);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+};
+
+const extractIsoDatesFromRequest = (request: unknown): string[] => {
+    const text = readString(request) || '';
+    const matches = text.match(/\d{4}-\d{2}-\d{2}(?:[T\s]\d{2}:\d{2}(?::\d{2})?(?:\.\d{3})?(?:Z|[+-]\d{2}:?\d{2})?)?/g) || [];
+    return matches
+        .map(value => readIsoDateString(value.includes('T') ? value : `${value}T09:00:00`))
+        .filter((value): value is string => Boolean(value));
+};
+
+const readAppointmentRange = (
+    input: Record<string, unknown>,
+    source: Record<string, unknown>,
+): { startDate?: string; endDate?: string } => {
+    const requestDates = extractIsoDatesFromRequest(input.request);
+    const startDate = readIsoDateString(source.startDate)
+        || readIsoDateString(source.start_date)
+        || readIsoDateString(input.startDate)
+        || readIsoDateString(input.start_date)
+        || requestDates[0];
+    const durationMinutes = readNumber(source.durationMinutes ?? source.duration_minutes ?? input.durationMinutes ?? input.duration_minutes) ?? 60;
+    const endDate = readIsoDateString(source.endDate)
+        || readIsoDateString(source.end_date)
+        || readIsoDateString(input.endDate)
+        || readIsoDateString(input.end_date)
+        || requestDates[1]
+        || (startDate ? addMinutesToIso(startDate, durationMinutes) : undefined);
+    return { startDate, endDate };
+};
+
+const buildAppointmentCreateInput = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): Partial<CanonicalAppointmentInput> => {
+    const appointment = requireObject(input, 'appointment');
+    const request = readString(input.request);
+    const range = readAppointmentRange(input, appointment);
+    const actorId = readString(appointment.organizerId)
+        || readString(appointment.organizer_id)
+        || action.userId
+        || context?.actor.userId;
+    return {
+        ...appointment,
+        title: readString(appointment.title) || readString(input.title) || titleFromRequest(request, 'AI appointment draft'),
+        description: readString(appointment.description) || readString(input.description) || request || '',
+        startDate: range.startDate,
+        endDate: range.endDate,
+        participantName: readString(appointment.participantName ?? appointment.participant_name ?? input.participantName ?? input.participant_name),
+        participantEmail: readString(appointment.participantEmail ?? appointment.participant_email ?? input.participantEmail ?? input.participant_email),
+        participantPhone: readString(appointment.participantPhone ?? appointment.participant_phone ?? input.participantPhone ?? input.participant_phone),
+        type: readString(appointment.type ?? input.type) || 'consultation',
+        status: (readString(appointment.status ?? input.status) || 'scheduled') as CanonicalAppointmentInput['status'],
+        priority: (readString(appointment.priority ?? input.priority) || 'medium') as CanonicalAppointmentInput['priority'],
+        timezone: readString(appointment.timezone ?? input.timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        linkedLeadId: readString(appointment.linkedLeadId ?? appointment.linked_lead_id ?? input.linkedLeadId ?? input.linked_lead_id),
+        bookingServiceId: readString(appointment.bookingServiceId ?? appointment.booking_service_id ?? input.bookingServiceId ?? input.booking_service_id),
+        organizerId: actorId,
+        createdBy: actorId,
+        updatedBy: actorId,
+    };
+};
+
+const normalizeAppointmentStatus = (value: unknown): string | undefined => {
+    const status = readString(value);
+    if (!status) return undefined;
+    if (appointmentStatuses.has(status)) return status;
+    const normalized = normalizeForSearch(status);
+    if (['confirmada', 'confirmado', 'confirmar', 'confirmed'].includes(normalized)) return 'confirmed';
+    if (['cancelada', 'cancelado', 'cancelar', 'cancelled', 'canceled'].includes(normalized)) return 'cancelled';
+    if (['completada', 'completado', 'completed'].includes(normalized)) return 'completed';
+    if (['no show', 'noshow'].includes(normalized)) return 'no_show';
+    if (['reprogramada', 'reprogramado', 'rescheduled'].includes(normalized)) return 'rescheduled';
+    return undefined;
+};
+
+const deriveAppointmentUpdatesFromRequest = (request: unknown): Record<string, unknown> => {
+    const text = normalizeForSearch(readString(request) || '');
+    const updates: Record<string, unknown> = {};
+    if (!text) return updates;
+    if (/\b(confirmada|confirmado|confirmar|confirmed)\b/.test(text)) updates.status = 'confirmed';
+    if (/\b(cancela|cancelar|cancelada|cancelado|cancelled|canceled)\b/.test(text)) updates.status = 'cancelled';
+    if (/\b(completa|completar|completada|completado|completed)\b/.test(text)) updates.status = 'completed';
+    if (/\b(no show|noshow)\b/.test(text)) updates.status = 'no_show';
+    if (/\b(reprograma|reprogramar|rescheduled)\b/.test(text)) updates.status = 'rescheduled';
+    const dates = extractIsoDatesFromRequest(request);
+    if (dates[0]) updates.startDate = dates[0];
+    if (dates[1]) updates.endDate = dates[1];
+    return updates;
+};
+
+const readAppointmentTextUpdate = (updates: Record<string, unknown>, keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = readString(updates[key]);
+        if (value !== undefined) return value;
+    }
+    return undefined;
+};
+
+const buildAppointmentUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const currentMetadata = asRecord(currentRow.metadata);
+    const nextMetadata: Record<string, unknown> = mergeAssistantMetadata(currentMetadata, input, action, context);
+    const patch: Record<string, unknown> = {
+        updated_at: now,
+        updated_by: getAssistantUserId(action, context),
+        needs_review: true,
+        generated_by_ai: true,
+        metadata: nextMetadata,
+    };
+    const changedFields = ['metadata'];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const title = readAppointmentTextUpdate(updates, ['title', 'titulo']);
+    if (title !== undefined) setValue('title', title);
+    const description = readAppointmentTextUpdate(updates, ['description', 'descripcion', 'notes', 'notas']);
+    if (description !== undefined) setValue('description', description);
+    const type = readAppointmentTextUpdate(updates, ['type', 'tipo']);
+    if (type !== undefined) setValue('type', type);
+    const priority = readAppointmentTextUpdate(updates, ['priority', 'prioridad']);
+    if (priority !== undefined) setValue('priority', priority);
+    const status = normalizeAppointmentStatus(updates.status ?? updates.estado);
+    if (status !== undefined) {
+        setValue('status', status);
+        if (status === 'cancelled') {
+            setValue('cancelled_at', now);
+            setValue('cancelled_by', getAssistantUserId(action, context));
+            const reason = readAppointmentTextUpdate(updates, ['reason', 'razon', 'cancelledReason', 'cancelled_reason']);
+            if (reason !== undefined) setValue('cancelled_reason', reason);
+        }
+        if (status === 'completed') setValue('completed_at', now);
+    }
+
+    const range = readAppointmentRange(input, updates);
+    if (range.startDate) setValue('start_date', range.startDate);
+    if (range.endDate) setValue('end_date', range.endDate);
+    const timezone = readAppointmentTextUpdate(updates, ['timezone', 'timeZone']);
+    if (timezone !== undefined) setValue('timezone', timezone);
+    const location = asRecord(updates.location);
+    if (Object.keys(location).length) setValue('location', location);
+    if (Array.isArray(updates.participants)) setValue('participants', updates.participants);
+    if (Array.isArray(updates.reminders)) setValue('reminders', updates.reminders);
+    if (Array.isArray(updates.tags)) setValue('tags', updates.tags.map(String));
+    if (Array.isArray(updates.linkedLeadIds) || Array.isArray(updates.linked_lead_ids)) {
+        setValue('linked_lead_ids', asArray(updates.linkedLeadIds ?? updates.linked_lead_ids).map(String));
+    }
+
+    if (changedFields.length === 1) {
+        nextMetadata.assistantDrafts = {
+            ...asRecord(nextMetadata.assistantDrafts),
+            appointmentUpdate: {
+                prompt: readString(input.request) || 'AI appointment update draft',
+                status: 'needs_review',
+                generatedAt: now,
+                generatedByAI: true,
+                needsReview: true,
+            },
+        };
+        changedFields.push('metadata.assistantDrafts.appointmentUpdate');
+    }
+
+    return { patch, changedFields: Array.from(new Set(changedFields)) };
+};
+
+const defaultAppointmentWeeklyHours = () => [
+    { day: 'monday', enabled: true, startTime: '09:00', endTime: '17:00' },
+    { day: 'tuesday', enabled: true, startTime: '09:00', endTime: '17:00' },
+    { day: 'wednesday', enabled: true, startTime: '09:00', endTime: '17:00' },
+    { day: 'thursday', enabled: true, startTime: '09:00', endTime: '17:00' },
+    { day: 'friday', enabled: true, startTime: '09:00', endTime: '17:00' },
+    { day: 'saturday', enabled: false, startTime: '09:00', endTime: '13:00' },
+    { day: 'sunday', enabled: false, startTime: '09:00', endTime: '13:00' },
+];
+
+const normalizeWeeklyHours = (value: unknown, fallback: unknown): unknown[] => {
+    const source = Array.isArray(value) && value.length
+        ? value
+        : Array.isArray(fallback) && fallback.length
+            ? fallback
+            : defaultAppointmentWeeklyHours();
+    return source.map(item => {
+        const record = asRecord(item);
+        return {
+            day: readString(record.day) || 'monday',
+            enabled: readBoolean(record.enabled) ?? true,
+            startTime: readString(record.startTime ?? record.start_time) || '09:00',
+            endTime: readString(record.endTime ?? record.end_time) || '17:00',
+        };
+    });
+};
+
 const createAppointmentHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: input => {
-        const appointment = requireObject(input, 'appointment');
+        const appointment = buildAppointmentCreateInput(input, {
+            id: 'validation',
+            actionType: 'create_appointment',
+            module: 'appointments',
+            userId: '',
+            tenantId: null,
+            projectId: readString(input.projectId) || '',
+            mode: 'user',
+            target: {},
+            input,
+            requiresConfirmation: true,
+            status: 'planned',
+            createdAt: '',
+        } as AssistantAction);
         const errors = [
-            ...(!readString(appointment.startDate) && !readString(appointment.start_date) ? ['appointment.startDate is required before apply.'] : []),
-            ...(!readString(appointment.endDate) && !readString(appointment.end_date) ? ['appointment.endDate is required before apply.'] : []),
+            ...(!appointment.startDate ? ['appointment.startDate is required before apply.'] : []),
+            ...(!appointment.endDate ? ['appointment.endDate is required before apply.'] : []),
         ];
         return { valid: errors.length === 0, errors };
     },
     execute: async (input, { action, context }) => {
         const client = getClient(deps);
         const projectId = getProjectId(input, action, context);
-        const appointment = requireObject(input, 'appointment');
-        const request = readString(input.request);
-        const result = await createAppointmentCanonical(client as any, {
+        const appointment = buildAppointmentCreateInput(input, action, context);
+        if (!appointment.startDate || !appointment.endDate) {
+            throw new Error('appointment.startDate and appointment.endDate are required before applying this appointment action.');
+        }
+        const appointmentPayload: CanonicalAppointmentInput = {
             ...appointment,
             projectId,
             tenantId: getTenantId(action, context),
-            title: readString(appointment.title) || titleFromRequest(request, 'AI appointment draft'),
-            description: readString(appointment.description) || request || '',
-            startDate: readString(appointment.startDate) || readString(appointment.start_date) || '',
-            endDate: readString(appointment.endDate) || readString(appointment.end_date) || '',
-            organizerId: action.userId,
-            createdBy: action.userId,
-            updatedBy: action.userId,
             source: 'dashboard',
             sourceModule: 'global-assistant',
             sourceComponent: 'OperatingLayer',
@@ -1627,7 +3184,8 @@ const createAppointmentHandler = (deps: GlobalAssistantActionHandlerDependencies
             idempotencyKey: `global-assistant:${action.id}:appointment`,
             correlationId: action.id,
             metadata: buildBaseMetadata(input, action, context),
-        });
+        } as CanonicalAppointmentInput;
+        const result = await createAppointmentCanonical(client as any, appointmentPayload);
         return {
             afterSnapshot: {
                 table: 'project_appointments',
@@ -1640,6 +3198,149 @@ const createAppointmentHandler = (deps: GlobalAssistantActionHandlerDependencies
         };
     },
     rollback: rollbackCreatedRow('project_appointments', deps, ['id', 'appointmentId']),
+});
+
+const updateAppointmentHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const appointmentId = getTargetAppointmentId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'project_appointments', projectId, appointmentId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...deriveAppointmentUpdatesFromRequest(input.request),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'appointmentUpdates'),
+            ...requireObject(input, 'appointment'),
+        };
+        const { patch, changedFields } = buildAppointmentUpdatePatch(currentRow, updates, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'project_appointments', projectId, appointmentId, patch);
+        return {
+            beforeSnapshot: { table: 'project_appointments', id: appointmentId, projectId, row: previousRow },
+            afterSnapshot: { table: 'project_appointments', id: appointmentId, projectId, row },
+            diff: {
+                updated: changedFields.map(field => `project_appointments.${appointmentId}.${field}`),
+                reviewRequired: true,
+                rollback: 'restore_previous_appointment_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('project_appointments', deps),
+});
+
+const configureAvailabilityHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const projectData = await loadProjectData(client, projectId);
+        const businessBlueprint = migrateBusinessBlueprint(
+            projectData.businessBlueprint || asRecord(projectData.data).businessBlueprint,
+        );
+        if (!businessBlueprint?.appointmentsBlueprint) {
+            throw new Error('BusinessBlueprint V2 is required before configuring appointment availability.');
+        }
+
+        const availability = {
+            ...requireObject(input, 'availability'),
+            ...requireObject(input, 'settings'),
+        };
+        const currentAppointmentsBlueprint = businessBlueprint.appointmentsBlueprint;
+        const currentAvailability = asRecord(currentAppointmentsBlueprint.availability);
+        const nextAvailability = {
+            ...currentAvailability,
+            ...availability,
+            weeklyHours: normalizeWeeklyHours(
+                availability.weeklyHours ?? availability.weekly_hours,
+                currentAvailability.weeklyHours,
+            ),
+            blockedTimeSource: 'project_appointment_blocks',
+            timezone: readString(availability.timezone) || readString(currentAvailability.timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+            minimumNoticeMinutes: readNumber(availability.minimumNoticeMinutes ?? availability.minimum_notice_minutes) ?? readNumber(currentAvailability.minimumNoticeMinutes) ?? 120,
+            maxAdvanceDays: readNumber(availability.maxAdvanceDays ?? availability.max_advance_days) ?? readNumber(currentAvailability.maxAdvanceDays) ?? 60,
+            intervalMinutes: readNumber(availability.intervalMinutes ?? availability.interval_minutes) ?? readNumber(currentAvailability.intervalMinutes) ?? 30,
+            capacityPerSlot: readNumber(availability.capacityPerSlot ?? availability.capacity_per_slot) ?? readNumber(currentAvailability.capacityPerSlot) ?? 1,
+        };
+        const nextAppointmentsBlueprint = {
+            ...currentAppointmentsBlueprint,
+            availabilityStatus: 'draft',
+            availability: nextAvailability,
+            needsReview: true,
+            updatedAt: now,
+            metadata: {
+                ...asRecord((currentAppointmentsBlueprint as unknown as Record<string, unknown>).metadata),
+                ...buildBaseMetadata(input, action, context),
+            },
+            sourceMap: {
+                ...asRecord((currentAppointmentsBlueprint as unknown as Record<string, unknown>).sourceMap),
+                ...assistantSourceMap(input, action, context),
+                availability: 'globalAssistant.configureAvailability',
+            },
+            readiness: {
+                ...asRecord((currentAppointmentsBlueprint as unknown as Record<string, unknown>).readiness),
+                isReady: false,
+                warnings: Array.from(new Set([
+                    ...asArray(asRecord((currentAppointmentsBlueprint as unknown as Record<string, unknown>).readiness).warnings).map(String),
+                    'Appointment availability was updated by Global Assistant and needs review.',
+                ])),
+            },
+        };
+        const nextBusinessBlueprint = {
+            ...businessBlueprint,
+            appointmentsBlueprint: nextAppointmentsBlueprint,
+            updatedAt: now,
+        };
+        const nextData = {
+            ...projectData,
+            businessBlueprint: nextBusinessBlueprint,
+        };
+        await updateProjectData(client, projectId, nextData, now);
+
+        return {
+            beforeSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                projectData,
+            },
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                row: {
+                    projectId,
+                    appointmentsBlueprint: nextAppointmentsBlueprint,
+                },
+            },
+            diff: {
+                updated: [`projects.${projectId}.data.businessBlueprint.appointmentsBlueprint.availability`],
+                reviewRequired: true,
+                rollback: 'restore_previous_project_data',
+            },
+        };
+    },
+    rollback: async (_input, { snapshot }) => {
+        const before = asRecord(snapshot.beforeSnapshot);
+        const projectId = readString(before.projectId) || readString(before.id);
+        const projectData = asRecord(before.projectData);
+        if (!projectId || !Object.keys(projectData).length) {
+            throw new Error('Cannot rollback appointment availability: previous project data was not recorded.');
+        }
+        const result = await updateProjectData(getClient(deps), projectId, projectData, getNow(deps));
+        return {
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                restored: true,
+                row: result,
+            },
+            diff: {
+                restored: [`projects.${projectId}.data`],
+            },
+        };
+    },
 });
 
 const createBioPageHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
@@ -2529,9 +4230,14 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_calendar: () => createNavigationHandler('appointments', { label: 'Open appointments calendar.', requiresProject: true }),
     open_chatbot_dashboard: () => createNavigationHandler('ai-assistant', { label: 'Open ChatCore dashboard.', requiresProject: true }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),
+    edit_website_section: deps => createWebsiteSectionPatchHandler(deps, 'merge'),
+    update_section_copy: deps => createWebsiteSectionPatchHandler(deps, 'copy'),
+    reorder_sections: createReorderWebsiteSectionsHandler,
+    toggle_section_visibility: createToggleWebsiteSectionVisibilityHandler,
     create_email_campaign: createEmailCampaignHandler,
     create_audience: createEmailAudienceHandler,
     create_email_automation: createEmailAutomationHandler,
+    generate_email_copy: generateEmailCopyHandler,
     search_leads: searchLeadsHandler,
     create_lead: createLeadHandler,
     update_lead: updateLeadHandler,
@@ -2544,10 +4250,15 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     update_inventory: updateProductInventoryHandler,
     create_discount: createDiscountHandler,
     generate_product_copy: generateProductCopyHandler,
+    add_storefront_section: createAddStorefrontSectionHandler,
+    edit_storefront_theme: createEditStorefrontThemeHandler,
+    update_product_card_style: createUpdateProductCardStyleHandler,
     generate_image: deps => createMediaDraftAssetHandler(deps, 'image'),
     edit_image: deps => createMediaDraftAssetHandler(deps, 'image_edit'),
     generate_video: deps => createMediaDraftAssetHandler(deps, 'video'),
     create_appointment: createAppointmentHandler,
+    update_appointment: updateAppointmentHandler,
+    configure_availability: configureAvailabilityHandler,
     create_bio_page: createBioPageHandler,
     add_bio_block: createBioPageBlockHandler,
     create_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: false }),

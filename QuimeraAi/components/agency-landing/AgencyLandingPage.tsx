@@ -79,6 +79,7 @@ type StoreView =
 // Import useSafeEditor
 import { useSafeEditor } from '../../contexts/EditorContext';
 import { useSafeTenant } from '../../contexts/tenant';
+import { buildChatbotEngineSurfaceContext } from '../../utils/chatbotEngine/surfaceContext';
 
 // ... (rest of imports)
 
@@ -501,6 +502,53 @@ const AgencyLandingPageContent: React.FC = () => {
 
   // Check if we're showing a store view
   const isStoreViewActive = storeView.type !== 'none';
+  const agencyLandingChatbotEngineContext = useMemo(() => {
+    const isCheckout = storeView.type === 'checkout';
+    const isStorefrontSurface = storeView.type !== 'none';
+    const entityType = isCheckout
+      ? 'checkout'
+      : storeView.type === 'product'
+        ? 'product'
+        : storeView.type === 'category'
+          ? 'category'
+          : activePost
+            ? 'blog_post'
+            : activeCategorySlug
+              ? 'blog_category'
+              : activePage
+                ? 'site_page'
+                : 'agency_landing';
+
+    return buildChatbotEngineSurfaceContext({
+      sourceSurface: isCheckout ? 'checkout' : isStorefrontSurface ? 'storefront' : 'website',
+      sourceModule: isCheckout ? 'ecommerce' : isStorefrontSurface ? 'storefront-builder' : 'website-builder',
+      route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+      entityType,
+      entityId: activePage?.id || activePost?.id || activeProjectId || undefined,
+      entitySlug: storeView.type === 'product' || storeView.type === 'category'
+        ? storeView.slug
+        : activeCategorySlug || activePage?.slug || activePost?.slug || undefined,
+      contextKeys: [
+        'agency_landing',
+        isStorefrontSurface ? 'storefront' : '',
+        isCheckout ? 'checkout' : '',
+        storeView.type === 'product' ? 'product' : '',
+        storeView.type === 'category' ? 'category' : '',
+        activePost ? 'blog_post' : '',
+        activeCategorySlug ? 'blog_category' : '',
+        activePage ? 'site_page' : '',
+      ].filter(Boolean),
+      metadata: {
+        projectId: activeProjectId,
+        ownerId: activeProject?.userId,
+        activePageSlug: activePage?.slug,
+        activePostSlug: activePost?.slug,
+        activeCategorySlug,
+        storeView: storeView.type,
+        sourceComponent: 'AgencyLandingPage',
+      },
+    });
+  }, [activeCategorySlug, activePage, activePost, activeProject?.userId, activeProjectId, storeView]);
 
   // Helper function to render custom components
   const renderCustomComponent = (customComponentId: string) => {
@@ -1383,7 +1431,7 @@ const AgencyLandingPageContent: React.FC = () => {
       )}
 
       {/* Chatbot Widget - Renders independently outside component order */}
-      <ChatbotWidget />
+      <ChatbotWidget chatbotEngineContext={agencyLandingChatbotEngineContext} />
     </div>
   );
 };

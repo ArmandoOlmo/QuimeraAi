@@ -40,6 +40,7 @@ import BusinessMap from '../../BusinessMap';
 import Menu from '../../Menu';
 import Banner from '../../Banner';
 import RealEstateListingsSection from '../../realty/PublicRealtyListingsSection';
+import { buildChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
 interface ComponentPreviewProps {
     selectedComponentId: string;
@@ -64,7 +65,7 @@ const widthClasses: Record<PreviewDevice, Record<PreviewOrientation, string>> = 
 
 const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId, previewDevice, previewOrientation }) => {
     const { componentStyles, customComponents } = useAdmin();
-    const { theme } = useProject();
+    const { activeProjectId, theme } = useProject();
     const [previewState, setPreviewState] = useState<PreviewState>('normal');
     const [renderKey, setRenderKey] = useState(0);
 
@@ -83,6 +84,22 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
     React.useEffect(() => {
         setRenderKey(prev => prev + 1);
     }, [componentStyles, selectedComponentId]);
+
+    const chatbotPreviewContext = React.useMemo(() => buildChatbotEngineSurfaceContext({
+        sourceSurface: 'admin_preview',
+        sourceModule: 'chatbot-engine',
+        route: `/dashboard/component-preview/${selectedComponentId}`,
+        entityType: 'component_preview',
+        entityId: selectedComponentId,
+        contextKeys: ['admin_preview', 'component_preview', `component:${selectedComponentId}`],
+        metadata: {
+            projectId: activeProjectId,
+            selectedComponentId,
+            previewDevice,
+            previewOrientation,
+            sourceComponent: 'ComponentPreview',
+        },
+    }), [activeProjectId, previewDevice, previewOrientation, selectedComponentId]);
 
     const isCustom = !Object.keys(componentStyles).includes(selectedComponentId);
 
@@ -232,12 +249,11 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
             case 'separator3':
             case 'separator4':
             case 'separator5':
-            case 'separator':
                 return <Separator data={mergedProps} />;
             case 'footer':
                 return <Footer {...mergedProps} />;
             case 'chatbot':
-                return <ChatbotWidget isPreview={true} />;
+                return <ChatbotWidget isPreview={true} chatbotEngineContext={chatbotPreviewContext} />;
             case 'typography':
                 return (
                     <div className="p-8 text-center">

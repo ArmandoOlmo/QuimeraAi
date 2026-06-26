@@ -8,6 +8,10 @@ import { resolveChatAppearanceConfig } from '../../../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, AppointmentSlot } from '../../chat/ChatCore';
 import { supabase } from '../../../supabase';
 import { createAppointmentFromChat, getAppointmentsByProject } from '../../../services/appointments/appointmentEngineService';
+import {
+    buildChatCoreAppointmentPayloadNotes,
+    buildChatCoreLeadPayloadNotes,
+} from '../../../utils/chatbotEngine/chatCorePayloadNotes';
 
 interface ChatSimulatorProps {
     config: AiAssistantConfig;
@@ -60,6 +64,15 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
     // Handle lead capture
     const handleLeadCapture = async (leadData: Partial<any>): Promise<string | undefined> => {
+        const customerRequestNotes = buildChatCoreLeadPayloadNotes({
+            leadData: leadData as Record<string, unknown>,
+            projectName: project.name,
+            agentName: config.agentName,
+            sourceSurface: 'test_lab',
+            sourceModule: 'chatcore',
+            locale: i18n.language,
+        });
+
         console.log('[ChatSimulator] 📝 handleLeadCapture called with:', {
             name: leadData.name,
             email: leadData.email,
@@ -70,9 +83,16 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
 
         const fullLeadData: Omit<Lead, 'id' | 'createdAt' | 'projectId'> = {
             ...leadData,
+            notes: customerRequestNotes,
             source: 'quimera-chat',
             status: 'new',
-            tags: ['quimera-chat', ...(leadData.tags || [])]
+            tags: ['quimera-chat', ...(leadData.tags || [])],
+            metadata: {
+                ...(leadData.metadata || {}),
+                customerRequestSummary: customerRequestNotes,
+                sourceSurface: 'test_lab',
+                sourceModule: 'chatcore',
+            },
         } as Omit<Lead, 'id' | 'createdAt' | 'projectId'>;
 
         try {
@@ -98,6 +118,14 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<string | undefined> => {
         console.log('[ChatSimulator] 📅 handleCreateAppointment called with:', appointmentData);
         console.log('[ChatSimulator] 📅 user:', user?.id, 'projectId:', projectId);
+        const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
+            appointmentData: appointmentData as unknown as Record<string, unknown>,
+            projectName: project.name,
+            agentName: config.agentName,
+            sourceSurface: 'test_lab',
+            sourceModule: 'chatcore',
+            locale: appointmentData.locale || i18n.language,
+        });
 
         if (!user || !projectId) {
             console.error('[ChatSimulator] ❌ Cannot create appointment: no user or project', { user: !!user, projectId });
@@ -113,7 +141,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                 tenantId: currentTenantId,
                 title: appointmentData.title || 'Cita desde Chat',
                 description: appointmentData.description || '',
-                notes: appointmentData.notes,
+                notes: customerRequestNotes,
                 type: appointmentData.type || 'consultation',
                 startDate: appointmentData.startDate,
                 endDate: appointmentData.endDate,
@@ -140,7 +168,7 @@ const ChatSimulator: React.FC<ChatSimulatorProps> = ({ config, project }) => {
                     projectName: project.name,
                     locale: i18n.language,
                     bookingChannel: appointmentData.bookingChannel,
-                    customerRequestSummary: appointmentData.notes,
+                    customerRequestSummary: customerRequestNotes,
                 },
             });
 

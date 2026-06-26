@@ -70,6 +70,7 @@ function buildBusinessBlueprint() {
 
 function createProjectClient(projectData: Record<string, unknown>) {
     let updatePayload: Record<string, unknown> | undefined;
+    const events: Record<string, unknown>[] = [];
     const selectQuery: any = {
         select: vi.fn(() => selectQuery),
         eq: vi.fn(() => selectQuery),
@@ -85,12 +86,25 @@ function createProjectClient(projectData: Record<string, unknown>) {
             return updateQuery;
         }),
     };
+    const eventQuery: any = {
+        insert: vi.fn((payload: Record<string, unknown>) => {
+            events.push(payload);
+            return eventQuery;
+        }),
+        select: vi.fn(() => eventQuery),
+        maybeSingle: vi.fn(async () => ({ data: { id: `event-${events.length}` }, error: null })),
+    };
     const client = {
-        from: vi.fn(() => tableApi),
+        from: vi.fn((table: string) => {
+            if (table === 'chatbot_engine_events') return eventQuery;
+            return tableApi;
+        }),
         getUpdatePayload: () => updatePayload,
+        getEvents: () => events,
         selectQuery,
         updateQuery,
         tableApi,
+        eventQuery,
     };
     return client;
 }
@@ -148,10 +162,29 @@ describe('chatbotEngineConfigurationService', () => {
         expect(client.selectQuery.eq).toHaveBeenCalledWith('id', 'project_chatbot');
         expect(client.tableApi.update).toHaveBeenCalledTimes(1);
         expect(client.updateQuery.eq).toHaveBeenCalledWith('id', 'project_chatbot');
+        expect(result.auditEventId).toBe('event-1');
         expect(result.action).toMatchObject({
             actionType: 'answer_from_knowledge',
             enabled: true,
             status: 'configured',
+        });
+        expect(client.getEvents()[0]).toMatchObject({
+            project_id: 'project_chatbot',
+            event_type: 'chatbot_configuration_updated',
+            action_type: 'answer_from_knowledge',
+            action_status: 'executed',
+            source_surface: 'admin_preview',
+            source_module: 'chatbot-engine-dashboard',
+            actor_type: 'project_user',
+            actor_id: 'user_1',
+        });
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'actionRegistry',
+            targetId: 'answer_from_knowledge',
+            operation: 'enable_action',
+            projectScoped: true,
+            idempotent: true,
+            auditLogRequired: true,
         });
         const updatePayload = client.getUpdatePayload();
         expect(updatePayload?.last_updated).toBe('2026-06-26T12:00:00.000Z');
@@ -215,6 +248,18 @@ describe('chatbotEngineConfigurationService', () => {
             id: 'knowledge-business-blueprint',
             status: 'ready',
             needsReview: false,
+        });
+        expect(result.auditEventId).toBe('event-1');
+        expect(client.getEvents()[0]).toMatchObject({
+            project_id: 'project_chatbot',
+            event_type: 'chatbot_configuration_updated',
+            action_type: null,
+            source_module: 'chatbot-engine-dashboard',
+        });
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'knowledgeCenter',
+            targetId: 'knowledge-business-blueprint',
+            operation: 'enable_knowledge_source',
         });
         const updatePayload = client.getUpdatePayload();
         const updatedData = updatePayload?.data as any;
@@ -281,6 +326,17 @@ describe('chatbotEngineConfigurationService', () => {
             id: scenarioId,
             status: 'failed',
             needsReview: true,
+        });
+        expect(result.auditEventId).toBe('event-1');
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'testLab',
+            targetId: scenarioId,
+            operation: 'mark_failed',
+            after: {
+                status: 'failed',
+                needsReview: true,
+                evaluationStatus: 'failing',
+            },
         });
         const updatePayload = client.getUpdatePayload();
         const updatedData = updatePayload?.data as any;
@@ -360,6 +416,17 @@ describe('chatbotEngineConfigurationService', () => {
 
         expect(result.surfaceId).toBe('storefront');
         expect(result.surface).toMatchObject({ enabled: true, status: 'deployed' });
+        expect(result.auditEventId).toBe('event-1');
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'deploySettings',
+            targetId: 'storefront',
+            operation: 'surface_deployed',
+            after: {
+                enabled: true,
+                status: 'deployed',
+                needsReview: false,
+            },
+        });
         const updatePayload = client.getUpdatePayload();
         const updatedData = updatePayload?.data as any;
         expect(updatedData.businessBlueprint.chatbotBlueprint.channels.storefront.status).toBe('deployed');
@@ -419,6 +486,18 @@ describe('chatbotEngineConfigurationService', () => {
             enabled: true,
             provider: 'elevenlabs',
             agentId: 'voice_agent_123',
+        });
+        expect(result.auditEventId).toBe('event-1');
+        expect(client.getEvents()[0].metadata).toMatchObject({
+            configurationType: 'voiceSettings',
+            targetId: 'voice',
+            operation: 'enable_voice',
+            after: {
+                enabled: true,
+                provider: 'elevenlabs',
+                agentConfigured: true,
+                surfaceStatus: 'deployed',
+            },
         });
         const updatePayload = client.getUpdatePayload();
         const updatedData = updatePayload?.data as any;

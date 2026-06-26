@@ -59,7 +59,7 @@ export const CHATBOT_ENGINE_DEPLOYMENT_SURFACES: ChatbotEngineDeploymentSurfaceD
         defaultRoutePattern: '/site/:projectSlug/*',
         requiredContextKeys: ['projectId', 'pageId', 'route'],
         requiredBlueprintPaths: ['channels.webWidget', 'deployment.deployedSurfaces', 'agentProfile'],
-        runtimeEvidence: ['components/ChatbotWidget.tsx', 'components/LandingPage.tsx', 'components/PublicWebsitePreview.tsx'],
+        runtimeEvidence: ['components/ChatbotWidget.tsx', 'components/LandingPage.tsx', 'components/PublicWebsitePreview.tsx', 'components/agency-landing/AgencyLandingPage.tsx'],
     },
     {
         id: 'storefront',
@@ -147,7 +147,7 @@ export const CHATBOT_ENGINE_DEPLOYMENT_SURFACES: ChatbotEngineDeploymentSurfaceD
         defaultRoutePattern: '/dashboard/chatbot',
         requiredContextKeys: ['projectId', 'adminUserId', 'testScenarioId'],
         requiredBlueprintPaths: ['channels.adminPreview', 'testing.testScenarios'],
-        runtimeEvidence: ['components/dashboard/ai/ChatSimulator.tsx', 'components/dashboard/ai/ChatbotEngineDashboard.tsx'],
+        runtimeEvidence: ['components/dashboard/ai/ChatSimulator.tsx', 'components/dashboard/ai/ChatbotEngineDashboard.tsx', 'components/dashboard/admin/ComponentPreview.tsx'],
     },
     {
         id: 'voice',

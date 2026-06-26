@@ -48,6 +48,12 @@ const CANONICAL_CHAT_EMAIL_MODULES: CanonicalEmailSourceModule[] = [
 ];
 
 function resolveChatCanonicalEmailModule(sourceModule?: string | null): CanonicalEmailSourceModule {
+    const moduleAliases: Record<string, CanonicalEmailSourceModule> = {
+        'storefront-builder': 'ecommerce',
+        'real-estate': 'realty',
+        'bio-page': 'bio-page-engine',
+    };
+    if (sourceModule && moduleAliases[sourceModule]) return moduleAliases[sourceModule];
     return CANONICAL_CHAT_EMAIL_MODULES.includes(sourceModule as CanonicalEmailSourceModule)
         ? sourceModule as CanonicalEmailSourceModule
         : 'chatcore';
