@@ -600,28 +600,13 @@ html.black .quimera-dashboard-home-bg {
 
 .quimera-user-name-highlight {
   display: inline-block;
-  color: var(--q-text);
-  background-image: linear-gradient(90deg, var(--q-text) 0%, color-mix(in srgb, var(--q-text) 72%, var(--q-accent)) 100%);
-  background-size: 240% 100%;
-  text-shadow: none;
-}
-
-html.dark .quimera-user-name-highlight,
-html.black .quimera-user-name-highlight {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: quimeraUserNameTextSheen 5.6s ease-in-out infinite;
-  text-shadow: 0 0 24px rgba(var(--q-accent-rgb), 0.18);
-}
-
-html.light .quimera-user-name-highlight {
-  color: var(--q-text);
+  color: var(--q-accent);
   -webkit-text-fill-color: currentColor;
-  background-image: none;
-  animation: none;
   text-shadow: none;
+}
+
+.quimera-user-name-highlight.block {
+  display: block;
 }
 
 html.light .quimera-dashboard-upgrade-cta {
@@ -635,21 +620,6 @@ html.light .quimera-dashboard-upgrade-cta:hover {
   filter: none;
   opacity: 0.92;
   box-shadow: var(--shadow-card-hover) !important;
-}
-
-@keyframes quimeraUserNameTextSheen {
-  0%,
-  18% {
-    background-position: 0% 50%;
-  }
-
-  55% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
 }
 
 .quimera-ai-launcher {
@@ -2773,11 +2743,6 @@ span.rounded-full.w-4 {
     animation: none !important;
   }
 
-  html.dark .quimera-user-name-highlight,
-  html.black .quimera-user-name-highlight {
-    animation: none !important;
-    background-position: 100% 50%;
-  }
 }
 
 @keyframes quimeraAiLauncherReducedEnter {
