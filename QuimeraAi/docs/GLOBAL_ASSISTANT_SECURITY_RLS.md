@@ -4,7 +4,7 @@
 
 The Global Assistant can eventually operate most of Quimera. That makes permission, preview, audit, and tenant isolation non-negotiable.
 
-GA1 centralizes checks in `globalAssistantPermissionService.ts` and keeps storage in memory. GA2 must add Supabase tables and RLS before assistant state is persisted.
+GA1 centralizes checks in `globalAssistantPermissionService.ts` and keeps storage in memory. GA2 adds Supabase tables, RLS, grants, and repository adapters before assistant state is wired into the live runtime.
 
 ## Runtime checks in GA1
 
@@ -21,9 +21,9 @@ GA1 centralizes checks in `globalAssistantPermissionService.ts` and keeps storag
 - Project mismatch blocks memory access outside admin mode.
 - Project-scoped actions require `projectId`.
 
-## Required Supabase RLS for GA2
+## Supabase RLS implemented in GA2
 
-Assistant tables must include scoped columns and policies:
+Assistant tables include scoped columns and policies:
 
 - `tenant_id`
 - `user_id`
@@ -32,7 +32,7 @@ Assistant tables must include scoped columns and policies:
 - `module`
 - `mode` where action/admin state needs it
 
-Minimum policy expectations:
+Implemented policy expectations:
 
 - `assistant_memories`: read/write own user memory; tenant/project memory only for authorized tenant/project members; admin memory only for Owner/Super Admin.
 - `assistant_memory_items`: inherit parent memory access.
@@ -42,6 +42,26 @@ Minimum policy expectations:
 - `assistant_actions`: read by authorized project/tenant/admin users; insert through trusted server paths when actions are applied.
 - `assistant_context_snapshots`: scoped to the same user/tenant/project boundaries as the task/conversation.
 - `assistant_admin_events`: admin mode only.
+
+Implementation details:
+
+- Migration: `supabase/migrations/20260626120743_global_assistant_memory_store.sql`
+- Helper functions are `SECURITY INVOKER` and pin `search_path`.
+- Policies are operation-specific; no `FOR ALL` assistant policies.
+- Policies target `TO authenticated`; there are no anon grants on `assistant_*` tables.
+- `assistant_runtime_events` records runtime/audit events under the same scoped access model.
+
+Local verification on 2026-06-26:
+
+- `supabase db reset --local --no-seed` applied all migrations including GA2.
+- Catalog query confirmed all 12 `assistant_*` tables have RLS enabled.
+- `supabase db advisors --local --output json` returned no findings containing `assistant_*` or `global_assistant_*`.
+
+Known non-GA advisory surfaced during verification:
+
+- Supabase reports `public.public_stores` has policies but RLS is disabled (`policy_exists_rls_disabled` / critical RLS advisory).
+- Suggested SQL from the advisor is `ALTER TABLE public.public_stores ENABLE ROW LEVEL SECURITY;`.
+- This was not applied in GA2 because enabling RLS without reviewing/adding the intended public storefront policies could block or change storefront access.
 
 ## Negative tests required for GA2
 

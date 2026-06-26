@@ -1,13 +1,17 @@
 # Global Assistant Architecture
 
-## GA1 scope
+## Current scope
 
-GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. It does not replace existing chats, does not add heavy UI, and does not apply real module mutations yet.
+GA1 creates the platform contract for the Quimera Global Assistant as an AI Operating Layer. GA2 adds the Supabase persistence layer for memory, conversations, tasks, actions, runtime events, summaries, preferences, and admin events.
 
-This PR-level scope adds:
+This work does not replace existing chats, does not add heavy UI, and does not apply real module mutations yet.
+
+The current PR-level scope adds:
 
 - `types/globalAssistant.ts` as the shared TypeScript contract.
 - `services/globalAssistant/*` for context resolution, memory, intent routing, action registry, permission checks, execution planning, audit events, task tracking, project resolution, and OpenRouter model metadata.
+- `services/globalAssistant/globalAssistantSupabaseStore.ts` for injectable Supabase persistence repositories.
+- `supabase/migrations/20260626120743_global_assistant_memory_store.sql` for `assistant_*` tables, RLS, grants, triggers, and helper functions.
 - Preview-first execution plans with confirmation requirements for high and critical actions.
 - Documentation for memory, actions, model routing, security/RLS, and QA.
 
@@ -38,13 +42,13 @@ Rule: Global Assistant can orchestrate these surfaces, open them, or create draf
 GA1 introduces these layers:
 
 - `globalAssistantContextResolver`: creates an `AssistantContextSnapshot` from user, tenant, active route, active project, admin mode, selected entity, and surface metadata.
-- `globalAssistantMemoryService`: validates and queries segmented memory through an adapter. GA1 uses an in-memory adapter; GA2 should add Supabase persistence and RLS.
+- `globalAssistantMemoryService`: validates and queries segmented memory through an adapter. GA1 uses an in-memory adapter; GA2 adds an injectable Supabase adapter and RLS-backed tables.
 - `globalAssistantIntentRouter`: returns structured GA1 intent output. It is intentionally rule-based until the OpenRouter structured tool loop is added.
 - `globalAssistantActionRegistry`: declares module actions, schemas, service gates, feature gates, safety level, preview support, rollback support, and required permissions.
 - `globalAssistantPermissionService`: centralizes user/admin mode checks, service availability checks, feature flag checks, memory access checks, and project-context checks.
 - `globalAssistantExecutionEngine`: converts intent and action definitions into a preview-first `AssistantExecutionPlan`.
-- `globalAssistantAuditService`: records action logs and runtime events in memory for GA1.
-- `globalAssistantTaskService`: creates resumable task records in memory for GA1.
+- `globalAssistantAuditService`: records action logs and runtime events in memory for GA1; GA2 adds Supabase repositories for durable action/event logs.
+- `globalAssistantTaskService`: creates resumable task records in memory for GA1; GA2 adds a Supabase task repository.
 - `globalAssistantRuntime`: coordinates memory loading, intent routing, model selection, execution planning, task creation, and audit events.
 
 ## Execution flow
@@ -89,7 +93,7 @@ Model metadata was verified against OpenRouter model availability on 2026-06-26 
 
 ## Next PRs
 
-- GA2: Supabase assistant tables, adapters, RLS, and persistence tests.
+- GA2: Supabase assistant tables, adapters, RLS, and persistence tests. Done as an additive persistence layer; live runtime switchover remains separate.
 - GA3: project switcher and richer context snapshots.
 - GA4: dashboard request bar routes to Global Assistant runtime.
 - GA5: global command palette.

@@ -8,6 +8,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY INVOKER
+SET search_path = public, auth
 AS $$
   SELECT (SELECT auth.uid()) IS NOT NULL
     AND EXISTS (
@@ -23,6 +24,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY INVOKER
+SET search_path = public, auth
 AS $$
   SELECT target_tenant_id IS NOT NULL
     AND (SELECT auth.uid()) IS NOT NULL
@@ -48,6 +50,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY INVOKER
+SET search_path = public, auth
 AS $$
   SELECT target_project_id IS NOT NULL
     AND (SELECT auth.uid()) IS NOT NULL
@@ -75,6 +78,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY INVOKER
+SET search_path = public, auth
 AS $$
   SELECT CASE
     WHEN target_scope IN ('admin', 'system') THEN public.global_assistant_is_platform_owner()
@@ -109,6 +113,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY INVOKER
+SET search_path = public, auth
 AS $$
   SELECT public.global_assistant_is_platform_owner()
     OR public.global_assistant_is_project_member(target_project_id)
@@ -120,12 +125,15 @@ AS $$
 $$;
 
 CREATE OR REPLACE FUNCTION public.set_global_assistant_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TABLE IF NOT EXISTS public.assistant_memories (
   id TEXT PRIMARY KEY DEFAULT ('asst_mem_' || gen_random_uuid()::text),

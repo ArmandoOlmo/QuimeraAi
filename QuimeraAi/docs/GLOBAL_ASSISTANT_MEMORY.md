@@ -4,7 +4,7 @@
 
 Global Assistant memory is operational state, not raw chat history. It should help the assistant understand user preferences, tenant/workspace configuration, project state, module readiness, session context, task progress, audit history, and admin context.
 
-GA1 defines the contract and an in-memory service. GA2 should persist the same contract in Supabase with strict RLS.
+GA1 defines the contract and an in-memory service. GA2 adds the Supabase persistence layer for the same contract with strict RLS, without switching the live runtime away from the in-memory adapter yet.
 
 ## Scopes
 
@@ -34,9 +34,17 @@ GA1 defines the contract and an in-memory service. GA2 should persist the same c
 - Queries filter expired memory unless `includeExpired` is true.
 - Queries run through `checkMemoryAccess`.
 
-## Supabase target tables
+## Supabase persistence added in GA2
 
-GA2 should add:
+Migration:
+
+- `supabase/migrations/20260626120743_global_assistant_memory_store.sql`
+
+Runtime adapter:
+
+- `services/globalAssistant/globalAssistantSupabaseStore.ts`
+
+GA2 adds these tables:
 
 - `assistant_memories`
 - `assistant_memory_items`
@@ -44,13 +52,18 @@ GA2 should add:
 - `assistant_messages`
 - `assistant_tasks`
 - `assistant_actions`
+- `assistant_runtime_events`
 - `assistant_context_snapshots`
 - `assistant_project_summaries`
 - `assistant_module_summaries`
 - `assistant_user_preferences`
 - `assistant_admin_events`
 
-## RLS expectations
+Assistant-owned IDs are stored as prefixed `TEXT` IDs (`asst_mem_*`, `asst_task_*`, `asst_action_*`) to match the TypeScript runtime contract. User, tenant, and project references remain UUID foreign keys.
+
+`utils/compatData.ts` includes assistant collection aliases and JSON fallback columns so the generic compatibility layer can safely handle the new tables.
+
+## RLS behavior
 
 - Users can read/write their own `user` memory.
 - Tenant members can read tenant memory only for their tenant, according to role.
@@ -59,6 +72,8 @@ GA2 should add:
 - Cross-tenant reads must return no rows.
 - Cross-project reads must return no rows unless an explicit all-project mode exists and the user has permission.
 - Users should later be able to view and delete personal memory, subject to retention rules for audit logs.
+
+GA2 implements these rules through `SECURITY INVOKER` helper functions with explicit `search_path`, per-table RLS, scoped `TO authenticated` policies, and no anon table grants.
 
 ## Sensitive data
 

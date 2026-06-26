@@ -60,4 +60,20 @@ describe('Global Assistant memory store migration', () => {
         expect(sql).toContain('CREATE OR REPLACE FUNCTION public.global_assistant_is_project_member(target_project_id UUID)');
         expect(sql).not.toMatch(/global_assistant_.*SECURITY DEFINER/is);
     });
+
+    it('pins helper function search_path for Supabase advisor compatibility', () => {
+        const helperFunctions = [
+            'global_assistant_is_platform_owner',
+            'global_assistant_is_tenant_member',
+            'global_assistant_is_project_member',
+            'global_assistant_can_access_scope',
+            'global_assistant_can_access_record',
+        ];
+
+        for (const functionName of helperFunctions) {
+            expect(sql).toMatch(new RegExp(`CREATE OR REPLACE FUNCTION public\\.${functionName}[\\s\\S]*?SECURITY INVOKER\\s+SET search_path = public, auth`, 'i'));
+        }
+
+        expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.set_global_assistant_updated_at\(\)[\s\S]*?LANGUAGE plpgsql\s+SET search_path = public/i);
+    });
 });
