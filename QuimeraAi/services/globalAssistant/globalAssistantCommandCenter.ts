@@ -114,10 +114,12 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
 
 export function shouldContinueAfterRuntimePlan(result: GlobalAssistantRuntimeResult): boolean {
     const mutatesData = result.plan.actions.some(action => action.metadata?.mutatesData === true);
+    const hasExecutableActions = result.plan.actions.some(action => action.metadata?.executable === true);
 
     return result.plan.status !== 'blocked'
         && !result.plan.requiresConfirmation
         && !mutatesData
+        && !hasExecutableActions
         && result.plan.safetyLevel === 'low';
 }
 
@@ -135,10 +137,14 @@ const AUTO_APPLY_NAVIGATION_ACTIONS = new Set([
 export function shouldAutoApplyOperatingLayerPlan(result: GlobalAssistantRuntimeResult): boolean {
     if (result.plan.status === 'blocked' || result.plan.requiresConfirmation) return false;
     if (result.plan.actions.length === 0) return false;
+    if (result.plan.status === 'preview' || result.plan.previews.length > 0) return false;
 
     return result.plan.actions.every(action =>
         action.metadata?.mutatesData !== true
-        && AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
+        && (
+            AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
+            || action.metadata?.executable === true
+        )
     );
 }
 

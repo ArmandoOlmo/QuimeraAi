@@ -21,9 +21,11 @@ const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
     if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
+    if (includesAny(text, ['exporta', 'export', 'descarga', 'download'])) return 'report';
     if (includesAny(text, ['abre', 'abrir', 'open', 've a', 'go to', 'muestra'])) return 'open';
     if (includesAny(text, ['busca', 'search', 'encuentra', 'find'])) return 'search';
-    if (includesAny(text, ['analiza', 'review', 'revisa', 'reporte', 'report'])) return 'analyze';
+    if (includesAny(text, ['reporte', 'report'])) return 'report';
+    if (includesAny(text, ['analiza', 'review', 'revisa', 'identifica', 'identify'])) return 'analyze';
     if (includesAny(text, ['imagen', 'image', 'foto', 'hero image'])) return 'generate_image';
     if (includesAny(text, ['video'])) return 'generate_video';
     if (includesAny(text, ['sincroniza', 'sync', 'entrena', 'entrenar', 'train', 'training'])) return 'sync';
@@ -111,6 +113,17 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         if (includesAny(text, ['campaign', 'campana', 'marketing', 'social', 'ads', 'anuncio'])) return ['generate_realty_campaign'];
         if (includesAny(text, ['showing', 'visita', 'tour'])) return ['create_showing_request_flow'];
         return ['create_listing'];
+    }
+
+    if (module === 'analytics') {
+        if (intent === 'report') {
+            if (includesAny(text, ['exporta', 'export', 'descarga', 'download', 'pdf', 'csv'])) return ['export_report'];
+            return ['run_project_report'];
+        }
+        if (intent === 'analyze') {
+            if (includesAny(text, ['blocker', 'bloqueo', 'bloqueos', 'faltan', 'falta', 'readiness', 'listo'])) return ['identify_blockers'];
+            return ['summarize_analytics'];
+        }
     }
 
     if (module === 'aiStudio' && intent === 'create') {

@@ -1388,6 +1388,174 @@ const createRealtyOpenHouseHandler = (deps: GlobalAssistantActionHandlerDependen
     rollback: rollbackCreatedRow('property_open_houses', deps),
 });
 
+type AnalyticsSourceKey =
+    | 'leads'
+    | 'appointments'
+    | 'emailCampaigns'
+    | 'emailAudiences'
+    | 'emailEvents'
+    | 'products'
+    | 'orders'
+    | 'mediaAssets'
+    | 'bioPages'
+    | 'bioPageEvents'
+    | 'chatbotEvents'
+    | 'financeInvoices'
+    | 'realtyListings'
+    | 'restaurantEvents';
+
+const ANALYTICS_SOURCES: Array<{
+    key: AnalyticsSourceKey;
+    table: string;
+    projectField: string;
+    columns: string;
+    statusField?: string;
+    eventField?: string;
+}> = [
+    { key: 'leads', table: 'leads', projectField: 'project_id', columns: 'id,status,source,created_at', statusField: 'status' },
+    { key: 'appointments', table: 'project_appointments', projectField: 'project_id', columns: 'id,status,source,created_at,start_date', statusField: 'status' },
+    { key: 'emailCampaigns', table: 'email_campaigns', projectField: 'project_id', columns: 'id,status,type,created_at', statusField: 'status' },
+    { key: 'emailAudiences', table: 'email_audiences', projectField: 'project_id', columns: 'id,status,created_at', statusField: 'status' },
+    { key: 'emailEvents', table: 'email_events', projectField: 'project_id', columns: 'id,event_type,type,received_at,created_at', eventField: 'event_type' },
+    { key: 'products', table: 'store_products', projectField: 'project_id', columns: 'id,data,created_at' },
+    { key: 'orders', table: 'store_orders', projectField: 'project_id', columns: 'id,status,total,created_at', statusField: 'status' },
+    { key: 'mediaAssets', table: 'media_assets', projectField: 'metadata->>projectId', columns: 'id,category,is_ai_generated,metadata,created_at', statusField: 'category' },
+    { key: 'bioPages', table: 'bio_pages', projectField: 'project_id', columns: 'id,status,created_at', statusField: 'status' },
+    { key: 'bioPageEvents', table: 'bio_page_events', projectField: 'project_id', columns: 'id,event_type,created_at', eventField: 'event_type' },
+    { key: 'chatbotEvents', table: 'chatbot_engine_events', projectField: 'project_id', columns: 'id,event_type,action_type,intent,created_at', eventField: 'event_type' },
+    { key: 'financeInvoices', table: 'accounting_invoices', projectField: 'project_id', columns: 'id,status,total,created_at', statusField: 'status' },
+    { key: 'realtyListings', table: 'properties', projectField: 'project_id', columns: 'id,status,public_enabled,created_at', statusField: 'status' },
+    { key: 'restaurantEvents', table: 'restaurant_analytics_events', projectField: 'project_id', columns: 'id,event_type,created_at', eventField: 'event_type' },
+];
+
+const countByField = (rows: Record<string, unknown>[], field?: string): Record<string, number> => {
+    if (!field) return {};
+    return rows.reduce<Record<string, number>>((acc, row) => {
+        const value = readString(row[field]) || 'unknown';
+        acc[value] = (acc[value] || 0) + 1;
+        return acc;
+    }, {});
+};
+
+const safeReadAnalyticsRows = async (
+    client: SupabaseClientLike,
+    source: (typeof ANALYTICS_SOURCES)[number],
+    projectId: string,
+): Promise<{ source: (typeof ANALYTICS_SOURCES)[number]; rows: Record<string, unknown>[]; warning?: string }> => {
+    try {
+        let query = client
+            .from(source.table)
+            .select(source.columns)
+            .eq(source.projectField, projectId);
+        if (typeof query.limit === 'function') query = query.limit(100);
+        const result = await query;
+        if (result?.error) throw result.error;
+        return { source, rows: asArray(result?.data).map(asRecord) };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+            source,
+            rows: [],
+            warning: `${source.table}: ${message}`,
+        };
+    }
+};
+
+const activeServiceSet = (context?: AssistantContextSnapshot): Set<string> =>
+    new Set(context?.tenant.activeServices || []);
+
+const buildProjectAnalyticsSnapshot = async (
+    deps: GlobalAssistantActionHandlerDependencies,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+) => {
+    const client = getClient(deps);
+    const projectId = getProjectId(input, action, context);
+    const now = getNow(deps);
+    const results = await Promise.all(
+        ANALYTICS_SOURCES.map(source => safeReadAnalyticsRows(client, source, projectId)),
+    );
+    const modules = results.reduce<Record<string, Record<string, unknown>>>((acc, result) => {
+        acc[result.source.key] = {
+            table: result.source.table,
+            count: result.rows.length,
+            byStatus: countByField(result.rows, result.source.statusField),
+            byEvent: countByField(result.rows, result.source.eventField),
+            sampleIds: result.rows.slice(0, 5).map(row => readString(row.id)).filter(Boolean),
+        };
+        return acc;
+    }, {});
+    const services = activeServiceSet(context);
+    const warnings = results.map(result => result.warning).filter((warning): warning is string => Boolean(warning));
+    const blockers = [
+        ...(!projectId ? ['missing_project_id'] : []),
+        ...(services.has('crm') && (modules.leads?.count as number || 0) === 0 ? ['crm_has_no_leads'] : []),
+        ...(services.has('appointments') && (modules.appointments?.count as number || 0) === 0 ? ['appointments_have_no_records'] : []),
+        ...(services.has('emailMarketing') && (modules.emailCampaigns?.count as number || 0) === 0 ? ['email_marketing_has_no_campaigns'] : []),
+        ...(services.has('emailMarketing') && (modules.emailAudiences?.count as number || 0) === 0 ? ['email_marketing_has_no_audiences'] : []),
+        ...(services.has('ecommerce') && (modules.products?.count as number || 0) === 0 ? ['ecommerce_has_no_products'] : []),
+        ...(services.has('ecommerce') && (modules.orders?.count as number || 0) === 0 ? ['ecommerce_has_no_orders'] : []),
+        ...(services.has('chatbot') && (modules.chatbotEvents?.count as number || 0) === 0 ? ['chatcore_has_no_runtime_events'] : []),
+        ...(services.has('aiFeatures') && (modules.mediaAssets?.count as number || 0) === 0 ? ['media_ai_has_no_assets'] : []),
+        ...(services.has('finance') && (modules.financeInvoices?.count as number || 0) === 0 ? ['finance_has_no_invoices'] : []),
+        ...(services.has('realEstate') && (modules.realtyListings?.count as number || 0) === 0 ? ['realty_has_no_listings'] : []),
+        ...(services.has('restaurants') && (modules.restaurantEvents?.count as number || 0) === 0 ? ['restaurants_have_no_analytics_events'] : []),
+    ];
+
+    return {
+        generatedAt: now,
+        projectId,
+        projectName: context?.project.projectName || null,
+        modules,
+        blockers,
+        warnings,
+        sourceTables: ANALYTICS_SOURCES.map(source => source.table),
+    };
+};
+
+const createAnalyticsHandler = (
+    deps: GlobalAssistantActionHandlerDependencies,
+    kind: 'summary' | 'blockers' | 'report' | 'export',
+): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const snapshot = await buildProjectAnalyticsSnapshot(deps, input, action, context);
+        const request = (readString(input.request) || '').toLowerCase();
+        const format = readString(input.format)
+            || (request.includes('csv') ? 'csv' : request.includes('pdf') ? 'pdf' : 'json');
+        const afterSnapshot = {
+            kind,
+            format,
+            reportId: `${kind}-${snapshot.projectId}-${snapshot.generatedAt}`,
+            summary: {
+                projectId: snapshot.projectId,
+                projectName: snapshot.projectName,
+                blockerCount: snapshot.blockers.length,
+                warningCount: snapshot.warnings.length,
+                totalSignals: Object.values(snapshot.modules).reduce<number>((sum, module) => sum + (readNumber(module.count) ?? 0), 0),
+            },
+            analytics: snapshot,
+            export: kind === 'export'
+                ? {
+                    fileName: `quimera-project-report-${snapshot.projectId}.${format}`,
+                    contentType: format === 'csv' ? 'text/csv' : format === 'pdf' ? 'application/pdf' : 'application/json',
+                    status: 'ready_for_download_renderer',
+                }
+                : null,
+        };
+
+        return {
+            afterSnapshot,
+            diff: {
+                reported: [`analytics.${kind}.${snapshot.projectId}`],
+                mutatesData: false,
+                sourceTables: snapshot.sourceTables,
+            },
+        };
+    },
+});
+
 const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDependencies) => HandlerPatch> = {
     open_project: () => createNavigationHandler('editor', { label: 'Open project in Website Builder.', requiresProject: true }),
     switch_project: () => createNavigationHandler('dashboard', { label: 'Switch active project context.', requiresProject: true }),
@@ -1426,6 +1594,10 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     create_listing: createRealtyListingHandler,
     create_open_house: createRealtyOpenHouseHandler,
     generate_realty_campaign: createRealtyCampaignHandler,
+    run_project_report: deps => createAnalyticsHandler(deps, 'report'),
+    summarize_analytics: deps => createAnalyticsHandler(deps, 'summary'),
+    identify_blockers: deps => createAnalyticsHandler(deps, 'blockers'),
+    export_report: deps => createAnalyticsHandler(deps, 'export'),
 };
 
 export function attachDefaultGlobalAssistantActionHandlers(

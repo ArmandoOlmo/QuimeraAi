@@ -4,10 +4,11 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
         });
 
+        const analytics = catalog.modules.find(module => module.module === 'analytics');
         const email = catalog.modules.find(module => module.module === 'emailMarketing');
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
         const media = catalog.modules.find(module => module.module === 'media');
@@ -18,6 +19,12 @@ describe('globalAssistantCapabilityCatalog', () => {
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
+        expect(analytics?.executableActionTypes).toEqual(expect.arrayContaining([
+            'run_project_report',
+            'summarize_analytics',
+            'identify_blockers',
+            'export_report',
+        ]));
         expect(email?.executableActionTypes).toEqual(expect.arrayContaining([
             'create_email_campaign',
             'create_email_automation',

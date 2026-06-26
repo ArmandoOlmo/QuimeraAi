@@ -348,6 +348,50 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.video_generation_jobs || []).toHaveLength(0);
     });
 
+    it('runs analytics snapshots from project-scoped module data without writing rows', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['analytics', 'crm', 'ecommerce'], []);
+        fakeSupabase.rowsByTable.leads = [
+            { id: 'lead-1', project_id: 'project-1', status: 'new', source: 'chat', created_at: '2026-06-26T12:00:00.000Z' },
+            { id: 'lead-2', project_id: 'project-2', status: 'new', source: 'chat', created_at: '2026-06-26T12:05:00.000Z' },
+        ];
+        fakeSupabase.rowsByTable.store_products = [
+            { id: 'product-1', project_id: 'project-1', data: { name: 'Cafe Premium' }, created_at: '2026-06-26T12:10:00.000Z' },
+        ];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Analiza analytics y blockers del proyecto Casa Luna',
+            enabledServices: ['analytics', 'crm', 'ecommerce'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['identify_blockers']);
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const snapshot = applied.actions[0].afterSnapshot as any;
+
+        expect(applied.task.status).toBe('completed');
+        expect(snapshot.kind).toBe('blockers');
+        expect(snapshot.summary).toMatchObject({
+            projectId: 'project-1',
+            projectName: 'Casa Luna',
+            totalSignals: 2,
+        });
+        expect(snapshot.analytics.modules.leads).toMatchObject({
+            count: 1,
+            byStatus: { new: 1 },
+            sampleIds: ['lead-1'],
+        });
+        expect(snapshot.analytics.modules.products).toMatchObject({
+            count: 1,
+            sampleIds: ['product-1'],
+        });
+        expect(snapshot.analytics.blockers).toContain('ecommerce_has_no_orders');
+        expect(fakeSupabase.rowsByTable.leads).toHaveLength(2);
+        expect(fakeSupabase.rowsByTable.store_products).toHaveLength(1);
+    });
+
     it('applies safe navigation handlers without mutating module data', async () => {
         const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
         const planned = await runtime.planRequest({
@@ -550,6 +594,95 @@ describe('Global Assistant default action handlers', () => {
         });
         expect(fakeSupabase.rowsByTable.payment_intents || []).toHaveLength(0);
         expect(fakeSupabase.rowsByTable.accounting_transactions || []).toHaveLength(0);
+    });
+
+    it('runs a read-only project analytics report across module tables', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(
+            ['analytics', 'crm', 'emailMarketing', 'ecommerce'],
+            ['emailMarketing', 'ecommerceEnabled'],
+        );
+        fakeSupabase.rowsByTable.leads = [
+            { id: 'lead-1', project_id: 'project-1', status: 'new', source: 'website' },
+            { id: 'lead-2', project_id: 'project-1', status: 'won', source: 'bio-page' },
+            { id: 'lead-other', project_id: 'project-2', status: 'new' },
+        ];
+        fakeSupabase.rowsByTable.email_campaigns = [
+            { id: 'campaign-1', project_id: 'project-1', status: 'draft', type: 'newsletter' },
+        ];
+        fakeSupabase.rowsByTable.store_products = [
+            { id: 'product-1', project_id: 'project-1', data: { name: 'Cafe Premium' } },
+        ];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea un reporte de analytics del proyecto',
+            enabledServices: ['analytics', 'crm', 'emailMarketing', 'ecommerce'],
+            enabledFeatures: ['emailMarketing', 'ecommerceEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['run_project_report']);
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'report',
+            summary: {
+                projectId: 'project-1',
+                totalSignals: 4,
+            },
+            analytics: {
+                blockers: expect.arrayContaining([
+                    'email_marketing_has_no_audiences',
+                    'ecommerce_has_no_orders',
+                ]),
+                modules: {
+                    leads: {
+                        count: 2,
+                        byStatus: {
+                            new: 1,
+                            won: 1,
+                        },
+                    },
+                    emailCampaigns: {
+                        count: 1,
+                    },
+                    products: {
+                        count: 1,
+                    },
+                },
+            },
+        });
+    });
+
+    it('exports a project analytics report as a non-mutating preview-first artifact', async () => {
+        const { runtime, context } = buildRuntime(['analytics'], []);
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Exporta el reporte de analytics en csv',
+            enabledServices: ['analytics'],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['export_report']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.requiresConfirmation).toBe(false);
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(applied.task.status).toBe('completed');
+        expect(applied.actions[0].metadata?.mutatesData).toBe(false);
+        expect(applied.actions[0].afterSnapshot).toMatchObject({
+            kind: 'export',
+            format: 'csv',
+            export: {
+                fileName: 'quimera-project-report-project-1.csv',
+                contentType: 'text/csv',
+                status: 'ready_for_download_renderer',
+            },
+        });
     });
 
     it('creates and rolls back an unavailable restaurant menu item draft', async () => {

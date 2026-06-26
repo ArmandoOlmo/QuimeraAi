@@ -348,10 +348,10 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         surface: stringSchema(),
     }, ['projectId', 'surface']), 'critical', { requiredService: 'chatbot', requiredFeature: 'chatbotEnabled' }),
 
-    action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
-    action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
-    action('analytics', 'identify_blockers', 'Identify readiness blockers.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
-    action('analytics', 'export_report', 'Export analytics report.', objectSchema({ projectId: stringSchema(), format: stringSchema(undefined, ['pdf', 'csv', 'json']) }, ['projectId']), 'medium', { mutatesData: false, previewSupported: true, rollbackSupported: false }),
+    action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
+    action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
+    action('analytics', 'identify_blockers', 'Identify readiness blockers.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
+    action('analytics', 'export_report', 'Export analytics report.', objectSchema({ projectId: stringSchema(), format: stringSchema(undefined, ['pdf', 'csv', 'json']) }, ['projectId']), 'medium', { mutatesData: false, requiredService: 'analytics', previewSupported: true, rollbackSupported: false }),
 
     action('finance', 'create_finance_record', 'Create a finance record draft.', objectSchema({
         projectId: stringSchema(),

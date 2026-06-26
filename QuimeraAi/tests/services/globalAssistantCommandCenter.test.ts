@@ -183,13 +183,23 @@ describe('globalAssistantCommandCenter', () => {
                 status: 'blocked',
             },
         } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
+        expect(shouldContinueAfterRuntimePlan({
+            ...baseResult,
+            plan: {
+                ...baseResult.plan,
+                actions: [
+                    { metadata: { mutatesData: false, executable: true } },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
     });
 
-    it('auto-applies only safe navigation plans', () => {
+    it('auto-applies safe navigation and read-only non-preview executable plans', () => {
         const navigationResult = {
             plan: {
                 status: 'draft',
                 requiresConfirmation: false,
+                previews: [],
                 actions: [
                     {
                         actionType: 'open_email_hub',
@@ -204,7 +214,33 @@ describe('globalAssistantCommandCenter', () => {
             ...navigationResult,
             plan: {
                 ...navigationResult.plan,
+                actions: [
+                    {
+                        actionType: 'summarize_analytics',
+                        metadata: { mutatesData: false, executable: true },
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
                 requiresConfirmation: true,
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                status: 'preview',
+                previews: [{ actionId: 'action-1' }],
+                actions: [
+                    {
+                        actionType: 'export_report',
+                        metadata: { mutatesData: false, executable: true },
+                    },
+                ],
             },
         } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
         expect(shouldAutoApplyOperatingLayerPlan({

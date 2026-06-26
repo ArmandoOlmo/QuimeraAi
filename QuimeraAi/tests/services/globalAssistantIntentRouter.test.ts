@@ -43,6 +43,7 @@ const context = resolveCurrentAssistantContext({
         'bioPage',
         'chatbot',
         'finance',
+        'analytics',
     ] as any,
     featureFlags: [
         'websiteBuilder',
@@ -118,6 +119,32 @@ describe('globalAssistantIntentRouter', () => {
         expect(routeAssistantIntent('Crea un producto nuevo en ecommerce', context)).toMatchObject({
             module: 'ecommerce',
             actionCandidates: ['create_product'],
+        });
+    });
+
+    it('routes analytics summaries, blockers, reports, and exports to explicit read actions', () => {
+        expect(routeAssistantIntent('Revisa analytics del proyecto', context)).toMatchObject({
+            module: 'analytics',
+            intent: 'analyze',
+            actionCandidates: ['summarize_analytics'],
+        });
+
+        expect(routeAssistantIntent('Identifica los bloqueos de readiness en analytics', context)).toMatchObject({
+            module: 'analytics',
+            intent: 'analyze',
+            actionCandidates: ['identify_blockers'],
+        });
+
+        expect(routeAssistantIntent('Crea un reporte de analytics del proyecto', context)).toMatchObject({
+            module: 'analytics',
+            intent: 'report',
+            actionCandidates: ['run_project_report'],
+        });
+
+        expect(routeAssistantIntent('Exporta el reporte de analytics en csv', context)).toMatchObject({
+            module: 'analytics',
+            intent: 'report',
+            actionCandidates: ['export_report'],
         });
     });
 
