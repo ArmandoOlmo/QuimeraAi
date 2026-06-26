@@ -244,6 +244,49 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'publish_website' || action.actionType === 'unpublish_website') {
+        const isPublish = action.actionType === 'publish_website';
+        return {
+            ...preview,
+            before: {
+                table: 'projects',
+                id: action.projectId,
+                path: 'publish_state',
+                status: isPublish ? 'Draft' : 'Published',
+            },
+            after: {
+                operation: isPublish ? 'publish_website' : 'unpublish_website',
+                table: 'projects',
+                id: action.projectId,
+                projectId: action.projectId,
+                status: isPublish ? 'Published' : 'Draft',
+                publishedData: isPublish ? 'snapshot_from_current_project_state' : null,
+                request: compactRequestTitle(action.input.request, isPublish ? 'Website publish' : 'Website unpublish'),
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [
+                    `projects.${action.projectId}.published_data`,
+                    `projects.${action.projectId}.published_at`,
+                    `projects.${action.projectId}.status`,
+                ],
+                critical: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_project_publish_state' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                isPublish
+                    ? 'Publishing exposes the current Website Builder snapshot publicly after confirmation.'
+                    : 'Unpublishing removes the public website snapshot after confirmation.',
+                'Publish is blocked if Global Assistant drafts still need review.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous project publish state.'] : []),
+            ],
+        };
+    }
+
     if (['update_section_image', 'attach_asset_to_section'].includes(action.actionType)) {
         const sectionId = asText(action.input.sectionId) || '$selected_section';
         const path = asText(action.input.path) || 'imageUrl';
@@ -561,6 +604,77 @@ export function enrichAssistantExecutionPreview(
                 ...preview.risks,
                 'ChatCore knowledge remains review-gated before it is used for training or deployment.',
                 ...(definition.rollbackSupported ? ['Rollback restores the previous project blueprint snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'edit_bio_link') {
+        const linkId = asText(action.input.linkId) || '$selected_link';
+        return {
+            ...preview,
+            before: {
+                table: 'bio_page_links',
+                id: linkId,
+                projectId: action.projectId,
+            },
+            after: {
+                operation: 'update_bio_page_link',
+                table: 'bio_page_links',
+                id: linkId,
+                projectId: action.projectId,
+                request: compactRequestTitle(action.input.request, 'Bio Page link update'),
+                generatedByAI: true,
+                needsReview: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`bio_page_links.${linkId}`],
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_bio_page_link_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Bio Page link updates remain review-gated before the public page should be published.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous Bio Page link row snapshot.'] : []),
+            ],
+        };
+    }
+
+    if (action.actionType === 'publish_bio_page') {
+        const bioPageId = asText(action.input.bioPageId) || '$project_bio_page';
+        return {
+            ...preview,
+            before: {
+                table: 'bio_pages',
+                id: bioPageId,
+                projectId: action.projectId,
+                status: 'draft',
+            },
+            after: {
+                operation: 'publish_bio_page',
+                table: 'bio_pages',
+                id: bioPageId,
+                projectId: action.projectId,
+                status: 'published',
+                request: compactRequestTitle(action.input.request, 'Bio Page publish'),
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                updated: [`bio_pages.${bioPageId}.status`, `bio_pages.${bioPageId}.published_at`],
+                critical: true,
+                rollback: definition.rollbackSupported ? 'restore_previous_bio_page_snapshot' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Publishing exposes the Bio Page publicly after confirmation.',
+                'Publish is blocked if the Bio Page, links, or blocks still need review or use unsafe URLs.',
+                ...(definition.rollbackSupported ? ['Rollback restores the previous Bio Page row snapshot.'] : []),
             ],
         };
     }

@@ -413,6 +413,53 @@ function customerRequestAuditMetadata(
   };
 }
 
+const WIDGET_RUNTIME_EVENT_TYPES = new Set([
+  'chatbot_voice_session_requested',
+  'chatbot_voice_session_started',
+  'chatbot_voice_session_blocked',
+  'chatbot_voice_session_failed',
+  'chatbot_voice_session_ended',
+]);
+
+function normalizeWidgetRuntimeEventType(value: unknown): string | undefined {
+  const eventType = normalizeString(value, 120);
+  return eventType && WIDGET_RUNTIME_EVENT_TYPES.has(eventType) ? eventType : undefined;
+}
+
+function safeBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function safeVoiceRuntimeMetadata(body: Record<string, any>): Record<string, unknown> {
+  const metadata = normalizeMetadata(body.metadata);
+  const metadataVoice = getNestedRecord(metadata, 'voice');
+  const voice = body.voice && typeof body.voice === 'object' && !Array.isArray(body.voice)
+    ? body.voice as Record<string, unknown>
+    : metadataVoice;
+
+  return {
+    widgetApi: true,
+    runtimeEvent: true,
+    runtimeEventType: normalizeWidgetRuntimeEventType(body.eventType || body.event_type),
+    sessionId: normalizeString(body.sessionId, 120),
+    sessionPhase: normalizeString(body.sessionPhase, 80),
+    reason: normalizeString(body.reason, 160),
+    readinessReason: normalizeString(body.readinessReason, 160),
+    durationMs: normalizeNumber(body.durationMs),
+    errorStatus: normalizeNumber(body.errorStatus),
+    errorCode: normalizeString(body.errorCode, 120),
+    errorMessage: normalizeString(body.errorMessage, 300),
+    voice: {
+      provider: normalizeString(voice.provider, 80),
+      source: normalizeString(voice.source, 80),
+      languageMode: normalizeString(voice.languageMode, 80),
+      consentRequired: safeBoolean(voice.consentRequired),
+      consentAccepted: safeBoolean(voice.consentAccepted),
+      agentConfigured: safeBoolean(voice.agentConfigured),
+    },
+  };
+}
+
 function getActionErrorMetadata(error: unknown): Record<string, unknown> {
   const record = error && typeof error === 'object' ? error as Record<string, unknown> : {};
   const status = Number(record.status || record.statusCode || 500);
@@ -1255,6 +1302,60 @@ async function handleCreateMessage(req: IncomingMessage, res: ServerResponse, pa
     }));
   }
   send(res, 201, { messageId: message.data.id, messageCount: nextMessageCount });
+}
+
+async function handleRecordRuntimeEvent(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req);
+  enforceWriteRateLimit(req, project.id);
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const eventType = normalizeWidgetRuntimeEventType(body.eventType || body.event_type);
+  if (!eventType) {
+    throw Object.assign(new Error('Unsupported widget runtime event type.'), {
+      status: 400,
+      code: 'UNSUPPORTED_RUNTIME_EVENT',
+    });
+  }
+
+  const safeContextBody = {
+    ...body,
+    metadata: {},
+  };
+  const eventMetadata = {
+    ...safeVoiceRuntimeMetadata(body),
+    ...getWidgetContextMetadata(safeContextBody),
+  };
+  const evaluation = await assertWidgetChatbotActionAllowed(req, project, tenantId, safeContextBody, {
+    actionType: 'record_analytics_event',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      eventType,
+      normalizeString(body.sessionId, 120),
+      normalizeString(body.sessionPhase, 80),
+      normalizeString(body.reason, 160),
+    ],
+    metadata: eventMetadata,
+  });
+
+  await recordWidgetChatbotEngineEvent(buildChatbotEngineObservedEvent({
+    tenantId: project.tenant_id,
+    projectId: project.id,
+    actionType: 'record_analytics_event',
+    eventType,
+    sourceSurface: getWidgetSourceSurface(safeContextBody),
+    sourceModule: getWidgetSourceModule(safeContextBody),
+    conversationId: normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120),
+    idempotencyKey: evaluation.idempotencyKey,
+    correlationId: normalizeString(body.correlationId, 240),
+    requestFingerprint: getRequestFingerprint(req, project.id),
+    metadata: {
+      ...eventMetadata,
+      actionRegistryAllowed: evaluation.allowed,
+      actionRegistryReason: evaluation.reason,
+    },
+  }));
+
+  send(res, 202, { recorded: true, eventType });
 }
 
 async function handleUpdateConversation(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, conversationId: string): Promise<void> {
@@ -2164,6 +2265,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
     if (req.method === 'POST' && resource === 'policies' && id === 'returns') return await handleExplainReturnsPolicy(req, res, parsed);
     if (req.method === 'POST' && resource === 'orders' && id === 'status') return await handleCheckOrderStatus(req, res, parsed);
     if (req.method === 'POST' && resource === 'checkout' && id === 'intent') return await handleStartCheckoutIntent(req, res, parsed);
+    if (req.method === 'POST' && resource === 'events' && !id) return await handleRecordRuntimeEvent(req, res, parsed);
     if (req.method === 'POST' && resource === 'conversations' && !id) return await handleCreateConversation(req, res, parsed);
     if (req.method === 'POST' && resource === 'conversations' && id && subResource === 'messages') {
       return await handleCreateMessage(req, res, parsed, id);

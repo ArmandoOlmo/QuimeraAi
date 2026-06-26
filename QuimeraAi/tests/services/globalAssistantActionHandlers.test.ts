@@ -225,6 +225,7 @@ const websiteTheme = {
 const buildWebsiteProjectRow = (): Row => ({
     id: 'project-1',
     name: 'Casa Luna',
+    status: 'Draft',
     tenant_id: 'tenant-1',
     user_id: 'user-1',
     data: {
@@ -279,6 +280,8 @@ const buildWebsiteProjectRow = (): Row => ({
         },
         isHomePage: true,
     }],
+    published_data: null,
+    published_at: null,
     last_updated: '2026-06-26T12:00:00.000Z',
 });
 
@@ -1202,6 +1205,198 @@ describe('Global Assistant default action handlers', () => {
         expect(fakeSupabase.rowsByTable.projects[0].data.businessBlueprint.websiteBlueprint.componentOrder).toEqual(['features', 'hero', 'chatbot']);
     });
 
+    it('publishes the current Website Builder snapshot and rolls back publish state', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime(['ecommerce'], ['websiteBuilder', 'ecommerceEnabled']);
+        fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
+        fakeSupabase.rowsByTable.store_products = [
+            {
+                id: 'product-active',
+                project_id: 'project-1',
+                name: 'VIP Reservation',
+                status: 'active',
+                price: 120,
+                data: { slug: 'vip-reservation' },
+            },
+            {
+                id: 'product-draft',
+                project_id: 'project-1',
+                name: 'Draft Product',
+                status: 'draft',
+            },
+        ];
+        fakeSupabase.rowsByTable.store_categories = [
+            {
+                id: 'category-services',
+                project_id: 'project-1',
+                name: 'Services',
+                data: { slug: 'services' },
+            },
+        ];
+        fakeSupabase.rowsByTable.posts = [
+            {
+                id: 'post-1',
+                tenant_id: 'tenant-1',
+                title: 'Reserva VIP',
+                status: 'published',
+                tags: ['project:project-1'],
+                published_at: '2026-06-26T10:00:00.000Z',
+            },
+        ];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Publica el website',
+            enabledServices: ['ecommerce'],
+            enabledFeatures: ['websiteBuilder', 'ecommerceEnabled'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['publish_website']);
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'publish_website',
+                table: 'projects',
+                status: 'Published',
+            },
+            diff: {
+                critical: true,
+                rollback: 'restore_previous_project_publish_state',
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+        const project = fakeSupabase.rowsByTable.projects[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(project).toMatchObject({
+            status: 'Published',
+            published_at: '2026-06-26T13:30:00.000Z',
+            last_updated: '2026-06-26T13:30:00.000Z',
+        });
+        expect(project.published_data).toMatchObject({
+            id: 'project-1',
+            name: 'Casa Luna',
+            tenantId: 'tenant-1',
+            userId: 'user-1',
+            data: {
+                hero: {
+                    headline: 'Original headline',
+                },
+            },
+            componentOrder: ['hero', 'features', 'chatbot'],
+            sectionVisibility: { hero: true, features: true, chatbot: true },
+            publishedAt: '2026-06-26T13:30:00.000Z',
+            globalAssistant: {
+                publishedByAssistant: true,
+                request: 'Publica el website',
+            },
+        });
+        expect(project.published_data.ecommerce.products.map((item: Row) => item.id)).toEqual(['product-active']);
+        expect(project.published_data.ecommerce.categories.map((item: Row) => item.id)).toEqual(['category-services']);
+        expect(project.published_data.posts.map((item: Row) => item.id)).toEqual(['post-1']);
+        expect(applied.actions[0].diff).toMatchObject({
+            critical: true,
+            stats: {
+                productsPublished: 1,
+                categoriesPublished: 1,
+                postsPublished: 1,
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0]).toMatchObject({
+            status: 'Draft',
+            published_at: null,
+            published_data: null,
+            last_updated: '2026-06-26T12:00:00.000Z',
+        });
+    });
+
+    it('unpublishes a website and rolls back the previous public snapshot', async () => {
+        const { fakeSupabase, runtime, context } = buildRuntime([], ['websiteBuilder']);
+        const projectRow = buildWebsiteProjectRow();
+        projectRow.status = 'Published';
+        projectRow.published_at = '2026-06-25T10:00:00.000Z';
+        projectRow.published_data = {
+            id: 'project-1',
+            name: 'Casa Luna',
+            data: { hero: { headline: 'Published headline' } },
+            publishedAt: '2026-06-25T10:00:00.000Z',
+        };
+        fakeSupabase.rowsByTable.projects = [projectRow];
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Despublica el website',
+            enabledServices: [],
+            enabledFeatures: ['websiteBuilder'],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['unpublish_website']);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'unpublish_website',
+                status: 'Draft',
+                publishedData: null,
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context });
+
+        expect(fakeSupabase.rowsByTable.projects[0]).toMatchObject({
+            status: 'Draft',
+            published_at: null,
+            published_data: null,
+            last_updated: '2026-06-26T13:30:00.000Z',
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context,
+        });
+
+        expect(fakeSupabase.rowsByTable.projects[0]).toMatchObject({
+            status: 'Published',
+            published_at: '2026-06-25T10:00:00.000Z',
+            published_data: {
+                id: 'project-1',
+                name: 'Casa Luna',
+                data: { hero: { headline: 'Published headline' } },
+                publishedAt: '2026-06-25T10:00:00.000Z',
+            },
+            last_updated: '2026-06-26T12:00:00.000Z',
+        });
+    });
+
+    it('blocks website publish while Global Assistant drafts still need review', async () => {
+        const { fakeSupabase, registry, context } = buildRuntime([], ['websiteBuilder']);
+        const projectRow = buildWebsiteProjectRow();
+        projectRow.data.assistantDrafts = {
+            website: {
+                needsReview: true,
+            },
+        };
+        fakeSupabase.rowsByTable.projects = [projectRow];
+        const definition = registry.get('publish_website');
+        const input = {
+            projectId: 'project-1',
+            request: 'Publica el website',
+        };
+
+        await expect(definition!.execute!(input, {
+            action: buildAssistantAction('publish_website', input),
+            context,
+        })).rejects.toThrow('Global Assistant website draft still needs review');
+    });
+
     it('updates Storefront Builder draft sections and rolls back without publishing', async () => {
         const { fakeSupabase, registry, context } = buildRuntime(['ecommerce'], ['ecommerceEnabled']);
         fakeSupabase.rowsByTable.projects = [buildWebsiteProjectRow()];
@@ -1815,6 +2010,207 @@ describe('Global Assistant default action handlers', () => {
             sourceModule: 'global-assistant',
             sourceComponent: 'OperatingLayer',
         });
+    });
+
+    it('edits and rolls back a selected Bio Page link with review metadata', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.bio_pages = [{
+            id: 'bio-page-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            user_id: 'user-1',
+            slug: 'casa-luna',
+            title: 'Casa Luna',
+            profile: { name: 'Casa Luna' },
+            settings: {},
+            status: 'draft',
+            created_at: '2026-06-01T00:00:00.000Z',
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+        fakeSupabase.rowsByTable.bio_page_links = [{
+            id: 'bio-link-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            bio_page_id: 'bio-page-1',
+            title: 'Old Booking',
+            url: 'https://old.example/booking',
+            visible: true,
+            link_type: 'external',
+            order_index: 0,
+            metadata: { clicks: 3 },
+            created_at: '2026-06-01T00:00:00.000Z',
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+        const bioPageContext = {
+            ...context,
+            activeModule: 'bioPage' as const,
+            activeEntityType: 'bio_page_link',
+            activeEntityId: 'bio-link-1',
+        };
+
+        const planned = await runtime.planRequest({
+            context: bioPageContext,
+            request: 'Actualiza este link de Bio Page a casaluna.test/reservas',
+            enabledServices: [],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['edit_bio_link']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'update_bio_page_link',
+                table: 'bio_page_links',
+                id: 'bio-link-1',
+                needsReview: true,
+            },
+            diff: {
+                reviewRequired: true,
+                rollback: 'restore_previous_bio_page_link_snapshot',
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: bioPageContext });
+        const link = fakeSupabase.rowsByTable.bio_page_links[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(link).toMatchObject({
+            url: 'https://casaluna.test/reservas',
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(link.metadata).toMatchObject({
+            clicks: 3,
+            needsReview: true,
+            generatedByAI: true,
+            userModified: false,
+            globalAssistant: {
+                actionType: 'edit_bio_link',
+                module: 'bioPage',
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: bioPageContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.bio_page_links[0]).toMatchObject({
+            title: 'Old Booking',
+            url: 'https://old.example/booking',
+            metadata: { clicks: 3 },
+            updated_at: '2026-06-01T00:00:00.000Z',
+        });
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
+    });
+
+    it('publishes and rolls back a reviewed Bio Page without bypassing readiness checks', async () => {
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        fakeSupabase.rowsByTable.bio_pages = [{
+            id: 'bio-page-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            user_id: 'user-1',
+            slug: 'casa-luna',
+            title: 'Casa Luna',
+            profile: { name: 'Casa Luna' },
+            settings: { showQuimeraFooter: true },
+            status: 'draft',
+            published_at: null,
+            created_at: '2026-06-01T00:00:00.000Z',
+            updated_at: '2026-06-01T00:00:00.000Z',
+        }];
+        fakeSupabase.rowsByTable.bio_page_links = [{
+            id: 'bio-link-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            bio_page_id: 'bio-page-1',
+            title: 'Booking',
+            url: 'https://casaluna.test/reservas',
+            visible: true,
+            link_type: 'external',
+            order_index: 0,
+            metadata: { needsReview: false },
+        }];
+        fakeSupabase.rowsByTable.bio_page_blocks = [{
+            id: 'bio-block-1',
+            tenant_id: 'tenant-1',
+            project_id: 'project-1',
+            bio_page_id: 'bio-page-1',
+            type: 'links',
+            title: 'Links',
+            visible: true,
+            needs_review: false,
+            order_index: 0,
+            data: {},
+            settings: {},
+        }];
+        const bioPageContext = {
+            ...context,
+            activeModule: 'bioPage' as const,
+            activeEntityType: 'bio_page',
+            activeEntityId: 'bio-page-1',
+        };
+
+        const planned = await runtime.planRequest({
+            context: bioPageContext,
+            request: 'Publica la Bio Page',
+            enabledServices: [],
+            enabledFeatures: [],
+        });
+
+        expect(planned.plan.actions.map(action => action.actionType)).toEqual(['publish_bio_page']);
+        expect(planned.plan.status).toBe('preview');
+        expect(planned.plan.requiresConfirmation).toBe(true);
+        expect(planned.plan.previews[0]).toMatchObject({
+            after: {
+                operation: 'publish_bio_page',
+                table: 'bio_pages',
+                id: 'bio-page-1',
+                status: 'published',
+            },
+            diff: {
+                critical: true,
+                rollback: 'restore_previous_bio_page_snapshot',
+            },
+        });
+
+        runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' });
+        const applied = await runtime.applyTask({ taskId: planned.task.id, context: bioPageContext });
+        const page = fakeSupabase.rowsByTable.bio_pages[0];
+
+        expect(applied.task.status).toBe('completed');
+        expect(page).toMatchObject({
+            status: 'published',
+            published_at: '2026-06-26T13:30:00.000Z',
+            updated_at: '2026-06-26T13:30:00.000Z',
+        });
+        expect(page.settings).toMatchObject({
+            showQuimeraFooter: true,
+            lastPublishedBy: 'global-assistant',
+            globalAssistant: {
+                actionType: 'publish_bio_page',
+                module: 'bioPage',
+                needsReview: false,
+                publishedByAssistant: true,
+            },
+        });
+
+        await runtime.rollbackAction({
+            taskId: planned.task.id,
+            actionId: applied.actions[0].id,
+            context: bioPageContext,
+        });
+
+        expect(fakeSupabase.rowsByTable.bio_pages[0]).toMatchObject({
+            status: 'draft',
+            published_at: null,
+            updated_at: '2026-06-01T00:00:00.000Z',
+            settings: { showQuimeraFooter: true },
+        });
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_rolled_back');
     });
 
     it('adds review-gated ChatCore knowledge to the project blueprint and rolls it back', async () => {

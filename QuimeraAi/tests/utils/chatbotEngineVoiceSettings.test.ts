@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { AiAssistantConfig } from '../../types/ai-assistant';
 import type { Project } from '../../types/project';
-import { resolveChatCoreVoiceSettings } from '../../utils/chatbotEngine/voiceSettings';
+import {
+    getChatCoreVoiceSessionReadiness,
+    resolveChatCoreVoiceSettings,
+} from '../../utils/chatbotEngine/voiceSettings';
 
 function buildConfig(overrides: Partial<AiAssistantConfig> = {}): AiAssistantConfig {
     return {
@@ -142,5 +145,63 @@ describe('resolveChatCoreVoiceSettings', () => {
             enabled: false,
         });
         expect(settings.agentId).toBeUndefined();
+    });
+});
+
+describe('getChatCoreVoiceSessionReadiness', () => {
+    it('blocks a configured voice session until required visitor consent is accepted', () => {
+        const settings = resolveChatCoreVoiceSettings(
+            buildConfig(),
+            buildProject({
+                enabled: true,
+                provider: 'elevenlabs',
+                agentId: 'voice_agent_1',
+                consentRequired: true,
+            }),
+        );
+
+        expect(getChatCoreVoiceSessionReadiness(settings)).toEqual({
+            allowed: false,
+            reason: 'consent_required',
+        });
+        expect(getChatCoreVoiceSessionReadiness(settings, true)).toEqual({
+            allowed: true,
+        });
+    });
+
+    it('allows a configured voice session when project consent is not required', () => {
+        const settings = resolveChatCoreVoiceSettings(
+            buildConfig(),
+            buildProject({
+                enabled: true,
+                provider: 'elevenlabs',
+                agentId: 'voice_agent_1',
+                consentRequired: false,
+            }),
+        );
+
+        expect(getChatCoreVoiceSessionReadiness(settings)).toEqual({
+            allowed: true,
+        });
+    });
+
+    it('keeps provider and agent configuration failures explicit before consent checks', () => {
+        const providerMissing = resolveChatCoreVoiceSettings(
+            buildConfig(),
+            buildProject({ enabled: true, provider: 'none', agentId: 'voice_agent_1' }),
+        );
+        const agentMissing = resolveChatCoreVoiceSettings(
+            buildConfig(),
+            buildProject({ enabled: true, provider: 'elevenlabs' }),
+        );
+
+        expect(getChatCoreVoiceSessionReadiness(providerMissing)).toEqual({
+            allowed: false,
+            reason: 'provider_missing',
+        });
+        expect(getChatCoreVoiceSessionReadiness(agentMissing)).toEqual({
+            allowed: false,
+            reason: 'agent_missing',
+        });
     });
 });

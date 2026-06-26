@@ -46,7 +46,7 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     tenants: ['id', 'name', 'slug', 'type', 'owner_user_id', 'owner_tenant_id', 'subscription_plan', 'status', 'limits', 'usage', 'branding', 'settings', 'billing', 'created_at', 'updated_at'],
     tenant_members: ['id', 'tenant_id', 'user_id', 'role', 'permissions', 'status', 'joined_at', 'created_at', 'updated_at'],
     tenant_invites: ['id', 'tenant_id', 'email', 'role', 'permissions', 'token', 'status', 'expires_at', 'created_at', 'updated_at'],
-    projects: ['id', 'user_id', 'tenant_id', 'name', 'status', 'data', 'thumbnail_url', 'theme', 'brand_identity', 'component_order', 'section_visibility', 'pages', 'menus', 'categories', 'ai_assistant_config', 'seo_config', 'crm_config', 'last_updated', 'published_at', 'created_at', 'updated_at'],
+    projects: ['id', 'user_id', 'tenant_id', 'name', 'status', 'data', 'published_data', 'thumbnail_url', 'theme', 'brand_identity', 'component_order', 'section_visibility', 'pages', 'menus', 'categories', 'ai_assistant_config', 'seo_config', 'crm_config', 'last_updated', 'published_at', 'created_at', 'updated_at'],
     leads: ['id', 'tenant_id', 'project_id', 'name', 'email', 'phone', 'company', 'status', 'source', 'value', 'tags', 'notes', 'custom_data', 'created_at', 'updated_at'],
     lead_activities: ['id', 'tenant_id', 'lead_id', 'project_id', 'type', 'description', 'created_at'],
     lead_tasks: ['id', 'tenant_id', 'lead_id', 'project_id', 'title', 'description', 'due_date', 'status', 'created_at', 'updated_at'],

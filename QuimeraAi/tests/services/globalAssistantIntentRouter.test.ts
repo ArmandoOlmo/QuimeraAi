@@ -160,6 +160,22 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes website publish and unpublish requests to critical website actions', () => {
+        expect(routeAssistantIntent('Publica el website', context)).toMatchObject({
+            module: 'website',
+            intent: 'publish',
+            actionCandidates: ['publish_website'],
+            safetyLevel: 'critical',
+        });
+
+        expect(routeAssistantIntent('Despublica el website', context)).toMatchObject({
+            module: 'website',
+            intent: 'unpublish',
+            actionCandidates: ['unpublish_website'],
+            safetyLevel: 'critical',
+        });
+    });
+
     it('routes Media AI asset attachments without generating a new image', () => {
         expect(routeAssistantIntent('Adjunta este asset a la seccion hero', context)).toMatchObject({
             module: 'media',
@@ -309,6 +325,21 @@ describe('globalAssistantIntentRouter', () => {
             module: 'finance',
             intent: 'edit',
             actionCandidates: ['update_finance_record'],
+            safetyLevel: 'critical',
+        });
+    });
+
+    it('routes Bio Page link edits and publish requests to executable Bio Page actions', () => {
+        expect(routeAssistantIntent('Actualiza este link de Bio Page a casaluna.test/reservas', context)).toMatchObject({
+            module: 'bioPage',
+            intent: 'edit',
+            actionCandidates: ['edit_bio_link'],
+        });
+
+        expect(routeAssistantIntent('Publica la Bio Page', context)).toMatchObject({
+            module: 'bioPage',
+            intent: 'publish',
+            actionCandidates: ['publish_bio_page'],
             safetyLevel: 'critical',
         });
     });

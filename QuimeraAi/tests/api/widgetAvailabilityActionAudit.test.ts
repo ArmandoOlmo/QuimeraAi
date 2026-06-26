@@ -414,4 +414,116 @@ describe('widget availability action audit', () => {
         });
         expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('sensitive skin');
     });
+
+    it('records sanitized ChatCore voice runtime events as analytics observations', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-record_analytics_event',
+            actionType: 'record_analytics_event',
+            ownerModule: 'analytics',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/events', {
+            eventType: 'chatbot_voice_session_started',
+            sessionId: 'voice-session-1',
+            sessionPhase: 'connected',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            voice: {
+                provider: 'elevenlabs',
+                source: 'chatbotBlueprint',
+                languageMode: 'visitor_language',
+                consentRequired: true,
+                consentAccepted: true,
+                agentConfigured: true,
+                agentId: 'secret-agent-id',
+            },
+            metadata: {
+                voiceTranscript: 'Private transcript',
+                customerRequestSummary: 'Private notes',
+            },
+        });
+
+        expect(response.status).toBe(202);
+        expect(response.body).toEqual({
+            recorded: true,
+            eventType: 'chatbot_voice_session_started',
+        });
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_voice_session_started',
+            action_type: 'record_analytics_event',
+            action_status: 'observed',
+            conversation_id: 'conversation-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            runtimeEvent: true,
+            runtimeEventType: 'chatbot_voice_session_started',
+            sessionId: 'voice-session-1',
+            sessionPhase: 'connected',
+            voice: {
+                provider: 'elevenlabs',
+                source: 'chatbotBlueprint',
+                languageMode: 'visitor_language',
+                consentRequired: true,
+                consentAccepted: true,
+                agentConfigured: true,
+            },
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('secret-agent-id');
+        expect(eventJson).not.toContain('Private transcript');
+        expect(eventJson).not.toContain('Private notes');
+    });
+
+    it('rejects unsupported widget runtime event types', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-record_analytics_event',
+            actionType: 'record_analytics_event',
+            ownerModule: 'analytics',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/events', {
+            eventType: 'chatbot_sensitive_payload_dumped',
+            sessionId: 'voice-session-1',
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toMatchObject({
+            code: 'UNSUPPORTED_RUNTIME_EVENT',
+        });
+        expect(mockState.recordedEvents).toHaveLength(0);
+    });
+
+    it('blocks runtime events when analytics recording is disabled in the Action Registry', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-record_analytics_event',
+            actionType: 'record_analytics_event',
+            ownerModule: 'analytics',
+            enabled: false,
+            status: 'disabled',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/events', {
+            eventType: 'chatbot_voice_session_blocked',
+            sessionId: 'voice-session-1',
+            reason: 'consent_required',
+        });
+
+        expect(response.status).toBe(403);
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_blocked',
+            action_type: 'record_analytics_event',
+            action_status: 'blocked',
+        });
+        expect(mockState.recordedEvents[0].metadata.blockers).toEqual(expect.arrayContaining([
+            'action_disabled',
+            'action_status_disabled',
+        ]));
+    });
 });

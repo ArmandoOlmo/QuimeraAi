@@ -19,8 +19,8 @@ const includesAny = (text: string, terms: string[]) => terms.some(term => text.i
 
 const inferIntent = (text: string): AssistantIntentCategory => {
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
-    if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['despublica', 'unpublish'])) return 'unpublish';
+    if (includesAny(text, ['publica', 'publish'])) return 'publish';
     if (includesAny(text, ['oculta', 'esconde', 'hide', 'mostrar', 'show', 'visibilidad', 'visible', 'invisible', 'reordena', 'reorder', 'orden de secciones', 'move section'])) return 'edit';
     if (includesAny(text, ['adjunta', 'adjuntar', 'attach', 'coloca', 'pon la imagen', 'poner imagen', 'usa este asset', 'usar este asset', 'replace image', 'reemplaza imagen', 'actualiza imagen', 'actualiza la imagen'])) return 'edit';
     if (includesAny(text, ['exporta', 'export', 'descarga', 'download'])) return 'report';
@@ -52,7 +52,7 @@ const inferModule = (text: string, context: AssistantContextSnapshot): Assistant
     if (includesAny(text, ['lead', 'crm', 'prospecto', 'follow up', 'follow-up', 'seguimiento', 'tarea de seguimiento'])) return 'crm';
     if (includesAny(text, ['restaurant', 'restaurante', 'menu', 'dish', 'catering'])) return 'restaurants';
     if (includesAny(text, ['realty', 'real estate', 'propiedad', 'listing', 'open house'])) return 'realEstate';
-    if (includesAny(text, ['bio page', 'biopage', 'link in bio'])) return 'bioPage';
+    if (includesAny(text, ['bio page', 'biopage', 'bio link', 'biolink', 'link in bio', 'link de bio'])) return 'bioPage';
     if (includesAny(text, ['cita', 'appointment', 'agenda', 'reserva', 'calendar'])) return 'appointments';
     if (includesAny(text, ['analytics', 'metricas', 'reporte', 'report'])) return 'analytics';
     if (includesAny(text, ['finance', 'finanzas', 'invoice', 'factura', 'gasto'])) return 'finance';
@@ -125,7 +125,8 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
     }
 
     if (module === 'bioPage' && ['create', 'edit', 'schedule'].includes(intent)) {
-        if (includesAny(text, ['block', 'bloque', 'section', 'seccion', 'link', 'cta'])) return ['add_bio_block'];
+        if (intent === 'edit') return ['edit_bio_link'];
+        if (includesAny(text, ['block', 'bloque', 'section', 'seccion', 'link', 'bio link', 'biolink', 'cta'])) return ['add_bio_block'];
         return ['create_bio_page'];
     }
 

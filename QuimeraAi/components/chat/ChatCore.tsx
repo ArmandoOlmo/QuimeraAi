@@ -30,10 +30,39 @@ import {
     buildChatbotEngineSurfacePrompt,
     type ChatbotEngineSurfaceContext,
 } from '../../utils/chatbotEngine/surfaceContext';
-import { resolveChatCoreVoiceSettings } from '../../utils/chatbotEngine/voiceSettings';
+import {
+    getChatCoreVoiceSessionReadiness,
+    resolveChatCoreVoiceSettings,
+} from '../../utils/chatbotEngine/voiceSettings';
 import { buildChatbotCustomerRequestNotes } from '../../utils/chatbotEngine/customerRequestNotes';
 
 const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
+const CHATCORE_VOICE_RUNTIME_EVENTS = {
+    requested: 'chatbot_voice_session_requested',
+    started: 'chatbot_voice_session_started',
+    blocked: 'chatbot_voice_session_blocked',
+    failed: 'chatbot_voice_session_failed',
+    ended: 'chatbot_voice_session_ended',
+} as const;
+
+type ChatCoreVoiceRuntimeEventType = typeof CHATCORE_VOICE_RUNTIME_EVENTS[keyof typeof CHATCORE_VOICE_RUNTIME_EVENTS];
+
+function createChatCoreRuntimeEventId(): string {
+    if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+        return window.crypto.randomUUID();
+    }
+    return `chatcore-voice-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function normalizeRuntimeError(error: unknown): { errorCode?: string; errorMessage?: string } {
+    if (!error || typeof error !== 'object') return { errorMessage: 'unknown_error' };
+    const record = error as { name?: unknown; message?: unknown; code?: unknown };
+    return {
+        errorCode: typeof record.code === 'string' ? record.code : typeof record.name === 'string' ? record.name : undefined,
+        errorMessage: typeof record.message === 'string' ? record.message : 'unknown_error',
+    };
+}
+
 const CANONICAL_CHAT_EMAIL_MODULES: CanonicalEmailSourceModule[] = [
     'ecommerce',
     'crm',
@@ -673,6 +702,7 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     // Voice State
     const [isLiveActive, setIsLiveActive] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
+    const [voiceConsentAccepted, setVoiceConsentAccepted] = useState(false);
     const [visualizerLevels, setVisualizerLevels] = useState(new Array(20).fill(4));
     const liveVoiceSettings = useMemo(
         () => resolveChatCoreVoiceSettings(config, project),
@@ -685,6 +715,9 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     const sessionRef = useRef<any>(null);
     const visualizerIntervalRef = useRef<number | null>(null);
     const isConnectedRef = useRef(false);
+    const voiceConsentAcceptedRef = useRef(false);
+    const voiceRuntimeSessionIdRef = useRef<string | null>(null);
+    const voiceRuntimeStartedAtRef = useRef<number | null>(null);
 
     // Voice Transcription Refs
     const voiceTranscriptRef = useRef<{ role: 'user' | 'model'; text: string }[]>([]);
@@ -713,6 +746,16 @@ const ChatCore: React.FC<ChatCoreProps> = ({
     useEffect(() => {
         messagesRef.current = messages;
     }, [messages]);
+
+    useEffect(() => {
+        voiceConsentAcceptedRef.current = false;
+        setVoiceConsentAccepted(false);
+    }, [
+        liveVoiceSettings.agentId,
+        liveVoiceSettings.consentRequired,
+        liveVoiceSettings.provider,
+        liveVoiceSettings.source,
+    ]);
 
     // =============================================================================
     // SYSTEM INSTRUCTION BUILDER
@@ -1048,6 +1091,58 @@ ${suggestAvailableSlots()}
             generatedByAI: bookingChannel !== 'chatcore_form',
         },
     });
+
+    const getVoiceRuntimeMetadata = () => ({
+        provider: liveVoiceSettings.provider,
+        source: liveVoiceSettings.source,
+        languageMode: liveVoiceSettings.languageMode,
+        consentRequired: liveVoiceSettings.consentRequired,
+        consentAccepted: liveVoiceSettings.consentRequired
+            ? voiceConsentAcceptedRef.current
+            : true,
+        agentConfigured: Boolean(liveVoiceSettings.agentId),
+    });
+
+    const recordVoiceRuntimeEvent = async (
+        eventType: ChatCoreVoiceRuntimeEventType,
+        details: {
+            sessionPhase?: string;
+            reason?: string;
+            readinessReason?: string;
+            durationMs?: number;
+            error?: unknown;
+        } = {},
+    ) => {
+        if (!projectIdForConversation) return;
+
+        const sessionId = voiceRuntimeSessionIdRef.current || createChatCoreRuntimeEventId();
+        voiceRuntimeSessionIdRef.current = sessionId;
+        const errorDetails = details.error ? normalizeRuntimeError(details.error) : {};
+
+        try {
+            await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(projectIdForConversation)}/events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType,
+                    sessionId,
+                    sessionPhase: details.sessionPhase,
+                    reason: details.reason,
+                    readinessReason: details.readinessReason,
+                    durationMs: details.durationMs,
+                    conversationId: conversationIdRef.current || undefined,
+                    sourceSurface: chatbotEngineContext?.sourceSurface || 'website',
+                    sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+                    chatbotEngineContext,
+                    correlationId: sessionId,
+                    voice: getVoiceRuntimeMetadata(),
+                    ...errorDetails,
+                }),
+            });
+        } catch (error) {
+            console.warn('[ChatCore] Voice runtime event was not recorded:', error);
+        }
+    };
 
     const buildCustomerRequestNotes = (
         sourceMessages: Message[] = messagesRef.current,
@@ -2089,10 +2184,41 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     const startLiveSession = async () => {
-        if (!liveVoiceSettings.enabled || !liveVoiceSettings.agentId) {
-            alert(liveVoiceSettings.unavailableReason === 'agent_missing'
-                ? t('chatbotWidget.liveVoiceNotConfigured')
-                : t('chatbotWidget.liveVoiceDisabled'));
+        voiceRuntimeSessionIdRef.current = createChatCoreRuntimeEventId();
+        voiceRuntimeStartedAtRef.current = null;
+        void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.requested, {
+            sessionPhase: 'requested',
+        });
+
+        const readiness = getChatCoreVoiceSessionReadiness(liveVoiceSettings, voiceConsentAccepted);
+        if (!readiness.allowed) {
+            if (readiness.reason === 'consent_required') {
+                const accepted = window.confirm(t('chatbotWidget.liveVoiceConsentPrompt'));
+                if (!accepted) {
+                    void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.blocked, {
+                        sessionPhase: 'blocked',
+                        reason: 'consent_declined',
+                        readinessReason: readiness.reason,
+                    });
+                    return;
+                }
+                voiceConsentAcceptedRef.current = true;
+                setVoiceConsentAccepted(true);
+            } else {
+                void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.blocked, {
+                    sessionPhase: 'blocked',
+                    reason: readiness.reason,
+                    readinessReason: readiness.reason,
+                });
+                alert(readiness.reason === 'agent_missing' || readiness.reason === 'provider_missing'
+                    ? t('chatbotWidget.liveVoiceNotConfigured')
+                    : t('chatbotWidget.liveVoiceDisabled'));
+                return;
+            }
+        }
+
+        if (!liveVoiceSettings.agentId) {
+            alert(t('chatbotWidget.liveVoiceNotConfigured'));
             return;
         }
 
@@ -2105,6 +2231,10 @@ ${suggestAvailableSlots()}
                     setIsConnecting(false);
                     setIsLiveActive(true);
                     isConnectedRef.current = true;
+                    voiceRuntimeStartedAtRef.current = Date.now();
+                    void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.started, {
+                        sessionPhase: 'connected',
+                    });
                     
                     // Start visualizer interval
                     if (visualizerIntervalRef.current) clearInterval(visualizerIntervalRef.current);
@@ -2130,6 +2260,11 @@ ${suggestAvailableSlots()}
                 },
                 onError: (error) => {
                     console.error("ElevenLabs Session Error:", error);
+                    void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.failed, {
+                        sessionPhase: 'session_error',
+                        reason: 'provider_session_error',
+                        error,
+                    });
                     stopLiveSession();
                 },
                 onModeChange: (mode) => {
@@ -2151,11 +2286,25 @@ ${suggestAvailableSlots()}
         } catch (error) {
             setIsConnecting(false);
             console.error("ElevenLabs connection error:", error);
+            void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.failed, {
+                sessionPhase: 'connection_error',
+                reason: 'provider_connection_error',
+                error,
+            });
             alert(t('chatbotWidget.sessionError'));
         }
     };
 
     const stopLiveSession = async () => {
+        if (voiceRuntimeSessionIdRef.current) {
+            const durationMs = voiceRuntimeStartedAtRef.current
+                ? Math.max(0, Date.now() - voiceRuntimeStartedAtRef.current)
+                : undefined;
+            void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.ended, {
+                sessionPhase: 'ended',
+                durationMs,
+            });
+        }
         isConnectedRef.current = false;
         
         if (visualizerIntervalRef.current) {
@@ -2215,6 +2364,8 @@ ${suggestAvailableSlots()}
 
         setIsLiveActive(false);
         setIsConnecting(false);
+        voiceRuntimeSessionIdRef.current = null;
+        voiceRuntimeStartedAtRef.current = null;
         nextStartTimeRef.current = 0;
     };
 
@@ -2368,6 +2519,16 @@ ${suggestAvailableSlots()}
                         voiceTranscript: fullConversation,
                         extractionConfidence: participantEmail ? 'medium' : 'low',
                         customerRequestSummary: customerRequestNotes,
+                        voice: {
+                            provider: liveVoiceSettings.provider,
+                            source: liveVoiceSettings.source,
+                            languageMode: liveVoiceSettings.languageMode,
+                            consentRequired: liveVoiceSettings.consentRequired,
+                            consentAccepted: liveVoiceSettings.consentRequired
+                                ? voiceConsentAcceptedRef.current
+                                : true,
+                            agentConfigured: Boolean(liveVoiceSettings.agentId),
+                        },
                     }),
                 };
 

@@ -76,6 +76,7 @@ export interface ChatbotEngineRuntimeSnapshot {
         financeEvents: number;
         restaurantEvents: number;
         realtyEvents: number;
+        voiceEvents: number;
         highIntentEvents: number;
         lastEventAt?: string;
         actionBreakdown: Array<{ actionType: string; count: number }>;
@@ -129,6 +130,7 @@ const EMPTY_ANALYTICS: ChatbotEngineRuntimeSnapshot['analytics'] = {
     financeEvents: 0,
     restaurantEvents: 0,
     realtyEvents: 0,
+    voiceEvents: 0,
     highIntentEvents: 0,
     actionBreakdown: [],
     intentBreakdown: [],
@@ -165,6 +167,20 @@ const REALTY_ACTIONS = new Set([
     'request_realty_showing',
     'register_open_house',
 ]);
+
+function eventIsVoiceRuntime(event: ChatbotEngineRuntimeEvent): boolean {
+    const eventType = normalizeString(event.eventType, '').toLowerCase();
+    const sourceSurface = normalizeString(event.sourceSurface, '').toLowerCase();
+    const metadata = normalizeRecord(event.metadata);
+    return eventType.includes('voice')
+        || sourceSurface === 'voice'
+        || metadata.runtimeEventType === 'chatbot_voice_session_requested'
+        || metadata.runtimeEventType === 'chatbot_voice_session_started'
+        || metadata.runtimeEventType === 'chatbot_voice_session_blocked'
+        || metadata.runtimeEventType === 'chatbot_voice_session_failed'
+        || metadata.runtimeEventType === 'chatbot_voice_session_ended'
+        || Object.keys(normalizeRecord(metadata.voice)).length > 0;
+}
 
 const EMPTY_INBOX: ChatbotEngineRuntimeSnapshot['inbox'] = {
     activeConversations: 0,
@@ -389,6 +405,7 @@ export function buildChatbotEngineRuntimeSnapshot(input: {
                 ['realty', 'real-estate', 'real_estate'],
                 ['realty', 'property', 'showing', 'open_house'],
             )).length,
+            voiceEvents: events.filter(eventIsVoiceRuntime).length,
             highIntentEvents: events.filter(event => normalizeRecord(event.metadata.intent).urgency === 'high').length,
             lastEventAt: events[0]?.createdAt,
             actionBreakdown: Array.from(actionCounts.entries())

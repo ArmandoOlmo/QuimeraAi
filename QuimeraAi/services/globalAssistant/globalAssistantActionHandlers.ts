@@ -1,4 +1,5 @@
 import { supabase as defaultSupabase } from '../../supabase';
+import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
 import type {
     AssistantAction,
     AssistantActionDefinition,
@@ -1118,6 +1119,26 @@ const createProjectWebsiteBeforeSnapshot = (state: ProjectWebsiteState): Record<
     row: cloneProjectWebsiteColumns(state.row),
 });
 
+const cloneProjectPublishColumns = (row: Record<string, unknown>): Record<string, unknown> => {
+    const snapshot: Record<string, unknown> = {};
+    ['status', 'published_at', 'published_data', 'last_updated', 'updated_at'].forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(row, key)) {
+            snapshot[key] = cloneValue(row[key]);
+        }
+    });
+    return snapshot;
+};
+
+const createProjectPublishBeforeSnapshot = (
+    projectId: string,
+    row: Record<string, unknown>,
+): Record<string, unknown> => ({
+    table: 'projects',
+    id: projectId,
+    projectId,
+    row: cloneProjectPublishColumns(row),
+});
+
 const rollbackProjectWebsiteColumns = (
     deps: GlobalAssistantActionHandlerDependencies,
 ): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
@@ -1141,6 +1162,312 @@ const rollbackProjectWebsiteColumns = (
         },
     };
 };
+
+const rollbackProjectPublishColumns = (
+    deps: GlobalAssistantActionHandlerDependencies,
+): HandlerPatch['rollback'] => async (_input, { snapshot }) => {
+    const before = asRecord(snapshot.beforeSnapshot);
+    const projectId = readString(before.projectId) || readString(before.id);
+    const row = asRecord(before.row);
+    if (!projectId || !Object.keys(row).length) {
+        throw new Error('Cannot rollback website publish state: previous project publish columns were not recorded.');
+    }
+    const result = await selectSingle(getClient(deps).from('projects').update(row).eq('id', projectId));
+    if (result?.error) throw result.error;
+    return {
+        afterSnapshot: {
+            table: 'projects',
+            id: projectId,
+            projectId,
+            restored: true,
+            row: result?.data || { id: projectId, ...row },
+        },
+        diff: {
+            restored: [`projects.${projectId}.publish_state`],
+        },
+    };
+};
+
+const rowBelongsToProjectStore = (row: Record<string, unknown>, projectId: string): boolean => {
+    const ids = uniqueStringList([
+        readString(row.project_id) || '',
+        readString(row.projectId) || '',
+        readString(row.store_id) || '',
+        readString(row.storeId) || '',
+        readString(row.public_store_id) || '',
+        readString(row.publicStoreId) || '',
+    ]);
+    return ids.includes(projectId);
+};
+
+const readTableRows = async (
+    client: SupabaseClientLike,
+    table: string,
+): Promise<Record<string, unknown>[]> => {
+    const result = await client.from(table).select('*');
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(row => asRecord(row));
+};
+
+const collectPublishedEcommerceRows = async (
+    client: SupabaseClientLike,
+    projectId: string,
+): Promise<{ products: Record<string, unknown>[]; categories: Record<string, unknown>[] }> => {
+    const [productRows, categoryRows] = await Promise.all([
+        readTableRows(client, 'store_products').catch(() => []),
+        readTableRows(client, 'store_categories').catch(() => []),
+    ]);
+
+    const products = productRows
+        .filter(row => rowBelongsToProjectStore(row, projectId))
+        .filter(row => ['active', 'published', 'live'].includes(normalizeForSearch(readString(row.status) || '')))
+        .map(row => ({
+            id: readString(row.id),
+            data: {
+                ...asRecord(row.data),
+                ...cloneRecord(row),
+            },
+        }));
+
+    const categories = categoryRows
+        .filter(row => rowBelongsToProjectStore(row, projectId))
+        .map(row => ({
+            id: readString(row.id),
+            data: {
+                ...asRecord(row.data),
+                ...cloneRecord(row),
+            },
+        }));
+
+    return { products, categories };
+};
+
+const postBelongsToProject = (
+    row: Record<string, unknown>,
+    projectId: string,
+    tenantId?: string | null,
+): boolean => {
+    const status = normalizeForSearch(readString(row.status) || '');
+    if (status !== 'published') return false;
+    const rowTenantId = readString(row.tenant_id) || readString(row.tenantId);
+    if (tenantId && rowTenantId && rowTenantId !== tenantId) return false;
+    const tags = readStringList(row.tags);
+    return tags.includes(`project:${projectId}`) || readString(row.project_id) === projectId || readString(row.projectId) === projectId;
+};
+
+const collectPublishedPostRows = async (
+    client: SupabaseClientLike,
+    projectId: string,
+    tenantId?: string | null,
+): Promise<Record<string, unknown>[]> => {
+    const rows = await readTableRows(client, 'posts').catch(() => []);
+    return rows
+        .filter(row => postBelongsToProject(row, projectId, tenantId))
+        .map(row => ({
+            id: readString(row.id),
+            data: cloneRecord(row),
+        }));
+};
+
+const hasReviewMarker = (value: unknown): boolean => {
+    const record = asRecord(value);
+    if (!Object.keys(record).length) return false;
+    return readBoolean(record.needsReview) === true
+        || normalizeForSearch(readString(record.status) || '') === 'needs_review';
+};
+
+const collectWebsitePublishBlockers = (state: ProjectWebsiteState): string[] => {
+    const blockers: string[] = [];
+    const status = readString(state.row.status);
+    if (status === 'Template') blockers.push('Template projects cannot be published as live websites.');
+
+    const hasPageData = Object.keys(state.pageData).some(key => key !== 'businessBlueprint');
+    const hasSections = state.componentOrder.length > 0 || state.pages.some(page => page.sections.length > 0);
+    if (!hasPageData || !hasSections) {
+        blockers.push('Website needs at least one configured page section before publish.');
+    }
+
+    if (state.componentOrder.length > 0 && state.componentOrder.every(section => state.sectionVisibility[section] === false)) {
+        blockers.push('Website cannot publish with every section hidden.');
+    }
+
+    if (state.pages.length > 0 && !state.pages.some(page => page.isHomePage || page.slug === '/')) {
+        blockers.push('Website needs a home page before publish.');
+    }
+
+    const assistantDrafts = asRecord(state.projectData.assistantDrafts);
+    Object.entries(assistantDrafts).forEach(([key, draft]) => {
+        if (hasReviewMarker(draft)) blockers.push(`Global Assistant ${key} draft still needs review.`);
+    });
+
+    const storefrontEditor = asRecord(state.pageData.storefrontEditor);
+    if (hasReviewMarker(storefrontEditor)) {
+        blockers.push('Storefront Builder draft still needs review before website publish.');
+    }
+
+    return Array.from(new Set(blockers));
+};
+
+const buildWebsitePublishedSnapshot = async (
+    client: SupabaseClientLike,
+    state: ProjectWebsiteState,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): Promise<{ snapshot: Record<string, unknown>; stats: Record<string, number> }> => {
+    const tenantId = getTenantId(action, context) || readProjectTenantId(state.row) || null;
+    const userId = action.userId || context?.actor.userId || readProjectUserId(state.row) || null;
+    const ecommerce = await collectPublishedEcommerceRows(client, state.projectId);
+    const posts = await collectPublishedPostRows(client, state.projectId, tenantId);
+    const data = cloneRecord(state.pageData);
+
+    const snapshot = {
+        id: state.projectId,
+        name: state.projectName,
+        userId,
+        tenantId,
+        data,
+        header: asRecord(data.header),
+        footer: asRecord(data.footer),
+        theme: state.theme,
+        brandIdentity: state.brandIdentity || null,
+        pages: state.pages,
+        componentOrder: state.componentOrder,
+        sectionVisibility: state.sectionVisibility,
+        componentStatus: state.row.component_status || asRecord(state.projectData.componentStatus) || null,
+        componentStyles: state.row.component_styles || state.projectData.componentStyles || defaultComponentStyles,
+        menus: asArray(state.row.menus).length ? cloneValue(state.row.menus) : asArray(state.projectData.menus),
+        categories: asArray(state.row.categories).length ? cloneValue(state.row.categories) : asArray(state.projectData.categories),
+        seoConfig: state.row.seo_config || state.projectData.seoConfig || null,
+        aiAssistantConfig: state.row.ai_assistant_config || state.projectData.aiAssistantConfig || null,
+        designTokens: state.row.design_tokens || state.projectData.designTokens || null,
+        responsiveStyles: state.row.responsive_styles || state.projectData.responsiveStyles || null,
+        abTests: state.row.ab_tests || state.projectData.abTests || null,
+        businessBlueprint: state.projectData.businessBlueprint || state.pageData.businessBlueprint || null,
+        ecommerce,
+        posts,
+        publishedAt: now,
+        updatedAt: now,
+        sourceProjectId: state.projectId,
+        faviconUrl: readString(state.row.favicon_url) || readString(state.projectData.faviconUrl) || null,
+        thumbnailUrl: readString(state.row.thumbnail_url) || readString(state.projectData.thumbnailUrl) || null,
+        globalAssistant: {
+            publishedByAssistant: true,
+            actionId: action.id,
+            taskId: action.taskId || null,
+            request: readString(input.request) || '',
+            contextSnapshotId: context?.id || null,
+        },
+    };
+
+    return {
+        snapshot,
+        stats: {
+            productsPublished: ecommerce.products.length,
+            categoriesPublished: ecommerce.categories.length,
+            postsPublished: posts.length,
+        },
+    };
+};
+
+const createPublishWebsiteHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => ({
+        valid: Boolean(readString(input.projectId)),
+        errors: readString(input.projectId) ? [] : ['projectId is required before publishing a website.'],
+    }),
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        assertProjectRowInAssistantScope(state.row, action, context);
+
+        const blockers = collectWebsitePublishBlockers(state);
+        if (blockers.length > 0) {
+            throw new Error(`Website publish blocked: ${blockers.join(' ')}`);
+        }
+
+        const { snapshot: publishedData, stats } = await buildWebsitePublishedSnapshot(client, state, input, action, context, now);
+        const patch = {
+            published_data: publishedData,
+            published_at: now,
+            status: 'Published',
+            last_updated: now,
+        };
+        const result = await selectSingle(client.from('projects').update(patch).eq('id', projectId));
+        if (result?.error) throw result.error;
+        const row = asRecord(result?.data);
+        if (!readString(row.id)) throw new Error(`Project ${projectId} could not be published.`);
+
+        return {
+            beforeSnapshot: createProjectPublishBeforeSnapshot(projectId, state.row),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                status: 'Published',
+                publishedAt: now,
+                row,
+                stats,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+            diff: {
+                updated: [`projects.${projectId}.published_data`, `projects.${projectId}.published_at`, `projects.${projectId}.status`],
+                critical: true,
+                rollback: 'restore_previous_project_publish_state',
+                stats,
+            },
+        };
+    },
+    rollback: rollbackProjectPublishColumns(deps),
+});
+
+const createUnpublishWebsiteHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => ({
+        valid: Boolean(readString(input.projectId)),
+        errors: readString(input.projectId) ? [] : ['projectId is required before unpublishing a website.'],
+    }),
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const state = await loadProjectWebsiteState(client, projectId, context);
+        assertProjectRowInAssistantScope(state.row, action, context);
+
+        const patch = {
+            published_data: null,
+            published_at: null,
+            status: 'Draft',
+            last_updated: now,
+        };
+        const result = await selectSingle(client.from('projects').update(patch).eq('id', projectId));
+        if (result?.error) throw result.error;
+        const row = asRecord(result?.data);
+        if (!readString(row.id)) throw new Error(`Project ${projectId} could not be unpublished.`);
+
+        return {
+            beforeSnapshot: createProjectPublishBeforeSnapshot(projectId, state.row),
+            afterSnapshot: {
+                table: 'projects',
+                id: projectId,
+                projectId,
+                status: 'Draft',
+                publishedAt: null,
+                row,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+            },
+            diff: {
+                updated: [`projects.${projectId}.published_data`, `projects.${projectId}.published_at`, `projects.${projectId}.status`],
+                critical: true,
+                rollback: 'restore_previous_project_publish_state',
+            },
+        };
+    },
+    rollback: rollbackProjectPublishColumns(deps),
+});
 
 const dangerousPathSegments = new Set(['__proto__', 'prototype', 'constructor']);
 
@@ -4123,6 +4450,310 @@ const createBioPageBlockHandler = (deps: GlobalAssistantActionHandlerDependencie
     rollback: rollbackCreatedRow('bio_page_blocks', deps),
 });
 
+const sanitizeBioPageLinkUrl = (value: unknown): string => {
+    const raw = readString(value) || '';
+    if (!raw) return '';
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('vbscript:')) return '';
+    if (raw.startsWith('/') || raw.startsWith('#')) return raw;
+    if (/^(mailto|tel|sms):/i.test(raw)) return raw;
+    const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+        const url = new URL(candidate);
+        return ['http:', 'https:'].includes(url.protocol) ? url.toString() : '';
+    } catch {
+        return '';
+    }
+};
+
+const hasBioPagePlaceholderUrl = (value: unknown): boolean => {
+    const text = normalizeForSearch(readString(value) || '');
+    return Boolean(text && (
+        text.includes('example.com')
+        || text.includes('placeholder')
+        || text.includes('your-link')
+        || text.includes('tu-link')
+        || text.includes('{{')
+    ));
+};
+
+const loadBioPageRowForAction = async (
+    client: SupabaseClientLike,
+    projectId: string,
+    bioPageId?: string,
+): Promise<Record<string, unknown>> => {
+    if (bioPageId) return loadProjectScopedRow(client, 'bio_pages', projectId, bioPageId);
+
+    const result = await selectSingle(
+        client
+            .from('bio_pages')
+            .select('*')
+            .eq('project_id', projectId)
+            .neq('status', 'archived'),
+    );
+    if (result?.error) throw result.error;
+    const row = asRecord(result?.data);
+    if (!readString(row.id)) throw new Error(`No Bio Page was found for project ${projectId}.`);
+    return cloneRecord(row);
+};
+
+const readBioPageChildRows = async (
+    client: SupabaseClientLike,
+    table: 'bio_page_links' | 'bio_page_blocks',
+    bioPageId: string,
+): Promise<Record<string, unknown>[]> => {
+    const result = await client.from(table).select('*').eq('bio_page_id', bioPageId);
+    if (result?.error) throw result.error;
+    return asArray(result?.data).map(row => cloneRecord(asRecord(row)));
+};
+
+const deriveBioPageLinkUpdatesFromRequest = (request: unknown): Record<string, unknown> => {
+    const original = readString(request) || '';
+    const text = normalizeForSearch(original);
+    const updates: Record<string, unknown> = {};
+    if (!text) return updates;
+
+    if (/\b(oculta|ocultar|hide|hidden|invisible|desactiva|desactivar)\b/.test(text)) updates.visible = false;
+    if (/\b(muestra|mostrar|show|visible|activa|activar)\b/.test(text)) updates.visible = true;
+
+    const urlMatch = original.match(/\b((?:https?:\/\/|www\.)[^\s<>"']+|[a-z0-9][a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s<>"']*)?)/i);
+    if (urlMatch) updates.url = urlMatch[1].replace(/[),.;]+$/g, '');
+
+    return updates;
+};
+
+const getContextBioPageLinkId = (context?: AssistantContextSnapshot): string | undefined => {
+    const entityType = normalizeForSearch(context?.activeEntityType || '').replace(/\s+/g, '_');
+    if (!context?.activeEntityId) return undefined;
+    if (['bio_page_link', 'bio_link', 'biopage_link', 'link_in_bio', 'link'].includes(entityType)) {
+        return context.activeEntityId;
+    }
+    return undefined;
+};
+
+const getTargetBioPageLinkId = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string => {
+    const updates = requireObject(input, 'updates');
+    const link = requireObject(input, 'link');
+    const linkId = readString(input.linkId)
+        || readString(input.link_id)
+        || readString(input.targetId)
+        || readString(updates.linkId)
+        || readString(updates.link_id)
+        || readString(link.id)
+        || getContextBioPageLinkId(context);
+    if (!linkId) throw new Error('linkId is required or the active context must point to a Bio Page link.');
+    return linkId;
+};
+
+const buildBioPageLinkUpdatePatch = (
+    currentRow: Record<string, unknown>,
+    updates: Record<string, unknown>,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    now: string,
+): { patch: Record<string, unknown>; changedFields: string[] } => {
+    const patch: Record<string, unknown> = { updated_at: now };
+    const changedFields: string[] = [];
+    const setValue = (column: string, value: unknown) => {
+        patch[column] = value;
+        changedFields.push(column);
+    };
+
+    const title = readString(updates.title ?? updates.label ?? updates.name);
+    if (title !== undefined) setValue('title', title || 'Link');
+    if (updates.url !== undefined) {
+        const url = sanitizeBioPageLinkUrl(updates.url);
+        if (!url) throw new Error('Bio Page link update requires a safe URL.');
+        setValue('url', url);
+    }
+    const description = readString(updates.description ?? updates.descripcion);
+    if (description !== undefined) setValue('description', description || null);
+    const icon = readString(updates.icon);
+    if (icon !== undefined) setValue('icon', icon || null);
+    const imageUrl = readString(updates.imageUrl ?? updates.image_url ?? updates.thumbnail);
+    if (imageUrl !== undefined) setValue('image_url', imageUrl || null);
+    const platform = readString(updates.platform);
+    if (platform !== undefined) setValue('platform', platform || null);
+    const linkType = readString(updates.linkType ?? updates.link_type ?? updates.type);
+    if (linkType !== undefined) setValue('link_type', linkType === 'link' ? 'external' : linkType);
+    const orderIndex = readNumber(updates.orderIndex ?? updates.order_index ?? updates.order);
+    if (orderIndex !== undefined) setValue('order_index', orderIndex);
+    const visible = readBoolean(updates.visible ?? updates.enabled);
+    if (visible !== undefined) setValue('visible', visible);
+    const clickTrackingEnabled = readBoolean(updates.clickTrackingEnabled ?? updates.click_tracking_enabled);
+    if (clickTrackingEnabled !== undefined) setValue('click_tracking_enabled', clickTrackingEnabled);
+
+    const metadata = mergeAssistantMetadata(currentRow.metadata, input, action, context);
+    metadata.needsReview = true;
+    metadata.generatedByAI = true;
+    metadata.userModified = false;
+    metadata.lockedFromRegeneration = false;
+    metadata.sourceMap = {
+        ...asRecord(metadata.sourceMap),
+        ...assistantSourceMap(input, action, context),
+        bioPageLink: 'globalAssistant.bioPage.linkUpdate',
+    };
+    patch.metadata = metadata;
+    changedFields.push(changedFields.length === 0 ? 'metadata.assistantDrafts.linkUpdate' : 'metadata.globalAssistant');
+
+    return { patch, changedFields: Array.from(new Set(changedFields)) };
+};
+
+const editBioPageLinkHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: input => {
+        const linkId = readString(input.linkId)
+            || readString(input.link_id)
+            || readString(input.targetId);
+        const updates = {
+            ...deriveBioPageLinkUpdatesFromRequest(input.request),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'link'),
+        };
+        const errors = [
+            ...(!linkId ? ['linkId is required before editing a Bio Page link.'] : []),
+            ...(Object.keys(updates).length === 0 ? ['At least one supported Bio Page link update is required.'] : []),
+            ...(updates.url !== undefined && !sanitizeBioPageLinkUrl(updates.url)
+                ? ['Bio Page link URL must be safe before updating.']
+                : []),
+        ];
+        return { valid: errors.length === 0, errors };
+    },
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const linkId = getTargetBioPageLinkId(input, context);
+        const now = getNow(deps);
+        const currentRow = await loadProjectScopedRow(client, 'bio_page_links', projectId, linkId);
+        const previousRow = cloneRecord(currentRow);
+        const updates = {
+            ...deriveBioPageLinkUpdatesFromRequest(input.request),
+            ...requireObject(input, 'updates'),
+            ...requireObject(input, 'link'),
+        };
+        const { patch, changedFields } = buildBioPageLinkUpdatePatch(currentRow, updates, input, action, context, now);
+        const row = await updateProjectScopedRow(client, 'bio_page_links', projectId, linkId, patch);
+        return {
+            beforeSnapshot: { table: 'bio_page_links', id: linkId, projectId, row: previousRow },
+            afterSnapshot: { table: 'bio_page_links', id: linkId, projectId, bioPageId: readString(row.bio_page_id), row },
+            diff: {
+                updated: changedFields.map(field => `bio_page_links.${linkId}.${field}`),
+                reviewRequired: true,
+                rollback: 'restore_previous_bio_page_link_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('bio_page_links', deps),
+});
+
+const getBioPageIdFromInput = (
+    input: Record<string, unknown>,
+    context?: AssistantContextSnapshot,
+): string | undefined => {
+    const page = requireObject(input, 'bioPage');
+    const entityType = normalizeForSearch(context?.activeEntityType || '').replace(/\s+/g, '_');
+    return readString(input.bioPageId)
+        || readString(input.bio_page_id)
+        || readString(input.pageId)
+        || readString(page.id)
+        || (context?.activeEntityId && ['bio_page', 'biopage', 'bio'].includes(entityType) ? context.activeEntityId : undefined);
+};
+
+const collectBioPagePublishBlockers = (
+    page: Record<string, unknown>,
+    links: Record<string, unknown>[],
+    blocks: Record<string, unknown>[],
+): string[] => {
+    const blockers: string[] = [];
+    const settings = asRecord(page.settings);
+    const profile = asRecord(page.profile);
+    const slug = readString(page.slug);
+    const displayName = readString(profile.displayName) || readString(profile.name) || readString(page.title);
+
+    if (!slug) blockers.push('Bio Page slug is required before publishing.');
+    if (!displayName) blockers.push('Bio Page profile name is required before publishing.');
+    if (settings.needsReview === true || asRecord(settings.metadata).needsReview === true) {
+        blockers.push('Bio Page settings still need review.');
+    }
+    if (profile.needsReview === true) blockers.push('Bio Page profile still needs review.');
+
+    links.filter(link => link.visible !== false).forEach(link => {
+        const metadata = asRecord(link.metadata);
+        const label = readString(link.title) || readString(link.id) || 'Untitled link';
+        if (metadata.needsReview === true) blockers.push(`Bio Page link "${label}" still needs review.`);
+        const linkType = readString(link.link_type) || 'external';
+        if (linkType !== 'chatbot') {
+            const url = sanitizeBioPageLinkUrl(link.url);
+            if (!url) blockers.push(`Bio Page link "${label}" needs a safe URL.`);
+            if (hasBioPagePlaceholderUrl(link.url)) blockers.push(`Bio Page link "${label}" still uses a placeholder URL.`);
+        }
+    });
+
+    blocks.filter(block => block.visible !== false).forEach(block => {
+        const label = readString(block.title) || readString(block.type) || readString(block.id) || 'Untitled block';
+        if (block.needs_review === true) blockers.push(`Bio Page block "${label}" still needs review.`);
+    });
+
+    return blockers;
+};
+
+const publishBioPageHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const projectId = getProjectId(input, action, context);
+        const now = getNow(deps);
+        const page = await loadBioPageRowForAction(client, projectId, getBioPageIdFromInput(input, context));
+        const bioPageId = readString(page.id) || '';
+        const previousRow = cloneRecord(page);
+        const [links, blocks] = await Promise.all([
+            readBioPageChildRows(client, 'bio_page_links', bioPageId),
+            readBioPageChildRows(client, 'bio_page_blocks', bioPageId),
+        ]);
+        const blockers = collectBioPagePublishBlockers(page, links, blocks);
+        if (blockers.length > 0) throw new Error(`Bio Page is not ready to publish: ${blockers.join(' ')}`);
+
+        const currentSettings = asRecord(page.settings);
+        const baseMetadata = buildBaseMetadata(input, action, context);
+        const patch = {
+            status: 'published',
+            published_at: now,
+            updated_at: now,
+            settings: {
+                ...currentSettings,
+                lastPublishedBy: 'global-assistant',
+                lastPublishedAt: now,
+                globalAssistant: {
+                    ...asRecord(currentSettings.globalAssistant),
+                    ...asRecord(baseMetadata.globalAssistant),
+                    needsReview: false,
+                    publishedByAssistant: true,
+                },
+                sourceMap: {
+                    ...asRecord(currentSettings.sourceMap),
+                    ...assistantSourceMap(input, action, context),
+                    bioPagePublish: 'globalAssistant.bioPage.publish',
+                },
+            },
+        };
+        const row = await updateProjectScopedRow(client, 'bio_pages', projectId, bioPageId, patch);
+        return {
+            beforeSnapshot: { table: 'bio_pages', id: bioPageId, projectId, row: previousRow },
+            afterSnapshot: { table: 'bio_pages', id: bioPageId, projectId, row },
+            diff: {
+                updated: [`bio_pages.${bioPageId}.status`, `bio_pages.${bioPageId}.published_at`, `bio_pages.${bioPageId}.settings.globalAssistant`],
+                critical: true,
+                published: [`bio_pages.${bioPageId}`],
+                rollback: 'restore_previous_bio_page_snapshot',
+            },
+        };
+    },
+    rollback: rollbackUpdatedProjectScopedRow('bio_pages', deps),
+});
+
 const chatbotKnowledgeSourceTypes = new Set<ChatbotKnowledgeSourceType>([
     'business_blueprint',
     'website_content',
@@ -5118,6 +5749,8 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     update_section_copy: deps => createWebsiteSectionPatchHandler(deps, 'copy'),
     reorder_sections: createReorderWebsiteSectionsHandler,
     toggle_section_visibility: createToggleWebsiteSectionVisibilityHandler,
+    publish_website: createPublishWebsiteHandler,
+    unpublish_website: createUnpublishWebsiteHandler,
     create_email_campaign: createEmailCampaignHandler,
     create_audience: createEmailAudienceHandler,
     create_email_automation: createEmailAutomationHandler,
@@ -5146,7 +5779,9 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     update_appointment: updateAppointmentHandler,
     configure_availability: configureAvailabilityHandler,
     create_bio_page: createBioPageHandler,
+    edit_bio_link: editBioPageLinkHandler,
     add_bio_block: createBioPageBlockHandler,
+    publish_bio_page: publishBioPageHandler,
     create_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: false }),
     sync_chatbot_knowledge: deps => createChatbotKnowledgeHandler(deps, { sync: true }),
     create_finance_record: createFinanceRecordHandler,

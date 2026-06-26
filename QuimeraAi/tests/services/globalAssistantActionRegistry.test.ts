@@ -65,6 +65,10 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('update_section_image')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('reorder_sections')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('toggle_section_visibility')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('publish_website')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('publish_website')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('attach_asset_to_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('add_storefront_section')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_storefront_theme')?.execute).toBe('function');
@@ -88,6 +92,11 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('create_appointment')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_appointment')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('configure_availability')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('create_bio_page')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_bio_link')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('edit_bio_link')?.rollback).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('publish_bio_page')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('publish_bio_page')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.rollback).toBe('function');

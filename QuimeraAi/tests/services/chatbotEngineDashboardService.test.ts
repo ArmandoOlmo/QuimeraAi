@@ -128,6 +128,24 @@ describe('chatbotEngineDashboardService', () => {
                 metadata: {},
                 createdAt: '2026-06-26T03:00:00.000Z',
             },
+            {
+                id: 'event_10',
+                eventType: 'chatbot_voice_session_started',
+                actionType: 'record_analytics_event',
+                actionStatus: 'observed',
+                sourceSurface: 'website',
+                sourceModule: 'chatcore',
+                conversationId: 'conversation_1',
+                metadata: {
+                    runtimeEventType: 'chatbot_voice_session_started',
+                    voice: {
+                        provider: 'elevenlabs',
+                        consentAccepted: true,
+                        agentConfigured: true,
+                    },
+                },
+                createdAt: '2026-06-26T02:00:00.000Z',
+            },
         ];
 
         const snapshot = buildChatbotEngineRuntimeSnapshot({
@@ -171,10 +189,10 @@ describe('chatbotEngineDashboardService', () => {
         });
 
         expect(snapshot.analytics).toMatchObject({
-            totalEvents: 9,
+            totalEvents: 10,
             executedActions: 7,
             blockedActions: 1,
-            observedEvents: 1,
+            observedEvents: 2,
             leadEvents: 1,
             appointmentEvents: 1,
             handoffEvents: 1,
@@ -183,13 +201,14 @@ describe('chatbotEngineDashboardService', () => {
             financeEvents: 1,
             restaurantEvents: 1,
             realtyEvents: 1,
+            voiceEvents: 1,
             highIntentEvents: 1,
             lastEventAt: '2026-06-26T10:00:00.000Z',
         });
         expect(snapshot.analytics.actionBreakdown[0]).toEqual({ actionType: 'create_lead', count: 1 });
         expect(snapshot.analytics.intentBreakdown[0]).toEqual({ intent: 'checkout_intent', count: 1 });
         expect(snapshot.analytics.surfaceBreakdown).toEqual([
-            { sourceSurface: 'website', count: 2 },
+            { sourceSurface: 'website', count: 3 },
             { sourceSurface: 'admin_preview', count: 1 },
             { sourceSurface: 'bio_page', count: 1 },
             { sourceSurface: 'booking_page', count: 1 },
@@ -202,6 +221,7 @@ describe('chatbotEngineDashboardService', () => {
             { sourceModule: 'ecommerce', count: 2 },
             { sourceModule: 'appointments', count: 1 },
             { sourceModule: 'bio-page', count: 1 },
+            { sourceModule: 'chatcore', count: 1 },
             { sourceModule: 'email-marketing', count: 1 },
             { sourceModule: 'finance', count: 1 },
             { sourceModule: 'real-estate', count: 1 },

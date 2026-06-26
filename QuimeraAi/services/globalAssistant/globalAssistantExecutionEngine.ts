@@ -163,6 +163,27 @@ const isFinanceRecordEntityType = (entityType: string | null | undefined): boole
     ].includes(normalized);
 };
 
+const isBioPageLinkEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'bio_page_link',
+        'bio_link',
+        'biopage_link',
+        'link_in_bio',
+        'link',
+    ].includes(normalized);
+};
+
+const isBioPageEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'bio_page',
+        'biopage',
+        'bio',
+        'link_in_bio_page',
+    ].includes(normalized);
+};
+
 const buildActionInput = (
     definition: AssistantActionDefinition,
     context: AssistantContextSnapshot,
@@ -204,6 +225,34 @@ const buildActionInput = (
                 'selectedFinanceRecordId',
             ]);
         if (recordId) actionInput.recordId = recordId;
+    }
+
+    if (definition.actionType === 'edit_bio_link') {
+        const activeLinkId = isBioPageLinkEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const linkId = activeLinkId
+            || readSnapshotText(context, [
+                'activeBioPageLinkId',
+                'selectedBioPageLinkId',
+                'bioPageLinkId',
+                'bioLinkId',
+                'linkId',
+            ]);
+        if (linkId) actionInput.linkId = linkId;
+    }
+
+    if (definition.actionType === 'publish_bio_page') {
+        const activeBioPageId = isBioPageEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const bioPageId = activeBioPageId
+            || readSnapshotText(context, [
+                'activeBioPageId',
+                'selectedBioPageId',
+                'bioPageId',
+            ]);
+        if (bioPageId) actionInput.bioPageId = bioPageId;
     }
 
     return actionInput;

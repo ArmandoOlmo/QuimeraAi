@@ -993,6 +993,7 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.financeEvents')} value={runtimeSnapshot.analytics.financeEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.restaurantEvents')} value={runtimeSnapshot.analytics.restaurantEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.realtyEvents')} value={runtimeSnapshot.analytics.realtyEvents} />
+                        <MetricTile label={t('aiAssistant.chatbotEngine.metrics.voiceEvents')} value={runtimeSnapshot.analytics.voiceEvents} />
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                         {runtimeSnapshot.analytics.actionBreakdown.slice(0, 8).map(item => (

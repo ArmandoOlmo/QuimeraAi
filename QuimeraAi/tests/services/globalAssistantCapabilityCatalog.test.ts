@@ -19,6 +19,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const project = catalog.modules.find(module => module.module === 'project');
         const admin = catalog.modules.find(module => module.module === 'admin');
         const finance = catalog.modules.find(module => module.module === 'finance');
+        const bioPage = catalog.modules.find(module => module.module === 'bioPage');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -26,6 +27,8 @@ describe('globalAssistantCapabilityCatalog', () => {
         const updateProjectMetadata = catalog.actions.find(action => action.actionType === 'update_project_metadata');
         const searchTenants = catalog.actions.find(action => action.actionType === 'search_tenants');
         const updateFinanceRecord = catalog.actions.find(action => action.actionType === 'update_finance_record');
+        const publishBioPage = catalog.actions.find(action => action.actionType === 'publish_bio_page');
+        const publishWebsite = catalog.actions.find(action => action.actionType === 'publish_website');
 
         expect(catalog.actionCount).toBeGreaterThan(40);
         expect(catalog.executableActionCount).toBeGreaterThan(10);
@@ -75,6 +78,8 @@ describe('globalAssistantCapabilityCatalog', () => {
             'update_section_image',
             'reorder_sections',
             'toggle_section_visibility',
+            'publish_website',
+            'unpublish_website',
         ]));
         expect(storefront?.executableActionTypes).toEqual(expect.arrayContaining([
             'add_storefront_section',
@@ -94,6 +99,12 @@ describe('globalAssistantCapabilityCatalog', () => {
         expect(finance?.executableActionTypes).toEqual(expect.arrayContaining([
             'create_finance_record',
             'update_finance_record',
+        ]));
+        expect(bioPage?.executableActionTypes).toEqual(expect.arrayContaining([
+            'create_bio_page',
+            'edit_bio_link',
+            'add_bio_block',
+            'publish_bio_page',
         ]));
         expect(createEmail).toMatchObject({
             executable: true,
@@ -136,6 +147,20 @@ describe('globalAssistantCapabilityCatalog', () => {
             requiresConfirmation: true,
             rollbackExecutable: true,
             requiredService: 'finance',
+        });
+        expect(publishBioPage).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
+        });
+        expect(publishWebsite).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            safetyLevel: 'critical',
+            requiresConfirmation: true,
+            rollbackExecutable: true,
         });
     });
 

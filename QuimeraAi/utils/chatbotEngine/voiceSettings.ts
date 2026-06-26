@@ -14,6 +14,15 @@ export interface ResolvedChatbotVoiceSettings {
     unavailableReason?: 'disabled' | 'provider_missing' | 'agent_missing';
 }
 
+export type ChatbotVoiceSessionBlockedReason =
+    | NonNullable<ResolvedChatbotVoiceSettings['unavailableReason']>
+    | 'consent_required';
+
+export interface ChatbotVoiceSessionReadiness {
+    allowed: boolean;
+    reason?: ChatbotVoiceSessionBlockedReason;
+}
+
 type VoiceSettingsRecord = {
     enabled?: unknown;
     provider?: unknown;
@@ -132,4 +141,27 @@ export function resolveChatCoreVoiceSettings(
         source: 'disabled',
         unavailableReason: config.enableLiveVoice ? 'agent_missing' : 'disabled',
     };
+}
+
+export function getChatCoreVoiceSessionReadiness(
+    settings: ResolvedChatbotVoiceSettings,
+    consentAccepted = false,
+): ChatbotVoiceSessionReadiness {
+    if (!settings.enabled) {
+        return { allowed: false, reason: settings.unavailableReason || 'disabled' };
+    }
+
+    if (settings.provider === 'none') {
+        return { allowed: false, reason: 'provider_missing' };
+    }
+
+    if (!settings.agentId) {
+        return { allowed: false, reason: 'agent_missing' };
+    }
+
+    if (settings.consentRequired && !consentAccepted) {
+        return { allowed: false, reason: 'consent_required' };
+    }
+
+    return { allowed: true };
 }
