@@ -64,6 +64,12 @@ describe('Agency Client Provisioning Global Assistant contract', () => {
         expect(onboardingApi).toContain('moduleId: "agency-client-provisioning"');
         expect(onboardingApi).toContain('requiredPermission: "canManageSettings"');
         expect(onboardingApi).toContain('const selectedPlanId = payload.selectedPlanId ? String(payload.selectedPlanId) : null');
+        expect(onboardingApi).toContain('async function countAgencyManagedClients(agencyTenantId: string)');
+        expect(onboardingApi).toContain('.from("agency_clients")');
+        expect(onboardingApi).toContain('.select("client_tenant_id")');
+        expect(onboardingApi).toContain('.eq("owner_tenant_id", agencyTenantId)');
+        expect(onboardingApi).toContain('const subClientCount = await countAgencyManagedClients(agencyTenantId)');
+        expect(onboardingApi).toContain('requestedUsage: { resource: "subClients", amount: 1, used: subClientCount }');
         expect(onboardingApi).toContain('fetchAgencyServicePlan(agencyTenantId, selectedPlanId)');
         expect(onboardingApi).toContain('agency_plan_id: agencyPlan?.id || selectedPlanId');
         expect(onboardingApi).toContain('businessBlueprintCreated: true');

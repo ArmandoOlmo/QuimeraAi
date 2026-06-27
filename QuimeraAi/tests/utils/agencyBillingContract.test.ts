@@ -66,6 +66,16 @@ describe('Agency billing canonical contract', () => {
         expect(stripeWebhook).toContain('mode: billingMode');
     });
 
+    it('resolves client billing context through canonical agency relationships', () => {
+        expect(stripeApi).toContain('let agencyTenantId = clientTenant.owner_tenant_id || clientTenant.billing?.agencyTenantId || null');
+        expect(stripeApi).toContain('let relationship: any = null');
+        expect(stripeApi).toContain('const { data: canonicalRelationship, error: canonicalRelationshipError } = await supabase');
+        expect(stripeApi).toContain('.eq("client_tenant_id", clientTenantId)');
+        expect(stripeApi).toContain('agencyTenantId = relationship?.agency_tenant_id || null');
+        expect(stripeApi).toContain('if (!relationship) {');
+        expect(stripeApi).toContain('.eq("agency_tenant_id", agencyTenantId)');
+    });
+
     it('guards agency client limit edits through the agency service-plan permission', () => {
         expect(stripeApi).toContain('action: "updateTenantLimits"');
         expect(stripeApi).toContain('moduleId: "agency-service-plans"');
@@ -135,5 +145,17 @@ describe('Agency billing canonical contract', () => {
         expect(addonsManager).toContain('if (!requireAgencyAddonsAccess()) return');
         expect(addonsManager).toContain("action: 'updateSubscriptionAddons'");
         expect(addonsManager).toContain('disabled={loading || !canManageAddons}');
+    });
+
+    it('summarizes agency billing from canonical agency_clients with legacy fallback', () => {
+        expect(stripeApi).toContain('async function fetchAgencyBillingClientTenants');
+        expect(stripeApi).toContain('.from("agency_clients")');
+        expect(stripeApi).toContain('.select("client_tenant_id,agency_plan_id,billing_mode,project_count")');
+        expect(stripeApi).toContain('const canonicalRows = await fetchTenantRowsByIds');
+        expect(stripeApi).toContain('.eq("owner_tenant_id", agencyTenantId)');
+        expect(stripeApi).toContain('const clients = await fetchAgencyBillingClientTenants(tenantId)');
+        expect(stripeApi).toContain('client.agencyRelationship?.project_count');
+        expect(stripeApi).toContain('project_count: count || 0');
+        expect(stripeApi).toContain('could not update agency_clients project_count');
     });
 });

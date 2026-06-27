@@ -78,6 +78,8 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
 
     it('persists the selected agency service plan and blueprint on the provisioned project', () => {
         expect(onboardingApi).toContain('const selectedPlanId = payload.selectedPlanId ? String(payload.selectedPlanId) : null');
+        expect(onboardingApi).toContain('countAgencyManagedClients(agencyTenantId)');
+        expect(onboardingApi).toContain('requestedUsage: { resource: "subClients", amount: 1, used: subClientCount }');
         expect(onboardingApi).toContain('fetchAgencyServicePlan(agencyTenantId, selectedPlanId)');
         expect(onboardingApi).toContain('agencyPlan?.id || selectedPlanId');
         expect(onboardingApi).toContain('const businessBlueprint = buildInitialBusinessBlueprint({');

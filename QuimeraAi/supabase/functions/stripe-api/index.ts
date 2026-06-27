@@ -378,16 +378,37 @@ async function requireAgencyClientBillingContext(
   if (error) throw error;
   if (!clientTenant) throw new Error("Client tenant not found");
 
-  const agencyTenantId = clientTenant.owner_tenant_id || clientTenant.billing?.agencyTenantId || null;
+  let agencyTenantId = clientTenant.owner_tenant_id || clientTenant.billing?.agencyTenantId || null;
+  let relationship: any = null;
+
+  if (!agencyTenantId) {
+    const { data: canonicalRelationship, error: canonicalRelationshipError } = await supabase
+      .from("agency_clients")
+      .select("*")
+      .eq("client_tenant_id", clientTenantId)
+      .limit(1)
+      .maybeSingle();
+
+    if (canonicalRelationshipError && !isMissingTableError(canonicalRelationshipError)) {
+      throw canonicalRelationshipError;
+    }
+
+    relationship = canonicalRelationship || null;
+    agencyTenantId = relationship?.agency_tenant_id || null;
+  }
+
   if (!agencyTenantId) throw new Error("Client tenant is not linked to an agency");
 
-  const { data: relationship, error: relationshipError } = await supabase
-    .from("agency_clients")
-    .select("*")
-    .eq("agency_tenant_id", agencyTenantId)
-    .eq("client_tenant_id", clientTenantId)
-    .maybeSingle();
-  if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
+  if (!relationship) {
+    const { data: scopedRelationship, error: relationshipError } = await supabase
+      .from("agency_clients")
+      .select("*")
+      .eq("agency_tenant_id", agencyTenantId)
+      .eq("client_tenant_id", clientTenantId)
+      .maybeSingle();
+    if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
+    relationship = scopedRelationship || null;
+  }
 
   const agencyAccess = await requireAgencyBillingAccess(req, agencyTenantId, options);
 
@@ -395,9 +416,71 @@ async function requireAgencyClientBillingContext(
     agencyTenantId,
     agencyTenant: agencyAccess.tenant as any,
     clientTenant,
-    relationship: relationshipError ? null : relationship,
+    relationship,
     userId,
   };
+}
+
+async function fetchTenantRowsByIds(clientTenantIds: string[]) {
+  const uniqueIds = Array.from(new Set(clientTenantIds.filter(Boolean)));
+  const rows: any[] = [];
+
+  for (let i = 0; i < uniqueIds.length; i += 50) {
+    const chunk = uniqueIds.slice(i, i + 50);
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("id,name,billing,usage")
+      .in("id", chunk);
+
+    if (error) throw error;
+    rows.push(...(data || []));
+  }
+
+  return rows;
+}
+
+async function fetchAgencyBillingClientTenants(agencyTenantId: string) {
+  const tenantsById = new Map<string, any>();
+  const relationshipByClientId = new Map<string, any>();
+
+  const { data: relationships, error: relationshipError } = await supabase
+    .from("agency_clients")
+    .select("client_tenant_id,agency_plan_id,billing_mode,project_count")
+    .eq("agency_tenant_id", agencyTenantId);
+
+  if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
+
+  if (!relationshipError && relationships?.length) {
+    for (const relationship of relationships) {
+      if (relationship.client_tenant_id) {
+        relationshipByClientId.set(relationship.client_tenant_id, relationship);
+      }
+    }
+
+    const canonicalRows = await fetchTenantRowsByIds(
+      relationships.map((relationship: any) => relationship.client_tenant_id),
+    );
+    canonicalRows.forEach((row) => {
+      tenantsById.set(row.id, {
+        ...row,
+        agencyRelationship: relationshipByClientId.get(row.id) || null,
+      });
+    });
+  }
+
+  const { data: legacyClients, error: legacyError } = await supabase
+    .from("tenants")
+    .select("id,name,billing,usage")
+    .eq("owner_tenant_id", agencyTenantId);
+  if (legacyError) throw legacyError;
+
+  (legacyClients || []).forEach((row: any) => {
+    if (!tenantsById.has(row.id)) {
+      tenantsById.set(row.id, { ...row, agencyRelationship: relationshipByClientId.get(row.id) || null });
+    }
+  });
+
+  return Array.from(tenantsById.values());
 }
 
 async function getPlan(planId: string) {
@@ -3270,19 +3353,20 @@ async function getAgencyBillingSummary(req: Request, userId: string, data: any) 
     requiredPermission: "canViewAnalytics",
   });
   const agency = (access.tenant || {}) as any;
-  const { data: clients, error } = await supabase
-    .from("tenants")
-    .select("id,name,billing,usage")
-    .eq("owner_tenant_id", tenantId);
-  if (error) throw error;
+  const clients = await fetchAgencyBillingClientTenants(tenantId);
 
   const breakdown: Record<string, { name: string; count: number }> = {};
   let totalMonthlyBill = 0;
   let activeProjects = 0;
-  for (const client of clients || []) {
+  for (const client of clients) {
     const monthly = Number(client.billing?.mrr || client.billing?.monthlyPrice || 0);
     totalMonthlyBill += monthly;
-    const projectCount = Number(client.usage?.projectCount || client.billing?.projectCount || 0);
+    const projectCount = Number(
+      client.agencyRelationship?.project_count ??
+        client.usage?.projectCount ??
+        client.billing?.projectCount ??
+        0,
+    );
     activeProjects += projectCount;
     breakdown[client.id] = { name: client.name, count: projectCount };
   }
@@ -3307,13 +3391,9 @@ async function updateAgencyProjectCount(req: Request, userId: string, data: any)
     action: "updateAgencyProjectCount",
     requiredPermission: "canViewAnalytics",
   });
-  const { data: clients, error } = await supabase
-    .from("tenants")
-    .select("id,billing,usage")
-    .eq("owner_tenant_id", tenantId);
-  if (error) throw error;
+  const clients = await fetchAgencyBillingClientTenants(tenantId);
 
-  for (const client of clients || []) {
+  for (const client of clients) {
     const { count } = await supabase
       .from("projects")
       .select("id", { count: "exact", head: true })
@@ -3324,6 +3404,15 @@ async function updateAgencyProjectCount(req: Request, userId: string, data: any)
       billing: { ...(client.billing || {}), projectCount: count || 0 },
       updated_at: nowIso(),
     }).eq("id", client.id);
+
+    const { error: relationshipError } = await supabase.from("agency_clients").update({
+      project_count: count || 0,
+      updated_at: nowIso(),
+    }).eq("agency_tenant_id", tenantId).eq("client_tenant_id", client.id);
+
+    if (relationshipError && !isMissingTableError(relationshipError)) {
+      console.warn("[stripe-api] could not update agency_clients project_count", relationshipError);
+    }
   }
   return { success: true };
 }

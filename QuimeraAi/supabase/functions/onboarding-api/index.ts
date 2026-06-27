@@ -1015,6 +1015,36 @@ async function fetchAgencyServicePlan(agencyTenantId: string, selectedPlanId?: s
   return data || null;
 }
 
+async function countAgencyManagedClients(agencyTenantId: string) {
+  const canonicalClientIds = new Set<string>();
+
+  const { data: relationships, error: relationshipError } = await supabase
+    .from("agency_clients")
+    .select("client_tenant_id")
+    .eq("agency_tenant_id", agencyTenantId);
+
+  if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
+
+  if (!relationshipError) {
+    for (const relationship of relationships || []) {
+      if (relationship.client_tenant_id) canonicalClientIds.add(relationship.client_tenant_id);
+    }
+  }
+
+  const { data: legacyRows, error: legacyError } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("owner_tenant_id", agencyTenantId);
+
+  if (legacyError) throw legacyError;
+
+  for (const row of legacyRows || []) {
+    if (row.id) canonicalClientIds.add(row.id);
+  }
+
+  return canonicalClientIds.size;
+}
+
 async function insertModuleActivations(input: {
   tenantId: string;
   projectId: string;
@@ -1183,10 +1213,7 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
   if (!businessName) throw new Error("businessName is required");
   if (!contactEmail) throw new Error("contactEmail is required");
 
-  const { count: subClientCount } = await supabase
-    .from("tenants")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_tenant_id", agencyTenantId);
+  const subClientCount = await countAgencyManagedClients(agencyTenantId);
 
   const access = await requireServiceAccess(req, {
     tenantId: agencyTenantId,
@@ -1194,7 +1221,7 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     serviceId: "agency",
     featureKey: "agencyModule",
     requiredPermission: "canManageSettings",
-    requestedUsage: { resource: "subClients", amount: 1, used: subClientCount || 0 },
+    requestedUsage: { resource: "subClients", amount: 1, used: subClientCount },
     action: "agency-client-auto-provision",
   });
 
@@ -1389,7 +1416,7 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     .update({
       usage: {
         ...((agencyTenant as any).usage || {}),
-        subClientCount: (subClientCount || 0) + 1,
+        subClientCount: subClientCount + 1,
       },
       updated_at: now,
     })

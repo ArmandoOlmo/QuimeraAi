@@ -107,6 +107,28 @@ function buildFrameImageEntry(url: string, frameType: string) {
     };
 }
 
+async function isAgencyClientRelationshipLinked(
+    admin: any,
+    agencyTenantId: string,
+    clientTenantId: string,
+): Promise<boolean> {
+    const { data, error } = await admin
+        .from('agency_clients')
+        .select('agency_tenant_id')
+        .eq('agency_tenant_id', agencyTenantId)
+        .eq('client_tenant_id', clientTenantId)
+        .maybeSingle();
+
+    if (error) {
+        const code = String(error?.code || '');
+        if (code === '42P01' || code === 'PGRST205') return false;
+        console.error('[ai-proxy] agency client relationship lookup error:', error);
+        throw httpError('Could not validate agency client relationship', 500);
+    }
+
+    return Boolean(data);
+}
+
 function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
     return new Response(
         JSON.stringify(body),
@@ -211,7 +233,12 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
             return jsonResponse({ error: 'Could not validate shared credits pool' }, { status: 500 });
         }
 
-        if (authorizedTenant?.owner_tenant_id !== tenantId) {
+        const ownerLinked = authorizedTenant?.owner_tenant_id === tenantId;
+        const relationshipLinked = ownerLinked
+            ? true
+            : await isAgencyClientRelationshipLinked(admin, tenantId, authorizedTenantId);
+
+        if (!relationshipLinked) {
             return jsonResponse({ error: 'Invalid shared credits pool tenant' }, { status: 403 });
         }
     }
@@ -888,7 +915,10 @@ async function resolveCreditsPoolTenant(
     }
 
     const ownerTenantId = cleanUuid(tenant?.owner_tenant_id);
-    if (!ownerTenantId) return { poolTenantId: tenantId, isSharedPool: false };
+    if (!ownerTenantId) {
+        const relationshipPool = await resolveAgencyRelationshipPoolTenant(admin, tenantId);
+        return relationshipPool || { poolTenantId: tenantId, isSharedPool: false };
+    }
 
     const { data: parentTenant, error: parentError } = await admin
         .from('tenants')
@@ -910,6 +940,49 @@ async function resolveCreditsPoolTenant(
     }
 
     return { poolTenantId: tenantId, isSharedPool: false };
+}
+
+async function resolveAgencyRelationshipPoolTenant(
+    admin: any,
+    clientTenantId: string,
+): Promise<{ poolTenantId: string; isSharedPool: boolean; agencyName?: string } | null> {
+    const { data: relationship, error } = await admin
+        .from('agency_clients')
+        .select('agency_tenant_id')
+        .eq('client_tenant_id', clientTenantId)
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        const code = String(error?.code || '');
+        if (code === '42P01' || code === 'PGRST205') return null;
+        console.error('[ai-proxy] billing agency relationship pool lookup error:', error);
+        throw httpError('Could not resolve agency credits pool', 500);
+    }
+
+    const agencyTenantId = cleanUuid(relationship?.agency_tenant_id);
+    if (!agencyTenantId) return null;
+
+    const { data: parentTenant, error: parentError } = await admin
+        .from('tenants')
+        .select('name, subscription_plan')
+        .eq('id', agencyTenantId)
+        .maybeSingle();
+
+    if (parentError) {
+        console.error('[ai-proxy] billing agency relationship parent lookup error:', parentError);
+        throw httpError('Could not resolve agency credits pool parent', 500);
+    }
+
+    if (parentTenant && SHARED_POOL_PLAN_IDS.has(cleanString(parentTenant.subscription_plan))) {
+        return {
+            poolTenantId: agencyTenantId,
+            isSharedPool: true,
+            agencyName: cleanString(parentTenant.name) || undefined,
+        };
+    }
+
+    return null;
 }
 
 async function ensureTenantMembership(
