@@ -98,6 +98,8 @@ Required before beta:
   `20260627202043_revoke_anon_agency_security_definer_execute.sql`.
 - [ ] Apply and review public insert policy hardening migration:
   `20260627204427_harden_public_insert_policies.sql`.
+- [ ] Apply and review tenant helper policy hardening migration:
+  `20260627205954_restrict_tenant_helper_policies_to_authenticated.sql`.
 - [ ] Re-run Supabase security advisors after migration.
 - [ ] Confirm no `Function Search Path Mutable` findings remain for:
   `set_realty_updated_at`, `normalize_realty_crm_status`,
@@ -116,10 +118,11 @@ Required before beta:
   analytics, and reservation routes before expanding beyond controlled pilots.
 - [ ] Review SECURITY DEFINER execute grants before expanding beyond controlled
   pilot accounts.
-- [ ] Confirm Agency Engine `SECURITY DEFINER` helpers are executable by
-  `authenticated`/`service_role`, not `anon`. Keep
-  `get_auth_user_tenants()` as the documented exception required by public
-  project reads.
+- [ ] Confirm `get_auth_user_tenants()` is not executable by `anon` and every
+  tenant policy that calls it is scoped to `TO authenticated`.
+- [ ] Confirm remaining `SECURITY DEFINER` advisor warnings are limited to
+  authenticated RLS helper functions that require a broader helper refactor
+  before open beta.
 
 Do not apply broad RLS/grant changes during the beta gate without an owner
 approved migration plan. Public forms and reservation flows depend on some open
