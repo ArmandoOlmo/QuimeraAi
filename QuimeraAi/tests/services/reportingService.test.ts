@@ -218,13 +218,22 @@ describe('Agency reporting canonical contract', () => {
     it('persists generated agency reports and activity snapshots', () => {
         expect(reportingService).toContain(".from('agency_reports')");
         expect(reportingService).toContain("source: 'agency_reporting_service'");
+        expect(reportingService).toContain('publishToClientPortal?: boolean');
+        expect(reportingService).toContain("const reportStatus = canPublishToClientPortal ? 'sent' : 'draft'");
+        expect(reportingService).toContain("clientPortal: {");
+        expect(reportingService).toContain("status: reportStatus");
+        expect(reportingService).toContain("portalPublicationStatus");
         expect(reportingService).toContain(".from('agency_activity')");
         expect(reportingService).toContain("type: 'report_generated'");
+        expect(reportingService).toContain('clientPortalVisible');
         expect(reportingService).toContain('metadata.agencyOperatingSystem');
         expect(reportingService).toContain('moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate');
         expect(reportingService).toContain('activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots');
         expect(reportsGenerator).toContain('reportingService.generateAgencyReport');
         expect(reportsGenerator).toContain('persistenceStatus');
+        expect(reportsGenerator).toContain('publishToClientPortal: canPublishToClientPortal && publishToClientPortal');
+        expect(reportsGenerator).toContain("dashboard.agency.reports.publishToPortal");
+        expect(reportsGenerator).toContain('portalPublicationStatus');
     });
 
     it('surfaces Agency OS readiness in visible report previews and exports', () => {

@@ -246,6 +246,10 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
 function getProjectDataVersionHistory(projectData: Record<string, unknown>) {
   const history = asRecord(projectData.versionHistory);
   const snapshots = Array.isArray(history.blueprintSnapshots)
@@ -1636,7 +1640,7 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
       .maybeSingle(),
     supabase
       .from("agency_clients")
-      .select("agency_tenant_id, client_tenant_id, project_count, primary_project_id")
+      .select("agency_tenant_id, client_tenant_id, project_count, primary_project_id, agency_plan_id, billing_mode, metadata")
       .eq("agency_tenant_id", agencyTenantId)
       .eq("client_tenant_id", targetClientTenantId)
       .maybeSingle(),
@@ -1679,7 +1683,60 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
 
   const now = new Date().toISOString();
   const newProjectId = crypto.randomUUID();
-  const projectName = String(payload.name || sourceProject.name || "Transferred Project").trim();
+  const projectName = String(payload.projectName || payload.name || sourceProject.name || "Transferred Project").trim();
+  const sourceData = cloneJson<Record<string, unknown>>(sourceProject.data || {}, {});
+  const sourceBlueprint = sourceData.businessBlueprint && typeof sourceData.businessBlueprint === "object"
+    ? sourceData.businessBlueprint as Record<string, unknown>
+    : null;
+  const agencyClientMetadata = asRecord(agencyClient?.metadata);
+  const relationshipAgencyOperatingSystem = asRecord(agencyClientMetadata.agencyOperatingSystem);
+  const sourceAgencyOperatingSystem = asRecord(sourceBlueprint?.agencyOperatingSystem || sourceData.agencyOperatingSystem);
+  const baseAgencyOperatingSystem = Object.keys(relationshipAgencyOperatingSystem).length > 0
+    ? relationshipAgencyOperatingSystem
+    : sourceAgencyOperatingSystem;
+  const hasAgencyOperatingSystem = Object.keys(baseAgencyOperatingSystem).length > 0;
+  const transferAgencyOperatingSystem = hasAgencyOperatingSystem
+    ? cleanForInsert({
+      ...cloneJson<Record<string, unknown>>(baseAgencyOperatingSystem, {}),
+      source: "agency-project-transfer",
+      status: "needs_review",
+      updatedAt: now,
+      draftOnly: true,
+      needsReview: true,
+      noRuntimeActivated: true,
+      noAutoPublish: true,
+      serviceAccessRequired: true,
+      agencyTransfer: {
+        agencyTenantId,
+        clientTenantId: targetClientTenantId,
+        originalProjectId: sourceProject.id,
+        transferredProjectId: newProjectId,
+        transferredAt: now,
+        transferredBy: userId,
+        transferMode: "copy",
+      },
+    })
+    : null;
+  const transferEnabledClient360ModuleIds = transferAgencyOperatingSystem
+    ? uniqueStrings(asArray(transferAgencyOperatingSystem.enabledClient360ModuleIds))
+    : [];
+  const transferGeneratedModuleIds = transferAgencyOperatingSystem
+    ? uniqueStrings(asArray(transferAgencyOperatingSystem.generatedModuleIds))
+    : [];
+  const transferClient360ModuleIds = transferAgencyOperatingSystem
+    ? uniqueStrings(
+      asArray(transferAgencyOperatingSystem.client360ModuleIds),
+      AGENCY_ENGINE_CLIENT_360_MODULES.map((module) => module.id),
+    )
+    : [];
+  const transferFoundationModuleIds = transferAgencyOperatingSystem
+    ? uniqueStrings(
+      asArray(transferAgencyOperatingSystem.foundationModuleIds),
+      Array.from(AGENCY_ENGINE_FOUNDATION_MODULES),
+    )
+    : [];
+  const transferAgencyPlanId = String(agencyClient?.agency_plan_id || clientTenant.billing?.agencyPlanId || "");
+  const transferBillingMode = String(agencyClient?.billing_mode || clientTenant.billing?.mode || "");
   const transferMetadataBase = {
     agencyTenantId,
     clientTenantId: targetClientTenantId,
@@ -1689,11 +1746,16 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
     transferredBy: userId,
     transferMode: "copy",
     source: "agency-engine",
+    agencyPlanId: transferAgencyPlanId || null,
+    billingMode: transferBillingMode || null,
+    agencyOperatingSystem: transferAgencyOperatingSystem,
+    enabledClient360ModuleIds: transferEnabledClient360ModuleIds,
+    generatedModuleIds: transferGeneratedModuleIds,
+    client360ModuleIds: transferClient360ModuleIds,
+    foundationModuleIds: transferFoundationModuleIds,
+    serviceAccessRequired: true,
+    noAutoPublish: true,
   };
-  const sourceData = cloneJson<Record<string, unknown>>(sourceProject.data || {}, {});
-  const sourceBlueprint = sourceData.businessBlueprint && typeof sourceData.businessBlueprint === "object"
-    ? sourceData.businessBlueprint as Record<string, unknown>
-    : null;
   const transferSnapshot = createAgencyTransferSnapshot({
     sourceProject,
     sourceData,
@@ -1720,6 +1782,19 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
       status: "needs_review",
       generatedBy: "agency-project-transfer",
       agencyTransfer: transferMetadata,
+      ...(transferAgencyOperatingSystem ? {
+        agencyOperatingSystem: transferAgencyOperatingSystem,
+        agencyProvisioning: {
+          ...asRecord(sourceBlueprint.agencyProvisioning),
+          agencyOperatingSystem: transferAgencyOperatingSystem,
+          client360ModuleIds: transferEnabledClient360ModuleIds,
+          foundationModuleIds: transferFoundationModuleIds,
+          transferredFromAgency: true,
+          transferMode: "copy",
+          noRuntimeActivated: true,
+          noAutoPublish: true,
+        },
+      } : {}),
       crossModuleSync: {
         ...(sourceBlueprint.crossModuleSync && typeof sourceBlueprint.crossModuleSync === "object"
           ? sourceBlueprint.crossModuleSync as Record<string, unknown>
@@ -1741,6 +1816,7 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
       transferredBy: userId,
     },
     agencyTransfer: transferMetadata,
+    ...(transferAgencyOperatingSystem ? { agencyOperatingSystem: transferAgencyOperatingSystem } : {}),
   });
 
   const { data: createdProject, error: insertError } = await supabase
@@ -1877,6 +1953,14 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
       copiedAsDraft: true,
       published: false,
       businessBlueprintUpdated: Boolean(nextBusinessBlueprint),
+      agencyOperatingSystemAttached: Boolean(transferAgencyOperatingSystem),
+      agencyPlanId: transferAgencyPlanId || null,
+      billingMode: transferBillingMode || null,
+      enabledClient360ModuleIds: transferEnabledClient360ModuleIds,
+      generatedModuleIds: transferGeneratedModuleIds,
+      client360ModuleIds: transferClient360ModuleIds,
+      serviceAccessRequired: true,
+      noAutoPublish: true,
       moduleActivationsCopied: modulesCopied > 0,
       approvalRequested: Boolean(approvalId),
       currentProjects: nextProjectCount,

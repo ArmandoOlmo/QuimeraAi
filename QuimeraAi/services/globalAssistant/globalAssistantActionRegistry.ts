@@ -401,7 +401,7 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
         includeClients: booleanSchema('Whether to include a small Client 360 sample.'),
     }), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
-    action('agency', 'create_agency_report', 'Create a draft Agency Report with AI summary and Agency activity audit.', objectSchema({
+    action('agency', 'create_agency_report', 'Create an Agency Report with AI summary, Agency activity audit, and optional Client Portal delivery for single-client reports.', objectSchema({
         tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
         clientTenantId: stringSchema('Optional managed client tenant id for a client-specific report.'),
         clientTenantIds: { type: 'array', items: stringSchema('Managed client tenant id.') },
@@ -409,6 +409,7 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         periodStart: stringSchema('Report period start date in YYYY-MM-DD format.'),
         periodEnd: stringSchema('Report period end date in YYYY-MM-DD format.'),
         includeClients: booleanSchema('Whether to include selected client snapshots in the report data.'),
+        publishToClientPortal: booleanSchema('Share the saved report with the selected client portal. Only valid for single-client reports.'),
     }), 'medium', {
         requiredService: 'agency',
         requiredFeature: 'agencyModule',

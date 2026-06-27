@@ -23,8 +23,8 @@ import {
     createDefaultAgencyLandingConfig,
 } from '../types/agencyLanding';
 
-// Collection name for agency landing pages
-const COLLECTION_NAME = 'agencyLandings';
+// Canonical Supabase Data API table for agency landing pages.
+const COLLECTION_NAME = 'agency_landings';
 
 let hasWarnedMissingAgencyLandingTable = false;
 

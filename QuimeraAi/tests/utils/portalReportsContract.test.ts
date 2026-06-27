@@ -11,6 +11,10 @@ describe('Portal client reports contract', () => {
     const panel = read('components/portal/PortalReportsPanel.tsx');
     const dashboard = read('components/portal/PortalDashboard.tsx');
     const exportsFile = read('components/portal/index.ts');
+    const reportingService = read('services/reportingService.ts');
+    const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
+    const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
+    const actionRegistry = read('services/globalAssistant/globalAssistantActionRegistry.ts');
     const migration = read('supabase/migrations/20260627071535_canonical_agency_engine.sql');
     const activityMigration = read('supabase/migrations/20260627072955_client_portal_activity_access.sql');
     const docs = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
@@ -46,6 +50,26 @@ describe('Portal client reports contract', () => {
         expect(docs).toContain('agency_reports');
         expect(docs).toContain("status in ('sent', 'published')");
         expect(docs).toContain('clients do not write report rows from the portal');
+    });
+
+    it('publishes single-client Agency Reports into the portal with sent status', () => {
+        expect(reportingService).toContain('publishToClientPortal?: boolean');
+        expect(reportingService).toContain("const reportStatus = canPublishToClientPortal ? 'sent' : 'draft'");
+        expect(reportingService).toContain("clientPortal: {");
+        expect(reportingService).toContain("visible: options.publishToClientPortal === true && Boolean(clientTenantId) && ['sent', 'published'].includes(reportStatus)");
+        expect(reportingService).toContain("clientPortalVisible: input.publishToClientPortal && input.reportStatus !== 'draft'");
+
+        expect(reportsGenerator).toContain("dashboard.agency.reports.publishToPortal");
+        expect(reportsGenerator).toContain('publishToClientPortal: canPublishToClientPortal && publishToClientPortal');
+        expect(reportsGenerator).toContain("dashboard.agency.reports.portalShared");
+
+        expect(actionRegistry).toContain('publishToClientPortal');
+        expect(actionHandlers).toContain('const reportStatus = canPublishToClientPortal ?');
+        expect(actionHandlers).toContain('portalPublicationStatus');
+        expect(actionHandlers).toContain('clientPortalVisible: canPublishToClientPortal');
+
+        expect(docs).toContain("agency_reports.status = 'sent'");
+        expect(docs).toContain('Multi-client reports remain internal drafts');
     });
 
     it('replaces portal placeholders with RLS-backed activity and report metrics', () => {

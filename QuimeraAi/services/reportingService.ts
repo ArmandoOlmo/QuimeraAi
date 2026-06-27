@@ -44,6 +44,7 @@ interface GenerateAgencyReportInput {
     includeTrends?: boolean;
     includeRecommendations?: boolean;
     persist?: boolean;
+    publishToClientPortal?: boolean;
 }
 
 interface PersistAgencyReportInput {
@@ -54,6 +55,7 @@ interface PersistAgencyReportInput {
     status?: 'draft' | 'sent' | 'published';
     includeTrends?: boolean;
     includeRecommendations?: boolean;
+    publishToClientPortal?: boolean;
 }
 
 interface PersistAgencyReportResult {
@@ -325,6 +327,9 @@ export function buildAgencyReportAISummary(data: AggregatedReportData): string {
 
 export class ReportingService {
     async generateAgencyReport(input: GenerateAgencyReportInput): Promise<AggregatedReportData> {
+        const publishRequested = input.publishToClientPortal === true;
+        const canPublishToClientPortal = publishRequested && input.clientIds.length === 1;
+        const reportStatus = canPublishToClientPortal ? 'sent' : 'draft';
         const data = await this.aggregateClientData(
             input.agencyTenantId,
             input.clientIds,
@@ -341,6 +346,9 @@ export class ReportingService {
             ...data,
             aiSummary,
             persistenceStatus: input.persist === false ? 'not_requested' : 'failed',
+            portalPublicationStatus: publishRequested
+                ? (canPublishToClientPortal ? 'failed' : 'not_eligible')
+                : 'not_requested',
         };
 
         if (input.persist === false) {
@@ -354,12 +362,17 @@ export class ReportingService {
             generatedBy: input.generatedBy,
             includeTrends: input.includeTrends,
             includeRecommendations: input.includeRecommendations,
+            status: reportStatus,
+            publishToClientPortal: canPublishToClientPortal,
         });
 
         return {
             ...reportData,
             savedReportId: persistence.reportId,
             persistenceStatus: persistence.status,
+            portalPublicationStatus: persistence.status === 'saved'
+                ? (canPublishToClientPortal ? 'sent' : (publishRequested ? 'not_eligible' : 'not_requested'))
+                : 'failed',
         };
     }
 
@@ -554,9 +567,12 @@ export class ReportingService {
             template: input.template,
             includeTrends: input.includeTrends,
             includeRecommendations: input.includeRecommendations,
+            reportStatus: input.status || 'draft',
+            publishToClientPortal: input.publishToClientPortal === true,
         });
         const singleClientId = input.data.includedClients.length === 1 ? input.data.includedClients[0] : null;
         const generatedBy = input.generatedBy ?? (await this.getCurrentUserId());
+        const reportStatus = input.status || 'draft';
 
         const { data, error } = await supabase
             .from('agency_reports')
@@ -568,7 +584,7 @@ export class ReportingService {
                 period_end: formatDateOnly(input.data.dateRange.end),
                 data: reportPayload,
                 ai_summary: input.data.aiSummary || buildAgencyReportAISummary(input.data),
-                status: input.status || 'draft',
+                status: reportStatus,
                 generated_by: generatedBy,
             })
             .select('id')
@@ -587,6 +603,8 @@ export class ReportingService {
             generatedBy,
             summary: input.data.summary,
             aiSummary: input.data.aiSummary || buildAgencyReportAISummary(input.data),
+            reportStatus,
+            publishToClientPortal: input.publishToClientPortal === true,
         });
 
         return { status: 'saved', reportId: data?.id };
@@ -603,8 +621,12 @@ export class ReportingService {
             template: ReportTemplate;
             includeTrends?: boolean;
             includeRecommendations?: boolean;
+            reportStatus?: 'draft' | 'sent' | 'published';
+            publishToClientPortal?: boolean;
         }
     ) {
+        const clientTenantId = data.includedClients.length === 1 ? data.includedClients[0] : null;
+        const reportStatus = options.reportStatus || 'draft';
         return {
             schemaVersion: 1,
             source: 'agency_reporting_service',
@@ -619,6 +641,13 @@ export class ReportingService {
             options: {
                 includeTrends: options.includeTrends !== false,
                 includeRecommendations: options.includeRecommendations !== false,
+            },
+            clientPortal: {
+                publishRequested: options.publishToClientPortal === true,
+                visible: options.publishToClientPortal === true && Boolean(clientTenantId) && ['sent', 'published'].includes(reportStatus),
+                status: reportStatus,
+                clientTenantId,
+                requiresSingleClient: true,
             },
             summary: data.summary,
             byClient: data.byClient,
@@ -636,6 +665,8 @@ export class ReportingService {
         generatedBy: string | null;
         summary: AggregatedReportData['summary'];
         aiSummary: string;
+        reportStatus: 'draft' | 'sent' | 'published';
+        publishToClientPortal: boolean;
     }) {
         const { error } = await supabase
             .from('agency_activity')
@@ -652,6 +683,9 @@ export class ReportingService {
                     totalRevenue: input.summary.totalRevenue,
                     totalOrders: input.summary.totalOrders,
                     totalMrr: input.summary.totalMrr,
+                    reportStatus: input.reportStatus,
+                    clientPortalVisible: input.publishToClientPortal && input.reportStatus !== 'draft',
+                    portalPublicationStatus: input.publishToClientPortal ? input.reportStatus : 'not_requested',
                     moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate,
                     activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots,
                     totalModuleSlots: input.summary.moduleReadiness.totalModuleSlots,

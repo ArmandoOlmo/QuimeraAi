@@ -44,8 +44,10 @@ The canonical Supabase tables are created in `supabase/migrations/20260627071535
 - `agency_activity`: lifecycle/audit activity stream
 - `agency_reports`: report artifacts and AI summaries
 - `agency_client_notes`: internal and client-visible notes
+- `agency_landings`: canonical white-label agency landing pages
 
 Legacy `agencyPlans` compatibility remains only as fallback while workspaces migrate. New reads/writes should prefer `agency_service_plans`.
+Legacy `agencyLandings` remains only as a transitional PostgREST view/alias. New agency landing reads and writes must use `agency_landings` directly to avoid `/rest/v1/agencyLandings` 404s when the legacy view is not deployed.
 
 ## Provisioning Contract
 
@@ -81,6 +83,8 @@ Project transfer requires Service Access Engine module `agency-project-transfer`
 
 Transferred projects are always copied as drafts. The transfer clears `published_data` and `published_at`, stamps `data.transferredFrom`, updates `businessBlueprint.projectId` and `businessBlueprint.tenantId` when present, copies project module activations when available, writes `agency_project_transfers`, and emits `agency_activity.type = project_transferred`.
 
+Project Transfer preserves the managed-client Agency OS context from `agency_clients.metadata.agencyOperatingSystem` first, then the source project blueprint as fallback. The copied project stores the transfer-safe `agencyOperatingSystem` in `data.agencyOperatingSystem`, `data.businessBlueprint.agencyOperatingSystem`, transfer metadata, approval metadata, activity metadata, and the response summary together with `agency_plan_id`, `billing_mode`, enabled Client 360 module IDs, generated module IDs, and draft/no-auto-publish policy. Global Assistant exposes the same transfer readiness fields in the action diff so Client 360 and Agency Command Center can reflect the handoff immediately.
+
 Each transfer also creates a pending `agency_client_approvals` row when the approval table exists. Client responses use `onboarding-api` action `respondClientApproval`; the client portal never writes approval status directly from the browser.
 
 ## Client Portal Contract
@@ -92,6 +96,8 @@ Client Portal routes and approval responses require Service Access Engine module
 The portal dashboard also renders a client-facing operations feed backed by `agency_activity` plus summary metrics from the latest shared `agency_reports` row. Client reads use `quimera_can_view_agency_relationship`; clients do not write activity rows from the portal.
 
 `PortalReportsPanel` is a read-only client-facing report inbox backed by `agency_reports`. It only reads rows for the active client tenant with `status in ('sent', 'published')`, relying on the `Clients can view sent reports` RLS policy. Agencies keep report creation and publishing control from Agency Reports; clients do not write report rows from the portal.
+
+White-label agency landing configuration is stored in `agency_landings`; dashboard editors and navigation management must not query the legacy camelCase `agencyLandings` endpoint.
 
 ## Billing Contract
 
@@ -114,6 +120,8 @@ Agency revenue and reports use `store_orders`, not legacy `orders`. Client reven
 Report snapshots include Agency OS module readiness from `agency_clients.metadata.agencyOperatingSystem`: clients with Agency OS, active Client 360 module slots, total module slots, readiness rate, enabled Client 360 module IDs, and generated module IDs. Global Assistant `create_agency_report` writes the same readiness summary into `agency_reports.data.metrics` and `agency_activity.metadata` so conversational reports, Client 360, and Agency Command Center use one operating-system metric contract.
 
 `ReportsGenerator` renders Agency OS readiness in the report preview, per-client table, and CSV output. PDF/CSV exports surface the same readiness fields so client-facing reports do not lose the Agency Operating System context.
+
+Single-client reports can be shared into the white-label Client Portal by saving `agency_reports.status = 'sent'`. Multi-client reports remain internal drafts. Both `ReportingService.generateAgencyReport` and Global Assistant `create_agency_report` stamp `data.clientPortal`, activity metadata, and response/diff status so `PortalReportsPanel` only reads client-facing report rows already allowed by RLS (`status in ('sent', 'published')`); clients do not write report rows from the portal.
 
 Store order reads intentionally use `select('*')` and normalize totals from `total_amount`, `total`, `amount_total`, `pricing`, and `data` fallbacks. This avoids breaking live Supabase environments where newer numeric columns may not be exposed through the current PostgREST schema cache.
 

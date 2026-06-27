@@ -369,6 +369,7 @@ describe('Global Assistant Agency Client 360 handler', () => {
             reportType: 'client_monthly',
             periodStart: '2026-06-01',
             periodEnd: '2026-06-26',
+            publishToClientPortal: true,
         };
 
         const result = await definition!.execute!(input, {
@@ -384,11 +385,18 @@ describe('Global Assistant Agency Client 360 handler', () => {
             report_type: 'client_monthly',
             period_start: '2026-06-01',
             period_end: '2026-06-26',
-            status: 'draft',
+            status: 'sent',
             generated_by: 'user-1',
         });
         expect(fakeSupabase.rowsByTable.agency_reports[0].data).toMatchObject({
             source: 'global-assistant',
+            clientPortal: {
+                publishRequested: true,
+                visible: true,
+                status: 'sent',
+                clientTenantId: 'client-1',
+                requiresSingleClient: true,
+            },
             metrics: {
                 clientCount: 1,
                 totalMonthlyRevenue: 260,
@@ -421,6 +429,9 @@ describe('Global Assistant Agency Client 360 handler', () => {
             selectedClientIds: ['client-1'],
             periodStart: '2026-06-01',
             periodEnd: '2026-06-26',
+            reportStatus: 'sent',
+            clientPortalVisible: true,
+            portalPublicationStatus: 'sent',
             moduleReadinessRate: 50,
             activeModuleSlots: 2,
             totalModuleSlots: 4,
@@ -428,7 +439,9 @@ describe('Global Assistant Agency Client 360 handler', () => {
         });
         expect(result.afterSnapshot).toMatchObject({
             agencyTenantId: 'agency-1',
-            status: 'draft',
+            status: 'sent',
+            portalPublicationStatus: 'sent',
+            clientPortalVisible: true,
             summary: {
                 clientCount: 1,
                 totalMonthlyRevenue: 260,
@@ -446,6 +459,8 @@ describe('Global Assistant Agency Client 360 handler', () => {
         expect(result.diff).toMatchObject({
             reported: ['agency.report.agency-1.agency_reports_1'],
             selectedClientIds: ['client-1'],
+            portalPublicationStatus: 'sent',
+            clientPortalVisible: true,
             mutatesData: true,
         });
 
@@ -700,6 +715,9 @@ describe('Global Assistant Agency Client 360 handler', () => {
                     copiedAsDraft: true,
                     published: false,
                     approvalRequested: true,
+                    agencyOperatingSystemAttached: true,
+                    enabledClient360ModuleIds: ['businessBlueprint', 'website-builder', 'ecommerce'],
+                    generatedModuleIds: ['ai-business-blueprint', 'website-builder', 'ecommerce-engine'],
                     currentProjects: 4,
                     maxProjects: 25,
                 },
@@ -764,6 +782,9 @@ describe('Global Assistant Agency Client 360 handler', () => {
             reviewRequired: true,
             copiedAsDraft: true,
             approvalRequested: true,
+            agencyOperatingSystemAttached: true,
+            agencyOperatingSystemModuleIds: ['businessBlueprint', 'website-builder', 'ecommerce'],
+            generatedModuleIds: ['ai-business-blueprint', 'website-builder', 'ecommerce-engine'],
         });
         expect(result.diff.sourceTables).toEqual(expect.arrayContaining([
             'agency_clients',

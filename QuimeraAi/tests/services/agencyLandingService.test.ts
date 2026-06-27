@@ -11,8 +11,9 @@ describe('Agency landing canonical Supabase contract', () => {
     const migration = read('supabase/migrations/20260627070415_canonical_agency_landings.sql');
     const legacyViewMigration = read('supabase/migrations/20260627070615_legacy_agency_landings_postgrest_view.sql');
 
-    it('maps the legacy agencyLandings collection to the canonical Supabase table', () => {
-        expect(service).toContain("const COLLECTION_NAME = 'agencyLandings'");
+    it('uses the canonical agency_landings table while keeping the legacy alias as compatibility only', () => {
+        expect(service).toContain("const COLLECTION_NAME = 'agency_landings'");
+        expect(service).not.toContain("const COLLECTION_NAME = 'agencyLandings'");
         expect(compatData).toContain("agencyLandings: 'agency_landings'");
         expect(compatData).toContain("agency_landings: 'agency_landings'");
         expect(compatData).toContain("agency_landings: ['id', 'tenant_id', 'data', 'subdomain', 'custom_domain', 'is_published'");

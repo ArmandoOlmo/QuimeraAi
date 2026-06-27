@@ -41,6 +41,7 @@ import {
     FileSpreadsheet,
     Clock,
     Building2,
+    Send,
 } from 'lucide-react';
 import { ReportTemplateSelector } from './ReportTemplateSelector';
 import { AgencySectionHeader, AgencyStatCard } from './AgencyDesignSystem';
@@ -152,6 +153,7 @@ export function ReportsGenerator() {
     const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate>('executive');
     const [includeTrends, setIncludeTrends] = useState(true);
     const [includeRecommendations, setIncludeRecommendations] = useState(true);
+    const [publishToClientPortal, setPublishToClientPortal] = useState(false);
 
     // Generation state
     const [reportData, setReportData] = useState<AggregatedReportData | null>(null);
@@ -163,7 +165,14 @@ export function ReportsGenerator() {
         [clients, selectAll, selectedClients]
     );
     const selectedClientCount = effectiveSelectedClientIds.length;
+    const canPublishToClientPortal = selectedClientCount === 1;
     const moduleReadiness = reportData?.summary.moduleReadiness || emptyModuleReadiness;
+
+    React.useEffect(() => {
+        if (!canPublishToClientPortal && publishToClientPortal) {
+            setPublishToClientPortal(false);
+        }
+    }, [canPublishToClientPortal, publishToClientPortal]);
 
     const allMetrics: { id: ReportMetric; label: string; description: string }[] = React.useMemo(() => [
         { id: 'leads', label: t('dashboard.agency.reports.metrics.leads', 'Leads'), description: t('dashboard.agency.reports.metrics.leadsDesc', 'Total de leads capturados') },
@@ -231,6 +240,7 @@ export function ReportsGenerator() {
                 generatedBy: user?.id || null,
                 includeTrends,
                 includeRecommendations,
+                publishToClientPortal: canPublishToClientPortal && publishToClientPortal,
                 persist: true,
             });
 
@@ -599,7 +609,7 @@ export function ReportsGenerator() {
                                 {t('dashboard.agency.reports.additionalOptions', 'Opciones adicionales')}
                             </h4>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                                 <label className="flex items-center gap-3 p-3 rounded-xl border border-q-border/50 hover:border-q-border cursor-pointer transition-colors">
                                     <input
                                         type="checkbox"
@@ -633,6 +643,29 @@ export function ReportsGenerator() {
                                         </div>
                                         <div className="text-xs text-q-text-muted">Sugerencias AI</div>
                                     </div>
+                                </label>
+                                <label className={`flex items-center gap-3 rounded-xl border border-q-border/50 p-3 transition-colors ${canPublishToClientPortal ? 'cursor-pointer hover:border-q-border' : 'cursor-not-allowed opacity-60'}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={publishToClientPortal && canPublishToClientPortal}
+                                        onChange={(e) => setPublishToClientPortal(canPublishToClientPortal && e.target.checked)}
+                                        disabled={!canPublishToClientPortal}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="h-5 w-5 rounded-md border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
+                                        {publishToClientPortal && canPublishToClientPortal && <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="font-medium text-sm text-foreground">
+                                            {t('dashboard.agency.reports.publishToPortal', 'Compartir en Client Portal')}
+                                        </div>
+                                        <div className="text-xs text-q-text-muted">
+                                            {canPublishToClientPortal
+                                                ? t('dashboard.agency.reports.publishToPortalDesc', 'Visible para el cliente seleccionado')
+                                                : t('dashboard.agency.reports.publishToPortalSingleClient', 'Solo disponible con un cliente')}
+                                        </div>
+                                    </div>
+                                    <Send className="ml-auto h-4 w-4 shrink-0 text-q-text-muted" />
                                 </label>
                             </div>
                         </div>
@@ -688,6 +721,12 @@ export function ReportsGenerator() {
                                     {reportData.persistenceStatus === 'saved' && reportData.savedReportId && (
                                         <p className="text-xs text-q-success mt-2">
                                             {t('dashboard.agency.reports.savedSnapshot', 'Snapshot guardado en Agency Reports')}
+                                        </p>
+                                    )}
+                                    {reportData.portalPublicationStatus === 'sent' && (
+                                        <p className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-q-accent">
+                                            <Send className="h-3.5 w-3.5" />
+                                            {t('dashboard.agency.reports.portalShared', 'Compartido en Client Portal')}
                                         </p>
                                     )}
                                     {reportData.persistenceStatus === 'failed' && (

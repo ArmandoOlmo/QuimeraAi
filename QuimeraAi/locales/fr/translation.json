@@ -429,6 +429,12 @@
         "moduleFinanceDesc": "Billing, factures, statut des paiements, revenue et contexte comptable.",
         "moduleAnalytics": "Analytics",
         "moduleAnalyticsDesc": "Performance, utilisation, rapports, recommandations et metriques portfolio."
+      },
+      "reports": {
+        "publishToPortal": "Partager dans le portail client",
+        "publishToPortalDesc": "Visible pour le client selectionne",
+        "publishToPortalSingleClient": "Disponible avec un seul client",
+        "portalShared": "Partage dans le portail client"
       }
     }
   },

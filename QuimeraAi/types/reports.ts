@@ -147,6 +147,7 @@ export interface AggregatedReportData {
     aiSummary?: string;
     savedReportId?: string;
     persistenceStatus?: 'not_requested' | 'saved' | 'failed';
+    portalPublicationStatus?: 'not_requested' | 'not_eligible' | 'draft' | 'sent' | 'published' | 'failed';
 
     // Metadata
     generatedAt: Date;

@@ -839,6 +839,12 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
         }
 
         const selectedClients = snapshot.clients.filter(clientSnapshot => selectedClientIds.includes(clientSnapshot.clientTenantId));
+        const publishToClientPortalRequested = readBoolean(input.publishToClientPortal) === true;
+        const canPublishToClientPortal = publishToClientPortalRequested && selectedClientIds.length === 1;
+        const reportStatus = canPublishToClientPortal ? 'sent' : 'draft';
+        const portalPublicationStatus = publishToClientPortalRequested
+            ? (canPublishToClientPortal ? 'sent' : 'not_eligible')
+            : 'not_requested';
         const reportType = normalizeAgencyReportType(input.reportType);
         const now = getNow(deps);
         const periodEnd = readDate(input.periodEnd, dateOnlyFromIso(now));
@@ -871,6 +877,13 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                 byLifecycleStage,
                 moduleReadiness,
             },
+            clientPortal: {
+                publishRequested: publishToClientPortalRequested,
+                visible: canPublishToClientPortal,
+                status: reportStatus,
+                clientTenantId: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
+                requiresSingleClient: true,
+            },
             clients: readBoolean(input.includeClients) === false ? [] : selectedClients,
             warnings: snapshot.warnings,
             sourceTables: [...snapshot.sourceTables, 'agency_reports', 'agency_activity'],
@@ -884,7 +897,7 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
             period_end: periodEnd,
             data: reportData,
             ai_summary: aiSummary,
-            status: 'draft',
+            status: reportStatus,
             generated_by: action.userId || context?.actor.userId || null,
             created_at: now,
         });
@@ -904,6 +917,9 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                 selectedClientIds,
                 periodStart,
                 periodEnd,
+                reportStatus,
+                clientPortalVisible: canPublishToClientPortal,
+                portalPublicationStatus,
                 moduleReadinessRate: moduleReadiness.moduleReadinessRate,
                 activeModuleSlots: moduleReadiness.activeModuleSlots,
                 totalModuleSlots: moduleReadiness.totalModuleSlots,
@@ -920,7 +936,9 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                 activity: activityRow,
                 summary: reportData.metrics,
                 aiSummary,
-                status: 'draft',
+                status: reportStatus,
+                portalPublicationStatus,
+                clientPortalVisible: canPublishToClientPortal,
                 sourceTables: reportData.sourceTables,
             },
             diff: {
@@ -930,6 +948,8 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                     agency_activity: readString(asRecord(activityRow).id) || null,
                 },
                 selectedClientIds,
+                portalPublicationStatus,
+                clientPortalVisible: canPublishToClientPortal,
                 mutatesData: true,
                 sourceTables: reportData.sourceTables,
             },
@@ -1166,6 +1186,13 @@ const createAgencyProjectTransferHandler = (deps: GlobalAssistantActionHandlerDe
         }
 
         const newProjectId = readString(transferResponse.newProjectId);
+        const transferSummary = asRecord(transferResponse.transferSummary);
+        const enabledClient360ModuleIds = asArray(transferSummary.enabledClient360ModuleIds)
+            .map(readString)
+            .filter((value): value is string => Boolean(value));
+        const generatedModuleIds = asArray(transferSummary.generatedModuleIds)
+            .map(readString)
+            .filter((value): value is string => Boolean(value));
         const sourceTables = [...snapshot.sourceTables, 'onboarding-api', 'agency_project_transfers', 'agency_client_approvals', 'agency_activity'];
 
         return {
@@ -1183,7 +1210,10 @@ const createAgencyProjectTransferHandler = (deps: GlobalAssistantActionHandlerDe
                 mutatesData: true,
                 reviewRequired: true,
                 copiedAsDraft: true,
-                approvalRequested: Boolean(asRecord(transferResponse.transferSummary).approvalRequested),
+                approvalRequested: Boolean(transferSummary.approvalRequested),
+                agencyOperatingSystemAttached: Boolean(transferSummary.agencyOperatingSystemAttached),
+                agencyOperatingSystemModuleIds: enabledClient360ModuleIds.length > 0 ? enabledClient360ModuleIds : null,
+                generatedModuleIds: generatedModuleIds.length > 0 ? generatedModuleIds : null,
                 sourceTables,
             },
         };
