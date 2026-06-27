@@ -38,7 +38,8 @@ const cleanNoteBlock = (value: unknown, maxLength = 6000): string => {
     if (typeof value !== 'string') return '';
     return value
         .replace(/\r\n/g, '\n')
-        .replace(/[ \t]+/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/[ ]+$/gm, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim()
         .slice(0, maxLength);

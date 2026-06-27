@@ -72,7 +72,8 @@ const AIWebsiteStudio: React.FC = () => {
 
             if (initialPrompt.trim()) {
                 const timer = window.setTimeout(() => {
-                    studio.sendMessage(initialPrompt);
+                    studio.setInput(initialPrompt);
+                    inputRef.current?.focus();
                 }, 80);
                 return () => window.clearTimeout(timer);
             }

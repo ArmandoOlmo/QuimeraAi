@@ -269,6 +269,36 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         requiresProject: false,
     },
     {
+        id: 'open_business_blueprint',
+        module: 'businessBlueprint',
+        labelKey: 'dashboard.assistantQuickActions.openBusinessBlueprint',
+        labelFallback: 'BusinessBlueprint',
+        promptKey: 'dashboard.assistantQuickActions.openBusinessBlueprintPrompt',
+        promptFallback: 'Use BusinessBlueprint to review the business plan, module readiness, and project structure.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
+        id: 'open_website_builder',
+        module: 'website',
+        labelKey: 'dashboard.assistantQuickActions.openWebsiteBuilder',
+        labelFallback: 'Website Builder',
+        promptKey: 'dashboard.assistantQuickActions.openWebsiteBuilderPrompt',
+        promptFallback: 'Use Website Builder for website sections, copy, images, layout, and styles.',
+        category: 'open',
+        requiresProject: true,
+    },
+    {
+        id: 'open_storefront_builder',
+        module: 'storefront',
+        labelKey: 'dashboard.assistantQuickActions.openStorefrontBuilder',
+        labelFallback: 'Storefront',
+        promptKey: 'dashboard.assistantQuickActions.openStorefrontBuilderPrompt',
+        promptFallback: 'Use Storefront for public store sections, product cards, catalog layout, and selling settings.',
+        category: 'open',
+        requiresProject: true,
+    },
+    {
         id: 'generate_hero_image',
         module: 'media',
         labelKey: 'dashboard.assistantQuickActions.generateHeroImage',
@@ -315,6 +345,36 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         labelFallback: 'Ecommerce',
         promptKey: 'dashboard.assistantQuickActions.openEcommercePrompt',
         promptFallback: 'Use Ecommerce for store questions, products, orders, inventory, and setup.',
+        category: 'open',
+        requiresProject: true,
+    },
+    {
+        id: 'open_finance',
+        module: 'finance',
+        labelKey: 'dashboard.assistantQuickActions.openFinance',
+        labelFallback: 'Finance',
+        promptKey: 'dashboard.assistantQuickActions.openFinancePrompt',
+        promptFallback: 'Use Finance for invoices, revenue, expenses, and project financial status.',
+        category: 'analyze',
+        requiresProject: true,
+    },
+    {
+        id: 'open_restaurants',
+        module: 'restaurants',
+        labelKey: 'dashboard.assistantQuickActions.openRestaurants',
+        labelFallback: 'Restaurants',
+        promptKey: 'dashboard.assistantQuickActions.openRestaurantsPrompt',
+        promptFallback: 'Use Restaurants for menus, reservations, services, and restaurant settings.',
+        category: 'open',
+        requiresProject: true,
+    },
+    {
+        id: 'open_realty',
+        module: 'realEstate',
+        labelKey: 'dashboard.assistantQuickActions.openRealty',
+        labelFallback: 'Realty',
+        promptKey: 'dashboard.assistantQuickActions.openRealtyPrompt',
+        promptFallback: 'Use Realty for properties, listings, showings, leads, and real estate campaigns.',
         category: 'open',
         requiresProject: true,
     },
@@ -377,7 +437,7 @@ export function getDashboardAssistantQuickActions(input: {
     canUseAdminMode?: boolean;
     limit?: number;
 }): DashboardAssistantQuickAction[] {
-    const limit = input.limit ?? 12;
+    const limit = input.limit ?? 18;
     const hasProjectTarget = input.hasProjects || input.hasActiveProject === true;
     return DASHBOARD_ASSISTANT_QUICK_ACTIONS
         .filter(action => !action.requiresProject || hasProjectTarget)

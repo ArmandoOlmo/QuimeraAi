@@ -46,6 +46,8 @@ const MAX_NOTE_LENGTH = 6000;
 const MAX_SNIPPET_LENGTH = 700;
 const GENERATED_SUMMARY_MARKER = 'Resumen de solicitud del cliente / Customer request summary';
 const FOLLOW_UP_SUMMARY_MARKER = 'Resumen de seguimiento / Follow-up summary';
+const SPANISH_SECTION_TITLE = 'Español / Spanish';
+const ENGLISH_SECTION_TITLE = 'English / Inglés';
 
 const cleanText = (value: unknown, maxLength = 1200): string => {
     if (typeof value !== 'string') return '';
@@ -56,7 +58,8 @@ const cleanNoteBlock = (value: unknown, maxLength = MAX_NOTE_LENGTH): string => 
     if (typeof value !== 'string') return '';
     return value
         .replace(/\r\n/g, '\n')
-        .replace(/[ \t]+/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/[ ]+$/gm, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim()
         .slice(0, maxLength);
@@ -81,6 +84,10 @@ const uniqueNonEmpty = (values: Array<string | null | undefined>): string[] => {
 
 const normalizeDisplayWhitespace = (value: string): string => (
     value.replace(/[\u00a0\u202f]/g, ' ').replace(/\s+/g, ' ').trim()
+);
+
+const stripLanguagePrefix = (value: string): string => (
+    value.replace(/^(ES|EN)\s*:\s*/i, '').trim()
 );
 
 const safeTimeZone = (value?: string | null): string => {
@@ -155,8 +162,32 @@ const formatConversationContext = (
         .slice(-4)
         .map(message => formatConversationLine(message, locale))
         .filter(Boolean)
-        .join(' | ')
+        .join('\n')
 );
+
+const splitContextLines = (value?: string | null): string[] => {
+    const block = cleanNoteBlock(value, 1800);
+    if (!block) return [];
+    return block
+        .split(/\n|\s+\|\s+/)
+        .map(line => cleanSentencePart(line))
+        .filter(Boolean)
+        .slice(0, 4);
+};
+
+const bullet = (label: string, value?: string | null): string => {
+    const cleaned = cleanSentencePart(cleanText(value, 1600));
+    if (!cleaned) return '';
+    return `- ${label}: ${finishSentence(cleaned)}`;
+};
+
+const bulletGroup = (label: string, lines: string[]): string[] => {
+    if (!lines.length) return [];
+    return [
+        `- ${label}:`,
+        ...lines.map(line => `  - ${finishSentence(line)}`),
+    ];
+};
 
 const buildConversationalSummary = (input: {
     header: string;
@@ -171,48 +202,47 @@ const buildConversationalSummary = (input: {
     contextEn?: string | null;
 }): string => {
     const customer = contactIdentity(input.customer);
-    const request = cleanSentencePart(cleanText(input.request, 1400));
+    const request = stripLanguagePrefix(cleanSentencePart(cleanText(input.request, 1400)));
     const appointmentTitle = cleanSentencePart(cleanText(input.appointmentTitle, 250));
     const appointmentTimeEs = formatHumanDateTime(input.appointmentDateTime, 'es', input.appointmentTimezone);
     const appointmentTimeEn = formatHumanDateTime(input.appointmentDateTime, 'en', input.appointmentTimezone);
     const urgencyEs = readableUrgency(cleanText(input.urgency, 80), 'es');
     const urgencyEn = readableUrgency(cleanText(input.urgency, 80), 'en');
-    const recommendedAction = cleanSentencePart(cleanText(input.recommendedAction, 1000));
-    const contextEs = cleanSentencePart(cleanText(input.contextEs, 1800));
-    const contextEn = cleanSentencePart(cleanText(input.contextEn, 1800));
+    const recommendedAction = stripLanguagePrefix(cleanSentencePart(cleanText(input.recommendedAction, 1000)));
+    const contextEs = splitContextLines(input.contextEs);
+    const contextEn = splitContextLines(input.contextEn);
 
-    const customerEs = customer ? `El cliente ${customer}` : 'El cliente';
-    const customerEn = customer ? `The customer ${customer}` : 'The customer';
+    const spanishBullets = [
+        bullet('Cliente', customer || 'No especificado'),
+        bullet('Lo que desea', request || 'Necesita seguimiento del equipo'),
+        bullet('Cita', appointmentTitle),
+        bullet('Fecha y hora', appointmentTimeEs),
+        bullet('Prioridad', urgencyEs),
+        bullet('Próximo paso sugerido', recommendedAction),
+        ...bulletGroup('Contexto de la conversación', contextEs),
+    ].filter(Boolean);
 
-    const spanishSummary = compactParagraph([
-        request
-            ? `${customerEs} quiere: ${request}`
-            : `${customerEs} necesita seguimiento del equipo`,
-        appointmentTitle || appointmentTimeEs
-            ? `Cita: ${appointmentTitle || 'sin título'}${appointmentTimeEs ? ` para ${appointmentTimeEs}` : ''}`
-            : '',
-        urgencyEs ? `Prioridad: ${urgencyEs}` : '',
-        recommendedAction ? `Próximo paso sugerido: ${recommendedAction}` : '',
-        contextEs ? `Contexto de la conversación: ${contextEs}` : '',
-    ]);
-
-    const englishSummary = compactParagraph([
-        request
-            ? `${customerEn} wants: ${request}`
-            : `${customerEn} needs team follow-up`,
-        appointmentTitle || appointmentTimeEn
-            ? `Appointment: ${appointmentTitle || 'untitled'}${appointmentTimeEn ? ` for ${appointmentTimeEn}` : ''}`
-            : '',
-        urgencyEn ? `Priority: ${urgencyEn}` : '',
-        recommendedAction ? `Suggested next step: ${recommendedAction}` : '',
-        contextEn ? `Conversation context: ${contextEn}` : '',
-    ]);
+    const englishBullets = [
+        bullet('Customer', customer || 'Not specified'),
+        bullet('Request', request || 'Needs team follow-up'),
+        bullet('Appointment', appointmentTitle),
+        bullet('Date and time', appointmentTimeEn),
+        bullet('Priority', urgencyEn),
+        bullet('Suggested next step', recommendedAction),
+        ...bulletGroup('Conversation context', contextEn),
+    ].filter(Boolean);
 
     return [
         input.header,
-        spanishSummary ? `ES: ${spanishSummary}` : '',
-        englishSummary ? `EN: ${englishSummary}` : '',
-    ].filter(Boolean).join('\n').slice(0, MAX_NOTE_LENGTH);
+        '',
+        SPANISH_SECTION_TITLE,
+        '',
+        ...spanishBullets,
+        '',
+        ENGLISH_SECTION_TITLE,
+        '',
+        ...englishBullets,
+    ].join('\n').trim().slice(0, MAX_NOTE_LENGTH);
 };
 
 const latestUserMessage = (messages: ChatbotCustomerRequestMessage[] = []) => {
@@ -311,14 +341,50 @@ const compactParagraph = (sentences: string[]): string => (
         .slice(0, MAX_NOTE_LENGTH)
 );
 
-const looksConversationalGeneratedNote = (value: string): boolean => (
+const looksDocumentFormattedGeneratedNote = (value: string): boolean => (
     (value.includes(GENERATED_SUMMARY_MARKER) || value.includes(FOLLOW_UP_SUMMARY_MARKER))
-    && value.includes('ES:')
-    && value.includes('EN:')
+    && value.includes(SPANISH_SECTION_TITLE)
+    && value.includes(ENGLISH_SECTION_TITLE)
+    && value.includes('- Lo que desea:')
+    && value.includes('- Request:')
     && !value.includes('Lead ID:')
     && !value.includes('Generado en / Generated at:')
     && !value.includes('Fecha solicitada / Requested time:')
 );
+
+const extractBetween = (value: string, start: string, endLabels: string[]): string => {
+    const startIndex = value.toLowerCase().indexOf(start.toLowerCase());
+    if (startIndex < 0) return '';
+    const afterStart = value.slice(startIndex + start.length);
+    const endIndexes = endLabels
+        .map(label => afterStart.toLowerCase().indexOf(label.toLowerCase()))
+        .filter(index => index >= 0);
+    const endIndex = endIndexes.length ? Math.min(...endIndexes) : afterStart.length;
+    return cleanSentencePart(afterStart.slice(0, endIndex));
+};
+
+const extractCompactSummaryValue = (lines: string[], labels: string[]): string => {
+    const line = valueAfterAnyLabel(lines, labels);
+    if (!line) return '';
+    return extractBetween(line, 'quiere:', [
+        'Cita:',
+        'Prioridad:',
+        'Próximo paso sugerido:',
+        'Contexto de la conversación:',
+    ]) || extractBetween(line, 'wants:', [
+        'Appointment:',
+        'Priority:',
+        'Suggested next step:',
+        'Conversation context:',
+    ]) || line;
+};
+
+const extractCompactCustomer = (lines: string[]): string => {
+    const line = valueAfterAnyLabel(lines, ['ES: ', 'EN: ']);
+    if (!line) return '';
+    return extractBetween(line, 'El cliente ', [' quiere:', ' necesita:'])
+        || extractBetween(line, 'The customer ', [' wants:', ' needs:']);
+};
 
 export const buildReadableChatbotCustomerRequestNote = (
     customerRequestNotes?: string | null,
@@ -327,7 +393,7 @@ export const buildReadableChatbotCustomerRequestNote = (
 ): string => {
     const raw = cleanNoteBlock(customerRequestNotes);
     if (!raw) return cleanNoteBlock(fallback);
-    if (looksConversationalGeneratedNote(raw)) {
+    if (looksDocumentFormattedGeneratedNote(raw)) {
         return raw.includes(GENERATED_SUMMARY_MARKER)
             ? raw.replace(GENERATED_SUMMARY_MARKER, FOLLOW_UP_SUMMARY_MARKER)
             : raw;
@@ -343,8 +409,9 @@ export const buildReadableChatbotCustomerRequestNote = (
         options.customer?.email,
         options.customer?.phone,
     ]).join(' | ');
-    const customer = valueAfterAnyLabel(lines, ['Cliente / Customer: ']) || optionCustomer;
-    const request = valueAfterAnyLabel(lines, ['Lo que desea el cliente / What the customer wants: ']);
+    const customer = valueAfterAnyLabel(lines, ['Cliente / Customer: ']) || extractCompactCustomer(lines) || optionCustomer;
+    const request = valueAfterAnyLabel(lines, ['Lo que desea el cliente / What the customer wants: '])
+        || extractCompactSummaryValue(lines, ['ES: ', 'EN: ']);
     const appointment = valueAfterAnyLabel(lines, ['Cita / Appointment: ']) || cleanText(options.appointmentTitle, 250);
     const requestedTime = valueAfterAnyLabel(lines, ['Fecha solicitada / Requested time: ']) || cleanText(options.appointmentDateTime, 250);
     const urgency = valueAfterAnyLabel(lines, ['Urgencia / Urgency: ']);

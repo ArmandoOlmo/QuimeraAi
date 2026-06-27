@@ -23,7 +23,7 @@ import {
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3 } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3, Workflow, LayoutTemplate, Store, Wallet, Utensils, Building2 } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -146,11 +146,17 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const quickActionIcon = (action: DashboardAssistantQuickAction) => {
         if (action.id === 'create_website') return <Globe2 size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_business_blueprint') return <Workflow size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_website_builder') return <LayoutTemplate size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_storefront_builder') return <Store size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'generate_hero_image') return <Image size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_video') return <Video size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'review_leads') return <Users size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_email') return <Mail size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'open_ecommerce') return <ShoppingBag size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_finance') return <Wallet size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_restaurants') return <Utensils size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'open_realty') return <Building2 size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'train_chatcore') return <Bot size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_appointment') return <Calendar size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'improve_bio_page') return <Link2 size={13} className="text-q-accent" aria-hidden="true" />;

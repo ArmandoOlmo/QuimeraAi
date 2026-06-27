@@ -32,6 +32,7 @@ import CustomFieldsManager, { CustomFieldDefinition } from './CustomFieldsManage
 import LeadsLibrary from './LeadsLibrary';
 import AddLeadModal from './AddLeadModal';
 import ImportLeadsModal from './ImportLeadsModal';
+import FormattedLeadNotes from './FormattedLeadNotes';
 import AddToAudienceModal from '../email/AddToAudienceModal';
 import { buildCanonicalEmailDraftMetadata } from '../../../services/email/emailModuleIntentService.ts';
 import { buildEmailReviewQueueUrl } from '../../../services/email/emailReviewQueueLinkService.ts';
@@ -2010,7 +2011,7 @@ const LeadsDashboard: React.FC = () => {
                                         />
                                     ) : (
                                         <div className="bg-secondary/20 p-4 rounded-xl border border-q-border min-h-[100px] text-sm text-foreground leading-relaxed">
-                                            {selectedLead.notes || "No notes added yet."}
+                                            <FormattedLeadNotes notes={selectedLead.notes} emptyText="No notes added yet." />
                                         </div>
                                     )}
                                 </div>

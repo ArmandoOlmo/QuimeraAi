@@ -204,11 +204,17 @@ describe('globalAssistantEntryBridge', () => {
         });
         expect(ownerWithoutActiveProject.map(action => action.id)).toEqual([
             'create_website',
+            'open_business_blueprint',
+            'open_website_builder',
+            'open_storefront_builder',
             'generate_hero_image',
             'create_video',
             'review_leads',
             'create_email',
             'open_ecommerce',
+            'open_finance',
+            'open_restaurants',
+            'open_realty',
             'train_chatcore',
             'create_appointment',
             'improve_bio_page',
@@ -224,11 +230,17 @@ describe('globalAssistantEntryBridge', () => {
 
         expect(ownerActions.map(action => action.id)).toEqual([
             'create_website',
+            'open_business_blueprint',
+            'open_website_builder',
+            'open_storefront_builder',
             'generate_hero_image',
             'create_video',
             'review_leads',
             'create_email',
             'open_ecommerce',
+            'open_finance',
+            'open_restaurants',
+            'open_realty',
             'train_chatcore',
             'create_appointment',
             'improve_bio_page',
@@ -237,10 +249,16 @@ describe('globalAssistantEntryBridge', () => {
         ]);
         expect(ownerActions.map(action => action.module)).toEqual(expect.arrayContaining([
             'aiStudio',
+            'businessBlueprint',
+            'website',
+            'storefront',
             'media',
             'crm',
             'emailMarketing',
             'ecommerce',
+            'finance',
+            'restaurants',
+            'realEstate',
             'chatbot',
             'appointments',
             'bioPage',
@@ -250,6 +268,30 @@ describe('globalAssistantEntryBridge', () => {
         expect(ownerActions.every(action => action.promptKey.startsWith('dashboard.assistantQuickActions.'))).toBe(true);
         expect(ownerActions.find(action => action.id === 'create_video')).toMatchObject({
             module: 'media',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_business_blueprint')).toMatchObject({
+            module: 'businessBlueprint',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_website_builder')).toMatchObject({
+            module: 'website',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_storefront_builder')).toMatchObject({
+            module: 'storefront',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_finance')).toMatchObject({
+            module: 'finance',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_restaurants')).toMatchObject({
+            module: 'restaurants',
+            requiresProject: true,
+        });
+        expect(ownerActions.find(action => action.id === 'open_realty')).toMatchObject({
+            module: 'realEstate',
             requiresProject: true,
         });
         expect(ownerActions.find(action => action.id === 'train_chatcore')).toMatchObject({
@@ -274,11 +316,17 @@ describe('globalAssistantEntryBridge', () => {
         });
         expect(ownerActions.map(action => action.labelFallback)).toEqual([
             'AI Studio',
+            'BusinessBlueprint',
+            'Website Builder',
+            'Storefront',
             'Images',
             'Videos',
             'Leads',
             'Email',
             'Ecommerce',
+            'Finance',
+            'Restaurants',
+            'Realty',
             'ChatCore',
             'Appointments',
             'Bio Page',
@@ -293,7 +341,7 @@ describe('globalAssistantEntryBridge', () => {
         const actions = getDashboardAssistantQuickActions({
             hasProjects: true,
             canUseAdminMode: true,
-            limit: 12,
+            limit: 24,
         });
 
         for (const action of actions) {
@@ -357,6 +405,7 @@ describe('globalAssistantEntryBridge', () => {
     it('opens clear module destinations directly instead of hallucinating chat-side work', () => {
         const assistantSource = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
         const guideSource = readFileSync(resolve(process.cwd(), 'services/globalAssistant/globalAssistantModuleGuide.ts'), 'utf8');
+        const aiStudioSource = readFileSync(resolve(process.cwd(), 'components/onboarding/AIWebsiteStudio.tsx'), 'utf8');
         const imagePanelSource = readFileSync(resolve(process.cwd(), 'components/ui/ImageGeneratorPanel.tsx'), 'utf8');
         const videoPanelSource = readFileSync(resolve(process.cwd(), 'components/media-generator/VideoGenerationSection.tsx'), 'utf8');
         const mediaPanelSource = readFileSync(resolve(process.cwd(), 'components/media-generator/MediaGeneratorPanel.tsx'), 'utf8');
@@ -382,7 +431,9 @@ describe('globalAssistantEntryBridge', () => {
         expect(assistantSource).toContain("projects: { view: 'websites', route: ROUTES.WEBSITES }");
         expect(assistantSource).toContain("settings: { view: 'settings', route: ROUTES.SETTINGS }");
         expect(assistantSource).toContain("source: 'direct_module_navigation'");
-        expect(guideSource).toContain('Abrí AI Studio. Tu idea quedó escrita ahí.');
+        expect(guideSource).toContain('Abrí AI Studio. Dejé tu idea en el campo.');
+        expect(aiStudioSource).toContain('studio.setInput(initialPrompt)');
+        expect(aiStudioSource).not.toContain('studio.sendMessage(initialPrompt)');
         expect(guideSource).toContain('Abrí Imágenes y dejé el prompt escrito.');
         expect(guideSource).toContain('Abrí Videos y dejé el prompt escrito.');
         expect(guideSource).toContain('isComponentHelpQuestion');

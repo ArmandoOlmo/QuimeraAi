@@ -226,7 +226,8 @@ describe('chatbotEngineRuntimeActionService', () => {
             source: 'aiAssistant',
         });
         expect(client.tables.restaurant_reservations[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
-        expect(client.tables.restaurant_reservations[0].notes).toContain('ES: El cliente Ana Rivera, ana@example.com quiere: Window table.');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('- Cliente: Ana Rivera, ana@example.com.');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('- Lo que desea: Window table.');
         expect(client.tables.restaurant_reservations[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0]).toMatchObject({
             project_id: 'project-1',
@@ -234,7 +235,8 @@ describe('chatbotEngineRuntimeActionService', () => {
             email: 'ana@example.com',
         });
         expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
-        expect(client.tables.leads[0].notes).toContain('EN: The customer Ana Rivera, ana@example.com wants: Window table.');
+        expect(client.tables.leads[0].notes).toContain('- Customer: Ana Rivera, ana@example.com.');
+        expect(client.tables.leads[0].notes).toContain('- Request: Window table.');
         expect(client.tables.leads[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Customer request summary');
         expect(client.tables.leads[0].custom_data.customerRequestNote).toContain('Follow-up summary');
@@ -746,8 +748,9 @@ describe('chatbotEngineRuntimeActionService', () => {
             idempotency_key: 'finance-quote-key-1',
         });
         expect(client.tables.accounting_invoices[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
-        expect(client.tables.accounting_invoices[0].notes).toContain('ES: El cliente Lead Contact, lead@example.com quiere: Formal quote for a consultation package.');
-        expect(client.tables.accounting_invoices[0].notes).toContain('Próximo paso sugerido: ES: Revisar totales, impuestos y terminos antes de enviar o crear pago en Stripe.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('- Cliente: Lead Contact, lead@example.com.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('- Lo que desea: Formal quote for a consultation package.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('- Próximo paso sugerido: Revisar totales, impuestos y terminos antes de enviar o crear pago en Stripe.');
         expect(client.tables.accounting_invoices[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.accounting_invoices[0].metadata).toMatchObject({
             chatbotEngine: true,
@@ -1013,7 +1016,8 @@ describe('chatbotEngineRuntimeActionService', () => {
             actionType: 'create_product_inquiry',
         });
         expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
-        expect(client.tables.leads[0].notes).toContain('ES: El cliente Marta Cruz, marta@example.com quiere: Is this safe for sensitive skin?');
+        expect(client.tables.leads[0].notes).toContain('- Cliente: Marta Cruz, marta@example.com.');
+        expect(client.tables.leads[0].notes).toContain('- Lo que desea: Is this safe for sensitive skin?');
         expect(client.tables.leads[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Is this safe for sensitive skin?');
         expect(client.tables.leads[0].custom_data.customerRequestNote).toContain('Follow-up summary');

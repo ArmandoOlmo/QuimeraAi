@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { LeadActivity, ActivityType } from '../../../types';
 import { Phone, Mail, Calendar, MessageSquare, TrendingUp, CheckCircle, Plus, Loader2 } from 'lucide-react';
 import AppSelect from '../../ui/AppSelect';
+import FormattedLeadNotes from './FormattedLeadNotes';
 
 interface LeadsTimelineProps {
     activities: LeadActivity[];
@@ -187,7 +188,9 @@ const LeadsTimeline: React.FC<LeadsTimelineProps> = ({ activities, onAddActivity
                                         <div className="flex-1">
                                             <h4 className="text-sm font-bold text-foreground">{activity.title}</h4>
                                             {activity.description && (
-                                                <p className="text-xs text-q-text-muted mt-1">{activity.description}</p>
+                                                <div className="mt-2 rounded-lg border border-q-border/60 bg-secondary/20 p-3">
+                                                    <FormattedLeadNotes notes={activity.description} compact />
+                                                </div>
                                             )}
                                             {activity.metadata && (
                                                 <div className="flex flex-wrap gap-2 mt-2">

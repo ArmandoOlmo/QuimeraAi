@@ -668,10 +668,10 @@ const formatDirectModuleMessage = (
     const messages: Record<GlobalAssistantGuideTarget, { es: string; en: string }> = {
         aiStudio: {
             es: preparedPrompt
-                ? 'Abrí AI Studio. Tu idea quedó escrita ahí. Revísala y sigue los pasos del Studio.'
+                ? 'Abrí AI Studio. Dejé tu idea en el campo. Presiona Enviar cuando quieras empezar.'
                 : 'Abrí AI Studio. Escribe la idea y sigue los pasos del Studio.',
             en: preparedPrompt
-                ? 'I opened AI Studio. Your idea is written there. Review it and follow the Studio steps.'
+                ? 'I opened AI Studio. I left your idea in the field. Press Send when you want to start.'
                 : 'I opened AI Studio. Write the idea and follow the Studio steps.',
         },
         image: {
@@ -776,11 +776,17 @@ export const resolveDirectModuleGuideDecision = (
 
     const quickTarget: Record<string, GlobalAssistantGuideTarget> = {
         create_website: 'aiStudio',
+        open_business_blueprint: 'businessBlueprint',
+        open_website_builder: 'websiteBuilder',
+        open_storefront_builder: 'storefront',
         generate_hero_image: 'image',
         create_video: 'video',
         review_leads: 'leads',
         create_email: 'email',
         open_ecommerce: 'ecommerce',
+        open_finance: 'finance',
+        open_restaurants: 'restaurants',
+        open_realty: 'realEstate',
         train_chatcore: 'chatcore',
         create_appointment: 'appointments',
         improve_bio_page: 'bioPage',

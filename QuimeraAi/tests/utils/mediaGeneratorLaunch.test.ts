@@ -51,6 +51,25 @@ describe('mediaGeneratorLaunch', () => {
         expect(window.sessionStorage.getItem(MEDIA_GENERATOR_LAUNCH_STORAGE_KEY)).toBeNull();
     });
 
+    it('forces Global Assistant media handoffs to wait for the user to press Generate', () => {
+        const stored = storeMediaGeneratorLaunchRequest({
+            mode: 'image',
+            prompt: 'casa moderna en Puerto Rico',
+            autoStart: true,
+            projectId: 'project-1',
+            source: 'global_assistant',
+        });
+
+        expect(stored).toMatchObject({
+            source: 'global_assistant',
+            autoStart: false,
+        });
+        expect(consumeMediaGeneratorLaunchRequest('image', 'project-1')).toMatchObject({
+            prompt: 'casa moderna en Puerto Rico',
+            autoStart: false,
+        });
+    });
+
     it('peeks pending video requests without removing the prompt before the video panel mounts', () => {
         storeMediaGeneratorLaunchRequest({
             mode: 'video',

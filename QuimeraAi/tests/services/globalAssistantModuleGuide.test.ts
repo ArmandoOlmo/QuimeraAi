@@ -18,7 +18,7 @@ describe('globalAssistantModuleGuide', () => {
             target: 'aiStudio',
             preparedPrompt: true,
             prompt: 'Necesito crear un website por una firma de arquitecto',
-            message: 'Abrí AI Studio. Tu idea quedó escrita ahí. Revísala y sigue los pasos del Studio.',
+            message: 'Abrí AI Studio. Dejé tu idea en el campo. Presiona Enviar cuando quieras empezar.',
         });
     });
 
@@ -118,6 +118,60 @@ describe('globalAssistantModuleGuide', () => {
             target: 'image',
             preparedPrompt: false,
             prompt: '',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Quiero revisarlo',
+            quickActionId: 'open_business_blueprint',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'businessBlueprint',
+            message: 'Abrí el área de proyectos. Revisa el plan del negocio y sus módulos desde ahí.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'I want to review this',
+            quickActionId: 'open_website_builder',
+            locale: 'en',
+        })).toMatchObject({
+            target: 'websiteBuilder',
+            message: 'I opened Website Builder. Choose the section you want to edit and make the change from there.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Quiero revisarlo',
+            quickActionId: 'open_finance',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'finance',
+            message: 'Abrí Finance. Revisa facturas, ingresos o gastos desde ahí.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Open it',
+            quickActionId: 'open_storefront_builder',
+            locale: 'en',
+        })).toMatchObject({
+            target: 'storefront',
+            message: 'I opened Ecommerce. Review Storefront, products, and store settings from there.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Ábrelo',
+            quickActionId: 'open_restaurants',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'restaurants',
+            message: 'Abrí Restaurants. Revisa menú, reservas o configuración desde ahí.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Open it',
+            quickActionId: 'open_realty',
+            locale: 'en',
+        })).toMatchObject({
+            target: 'realEstate',
+            message: 'I opened Realty. Review properties, listings, or showings from there.',
         });
     });
 

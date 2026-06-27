@@ -33,6 +33,7 @@ export const storeMediaGeneratorLaunchRequest = (request: Omit<MediaGeneratorLau
     if (!isBrowser()) return null;
     const normalized: MediaGeneratorLaunchRequest = {
         ...request,
+        autoStart: request.source === 'global_assistant' ? false : request.autoStart,
         prompt: request.prompt.trim(),
         createdAt: new Date().toISOString(),
     };

@@ -25,9 +25,13 @@ describe('ChatCore payload notes', () => {
         });
 
         expect(notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(notes).toContain('ES: El cliente Luis Rivera, luis@example.com, +1 787 555 0101 quiere: Quiero una mesa privada para 8 personas este viernes.');
-        expect(notes).toContain('EN: The customer Luis Rivera, luis@example.com, +1 787 555 0101 wants: Quiero una mesa privada para 8 personas este viernes.');
-        expect(notes).toContain('Próximo paso sugerido: Confirmar disponibilidad y menu');
+        expect(notes).toContain('Español / Spanish');
+        expect(notes).toContain('English / Inglés');
+        expect(notes).toContain('- Cliente: Luis Rivera, luis@example.com, +1 787 555 0101.');
+        expect(notes).toContain('- Lo que desea: Quiero una mesa privada para 8 personas este viernes.');
+        expect(notes).toContain('- Customer: Luis Rivera, luis@example.com, +1 787 555 0101.');
+        expect(notes).toContain('- Request: Quiero una mesa privada para 8 personas este viernes.');
+        expect(notes).toContain('- Próximo paso sugerido: Confirmar disponibilidad y menu.');
         expect(notes).not.toContain('Proyecto / Project');
         expect(notes).not.toContain('Origen / Source');
         expect(notes).not.toContain('Score:');
@@ -58,11 +62,11 @@ describe('ChatCore payload notes', () => {
             },
         });
 
-        expect(notes).toContain('Cita: Consultation with Ana');
-        expect(notes).toContain('Appointment: Consultation with Ana');
+        expect(notes).toContain('- Cita: Consultation with Ana.');
+        expect(notes).toContain('- Appointment: Consultation with Ana.');
         expect(notes).toContain('July 1, 2026 at 2:00 PM');
         expect(notes).toContain('Ana wants pricing for the premium package before booking.');
-        expect(notes).toContain('Contexto de la conversación');
+        expect(notes).toContain('- Contexto de la conversación:');
         expect(notes).not.toContain('Fecha solicitada / Requested time');
         expect(notes).not.toContain('Lead ID: lead-1');
         expect(notes).not.toContain('Conversacion / Conversation');
