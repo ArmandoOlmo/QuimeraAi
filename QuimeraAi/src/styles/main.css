@@ -633,6 +633,12 @@ html.light .quimera-dashboard-upgrade-cta:hover {
   padding: 0.875rem;
 }
 
+@media (max-width: 639px) {
+  .quimera-ai-launcher {
+    overflow: visible;
+  }
+}
+
 html.light .quimera-ai-launcher {
   border-color: hsl(var(--border-subtle));
   background: var(--q-surface-elevated);
