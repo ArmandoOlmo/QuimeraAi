@@ -174,7 +174,7 @@ const Dashboard: React.FC = () => {
                                 )}
 
                                 {/* Welcome / Hero Section */}
-                                <motion.div className="relative z-[1]" variants={dashboardItemVariants}>
+                                <motion.div className="relative z-[30]" variants={dashboardItemVariants}>
                                     <DashboardWelcome allUserProjectsCount={filters.allUserProjects.length} />
                                 </motion.div>
 
