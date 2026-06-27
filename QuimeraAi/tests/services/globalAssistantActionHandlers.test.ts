@@ -549,7 +549,62 @@ describe('Global Assistant default action handlers', () => {
                 globalActionSurfaceId: 'global-operating-layer',
                 surfaceCount: expect.any(Number),
             },
+            agencyEngine: {
+                id: 'agency-engine',
+                requiredService: 'agency',
+                requiredFeature: 'agencyModule',
+                summary: {
+                    surfaceCount: 9,
+                    serviceAccessSurfaceCount: 9,
+                    aiPoweredSurfaceCount: 4,
+                    globalAssistantSurfaceCount: 5,
+                    missingModuleCount: 0,
+                },
+            },
         });
+        expect(snapshot.agencyEngine.foundationalSystems).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'chatbot',
+            'media',
+            'finance',
+            'analytics',
+        ]));
+        expect(snapshot.agencyEngine.moduleIds).toEqual(expect.arrayContaining([
+            'agency-engine',
+            'agency-command-center',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-project-transfer',
+            'agency-service-plans',
+            'agency-billing',
+            'agency-reports',
+            'agency-white-label',
+            'agency-client-portal',
+        ]));
+        expect(snapshot.agencyEngine.operatingSurfaces).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                moduleId: 'agency-client-provisioning',
+                aiPowered: true,
+                globalAssistantEnabled: true,
+                serviceAccessGated: true,
+                requiredSystems: expect.arrayContaining(['businessBlueprint', 'websiteBuilder', 'ecommerce', 'media']),
+            }),
+            expect.objectContaining({
+                moduleId: 'agency-client-portal',
+                route: '/portal/dashboard',
+                requiredFeature: null,
+                serviceAccessGated: true,
+            }),
+        ]));
         expect(snapshot.summary.actionCount).toBeGreaterThan(30);
         expect(snapshot.summary.executableActionCount).toBeGreaterThan(10);
         expect(snapshot.modules.map((module: any) => module.module)).not.toContain('bioPage');

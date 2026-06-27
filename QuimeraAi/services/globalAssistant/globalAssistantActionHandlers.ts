@@ -51,6 +51,10 @@ import {
 } from '../../utils/storefrontRenderer/registry';
 import { resolveStorefrontEditorConfig } from '../../utils/storefrontRenderer/editorConfig';
 import { normalizeStorefrontSectionVisibility } from '../../utils/storefrontRenderer/visibility';
+import {
+    getAgencyEngineOperatingSystemManifest,
+    getModuleRegistryItem,
+} from '../../registry/moduleRegistry';
 
 type SupabaseClientLike = {
     from: (table: string) => any;
@@ -1534,6 +1538,72 @@ const inferCapabilityModuleFilter = (
     return uniqueMatches.length === 1 ? uniqueMatches[0] : '';
 };
 
+const buildAgencyEngineOperatingLayerSnapshot = (
+    moduleSummaries: Record<string, unknown>[],
+    selectedActions: Record<string, unknown>[],
+) => {
+    const manifest = getAgencyEngineOperatingSystemManifest();
+    const agencyActions = selectedActions.filter(action => readString(action.module) === 'agency');
+    const agencyModuleSummary = moduleSummaries.find(module => readString(module.module) === 'agency') || null;
+    const missingModuleIds = manifest.moduleIds.filter(moduleId => !getModuleRegistryItem(moduleId));
+
+    return {
+        id: manifest.id,
+        label: manifest.label,
+        requiredService: manifest.requiredService,
+        requiredFeature: String(manifest.requiredFeature),
+        foundationalSystems: manifest.foundationalSystems,
+        moduleIds: manifest.moduleIds,
+        serviceAccessModuleIds: manifest.serviceAccessModuleIds,
+        aiPoweredModuleIds: manifest.aiPoweredModuleIds,
+        globalAssistantModuleIds: manifest.globalAssistantModuleIds,
+        missingModuleIds,
+        summary: {
+            surfaceCount: manifest.operatingSurfaces.length,
+            serviceAccessSurfaceCount: manifest.operatingSurfaces
+                .filter(surface => manifest.serviceAccessModuleIds.includes(surface.moduleId))
+                .length,
+            aiPoweredSurfaceCount: manifest.operatingSurfaces.filter(surface => surface.aiPowered).length,
+            globalAssistantSurfaceCount: manifest.operatingSurfaces.filter(surface => surface.globalAssistantEnabled).length,
+            catalogActionCount: agencyActions.length,
+            executableActionCount: agencyActions.filter(action => action.executable === true).length,
+            missingModuleCount: missingModuleIds.length,
+        },
+        operatingSurfaces: manifest.operatingSurfaces.map(surface => {
+            const registryItem = getModuleRegistryItem(surface.moduleId);
+            return {
+                id: surface.id,
+                moduleId: surface.moduleId,
+                label: surface.label,
+                role: surface.role,
+                requiredPermission: surface.requiredPermission || null,
+                requiredService: registryItem?.requiredService || manifest.requiredService,
+                requiredFeature: registryItem?.requiredFeature ? String(registryItem.requiredFeature) : null,
+                serviceAccessGated: manifest.serviceAccessModuleIds.includes(surface.moduleId),
+                aiPowered: surface.aiPowered,
+                globalAssistantEnabled: surface.globalAssistantEnabled,
+                requiredSystems: surface.requiredSystems,
+                registered: Boolean(registryItem),
+                route: registryItem?.route || null,
+            };
+        }),
+        catalog: {
+            module: agencyModuleSummary,
+            actionTypes: agencyActions
+                .map(action => readString(action.actionType))
+                .filter((actionType): actionType is string => Boolean(actionType)),
+            executableActionTypes: agencyActions
+                .filter(action => action.executable === true)
+                .map(action => readString(action.actionType))
+                .filter((actionType): actionType is string => Boolean(actionType)),
+            unavailableActionTypes: agencyActions
+                .filter(action => action.availableInContext === false)
+                .map(action => readString(action.actionType))
+                .filter((actionType): actionType is string => Boolean(actionType)),
+        },
+    };
+};
+
 const createOperatingLayerCapabilitySummaryHandler = (): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { context }) => {
@@ -1653,6 +1723,7 @@ const createOperatingLayerCapabilitySummaryHandler = (): HandlerPatch => ({
                 blockedFeatureCount: blockedFeatures.length,
             },
             modules: moduleSummaries,
+            agencyEngine: buildAgencyEngineOperatingLayerSnapshot(moduleSummaries, selectedActions),
             blockedBy: {
                 services: blockedServices,
                 features: blockedFeatures,
@@ -7020,7 +7091,7 @@ const persistProjectSnapshotBeforeAssistantMutation = async (
     context: AssistantContextSnapshot | undefined,
     deps: GlobalAssistantActionHandlerDependencies,
 ): Promise<void> => {
-    if (definition.actionType === 'transfer_agency_project') {
+    if (definition.actionType === 'create_project_from_prompt' || definition.actionType === 'transfer_agency_project') {
         return;
     }
 

@@ -88,6 +88,41 @@ export interface ModuleRegistryAccessContext {
     permissions?: Record<string, unknown>;
 }
 
+export type AgencyEngineOperatingSurfaceId =
+    | 'command-center'
+    | 'client-360'
+    | 'client-provisioning'
+    | 'project-transfer'
+    | 'service-plans'
+    | 'billing'
+    | 'reports'
+    | 'white-label'
+    | 'client-portal';
+
+export interface AgencyEngineOperatingSurface {
+    id: AgencyEngineOperatingSurfaceId;
+    moduleId: string;
+    label: string;
+    role: 'operate' | 'provision' | 'monetize' | 'report' | 'publish' | 'transfer';
+    requiredPermission?: string;
+    aiPowered: boolean;
+    globalAssistantEnabled: boolean;
+    requiredSystems: CanonicalSystemId[];
+}
+
+export interface AgencyEngineOperatingSystemManifest {
+    id: 'agency-engine';
+    label: string;
+    requiredService: Extract<PlatformServiceId, 'agency'>;
+    requiredFeature: keyof PlanFeatures;
+    moduleIds: string[];
+    serviceAccessModuleIds: string[];
+    globalAssistantModuleIds: string[];
+    aiPoweredModuleIds: string[];
+    foundationalSystems: CanonicalSystemId[];
+    operatingSurfaces: AgencyEngineOperatingSurface[];
+}
+
 const PLAN_RANK: Record<SubscriptionPlanId, number> = {
     free: 0,
     hobby: 1,
@@ -121,7 +156,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canManageSettings',
         gatingReason: 'Requires Agency Engine service availability, an agency-enabled plan, and agency management permission.',
         compatibleIndustries: ['all'],
-        editableBy: ['agency-engine', 'ai-studio'],
+        editableBy: ['agency-engine', 'ai-studio', 'global-assistant'],
         readsFrom: [
             'businessBlueprint',
             'websiteBuilder',
@@ -181,7 +216,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredFeature: 'agencyModule',
         requiredPermission: 'canManageSettings',
         compatibleIndustries: ['all'],
-        editableBy: ['agency-engine', 'ai-studio'],
+        editableBy: ['agency-engine', 'ai-studio', 'global-assistant'],
         readsFrom: ['businessBlueprint'],
         writesTo: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics', 'finance'],
     },
@@ -196,7 +231,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredFeature: 'agencyModule',
         requiredPermission: 'canManageProjects',
         compatibleIndustries: ['all'],
-        editableBy: ['agency-engine', 'website-builder'],
+        editableBy: ['agency-engine', 'website-builder', 'global-assistant'],
         readsFrom: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics'],
         writesTo: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint', 'analytics'],
     },
@@ -588,6 +623,132 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
     },
 ];
 
+export const AGENCY_ENGINE_FOUNDATIONAL_SYSTEMS: CanonicalSystemId[] = [
+    'businessBlueprint',
+    'websiteBuilder',
+    'storefrontBuilder',
+    'ecommerce',
+    'crm',
+    'emailMarketing',
+    'appointments',
+    'restaurants',
+    'realEstate',
+    'bioPage',
+    'chatbot',
+    'media',
+    'finance',
+    'analytics',
+];
+
+export const AGENCY_ENGINE_OPERATING_SURFACES: AgencyEngineOperatingSurface[] = [
+    {
+        id: 'command-center',
+        moduleId: 'agency-command-center',
+        label: 'Agency Command Center',
+        role: 'operate',
+        requiredPermission: 'canViewAnalytics',
+        aiPowered: true,
+        globalAssistantEnabled: true,
+        requiredSystems: ['analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+    },
+    {
+        id: 'client-360',
+        moduleId: 'agency-client-360',
+        label: 'Agency Client 360',
+        role: 'operate',
+        requiredPermission: 'canManageSettings',
+        aiPowered: true,
+        globalAssistantEnabled: true,
+        requiredSystems: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
+    },
+    {
+        id: 'client-provisioning',
+        moduleId: 'agency-client-provisioning',
+        label: 'Agency Client Provisioning',
+        role: 'provision',
+        requiredPermission: 'canManageSettings',
+        aiPowered: true,
+        globalAssistantEnabled: true,
+        requiredSystems: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media'],
+    },
+    {
+        id: 'project-transfer',
+        moduleId: 'agency-project-transfer',
+        label: 'Agency Project Transfer',
+        role: 'transfer',
+        requiredPermission: 'canManageProjects',
+        aiPowered: false,
+        globalAssistantEnabled: true,
+        requiredSystems: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media'],
+    },
+    {
+        id: 'service-plans',
+        moduleId: 'agency-service-plans',
+        label: 'Agency Service Plans',
+        role: 'monetize',
+        requiredPermission: 'canManageBilling',
+        aiPowered: false,
+        globalAssistantEnabled: false,
+        requiredSystems: ['finance', 'analytics'],
+    },
+    {
+        id: 'billing',
+        moduleId: 'agency-billing',
+        label: 'Agency Billing',
+        role: 'monetize',
+        requiredPermission: 'canManageBilling',
+        aiPowered: false,
+        globalAssistantEnabled: false,
+        requiredSystems: ['finance', 'analytics'],
+    },
+    {
+        id: 'reports',
+        moduleId: 'agency-reports',
+        label: 'Agency Reports',
+        role: 'report',
+        requiredPermission: 'canViewAnalytics',
+        aiPowered: true,
+        globalAssistantEnabled: true,
+        requiredSystems: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+    },
+    {
+        id: 'white-label',
+        moduleId: 'agency-white-label',
+        label: 'Agency White Label Studio',
+        role: 'publish',
+        requiredPermission: 'canManageSettings',
+        aiPowered: false,
+        globalAssistantEnabled: false,
+        requiredSystems: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint'],
+    },
+    {
+        id: 'client-portal',
+        moduleId: 'agency-client-portal',
+        label: 'Agency Client Portal',
+        role: 'publish',
+        aiPowered: false,
+        globalAssistantEnabled: false,
+        requiredSystems: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'businessBlueprint'],
+    },
+];
+
+export const AGENCY_ENGINE_OPERATING_SYSTEM: AgencyEngineOperatingSystemManifest = {
+    id: 'agency-engine',
+    label: 'Agency Engine',
+    requiredService: 'agency',
+    requiredFeature: 'agencyModule',
+    moduleIds: ['agency-engine', ...AGENCY_ENGINE_OPERATING_SURFACES.map(surface => surface.moduleId)],
+    serviceAccessModuleIds: ['agency-engine', ...AGENCY_ENGINE_OPERATING_SURFACES.map(surface => surface.moduleId)],
+    globalAssistantModuleIds: AGENCY_ENGINE_OPERATING_SURFACES
+        .filter(surface => surface.globalAssistantEnabled)
+        .map(surface => surface.moduleId),
+    aiPoweredModuleIds: AGENCY_ENGINE_OPERATING_SURFACES
+        .filter(surface => surface.aiPowered)
+        .map(surface => surface.moduleId),
+    foundationalSystems: AGENCY_ENGINE_FOUNDATIONAL_SYSTEMS,
+    operatingSurfaces: AGENCY_ENGINE_OPERATING_SURFACES,
+};
+
 export function canAccessModuleRegistryItem(item: ModuleRegistryItem, access: ModuleRegistryAccessContext = {}): boolean {
     if (item.requiredPlan && access.currentPlan && PLAN_RANK[access.currentPlan] < PLAN_RANK[item.requiredPlan]) return false;
     if (item.requiredService && (!access.canAccessService || !access.canAccessService(item.requiredService))) return false;
@@ -621,4 +782,8 @@ export function getModuleRegistryItem(id: string): ModuleRegistryItem | undefine
 
 export function getModulesByCanonicalSystem(system: CanonicalSystemId): ModuleRegistryItem[] {
     return quimeraModuleRegistry.filter(item => item.canonicalSystem === system || item.readsFrom?.includes(system) || item.writesTo?.includes(system));
+}
+
+export function getAgencyEngineOperatingSystemManifest(): AgencyEngineOperatingSystemManifest {
+    return AGENCY_ENGINE_OPERATING_SYSTEM;
 }

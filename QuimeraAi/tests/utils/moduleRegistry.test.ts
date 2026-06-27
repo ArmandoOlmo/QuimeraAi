@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     canAccessModuleRegistryItem,
+    getAgencyEngineOperatingSystemManifest,
     getAccessibleModuleRegistry,
     getModuleRegistryItem,
     getModulesByCanonicalSystem,
@@ -122,6 +123,7 @@ describe('moduleRegistry', () => {
             requiredFeature: 'agencyModule',
             requiredPermission: 'canManageSettings',
         });
+        expect(agency?.editableBy).toEqual(expect.arrayContaining(['ai-studio', 'global-assistant']));
         expect(agency?.readsFrom).toEqual(expect.arrayContaining([
             'businessBlueprint',
             'websiteBuilder',
@@ -169,6 +171,77 @@ describe('moduleRegistry', () => {
             requiredService: 'agency',
         });
         expect(clientPortal?.requiredFeature).toBeUndefined();
+    });
+
+    it('exposes a canonical Agency Engine operating system manifest for dashboard and assistant orchestration', () => {
+        const manifest = getAgencyEngineOperatingSystemManifest();
+        const requiredSystems = [
+            'businessBlueprint',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'chatbot',
+            'media',
+            'finance',
+            'analytics',
+        ];
+
+        expect(manifest).toMatchObject({
+            id: 'agency-engine',
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+        });
+        expect(manifest.foundationalSystems).toEqual(expect.arrayContaining(requiredSystems));
+        expect(manifest.moduleIds).toEqual(expect.arrayContaining([
+            'agency-engine',
+            'agency-command-center',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-project-transfer',
+            'agency-service-plans',
+            'agency-billing',
+            'agency-reports',
+            'agency-white-label',
+            'agency-client-portal',
+        ]));
+        expect(manifest.serviceAccessModuleIds).toEqual(expect.arrayContaining(manifest.moduleIds));
+        expect(manifest.aiPoweredModuleIds).toEqual(expect.arrayContaining([
+            'agency-command-center',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-reports',
+        ]));
+        expect(manifest.globalAssistantModuleIds).toEqual(expect.arrayContaining([
+            'agency-command-center',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-project-transfer',
+            'agency-reports',
+        ]));
+
+        for (const moduleId of manifest.moduleIds) {
+            const item = getModuleRegistryItem(moduleId);
+            expect(item, moduleId).toBeDefined();
+            expect(item?.canonicalSystem, moduleId).toBe('agency');
+            expect(item?.requiredService, moduleId).toBe('agency');
+        }
+
+        for (const surface of manifest.operatingSurfaces) {
+            const item = getModuleRegistryItem(surface.moduleId);
+            if (surface.requiredPermission) {
+                expect(item?.requiredPermission, surface.moduleId).toBe(surface.requiredPermission);
+            }
+            expect(surface.requiredSystems.length, surface.moduleId).toBeGreaterThan(0);
+            if (surface.globalAssistantEnabled) {
+                expect(item?.editableBy, surface.moduleId).toContain('global-assistant');
+            }
+        }
     });
 
     it('declares Bio Page Engine ecosystem ownership and AI generation dependencies', () => {

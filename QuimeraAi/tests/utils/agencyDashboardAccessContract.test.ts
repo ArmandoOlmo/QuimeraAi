@@ -28,7 +28,11 @@ describe('Agency dashboard Service Access contract', () => {
 
     it('routes every internal Agency tab through the Service Access Engine', () => {
         expect(dashboard).toContain("import { useServiceAccess }");
+        expect(dashboard).toContain("import { getAgencyEngineOperatingSystemManifest }");
+        expect(dashboard).toContain('AGENCY_ENGINE_OPERATING_MODULE_IDS');
+        expect(dashboard).toContain('getAgencyEngineOperatingSystemManifest().moduleIds');
         expect(dashboard).toContain('export const AGENCY_TAB_ACCESS');
+        expect(dashboard).toContain('rawTabs.filter((tab) => AGENCY_ENGINE_OPERATING_MODULE_IDS.has(AGENCY_TAB_ACCESS[tab.id].moduleId))');
         expect(dashboard).toContain('serviceAccess.canAccessModule(access.moduleId');
         expect(dashboard).toContain("serviceId: 'agency'");
         expect(dashboard).toContain("featureKey: 'agencyModule'");

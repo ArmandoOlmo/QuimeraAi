@@ -10,6 +10,7 @@ import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboa
 import { useRouter } from '../../../hooks/useRouter';
 import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { ROUTES } from '../../../routes/config';
+import { getAgencyEngineOperatingSystemManifest } from '../../../registry/moduleRegistry';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
@@ -58,6 +59,8 @@ const HIDDEN_AGENCY_TAB_REASONS = new Set([
     'service_in_development',
     'module_disabled',
 ]);
+
+const AGENCY_ENGINE_OPERATING_MODULE_IDS = new Set(getAgencyEngineOperatingSystemManifest().moduleIds);
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -166,8 +169,9 @@ const AgencyDashboardMain: React.FC = () => {
     }, [rawTabs, serviceAccess]);
 
     const tabs = useMemo(() => {
-        if (serviceAccess.isLoading) return rawTabs;
-        return rawTabs.filter((tab) => !HIDDEN_AGENCY_TAB_REASONS.has(tabAccessDecisions[tab.id]?.reasonCode));
+        const operatingTabs = rawTabs.filter((tab) => AGENCY_ENGINE_OPERATING_MODULE_IDS.has(AGENCY_TAB_ACCESS[tab.id].moduleId));
+        if (serviceAccess.isLoading) return operatingTabs;
+        return operatingTabs.filter((tab) => !HIDDEN_AGENCY_TAB_REASONS.has(tabAccessDecisions[tab.id]?.reasonCode));
     }, [rawTabs, serviceAccess.isLoading, tabAccessDecisions]);
 
     const firstAllowedTab = useMemo(
