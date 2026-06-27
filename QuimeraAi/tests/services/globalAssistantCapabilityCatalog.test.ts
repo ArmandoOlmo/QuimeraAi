@@ -43,6 +43,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const searchAgencyClients = catalog.actions.find(action => action.actionType === 'search_agency_clients');
         const summarizeAgencyPerformance = catalog.actions.find(action => action.actionType === 'summarize_agency_performance');
         const createAgencyReport = catalog.actions.find(action => action.actionType === 'create_agency_report');
+        const createAgencyClient = catalog.actions.find(action => action.actionType === 'create_agency_client');
         const transferAgencyProject = catalog.actions.find(action => action.actionType === 'transfer_agency_project');
         const updateServiceAvailability = catalog.actions.find(action => action.actionType === 'update_service_availability');
         const updatePlan = catalog.actions.find(action => action.actionType === 'update_plan');
@@ -178,6 +179,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'search_agency_clients',
             'summarize_agency_performance',
             'create_agency_report',
+            'create_agency_client',
             'transfer_agency_project',
         ]));
         expect(agency?.serviceIds).toEqual(['agency']);
@@ -283,6 +285,20 @@ describe('globalAssistantCapabilityCatalog', () => {
             rollbackExecutable: true,
             requiredService: 'agency',
             requiredFeature: 'agencyModule',
+            requiredPermissions: ['assistant:agency:use', 'assistant:agency:reports'],
+        });
+        expect(createAgencyClient).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            mutatesData: true,
+            safetyLevel: 'high',
+            requiresConfirmation: true,
+            previewSupported: true,
+            rollbackSupported: false,
+            rollbackExecutable: false,
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+            requiredPermissions: ['assistant:agency:use', 'assistant:agency:settings'],
         });
         expect(transferAgencyProject).toMatchObject({
             executable: true,
@@ -295,6 +311,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             rollbackExecutable: false,
             requiredService: 'agency',
             requiredFeature: 'agencyModule',
+            requiredPermissions: ['assistant:agency:use', 'assistant:agency:projects'],
         });
         expect(deployChatbot).toMatchObject({
             executable: true,

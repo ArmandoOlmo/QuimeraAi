@@ -132,6 +132,8 @@ const addModulePermissions = (permissions: Set<string>, modules: AssistantModule
     modules.forEach(module => permissions.add(`assistant:${module}:use`));
 };
 
+const AGENCY_OPERATOR_ROLES = new Set(['agency_admin', 'agency_member']);
+
 export function resolveOperatingLayerTenantContext(input: ResolveOperatingLayerTenantContextInput): OperatingLayerTenantContext {
     const projectTenantId = asText(input.activeProject?.tenantId).trim() || null;
     const currentTenantId = asText(input.currentTenant?.id).trim() || null;
@@ -167,6 +169,8 @@ export function resolveOperatingLayerAccessContext(input: ResolveOperatingLayerA
     const mode = resolveOperatingLayerAssistantMode(input);
     const permissions = new Set<string>();
     const tenantPermissions = input.tenantPermissions || {};
+    const tenantRole = asText(input.tenantRole).trim();
+    const isAgencyOperator = AGENCY_OPERATOR_ROLES.has(tenantRole);
 
     if (mode === 'owner' || mode === 'super_admin' || mode === 'system') {
         addModulePermissions(permissions, ALL_ASSISTANT_MODULES);
@@ -202,6 +206,24 @@ export function resolveOperatingLayerAccessContext(input: ResolveOperatingLayerA
     }
     if (tenantPermissions.canManageSettings) {
         addModulePermissions(permissions, ['settings', 'tenant', 'user']);
+    }
+
+    if (isAgencyOperator && (
+        tenantPermissions.canManageProjects ||
+        tenantPermissions.canManageLeads ||
+        tenantPermissions.canManageCMS ||
+        tenantPermissions.canManageEcommerce ||
+        tenantPermissions.canManageRealEstate ||
+        tenantPermissions.canManageFiles ||
+        tenantPermissions.canViewAnalytics ||
+        tenantPermissions.canManageBilling ||
+        tenantPermissions.canManageSettings
+    )) {
+        addModulePermissions(permissions, ['agency']);
+        if (tenantPermissions.canManageProjects) permissions.add('assistant:agency:projects');
+        if (tenantPermissions.canViewAnalytics) permissions.add('assistant:agency:reports');
+        if (tenantPermissions.canManageBilling) permissions.add('assistant:agency:billing');
+        if (tenantPermissions.canManageSettings) permissions.add('assistant:agency:settings');
     }
 
     return { mode, userPermissions: Array.from(permissions).sort() };
@@ -328,6 +350,7 @@ const ACTION_COPY: Record<string, { es: string; en: string }> = {
     search_agency_clients: { es: 'buscar clientes de agencia', en: 'search agency clients' },
     summarize_agency_performance: { es: 'resumir performance de agencia', en: 'summarize agency performance' },
     create_agency_report: { es: 'crear reporte de agencia', en: 'create agency report' },
+    create_agency_client: { es: 'crear cliente de agencia', en: 'create agency client' },
     transfer_agency_project: { es: 'transferir proyecto a cliente de agencia', en: 'transfer project to agency client' },
     open_restaurants_dashboard: { es: 'abrir restaurantes', en: 'open restaurants' },
     open_realty_dashboard: { es: 'abrir Realty', en: 'open Realty' },

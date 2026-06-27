@@ -255,6 +255,13 @@ describe('globalAssistantIntentRouter', () => {
             requiresClarification: false,
         });
 
+        expect(routeAssistantIntent('Crea un nuevo cliente de agencia con plan Growth', agencyContext)).toMatchObject({
+            module: 'agency',
+            intent: 'create',
+            actionCandidates: ['create_agency_client'],
+            requiresClarification: false,
+        });
+
         expect(routeAssistantIntent('Transfiere proyecto al cliente de agencia para revision', agencyContext)).toMatchObject({
             module: 'agency',
             actionCandidates: ['transfer_agency_project'],

@@ -292,6 +292,7 @@ describe('globalAssistantCommandCenter', () => {
                 canManageProjects: true,
                 canManageLeads: true,
                 canManageEcommerce: false,
+                canViewAnalytics: true,
                 canManageBilling: false,
                 canManageSettings: false,
             },
@@ -304,10 +305,50 @@ describe('globalAssistantCommandCenter', () => {
             'assistant:crm:use',
             'assistant:emailMarketing:use',
             'assistant:appointments:use',
+            'assistant:agency:use',
+            'assistant:agency:projects',
+            'assistant:agency:reports',
         ]));
         expect(memberAccess.userPermissions).not.toContain('assistant:ecommerce:use');
         expect(memberAccess.userPermissions).not.toContain('assistant:admin:write');
         expect(memberAccess.userPermissions).not.toContain('assistant:finance:use');
+
+        const adminAccess = resolveOperatingLayerAccessContext({
+            userRole: 'member',
+            tenantRole: 'agency_admin',
+            tenantPermissions: {
+                canManageProjects: true,
+                canManageLeads: true,
+                canManageEcommerce: true,
+                canViewAnalytics: true,
+                canManageBilling: true,
+                canManageSettings: true,
+            },
+        });
+
+        expect(adminAccess.userPermissions).toEqual(expect.arrayContaining([
+            'assistant:agency:use',
+            'assistant:agency:projects',
+            'assistant:agency:reports',
+            'assistant:agency:billing',
+            'assistant:agency:settings',
+            'assistant:finance:use',
+            'assistant:settings:use',
+        ]));
+
+        const clientAccess = resolveOperatingLayerAccessContext({
+            userRole: 'member',
+            tenantRole: 'client',
+            tenantPermissions: {
+                canManageProjects: true,
+                canManageLeads: true,
+                canManageEcommerce: true,
+                canViewAnalytics: true,
+            },
+        });
+
+        expect(clientAccess.userPermissions).not.toContain('assistant:agency:use');
+        expect(clientAccess.userPermissions).not.toContain('assistant:agency:projects');
     });
 
     it('formats runtime plans as user-facing previews without internal reasoning fields', () => {

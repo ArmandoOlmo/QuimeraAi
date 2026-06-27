@@ -15,6 +15,7 @@ describe('Agency Project Transfer Global Assistant contract', () => {
         expect(registry).toContain("action('agency', 'transfer_agency_project'");
         expect(registry).toContain("requiredService: 'agency'");
         expect(registry).toContain("requiredFeature: 'agencyModule'");
+        expect(registry).toContain("requiredPermissions: ['assistant:agency:use', 'assistant:agency:projects']");
         expect(registry).toContain('rollbackSupported: false');
     });
 

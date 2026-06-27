@@ -295,6 +295,87 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(permission.reasons).toContain('Required feature is not enabled: ecommerceEnabled.');
     });
 
+    it('allows non-mutating Agency Engine actions for scoped agency assistant permissions', () => {
+        const definition = globalAssistantActionRegistry.get('open_agency_command_center');
+        expect(definition).toBeDefined();
+
+        expect(checkActionPermission({
+            definition: definition!,
+            context: resolveCurrentAssistantContext({
+                userId: 'user-1',
+                tenantId: 'agency-1',
+                role: 'member',
+                mode: 'user',
+                activeProject: null,
+                activeServices: ['agency'],
+                featureFlags: ['agencyModule'],
+            }),
+            userPermissions: ['assistant:agency:use'],
+            enabledServices: ['agency'],
+            enabledFeatures: ['agencyModule'],
+        })).toMatchObject({
+            allowed: true,
+            missingPermissions: [],
+            reasons: [],
+        });
+    });
+
+    it('allows scoped Agency Engine mutations without opening mutating actions globally', () => {
+        const createAgencyClient = globalAssistantActionRegistry.get('create_agency_client');
+        const createEmailCampaign = globalAssistantActionRegistry.get('create_email_campaign');
+        expect(createAgencyClient).toBeDefined();
+        expect(createEmailCampaign).toBeDefined();
+
+        const agencyUserContext = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'agency-1',
+            role: 'member',
+            mode: 'user',
+            activeProject: null,
+            activeServices: ['agency'],
+            featureFlags: ['agencyModule'],
+        });
+
+        expect(checkActionPermission({
+            definition: createAgencyClient!,
+            context: agencyUserContext,
+            userPermissions: ['assistant:agency:use', 'assistant:agency:settings'],
+            enabledServices: ['agency'],
+            enabledFeatures: ['agencyModule'],
+        })).toMatchObject({
+            allowed: true,
+            missingPermissions: [],
+            reasons: [],
+        });
+
+        expect(checkActionPermission({
+            definition: createAgencyClient!,
+            context: agencyUserContext,
+            userPermissions: ['assistant:agency:use'],
+            enabledServices: ['agency'],
+            enabledFeatures: ['agencyModule'],
+        })).toMatchObject({
+            allowed: false,
+            missingPermissions: ['assistant:agency:settings'],
+        });
+
+        expect(checkActionPermission({
+            definition: createEmailCampaign!,
+            context: resolveCurrentAssistantContext({
+                userId: 'user-1',
+                tenantId: 'tenant-1',
+                role: 'member',
+                mode: 'user',
+                activeProject,
+                activeServices: ['emailMarketing'],
+                featureFlags: ['emailMarketing'],
+            }),
+            userPermissions: ['assistant:emailMarketing:use'],
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        }).reasons).toContain('Mutating assistant actions require Owner or Super Admin mode.');
+    });
+
     it('blocks catalogued actions that are not wired to real execution handlers', () => {
         const definition = globalAssistantActionRegistry.get('send_email_campaign');
         expect(definition).toBeDefined();

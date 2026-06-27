@@ -883,6 +883,163 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
     },
 });
 
+const createAgencyClientProvisioningHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: (input) => {
+        const businessName = readString(input.businessName);
+        const contactEmail = readString(input.contactEmail);
+        const errors = [
+            ...(!businessName ? ['businessName is required before creating an agency client.'] : []),
+            ...(!contactEmail ? ['contactEmail is required before creating an agency client.'] : []),
+            ...(contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) ? ['contactEmail must be a valid email address.'] : []),
+        ];
+        return {
+            valid: errors.length === 0,
+            errors,
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const businessName = readString(input.businessName);
+        const contactEmail = readString(input.contactEmail)?.toLowerCase();
+        const contactPhone = readString(input.contactPhone);
+
+        if (!businessName) throw new Error('businessName is required before creating an agency client.');
+        if (!contactEmail) throw new Error('contactEmail is required before creating an agency client.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+            throw new Error('contactEmail must be a valid email address.');
+        }
+
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const requestedPlanId = readString(input.selectedPlanId);
+        const selectedPlan = requestedPlanId
+            ? snapshot.activePlans.find(plan => readString(plan.id) === requestedPlanId)
+            : snapshot.activePlans.find(plan => plan.is_default === true);
+
+        if (requestedPlanId && !selectedPlan) {
+            throw new Error('Agency client provisioning requires an active service plan owned by the active agency tenant.');
+        }
+
+        if (!selectedPlan) {
+            throw new Error('Agency client provisioning requires selectedPlanId or an active default agency service plan.');
+        }
+
+        const selectedPlanId = readString(selectedPlan.id);
+        const selectedPlanName = readDisplayText(selectedPlan.name);
+        const monthlyPrice = readNumber(input.monthlyPrice) ?? readNumber(selectedPlan.price) ?? 0;
+        const setupBilling = readBoolean(input.setupBilling) ?? monthlyPrice > 0;
+        const enabledFeatures = uniqueStringList(
+            asArray(input.enabledFeatures)
+                .map(readString)
+                .filter((value): value is string => Boolean(value)),
+        );
+        const initialUsers = asArray(input.initialUsers)
+            .map(item => {
+                const row = asRecord(item);
+                const email = readString(row.email)?.toLowerCase();
+                if (!email) return null;
+                const role = readString(row.role);
+                const safeRole = ['client', 'client_admin', 'client_user'].includes(role || '') ? role as string : 'client_admin';
+                return {
+                    email,
+                    name: readDisplayText(row.name) || businessName,
+                    role: safeRole,
+                };
+            })
+            .filter((item): item is { email: string; name: string; role: string } => Boolean(item));
+        const usersForInvite = initialUsers.length > 0
+            ? initialUsers
+            : [{ email: contactEmail, name: businessName, role: 'client_admin' }];
+        const provisionBody = {
+            action: 'autoProvision',
+            agencyTenantId,
+            businessName,
+            industry: readString(input.industry) || 'other',
+            contactEmail,
+            ...(contactPhone ? { contactPhone } : {}),
+            projectTemplate: readString(input.projectTemplate) || 'default',
+            enabledFeatures: enabledFeatures.length > 0 ? enabledFeatures : ['cms', 'leads'],
+            initialUsers: usersForInvite,
+            selectedPlanId,
+            selectedPlanName,
+            setupBilling,
+            monthlyPrice,
+            aiStudioMode: readString(input.aiStudioMode) || 'draft',
+            ...(readString(input.logoUrl) ? { logoUrl: readString(input.logoUrl) } : {}),
+            primaryColor: readString(input.primaryColor) || '#3B82F6',
+            secondaryColor: readString(input.secondaryColor) || '#10B981',
+            generateWebsite: readBoolean(input.generateWebsite) ?? true,
+            generateStorefront: readBoolean(input.generateStorefront) ?? false,
+            generateEcommerce: readBoolean(input.generateEcommerce) ?? false,
+            generateChatbot: readBoolean(input.generateChatbot) ?? true,
+            generateEmailFlows: readBoolean(input.generateEmailFlows) ?? false,
+            generateAppointments: readBoolean(input.generateAppointments) ?? false,
+            generateRestaurantModule: readBoolean(input.generateRestaurantModule) ?? false,
+            generateRealtyModule: readBoolean(input.generateRealtyModule) ?? false,
+            generateBioPage: readBoolean(input.generateBioPage) ?? false,
+            generateMediaAssets: readBoolean(input.generateMediaAssets) ?? true,
+            metadata: {
+                ...asRecord(input.metadata),
+                source: 'global-assistant',
+                actionId: action.id,
+                taskId: action.taskId || null,
+            },
+        };
+
+        const provisionResponse = asRecord(await invokeFunction(deps, 'onboarding-api', provisionBody));
+        if (provisionResponse.success !== true) {
+            throw new Error(readString(provisionResponse.message) || 'Agency client provisioning did not complete.');
+        }
+
+        const clientTenantId = readString(provisionResponse.clientTenantId);
+        const projectId = readString(provisionResponse.projectId);
+        const sourceTables = [
+            ...snapshot.sourceTables,
+            'onboarding-api',
+            'projects',
+            'tenant_modules',
+            'project_modules',
+            'tenant_invites',
+            'agency_activity',
+        ];
+
+        return {
+            afterSnapshot: {
+                agencyTenantId,
+                clientTenantId: clientTenantId || null,
+                projectId: projectId || null,
+                selectedPlan: {
+                    id: selectedPlanId,
+                    name: selectedPlanName || null,
+                    monthlyPrice,
+                    setupBilling,
+                },
+                provisioning: provisionResponse,
+                sourceTables,
+            },
+            diff: {
+                created: [
+                    ...(clientTenantId ? [`tenant.${clientTenantId}`] : ['tenant.$pending']),
+                    ...(projectId ? [`project.${projectId}`] : ['project.$pending']),
+                    'agency_clients.relationship',
+                    'businessBlueprint.draft',
+                    'moduleActivations.prepared',
+                    'agency_activity.client_created',
+                ],
+                clientTenantId: clientTenantId || null,
+                projectId: projectId || null,
+                selectedPlanId,
+                mutatesData: true,
+                reviewRequired: true,
+                businessBlueprintCreated: Boolean(asRecord(provisionResponse.provisioningSummary).businessBlueprintCreated),
+                moduleActivationsPrepared: Boolean(asRecord(provisionResponse.provisioningSummary).moduleActivationsPrepared),
+                billingMode: readString(asRecord(provisionResponse.provisioningSummary).billingMode) || (setupBilling ? 'agency_managed' : 'included_in_parent'),
+                invitesSent: readNumber(provisionResponse.invitesSent) ?? usersForInvite.length,
+                sourceTables,
+            },
+        };
+    },
+});
+
 const createAgencyProjectTransferHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: (input) => {
         const projectId = readString(input.projectId) || readString(input.sourceProjectId);
@@ -8703,6 +8860,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     search_agency_clients: createSearchAgencyClientsHandler,
     summarize_agency_performance: createAgencyPerformanceSummaryHandler,
     create_agency_report: createAgencyReportHandler,
+    create_agency_client: createAgencyClientProvisioningHandler,
     transfer_agency_project: createAgencyProjectTransferHandler,
     open_analytics_dashboard: () => createNavigationHandler('superadmin', { label: 'Open platform analytics.', adminView: 'analytics' }),
     open_super_admin: () => createNavigationHandler('superadmin', { label: 'Open Super Admin.' }),

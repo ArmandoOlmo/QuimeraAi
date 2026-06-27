@@ -1153,6 +1153,57 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'create_agency_client') {
+        const businessName = compactRequestTitle(action.input.businessName, 'Agency client');
+        const selectedPlanId = asText(action.input.selectedPlanId) || 'default_agency_service_plan';
+        const setupBilling = action.input.setupBilling === true || Boolean(asText(action.input.monthlyPrice));
+
+        return {
+            ...preview,
+            before: {
+                clientExists: false,
+                selectedPlanId,
+            },
+            after: {
+                operation: 'agency_client_auto_provision',
+                functionName: 'onboarding-api',
+                businessName,
+                selectedPlanId,
+                tenantType: 'agency_client',
+                projectStatus: 'Draft',
+                businessBlueprintStatus: 'needs_review',
+                setupBilling,
+                noAutoPublish: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                created: [
+                    'tenants.$pending',
+                    'projects.$pending',
+                    'agency_clients.$pending',
+                    'tenant_modules.$pending',
+                    'project_modules.$pending',
+                    'tenant_invites.$pending',
+                    'agency_activity.$pending',
+                ],
+                createdLabel: 'agency client workspace draft',
+                selectedPlanId,
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'delete_created_client_workspace' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'The client workspace and initial project are created as draft/needs-review assets.',
+                'BusinessBlueprint and module activations are prepared, but public publishing and live runtime activation remain off.',
+                'Billing is stored as agency-managed pending setup or included in parent; no Stripe checkout is created by this action.',
+                'Rollback is not automatic because provisioning spans tenant, project, module activation, invite, relationship, and activity records.',
+            ],
+        };
+    }
+
     const draft = DRAFT_PREVIEW_BY_ACTION[action.actionType];
     if (!draft) return preview;
 

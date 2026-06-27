@@ -18,6 +18,20 @@ export const isAdminRole = (role?: string | null): boolean =>
 export const canUseAdminMode = (context: Pick<AssistantContextSnapshot, 'actor'>): boolean =>
     isAdminMode(context.actor.mode) || context.actor.isOwner === true || context.actor.isSuperAdmin === true || isAdminRole(context.actor.role);
 
+const MODULE_USE_PERMISSION_PATTERN = /^assistant:[^:]+:use$/;
+
+const hasScopedAgencyMutationPermission = (
+    definition: AssistantActionDefinition,
+    userPermissions: Set<string>,
+): boolean => {
+    if (definition.module !== 'agency') return false;
+    return definition.requiredPermissions.some(permission =>
+        permission.startsWith('assistant:agency:')
+        && !MODULE_USE_PERMISSION_PATTERN.test(permission)
+        && userPermissions.has(permission),
+    );
+};
+
 export interface ActionPermissionInput {
     definition: AssistantActionDefinition;
     context: AssistantContextSnapshot;
@@ -42,7 +56,7 @@ export function checkActionPermission(input: ActionPermissionInput): AssistantPe
         reasons.push('User mode cannot execute admin actions.');
     }
 
-    if (definition.mutatesData && !isAdminMode(context.actor.mode)) {
+    if (definition.mutatesData && !isAdminMode(context.actor.mode) && !hasScopedAgencyMutationPermission(definition, userPermissions)) {
         reasons.push('Mutating assistant actions require Owner or Super Admin mode.');
     }
 

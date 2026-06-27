@@ -186,6 +186,23 @@ const buildAgencyReportAction = (input: Row): AssistantAction => ({
     updatedAt: '2026-06-26T13:00:00.000Z',
 });
 
+const buildAgencyClientProvisioningAction = (input: Row): AssistantAction => ({
+    id: 'action-create-agency-client',
+    taskId: 'task-agency-client',
+    actionType: 'create_agency_client',
+    module: 'agency',
+    target: { module: 'agency' },
+    input,
+    projectId: null,
+    tenantId: 'agency-1',
+    userId: 'user-1',
+    mode: 'owner',
+    requiresConfirmation: true,
+    status: 'confirmed',
+    createdAt: '2026-06-26T13:00:00.000Z',
+    updatedAt: '2026-06-26T13:00:00.000Z',
+});
+
 const buildAgencyProjectTransferAction = (input: Row): AssistantAction => ({
     id: 'action-transfer-agency-project',
     taskId: 'task-agency-transfer',
@@ -449,6 +466,171 @@ describe('Global Assistant Agency Client 360 handler', () => {
             action: buildAgencyReportAction(input),
             context,
         })).rejects.toThrow('Agency reports can only include clients managed by the active agency tenant.');
+    });
+
+    it('creates an agency client through onboarding-api with a canonical service plan', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_service_plans = [{
+            id: 'plan-growth',
+            tenant_id: 'agency-1',
+            name: 'Growth Ops',
+            price: 240,
+            base_cost: 29,
+            is_active: true,
+            is_default: true,
+            is_archived: false,
+            limits: { maxProjects: 5, maxUsers: 3, maxAiCredits: 1000 },
+        }];
+        fakeSupabase.functionResponses['onboarding-api'] = {
+            data: {
+                success: true,
+                agencyTenantId: 'agency-1',
+                clientTenantId: 'client-new-1',
+                projectId: 'project-new-1',
+                selectedPlanId: 'plan-growth',
+                selectedPlanName: 'Growth Ops',
+                limits: { maxProjects: 5, maxUsers: 3, maxAiCredits: 1000 },
+                modules: ['website-builder', 'crm-leads', 'chatbot-engine', 'media-assets', 'finance'],
+                invitesSent: 1,
+                provisioningSummary: {
+                    tenantCreated: true,
+                    projectCreated: true,
+                    businessBlueprintCreated: true,
+                    moduleActivationsPrepared: true,
+                    billingMode: 'agency_managed',
+                    activityLogged: true,
+                },
+            },
+            error: null,
+        };
+
+        const definition = registry.get('create_agency_client');
+        const input = {
+            tenantId: 'agency-1',
+            businessName: 'Client One Studio',
+            industry: 'professional_services',
+            contactEmail: 'owner@clientone.test',
+            contactPhone: '787-555-0101',
+            selectedPlanId: 'plan-growth',
+            enabledFeatures: ['cms', 'leads', 'chatbot', 'finance'],
+            generateWebsite: true,
+            generateChatbot: true,
+            generateMediaAssets: true,
+        };
+
+        const result = await definition!.execute!(input, {
+            action: buildAgencyClientProvisioningAction(input),
+            context,
+        }) as Row;
+
+        expect(fakeSupabase.functionInvocations).toHaveLength(1);
+        expect(fakeSupabase.functionInvocations[0]).toMatchObject({
+            functionName: 'onboarding-api',
+            options: {
+                body: {
+                    action: 'autoProvision',
+                    agencyTenantId: 'agency-1',
+                    businessName: 'Client One Studio',
+                    industry: 'professional_services',
+                    contactEmail: 'owner@clientone.test',
+                    contactPhone: '787-555-0101',
+                    selectedPlanId: 'plan-growth',
+                    selectedPlanName: 'Growth Ops',
+                    setupBilling: true,
+                    monthlyPrice: 240,
+                    enabledFeatures: ['cms', 'leads', 'chatbot', 'finance'],
+                    initialUsers: [{
+                        email: 'owner@clientone.test',
+                        name: 'Client One Studio',
+                        role: 'client_admin',
+                    }],
+                    generateWebsite: true,
+                    generateChatbot: true,
+                    generateMediaAssets: true,
+                    metadata: {
+                        source: 'global-assistant',
+                        actionId: 'action-create-agency-client',
+                        taskId: 'task-agency-client',
+                    },
+                },
+            },
+        });
+        expect(result.afterSnapshot).toMatchObject({
+            agencyTenantId: 'agency-1',
+            clientTenantId: 'client-new-1',
+            projectId: 'project-new-1',
+            selectedPlan: {
+                id: 'plan-growth',
+                name: 'Growth Ops',
+                monthlyPrice: 240,
+                setupBilling: true,
+            },
+            provisioning: {
+                success: true,
+                selectedPlanId: 'plan-growth',
+                provisioningSummary: {
+                    businessBlueprintCreated: true,
+                    moduleActivationsPrepared: true,
+                    billingMode: 'agency_managed',
+                },
+            },
+        });
+        expect(result.diff).toMatchObject({
+            clientTenantId: 'client-new-1',
+            projectId: 'project-new-1',
+            selectedPlanId: 'plan-growth',
+            mutatesData: true,
+            reviewRequired: true,
+            businessBlueprintCreated: true,
+            moduleActivationsPrepared: true,
+            billingMode: 'agency_managed',
+            invitesSent: 1,
+        });
+        expect(result.diff.created).toEqual(expect.arrayContaining([
+            'tenant.client-new-1',
+            'project.project-new-1',
+            'agency_clients.relationship',
+            'businessBlueprint.draft',
+            'moduleActivations.prepared',
+            'agency_activity.client_created',
+        ]));
+        expect(result.diff.sourceTables).toEqual(expect.arrayContaining([
+            'agency_clients',
+            'agency_service_plans',
+            'tenants',
+            'onboarding-api',
+            'projects',
+            'tenant_modules',
+            'project_modules',
+            'tenant_invites',
+            'agency_activity',
+        ]));
+    });
+
+    it('blocks agency client provisioning when selectedPlanId is not an active plan for the agency', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_service_plans = [{
+            id: 'plan-growth',
+            tenant_id: 'agency-1',
+            name: 'Growth Ops',
+            price: 240,
+            is_active: true,
+            is_archived: false,
+        }];
+
+        const definition = registry.get('create_agency_client');
+        const input = {
+            tenantId: 'agency-1',
+            businessName: 'External Plan Client',
+            contactEmail: 'owner@external.test',
+            selectedPlanId: 'plan-other-agency',
+        };
+
+        await expect(definition!.execute!(input, {
+            action: buildAgencyClientProvisioningAction(input),
+            context,
+        })).rejects.toThrow('Agency client provisioning requires an active service plan owned by the active agency tenant.');
+        expect(fakeSupabase.functionInvocations).toEqual([]);
     });
 
     it('transfers an agency project through onboarding-api for a managed client', async () => {
