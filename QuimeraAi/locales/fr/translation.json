@@ -390,7 +390,9 @@
         "openBilling": "Ouvrir la facturation",
         "generateReport": "Generer le rapport",
         "generateAiReport": "Generer un rapport IA",
-        "aiReportPrompt": "Creez un rapport d'agence pour {{clientName}} avec le contexte Client 360. Concentrez-vous sur l'utilisation, la facturation, l'activite, les blocages et les prochaines etapes.",
+        "aiReportPrompt": "Creez un rapport d'agence pour {{clientName}} avec le contexte Client 360 et partagez-le dans le portail client. Concentrez-vous sur l'utilisation, la facturation, l'activite, les blocages et les prochaines etapes.",
+        "portalReportSent": "Partage dans le portail client",
+        "portalReportPublished": "Publie dans le portail client",
         "projectsAction": "Projets",
         "export": "Exporter",
         "activity": "Activite recente",
@@ -429,6 +431,10 @@
         "moduleFinanceDesc": "Billing, factures, statut des paiements, revenue et contexte comptable.",
         "moduleAnalytics": "Analytics",
         "moduleAnalyticsDesc": "Performance, utilisation, rapports, recommandations et metriques portfolio."
+      },
+      "activityFeed": {
+        "portalSent": "Partage dans le portail client",
+        "portalPublished": "Publie dans le portail client"
       },
       "reports": {
         "publishToPortal": "Partager dans le portail client",

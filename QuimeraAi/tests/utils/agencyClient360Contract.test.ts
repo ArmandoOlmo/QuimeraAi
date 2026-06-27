@@ -16,6 +16,10 @@ function getNestedValue(source: Record<string, unknown>, keyPath: string): unkno
 describe('Agency Client 360 contract', () => {
     const clientList = read('components/dashboard/agency/ClientListTable.tsx');
     const client360Panel = read('components/dashboard/agency/Client360Panel.tsx');
+    const activityDisplay = read('components/dashboard/agency/agencyActivityDisplay.ts');
+    const activityFeed = read('components/dashboard/agency/ClientActivityFeed.tsx');
+    const globalAssistant = read('components/ui/GlobalAiAssistant.tsx');
+    const executionEngine = read('services/globalAssistant/globalAssistantExecutionEngine.ts');
     const entryBridge = read('services/globalAssistant/globalAssistantEntryBridge.ts');
     const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
     const registry = read('registry/moduleRegistry.ts');
@@ -74,6 +78,8 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain("activeModule: 'agency'");
         expect(client360Panel).toContain("quickActionId: 'create_agency_report'");
         expect(client360Panel).toContain("quickActionCategory: 'analyze'");
+        expect(client360Panel).toContain('publishToClientPortal: true');
+        expect(client360Panel).toContain("clientPortalDelivery: 'single_client'");
         expect(client360Panel).toContain("activeEntityType: 'agency_client'");
         expect(client360Panel).toContain('clientTenantId: client.id');
         expect(client360Panel).toContain('agencyOperatingSystemAvailable: Boolean(agencyOperatingSystem)');
@@ -82,6 +88,31 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain('pendingModuleIds: pendingModuleSignals.map(module => module.id)');
         expect(client360Panel).toContain("'dashboard.agency.client360.generateAiReport'");
         expect(client360Panel).toContain("'dashboard.agency.client360.aiReportPrompt'");
+
+        expect(globalAssistant).toContain('const activeEntityType = typeof entryMetadata.activeEntityType');
+        expect(globalAssistant).toContain('activeEntityType,');
+        expect(globalAssistant).toContain('activeEntityId,');
+        expect(executionEngine).toContain("definition.actionType === 'create_agency_report'");
+        expect(executionEngine).toContain('isAgencyClientEntityType(context.activeEntityType)');
+        expect(executionEngine).toContain('actionInput.clientTenantId = clientTenantId');
+        expect(executionEngine).toContain('actionInput.publishToClientPortal = publishToClientPortal');
+    });
+
+    it('surfaces Client Portal report delivery state in Client 360 and Command Center timelines', () => {
+        expect(activityDisplay).toContain('getPortalReportDeliveryStatus');
+        expect(activityDisplay).toContain("activity.type !== 'report_generated'");
+        expect(activityDisplay).toContain('metadata.clientPortalVisible');
+        expect(activityDisplay).toContain('metadata.portalPublicationStatus');
+        expect(activityDisplay).toContain("status === 'published' || status === 'sent'");
+
+        expect(client360Panel).toContain('getPortalReportDeliveryStatus(activity)');
+        expect(client360Panel).toContain("dashboard.agency.client360.portalReportSent");
+        expect(client360Panel).toContain("dashboard.agency.client360.portalReportPublished");
+
+        expect(activityFeed).toContain('getPortalReportDeliveryStatus(activity)');
+        expect(activityFeed).toContain("dashboard.agency.activityFeed.portalSent");
+        expect(activityFeed).toContain("dashboard.agency.activityFeed.portalPublished");
+        expect(docs).toContain('Agency Command Center and Client 360 consume the same `agency_activity.metadata.clientPortalVisible`');
     });
 
     it('feeds Agency Operating System module context into Global Assistant client snapshots', () => {

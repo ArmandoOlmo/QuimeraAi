@@ -3405,7 +3405,9 @@
         "openBilling": "Open billing",
         "generateReport": "Generate report",
         "generateAiReport": "Generate AI report",
-        "aiReportPrompt": "Create an agency report for {{clientName}} using Client 360 context. Focus on usage, billing, activity, blockers, and next steps.",
+        "aiReportPrompt": "Create an agency report for {{clientName}} using Client 360 context and share it to the Client Portal. Focus on usage, billing, activity, blockers, and next steps.",
+        "portalReportSent": "Shared in Client Portal",
+        "portalReportPublished": "Published in Client Portal",
         "projectsAction": "Projects",
         "export": "Export",
         "activity": "Recent activity",
@@ -3444,6 +3446,10 @@
         "moduleFinanceDesc": "Billing, invoices, payment status, revenue, and accounting context.",
         "moduleAnalytics": "Analytics",
         "moduleAnalyticsDesc": "Performance, usage, reports, recommendations, and portfolio metrics."
+      },
+      "activityFeed": {
+        "portalSent": "Shared in Client Portal",
+        "portalPublished": "Published in Client Portal"
       },
       "billingPage": {
         "title": "Billing Settings",

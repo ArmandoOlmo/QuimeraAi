@@ -3396,7 +3396,9 @@
         "openBilling": "Abrir facturación",
         "generateReport": "Generar reporte",
         "generateAiReport": "Generar reporte AI",
-        "aiReportPrompt": "Crea un reporte de agencia para {{clientName}} usando el contexto de Client 360. Enfócate en uso, facturación, actividad, bloqueos y próximos pasos.",
+        "aiReportPrompt": "Crea un reporte de agencia para {{clientName}} usando el contexto de Client 360 y compártelo en el Client Portal. Enfócate en uso, facturación, actividad, bloqueos y próximos pasos.",
+        "portalReportSent": "Compartido en Client Portal",
+        "portalReportPublished": "Publicado en Client Portal",
         "projectsAction": "Proyectos",
         "export": "Exportar",
         "activity": "Actividad reciente",
@@ -3435,6 +3437,10 @@
         "moduleFinanceDesc": "Billing, facturas, estado de pagos, revenue y contexto contable.",
         "moduleAnalytics": "Analytics",
         "moduleAnalyticsDesc": "Performance, uso, reportes, recomendaciones y métricas de portafolio."
+      },
+      "activityFeed": {
+        "portalSent": "Compartido en Client Portal",
+        "portalPublished": "Publicado en Client Portal"
       },
       "billingPage": {
         "title": "Configuración de Facturación",

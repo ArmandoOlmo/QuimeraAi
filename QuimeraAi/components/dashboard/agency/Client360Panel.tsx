@@ -10,6 +10,7 @@ import {
     Clock,
     CreditCard,
     Download,
+    FileCheck2,
     FileText,
     FolderOpen,
     Globe,
@@ -43,6 +44,7 @@ import {
     createGlobalAssistantEntryPayload,
     dispatchGlobalAssistantEntryRequest,
 } from '../../../services/globalAssistant/globalAssistantEntryBridge';
+import { getPortalReportDeliveryStatus } from './agencyActivityDisplay';
 
 interface Client360PanelProps {
     client: Tenant | null;
@@ -289,7 +291,7 @@ export function Client360Panel({
         const clientName = client.companyName || client.name;
         const prompt = t(
             'dashboard.agency.client360.aiReportPrompt',
-            'Create an agency report for {{clientName}} using Client 360 context. Focus on usage, billing, activity, blockers, and next steps.',
+            'Create an agency report for {{clientName}} using Client 360 context and share it to the Client Portal. Focus on usage, billing, activity, blockers, and next steps.',
             { clientName },
         );
 
@@ -305,6 +307,8 @@ export function Client360Panel({
                 activeModule: 'agency',
                 quickActionId: 'create_agency_report',
                 quickActionCategory: 'analyze',
+                publishToClientPortal: true,
+                clientPortalDelivery: 'single_client',
                 activeEntityType: 'agency_client',
                 activeEntityId: client.id,
                 activeEntityName: clientName,
@@ -570,12 +574,30 @@ export function Client360Panel({
                         <AgencyPanel title={t('dashboard.agency.client360.activity', 'Recent activity')} icon={Activity}>
                             {clientActivities.length > 0 ? (
                                 <div className="space-y-2">
-                                    {clientActivities.map((activity) => (
-                                        <div key={activity.id} className="rounded-lg border border-q-border bg-q-surface p-3">
-                                            <p className="text-sm text-foreground">{activity.description}</p>
-                                            <p className="mt-1 text-xs text-q-text-muted">{formatTimeAgo(activity.timestamp)}</p>
-                                        </div>
-                                    ))}
+                                    {clientActivities.map((activity) => {
+                                        const portalReportStatus = getPortalReportDeliveryStatus(activity);
+
+                                        return (
+                                            <div key={activity.id} className="rounded-lg border border-q-border bg-q-surface p-3">
+                                                <p className="text-sm text-foreground">{activity.description}</p>
+                                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                    <span className="text-xs text-q-text-muted">{formatTimeAgo(activity.timestamp)}</span>
+                                                    {portalReportStatus && (
+                                                        <StatusBadge
+                                                            size="sm"
+                                                            variant={portalReportStatus === 'published' ? 'success' : 'info'}
+                                                            className="gap-1"
+                                                        >
+                                                            <FileCheck2 className="h-3.5 w-3.5" />
+                                                            {portalReportStatus === 'published'
+                                                                ? t('dashboard.agency.client360.portalReportPublished', 'Published in Client Portal')
+                                                                : t('dashboard.agency.client360.portalReportSent', 'Shared in Client Portal')}
+                                                        </StatusBadge>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <p className="text-sm text-q-text-muted">

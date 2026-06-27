@@ -123,6 +123,10 @@ Report snapshots include Agency OS module readiness from `agency_clients.metadat
 
 Single-client reports can be shared into the white-label Client Portal by saving `agency_reports.status = 'sent'`. Multi-client reports remain internal drafts. Both `ReportingService.generateAgencyReport` and Global Assistant `create_agency_report` stamp `data.clientPortal`, activity metadata, and response/diff status so `PortalReportsPanel` only reads client-facing report rows already allowed by RLS (`status in ('sent', 'published')`); clients do not write report rows from the portal.
 
+Agency Command Center and Client 360 consume the same `agency_activity.metadata.clientPortalVisible` and `portalPublicationStatus` fields to label report delivery as shared or published in the Client Portal, keeping agency operators, client timelines, and portal inbox state aligned.
+
+Client 360 report quick actions also pass `activeEntityType = agency_client`, `clientTenantId`, and `publishToClientPortal = true` into the Global Assistant Operating Layer. `buildExecutionPlan` pre-fills `create_agency_report` inputs from that context, so single-client Client 360 reports can be previewed, approved, saved, and delivered to the Client Portal through the same canonical action handler instead of relying on prompt text alone.
+
 Store order reads intentionally use `select('*')` and normalize totals from `total_amount`, `total`, `amount_total`, `pricing`, and `data` fallbacks. This avoids breaking live Supabase environments where newer numeric columns may not be exposed through the current PostgREST schema cache.
 
 ## Phase Roadmap

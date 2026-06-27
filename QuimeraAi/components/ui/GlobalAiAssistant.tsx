@@ -1415,6 +1415,8 @@ const GlobalAiAssistant: React.FC = () => {
             ? entryMetadata.routeModule
             : resolveModuleFromRoute(path);
         const activeModule = (entryActiveModule || (routeModule && routeModule !== 'project' ? routeModule : null)) as AssistantContextSnapshot['activeModule'];
+        const activeEntityType = typeof entryMetadata.activeEntityType === 'string' ? entryMetadata.activeEntityType : null;
+        const activeEntityId = typeof entryMetadata.activeEntityId === 'string' ? entryMetadata.activeEntityId : null;
         const userId = user?.id || userDoc?.id || null;
 
         return resolveCurrentAssistantContext({
@@ -1437,6 +1439,8 @@ const GlobalAiAssistant: React.FC = () => {
             } : null,
             activeRoute: path,
             activeModule,
+            activeEntityType,
+            activeEntityId,
             currentSurface: entry?.surface || 'authenticated_app',
             locale: i18n.language,
             snapshot: {

@@ -273,6 +273,61 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(plan.approvals[0].actionId).toBe(plan.actions[0].id);
     });
 
+    it('prefills Client 360 agency report actions with client and portal delivery context', () => {
+        const definition = globalAssistantActionRegistry.get('create_agency_report');
+        expect(definition).toBeDefined();
+
+        const context = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'agency-tenant-1',
+            role: 'owner',
+            mode: 'owner',
+            activeServices: ['agency'],
+            featureFlags: ['agencyModule'],
+            activeRoute: '/dashboard/agency',
+            activeModule: 'agency',
+            activeEntityType: 'agency_client',
+            activeEntityId: 'client-tenant-1',
+            snapshot: {
+                entryMetadata: {
+                    quickActionId: 'create_agency_report',
+                    activeEntityType: 'agency_client',
+                    activeEntityId: 'client-tenant-1',
+                    clientTenantId: 'client-tenant-1',
+                    publishToClientPortal: true,
+                },
+            },
+        });
+
+        const plan = buildExecutionPlan({
+            context,
+            intent: {
+                intent: 'report',
+                module: 'agency',
+                confidence: 0.9,
+                projectResolution: {
+                    projectId: null,
+                    requiresProjectSwitch: false,
+                    ambiguous: false,
+                },
+                actionCandidates: ['create_agency_report'],
+                requiresClarification: false,
+                safetyLevel: 'medium',
+            },
+            actionDefinitions: [definition!],
+            request: 'Create an agency report for this Client 360 account and share it to the Client Portal.',
+            userPermissions: ['assistant:agency:use', 'assistant:agency:reports'],
+            enabledServices: ['agency'],
+            enabledFeatures: ['agencyModule'],
+        });
+
+        expect(plan.blockers).toEqual([]);
+        expect(plan.actions[0].input).toMatchObject({
+            clientTenantId: 'client-tenant-1',
+            publishToClientPortal: true,
+        });
+    });
+
     it('blocks actions when required services or feature flags are unavailable', () => {
         const definition = globalAssistantActionRegistry.get('update_price');
         expect(definition).toBeDefined();

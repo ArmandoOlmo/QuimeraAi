@@ -13,6 +13,9 @@ describe('Portal client reports contract', () => {
     const exportsFile = read('components/portal/index.ts');
     const reportingService = read('services/reportingService.ts');
     const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
+    const activityDisplay = read('components/dashboard/agency/agencyActivityDisplay.ts');
+    const activityFeed = read('components/dashboard/agency/ClientActivityFeed.tsx');
+    const client360Panel = read('components/dashboard/agency/Client360Panel.tsx');
     const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
     const actionRegistry = read('services/globalAssistant/globalAssistantActionRegistry.ts');
     const migration = read('supabase/migrations/20260627071535_canonical_agency_engine.sql');
@@ -70,6 +73,16 @@ describe('Portal client reports contract', () => {
 
         expect(docs).toContain("agency_reports.status = 'sent'");
         expect(docs).toContain('Multi-client reports remain internal drafts');
+    });
+
+    it('keeps agency-side timelines aligned with portal report delivery metadata', () => {
+        expect(activityDisplay).toContain('metadata.clientPortalVisible');
+        expect(activityDisplay).toContain('metadata.portalPublicationStatus');
+        expect(activityDisplay).toContain("activity.type !== 'report_generated'");
+        expect(activityFeed).toContain('getPortalReportDeliveryStatus(activity)');
+        expect(client360Panel).toContain('getPortalReportDeliveryStatus(activity)');
+        expect(client360Panel).toContain('publishToClientPortal: true');
+        expect(docs).toContain('label report delivery as shared or published in the Client Portal');
     });
 
     it('replaces portal placeholders with RLS-backed activity and report metrics', () => {

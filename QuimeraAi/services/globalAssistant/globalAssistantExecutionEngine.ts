@@ -145,6 +145,32 @@ const readSnapshotText = (context: AssistantContextSnapshot, keys: string[]): st
     return undefined;
 };
 
+const readRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+
+const readEntryMetadataText = (context: AssistantContextSnapshot, keys: string[]): string | undefined => {
+    const entryMetadata = readRecord(context.snapshot?.entryMetadata);
+    for (const key of keys) {
+        const value = entryMetadata[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return undefined;
+};
+
+const readEntryMetadataBoolean = (context: AssistantContextSnapshot, keys: string[]): boolean | undefined => {
+    const entryMetadata = readRecord(context.snapshot?.entryMetadata);
+    for (const key of keys) {
+        const value = entryMetadata[key];
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === 'true') return true;
+            if (normalized === 'false') return false;
+        }
+    }
+    return undefined;
+};
+
 const isMediaAssetEntityType = (entityType: string | null | undefined): boolean => {
     const normalized = normalizeContextToken(entityType);
     return [
@@ -203,6 +229,36 @@ const isRestaurantMenuItemEntityType = (entityType: string | null | undefined): 
         'restaurant_dish',
         'dish',
     ].includes(normalized);
+};
+
+const isAgencyClientEntityType = (entityType: string | null | undefined): boolean => {
+    const normalized = normalizeContextToken(entityType);
+    return [
+        'agency_client',
+        'agency_managed_client',
+        'managed_client',
+        'client_360',
+        'client360',
+    ].includes(normalized);
+};
+
+const inferClientPortalPublishFromRequest = (request: string): boolean | undefined => {
+    const normalized = normalizeContextToken(request);
+    const mentionsPortal = normalized.includes('client_portal') || normalized.includes('portal_cliente');
+    const publishIntent = [
+        'share',
+        'shared',
+        'publish',
+        'published',
+        'send',
+        'sent',
+        'compart',
+        'public',
+        'enviar',
+        'envia',
+    ].some(term => normalized.includes(term));
+
+    return mentionsPortal && publishIntent ? true : undefined;
 };
 
 const inferRestaurantMenuAvailabilityFromRequest = (request: string): boolean | undefined => {
@@ -479,6 +535,27 @@ const buildActionInput = (
 
     if (definition.actionType === 'create_showing_request_flow') {
         actionInput.flow = inferRealtyShowingFlowFromRequest(request);
+    }
+
+    if (definition.actionType === 'create_agency_report') {
+        const activeClientId = isAgencyClientEntityType(context.activeEntityType)
+            ? context.activeEntityId
+            : null;
+        const entryEntityType = readEntryMetadataText(context, ['activeEntityType']);
+        const entryClientId = isAgencyClientEntityType(entryEntityType)
+            ? readEntryMetadataText(context, ['activeEntityId'])
+            : null;
+        const clientTenantId = activeClientId
+            || entryClientId
+            || readSnapshotText(context, ['clientTenantId', 'activeClientTenantId', 'selectedClientTenantId'])
+            || readEntryMetadataText(context, ['clientTenantId']);
+        if (clientTenantId) actionInput.clientTenantId = clientTenantId;
+
+        const publishToClientPortal = readEntryMetadataBoolean(context, ['publishToClientPortal'])
+            ?? inferClientPortalPublishFromRequest(request);
+        if (publishToClientPortal !== undefined) {
+            actionInput.publishToClientPortal = publishToClientPortal;
+        }
     }
 
     if (definition.module === 'admin') {
