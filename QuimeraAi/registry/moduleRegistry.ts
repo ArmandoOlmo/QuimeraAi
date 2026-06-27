@@ -34,6 +34,7 @@ export type ModuleOwnerSystem =
 export type CanonicalSystemId =
     | 'businessBlueprint'
     | 'websiteBuilder'
+    | 'storefrontBuilder'
     | 'designSystem'
     | 'ecommerce'
     | 'crm'
@@ -124,6 +125,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         readsFrom: [
             'businessBlueprint',
             'websiteBuilder',
+            'storefrontBuilder',
             'ecommerce',
             'crm',
             'emailMarketing',
@@ -143,6 +145,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
             'finance',
             'businessBlueprint',
             'websiteBuilder',
+            'storefrontBuilder',
             'ecommerce',
             'chatbot',
             'appointments',
@@ -164,7 +167,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canManageSettings',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'global-assistant'],
-        readsFrom: ['businessBlueprint', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
+        readsFrom: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
         writesTo: ['analytics', 'finance', 'crm', 'emailMarketing'],
     },
     {
@@ -180,7 +183,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'ai-studio'],
         readsFrom: ['businessBlueprint'],
-        writesTo: ['businessBlueprint', 'websiteBuilder', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics', 'finance'],
+        writesTo: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics', 'finance'],
     },
     {
         id: 'agency-project-transfer',
@@ -194,8 +197,8 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canManageProjects',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'website-builder'],
-        readsFrom: ['websiteBuilder', 'businessBlueprint', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics'],
-        writesTo: ['websiteBuilder', 'businessBlueprint', 'analytics'],
+        readsFrom: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics'],
+        writesTo: ['websiteBuilder', 'storefrontBuilder', 'businessBlueprint', 'analytics'],
     },
     {
         id: 'agency-service-plans',
@@ -238,7 +241,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canViewAnalytics',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'global-assistant'],
-        readsFrom: ['analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+        readsFrom: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
         writesTo: ['analytics'],
     },
     {
@@ -253,8 +256,8 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canManageSettings',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'website-builder'],
-        readsFrom: ['websiteBuilder', 'designSystem'],
-        writesTo: ['websiteBuilder'],
+        readsFrom: ['websiteBuilder', 'storefrontBuilder', 'designSystem'],
+        writesTo: ['websiteBuilder', 'storefrontBuilder'],
     },
     {
         id: 'agency-client-portal',
@@ -268,7 +271,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredFeature: 'agencyModule',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine'],
-        readsFrom: ['analytics', 'finance', 'websiteBuilder', 'businessBlueprint'],
+        readsFrom: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'businessBlueprint'],
         writesTo: ['analytics'],
     },
     {
@@ -283,7 +286,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canViewAnalytics',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'global-assistant'],
-        readsFrom: ['analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+        readsFrom: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
         writesTo: ['analytics', 'finance'],
     },
     {
@@ -423,6 +426,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         label: 'Storefront Builder',
         moduleKind: 'engine',
         ownerSystem: 'storefront-builder',
+        canonicalSystem: 'storefrontBuilder',
         description: 'Edits storefront presentation, templates, product-card style, cart visuals, and checkout visuals.',
         requiredPermission: 'canManageEcommerce',
         compatibleIndustries: ['ecommerce', 'retail', 'fashion', 'fitness', 'food', 'beauty', 'digital'],
@@ -461,7 +465,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         label: 'Storefront Home Sections',
         moduleKind: 'storefront-section',
         ownerSystem: 'storefront-builder',
-        canonicalSystem: 'ecommerce',
+        canonicalSystem: 'storefrontBuilder',
         description: 'Storefront sections such as hero, collections, product grid, promo strips, trust badges, reviews, newsletter, and footer.',
         compatibleIndustries: ['ecommerce', 'retail', 'fashion', 'fitness', 'food', 'beauty', 'digital'],
         editableBy: ['storefront-builder'],

@@ -89,6 +89,94 @@ function isMissingAgencyEngineTable(error: unknown): boolean {
         message.includes('could not find the table');
 }
 
+function parseTenantJsonField<T>(value: T | string | null | undefined, fallback: T): T {
+    if (!value) return fallback;
+    if (typeof value !== 'string') return value as T;
+    try {
+        return JSON.parse(value) as T;
+    } catch {
+        return fallback;
+    }
+}
+
+function mapTenantRowToTenant(tData: any): Tenant {
+    const raw = {
+        id: tData.id,
+        name: tData.name,
+        slug: tData.slug,
+        type: tData.type,
+        ownerUserId: tData.owner_user_id,
+        ownerTenantId: tData.owner_tenant_id,
+        subscriptionPlan: tData.subscription_plan,
+        status: tData.status,
+        limits: parseTenantJsonField(tData.limits, {} as Tenant['limits']),
+        usage: parseTenantJsonField(tData.usage, {} as Tenant['usage']),
+        branding: parseTenantJsonField(tData.branding, {} as Tenant['branding']),
+        settings: parseTenantJsonField(tData.settings, {} as Tenant['settings']),
+        billing: parseTenantJsonField(tData.billing, {} as Tenant['billing']),
+        createdAt: tData.created_at,
+        updatedAt: tData.updated_at
+    } as any;
+
+    return {
+        ...raw,
+        name: resolveProjectName(raw.name),
+        branding: raw.branding ? {
+            ...raw.branding,
+            companyName: raw.branding.companyName ? resolveProjectName(raw.branding.companyName) : resolveProjectName(raw.name)
+        } : undefined
+    } as Tenant;
+}
+
+async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
+    const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
+    const rows: any[] = [];
+
+    for (let i = 0; i < uniqueIds.length; i += 50) {
+        const chunk = uniqueIds.slice(i, i + 50);
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .in('id', chunk);
+
+        if (error) throw error;
+        rows.push(...(data || []));
+    }
+
+    return rows;
+}
+
+async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[]> {
+    const tenantsById = new Map<string, any>();
+
+    const { data: relationships, error: relationshipError } = await supabase
+        .from('agency_clients')
+        .select('client_tenant_id')
+        .eq('agency_tenant_id', agencyTenantId);
+
+    if (relationshipError && !isMissingAgencyEngineTable(relationshipError)) {
+        throw relationshipError;
+    }
+
+    if (!relationshipError && relationships?.length) {
+        const canonicalClientIds = relationships
+            .map(row => row.client_tenant_id)
+            .filter(Boolean);
+        const canonicalRows = await fetchTenantRowsByIds(canonicalClientIds);
+        canonicalRows.forEach(row => tenantsById.set(row.id, row));
+    }
+
+    const { data: legacyRows, error: legacyError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('owner_tenant_id', agencyTenantId);
+
+    if (legacyError) throw legacyError;
+    (legacyRows || []).forEach(row => tenantsById.set(row.id, row));
+
+    return Array.from(tenantsById.values());
+}
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -813,35 +901,9 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const getSubClients = useCallback(async (): Promise<Tenant[]> => {
         if (!currentTenant) return [];
 
-        const { data: snapshot } = await supabase.from('tenants').select('*').eq('owner_tenant_id', currentTenant.id);
-        
-        return (snapshot || []).map((tData: any) => {
-            const raw = {
-                id: tData.id,
-                name: tData.name,
-                slug: tData.slug,
-                type: tData.type,
-                ownerUserId: tData.owner_user_id,
-                ownerTenantId: tData.owner_tenant_id,
-                subscriptionPlan: tData.subscription_plan,
-                status: tData.status,
-                limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
-                usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
-                branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
-                settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
-                billing: typeof tData.billing === 'string' ? JSON.parse(tData.billing) : tData.billing,
-                createdAt: tData.created_at,
-                updatedAt: tData.updated_at
-            } as any;
-            return {
-                ...raw,
-                name: resolveProjectName(raw.name),
-                branding: raw.branding ? {
-                    ...raw.branding,
-                    companyName: raw.branding.companyName ? resolveProjectName(raw.branding.companyName) : resolveProjectName(raw.name)
-                } : undefined
-            } as Tenant;
-        });
+        const rows = await fetchAgencyClientTenantRows(currentTenant.id);
+
+        return rows.map(mapTenantRowToTenant);
     }, [currentTenant]);
 
 

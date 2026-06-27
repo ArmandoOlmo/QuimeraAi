@@ -20,6 +20,7 @@ describe('moduleRegistry', () => {
         expect(ecommerce?.description).toContain('products');
 
         expect(storefront).toMatchObject({
+            canonicalSystem: 'storefrontBuilder',
             ownerSystem: 'storefront-builder',
             requiredService: 'ecommerce',
             requiredFeature: 'ecommerceEnabled',
@@ -27,6 +28,19 @@ describe('moduleRegistry', () => {
         expect(storefront?.editableBy).toContain('storefront-builder');
         expect(storefront?.readsFrom).toContain('ecommerce');
         expect(storefront?.writesTo).toBeUndefined();
+
+        const storefrontRelated = getModulesByCanonicalSystem('storefrontBuilder').map(item => item.id);
+        expect(storefrontRelated).toEqual(expect.arrayContaining([
+            'storefront-builder',
+            'storefront-home-sections',
+            'agency-engine',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-project-transfer',
+            'agency-white-label',
+            'agency-client-portal',
+            'agency-command-center',
+        ]));
     });
 
     it('gates ecommerce modules by service availability and plan feature', () => {
@@ -111,6 +125,7 @@ describe('moduleRegistry', () => {
         expect(agency?.readsFrom).toEqual(expect.arrayContaining([
             'businessBlueprint',
             'websiteBuilder',
+            'storefrontBuilder',
             'ecommerce',
             'crm',
             'emailMarketing',
@@ -120,6 +135,20 @@ describe('moduleRegistry', () => {
             'realEstate',
             'finance',
             'analytics',
+            'bioPage',
+            'media',
+        ]));
+        expect(agency?.writesTo).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
             'bioPage',
             'media',
         ]));

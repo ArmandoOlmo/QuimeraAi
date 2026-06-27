@@ -16,6 +16,8 @@ It is registered in `registry/moduleRegistry.ts` as `agency-engine` with canonic
 - `agency-client-portal`
 - `agency-command-center`
 
+Agency Engine reads and writes `storefrontBuilder` as the canonical presentation system for public stores. `storefrontBuilder` owns storefront theme, sections, product-card presentation, collection layout, cart/checkout visuals, and draft/published template state. Ecommerce Engine remains the canonical owner for products, variants, prices, inventory, carts, checkout, orders, discounts, refunds, and customers.
+
 ## Access Contract
 
 Agency Engine access must pass through Service Access Engine.

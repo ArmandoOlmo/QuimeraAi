@@ -76,6 +76,16 @@ describe('Agency billing canonical contract', () => {
         expect(tenantContext).toContain("onConflict: 'agency_tenant_id,client_tenant_id'");
     });
 
+    it('loads TenantContext sub-clients through canonical agency relationships with legacy fallback', () => {
+        expect(tenantContext).toContain('async function fetchAgencyClientTenantRows(agencyTenantId: string)');
+        expect(tenantContext).toContain(".from('agency_clients')");
+        expect(tenantContext).toContain(".select('client_tenant_id')");
+        expect(tenantContext).toContain(".eq('agency_tenant_id', agencyTenantId)");
+        expect(tenantContext).toContain(".eq('owner_tenant_id', agencyTenantId)");
+        expect(tenantContext).toContain('const rows = await fetchAgencyClientTenantRows(currentTenant.id)');
+        expect(tenantContext).toContain('return rows.map(mapTenantRowToTenant)');
+    });
+
     it('loads Agency Command Center clients from canonical agency relationships', () => {
         expect(agencyMetricsHook).toContain('async function fetchAgencyClientTenantRows');
         expect(agencyMetricsHook).toContain(".from('agency_clients')");
