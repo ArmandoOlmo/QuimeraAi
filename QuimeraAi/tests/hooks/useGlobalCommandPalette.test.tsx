@@ -176,6 +176,46 @@ describe('useGlobalCommandPalette', () => {
 
         await act(async () => {
             await result.current.executeCommand({
+                id: 'action:agency-create-client',
+                type: 'action',
+                label: 'Create Agency Client',
+                description: 'Create a managed client.',
+                prompt: 'Create a new agency client with AI provisioning',
+                assistantModule: 'agency',
+                keywords: ['agency', 'client'],
+            });
+        });
+
+        expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Create a new agency client with AI provisioning', expect.objectContaining({
+            metadata: expect.objectContaining({
+                commandId: 'action:agency-create-client',
+                quickActionId: 'create_agency_client',
+                activeModule: 'agency',
+            }),
+        }));
+
+        await act(async () => {
+            await result.current.executeCommand({
+                id: 'action:agency-search-clients',
+                type: 'action',
+                label: 'Search Agency Clients',
+                description: 'Search managed clients.',
+                prompt: 'Search agency clients by name, email, lifecycle, billing, or service plan',
+                assistantModule: 'agency',
+                keywords: ['agency', 'clients'],
+            });
+        });
+
+        expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Search agency clients by name, email, lifecycle, billing, or service plan', expect.objectContaining({
+            metadata: expect.objectContaining({
+                commandId: 'action:agency-search-clients',
+                quickActionId: 'search_agency_clients',
+                activeModule: 'agency',
+            }),
+        }));
+
+        await act(async () => {
+            await result.current.executeCommand({
                 id: 'assistant:request',
                 type: 'assistant_request',
                 label: 'Ask Quimera',

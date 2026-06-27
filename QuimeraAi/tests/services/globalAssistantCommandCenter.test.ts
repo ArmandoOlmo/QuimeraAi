@@ -27,6 +27,7 @@ describe('globalAssistantCommandCenter', () => {
             'ecommerceEnabled',
             'chatbotEnabled',
             'realEstateModule',
+            'agencyModule',
         ]));
     });
 
@@ -144,6 +145,45 @@ describe('globalAssistantCommandCenter', () => {
         expect(catalog.actions).toEqual(expect.arrayContaining([
             expect.objectContaining({ actionType: 'open_project' }),
             expect.objectContaining({ actionType: 'search_projects' }),
+        ]));
+    });
+
+    it('exposes the full Agency operating toolset when Agency service is active', () => {
+        const context = resolveGlobalAssistantAppContext({
+            conversationId: 'asst_conversation_agency',
+            userId: 'agency-owner',
+            role: 'owner',
+            tenantId: 'agency-tenant',
+            tenantRole: 'agency_owner',
+            tenantPlan: 'agency_pro',
+            activeServices: ['agency'],
+            featureFlags: defaultGlobalAssistantFeatureFlags(),
+            currentSurface: 'command palette',
+            activeRoute: '/agency',
+            activeModule: 'agency',
+        });
+        const catalog = context.snapshot.toolCatalog as any;
+
+        expect(defaultGlobalAssistantFeatureFlags()).toContain('agencyModule');
+        expect(catalog.actions).toEqual(expect.arrayContaining([
+            expect.objectContaining({ actionType: 'open_agency_command_center', availableInContext: true }),
+            expect.objectContaining({ actionType: 'open_agency_client_360', availableInContext: true }),
+            expect.objectContaining({ actionType: 'search_agency_clients', availableInContext: true }),
+            expect.objectContaining({ actionType: 'summarize_agency_performance', availableInContext: true }),
+            expect.objectContaining({ actionType: 'create_agency_report', availableInContext: true, requiredFeature: 'agencyModule' }),
+            expect.objectContaining({ actionType: 'create_agency_client', availableInContext: true, requiredFeature: 'agencyModule' }),
+            expect.objectContaining({ actionType: 'transfer_agency_project', availableInContext: true, requiredFeature: 'agencyModule' }),
+        ]));
+        expect(catalog.modules).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                module: 'agency',
+                executableActionTypes: expect.arrayContaining([
+                    'create_agency_client',
+                    'create_agency_report',
+                    'transfer_agency_project',
+                ]),
+                unavailableActionTypes: [],
+            }),
         ]));
     });
 

@@ -12,6 +12,7 @@ import {
     Globe,
     Mail,
     Package,
+    Sparkles,
     Users,
     X,
 } from 'lucide-react';
@@ -25,6 +26,10 @@ import { StatusBadge } from '../../ui/system';
 import { formatTimeAgo } from '../../../contexts/agency/AgencyContext';
 import { cn } from '../../../utils';
 import { resolveAgencyClientServicePlanLabel } from './agencyClientDisplay';
+import {
+    createGlobalAssistantEntryPayload,
+    dispatchGlobalAssistantEntryRequest,
+} from '../../../services/globalAssistant/globalAssistantEntryBridge';
 
 interface Client360PanelProps {
     client: Tenant | null;
@@ -142,6 +147,38 @@ export function Client360Panel({
     const goTo = (route: string) => {
         onClose();
         navigate(route);
+    };
+
+    const openAiReport = () => {
+        const clientName = client.companyName || client.name;
+        const prompt = t(
+            'dashboard.agency.client360.aiReportPrompt',
+            'Create an agency report for {{clientName}} using Client 360 context. Focus on usage, billing, activity, blockers, and next steps.',
+            { clientName },
+        );
+
+        dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt, {
+            source: 'agency_client_360',
+            surface: 'app',
+            metadata: {
+                entryPoint: 'client_360_operating_action',
+                sourceComponent: 'Client360Panel',
+                assistantLayer: 'global_operating_layer',
+                commandCenter: true,
+                memoryScopeHint: 'user_tenant_project_module_session_task',
+                activeModule: 'agency',
+                quickActionId: 'create_agency_report',
+                quickActionCategory: 'analyze',
+                activeEntityType: 'agency_client',
+                activeEntityId: client.id,
+                activeEntityName: clientName,
+                clientTenantId: client.id,
+                clientName,
+                reportRoute: ROUTES.AGENCY_REPORTS,
+                servicePlanLabel,
+                billingMode,
+            },
+        }));
     };
 
     return (
@@ -293,8 +330,8 @@ export function Client360Panel({
                                     <CreditCard className="h-4 w-4" />
                                     {t('dashboard.agency.client360.openBilling', 'Open billing')}
                                 </button>
-                                <button type="button" onClick={() => goTo(ROUTES.AGENCY_REPORTS)} className="rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
-                                    {t('dashboard.agency.client360.generateReport', 'Generate report')}
+                                <button type="button" onClick={openAiReport} className="rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
+                                    <span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4" />{t('dashboard.agency.client360.generateAiReport', 'Generate AI report')}</span>
                                 </button>
                                 <button type="button" onClick={() => goTo(ROUTES.AGENCY_PROJECTS)} className="rounded-lg border border-q-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
                                     <span className="inline-flex items-center gap-2"><FolderOpen className="h-4 w-4" />{t('dashboard.agency.client360.projectsAction', 'Projects')}</span>

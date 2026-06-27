@@ -3385,6 +3385,8 @@
         "actions": "Operating actions",
         "openBilling": "Open billing",
         "generateReport": "Generate report",
+        "generateAiReport": "Generate AI report",
+        "aiReportPrompt": "Create an agency report for {{clientName}} using Client 360 context. Focus on usage, billing, activity, blockers, and next steps.",
         "projectsAction": "Projects",
         "export": "Export",
         "activity": "Recent activity",
@@ -17686,6 +17688,36 @@
           "label": "Agency Command Center",
           "description": "Use Agency Engine for Client 360, service plans, billing, reports, white label, and project transfer.",
           "prompt": "Open Agency Command Center"
+        },
+        "agency-create-client": {
+          "label": "Create Agency Client",
+          "description": "Use Agency Engine to provision a managed client with AI Studio, BusinessBlueprint, modules, billing setup, and a canonical service plan.",
+          "prompt": "Create a new agency client with AI provisioning"
+        },
+        "agency-client-360": {
+          "label": "Open Client 360",
+          "description": "Use Agency Engine to search managed clients and open Client 360 context.",
+          "prompt": "Open Client 360 for an agency client"
+        },
+        "agency-search-clients": {
+          "label": "Search Agency Clients",
+          "description": "Use Agency Engine to search managed clients by name, email, lifecycle, billing mode, or service plan.",
+          "prompt": "Search agency clients by name, email, lifecycle, billing, or service plan"
+        },
+        "agency-performance-summary": {
+          "label": "Summarize Agency Performance",
+          "description": "Use Agency Engine to summarize portfolio health, MRR, revenue, usage, reports, and operating blockers.",
+          "prompt": "Summarize agency performance and blockers"
+        },
+        "agency-create-report": {
+          "label": "Create Agency Report",
+          "description": "Use Agency Engine to create a draft client or portfolio report with AI summary and activity audit.",
+          "prompt": "Create an agency report"
+        },
+        "agency-transfer-project": {
+          "label": "Transfer Agency Project",
+          "description": "Use Agency Engine to transfer an agency-owned project draft to a managed client with approval.",
+          "prompt": "Transfer an agency project to a managed client"
         },
         "use-restaurants": {
           "label": "Restaurants",

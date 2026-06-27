@@ -8,6 +8,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 describe('Agency Client 360 contract', () => {
     const clientList = read('components/dashboard/agency/ClientListTable.tsx');
     const client360Panel = read('components/dashboard/agency/Client360Panel.tsx');
+    const entryBridge = read('services/globalAssistant/globalAssistantEntryBridge.ts');
     const registry = read('registry/moduleRegistry.ts');
     const docs = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
 
@@ -29,6 +30,20 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain('ROUTES.AGENCY_BILLING');
         expect(client360Panel).toContain('ROUTES.AGENCY_REPORTS');
         expect(client360Panel).toContain('ROUTES.AGENCY_PROJECTS');
+    });
+
+    it('hands Client 360 report generation to the Agency AI operating layer with client context', () => {
+        expect(entryBridge).toContain("| 'agency_client_360'");
+        expect(client360Panel).toContain('dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt');
+        expect(client360Panel).toContain("source: 'agency_client_360'");
+        expect(client360Panel).toContain("sourceComponent: 'Client360Panel'");
+        expect(client360Panel).toContain("activeModule: 'agency'");
+        expect(client360Panel).toContain("quickActionId: 'create_agency_report'");
+        expect(client360Panel).toContain("quickActionCategory: 'analyze'");
+        expect(client360Panel).toContain("activeEntityType: 'agency_client'");
+        expect(client360Panel).toContain('clientTenantId: client.id');
+        expect(client360Panel).toContain("'dashboard.agency.client360.generateAiReport'");
+        expect(client360Panel).toContain("'dashboard.agency.client360.aiReportPrompt'");
     });
 
     it('tracks the documented AG2 Client 360 consolidation item', () => {

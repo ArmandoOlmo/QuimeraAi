@@ -171,6 +171,42 @@ describe('globalCommandSearch', () => {
         expect(items.find(item => item.id === 'action:use-agency')?.prompt).toBe('Open Agency Command Center');
     });
 
+    it('surfaces Agency Engine operating actions through Global Assistant prompts', () => {
+        const items = buildGlobalCommandItems({
+            query: 'agency create client search clients client 360 performance report transfer project',
+            projects,
+            activeProjectId: 'project-1',
+            canAccessAdmin: false,
+            canAccessService: () => true,
+            maxItems: 100,
+        });
+
+        const agencyActionIds = [
+            'action:use-agency',
+            'action:agency-create-client',
+            'action:agency-client-360',
+            'action:agency-search-clients',
+            'action:agency-performance-summary',
+            'action:agency-create-report',
+            'action:agency-transfer-project',
+        ];
+
+        expect(items).toEqual(expect.arrayContaining(
+            agencyActionIds.map(id => expect.objectContaining({
+                id,
+                type: 'action',
+                assistantModule: 'agency',
+                serviceId: 'agency',
+            })),
+        ));
+        expect(items.find(item => item.id === 'action:agency-create-client')?.prompt)
+            .toBe('Create a new agency client with AI provisioning');
+        expect(items.find(item => item.id === 'action:agency-search-clients')?.prompt)
+            .toBe('Search agency clients by name, email, lifecycle, billing, or service plan');
+        expect(items.find(item => item.id === 'action:agency-transfer-project')?.prompt)
+            .toBe('Transfer an agency project to a managed client');
+    });
+
     it('keeps project and admin boundaries for new guide-only command actions', () => {
         const noProjectItems = buildGlobalCommandItems({
             query: 'cms domains finance templates agency owner',
@@ -200,6 +236,12 @@ describe('globalCommandSearch', () => {
         });
 
         expect(noAgencyServiceItems.some(item => item.id === 'action:use-agency')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-create-client')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-client-360')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-search-clients')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-performance-summary')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-create-report')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'action:agency-transfer-project')).toBe(false);
         expect(noAgencyServiceItems.some(item => item.id === 'nav:agency')).toBe(false);
     });
 

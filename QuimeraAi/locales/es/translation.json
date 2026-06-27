@@ -3376,6 +3376,8 @@
         "actions": "Acciones operativas",
         "openBilling": "Abrir facturación",
         "generateReport": "Generar reporte",
+        "generateAiReport": "Generar reporte AI",
+        "aiReportPrompt": "Crea un reporte de agencia para {{clientName}} usando el contexto de Client 360. Enfócate en uso, facturación, actividad, bloqueos y próximos pasos.",
         "projectsAction": "Proyectos",
         "export": "Exportar",
         "activity": "Actividad reciente",
@@ -17700,6 +17702,36 @@
           "label": "Agency Command Center",
           "description": "Usa Agency Engine para Client 360, planes de servicio, facturación, reportes, white label y transferencia de proyectos.",
           "prompt": "Abrir Agency Command Center"
+        },
+        "agency-create-client": {
+          "label": "Crear cliente de agencia",
+          "description": "Usa Agency Engine para provisionar un cliente administrado con AI Studio, BusinessBlueprint, módulos, facturación y un plan de servicio canónico.",
+          "prompt": "Crear un nuevo cliente de agencia con provisionamiento AI"
+        },
+        "agency-client-360": {
+          "label": "Abrir Client 360",
+          "description": "Usa Agency Engine para buscar clientes administrados y abrir contexto de Client 360.",
+          "prompt": "Abrir Client 360 para un cliente de agencia"
+        },
+        "agency-search-clients": {
+          "label": "Buscar clientes de agencia",
+          "description": "Usa Agency Engine para buscar clientes administrados por nombre, email, ciclo de vida, modo de facturación o plan de servicio.",
+          "prompt": "Buscar clientes de agencia por nombre, email, ciclo de vida, facturación o plan de servicio"
+        },
+        "agency-performance-summary": {
+          "label": "Resumir performance de agencia",
+          "description": "Usa Agency Engine para resumir salud del portafolio, MRR, revenue, uso, reportes y bloqueos operativos.",
+          "prompt": "Resumir performance y bloqueos de agencia"
+        },
+        "agency-create-report": {
+          "label": "Crear reporte de agencia",
+          "description": "Usa Agency Engine para crear un reporte borrador de cliente o portafolio con resumen AI y auditoría de actividad.",
+          "prompt": "Crear un reporte de agencia"
+        },
+        "agency-transfer-project": {
+          "label": "Transferir proyecto de agencia",
+          "description": "Usa Agency Engine para transferir un proyecto borrador propiedad de la agencia a un cliente administrado con aprobación.",
+          "prompt": "Transferir un proyecto de agencia a un cliente administrado"
         },
         "use-restaurants": {
           "label": "Restaurantes",

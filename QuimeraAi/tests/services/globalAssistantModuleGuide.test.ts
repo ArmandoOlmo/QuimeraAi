@@ -189,6 +189,13 @@ describe('globalAssistantModuleGuide', () => {
             { quickActionId: 'open_seo', target: 'seo', terms: ['SEO', 'title'] },
             { quickActionId: 'open_templates', target: 'templates', terms: ['Templates', 'template'] },
             { quickActionId: 'open_finance', target: 'finance', terms: ['Finance', 'invoices'] },
+            { quickActionId: 'open_agency', target: 'agency', terms: ['Agency', 'Clients'] },
+            { quickActionId: 'create_agency_client', target: 'agency', terms: ['Agency', 'Clients'] },
+            { quickActionId: 'open_agency_client_360', target: 'agency', terms: ['Agency', 'Clients'] },
+            { quickActionId: 'search_agency_clients', target: 'agency', terms: ['Agency', 'Clients'] },
+            { quickActionId: 'summarize_agency_performance', target: 'agency', terms: ['Agency', 'Reports'] },
+            { quickActionId: 'create_agency_report', target: 'agency', terms: ['Agency', 'Reports'] },
+            { quickActionId: 'transfer_agency_project', target: 'agency', terms: ['Agency', 'Clients'] },
             { quickActionId: 'open_restaurants', target: 'restaurants', terms: ['Restaurants', 'menu'] },
             { quickActionId: 'open_realty', target: 'realEstate', terms: ['Realty', 'properties'] },
         ];

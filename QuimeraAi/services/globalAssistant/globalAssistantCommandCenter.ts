@@ -17,6 +17,7 @@ export const GLOBAL_ASSISTANT_KNOWN_FEATURE_FLAGS = [
     'ecommerceEnabled',
     'chatbotEnabled',
     'realEstateModule',
+    'agencyModule',
 ] as const;
 
 export interface ResolveGlobalAssistantAppContextInput {

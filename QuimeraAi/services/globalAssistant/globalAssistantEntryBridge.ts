@@ -7,6 +7,7 @@ export const GLOBAL_ASSISTANT_ENTRY_STORAGE_KEY = 'quimera_global_assistant_entr
 export type GlobalAssistantEntrySource =
     | 'dashboard_welcome'
     | 'dashboard_quick_action'
+    | 'agency_client_360'
     | 'command_palette'
     | 'global_assistant'
     | 'system';
