@@ -8017,6 +8017,7 @@ const updateRealtyShowingFlowInBlueprint = (
             },
             metadata: {
                 ...realtyMetadata,
+                generatedBy: realty.metadata?.generatedBy || 'ai',
                 userModified: true,
                 lockedFromRegeneration: true,
                 lastEditedAt: now,

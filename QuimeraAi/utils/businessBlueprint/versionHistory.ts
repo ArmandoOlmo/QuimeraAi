@@ -290,7 +290,7 @@ function moduleIsProtected(value: unknown): boolean {
     return record.userModified === true || record.lockedFromRegeneration === true;
 }
 
-export function shouldProtectVersionHistoryItemFromRegeneration(value: unknown): boolean {
+export function shouldProtectFromRegeneration(value: unknown): boolean {
     return moduleIsProtected(value);
 }
 

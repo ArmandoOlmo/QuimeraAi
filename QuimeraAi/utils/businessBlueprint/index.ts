@@ -7,5 +7,6 @@ export * from './restaurantWebsiteBinding';
 export * from './mergeAiStudioBlueprint';
 export * from './websiteEditorSync';
 export * from './versionHistory';
+export { shouldProtectFromRegeneration } from './versionHistory';
 export * from './crossModuleSync';
 export * from './crossModuleSyncIdempotency';
