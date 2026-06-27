@@ -14,6 +14,9 @@ import {
 import {
     resolveTenantEffectiveLimits,
     resolveTenantEffectivePlan,
+    calculateAgencyMonthlyBill,
+    getAgencyPlanBillingDetails,
+    isAgencyBillingPlan,
     type Tenant,
 } from '../../types/multiTenant';
 
@@ -220,6 +223,24 @@ describe('Service Access Engine', () => {
             currentPlan: 'enterprise',
             requiredFeature: 'agencyModule',
         });
+    });
+
+    it('derives agency billing details from the canonical plan catalog', () => {
+        expect(isAgencyBillingPlan('agency_pro')).toBe(true);
+        expect(isAgencyBillingPlan('agency_plus')).toBe(true);
+        expect(isAgencyBillingPlan('enterprise')).toBe(false);
+        expect(isAgencyBillingPlan('agency_client' as Tenant['subscriptionPlan'])).toBe(false);
+
+        expect(getAgencyPlanBillingDetails('agency_pro')).toEqual({
+            baseFee: 199,
+            projectCost: 29,
+            poolCredits: 5000,
+        });
+        expect(getAgencyPlanBillingDetails('agency_plus')).toEqual(getAgencyPlanBillingDetails('agency_pro'));
+        expect(getAgencyPlanBillingDetails('enterprise')).toBeNull();
+
+        expect(calculateAgencyMonthlyBill('agency_pro', 3)).toBe(199 + (29 * 3));
+        expect(calculateAgencyMonthlyBill('enterprise', 3)).toBe(0);
     });
 
     it('requires tenant permissions for agency billing submodules', () => {

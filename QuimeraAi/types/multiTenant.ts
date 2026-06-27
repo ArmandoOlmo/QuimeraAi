@@ -5,6 +5,7 @@
 
 import type { SubscriptionPlanId } from './subscription';
 import {
+    getCanonicalAgencyPlanBillingDetails,
     getCanonicalPlanLimits,
     isAgencyPlan,
     normalizePlanId,
@@ -407,7 +408,8 @@ export function getMembershipId(tenantId: string, userId: string): string {
  * 
  * Individual Plans: free, hobby, starter, individual, pro
  * Agency Plans (Fee + Project model): agency_starter, agency_pro, agency_scale
- * Legacy: agency, agency_plus, enterprise
+ * Legacy: agency and agency_plus map to canonical agency plans.
+ * Enterprise remains a custom-contract platform plan, not an agency plan.
  * 
  * AI Credits: ~$0.01 USD real cost per credit
  */
@@ -430,13 +432,14 @@ export function getAgencyPlanBillingDetails(plan: Tenant['subscriptionPlan']): {
     projectCost: number;
     poolCredits: number;
 } | null {
-    const agencyPlans: Record<string, { baseFee: number; projectCost: number; poolCredits: number }> = {
-        agency_starter: { baseFee: 99, projectCost: 29, poolCredits: 2000 },
-        agency_pro: { baseFee: 199, projectCost: 29, poolCredits: 5000 },
-        agency_scale: { baseFee: 399, projectCost: 29, poolCredits: 15000 },
-    };
+    const details = getCanonicalAgencyPlanBillingDetails(plan);
+    if (!details) return null;
 
-    return agencyPlans[plan] || null;
+    return {
+        baseFee: details.baseFee,
+        projectCost: details.projectCost,
+        poolCredits: details.poolCredits,
+    };
 }
 
 /**

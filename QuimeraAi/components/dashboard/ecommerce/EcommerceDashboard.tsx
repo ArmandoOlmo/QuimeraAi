@@ -49,6 +49,8 @@ import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
 import { useProject } from '../../../contexts/project';
+import { useRouter } from '../../../hooks/useRouter';
+import { ROUTES } from '../../../routes/config';
 import { resolveProjectBackedStoreIdentity } from '../../../utils/ecommerce/storeIdentity';
 import { supabase } from '../../../supabase';
 import type { Category, Customer, EcommerceView, Order, Product, Review, StoreSettings } from '../../../types/ecommerce';
@@ -123,13 +125,63 @@ const VALID_ECOMMERCE_VIEWS: EcommerceView[] = [
     'settings',
 ];
 
+const ECOMMERCE_VIEW_ROUTE_ALIASES: Record<string, EcommerceView> = {
+    overview: 'overview',
+    storefront: 'storefront',
+    store: 'storefront',
+    tienda: 'storefront',
+    products: 'products',
+    productos: 'products',
+    categories: 'categories',
+    categorias: 'categories',
+    orders: 'orders',
+    pedidos: 'orders',
+    customers: 'customers',
+    clientes: 'customers',
+    'store-users': 'store-users',
+    users: 'store-users',
+    usuarios: 'store-users',
+    discounts: 'discounts',
+    descuentos: 'discounts',
+    reviews: 'reviews',
+    resenas: 'reviews',
+    reseñas: 'reviews',
+    stock_alerts: 'stock_alerts',
+    'stock-alerts': 'stock_alerts',
+    reports: 'reports',
+    reportes: 'reports',
+    analytics: 'analytics',
+    settings: 'settings',
+    configuracion: 'settings',
+    configuración: 'settings',
+};
+
+const resolveEcommerceViewFromPath = (pathname: string): EcommerceView | null => {
+    if (pathname === ROUTES.ECOMMERCE) return null;
+    if (!pathname.startsWith(`${ROUTES.ECOMMERCE}/`)) return null;
+
+    const segment = decodeURIComponent(pathname.slice(ROUTES.ECOMMERCE.length + 1).split('/')[0] || '')
+        .trim()
+        .toLowerCase();
+
+    return ECOMMERCE_VIEW_ROUTE_ALIASES[segment] || null;
+};
+
+const getEcommerceViewPath = (view: EcommerceView): string => (
+    view === 'overview' ? ROUTES.ECOMMERCE : `${ROUTES.ECOMMERCE}/${view}`
+);
+
 const getInitialEcommerceView = (): EcommerceView => {
+    const requestedView = resolveEcommerceViewFromPath(window.location.pathname);
+    if (requestedView) return requestedView;
+
     const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView | null;
 
     if (!savedView || !VALID_ECOMMERCE_VIEWS.includes(savedView)) return 'overview';
 
     // The storefront editor owns a live iframe preview and should not auto-mount
-    // from persisted localStorage while we are stabilizing the ecommerce suite.
+    // from persisted localStorage. Explicit /ecommerce/storefront navigation can
+    // still open it directly.
     if (savedView === 'storefront') {
         localStorage.setItem('ecommerceActiveView', 'overview');
         return 'overview';
@@ -142,6 +194,7 @@ const EcommerceDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
     const { setView } = useUI();
+    const { path, navigate } = useRouter();
     const { projects, activeProject, activeProjectId, refreshProjects } = useProject();
     const [activeView, setActiveView] = useState<EcommerceView>(getInitialEcommerceView);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -188,22 +241,26 @@ const EcommerceDashboard: React.FC = () => {
     useEffect(() => {
         const handleViewChange = (event: CustomEvent<string>) => {
             const newView = event.detail as EcommerceView;
-            if (newView) {
+            if (VALID_ECOMMERCE_VIEWS.includes(newView)) {
                 setActiveView(newView);
             }
         };
 
         window.addEventListener('ecommerceViewChange', handleViewChange as EventListener);
 
-        const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView;
-        if (savedView && savedView !== 'storefront' && VALID_ECOMMERCE_VIEWS.includes(savedView) && savedView !== activeView) {
-            setActiveView(savedView);
-        }
-
         return () => {
             window.removeEventListener('ecommerceViewChange', handleViewChange as EventListener);
         };
     }, []);
+
+    useEffect(() => {
+        const requestedView = resolveEcommerceViewFromPath(path);
+        if (!requestedView || requestedView === activeView) return;
+
+        setActiveView(requestedView);
+        localStorage.setItem('ecommerceActiveView', requestedView);
+        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: requestedView }));
+    }, [activeView, path]);
 
     // Sincronizar proyecto seleccionado con proyecto activo (always sync when activeProjectId changes)
     useEffect(() => {
@@ -215,8 +272,16 @@ const EcommerceDashboard: React.FC = () => {
     const [showDemoSeeder, setShowDemoSeeder] = useState(false);
 
     const handleViewChange = (view: EcommerceView) => {
+        if (!VALID_ECOMMERCE_VIEWS.includes(view)) return;
+
         setActiveView(view);
         localStorage.setItem('ecommerceActiveView', view);
+        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: view }));
+
+        const nextPath = getEcommerceViewPath(view);
+        if (path !== nextPath) {
+            navigate(nextPath);
+        }
     };
 
     const handleProjectSelect = (projectId: string) => {

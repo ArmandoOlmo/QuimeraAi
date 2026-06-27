@@ -20,6 +20,15 @@ export type BillingModel = 'free' | 'subscription' | 'pay_per_project' | 'custom
 
 export type PlanLimitKey = keyof PlanLimits;
 
+export interface CanonicalAgencyPlanBillingDetails {
+    planId: Extract<CanonicalPlanId, 'agency_starter' | 'agency_pro' | 'agency_scale'>;
+    baseFee: number;
+    projectCost: number;
+    poolCredits: number;
+    includedProjects: number;
+    maxBillableProjects: number;
+}
+
 const CANONICAL_PLAN_SET = new Set<string>(CANONICAL_PLAN_IDS);
 
 export const LEGACY_PLAN_MAP: Record<string, CanonicalPlanId> = {
@@ -384,6 +393,21 @@ export function getCanonicalPlan(planId?: string | null): SubscriptionPlan {
         isAgencyPlan: isAgencyPlan(id),
         projectCost: limits.projectCost,
         hasSharedCreditsPool: isAgencyPlan(id),
+    };
+}
+
+export function getCanonicalAgencyPlanBillingDetails(planId?: string | null): CanonicalAgencyPlanBillingDetails | null {
+    const id = normalizePlanId(planId);
+    if (!isAgencyPlan(id)) return null;
+
+    const limits = getCanonicalPlanLimits(id);
+    return {
+        planId: id as CanonicalAgencyPlanBillingDetails['planId'],
+        baseFee: PLAN_META[id].price.monthly,
+        projectCost: limits.projectCost,
+        poolCredits: limits.maxAiCredits,
+        includedProjects: limits.includedProjects,
+        maxBillableProjects: limits.maxBillableProjects,
     };
 }
 

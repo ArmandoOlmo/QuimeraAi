@@ -144,9 +144,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // State for footer collapse (true = collapsed, only user visible)
   const [isFooterCollapsed, setIsFooterCollapsed] = useState(false);
 
+  const getEcommerceSubViewFromPath = (currentPath: string): string | null => {
+    if (currentPath === ROUTES.ECOMMERCE) return 'overview';
+    if (!currentPath.startsWith(`${ROUTES.ECOMMERCE}/`)) return null;
+    return currentPath.slice(ROUTES.ECOMMERCE.length + 1).split('/')[0] || null;
+  };
+
   // Estado para trackear la sub-vista activa de ecommerce
   const [activeEcommerceSubView, setActiveEcommerceSubView] = useState<string>(() => {
-    return localStorage.getItem('ecommerceActiveView') || 'overview';
+    return getEcommerceSubViewFromPath(window.location.pathname) || localStorage.getItem('ecommerceActiveView') || 'overview';
   });
 
   // Escuchar cambios de la sub-vista de ecommerce
@@ -160,6 +166,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       window.removeEventListener('ecommerceViewChange', handleEcommerceViewChange as EventListener);
     };
   }, []);
+
+  const currentEcommerceSubView = getEcommerceSubViewFromPath(path) || activeEcommerceSubView;
 
   const toggleSection = (sectionId: string) => {
     setCollapsedSections(prev => ({
@@ -228,14 +236,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Ecommerce section items (sección independiente con árbol de componentes)
   const ecommerceItems: NavItemData[] = [
     { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
-    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-storefront', icon: LayoutTemplate, label: t('ecommerce.storefrontLabel', 'Tienda online'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/storefront`, subView: 'storefront', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/products`, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/categories`, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/orders`, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/customers`, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/store-users`, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/discounts`, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/analytics`, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/settings`, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
   ];
 
   // Tools section items (settings removed - placed outside section)
@@ -447,7 +456,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
     // Para items de ecommerce, verificar también el subView
     const isActive = item.subView
-      ? isRouteActive(item.route) && activeEcommerceSubView === item.subView
+      ? isRouteActive(ROUTES.ECOMMERCE) && currentEcommerceSubView === item.subView
       : isRouteActive(item.route);
     const Icon = item.icon;
 

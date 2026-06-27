@@ -67,6 +67,10 @@ describe('route config', () => {
             requiredService: 'agency',
             moduleId: 'agency-engine',
         });
+        expect(getRouteConfig(ROUTES.CHECKOUT_PAY)).toMatchObject({
+            requiredService: 'agency',
+            moduleId: 'agency-engine',
+        });
     });
 
     it('keeps service-backed visible routes tied to a registry module', () => {

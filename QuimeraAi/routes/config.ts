@@ -235,6 +235,7 @@ export const ROUTES = {
   SEO: '/seo',
   FINANCE: '/finance',
   ECOMMERCE: '/ecommerce',
+  ECOMMERCE_SUBVIEW: '/ecommerce/:subView',
   RESTAURANTS: '/restaurants',
   EMAIL: '/email',
   BIOPAGE: '/biopage',
@@ -654,6 +655,15 @@ export const routeConfigs: RouteConfig[] = [
     icon: 'ShoppingBag',
   },
   {
+    path: ROUTES.ECOMMERCE_SUBVIEW,
+    view: 'ecommerce',
+    type: 'private',
+    title: 'Ecommerce',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    ...ECOMMERCE_ROUTE_GATE,
+  },
+  {
     path: ROUTES.RESTAURANTS,
     view: 'restaurants',
     type: 'private',
@@ -774,6 +784,7 @@ export const routeConfigs: RouteConfig[] = [
     type: 'public',
     title: 'Checkout',
     requiresAuth: false,
+    ...AGENCY_PUBLIC_ROUTE_GATE,
   },
 
   // =========================================================================

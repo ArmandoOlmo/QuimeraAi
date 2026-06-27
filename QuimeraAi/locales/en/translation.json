@@ -15565,6 +15565,8 @@
   },
   "userTemplates": {
     "title": "Templates",
+    "subtitle": "Choose a visual starting point for your next site and review it before creating an editable copy.",
+    "catalogTitle": "Template library",
     "searchPlaceholder": "Search templates...",
     "howToUseTitle": "How to use templates?",
     "step1": "Explore available templates and find one that fits your industry",
@@ -15574,6 +15576,7 @@
     "availableTemplates": "Available templates",
     "showing": "Showing",
     "preview": "Preview",
+    "templatePreview": "Template preview",
     "noTemplatesFound": "No templates found",
     "tryAdjustingFilters": "Try adjusting search filters",
     "includedSections": "Included Sections",
@@ -15597,7 +15600,21 @@
     "searchTemplates": "Search templates...",
     "templateDescription": "Template Description",
     "templateName": "Template Name",
-    "useTemplate": "Use Template"
+    "useTemplate": "Use Template",
+    "allIndustries": "All industries",
+    "filterByIndustry": "Industry",
+    "resetFilters": "Clear",
+    "matchingCount": "Showing {{count}} of {{total}}",
+    "activeFilter": "Industry: {{industry}}",
+    "palette": "Palette",
+    "sectionsCount": "{{count}} sections",
+    "detailsTitle": "Details",
+    "stats": {
+      "available": "Available",
+      "industries": "Industries",
+      "results": "Results",
+      "avgSections": "Avg. sections"
+    }
   },
   "credits": {
     "mustBeAuthenticated": "You must be authenticated to purchase credits.",
