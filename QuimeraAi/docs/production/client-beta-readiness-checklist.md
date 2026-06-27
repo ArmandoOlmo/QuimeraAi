@@ -93,8 +93,9 @@ Required before beta:
 - [ ] Compare `supabase_migrations.schema_migrations` with local
   `supabase/migrations` before applying new migrations. Do not run `db push`
   blindly if timestamps drift between remote and local history.
-- [ ] Apply and review migration
-  `20260627191331_harden_function_search_paths.sql`.
+- [ ] Apply and review Supabase hardening migrations:
+  `20260627201856_harden_function_search_paths.sql` and
+  `20260627202043_revoke_anon_agency_security_definer_execute.sql`.
 - [ ] Re-run Supabase security advisors after migration.
 - [ ] Confirm no `Function Search Path Mutable` findings remain for:
   `set_realty_updated_at`, `normalize_realty_crm_status`,
@@ -110,6 +111,10 @@ Required before beta:
   if each route has product-approved anti-abuse controls.
 - [ ] Review SECURITY DEFINER execute grants before expanding beyond controlled
   pilot accounts.
+- [ ] Confirm Agency Engine `SECURITY DEFINER` helpers are executable by
+  `authenticated`/`service_role`, not `anon`. Keep
+  `get_auth_user_tenants()` as the documented exception required by public
+  project reads.
 
 Do not apply broad RLS/grant changes during the beta gate without an owner
 approved migration plan. Public forms and reservation flows depend on some open
