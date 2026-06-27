@@ -7060,10 +7060,14 @@ const updateProjectData = async (
     projectId: string,
     data: Record<string, unknown>,
     now: string,
+    options: { touchLastUpdated?: boolean } = {},
 ) => {
+    const patch = options.touchLastUpdated === false
+        ? { data }
+        : { data, last_updated: now };
     const result = await client
         .from('projects')
-        .update({ data, last_updated: now })
+        .update(patch)
         .eq('id', projectId);
     if (result?.error) throw result.error;
     return result?.data || { projectId, data };
@@ -7084,6 +7088,27 @@ const resolveProjectIdForSnapshot = (
 ): string | null =>
     readString(input.projectId) || action.projectId || context?.project.projectId || null;
 
+const PROJECT_VERSION_HISTORY_ACTIONS = new Set([
+    'create_website_from_prompt',
+    'edit_website_section',
+    'update_section_copy',
+    'update_section_image',
+    'attach_asset_to_section',
+    'reorder_sections',
+    'toggle_section_visibility',
+    'publish_website',
+    'unpublish_website',
+    'add_storefront_section',
+    'edit_storefront_theme',
+    'update_product_card_style',
+    'update_project_metadata',
+    'configure_availability',
+    'create_chatbot_knowledge',
+    'sync_chatbot_knowledge',
+    'deploy_chatbot_to_surface',
+    'create_showing_request_flow',
+]);
+
 const persistProjectSnapshotBeforeAssistantMutation = async (
     definition: AssistantActionDefinition,
     input: Record<string, unknown>,
@@ -7092,6 +7117,10 @@ const persistProjectSnapshotBeforeAssistantMutation = async (
     deps: GlobalAssistantActionHandlerDependencies,
 ): Promise<void> => {
     if (definition.actionType === 'create_project_from_prompt' || definition.actionType === 'transfer_agency_project') {
+        return;
+    }
+
+    if (!PROJECT_VERSION_HISTORY_ACTIONS.has(definition.actionType)) {
         return;
     }
 
@@ -7133,7 +7162,7 @@ const persistProjectSnapshotBeforeAssistantMutation = async (
         },
     });
 
-    await updateProjectData(client, projectId, nextProjectData, now);
+    await updateProjectData(client, projectId, nextProjectData, now, { touchLastUpdated: false });
 };
 
 const rollbackProjectDataSnapshot = (

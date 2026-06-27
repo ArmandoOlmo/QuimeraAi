@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { getAgencyEngineOperatingSystemManifest } from '../../registry/moduleRegistry';
 
 const rootDir = process.cwd();
 const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
@@ -10,11 +11,25 @@ describe('Agency White Label Service Access contract', () => {
     const contentDashboard = read('components/dashboard/agency/AgencyContentDashboard.tsx');
     const navigationManagement = read('components/dashboard/agency/AgencyNavigationManagement.tsx');
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
+    const manifest = getAgencyEngineOperatingSystemManifest();
 
     it('keeps White Label tab and nested settings aligned to the canonical Agency module', () => {
-        expect(dashboard).toContain("'white-label': { route: ROUTES.AGENCY_WHITE_LABEL, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' }");
-        expect(dashboard).toContain("cms: { route: ROUTES.AGENCY_CMS, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' }");
-        expect(dashboard).toContain("navigation: { route: ROUTES.AGENCY_NAVIGATION, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' }");
+        expect(dashboard).toContain('const agencyDashboardTabs = agencyEngineManifest.dashboardTabs;');
+        expect(manifest.dashboardTabs.find(tab => tab.id === 'white-label')).toMatchObject({
+            route: '/agency/white-label',
+            moduleId: 'agency-white-label',
+            requiredPermission: 'canManageSettings',
+        });
+        expect(manifest.dashboardTabs.find(tab => tab.id === 'cms')).toMatchObject({
+            route: '/agency/cms',
+            moduleId: 'agency-white-label',
+            requiredPermission: 'canManageSettings',
+        });
+        expect(manifest.dashboardTabs.find(tab => tab.id === 'navigation')).toMatchObject({
+            route: '/agency/navigation',
+            moduleId: 'agency-white-label',
+            requiredPermission: 'canManageSettings',
+        });
         expect(whiteLabelSettings).toContain("import { useServiceAccess }");
         expect(whiteLabelSettings).toContain("serviceAccess.canAccessModule('agency-white-label'");
         expect(whiteLabelSettings).toContain("requiredPermission: 'canManageSettings'");

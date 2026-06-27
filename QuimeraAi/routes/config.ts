@@ -85,6 +85,12 @@ const AGENCY_PROJECT_TRANSFER_ROUTE_GATE = {
   requiredPermission: 'canManageProjects',
 };
 
+const AGENCY_CLIENT_PORTAL_ADMIN_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-client-portal',
+  requiredPermission: 'canManageSettings',
+};
+
 const AGENCY_CLIENT_PORTAL_ROUTE_GATE = {
   requiredService: 'agency' as const,
   moduleId: 'agency-client-portal',
@@ -266,6 +272,7 @@ export const ROUTES = {
   AGENCY_NAVIGATION: '/agency/navigation',
   AGENCY_PROJECTS: '/agency/projects',
   AGENCY_WHITE_LABEL: '/agency/white-label',
+  AGENCY_CLIENT_PORTAL: '/agency/client-portal',
 
   // Agency Signup (Public)
   AGENCY_SIGNUP: '/agency-signup',
@@ -973,6 +980,17 @@ export const routeConfigs: RouteConfig[] = [
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
     ...AGENCY_WHITE_LABEL_ROUTE_GATE,
+    parent: ROUTES.AGENCY,
+  },
+  {
+    path: ROUTES.AGENCY_CLIENT_PORTAL,
+    view: 'agency',
+    type: 'private',
+    title: 'Client Portal',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_CLIENT_PORTAL_ADMIN_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   // =========================================================================

@@ -224,6 +224,14 @@ describe('moduleRegistry', () => {
             'agency-project-transfer',
             'agency-reports',
         ]));
+        expect(manifest.dashboardTabs).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: 'overview', surfaceId: 'command-center', moduleId: 'agency-command-center', route: '/agency/overview', requiredPermission: 'canViewAnalytics' }),
+            expect.objectContaining({ id: 'new-client', surfaceId: 'client-provisioning', moduleId: 'agency-client-provisioning', route: '/agency/new-client', requiredPermission: 'canManageSettings' }),
+            expect.objectContaining({ id: 'billing', surfaceId: 'billing', moduleId: 'agency-billing', route: '/agency/billing', requiredPermission: 'canManageBilling' }),
+            expect.objectContaining({ id: 'projects', surfaceId: 'project-transfer', moduleId: 'agency-project-transfer', route: '/agency/projects', requiredPermission: 'canManageProjects' }),
+            expect.objectContaining({ id: 'client-portal', surfaceId: 'client-portal', moduleId: 'agency-client-portal', route: '/agency/client-portal', requiredPermission: 'canManageSettings' }),
+        ]));
+        expect(new Set(manifest.dashboardTabs.map(tab => tab.id)).size).toBe(manifest.dashboardTabs.length);
 
         for (const moduleId of manifest.moduleIds) {
             const item = getModuleRegistryItem(moduleId);
@@ -241,6 +249,11 @@ describe('moduleRegistry', () => {
             if (surface.globalAssistantEnabled) {
                 expect(item?.editableBy, surface.moduleId).toContain('global-assistant');
             }
+        }
+
+        for (const tab of manifest.dashboardTabs) {
+            expect(manifest.moduleIds, tab.id).toContain(tab.moduleId);
+            expect(manifest.operatingSurfaces.some(surface => surface.id === tab.surfaceId), tab.id).toBe(true);
         }
     });
 

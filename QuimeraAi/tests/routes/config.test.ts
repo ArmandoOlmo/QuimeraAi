@@ -136,6 +136,13 @@ describe('route config', () => {
             moduleId: 'agency-project-transfer',
             requiredPermission: 'canManageProjects',
         });
+        expect(getRouteConfig(ROUTES.AGENCY_CLIENT_PORTAL)).toMatchObject({
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+            moduleId: 'agency-client-portal',
+            requiredPermission: 'canManageSettings',
+            parent: ROUTES.AGENCY,
+        });
         expect(getRouteConfig(ROUTES.PORTAL_HOME)).toMatchObject({
             requiredService: 'agency',
             moduleId: 'agency-client-portal',

@@ -99,6 +99,21 @@ export type AgencyEngineOperatingSurfaceId =
     | 'white-label'
     | 'client-portal';
 
+export type AgencyEngineDashboardTabId =
+    | 'overview'
+    | 'analytics'
+    | 'landing'
+    | 'billing'
+    | 'reports'
+    | 'new-client'
+    | 'addons'
+    | 'plans'
+    | 'cms'
+    | 'navigation'
+    | 'projects'
+    | 'white-label'
+    | 'client-portal';
+
 export interface AgencyEngineOperatingSurface {
     id: AgencyEngineOperatingSurfaceId;
     moduleId: string;
@@ -108,6 +123,16 @@ export interface AgencyEngineOperatingSurface {
     aiPowered: boolean;
     globalAssistantEnabled: boolean;
     requiredSystems: CanonicalSystemId[];
+}
+
+export interface AgencyEngineDashboardTab {
+    id: AgencyEngineDashboardTabId;
+    surfaceId: AgencyEngineOperatingSurfaceId;
+    moduleId: string;
+    route: string;
+    labelKey: string;
+    label: string;
+    requiredPermission: string;
 }
 
 export interface AgencyEngineOperatingSystemManifest {
@@ -121,6 +146,7 @@ export interface AgencyEngineOperatingSystemManifest {
     aiPoweredModuleIds: string[];
     foundationalSystems: CanonicalSystemId[];
     operatingSurfaces: AgencyEngineOperatingSurface[];
+    dashboardTabs: AgencyEngineDashboardTab[];
 }
 
 const PLAN_RANK: Record<SubscriptionPlanId, number> = {
@@ -732,6 +758,126 @@ export const AGENCY_ENGINE_OPERATING_SURFACES: AgencyEngineOperatingSurface[] = 
     },
 ];
 
+export const AGENCY_ENGINE_DASHBOARD_TABS: AgencyEngineDashboardTab[] = [
+    {
+        id: 'overview',
+        surfaceId: 'command-center',
+        moduleId: 'agency-command-center',
+        route: '/agency/overview',
+        labelKey: 'agency.overview',
+        label: 'Vista General',
+        requiredPermission: 'canViewAnalytics',
+    },
+    {
+        id: 'landing',
+        surfaceId: 'white-label',
+        moduleId: 'agency-white-label',
+        route: '/agency/landing',
+        labelKey: 'agency.landing',
+        label: 'Landing Page',
+        requiredPermission: 'canManageSettings',
+    },
+    {
+        id: 'new-client',
+        surfaceId: 'client-provisioning',
+        moduleId: 'agency-client-provisioning',
+        route: '/agency/new-client',
+        labelKey: 'agency.newClient',
+        label: 'Nuevo Cliente',
+        requiredPermission: 'canManageSettings',
+    },
+    {
+        id: 'cms',
+        surfaceId: 'white-label',
+        moduleId: 'agency-white-label',
+        route: '/agency/cms',
+        labelKey: 'agency.cms',
+        label: 'CMS',
+        requiredPermission: 'canManageSettings',
+    },
+    {
+        id: 'navigation',
+        surfaceId: 'white-label',
+        moduleId: 'agency-white-label',
+        route: '/agency/navigation',
+        labelKey: 'agency.navigation',
+        label: 'Menu',
+        requiredPermission: 'canManageSettings',
+    },
+    {
+        id: 'plans',
+        surfaceId: 'service-plans',
+        moduleId: 'agency-service-plans',
+        route: '/agency/plans',
+        labelKey: 'agency.plans',
+        label: 'Planes',
+        requiredPermission: 'canManageBilling',
+    },
+    {
+        id: 'addons',
+        surfaceId: 'service-plans',
+        moduleId: 'agency-service-plans',
+        route: '/agency/addons',
+        labelKey: 'agency.addons',
+        label: 'Add-ons',
+        requiredPermission: 'canManageBilling',
+    },
+    {
+        id: 'billing',
+        surfaceId: 'billing',
+        moduleId: 'agency-billing',
+        route: '/agency/billing',
+        labelKey: 'agency.billing',
+        label: 'Facturacion',
+        requiredPermission: 'canManageBilling',
+    },
+    {
+        id: 'analytics',
+        surfaceId: 'command-center',
+        moduleId: 'agency-command-center',
+        route: '/agency/analytics',
+        labelKey: 'agency.analytics',
+        label: 'Analytics',
+        requiredPermission: 'canViewAnalytics',
+    },
+    {
+        id: 'reports',
+        surfaceId: 'reports',
+        moduleId: 'agency-reports',
+        route: '/agency/reports',
+        labelKey: 'agency.reports',
+        label: 'Reportes',
+        requiredPermission: 'canViewAnalytics',
+    },
+    {
+        id: 'projects',
+        surfaceId: 'project-transfer',
+        moduleId: 'agency-project-transfer',
+        route: '/agency/projects',
+        labelKey: 'agency.projects',
+        label: 'Proyectos',
+        requiredPermission: 'canManageProjects',
+    },
+    {
+        id: 'white-label',
+        surfaceId: 'white-label',
+        moduleId: 'agency-white-label',
+        route: '/agency/white-label',
+        labelKey: 'agency.whiteLabel.tab',
+        label: 'White Label',
+        requiredPermission: 'canManageSettings',
+    },
+    {
+        id: 'client-portal',
+        surfaceId: 'client-portal',
+        moduleId: 'agency-client-portal',
+        route: '/agency/client-portal',
+        labelKey: 'agency.clientPortal.tab',
+        label: 'Client Portal',
+        requiredPermission: 'canManageSettings',
+    },
+];
+
 export const AGENCY_ENGINE_OPERATING_SYSTEM: AgencyEngineOperatingSystemManifest = {
     id: 'agency-engine',
     label: 'Agency Engine',
@@ -747,6 +893,7 @@ export const AGENCY_ENGINE_OPERATING_SYSTEM: AgencyEngineOperatingSystemManifest
         .map(surface => surface.moduleId),
     foundationalSystems: AGENCY_ENGINE_FOUNDATIONAL_SYSTEMS,
     operatingSurfaces: AGENCY_ENGINE_OPERATING_SURFACES,
+    dashboardTabs: AGENCY_ENGINE_DASHBOARD_TABS,
 };
 
 export function canAccessModuleRegistryItem(item: ModuleRegistryItem, access: ModuleRegistryAccessContext = {}): boolean {

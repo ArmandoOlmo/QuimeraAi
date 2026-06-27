@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { getAgencyEngineOperatingSystemManifest } from '../../registry/moduleRegistry';
 
 const rootDir = process.cwd();
 const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
@@ -10,28 +11,38 @@ describe('Agency dashboard Service Access contract', () => {
     const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
     const routes = read('routes/config.ts');
     const registry = read('registry/moduleRegistry.ts');
+    const manifest = getAgencyEngineOperatingSystemManifest();
 
     const tabContracts = [
-        ['overview', 'agency-command-center', 'canViewAnalytics', 'AGENCY_OVERVIEW'],
-        ['analytics', 'agency-command-center', 'canViewAnalytics', 'AGENCY_ANALYTICS'],
-        ['landing', 'agency-white-label', 'canManageSettings', 'AGENCY_LANDING'],
-        ['billing', 'agency-billing', 'canManageBilling', 'AGENCY_BILLING'],
-        ['reports', 'agency-reports', 'canViewAnalytics', 'AGENCY_REPORTS'],
-        ['new-client', 'agency-client-provisioning', 'canManageSettings', 'AGENCY_NEW_CLIENT'],
-        ['addons', 'agency-service-plans', 'canManageBilling', 'AGENCY_ADDONS'],
-        ['plans', 'agency-service-plans', 'canManageBilling', 'AGENCY_PLANS'],
-        ['cms', 'agency-white-label', 'canManageSettings', 'AGENCY_CMS'],
-        ['navigation', 'agency-white-label', 'canManageSettings', 'AGENCY_NAVIGATION'],
-        ['projects', 'agency-project-transfer', 'canManageProjects', 'AGENCY_PROJECTS'],
-        ['white-label', 'agency-white-label', 'canManageSettings', 'AGENCY_WHITE_LABEL'],
+        ['overview', 'agency-command-center', 'canViewAnalytics', 'AGENCY_OVERVIEW', '/agency/overview'],
+        ['analytics', 'agency-command-center', 'canViewAnalytics', 'AGENCY_ANALYTICS', '/agency/analytics'],
+        ['landing', 'agency-white-label', 'canManageSettings', 'AGENCY_LANDING', '/agency/landing'],
+        ['billing', 'agency-billing', 'canManageBilling', 'AGENCY_BILLING', '/agency/billing'],
+        ['reports', 'agency-reports', 'canViewAnalytics', 'AGENCY_REPORTS', '/agency/reports'],
+        ['new-client', 'agency-client-provisioning', 'canManageSettings', 'AGENCY_NEW_CLIENT', '/agency/new-client'],
+        ['addons', 'agency-service-plans', 'canManageBilling', 'AGENCY_ADDONS', '/agency/addons'],
+        ['plans', 'agency-service-plans', 'canManageBilling', 'AGENCY_PLANS', '/agency/plans'],
+        ['cms', 'agency-white-label', 'canManageSettings', 'AGENCY_CMS', '/agency/cms'],
+        ['navigation', 'agency-white-label', 'canManageSettings', 'AGENCY_NAVIGATION', '/agency/navigation'],
+        ['projects', 'agency-project-transfer', 'canManageProjects', 'AGENCY_PROJECTS', '/agency/projects'],
+        ['white-label', 'agency-white-label', 'canManageSettings', 'AGENCY_WHITE_LABEL', '/agency/white-label'],
+        ['client-portal', 'agency-client-portal', 'canManageSettings', 'AGENCY_CLIENT_PORTAL', '/agency/client-portal'],
     ] as const;
 
     it('routes every internal Agency tab through the Service Access Engine', () => {
         expect(dashboard).toContain("import { useServiceAccess }");
-        expect(dashboard).toContain("import { getAgencyEngineOperatingSystemManifest }");
+        expect(dashboard).toContain("import { getAgencyEngineOperatingSystemManifest, type AgencyEngineDashboardTabId }");
+        expect(dashboard).toContain('const agencyEngineManifest = getAgencyEngineOperatingSystemManifest();');
+        expect(dashboard).toContain('const agencyDashboardTabs = agencyEngineManifest.dashboardTabs;');
+        expect(dashboard).toContain('Object.fromEntries(');
+        expect(dashboard).toContain('agencyDashboardTabs.map(tab =>');
         expect(dashboard).toContain('AGENCY_ENGINE_OPERATING_MODULE_IDS');
-        expect(dashboard).toContain('getAgencyEngineOperatingSystemManifest().moduleIds');
+        expect(dashboard).toContain('agencyEngineManifest.moduleIds');
         expect(dashboard).toContain('export const AGENCY_TAB_ACCESS');
+        expect(dashboard).toContain('AGENCY_TAB_ICONS');
+        expect(dashboard).toContain('AgencyClientPortalSettings');
+        expect(dashboard).toContain("activeTab === 'client-portal'");
+        expect(dashboard).toContain('path === tab.route || path.startsWith(`${tab.route}/`)');
         expect(dashboard).toContain('rawTabs.filter((tab) => AGENCY_ENGINE_OPERATING_MODULE_IDS.has(AGENCY_TAB_ACCESS[tab.id].moduleId))');
         expect(dashboard).toContain('serviceAccess.canAccessModule(access.moduleId');
         expect(dashboard).toContain("serviceId: 'agency'");
@@ -39,9 +50,13 @@ describe('Agency dashboard Service Access contract', () => {
         expect(dashboard).toContain('disabled={isDisabled}');
         expect(dashboard).toContain('<Lock size={13}');
 
-        for (const [tab, moduleId, permission, routeKey] of tabContracts) {
-            const key = tab.includes('-') ? `'${tab}'` : tab;
-            expect(dashboard).toContain(`${key}: { route: ROUTES.${routeKey}, moduleId: '${moduleId}', requiredPermission: '${permission}' }`);
+        for (const [tab, moduleId, permission, routeKey, route] of tabContracts) {
+            expect(manifest.dashboardTabs.find(item => item.id === tab)).toMatchObject({
+                moduleId,
+                route,
+                requiredPermission: permission,
+            });
+            expect(routes).toContain(`${routeKey}: '${route}'`);
         }
     });
 

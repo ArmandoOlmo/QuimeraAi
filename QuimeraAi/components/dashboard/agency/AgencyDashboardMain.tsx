@@ -5,12 +5,12 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield, Lock } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield, Lock, Monitor, type LucideIcon } from 'lucide-react';
 
 import { useRouter } from '../../../hooks/useRouter';
 import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { ROUTES } from '../../../routes/config';
-import { getAgencyEngineOperatingSystemManifest } from '../../../registry/moduleRegistry';
+import { getAgencyEngineOperatingSystemManifest, type AgencyEngineDashboardTabId } from '../../../registry/moduleRegistry';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
@@ -26,12 +26,13 @@ import AgencyContentDashboard from './AgencyContentDashboard';
 import AgencyNavigationManagement from './AgencyNavigationManagement';
 import { AgencyProjects } from './AgencyProjects';
 import { WhiteLabelSettings } from './WhiteLabelSettings';
+import { AgencyClientPortalSettings } from './AgencyClientPortalSettings';
 import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '@/components/ui/HeaderBackButton';
 import { AgencySectionHeader, agencyContentClass, agencyShellClass } from './AgencyDesignSystem';
 
-export type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
+export type AgencyTab = AgencyEngineDashboardTabId;
 
 type AgencyTabAccessConfig = {
     route: string;
@@ -39,19 +40,34 @@ type AgencyTabAccessConfig = {
     requiredPermission: string;
 };
 
-export const AGENCY_TAB_ACCESS: Record<AgencyTab, AgencyTabAccessConfig> = {
-    overview: { route: ROUTES.AGENCY_OVERVIEW, moduleId: 'agency-command-center', requiredPermission: 'canViewAnalytics' },
-    analytics: { route: ROUTES.AGENCY_ANALYTICS, moduleId: 'agency-command-center', requiredPermission: 'canViewAnalytics' },
-    landing: { route: ROUTES.AGENCY_LANDING, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
-    billing: { route: ROUTES.AGENCY_BILLING, moduleId: 'agency-billing', requiredPermission: 'canManageBilling' },
-    reports: { route: ROUTES.AGENCY_REPORTS, moduleId: 'agency-reports', requiredPermission: 'canViewAnalytics' },
-    'new-client': { route: ROUTES.AGENCY_NEW_CLIENT, moduleId: 'agency-client-provisioning', requiredPermission: 'canManageSettings' },
-    addons: { route: ROUTES.AGENCY_ADDONS, moduleId: 'agency-service-plans', requiredPermission: 'canManageBilling' },
-    plans: { route: ROUTES.AGENCY_PLANS, moduleId: 'agency-service-plans', requiredPermission: 'canManageBilling' },
-    cms: { route: ROUTES.AGENCY_CMS, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
-    navigation: { route: ROUTES.AGENCY_NAVIGATION, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
-    projects: { route: ROUTES.AGENCY_PROJECTS, moduleId: 'agency-project-transfer', requiredPermission: 'canManageProjects' },
-    'white-label': { route: ROUTES.AGENCY_WHITE_LABEL, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
+const agencyEngineManifest = getAgencyEngineOperatingSystemManifest();
+const agencyDashboardTabs = agencyEngineManifest.dashboardTabs;
+
+export const AGENCY_TAB_ACCESS = Object.fromEntries(
+    agencyDashboardTabs.map(tab => [
+        tab.id,
+        {
+            route: tab.route,
+            moduleId: tab.moduleId,
+            requiredPermission: tab.requiredPermission,
+        },
+    ]),
+) as Record<AgencyTab, AgencyTabAccessConfig>;
+
+const AGENCY_TAB_ICONS: Record<AgencyTab, LucideIcon> = {
+    overview: LayoutDashboard,
+    analytics: BarChart3,
+    landing: Globe,
+    billing: CreditCard,
+    reports: FileText,
+    'new-client': UserPlus,
+    addons: Package,
+    plans: Layers,
+    cms: PenTool,
+    navigation: Navigation,
+    projects: FolderOpen,
+    'white-label': Shield,
+    'client-portal': Monitor,
 };
 
 const HIDDEN_AGENCY_TAB_REASONS = new Set([
@@ -60,7 +76,7 @@ const HIDDEN_AGENCY_TAB_REASONS = new Set([
     'module_disabled',
 ]);
 
-const AGENCY_ENGINE_OPERATING_MODULE_IDS = new Set(getAgencyEngineOperatingSystemManifest().moduleIds);
+const AGENCY_ENGINE_OPERATING_MODULE_IDS = new Set(agencyEngineManifest.moduleIds);
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
@@ -73,18 +89,7 @@ const AgencyDashboardMain: React.FC = () => {
 
     // Determine active tab from URL
     const getTabFromPath = (): AgencyTab => {
-        if (path.includes('/analytics')) return 'analytics';
-        if (path.includes('/landing')) return 'landing';
-        if (path.includes('/billing')) return 'billing';
-        if (path.includes('/reports')) return 'reports';
-        if (path.includes('/new-client')) return 'new-client';
-        if (path.includes('/addons')) return 'addons';
-        if (path.includes('/plans')) return 'plans';
-        if (path.includes('/cms')) return 'cms';
-        if (path.includes('/navigation')) return 'navigation';
-        if (path.includes('/projects')) return 'projects';
-        if (path.includes('/white-label')) return 'white-label';
-        return 'overview';
+        return agencyDashboardTabs.find(tab => path === tab.route || path.startsWith(`${tab.route}/`))?.id || 'overview';
     };
 
     const activeTab = getTabFromPath();
@@ -94,66 +99,11 @@ const AgencyDashboardMain: React.FC = () => {
     };
 
     const rawTabs = useMemo(() => [
-        {
-            id: 'overview' as AgencyTab,
-            label: t('agency.overview', 'Vista General'),
-            icon: LayoutDashboard,
-        },
-        {
-            id: 'landing' as AgencyTab,
-            label: t('agency.landing', 'Landing Page'),
-            icon: Globe,
-        },
-        {
-            id: 'new-client' as AgencyTab,
-            label: t('agency.newClient', 'Nuevo Cliente'),
-            icon: UserPlus,
-        },
-        {
-            id: 'cms' as AgencyTab,
-            label: t('agency.cms', 'CMS'),
-            icon: PenTool,
-        },
-        {
-            id: 'navigation' as AgencyTab,
-            label: t('agency.navigation', 'Menú'),
-            icon: Navigation,
-        },
-        {
-            id: 'plans' as AgencyTab,
-            label: t('agency.plans', 'Planes'),
-            icon: Layers,
-        },
-        {
-            id: 'addons' as AgencyTab,
-            label: t('agency.addons', 'Add-ons'),
-            icon: Package,
-        },
-        {
-            id: 'billing' as AgencyTab,
-            label: t('agency.billing', 'Facturación'),
-            icon: CreditCard,
-        },
-        {
-            id: 'analytics' as AgencyTab,
-            label: t('agency.analytics', 'Analytics'),
-            icon: BarChart3,
-        },
-        {
-            id: 'reports' as AgencyTab,
-            label: t('agency.reports', 'Reportes'),
-            icon: FileText,
-        },
-        {
-            id: 'projects' as AgencyTab,
-            label: t('agency.projects', 'Proyectos'),
-            icon: FolderOpen,
-        },
-        {
-            id: 'white-label' as AgencyTab,
-            label: t('agency.whiteLabel.tab', 'White Label'),
-            icon: Shield,
-        },
+        ...agencyDashboardTabs.map(tab => ({
+            id: tab.id,
+            label: t(tab.labelKey, tab.label),
+            icon: AGENCY_TAB_ICONS[tab.id],
+        })),
     ], [t]);
 
     const tabAccessDecisions = useMemo(() => {
@@ -416,6 +366,10 @@ const AgencyDashboardMain: React.FC = () => {
 
                                     {activeTab === 'white-label' && (
                                         <WhiteLabelSettings />
+                                    )}
+
+                                    {activeTab === 'client-portal' && (
+                                        <AgencyClientPortalSettings />
                                     )}
                                 </>
                             )}
