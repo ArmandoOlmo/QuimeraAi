@@ -376,7 +376,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
                 <form
                     onSubmit={handlePromptSubmit}
-                    className="quimera-ai-launcher quimera-ai-launcher-enter mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
+                    className="quimera-ai-launcher quimera-ai-launcher-enter relative z-[70] mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
                 >
                     <label className="sr-only" htmlFor="dashboard-ai-prompt">
                         {t('dashboard.assistantInputLabel', 'Escribe tu solicitud')}
@@ -400,7 +400,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </div>
                     <div className="flex items-center justify-between gap-3 pt-2">
                         <div className="min-w-0 flex-1">
-                            <div className="relative sm:hidden" onClick={(event) => event.stopPropagation()}>
+                            <div className="relative z-[80] sm:hidden" onClick={(event) => event.stopPropagation()}>
                                 <AppButton
                                     variant="icon"
                                     size="icon-sm"
@@ -417,7 +417,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     <ChevronDown className={`size-3 text-q-text-secondary transition-transform ${mobileChooserOpen ? 'rotate-180' : ''}`} />
                                 </AppButton>
                                 {mobileChooserOpen && prioritizedMobileQuickActions.length > 0 && (
-                                    <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-[220px] max-w-[85vw] rounded-2xl border border-border-subtle bg-q-surface p-1.5 shadow-[var(--shadow-card)]">
+                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[220px] max-w-[85vw] rounded-2xl border border-border-subtle bg-q-surface p-1.5 shadow-[var(--shadow-card)]">
                                         {prioritizedMobileQuickActions.map((action) => {
                                             const label = t(action.labelKey, action.labelFallback);
                                             const isSelected = selectedQuickActionId === action.id;
@@ -507,7 +507,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                 </form>
 
                 {/* Status Cards */}
-                <motion.div variants={dashboardItemVariants}>
+                <motion.div className="relative z-0" variants={dashboardItemVariants}>
                     <DashboardStatusCards />
                 </motion.div>
             </div>
