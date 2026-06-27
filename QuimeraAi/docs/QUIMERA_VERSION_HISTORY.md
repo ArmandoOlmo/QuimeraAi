@@ -36,7 +36,7 @@ Pure utilities live in `utils/businessBlueprint/versionHistory.ts`:
 - `restoreBlueprintSnapshot`
 - `restoreBlueprintModule`
 - `restoreBlueprintSection`
-- `shouldProtectFromRegeneration`
+- `shouldProtectVersionHistoryItemFromRegeneration`
 - `getSnapshotLabel`
 - `getSnapshotSummary`
 

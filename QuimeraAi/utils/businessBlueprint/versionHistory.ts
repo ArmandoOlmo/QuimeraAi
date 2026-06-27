@@ -290,7 +290,7 @@ function moduleIsProtected(value: unknown): boolean {
     return record.userModified === true || record.lockedFromRegeneration === true;
 }
 
-export function shouldProtectFromRegeneration(value: unknown): boolean {
+export function shouldProtectVersionHistoryItemFromRegeneration(value: unknown): boolean {
     return moduleIsProtected(value);
 }
 
@@ -324,7 +324,7 @@ function applyProtectedModuleGuards(
         const previousModule = previous[key];
         if (!currentModule || !previousModule) return;
         if (moduleIsProtected(currentModule) && JSON.stringify(currentModule) !== JSON.stringify(previousModule)) {
-            (next as Record<string, unknown>)[key] = clone(currentModule);
+            (next as unknown as Record<string, unknown>)[key] = clone(currentModule);
             protectedPaths.push(`businessBlueprint.${key}`);
             skippedPaths.push(`businessBlueprint.${key}`);
         }
