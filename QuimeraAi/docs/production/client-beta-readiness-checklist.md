@@ -88,6 +88,18 @@ Latest controlled-readiness evidence, 2026-06-27:
 - Do not run authenticated cron routes until the owner confirms a controlled
   production window, current queue volume, rate limits, and provider secret
   correctness.
+- Preview deployment for PR #42 head `dccb2a6` is `READY`:
+  `dpl_5b5VBo9G2b1mvbn35tUAYHUVzFKd` /
+  `https://quimera-8afec8u46-quimeraapp.vercel.app`.
+- `vercel inspect` confirms lambda outputs exist for `api/email/jobs/run`,
+  `api/appointments/jobs/run`, `api/appointments/google/jobs/run`,
+  `api/mcp/jobs/run`, and `api/ops/readiness`; direct preview HTTP requests are
+  intercepted by Vercel SSO with `302` before handlers run.
+- Production unauthenticated smokes on `https://www.quimera.ai` returned `401`
+  for email, appointment email, Google Calendar sync, and `POST` MCP job routes.
+  `GET /api/mcp/jobs/run` returns `405`, as expected for a POST-only job route.
+- Production error log scan for `https://www.quimera.ai` over the latest checked
+  hour returned no Vercel error logs.
 
 ## 3. Required Secrets And Environment Contract
 
@@ -192,6 +204,25 @@ Required before beta:
 Do not apply broad RLS/grant changes during the beta gate without an owner
 approved migration plan. Public forms and reservation flows depend on some open
 insert paths.
+
+Latest Supabase evidence, 2026-06-27:
+
+- Project `elfcrnhffuvntlfuvumd` is `ACTIVE_HEALTHY` on Postgres 17.6.
+- Critical Edge Functions are active: `ai-proxy`, `email-api`, `stripe-api`,
+  `stripe-webhook`, `storefront-api`, `onboarding-api`, and
+  `create-public-restaurant-reservation`.
+- Migration history confirms the hardening migrations through
+  `20260627215753_harden_restaurant_public_insert_and_tenant_helper_grants`.
+- `anon` no longer has `EXECUTE` on `public.get_auth_user_tenants()`;
+  `authenticated` and `service_role` retain execute.
+- Public insert policies for `restaurant_reservations` and
+  `restaurant_analytics_events` now verify restaurant, tenant, and project scope
+  against `public.restaurants`.
+- Supabase advisors currently report `422` warnings: `13` security warnings
+  for authenticated-only `SECURITY DEFINER` helper callability and `409`
+  performance warnings. Current advisor summary shows `0`
+  `function_search_path_mutable`, `0` public RLS-disabled findings, `0`
+  `security_definer_view`, and `0` anon-executable `SECURITY DEFINER` findings.
 
 ## 5. Production Smoke Tests
 
