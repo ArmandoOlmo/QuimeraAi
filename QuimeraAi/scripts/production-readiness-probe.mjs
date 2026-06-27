@@ -106,11 +106,9 @@ export async function runProductionReadinessProbe(input = {}) {
   const serviceRoleKey = requireValue('SUPABASE_SERVICE_ROLE_KEY', { minLength: 80 });
   const publicSupabaseUrl = requireValue('VITE_SUPABASE_URL', { minLength: 8 });
   const anonKey = requireValue('VITE_SUPABASE_ANON_KEY', { minLength: 40 });
-  const resendApiKey = requireValue('RESEND_API_KEY', {
-    minLength: 20,
-    pattern: /^re_/,
-    patternEvidence: 'expected Resend key prefix',
-  });
+  const resendApiKey = readEnv(env, 'RESEND_API_KEY');
+  const sendGridApiKey = readEnv(env, 'SENDGRID_API_KEY');
+  validateEmailProviderConfig(add, resendApiKey, sendGridApiKey);
   const appointmentFrom = readEnv(env, 'APPOINTMENT_EMAIL_FROM') || readEnv(env, 'RESEND_FROM_EMAIL');
   if (appointmentFrom) {
     add({ name: 'APPOINTMENT_EMAIL_FROM_OR_RESEND_FROM_EMAIL', status: 'pass', evidence: 'present' });
@@ -135,13 +133,6 @@ export async function runProductionReadinessProbe(input = {}) {
       status: 'pass',
       evidence: `valid URL; host ${parseUrl(supabaseUrl).host}`,
     });
-  }
-
-  const sendGridApiKey = readEnv(env, 'SENDGRID_API_KEY');
-  if (sendGridApiKey) {
-    add({ name: 'SENDGRID_API_KEY', status: 'pass', evidence: `present; length ${sendGridApiKey.length}` });
-  } else {
-    add({ name: 'SENDGRID_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured; Resend is primary provider' });
   }
 
   const cloudflareToken = readEnv(env, 'CLOUDFLARE_API_TOKEN');
@@ -190,6 +181,43 @@ export async function runProductionReadinessProbe(input = {}) {
   };
 }
 
+function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey) {
+  if (!resendApiKey && !sendGridApiKey) {
+    add({ name: 'EMAIL_PROVIDER_API_KEY', status: 'fail', severity: 'critical', evidence: 'missing RESEND_API_KEY or SENDGRID_API_KEY' });
+    add({ name: 'RESEND_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured' });
+    add({ name: 'SENDGRID_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured' });
+    return;
+  }
+
+  const configuredProviders = [
+    resendApiKey ? 'Resend' : null,
+    sendGridApiKey ? 'SendGrid' : null,
+  ].filter(Boolean).join(', ');
+  add({ name: 'EMAIL_PROVIDER_API_KEY', status: 'pass', evidence: `${configuredProviders} configured` });
+
+  if (!resendApiKey) {
+    add({ name: 'RESEND_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured; SendGrid provider is available' });
+  } else if (PLACEHOLDER_PATTERN.test(resendApiKey)) {
+    add({ name: 'RESEND_API_KEY', status: 'fail', severity: 'critical', evidence: 'placeholder-like value' });
+  } else if (resendApiKey.length < 20) {
+    add({ name: 'RESEND_API_KEY', status: 'fail', severity: 'critical', evidence: `too short; length ${resendApiKey.length}` });
+  } else if (!/^re_/.test(resendApiKey)) {
+    add({ name: 'RESEND_API_KEY', status: 'fail', severity: 'critical', evidence: 'expected Resend key prefix' });
+  } else {
+    add({ name: 'RESEND_API_KEY', status: 'pass', evidence: `present; length ${resendApiKey.length}` });
+  }
+
+  if (!sendGridApiKey) {
+    add({ name: 'SENDGRID_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured; Resend provider is available' });
+  } else if (PLACEHOLDER_PATTERN.test(sendGridApiKey)) {
+    add({ name: 'SENDGRID_API_KEY', status: 'fail', severity: 'critical', evidence: 'placeholder-like value' });
+  } else if (sendGridApiKey.length < 20) {
+    add({ name: 'SENDGRID_API_KEY', status: 'fail', severity: 'critical', evidence: `too short; length ${sendGridApiKey.length}` });
+  } else {
+    add({ name: 'SENDGRID_API_KEY', status: 'pass', evidence: `present; length ${sendGridApiKey.length}` });
+  }
+}
+
 function validateGoogleConfig(env, add, googleClientId, cronSecret) {
   if (!googleClientId) {
     add({ name: 'GOOGLE_CALENDAR_CLIENT_ID_OR_VITE_GOOGLE_CLIENT_ID', status: 'fail', severity: 'critical', evidence: 'missing' });
@@ -233,7 +261,7 @@ function validateGoogleConfig(env, add, googleClientId, cronSecret) {
   validateUrlValue(add, 'GOOGLE_CALENDAR_WEBHOOK_URL', readEnv(env, 'GOOGLE_CALENDAR_WEBHOOK_URL'), '/api/appointments/google/webhook');
 }
 
-function validateUrlValue(add, name, value, expectedPath) {
+function validateUrlValue(add, name, value, expectedPath, expectedOrigin = PRODUCTION_ORIGIN) {
   if (!value) {
     add({ name, status: 'fail', severity: 'critical', evidence: 'missing' });
     return;
@@ -247,11 +275,15 @@ function validateUrlValue(add, name, value, expectedPath) {
     add({ name, status: 'fail', severity: 'critical', evidence: 'must use https' });
     return;
   }
-  if (expectedPath && parsed.pathname !== expectedPath) {
-    add({ name, status: 'warn', severity: 'warning', evidence: `path is ${parsed.pathname}; expected ${expectedPath}` });
+  if (expectedOrigin && parsed.origin !== expectedOrigin) {
+    add({ name: `${name}:origin`, status: 'fail', severity: 'critical', evidence: `origin is ${parsed.origin}; expected ${expectedOrigin}` });
     return;
   }
-  add({ name, status: 'pass', evidence: `valid URL; host ${parsed.host}` });
+  if (expectedPath && parsed.pathname !== expectedPath) {
+    add({ name: `${name}:path`, status: 'fail', severity: 'critical', evidence: `path is ${parsed.pathname}; expected ${expectedPath}` });
+    return;
+  }
+  add({ name, status: 'pass', evidence: `valid URL; origin ${parsed.origin}; path ${parsed.pathname}` });
 }
 
 function validateCloudflareShape(add, token, accountId, requireCloudflare) {

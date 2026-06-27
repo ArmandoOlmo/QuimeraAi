@@ -1,27 +1,9 @@
--- Harden public insert policies without closing intentional public lead and
--- restaurant reservation flows. No table shape or existing data is changed.
+-- Apply the final production-readiness hardening incrementally for databases
+-- that already received the initial public insert and tenant helper migrations.
 
-drop policy if exists "Anyone can create platform leads" on public.platform_leads;
-drop policy if exists "Public can create valid platform leads" on public.platform_leads;
-create policy "Public can create valid platform leads"
-  on public.platform_leads
-  for insert
-  to anon, authenticated
-  with check (
-    char_length(trim(name)) between 1 and 200
-    and char_length(trim(email)) between 3 and 320
-    and email ~* '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
-    and char_length(trim(source)) between 1 and 80
-    and source ~ '^[A-Za-z0-9_-]+$'
-    and status in ('new', 'contacted', 'qualified', 'lost')
-    and coalesce(score, 0) between 0 and 100
-    and coalesce(project_id, '__platform__') = '__platform__'
-    and (phone is null or char_length(trim(phone)) <= 80)
-    and (company is null or char_length(trim(company)) <= 200)
-    and (message is null or char_length(trim(message)) <= 5000)
-    and (metadata is null or jsonb_typeof(metadata) = 'object')
-    and (tags is null or jsonb_typeof(tags) = 'array')
-  );
+revoke execute on function public.get_auth_user_tenants() from public;
+revoke execute on function public.get_auth_user_tenants() from anon;
+grant execute on function public.get_auth_user_tenants() to authenticated, service_role;
 
 drop policy if exists "Public can create reservations" on public.restaurant_reservations;
 drop policy if exists "Public can create valid reservations" on public.restaurant_reservations;
@@ -77,11 +59,3 @@ create policy "Public can insert valid analytics events"
     and event_name ~ '^[A-Za-z0-9_.:-]+$'
     and (metadata is null or jsonb_typeof(metadata) = 'object')
   );
-
-drop policy if exists "Service role can manage store payment events" on public.store_payment_events;
-create policy "Service role can manage store payment events"
-  on public.store_payment_events
-  for all
-  to service_role
-  using (true)
-  with check (true);

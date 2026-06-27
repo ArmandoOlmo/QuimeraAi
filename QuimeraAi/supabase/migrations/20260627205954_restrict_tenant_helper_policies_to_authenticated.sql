@@ -56,5 +56,6 @@ begin
   end if;
 end $$;
 
+revoke execute on function public.get_auth_user_tenants() from public;
 revoke execute on function public.get_auth_user_tenants() from anon;
 grant execute on function public.get_auth_user_tenants() to authenticated, service_role;

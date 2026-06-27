@@ -96,8 +96,8 @@ Server-only in Vercel/Supabase. Never expose with a `VITE_` prefix:
 - [ ] `CRON_SECRET`
 - [ ] `SUPABASE_URL`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY`
-- [ ] `RESEND_API_KEY`
-- [ ] `SENDGRID_API_KEY` if SendGrid fallback is enabled
+- [ ] `RESEND_API_KEY` if Resend is enabled, or `SENDGRID_API_KEY` if SendGrid
+  is the active/fallback email provider. At least one provider key is required.
 - [ ] `STRIPE_SECRET_KEY`
 - [ ] `STRIPE_WEBHOOK_SECRET`
 - [ ] `GOOGLE_CALENDAR_CLIENT_SECRET`
@@ -120,8 +120,10 @@ URL contract:
 
 - [ ] `APP_BASE_URL=https://www.quimera.ai`
 - [ ] `VITE_PUBLIC_APP_URL=https://www.quimera.ai`
-- [ ] Google Calendar redirect URI matches the deployed callback route.
-- [ ] Webhook URLs use the canonical production domain.
+- [ ] Google Calendar redirect URI is exactly on `https://www.quimera.ai` and
+  matches `/api/appointments/google/oauth/callback`.
+- [ ] Google Calendar webhook URL is exactly on `https://www.quimera.ai` and
+  matches `/api/appointments/google/webhook`.
 
 Hard blockers:
 
@@ -159,6 +161,9 @@ Required before beta:
   `20260627204427_harden_public_insert_policies.sql`.
 - [ ] Apply and review tenant helper policy hardening migration:
   `20260627205954_restrict_tenant_helper_policies_to_authenticated.sql`.
+- [ ] Apply and review final restaurant public insert and tenant helper grant
+  hardening migration:
+  `20260627215753_harden_restaurant_public_insert_and_tenant_helper_grants.sql`.
 - [ ] Re-run Supabase security advisors after migration.
 - [ ] Confirm no `Function Search Path Mutable` findings remain for:
   `set_realty_updated_at`, `normalize_realty_crm_status`,
@@ -172,7 +177,8 @@ Required before beta:
   open beta.
 - [ ] Confirm public `insert` policies for `platform_leads`,
   `restaurant_analytics_events`, and `restaurant_reservations` keep schema-level
-  validation predicates and do not regress to `WITH CHECK (true)`.
+  validation predicates, verify restaurant/tenant/project scope against
+  `public.restaurants`, and do not regress to `WITH CHECK (true)`.
 - [ ] Confirm product-approved anti-abuse controls/rate limits for public lead,
   analytics, and reservation routes before expanding beyond controlled pilots.
 - [ ] Review SECURITY DEFINER execute grants before expanding beyond controlled

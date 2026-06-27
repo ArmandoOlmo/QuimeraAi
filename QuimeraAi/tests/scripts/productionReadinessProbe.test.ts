@@ -91,6 +91,42 @@ describe('production readiness probe', () => {
     ]));
   });
 
+  it('accepts SendGrid as the configured email provider without Resend', async () => {
+    const envWithoutResend: Partial<typeof VALID_ENV> = { ...VALID_ENV };
+    delete envWithoutResend.RESEND_API_KEY;
+    const result = await runProductionReadinessProbe({
+      env: {
+        ...envWithoutResend,
+        SENDGRID_API_KEY: 'sendgrid-key-with-enough-length-for-production-shape',
+      },
+      live: false,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'EMAIL_PROVIDER_API_KEY', status: 'pass' }),
+      expect.objectContaining({ name: 'RESEND_API_KEY', status: 'skip' }),
+      expect.objectContaining({ name: 'SENDGRID_API_KEY', status: 'pass' }),
+    ]));
+  });
+
+  it('fails Google callback URLs outside the production origin', async () => {
+    const result = await runProductionReadinessProbe({
+      env: {
+        ...VALID_ENV,
+        GOOGLE_CALENDAR_REDIRECT_URI: 'https://attacker.example/api/appointments/google/oauth/callback',
+      },
+      live: false,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'GOOGLE_CALENDAR_REDIRECT_URI:origin', status: 'fail' }),
+    ]));
+  });
+
   it('does not include secret values in serialized output', async () => {
     const secretValue = ['sk', 'test', 'super_secret_value_that_must_not_leak'].join('_');
     const result = await runProductionReadinessProbe({
