@@ -43,6 +43,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const searchAgencyClients = catalog.actions.find(action => action.actionType === 'search_agency_clients');
         const summarizeAgencyPerformance = catalog.actions.find(action => action.actionType === 'summarize_agency_performance');
         const createAgencyReport = catalog.actions.find(action => action.actionType === 'create_agency_report');
+        const transferAgencyProject = catalog.actions.find(action => action.actionType === 'transfer_agency_project');
         const updateServiceAvailability = catalog.actions.find(action => action.actionType === 'update_service_availability');
         const updatePlan = catalog.actions.find(action => action.actionType === 'update_plan');
         const reviewErrors = catalog.actions.find(action => action.actionType === 'review_errors');
@@ -177,6 +178,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'search_agency_clients',
             'summarize_agency_performance',
             'create_agency_report',
+            'transfer_agency_project',
         ]));
         expect(agency?.serviceIds).toEqual(['agency']);
         expect(createEmail).toMatchObject({
@@ -279,6 +281,18 @@ describe('globalAssistantCapabilityCatalog', () => {
             previewSupported: true,
             rollbackSupported: true,
             rollbackExecutable: true,
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+        });
+        expect(transferAgencyProject).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            mutatesData: true,
+            safetyLevel: 'high',
+            requiresConfirmation: true,
+            previewSupported: true,
+            rollbackSupported: false,
+            rollbackExecutable: false,
             requiredService: 'agency',
             requiredFeature: 'agencyModule',
         });

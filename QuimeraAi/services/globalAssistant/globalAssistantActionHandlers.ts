@@ -54,6 +54,9 @@ import { normalizeStorefrontSectionVisibility } from '../../utils/storefrontRend
 
 type SupabaseClientLike = {
     from: (table: string) => any;
+    functions?: {
+        invoke: (functionName: string, options?: { body?: Record<string, unknown> }) => Promise<{ data?: unknown; error?: unknown }>;
+    };
 };
 
 type HandlerPatch = Pick<AssistantActionDefinition, 'validate' | 'execute' | 'rollback'>;
@@ -154,6 +157,21 @@ const createId = (prefix: string): string => {
 
 const getClient = (deps: GlobalAssistantActionHandlerDependencies): SupabaseClientLike =>
     deps.supabase || defaultSupabase;
+
+const invokeFunction = async (
+    deps: GlobalAssistantActionHandlerDependencies,
+    functionName: string,
+    body: Record<string, unknown>,
+): Promise<unknown> => {
+    const client = getClient(deps);
+    if (typeof client.functions?.invoke !== 'function') {
+        throw new Error(`Supabase functions.invoke is required for ${functionName}.`);
+    }
+
+    const result = await client.functions.invoke(functionName, { body });
+    if (result?.error) throw result.error;
+    return asRecord(result?.data).data || result?.data;
+};
 
 const getNow = (deps: GlobalAssistantActionHandlerDependencies): string =>
     deps.now ? deps.now() : new Date().toISOString();
@@ -860,6 +878,77 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
             },
             diff: {
                 rolledBack,
+            },
+        };
+    },
+});
+
+const createAgencyProjectTransferHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: (input) => {
+        const projectId = readString(input.projectId) || readString(input.sourceProjectId);
+        const targetClientTenantId = readString(input.targetClientTenantId) || readString(input.clientTenantId);
+        const errors = [
+            ...(!projectId ? ['projectId is required before transferring an agency project.'] : []),
+            ...(!targetClientTenantId ? ['targetClientTenantId is required before transferring an agency project.'] : []),
+        ];
+        return {
+            valid: errors.length === 0,
+            errors,
+        };
+    },
+    execute: async (input, { action, context }) => {
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const sourceProjectId = readString(input.projectId) || readString(input.sourceProjectId);
+        const targetClientTenantId = readString(input.targetClientTenantId) || readString(input.clientTenantId);
+        const projectName = readString(input.projectName);
+
+        if (!sourceProjectId) throw new Error('projectId is required before transferring an agency project.');
+        if (!targetClientTenantId) throw new Error('targetClientTenantId is required before transferring an agency project.');
+
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const managedClient = snapshot.clients.find(clientSnapshot => clientSnapshot.clientTenantId === targetClientTenantId);
+        if (!managedClient) {
+            throw new Error('Agency Project Transfer can only target clients managed by the active agency tenant.');
+        }
+
+        const transferResponse = asRecord(await invokeFunction(deps, 'onboarding-api', {
+            action: 'transferProject',
+            sourceTenantId: agencyTenantId,
+            targetClientTenantId,
+            projectId: sourceProjectId,
+            ...(projectName ? { projectName } : {}),
+            metadata: {
+                ...asRecord(input.metadata),
+                source: 'global-assistant',
+                actionId: action.id,
+                taskId: action.taskId || null,
+            },
+        }));
+
+        if (transferResponse.success !== true) {
+            throw new Error(readString(transferResponse.message) || 'Agency project transfer did not complete.');
+        }
+
+        const newProjectId = readString(transferResponse.newProjectId);
+        const sourceTables = [...snapshot.sourceTables, 'onboarding-api', 'agency_project_transfers', 'agency_client_approvals', 'agency_activity'];
+
+        return {
+            afterSnapshot: {
+                agencyTenantId,
+                client: managedClient,
+                transfer: transferResponse,
+                sourceTables,
+            },
+            diff: {
+                transferred: [`agency.projectTransfer.${sourceProjectId}.${targetClientTenantId}`],
+                sourceProjectId,
+                targetClientTenantId,
+                newProjectId: newProjectId || null,
+                mutatesData: true,
+                reviewRequired: true,
+                copiedAsDraft: true,
+                approvalRequested: Boolean(asRecord(transferResponse.transferSummary).approvalRequested),
+                sourceTables,
             },
         };
     },
@@ -6774,6 +6863,10 @@ const persistProjectSnapshotBeforeAssistantMutation = async (
     context: AssistantContextSnapshot | undefined,
     deps: GlobalAssistantActionHandlerDependencies,
 ): Promise<void> => {
+    if (definition.actionType === 'transfer_agency_project') {
+        return;
+    }
+
     if (definition.module === 'agency' && !readString(input.projectId) && !action.projectId) {
         return;
     }
@@ -8610,6 +8703,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     search_agency_clients: createSearchAgencyClientsHandler,
     summarize_agency_performance: createAgencyPerformanceSummaryHandler,
     create_agency_report: createAgencyReportHandler,
+    transfer_agency_project: createAgencyProjectTransferHandler,
     open_analytics_dashboard: () => createNavigationHandler('superadmin', { label: 'Open platform analytics.', adminView: 'analytics' }),
     open_super_admin: () => createNavigationHandler('superadmin', { label: 'Open Super Admin.' }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),

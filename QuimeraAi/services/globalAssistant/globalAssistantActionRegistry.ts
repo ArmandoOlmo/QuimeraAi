@@ -410,6 +410,19 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         periodEnd: stringSchema('Report period end date in YYYY-MM-DD format.'),
         includeClients: booleanSchema('Whether to include selected client snapshots in the report data.'),
     }), 'medium', { requiredService: 'agency', requiredFeature: 'agencyModule' }),
+    action('agency', 'transfer_agency_project', 'Copy an agency-owned project into a managed client workspace as a draft and request client approval through onboarding-api.', objectSchema({
+        tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
+        projectId: stringSchema('Agency-owned source project id.'),
+        sourceProjectId: stringSchema('Alias for projectId.'),
+        targetClientTenantId: stringSchema('Managed client tenant id that should receive the draft copy.'),
+        clientTenantId: stringSchema('Alias for targetClientTenantId.'),
+        projectName: stringSchema('Optional name for the transferred draft project.'),
+        metadata: objectSchema(),
+    }, ['projectId', 'targetClientTenantId']), 'high', {
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        rollbackSupported: false,
+    }),
 
     action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),

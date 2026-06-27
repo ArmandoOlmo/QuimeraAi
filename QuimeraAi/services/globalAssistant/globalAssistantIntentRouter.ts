@@ -420,6 +420,9 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
     }
 
     if (module === 'agency') {
+        if (includesAny(text, ['project transfer', 'transfer project', 'transferir proyecto', 'transfiere proyecto', 'copiar proyecto', 'copia proyecto', 'copy project'])) {
+            return ['transfer_agency_project'];
+        }
         if (intent === 'open') {
             if (includesAny(text, ['client 360', 'cliente 360', 'client360'])) return ['open_agency_client_360'];
             return ['open_agency_command_center'];
@@ -582,6 +585,8 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             analyze: ['summarize_agency_performance'],
             report: ['create_agency_report'],
             explain: ['summarize_agency_performance'],
+            create: ['transfer_agency_project'],
+            edit: ['transfer_agency_project'],
         },
     };
 

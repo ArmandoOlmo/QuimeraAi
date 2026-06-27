@@ -1107,6 +1107,52 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'transfer_agency_project') {
+        const sourceProjectId = asText(action.input.projectId || action.input.sourceProjectId || action.projectId);
+        const targetClientTenantId = asText(action.input.targetClientTenantId || action.input.clientTenantId);
+        const projectName = asText(action.input.projectName);
+
+        return {
+            ...preview,
+            before: {
+                sourceProjectId,
+                targetClientTenantId,
+                existingTargetProject: false,
+            },
+            after: {
+                operation: 'agency_project_transfer',
+                functionName: 'onboarding-api',
+                sourceProjectId,
+                targetClientTenantId,
+                projectName: projectName || undefined,
+                copiedAsDraft: true,
+                published: false,
+                approvalRequested: true,
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                created: [
+                    'projects.$pending',
+                    'agency_project_transfers.$pending',
+                    'agency_client_approvals.$pending',
+                    'agency_activity.$pending',
+                ],
+                createdLabel: 'agency project transfer draft',
+                reviewRequired: true,
+                rollback: definition.rollbackSupported ? 'delete_created_transfer' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'The target client receives a draft copy only; nothing is published automatically.',
+                'Client approval is requested through Agency Client Portal before client-facing acceptance.',
+                'Rollback is not automatic because transfer cleanup can span projects, approvals, activity, and client usage counts.',
+            ],
+        };
+    }
+
     const draft = DRAFT_PREVIEW_BY_ACTION[action.actionType];
     if (!draft) return preview;
 

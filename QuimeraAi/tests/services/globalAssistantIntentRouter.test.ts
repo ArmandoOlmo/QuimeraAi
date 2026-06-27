@@ -254,6 +254,12 @@ describe('globalAssistantIntentRouter', () => {
             actionCandidates: ['create_agency_report'],
             requiresClarification: false,
         });
+
+        expect(routeAssistantIntent('Transfiere proyecto al cliente de agencia para revision', agencyContext)).toMatchObject({
+            module: 'agency',
+            actionCandidates: ['transfer_agency_project'],
+            requiresClarification: false,
+        });
     });
 
     it('routes Website Builder edits to structured website actions', () => {

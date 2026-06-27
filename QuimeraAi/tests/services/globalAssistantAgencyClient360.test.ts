@@ -103,10 +103,22 @@ class FakeSupabaseQuery {
 
 const createFakeSupabase = () => {
     const rowsByTable: Record<string, Row[]> = {};
+    const functionInvocations: Array<{ functionName: string; options?: Row }> = [];
+    const functionResponses: Record<string, { data?: unknown; error?: unknown }> = {};
     let counter = 0;
 
     return {
         rowsByTable,
+        functionInvocations,
+        functionResponses,
+        functions: {
+            invoke(functionName: string, options?: Row) {
+                functionInvocations.push({ functionName, options });
+                const configured = functionResponses[functionName];
+                if (configured) return Promise.resolve(configured);
+                return Promise.resolve({ data: { success: true }, error: null });
+            },
+        },
         from(table: string) {
             return new FakeSupabaseQuery(table, rowsByTable, prefix => `${prefix}_${++counter}`);
         },
@@ -170,6 +182,23 @@ const buildAgencyReportAction = (input: Row): AssistantAction => ({
     mode: 'owner',
     requiresConfirmation: false,
     status: 'previewed',
+    createdAt: '2026-06-26T13:00:00.000Z',
+    updatedAt: '2026-06-26T13:00:00.000Z',
+});
+
+const buildAgencyProjectTransferAction = (input: Row): AssistantAction => ({
+    id: 'action-transfer-agency-project',
+    taskId: 'task-agency-transfer',
+    actionType: 'transfer_agency_project',
+    module: 'agency',
+    target: { module: 'agency' },
+    input,
+    projectId: 'source-project-1',
+    tenantId: 'agency-1',
+    userId: 'user-1',
+    mode: 'owner',
+    requiresConfirmation: true,
+    status: 'confirmed',
     createdAt: '2026-06-26T13:00:00.000Z',
     updatedAt: '2026-06-26T13:00:00.000Z',
 });
@@ -420,5 +449,143 @@ describe('Global Assistant Agency Client 360 handler', () => {
             action: buildAgencyReportAction(input),
             context,
         })).rejects.toThrow('Agency reports can only include clients managed by the active agency tenant.');
+    });
+
+    it('transfers an agency project through onboarding-api for a managed client', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+            billing_mode: 'agency_managed',
+            onboarding_status: 'active',
+            lifecycle_stage: 'operating',
+        }];
+        fakeSupabase.rowsByTable.agency_service_plans = [{
+            id: 'plan-growth',
+            tenant_id: 'agency-1',
+            name: 'Growth Ops',
+            price: 240,
+            base_cost: 29,
+            is_active: true,
+            is_archived: false,
+        }];
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'client-1',
+            name: 'Client One',
+            email: 'client@example.test',
+            type: 'agency_client',
+            billing: { agencyPlanId: 'plan-growth', monthlyPrice: 260, mode: 'agency_managed' },
+            subscription_plan: 'individual',
+            usage: { projectCount: 3 },
+        }];
+        fakeSupabase.functionResponses['onboarding-api'] = {
+            data: {
+                success: true,
+                agencyTenantId: 'agency-1',
+                sourceProjectId: 'source-project-1',
+                targetClientTenantId: 'client-1',
+                newProjectId: 'copied-project-1',
+                modulesCopied: 4,
+                transferSummary: {
+                    copiedAsDraft: true,
+                    published: false,
+                    approvalRequested: true,
+                    currentProjects: 4,
+                    maxProjects: 25,
+                },
+            },
+            error: null,
+        };
+
+        const definition = registry.get('transfer_agency_project');
+        const input = {
+            tenantId: 'agency-1',
+            projectId: 'source-project-1',
+            targetClientTenantId: 'client-1',
+            projectName: 'Client One Draft Website',
+        };
+
+        const result = await definition!.execute!(input, {
+            action: buildAgencyProjectTransferAction(input),
+            context,
+        }) as Row;
+
+        expect(fakeSupabase.functionInvocations).toHaveLength(1);
+        expect(fakeSupabase.functionInvocations[0]).toMatchObject({
+            functionName: 'onboarding-api',
+            options: {
+                body: {
+                    action: 'transferProject',
+                    sourceTenantId: 'agency-1',
+                    targetClientTenantId: 'client-1',
+                    projectId: 'source-project-1',
+                    projectName: 'Client One Draft Website',
+                    metadata: {
+                        source: 'global-assistant',
+                        actionId: 'action-transfer-agency-project',
+                        taskId: 'task-agency-transfer',
+                    },
+                },
+            },
+        });
+        expect(result.afterSnapshot).toMatchObject({
+            agencyTenantId: 'agency-1',
+            client: {
+                clientTenantId: 'client-1',
+                agencyPlanId: 'plan-growth',
+                agencyPlanName: 'Growth Ops',
+            },
+            transfer: {
+                success: true,
+                newProjectId: 'copied-project-1',
+                transferSummary: {
+                    copiedAsDraft: true,
+                    published: false,
+                    approvalRequested: true,
+                },
+            },
+        });
+        expect(result.diff).toMatchObject({
+            transferred: ['agency.projectTransfer.source-project-1.client-1'],
+            sourceProjectId: 'source-project-1',
+            targetClientTenantId: 'client-1',
+            newProjectId: 'copied-project-1',
+            mutatesData: true,
+            reviewRequired: true,
+            copiedAsDraft: true,
+            approvalRequested: true,
+        });
+        expect(result.diff.sourceTables).toEqual(expect.arrayContaining([
+            'agency_clients',
+            'agency_service_plans',
+            'tenants',
+            'onboarding-api',
+            'agency_project_transfers',
+            'agency_client_approvals',
+            'agency_activity',
+        ]));
+    });
+
+    it('blocks project transfer for clients outside the active agency before invoking onboarding-api', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+        }];
+
+        const definition = registry.get('transfer_agency_project');
+        const input = {
+            tenantId: 'agency-1',
+            projectId: 'source-project-1',
+            targetClientTenantId: 'external-client',
+        };
+
+        await expect(definition!.execute!(input, {
+            action: buildAgencyProjectTransferAction(input),
+            context,
+        })).rejects.toThrow('Agency Project Transfer can only target clients managed by the active agency tenant.');
+        expect(fakeSupabase.functionInvocations).toEqual([]);
     });
 });
