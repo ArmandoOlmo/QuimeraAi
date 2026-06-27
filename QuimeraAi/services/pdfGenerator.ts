@@ -126,6 +126,14 @@ export class PDFReportGenerator {
                 label: 'Tasa de Conversión Promedio',
                 value: `${reportData.summary.avgConversionRate.toFixed(1)}%`,
             },
+            {
+                label: 'MRR Administrado',
+                value: this.formatCurrency(reportData.summary.totalMrr),
+            },
+            {
+                label: 'Agency OS Readiness',
+                value: `${reportData.summary.moduleReadiness.moduleReadinessRate}%`,
+            },
         ];
 
         // Display metrics in a grid
@@ -158,6 +166,7 @@ export class PDFReportGenerator {
         });
 
         yPosition += Math.ceil(metrics.length / cols) * rowHeight + 15;
+        yPosition = this.addAgencyOperatingSystemSection(doc, reportData, yPosition);
 
         // Trends section
         doc.setFontSize(14);
@@ -262,6 +271,7 @@ export class PDFReportGenerator {
         doc.setFont('helvetica', 'bold');
         doc.text('Reporte Detallado por Cliente', 20, yPosition);
         yPosition += 15;
+        yPosition = this.addAgencyOperatingSystemSection(doc, reportData, yPosition);
 
         // Client table
         const tableData = reportData.byClient.map((client) => [
@@ -271,11 +281,13 @@ export class PDFReportGenerator {
             this.formatCurrency(client.totalRevenue),
             `${client.conversionRate.toFixed(1)}%`,
             `${client.openRate.toFixed(1)}%`,
+            `${client.moduleReadinessRate || 0}%`,
+            `${client.activeClient360ModuleSlots || 0}/${client.totalClient360ModuleSlots || 0}`,
         ]);
 
         autoTable(doc, {
             startY: yPosition,
-            head: [['Cliente', 'Leads', 'Visitas', 'Ingresos', 'Conv. %', 'Email Open %']],
+            head: [['Cliente', 'Leads', 'Visitas', 'Ingresos', 'Conv.', 'Email', 'OS', 'Slots']],
             body: tableData,
             theme: 'striped',
             headStyles: {
@@ -283,14 +295,16 @@ export class PDFReportGenerator {
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
             },
-            styles: { fontSize: 9 },
+            styles: { fontSize: 8 },
             columnStyles: {
-                0: { cellWidth: 50 },
-                1: { cellWidth: 25, halign: 'right' },
-                2: { cellWidth: 25, halign: 'right' },
-                3: { cellWidth: 30, halign: 'right' },
-                4: { cellWidth: 20, halign: 'right' },
-                5: { cellWidth: 25, halign: 'right' },
+                0: { cellWidth: 42 },
+                1: { cellWidth: 20, halign: 'right' },
+                2: { cellWidth: 22, halign: 'right' },
+                3: { cellWidth: 28, halign: 'right' },
+                4: { cellWidth: 18, halign: 'right' },
+                5: { cellWidth: 20, halign: 'right' },
+                6: { cellWidth: 16, halign: 'right' },
+                7: { cellWidth: 18, halign: 'right' },
             },
         });
     }
@@ -305,6 +319,7 @@ export class PDFReportGenerator {
         doc.setFont('helvetica', 'bold');
         doc.text('Comparativa de Rendimiento', 20, yPosition);
         yPosition += 15;
+        yPosition = this.addAgencyOperatingSystemSection(doc, reportData, yPosition);
 
         // Sort clients by total revenue
         const sortedClients = [...reportData.byClient].sort(
@@ -348,6 +363,64 @@ export class PDFReportGenerator {
                 6: { cellWidth: 20, halign: 'center' },
             },
         });
+    }
+
+    private addAgencyOperatingSystemSection(
+        doc: jsPDF,
+        reportData: AggregatedReportData,
+        yPosition: number
+    ): number {
+        const readiness = reportData.summary.moduleReadiness;
+
+        if (yPosition > 230) {
+            doc.addPage();
+            yPosition = 20;
+        }
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('Agency OS Readiness', 20, yPosition);
+        yPosition += 9;
+
+        autoTable(doc, {
+            startY: yPosition,
+            head: [['Readiness', 'Slots Client 360', 'Clientes Agency OS', 'Módulos generados']],
+            body: [[
+                `${readiness.moduleReadinessRate}%`,
+                `${readiness.activeModuleSlots}/${readiness.totalModuleSlots}`,
+                readiness.clientsWithAgencyOperatingSystem.toLocaleString(),
+                this.formatModuleList(readiness.generatedModuleIds),
+            ]],
+            theme: 'grid',
+            headStyles: {
+                fillColor: [17, 24, 39],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+            },
+            styles: { fontSize: 8 },
+            columnStyles: {
+                0: { cellWidth: 28, halign: 'right' },
+                1: { cellWidth: 35, halign: 'right' },
+                2: { cellWidth: 35, halign: 'right' },
+                3: { cellWidth: 80 },
+            },
+        });
+
+        yPosition = (doc as any).lastAutoTable.finalY + 8;
+
+        if (readiness.enabledClient360ModuleIds.length > 0) {
+            const enabledModules = `Módulos Client 360 activos: ${this.formatModuleList(readiness.enabledClient360ModuleIds)}`;
+            const lines = doc.splitTextToSize(enabledModules, doc.internal.pageSize.getWidth() - 40);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(80, 80, 80);
+            doc.text(lines, 20, yPosition);
+            yPosition += lines.length * 5 + 6;
+        }
+
+        doc.setTextColor(0, 0, 0);
+        return yPosition;
     }
 
     /**
@@ -404,6 +477,10 @@ export class PDFReportGenerator {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(amount);
+    }
+
+    private formatModuleList(modules: string[]): string {
+        return modules.length > 0 ? modules.join(', ') : 'Sin módulos';
     }
 
     private hexToRgb(hex: string): { r: number; g: number; b: number } {

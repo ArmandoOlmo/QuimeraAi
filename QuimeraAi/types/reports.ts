@@ -26,6 +26,15 @@ export interface ReportDateRange {
     end: Date;
 }
 
+export interface AgencyReportModuleReadiness {
+    clientsWithAgencyOperatingSystem: number;
+    activeModuleSlots: number;
+    totalModuleSlots: number;
+    moduleReadinessRate: number;
+    enabledClient360ModuleIds: string[];
+    generatedModuleIds: string[];
+}
+
 // =============================================================================
 // AGGREGATED DATA TYPES
 // =============================================================================
@@ -41,6 +50,12 @@ export interface ClientMetrics {
     billingStatus?: string;
     monthlyRecurringRevenue: number;
     healthScore?: number;
+    agencyOperatingSystem?: Record<string, unknown> | null;
+    enabledClient360ModuleIds?: string[];
+    generatedModuleIds?: string[];
+    activeClient360ModuleSlots?: number;
+    totalClient360ModuleSlots?: number;
+    moduleReadinessRate?: number;
 
     // Lead metrics
     totalLeads: number;
@@ -99,6 +114,7 @@ export interface AggregatedReportData {
         avgConversionRate: number;
         totalAiCreditsUsed: number;
         totalStorageUsedGB: number;
+        moduleReadiness: AgencyReportModuleReadiness;
     };
 
     // Per-client breakdown

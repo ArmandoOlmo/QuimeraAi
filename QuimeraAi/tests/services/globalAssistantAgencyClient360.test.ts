@@ -331,6 +331,14 @@ describe('Global Assistant Agency Client 360 handler', () => {
             billing_mode: 'agency_managed',
             onboarding_status: 'active',
             lifecycle_stage: 'operating',
+            metadata: {
+                agencyOperatingSystem: {
+                    source: 'agency-engine',
+                    client360ModuleIds: ['businessBlueprint', 'website-builder', 'ecommerce', 'analytics'],
+                    enabledClient360ModuleIds: ['website-builder', 'ecommerce'],
+                    generatedModuleIds: ['website-builder', 'ecommerce-engine'],
+                },
+            },
             updated_at: '2026-06-26T14:00:00.000Z',
         }];
         fakeSupabase.rowsByTable.agency_service_plans = [{
@@ -387,6 +395,14 @@ describe('Global Assistant Agency Client 360 handler', () => {
                 totalProjects: 3,
                 byBillingMode: { agency_managed: 1 },
                 byLifecycleStage: { operating: 1 },
+                moduleReadiness: {
+                    clientsWithAgencyOperatingSystem: 1,
+                    activeModuleSlots: 2,
+                    totalModuleSlots: 4,
+                    moduleReadinessRate: 50,
+                    enabledClient360ModuleIds: ['ecommerce', 'website-builder'],
+                    generatedModuleIds: ['ecommerce-engine', 'website-builder'],
+                },
             },
             sourceTables: ['agency_clients', 'agency_service_plans', 'tenants', 'agency_reports', 'agency_activity'],
         });
@@ -405,6 +421,10 @@ describe('Global Assistant Agency Client 360 handler', () => {
             selectedClientIds: ['client-1'],
             periodStart: '2026-06-01',
             periodEnd: '2026-06-26',
+            moduleReadinessRate: 50,
+            activeModuleSlots: 2,
+            totalModuleSlots: 4,
+            clientsWithAgencyOperatingSystem: 1,
         });
         expect(result.afterSnapshot).toMatchObject({
             agencyTenantId: 'agency-1',
@@ -413,7 +433,14 @@ describe('Global Assistant Agency Client 360 handler', () => {
                 clientCount: 1,
                 totalMonthlyRevenue: 260,
                 totalProjects: 3,
+                moduleReadiness: {
+                    clientsWithAgencyOperatingSystem: 1,
+                    activeModuleSlots: 2,
+                    totalModuleSlots: 4,
+                    moduleReadinessRate: 50,
+                },
             },
+            aiSummary: 'Agency client monthly report prepared for 1 client from 2026-06-01 to 2026-06-26. Agency OS readiness 50% (2/4 Client 360 slots).',
             sourceTables: ['agency_clients', 'agency_service_plans', 'tenants', 'agency_reports', 'agency_activity'],
         });
         expect(result.diff).toMatchObject({

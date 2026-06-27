@@ -683,6 +683,58 @@ const readAgencyClientsSnapshot = async (
     };
 };
 
+const summarizeAgencyOperatingSystemReadiness = (clients: Array<Record<string, unknown>>) => {
+    let clientsWithAgencyOperatingSystem = 0;
+    let activeModuleSlots = 0;
+    let totalModuleSlots = 0;
+    const enabledClient360ModuleIds = new Set<string>();
+    const generatedModuleIds = new Set<string>();
+
+    clients.forEach(client => {
+        const agencyOperatingSystem = asRecord(client.agencyOperatingSystem);
+        if (Object.keys(agencyOperatingSystem).length === 0) return;
+
+        clientsWithAgencyOperatingSystem += 1;
+        const enabledModules = uniqueStringList(
+            asArray(agencyOperatingSystem.enabledClient360ModuleIds)
+                .map(value => readString(value) || '')
+                .filter(Boolean),
+        );
+        const totalModules = uniqueStringList(
+            asArray(agencyOperatingSystem.client360ModuleIds)
+                .map(value => readString(value) || '')
+                .filter(Boolean),
+        );
+        const generatedModules = uniqueStringList(
+            asArray(agencyOperatingSystem.generatedModuleIds)
+                .map(value => readString(value) || '')
+                .filter(Boolean),
+        );
+        const client360Rows = asArray(agencyOperatingSystem.client360Modules);
+        const totalFromRows = uniqueStringList(
+            client360Rows
+                .map(row => readString(asRecord(row).id) || '')
+                .filter(Boolean),
+        );
+        const totalForClient = totalModules.length > 0 ? totalModules : totalFromRows;
+        const totalForSummary = totalForClient.length > 0 ? totalForClient.length : enabledModules.length;
+
+        activeModuleSlots += enabledModules.length;
+        totalModuleSlots += totalForSummary;
+        enabledModules.forEach(moduleId => enabledClient360ModuleIds.add(moduleId));
+        generatedModules.forEach(moduleId => generatedModuleIds.add(moduleId));
+    });
+
+    return {
+        clientsWithAgencyOperatingSystem,
+        activeModuleSlots,
+        totalModuleSlots,
+        moduleReadinessRate: totalModuleSlots > 0 ? Math.round((activeModuleSlots / totalModuleSlots) * 100) : 0,
+        enabledClient360ModuleIds: Array.from(enabledClient360ModuleIds).sort(),
+        generatedModuleIds: Array.from(generatedModuleIds).sort(),
+    };
+};
+
 const createSearchAgencyClientsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: noValidationErrors,
     execute: async (input, { action, context }) => {
@@ -736,6 +788,7 @@ const createAgencyPerformanceSummaryHandler = (deps: GlobalAssistantActionHandle
             acc[key] = (acc[key] || 0) + 1;
             return acc;
         }, {});
+        const moduleReadiness = summarizeAgencyOperatingSystemReadiness(snapshot.clients);
 
         return {
             afterSnapshot: {
@@ -750,6 +803,7 @@ const createAgencyPerformanceSummaryHandler = (deps: GlobalAssistantActionHandle
                     averageRevenuePerClient: snapshot.clients.length > 0 ? totalMonthlyRevenue / snapshot.clients.length : 0,
                     byBillingMode,
                     byLifecycleStage,
+                    moduleReadiness,
                 },
                 clients: includeClients ? snapshot.clients.slice(0, 10) : [],
                 warnings: snapshot.warnings,
@@ -801,6 +855,7 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
             acc[key] = (acc[key] || 0) + 1;
             return acc;
         }, {});
+        const moduleReadiness = summarizeAgencyOperatingSystemReadiness(selectedClients);
         const reportData = {
             source: 'global-assistant',
             actionId: action.id,
@@ -814,12 +869,13 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                 averageRevenuePerClient: selectedClients.length > 0 ? totalMonthlyRevenue / selectedClients.length : 0,
                 byBillingMode,
                 byLifecycleStage,
+                moduleReadiness,
             },
             clients: readBoolean(input.includeClients) === false ? [] : selectedClients,
             warnings: snapshot.warnings,
             sourceTables: [...snapshot.sourceTables, 'agency_reports', 'agency_activity'],
         };
-        const aiSummary = `Agency ${reportType.replace(/_/g, ' ')} report prepared for ${selectedClients.length} client${selectedClients.length === 1 ? '' : 's'} from ${periodStart} to ${periodEnd}.`;
+        const aiSummary = `Agency ${reportType.replace(/_/g, ' ')} report prepared for ${selectedClients.length} client${selectedClients.length === 1 ? '' : 's'} from ${periodStart} to ${periodEnd}. Agency OS readiness ${moduleReadiness.moduleReadinessRate}% (${moduleReadiness.activeModuleSlots}/${moduleReadiness.totalModuleSlots} Client 360 slots).`;
         const reportRow = await insertRow(client, 'agency_reports', {
             agency_tenant_id: agencyTenantId,
             client_tenant_id: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
@@ -848,6 +904,10 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
                 selectedClientIds,
                 periodStart,
                 periodEnd,
+                moduleReadinessRate: moduleReadiness.moduleReadinessRate,
+                activeModuleSlots: moduleReadiness.activeModuleSlots,
+                totalModuleSlots: moduleReadiness.totalModuleSlots,
+                clientsWithAgencyOperatingSystem: moduleReadiness.clientsWithAgencyOperatingSystem,
             },
             created_by: action.userId || context?.actor.userId || null,
             created_at: now,

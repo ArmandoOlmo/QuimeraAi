@@ -11,6 +11,7 @@ import type {
     AggregatedReportData,
     ClientMetrics,
     ReportTemplate,
+    AgencyReportModuleReadiness,
 } from '../types/reports';
 
 type JsonRecord = Record<string, any>;
@@ -25,6 +26,12 @@ interface AgencyClientRelationship {
     onboardingStatus?: string;
     projectCount?: number;
     primaryProjectId?: string;
+    agencyOperatingSystem?: JsonRecord | null;
+    enabledClient360ModuleIds?: string[];
+    generatedModuleIds?: string[];
+    activeClient360ModuleSlots?: number;
+    totalClient360ModuleSlots?: number;
+    moduleReadinessRate?: number;
 }
 
 interface GenerateAgencyReportInput {
@@ -95,6 +102,55 @@ function readPositiveNumber(...values: unknown[]): number {
         if (number > 0) return number;
     }
     return 0;
+}
+
+function readStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return Array.from(new Set(
+        value
+            .map(item => String(item || '').trim())
+            .filter(Boolean)
+    ));
+}
+
+function readAgencyOperatingSystemStats(value: unknown) {
+    const agencyOperatingSystem = parseJsonObject(value);
+
+    if (Object.keys(agencyOperatingSystem).length === 0) {
+        return {
+            agencyOperatingSystem: null,
+            enabledClient360ModuleIds: [],
+            generatedModuleIds: [],
+            activeClient360ModuleSlots: 0,
+            totalClient360ModuleSlots: 0,
+            moduleReadinessRate: 0,
+        };
+    }
+
+    const enabledClient360ModuleIds = readStringArray(agencyOperatingSystem.enabledClient360ModuleIds);
+    const generatedModuleIds = readStringArray(agencyOperatingSystem.generatedModuleIds);
+    const totalModuleIds = readStringArray(agencyOperatingSystem.client360ModuleIds);
+    const client360Rows = Array.isArray(agencyOperatingSystem.client360Modules)
+        ? agencyOperatingSystem.client360Modules
+        : [];
+    const totalFromRows = readStringArray(
+        client360Rows.map(row => isRecord(row) ? row.id : null)
+    );
+    const totalForClient = totalModuleIds.length > 0 ? totalModuleIds : totalFromRows;
+    const totalClient360ModuleSlots = totalForClient.length > 0
+        ? totalForClient.length
+        : enabledClient360ModuleIds.length;
+
+    return {
+        agencyOperatingSystem,
+        enabledClient360ModuleIds,
+        generatedModuleIds,
+        activeClient360ModuleSlots: enabledClient360ModuleIds.length,
+        totalClient360ModuleSlots,
+        moduleReadinessRate: totalClient360ModuleSlots > 0
+            ? Math.round((enabledClient360ModuleIds.length / totalClient360ModuleSlots) * 100)
+            : 0,
+    };
 }
 
 function isMissingAgencyRelationshipTable(error: unknown): boolean {
@@ -200,6 +256,33 @@ export function readClientMonthlyRecurringRevenue(client: Pick<Tenant, 'billing'
     );
 }
 
+export function calculateAgencyModuleReadiness(clientMetrics: ClientMetrics[]): AgencyReportModuleReadiness {
+    let clientsWithAgencyOperatingSystem = 0;
+    let activeModuleSlots = 0;
+    let totalModuleSlots = 0;
+    const enabledClient360ModuleIds = new Set<string>();
+    const generatedModuleIds = new Set<string>();
+
+    clientMetrics.forEach(client => {
+        if (!client.agencyOperatingSystem) return;
+
+        clientsWithAgencyOperatingSystem += 1;
+        activeModuleSlots += readFiniteNumber(client.activeClient360ModuleSlots);
+        totalModuleSlots += readFiniteNumber(client.totalClient360ModuleSlots);
+        (client.enabledClient360ModuleIds || []).forEach(moduleId => enabledClient360ModuleIds.add(moduleId));
+        (client.generatedModuleIds || []).forEach(moduleId => generatedModuleIds.add(moduleId));
+    });
+
+    return {
+        clientsWithAgencyOperatingSystem,
+        activeModuleSlots,
+        totalModuleSlots,
+        moduleReadinessRate: totalModuleSlots > 0 ? Math.round((activeModuleSlots / totalModuleSlots) * 100) : 0,
+        enabledClient360ModuleIds: Array.from(enabledClient360ModuleIds).sort(),
+        generatedModuleIds: Array.from(generatedModuleIds).sort(),
+    };
+}
+
 export function calculateAgencyReportSummary(clientMetrics: ClientMetrics[]): AggregatedReportData['summary'] {
     const totalOrders = clientMetrics.reduce((sum, client) => sum + client.totalOrders, 0);
     const totalRevenue = clientMetrics.reduce((sum, client) => sum + client.totalRevenue, 0);
@@ -220,13 +303,18 @@ export function calculateAgencyReportSummary(clientMetrics: ClientMetrics[]): Ag
                 : 0,
         totalAiCreditsUsed: clientMetrics.reduce((sum, c) => sum + c.aiCreditsUsed, 0),
         totalStorageUsedGB: clientMetrics.reduce((sum, c) => sum + c.storageUsedGB, 0),
+        moduleReadiness: calculateAgencyModuleReadiness(clientMetrics),
     };
 }
 
 export function buildAgencyReportAISummary(data: AggregatedReportData): string {
     const topClient = data.trends.topPerformingClients[0];
     const period = `${formatDateOnly(data.dateRange.start)} - ${formatDateOnly(data.dateRange.end)}`;
-    const base = `Reporte Agency Engine (${period}): ${data.summary.totalClients} clientes, ${data.summary.totalLeads} leads, ${data.summary.totalOrders} ordenes pagadas, $${Math.round(data.summary.totalRevenue).toLocaleString()} en revenue y $${Math.round(data.summary.totalMrr).toLocaleString()} en MRR administrado.`;
+    const readiness = data.summary.moduleReadiness;
+    const moduleReadiness = readiness.totalModuleSlots > 0
+        ? ` Agency OS readiness ${readiness.moduleReadinessRate}% (${readiness.activeModuleSlots}/${readiness.totalModuleSlots} slots Client 360 activos).`
+        : ' Agency OS readiness sin slots Client 360 registrados.';
+    const base = `Reporte Agency Engine (${period}): ${data.summary.totalClients} clientes, ${data.summary.totalLeads} leads, ${data.summary.totalOrders} ordenes pagadas, $${Math.round(data.summary.totalRevenue).toLocaleString()} en revenue y $${Math.round(data.summary.totalMrr).toLocaleString()} en MRR administrado.${moduleReadiness}`;
 
     if (!topClient) {
         return `${base} No hay suficientes datos de revenue o leads para destacar un cliente principal.`;
@@ -438,6 +526,7 @@ export class ReportingService {
 
         data.forEach(row => {
             const metadata = parseJsonObject(row.metadata);
+            const agencyOperatingSystemStats = readAgencyOperatingSystemStats(metadata.agencyOperatingSystem);
             relationships.set(row.client_tenant_id, {
                 servicePlanId: row.agency_plan_id || metadata.agencyPlanId || metadata.effectivePlanId,
                 servicePlanName: row.agency_plan_id ? planNames.get(row.agency_plan_id) : undefined,
@@ -448,6 +537,12 @@ export class ReportingService {
                 onboardingStatus: row.onboarding_status,
                 projectCount: readFiniteNumber(row.project_count),
                 primaryProjectId: row.primary_project_id,
+                agencyOperatingSystem: agencyOperatingSystemStats.agencyOperatingSystem,
+                enabledClient360ModuleIds: agencyOperatingSystemStats.enabledClient360ModuleIds,
+                generatedModuleIds: agencyOperatingSystemStats.generatedModuleIds,
+                activeClient360ModuleSlots: agencyOperatingSystemStats.activeClient360ModuleSlots,
+                totalClient360ModuleSlots: agencyOperatingSystemStats.totalClient360ModuleSlots,
+                moduleReadinessRate: agencyOperatingSystemStats.moduleReadinessRate,
             });
         });
 
@@ -557,6 +652,10 @@ export class ReportingService {
                     totalRevenue: input.summary.totalRevenue,
                     totalOrders: input.summary.totalOrders,
                     totalMrr: input.summary.totalMrr,
+                    moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate,
+                    activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots,
+                    totalModuleSlots: input.summary.moduleReadiness.totalModuleSlots,
+                    clientsWithAgencyOperatingSystem: input.summary.moduleReadiness.clientsWithAgencyOperatingSystem,
                 },
                 created_by: input.generatedBy,
             });
@@ -621,6 +720,12 @@ export class ReportingService {
             billingStatus: relationship?.billingStatus || (client.billing?.cancelAtPeriodEnd ? 'cancelling' : 'active'),
             monthlyRecurringRevenue: readClientMonthlyRecurringRevenue(client),
             healthScore: relationship?.healthScore,
+            agencyOperatingSystem: relationship?.agencyOperatingSystem || null,
+            enabledClient360ModuleIds: relationship?.enabledClient360ModuleIds || [],
+            generatedModuleIds: relationship?.generatedModuleIds || [],
+            activeClient360ModuleSlots: relationship?.activeClient360ModuleSlots || 0,
+            totalClient360ModuleSlots: relationship?.totalClient360ModuleSlots || 0,
+            moduleReadinessRate: relationship?.moduleReadinessRate || 0,
             ...leadsData,
             ...trafficData,
             ...salesData,

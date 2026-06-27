@@ -3038,15 +3038,23 @@ async function createClientPaymentLink(req: Request, userId: string, data: any) 
     .eq("tenant_id", context.agencyTenantId)
     .eq("id", planId)
     .maybeSingle();
-  if (agencyPlanError && !isMissingTableError(agencyPlanError)) throw agencyPlanError;
+  if (agencyPlanError) {
+    if (isMissingTableError(agencyPlanError)) {
+      throw new Error("Canonical agency_service_plans table is required for agency client billing");
+    }
+    throw agencyPlanError;
+  }
 
-  const fallbackPlan = agencyPlan ? null : await getPlan(planId).catch(() => null);
-  const monthlyPrice = Number(customPrice ?? agencyPlan?.price ?? fallbackPlan?.price?.monthly ?? fallbackPlan?.monthly_price ?? 0);
+  if (!agencyPlan) {
+    throw new Error("Agency client payment links require a canonical agency service plan");
+  }
+
+  const monthlyPrice = Number(customPrice ?? agencyPlan.price ?? 0);
   if (monthlyPrice <= 0) throw new Error("A valid monthly price is required");
 
   const token = randomToken("pay_");
   const expiresAt = new Date(Date.now() + AGENCY_PAYMENT_LINK_TTL_MS).toISOString();
-  const planFeatures = normalizeAgencyFeatureList(agencyPlan?.features || fallbackPlan?.features || []);
+  const planFeatures = normalizeAgencyFeatureList(agencyPlan.features || []);
   const effectivePlanId = normalizePlanId(
     context.clientTenant?.billing?.effectivePlanId ||
     context.clientTenant?.subscription_plan ||
@@ -3058,7 +3066,7 @@ async function createClientPaymentLink(req: Request, userId: string, data: any) 
     clientTenantId,
     clientName: context.clientTenant?.name || context.clientTenant?.company_name || "Cliente",
     planId,
-    planName: agencyPlan?.name || fallbackPlan?.name || planId,
+    planName: agencyPlan.name || planId,
     planFeatures,
     monthlyPrice,
     currency: "usd",
@@ -3072,7 +3080,7 @@ async function createClientPaymentLink(req: Request, userId: string, data: any) 
       token,
       agency_tenant_id: context.agencyTenantId,
       client_tenant_id: clientTenantId,
-      agency_plan_id: agencyPlan?.id || null,
+      agency_plan_id: agencyPlan.id,
       status: "pending",
       plan_name: link.planName,
       plan_features: planFeatures,

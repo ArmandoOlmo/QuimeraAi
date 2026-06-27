@@ -14,6 +14,7 @@ vi.mock('../../supabase', () => ({
 
 import {
     buildAgencyReportAISummary,
+    calculateAgencyModuleReadiness,
     calculateAgencyReportSummary,
     readCanonicalOrderTotal,
     readClientMonthlyRecurringRevenue,
@@ -119,6 +120,42 @@ describe('ReportingService canonical helpers', () => {
             avgConversionRate: 15,
             totalAiCreditsUsed: 750,
             totalStorageUsedGB: 2,
+            moduleReadiness: {
+                clientsWithAgencyOperatingSystem: 0,
+                activeModuleSlots: 0,
+                totalModuleSlots: 0,
+                moduleReadinessRate: 0,
+            },
+        });
+    });
+
+    it('summarizes Agency OS module readiness across report clients', () => {
+        const moduleReadiness = calculateAgencyModuleReadiness([
+            clientMetric({
+                clientId: 'client-a',
+                agencyOperatingSystem: { source: 'agency-engine' },
+                enabledClient360ModuleIds: ['website-builder', 'analytics', 'ecommerce'],
+                generatedModuleIds: ['website-builder', 'analytics-engine', 'ecommerce-engine'],
+                activeClient360ModuleSlots: 3,
+                totalClient360ModuleSlots: 12,
+            }),
+            clientMetric({
+                clientId: 'client-b',
+                agencyOperatingSystem: { source: 'agency-engine' },
+                enabledClient360ModuleIds: ['website-builder', 'crm-leads'],
+                generatedModuleIds: ['website-builder', 'crm-leads'],
+                activeClient360ModuleSlots: 2,
+                totalClient360ModuleSlots: 10,
+            }),
+        ]);
+
+        expect(moduleReadiness).toEqual({
+            clientsWithAgencyOperatingSystem: 2,
+            activeModuleSlots: 5,
+            totalModuleSlots: 22,
+            moduleReadinessRate: 23,
+            enabledClient360ModuleIds: ['analytics', 'crm-leads', 'ecommerce', 'website-builder'],
+            generatedModuleIds: ['analytics-engine', 'crm-leads', 'ecommerce-engine', 'website-builder'],
         });
     });
 
@@ -153,12 +190,14 @@ describe('ReportingService canonical helpers', () => {
         expect(buildAgencyReportAISummary(reportData)).toContain('Client A');
         expect(buildAgencyReportAISummary(reportData)).toContain('$400');
         expect(buildAgencyReportAISummary(reportData)).toContain('$99');
+        expect(buildAgencyReportAISummary(reportData)).toContain('Agency OS readiness');
     });
 });
 
 describe('Agency reporting canonical contract', () => {
     const reportingService = read('services/reportingService.ts');
     const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
+    const pdfGenerator = read('services/pdfGenerator.ts');
     const architectureDoc = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
 
     it('uses store_orders as the revenue source and avoids the legacy orders table', () => {
@@ -181,13 +220,31 @@ describe('Agency reporting canonical contract', () => {
         expect(reportingService).toContain("source: 'agency_reporting_service'");
         expect(reportingService).toContain(".from('agency_activity')");
         expect(reportingService).toContain("type: 'report_generated'");
+        expect(reportingService).toContain('metadata.agencyOperatingSystem');
+        expect(reportingService).toContain('moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate');
+        expect(reportingService).toContain('activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots');
         expect(reportsGenerator).toContain('reportingService.generateAgencyReport');
         expect(reportsGenerator).toContain('persistenceStatus');
+    });
+
+    it('surfaces Agency OS readiness in visible report previews and exports', () => {
+        expect(reportsGenerator).toContain("dashboard.agency.reports.agencyOs");
+        expect(reportsGenerator).toContain("dashboard.agency.reports.agencyOsReadiness");
+        expect(reportsGenerator).toContain('moduleReadiness.moduleReadinessRate');
+        expect(reportsGenerator).toContain('client.moduleReadinessRate');
+        expect(reportsGenerator).toContain('activeClient360ModuleSlots');
+        expect(reportsGenerator).toContain('generatedModuleIds');
+        expect(reportsGenerator).toContain('formatCsvCell');
+        expect(pdfGenerator).toContain('Agency OS Readiness');
+        expect(pdfGenerator).toContain('enabledClient360ModuleIds');
+        expect(pdfGenerator).toContain('generatedModuleIds');
     });
 
     it('documents the canonical report storage contract', () => {
         expect(architectureDoc).toContain('ReportingService.generateAgencyReport');
         expect(architectureDoc).toContain('agency_reports');
         expect(architectureDoc).toContain('Store order reads intentionally use `select');
+        expect(architectureDoc).toContain('Agency OS module readiness');
+        expect(architectureDoc).toContain('PDF/CSV exports surface the same readiness fields');
     });
 });

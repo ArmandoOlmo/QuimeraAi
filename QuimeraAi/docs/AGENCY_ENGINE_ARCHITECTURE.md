@@ -101,6 +101,8 @@ Agency client billing uses Stripe Checkout Sessions in `mode: subscription`. The
 
 Public branded links generated from Agency Billing are stored in `agency_client_payment_links`. `/pay/:token` loads the agency/client/plan summary, then `agencyBilling-confirmClientPayment` creates a Stripe Checkout Session and returns the hosted Checkout URL. The public page redirects to Stripe instead of collecting card data with Stripe Elements.
 
+`agencyBilling-createClientPaymentLink` requires a canonical `agency_service_plans` row owned by the agency. It must not fall back to `subscription_plans`; platform plans such as `enterprise` are not sellable agency service plans.
+
 `stripe-webhook` treats metadata `source = agency-engine` and `billingFlow = agency_client_payment_link` as agency client billing. It updates `agency_client_payment_links`, `agency_clients`, and `tenant.billing` while preserving `subscription_plan` as the client's finite effective Quimera plan. The agency service plan remains in `tenant.billing.agencyPlanId`; it is not written as `subscription_plan`.
 
 ## Metrics And Reports
@@ -108,6 +110,10 @@ Public branded links generated from Agency Billing are stored in `agency_client_
 Agency revenue and reports use `store_orders`, not legacy `orders`. Client revenue is aggregated through client projects by `project_id`.
 
 `ReportingService.generateAgencyReport` is the canonical browser-side report flow. It aggregates client relationships from `agency_clients`, service-plan names from `agency_service_plans`, paid revenue from `store_orders`, MRR from `tenant.billing`, usage from tenant limits, then persists a snapshot in `agency_reports` with an AI operational summary. A matching `agency_activity.type = report_generated` entry is emitted for Agency Command Center and Client 360 timelines.
+
+Report snapshots include Agency OS module readiness from `agency_clients.metadata.agencyOperatingSystem`: clients with Agency OS, active Client 360 module slots, total module slots, readiness rate, enabled Client 360 module IDs, and generated module IDs. Global Assistant `create_agency_report` writes the same readiness summary into `agency_reports.data.metrics` and `agency_activity.metadata` so conversational reports, Client 360, and Agency Command Center use one operating-system metric contract.
+
+`ReportsGenerator` renders Agency OS readiness in the report preview, per-client table, and CSV output. PDF/CSV exports surface the same readiness fields so client-facing reports do not lose the Agency Operating System context.
 
 Store order reads intentionally use `select('*')` and normalize totals from `total_amount`, `total`, `amount_total`, `pricing`, and `data` fallbacks. This avoids breaking live Supabase environments where newer numeric columns may not be exposed through the current PostgREST schema cache.
 

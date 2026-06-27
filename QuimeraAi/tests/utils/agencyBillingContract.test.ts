@@ -32,10 +32,15 @@ describe('Agency billing canonical contract', () => {
 
     it('creates public agency payment checkout through Stripe Checkout Sessions, not temporary payment methods', () => {
         expect(stripeApi).toContain('.from("agency_client_payment_links")');
+        expect(stripeApi).toContain('.from("agency_service_plans")');
+        expect(stripeApi).toContain('Canonical agency_service_plans table is required for agency client billing');
+        expect(stripeApi).toContain('Agency client payment links require a canonical agency service plan');
         expect(stripeApi).toContain('stripe.checkout.sessions.create');
         expect(stripeApi).toContain('mode: "subscription"');
         expect(stripeApi).toContain('billingFlow: "agency_client_payment_link"');
         expect(stripeApi).not.toContain('token and paymentMethodId are required');
+        expect(stripeApi).not.toContain('const fallbackPlan = agencyPlan');
+        expect(stripeApi).not.toContain('fallbackPlan?.price');
 
         expect(checkoutPage).toContain("action: 'agencyBilling-confirmClientPayment'");
         expect(checkoutPage).toContain('window.location.assign(data.url)');

@@ -16,6 +16,7 @@ import type {
     ReportTemplate,
     ReportDateRange,
     AggregatedReportData,
+    AgencyReportModuleReadiness,
 } from '../../../types/reports';
 import {
     FileText,
@@ -115,6 +116,20 @@ const metricIcons: Record<ReportMetric, React.ElementType> = {
     projects: FolderOpen,
 };
 
+const emptyModuleReadiness: AgencyReportModuleReadiness = {
+    clientsWithAgencyOperatingSystem: 0,
+    activeModuleSlots: 0,
+    totalModuleSlots: 0,
+    moduleReadinessRate: 0,
+    enabledClient360ModuleIds: [],
+    generatedModuleIds: [],
+};
+
+const formatCsvCell = (value: string | number | null | undefined) => {
+    const text = String(value ?? '');
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
 export function ReportsGenerator() {
     const { t } = useTranslation();
     const { subClients: clients } = useAgency();
@@ -148,6 +163,7 @@ export function ReportsGenerator() {
         [clients, selectAll, selectedClients]
     );
     const selectedClientCount = effectiveSelectedClientIds.length;
+    const moduleReadiness = reportData?.summary.moduleReadiness || emptyModuleReadiness;
 
     const allMetrics: { id: ReportMetric; label: string; description: string }[] = React.useMemo(() => [
         { id: 'leads', label: t('dashboard.agency.reports.metrics.leads', 'Leads'), description: t('dashboard.agency.reports.metrics.leadsDesc', 'Total de leads capturados') },
@@ -275,6 +291,9 @@ export function ReportsGenerator() {
             t('dashboard.agency.reports.table.orders', 'Ordenes'),
             t('dashboard.agency.reports.table.aov', 'AOV'),
             t('dashboard.agency.reports.table.mrr', 'MRR'),
+            t('dashboard.agency.reports.table.agencyOs', 'Agency OS'),
+            t('dashboard.agency.reports.table.activeModules', 'Módulos activos'),
+            t('dashboard.agency.reports.table.generatedModules', 'Módulos generados'),
             t('dashboard.agency.reports.table.conversion', 'Conversión')
         ];
         const rows = reportData.byClient.map((client) => [
@@ -285,12 +304,15 @@ export function ReportsGenerator() {
             client.totalOrders.toString(),
             client.averageOrderValue.toFixed(2),
             client.monthlyRecurringRevenue.toFixed(2),
+            `${client.moduleReadinessRate || 0}%`,
+            `${client.activeClient360ModuleSlots || 0}/${client.totalClient360ModuleSlots || 0}`,
+            (client.generatedModuleIds || []).join(' | '),
             client.conversionRate.toFixed(2),
         ]);
 
         const csvContent = [
-            headers.join(','),
-            ...rows.map((row) => row.join(',')),
+            headers.map(formatCsvCell).join(','),
+            ...rows.map((row) => row.map(formatCsvCell).join(',')),
         ].join('\n');
 
         // Download
@@ -679,14 +701,90 @@ export function ReportsGenerator() {
                     )}
 
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-7">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-8">
                         <AgencyStatCard label={t('dashboard.agency.reports.clients', 'Clientes')} value={reportData.summary.totalClients} icon={Users} tone="accent" />
                         <AgencyStatCard label={t('dashboard.agency.reports.totalLeads', 'Total Leads')} value={reportData.summary.totalLeads.toLocaleString()} icon={TrendingUp} />
                         <AgencyStatCard label={t('dashboard.agency.reports.revenue', 'Ingresos')} value={`$${reportData.summary.totalRevenue.toLocaleString()}`} icon={DollarSign} tone="success" />
                         <AgencyStatCard label={t('dashboard.agency.reports.orders', 'Ordenes')} value={reportData.summary.totalOrders.toLocaleString()} icon={FileSpreadsheet} />
                         <AgencyStatCard label={t('dashboard.agency.reports.aov', 'AOV')} value={`$${reportData.summary.averageOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} icon={DollarSign} />
                         <AgencyStatCard label={t('dashboard.agency.reports.managedMrr', 'MRR')} value={`$${reportData.summary.totalMrr.toLocaleString()}`} icon={TrendingUp} tone="success" />
+                        <AgencyStatCard
+                            label={t('dashboard.agency.reports.agencyOs', 'Agency OS')}
+                            value={`${moduleReadiness.moduleReadinessRate}%`}
+                            icon={Cpu}
+                            tone={moduleReadiness.moduleReadinessRate >= 70 ? 'success' : 'info'}
+                        />
                         <AgencyStatCard label={t('dashboard.agency.reports.avgConversion', 'Conversión')} value={`${reportData.summary.avgConversionRate.toFixed(1)}%`} icon={Eye} tone="accent" />
+                    </div>
+
+                    <div className="quimera-dashboard-panel-card p-5">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                        <Cpu className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-semibold text-foreground">
+                                            {t('dashboard.agency.reports.agencyOsReadiness', 'Agency OS readiness')}
+                                        </h3>
+                                        <p className="text-sm text-q-text-muted">
+                                            {t('dashboard.agency.reports.agencyOsReadinessDesc', 'Client 360 module readiness across selected clients')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
+                                    <div
+                                        className="h-full rounded-full bg-primary transition-all"
+                                        style={{ width: `${Math.min(100, Math.max(0, moduleReadiness.moduleReadinessRate))}%` }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 text-center sm:min-w-[360px]">
+                                <div>
+                                    <div className="text-2xl font-semibold text-foreground">{moduleReadiness.moduleReadinessRate}%</div>
+                                    <div className="text-xs text-q-text-muted">{t('dashboard.agency.reports.readiness', 'Readiness')}</div>
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-semibold text-foreground">
+                                        {moduleReadiness.activeModuleSlots}/{moduleReadiness.totalModuleSlots}
+                                    </div>
+                                    <div className="text-xs text-q-text-muted">{t('dashboard.agency.reports.moduleSlots', 'Module slots')}</div>
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-semibold text-foreground">{moduleReadiness.clientsWithAgencyOperatingSystem}</div>
+                                    <div className="text-xs text-q-text-muted">{t('dashboard.agency.reports.clientsWithAgencyOs', 'Agency OS clients')}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {(moduleReadiness.enabledClient360ModuleIds.length > 0 || moduleReadiness.generatedModuleIds.length > 0) && (
+                            <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-q-text-muted">
+                                        {t('dashboard.agency.reports.enabledModules', 'Enabled Client 360 modules')}
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {moduleReadiness.enabledClient360ModuleIds.map((moduleId) => (
+                                            <span key={moduleId} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                                                {moduleId}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-q-text-muted">
+                                        {t('dashboard.agency.reports.generatedModules', 'Generated modules')}
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {moduleReadiness.generatedModuleIds.map((moduleId) => (
+                                            <span key={moduleId} className="rounded-full bg-q-success/10 px-2.5 py-1 text-xs font-medium text-q-success">
+                                                {moduleId}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Action Buttons */}
@@ -741,54 +839,77 @@ export function ReportsGenerator() {
                                             {t('dashboard.agency.reports.table.mrr', 'MRR')}
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                            {t('dashboard.agency.reports.table.agencyOs', 'Agency OS')}
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.conversion', 'Conversión')}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/50">
-                                    {reportData.byClient.map((client, index) => (
-                                        <tr key={client.clientId} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                                                        {client.clientName.charAt(0)}
+                                    {reportData.byClient.map((client) => {
+                                        const clientReadinessRate = client.moduleReadinessRate || 0;
+
+                                        return (
+                                            <tr key={client.clientId} className="hover:bg-muted/30 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                                            {client.clientName.charAt(0)}
+                                                        </div>
+                                                        <span className="font-medium text-foreground">{client.clientName}</span>
                                                     </div>
-                                                    <span className="font-medium text-foreground">{client.clientName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
-                                                {client.totalLeads.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
-                                                {client.totalVisits.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-q-success dark:text-q-success">
-                                                ${client.totalRevenue.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
-                                                {client.totalOrders.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
-                                                ${client.averageOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
-                                                ${client.monthlyRecurringRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`
-                                                    inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                                    ${client.conversionRate >= 5
-                                                        ? 'bg-q-success/10 text-q-success dark:bg-q-success/12 dark:text-q-success'
-                                                        : client.conversionRate >= 2
-                                                            ? 'bg-q-accent/10 text-q-accent dark:bg-q-accent/12 dark:text-q-accent'
-                                                            : 'bg-q-error/10 text-q-error dark:bg-q-error/12 dark:text-q-error'
-                                                    }
-                                                `}>
-                                                    {client.conversionRate.toFixed(1)}%
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                    {client.totalLeads.toLocaleString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                    {client.totalVisits.toLocaleString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-q-success dark:text-q-success">
+                                                    ${client.totalRevenue.toLocaleString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                    {client.totalOrders.toLocaleString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                    ${client.averageOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                    ${client.monthlyRecurringRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`
+                                                        inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                                                        ${clientReadinessRate >= 70
+                                                            ? 'bg-q-success/10 text-q-success dark:bg-q-success/12 dark:text-q-success'
+                                                            : clientReadinessRate > 0
+                                                                ? 'bg-q-accent/10 text-q-accent dark:bg-q-accent/12 dark:text-q-accent'
+                                                                : 'bg-muted text-q-text-muted'
+                                                        }
+                                                    `}>
+                                                        {clientReadinessRate}%
+                                                    </span>
+                                                    <div className="mt-1 text-xs text-q-text-muted">
+                                                        {client.activeClient360ModuleSlots || 0}/{client.totalClient360ModuleSlots || 0}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`
+                                                        inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                                                        ${client.conversionRate >= 5
+                                                            ? 'bg-q-success/10 text-q-success dark:bg-q-success/12 dark:text-q-success'
+                                                            : client.conversionRate >= 2
+                                                                ? 'bg-q-accent/10 text-q-accent dark:bg-q-accent/12 dark:text-q-accent'
+                                                                : 'bg-q-error/10 text-q-error dark:bg-q-error/12 dark:text-q-error'
+                                                        }
+                                                    `}>
+                                                        {client.conversionRate.toFixed(1)}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
