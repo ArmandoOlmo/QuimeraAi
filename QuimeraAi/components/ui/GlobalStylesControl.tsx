@@ -17,6 +17,7 @@ import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
 import { darkenColor, hexToRgba } from '../../utils/colorUtils';
 import { createColorBriefFromTheme, generateColorCandidates, toGlobalColors } from '../../utils/colorSystemEngine';
+import { ColorExpertScores } from './ColorExpertScores';
 import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
 import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
 import FontFamilyPicker from './FontFamilyPicker';
@@ -1187,6 +1188,19 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                         </div>
 
                         {expertColorCandidates.length > 0 && (
+                            <>
+                                {selectedExpertCandidateId && (() => {
+                                    const selectedCandidate = expertColorCandidates.find(candidate => candidate.id === selectedExpertCandidateId);
+                                    if (!selectedCandidate) return null;
+                                    return (
+                                        <div className="mb-3 rounded-lg border border-q-border bg-q-bg/80 p-3">
+                                            <ColorExpertScores
+                                                scores={selectedCandidate.system.scores}
+                                                totalScore={selectedCandidate.system.score}
+                                            />
+                                        </div>
+                                    );
+                                })()}
                             <div className="grid grid-cols-2 gap-2">
                                 {expertColorCandidates.slice(0, 6).map(candidate => (
                                     <button
@@ -1211,11 +1225,16 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
                                         </div>
                                         <div className="flex items-center justify-between gap-2">
                                             <span className="truncate text-[11px] font-semibold text-q-text">{candidate.labelEs || candidate.label}</span>
-                                            <span className="text-[10px] text-q-accent">{candidate.system.score}</span>
+                                            <ColorExpertScores
+                                                scores={candidate.system.scores}
+                                                totalScore={candidate.system.score}
+                                                compact
+                                            />
                                         </div>
                                     </button>
                                 ))}
                             </div>
+                            </>
                         )}
                     </div>
 

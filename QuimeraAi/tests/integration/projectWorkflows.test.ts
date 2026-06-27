@@ -3,7 +3,7 @@
  * Tests complete user workflows related to project management
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { applyTokensToFullProject } from '../../utils/designTokenApplier';
 import { applyResponsiveStylesToProject } from '../../utils/responsiveStyleApplier';
 import { Project, DesignTokens } from '../../types';
@@ -14,6 +14,9 @@ describe('Project Workflows', () => {
     let mockTokens: DesignTokens;
 
     beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-06-27T12:00:00.000Z'));
+
         // Setup mock project
         mockProject = {
             id: 'test-project-1',
@@ -146,6 +149,10 @@ describe('Project Workflows', () => {
         };
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     describe('Create Project from Template', () => {
         it('should create a project with all required fields', () => {
             expect(mockProject.id).toBeDefined();
@@ -178,6 +185,7 @@ describe('Project Workflows', () => {
 
         it('should update lastUpdated timestamp', () => {
             const originalTimestamp = mockProject.lastUpdated;
+            vi.setSystemTime(new Date('2026-06-27T12:00:01.000Z'));
             const result = applyTokensToFullProject(mockProject, mockTokens);
             
             expect(result.lastUpdated).not.toBe(originalTimestamp);
@@ -296,6 +304,7 @@ describe('Project Workflows', () => {
 
         it('should track last updated timestamp', () => {
             const beforeUpdate = mockProject.lastUpdated;
+            vi.setSystemTime(new Date('2026-06-27T12:00:01.000Z'));
             mockProject.lastUpdated = new Date().toISOString();
             
             expect(mockProject.lastUpdated).not.toBe(beforeUpdate);
@@ -351,4 +360,3 @@ describe('Project Workflows', () => {
         });
     });
 });
-

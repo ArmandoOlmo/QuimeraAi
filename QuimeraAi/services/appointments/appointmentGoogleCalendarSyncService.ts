@@ -760,7 +760,9 @@ async function getValidGoogleAccessToken(
     const encryptionKey = requireEnvValue(options.encryptionKey ?? process.env.GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY, 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY');
     const tokens = decryptGoogleCalendarTokens(integration.oauth_tokens_encrypted, encryptionKey);
     const expiresAt = integration.oauth_token_expires_at ? new Date(integration.oauth_token_expires_at).getTime() : 0;
-    if (tokens.accessToken && expiresAt > Date.now() + TOKEN_REFRESH_SKEW_MS) return tokens.accessToken;
+    const referenceNow = options.now ? new Date(options.now).getTime() : Date.now();
+    const nowMs = Number.isNaN(referenceNow) ? Date.now() : referenceNow;
+    if (tokens.accessToken && expiresAt > nowMs + TOKEN_REFRESH_SKEW_MS) return tokens.accessToken;
     if (!tokens.refreshToken) {
         throw Object.assign(new Error('Google Calendar refresh token is missing. Reconnect Google Calendar.'), { status: 401 });
     }

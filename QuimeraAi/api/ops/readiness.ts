@@ -1,12 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { getSupabaseAdmin } from '../../_lib/supabaseAdmin.js';
-import { processAppointmentEmailLogs } from '../../../services/appointments/serverless/appointmentEmailDeliveryService.js';
+import { runProductionReadinessProbe } from '../../scripts/production-readiness-probe.mjs';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Cron-Secret',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -21,6 +17,12 @@ function tokenFromRequest(req: IncomingMessage): string | null {
   const auth = req.headers.authorization;
   const value = Array.isArray(auth) ? auth[0] : auth;
   return value?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || null;
+}
+
+function booleanParam(url: URL, name: string, defaultValue: boolean): boolean {
+  const value = url.searchParams.get(name);
+  if (value === null) return defaultValue;
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
@@ -47,13 +49,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   try {
-    const result = await processAppointmentEmailLogs(getSupabaseAdmin(), {
-      limit: Number(process.env.APPOINTMENT_EMAIL_JOB_LIMIT || 25),
-      resendApiKey: process.env.RESEND_API_KEY,
-      defaultFromEmail: process.env.APPOINTMENT_EMAIL_FROM || process.env.RESEND_FROM_EMAIL,
+    const url = new URL(req.url || '/', 'https://quimera.ai');
+    const result = await runProductionReadinessProbe({
+      env: process.env,
+      live: booleanParam(url, 'live', false),
+      strict: booleanParam(url, 'strict', true),
+      requireCloudflare: booleanParam(url, 'requireCloudflare', false),
+      timeoutMs: Number(url.searchParams.get('timeoutMs') || 8000),
     });
-    send(res, 200, result);
+    send(res, result.ok ? 200 : 503, result);
   } catch (error: any) {
-    send(res, error.status || 500, { error: error.message || 'Failed to process appointment email jobs.' });
+    send(res, error.status || 500, { error: error.message || 'Production readiness probe failed.' });
   }
 }

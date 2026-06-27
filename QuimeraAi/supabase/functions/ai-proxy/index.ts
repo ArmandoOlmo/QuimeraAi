@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts"
 import { edgeAccessErrorResponse, requireServiceAccess } from "../_shared/access.ts"
 
@@ -15,6 +15,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
+
+type SupabaseAdminClient = SupabaseClient<any, 'public', any>;
 
 const CURATED_VIDEO_WHITELIST = [
     'bytedance/seedance-2.0',
@@ -839,7 +841,7 @@ function mergeBillingMetadata(
 }
 
 async function resolveTenantIdFromProject(
-    admin: ReturnType<typeof createClient>,
+    admin: SupabaseAdminClient,
     projectId: string | null,
 ): Promise<string | null> {
     if (!projectId || !isValidUuid(projectId)) return null;
@@ -859,7 +861,7 @@ async function resolveTenantIdFromProject(
 }
 
 async function resolvePrimaryTenantForUser(
-    admin: ReturnType<typeof createClient>,
+    admin: SupabaseAdminClient,
     userId: string,
 ): Promise<string | null> {
     const { data, error } = await admin
@@ -879,7 +881,7 @@ async function resolvePrimaryTenantForUser(
 }
 
 async function resolveCreditsPoolTenant(
-    admin: ReturnType<typeof createClient>,
+    admin: SupabaseAdminClient,
     tenantId: string,
 ): Promise<{ poolTenantId: string; isSharedPool: boolean; agencyName?: string }> {
     const { data: subscription } = await admin
@@ -986,7 +988,7 @@ async function resolveAgencyRelationshipPoolTenant(
 }
 
 async function ensureTenantMembership(
-    admin: ReturnType<typeof createClient>,
+    admin: SupabaseAdminClient,
     tenantId: string,
     userId: string,
 ): Promise<void> {
@@ -1008,7 +1010,7 @@ async function ensureTenantMembership(
 }
 
 async function loadCreditsUsage(
-    admin: ReturnType<typeof createClient>,
+    admin: SupabaseAdminClient,
     tenantId: string,
 ): Promise<Record<string, unknown> | null> {
     const { data, error } = await admin
@@ -1089,7 +1091,7 @@ async function resolveProxyBillingContext(
 }
 
 async function assertCreditsAvailable(billingContext: Record<string, unknown>): Promise<void> {
-    const admin = billingContext.admin as ReturnType<typeof createClient>;
+    const admin = billingContext.admin as SupabaseAdminClient;
     const tenantId = billingContext.tenantId as string;
     const creditsUsed = Number(billingContext.creditsUsed);
     const operation = String(billingContext.operation || 'ai_assistant_request');
@@ -1128,7 +1130,7 @@ async function assertCreditsAvailable(billingContext: Record<string, unknown>): 
 }
 
 async function consumeResolvedCredits(billingContext: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const admin = billingContext.admin as ReturnType<typeof createClient>;
+    const admin = billingContext.admin as SupabaseAdminClient;
     const requestedTenantId = billingContext.tenantId as string;
     const userId = billingContext.userId as string;
     const operation = billingContext.operation as string;
@@ -2180,7 +2182,7 @@ serve(async (req) => {
 
         const billingResult = billingContext ? await consumeResolvedCredits(billingContext) : null;
         if (billingResult) {
-            responseBody.metadata.billing = billingResult;
+            (responseBody.metadata as Record<string, unknown>).billing = billingResult;
         }
 
         return new Response(
