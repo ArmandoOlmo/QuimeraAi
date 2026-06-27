@@ -105,7 +105,8 @@ Required before beta:
   `quimera_sanitize_plan_limits`, `quimera_plan_limits_are_finite`.
 - [ ] Confirm Edge Functions expected to be public implement custom validation:
   `stripe-webhook`, `email-api`, `create-public-restaurant-reservation`.
-- [ ] Enable leaked password protection in Supabase Auth before open beta.
+- [ ] Confirm leaked password protection remains enabled in Supabase Auth before
+  open beta.
 - [ ] Review public `insert` policies for `platform_leads`,
   `restaurant_analytics_events`, and `restaurant_reservations`; keep them only
   if each route has product-approved anti-abuse controls.
