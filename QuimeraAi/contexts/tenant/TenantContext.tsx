@@ -554,19 +554,31 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
 
+        const agencyClientBillingMode: TenantBilling['mode'] = data.useParentCreditsPool === false
+            ? 'direct'
+            : (data.setupBilling ? 'agency_managed' : 'included_in_parent');
+        const requestedClientPlan = data.type === 'agency_client'
+            ? normalizeTenantSubscriptionPlanForType('agency_client', data.plan || 'individual')
+            : null;
+        const inheritedAgencyPlan = data.type === 'agency_client'
+            ? normalizePlanId(parentTenant?.subscriptionPlan || 'individual')
+            : null;
+        const agencyClientEffectivePlan = data.type === 'agency_client'
+            ? (agencyClientBillingMode === 'direct' ? requestedClientPlan : inheritedAgencyPlan)
+            : null;
         const plan = data.type === 'agency_client'
             ? resolveTenantEffectivePlan({
                 type: 'agency_client',
-                subscriptionPlan: normalizePlanId(data.plan || parentTenant?.subscriptionPlan || 'individual') as any,
+                subscriptionPlan: requestedClientPlan as any,
                 billing: {
-                    mode: data.useParentCreditsPool === false ? 'direct' : (data.setupBilling ? 'agency_managed' : 'included_in_parent'),
-                    effectivePlanId: normalizePlanId(parentTenant?.subscriptionPlan || data.plan || 'individual') as any,
+                    mode: agencyClientBillingMode,
+                    effectivePlanId: agencyClientEffectivePlan as any,
                 },
             }, parentTenant)
             : normalizeTenantSubscriptionPlanForType(data.type, data.plan);
         const billing: TenantBilling | undefined = data.type === 'agency_client'
             ? {
-                mode: data.useParentCreditsPool === false ? 'direct' : (data.setupBilling ? 'agency_managed' : 'included_in_parent'),
+                mode: agencyClientBillingMode,
                 effectivePlanId: plan,
                 agencyTenantId: parentAgencyTenantId,
                 agencyPlanId: selectedAgencyPlanId || undefined,

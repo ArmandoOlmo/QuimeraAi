@@ -8,7 +8,10 @@ import {
     formatPlanLimit,
     getCanonicalPlanLimits,
     isFinitePlanLimit,
+    isInvalidSubscriptionPlanId,
+    isLegacyPlan,
     isPlatformUnlimitedUser,
+    normalizePlanId,
     normalizePlanLimits,
 } from '../../services/billing/planCatalog';
 import {
@@ -182,6 +185,10 @@ describe('Service Access Engine', () => {
     });
 
     it('rejects agency_client as a subscription plan id', () => {
+        expect(isInvalidSubscriptionPlanId('agency_client')).toBe(true);
+        expect(isLegacyPlan('agency_client')).toBe(false);
+        expect(normalizePlanId('agency_client')).toBe('free');
+
         expect(resolveServiceAccess({
             ...baseInput,
             planId: 'agency_client',

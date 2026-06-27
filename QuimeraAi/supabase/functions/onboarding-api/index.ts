@@ -169,6 +169,35 @@ function sanitizeFiniteLimits(raw: unknown, fallbackPlanId = "individual") {
   return next;
 }
 
+function resolveAgencyClientEffectivePlanId(agencyTenant: Record<string, unknown>, payload: Record<string, unknown>): string {
+  const selectedServicePlanId = String(payload.selectedPlanId || "").trim();
+  const candidates = [
+    payload.clientEffectivePlanId,
+    payload.effectivePlanId,
+    payload.subscriptionPlan,
+    payload.subscription_plan,
+    payload.planId,
+    payload.plan,
+    agencyTenant.subscription_plan,
+    "individual",
+  ];
+
+  for (const candidate of candidates) {
+    const rawPlanId = String(candidate || "").trim();
+    if (!rawPlanId) continue;
+    if (rawPlanId === "agency_client") {
+      throw new Error("agency_client is a tenant type, not a subscription plan");
+    }
+    if (selectedServicePlanId && rawPlanId === selectedServicePlanId) continue;
+
+    const normalized = normalizePlanId(rawPlanId);
+    if (normalized === "free" && rawPlanId !== "free") continue;
+    return normalized;
+  }
+
+  return "individual";
+}
+
 function isMissingTableError(error: unknown): boolean {
   const code = (error as { code?: string } | null)?.code;
   return code === "42P01" || code === "PGRST205";
@@ -1227,7 +1256,7 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
 
   const agencyTenant = access.tenant || {};
   const agencyPlan = await fetchAgencyServicePlan(agencyTenantId, selectedPlanId);
-  const effectivePlanId = normalizePlanId(String((agencyTenant as any).subscription_plan || "individual"));
+  const effectivePlanId = resolveAgencyClientEffectivePlanId(agencyTenant, payload);
   const clientLimits = sanitizeFiniteLimits(agencyPlan?.limits, effectivePlanId);
   const monthlyPrice = Number(payload.monthlyPrice ?? agencyPlan?.price ?? 0);
   const modules = selectedModules(payload);

@@ -16,6 +16,8 @@ It is registered in `registry/moduleRegistry.ts` as `agency-engine` with canonic
 - `agency-client-portal`
 - `agency-command-center`
 
+Client 360 module coverage is part of the canonical manifest: `getAgencyEngineOperatingSystemManifest().client360Modules` maps BusinessBlueprint, Website Builder, Storefront Builder, Ecommerce, CRM/Leads, Email Marketing, Appointments, Restaurants, Realty, Bio Page, ChatCore, Media AI, Finance, and Analytics to their owner registry modules, activation signals, labels, descriptions, and Agency routes.
+
 Agency Engine reads and writes `storefrontBuilder` as the canonical presentation system for public stores. `storefrontBuilder` owns storefront theme, sections, product-card presentation, collection layout, cart/checkout visuals, and draft/published template state. Ecommerce Engine remains the canonical owner for products, variants, prices, inventory, carts, checkout, orders, discounts, refunds, and customers.
 
 ## Access Contract
@@ -61,6 +63,8 @@ Provisioning creates:
 - Agency activity entry
 
 Generated projects are drafts and require review. No runtime is auto-published.
+
+For agency client tenants, `type = agency_client` is never a subscription plan. Direct-billed clients use their requested effective Quimera plan; included or agency-managed clients inherit the agency operating plan as `billing.effectivePlanId`. `selectedPlanId` is never written as `subscription_plan`; it is only the agency service-package identity in `agency_service_plans`, `agency_clients.agency_plan_id`, and `tenant.billing.agencyPlanId`.
 
 ## Project Transfer Contract
 

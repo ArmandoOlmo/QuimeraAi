@@ -28,6 +28,11 @@ import {
 import type { ActivityEvent, ClientMetricsSummary } from '../../../hooks/useAgencyMetrics';
 import type { Tenant } from '../../../types/multiTenant';
 import { ROUTES } from '../../../routes/config';
+import {
+    getAgencyEngineOperatingSystemManifest,
+    type AgencyEngineClient360Module,
+    type AgencyEngineClient360ModuleId,
+} from '../../../registry/moduleRegistry';
 import { useRouter } from '../../../hooks/useRouter';
 import { AgencyPanel } from './AgencyDesignSystem';
 import { StatusBadge } from '../../ui/system';
@@ -93,14 +98,25 @@ function statusVariant(status?: Tenant['status']) {
 }
 
 type Client360ModuleSignal = {
-    id: string;
     icon: LucideIcon;
-    labelKey: string;
-    label: string;
-    descriptionKey: string;
-    description: string;
     active: boolean;
-    route?: string;
+} & AgencyEngineClient360Module;
+
+const CLIENT_360_MODULE_ICONS: Record<AgencyEngineClient360ModuleId, LucideIcon> = {
+    businessBlueprint: Sparkles,
+    'website-builder': Globe,
+    'storefront-builder': Package,
+    ecommerce: ShoppingCart,
+    'crm-leads': Users,
+    'email-marketing': Mail,
+    appointments: CalendarDays,
+    restaurants: FileText,
+    realty: Home,
+    'bio-page': FileText,
+    chatcore: Bot,
+    'media-ai': Image,
+    finance: CreditCard,
+    analytics: BarChart3,
 };
 
 function readEnabledFeatures(client: Tenant): Set<string> {
@@ -119,145 +135,30 @@ function hasAnyFeature(features: Set<string>, values: string[]): boolean {
     return values.some(value => features.has(value.toLowerCase()));
 }
 
+function isClient360ModuleActive(
+    module: AgencyEngineClient360Module,
+    features: Set<string>,
+    projectCount: number,
+    hasBilling: boolean,
+): boolean {
+    if (module.id === 'businessBlueprint') return projectCount > 0 || features.size > 0;
+    if (module.id === 'website-builder') return projectCount > 0 || hasAnyFeature(features, module.activationSignals);
+    if (module.id === 'finance') return hasBilling || hasAnyFeature(features, module.activationSignals);
+    if (module.id === 'analytics') return projectCount > 0 || hasAnyFeature(features, module.activationSignals);
+    return hasAnyFeature(features, module.activationSignals);
+}
+
 function buildClient360ModuleSignals(client: Tenant, metrics: ClientMetricsSummary | null): Client360ModuleSignal[] {
     const features = readEnabledFeatures(client);
     const billing = (client.billing || {}) as Record<string, unknown>;
     const projectCount = metrics?.usage.projectCount || client.usage?.projectCount || client.projectIds?.length || 0;
     const hasBilling = Number(billing.mrr || billing.monthlyPrice || 0) > 0 || Boolean(billing.mode && billing.mode !== 'included_in_parent');
 
-    return [
-        {
-            id: 'businessBlueprint',
-            icon: Sparkles,
-            labelKey: 'dashboard.agency.client360.moduleBusinessBlueprint',
-            label: 'BusinessBlueprint',
-            descriptionKey: 'dashboard.agency.client360.moduleBusinessBlueprintDesc',
-            description: 'AI-generated operating contract for the client business.',
-            active: projectCount > 0 || features.size > 0,
-        },
-        {
-            id: 'website-builder',
-            icon: Globe,
-            labelKey: 'dashboard.agency.client360.moduleWebsite',
-            label: 'Website Builder',
-            descriptionKey: 'dashboard.agency.client360.moduleWebsiteDesc',
-            description: 'Website draft, pages, content, sections, and launch workflow.',
-            active: projectCount > 0 || hasAnyFeature(features, ['projects', 'cms', 'website', 'website-builder']),
-            route: ROUTES.AGENCY_PROJECTS,
-        },
-        {
-            id: 'storefront-builder',
-            icon: Package,
-            labelKey: 'dashboard.agency.client360.moduleStorefront',
-            label: 'Storefront Builder',
-            descriptionKey: 'dashboard.agency.client360.moduleStorefrontDesc',
-            description: 'Storefront layout, product presentation, and commerce surface.',
-            active: hasAnyFeature(features, ['ecommerce', 'storefront', 'storefront-builder']),
-            route: ROUTES.AGENCY_PROJECTS,
-        },
-        {
-            id: 'ecommerce',
-            icon: ShoppingCart,
-            labelKey: 'dashboard.agency.client360.moduleEcommerce',
-            label: 'Ecommerce',
-            descriptionKey: 'dashboard.agency.client360.moduleEcommerceDesc',
-            description: 'Products, orders, checkout readiness, and revenue operations.',
-            active: hasAnyFeature(features, ['ecommerce', 'store', 'checkout']),
-            route: ROUTES.AGENCY_BILLING,
-        },
-        {
-            id: 'crm-leads',
-            icon: Users,
-            labelKey: 'dashboard.agency.client360.moduleCrm',
-            label: 'CRM / Leads',
-            descriptionKey: 'dashboard.agency.client360.moduleCrmDesc',
-            description: 'Lead capture, customer records, intake, and follow-up pipeline.',
-            active: hasAnyFeature(features, ['leads', 'crm', 'crm-leads']),
-        },
-        {
-            id: 'email-marketing',
-            icon: Mail,
-            labelKey: 'dashboard.agency.client360.moduleEmail',
-            label: 'Email Marketing',
-            descriptionKey: 'dashboard.agency.client360.moduleEmailDesc',
-            description: 'Campaigns, automations, consent, and client communications.',
-            active: hasAnyFeature(features, ['email', 'email-marketing', 'emailMarketing']),
-        },
-        {
-            id: 'appointments',
-            icon: CalendarDays,
-            labelKey: 'dashboard.agency.client360.moduleAppointments',
-            label: 'Appointments',
-            descriptionKey: 'dashboard.agency.client360.moduleAppointmentsDesc',
-            description: 'Bookings, availability, confirmations, and calendar operations.',
-            active: hasAnyFeature(features, ['appointments', 'appointments-engine', 'bookings']),
-        },
-        {
-            id: 'restaurants',
-            icon: FileText,
-            labelKey: 'dashboard.agency.client360.moduleRestaurants',
-            label: 'Restaurants',
-            descriptionKey: 'dashboard.agency.client360.moduleRestaurantsDesc',
-            description: 'Menu, reservations, restaurant content, and guest operations.',
-            active: hasAnyFeature(features, ['restaurants', 'restaurant', 'restaurant-engine']),
-        },
-        {
-            id: 'realty',
-            icon: Home,
-            labelKey: 'dashboard.agency.client360.moduleRealty',
-            label: 'Realty',
-            descriptionKey: 'dashboard.agency.client360.moduleRealtyDesc',
-            description: 'Listings, property pages, leads, and showing workflows.',
-            active: hasAnyFeature(features, ['realestate', 'realestateModule', 'real-estate', 'realty']),
-        },
-        {
-            id: 'bio-page',
-            icon: FileText,
-            labelKey: 'dashboard.agency.client360.moduleBioPage',
-            label: 'Bio Page',
-            descriptionKey: 'dashboard.agency.client360.moduleBioPageDesc',
-            description: 'Bio links, QR flows, social surfaces, and profile landing pages.',
-            active: hasAnyFeature(features, ['biopage', 'bio-page', 'bioPage']),
-        },
-        {
-            id: 'chatcore',
-            icon: Bot,
-            labelKey: 'dashboard.agency.client360.moduleChatCore',
-            label: 'ChatCore',
-            descriptionKey: 'dashboard.agency.client360.moduleChatCoreDesc',
-            description: 'AI chatbot, knowledge, channels, and visitor conversations.',
-            active: hasAnyFeature(features, ['chat', 'chatbot', 'chatcore', 'chatbot-engine']),
-        },
-        {
-            id: 'media-ai',
-            icon: Image,
-            labelKey: 'dashboard.agency.client360.moduleMediaAi',
-            label: 'Media AI',
-            descriptionKey: 'dashboard.agency.client360.moduleMediaAiDesc',
-            description: 'Generated image assets, creative library, and launch media.',
-            active: hasAnyFeature(features, ['media', 'media-ai', 'mediaAssets', 'assets']),
-        },
-        {
-            id: 'finance',
-            icon: CreditCard,
-            labelKey: 'dashboard.agency.client360.moduleFinance',
-            label: 'Finance',
-            descriptionKey: 'dashboard.agency.client360.moduleFinanceDesc',
-            description: 'Billing, invoices, payment status, revenue, and accounting context.',
-            active: hasBilling || hasAnyFeature(features, ['finance', 'billing']),
-            route: ROUTES.AGENCY_BILLING,
-        },
-        {
-            id: 'analytics',
-            icon: BarChart3,
-            labelKey: 'dashboard.agency.client360.moduleAnalytics',
-            label: 'Analytics',
-            descriptionKey: 'dashboard.agency.client360.moduleAnalyticsDesc',
-            description: 'Performance, usage, reports, recommendations, and portfolio metrics.',
-            active: hasAnyFeature(features, ['analytics']) || projectCount > 0,
-            route: ROUTES.AGENCY_ANALYTICS,
-        },
-    ];
+    return getAgencyEngineOperatingSystemManifest().client360Modules.map(module => ({
+        ...module,
+        icon: CLIENT_360_MODULE_ICONS[module.id],
+        active: isClient360ModuleActive(module, features, projectCount, hasBilling),
+    }));
 }
 
 function UsageRow({

@@ -30,6 +30,8 @@ export interface CanonicalAgencyPlanBillingDetails {
 }
 
 const CANONICAL_PLAN_SET = new Set<string>(CANONICAL_PLAN_IDS);
+export const INVALID_SUBSCRIPTION_PLAN_IDS = ['agency_client'] as const;
+const INVALID_SUBSCRIPTION_PLAN_SET = new Set<string>(INVALID_SUBSCRIPTION_PLAN_IDS);
 
 export const LEGACY_PLAN_MAP: Record<string, CanonicalPlanId> = {
     hobby: 'individual',
@@ -37,7 +39,6 @@ export const LEGACY_PLAN_MAP: Record<string, CanonicalPlanId> = {
     pro: 'individual',
     agency: 'agency_starter',
     agency_plus: 'agency_pro',
-    agency_client: 'individual',
 };
 
 const baseFeatures: PlanFeatures = {
@@ -307,6 +308,10 @@ export function isPlatformUnlimitedUser(role?: string | null): boolean {
 
 export function isLegacyPlan(planId?: string | null): boolean {
     return Boolean(planId && Object.prototype.hasOwnProperty.call(LEGACY_PLAN_MAP, planId));
+}
+
+export function isInvalidSubscriptionPlanId(planId?: string | null): boolean {
+    return Boolean(planId && INVALID_SUBSCRIPTION_PLAN_SET.has(planId));
 }
 
 export function mapLegacyPlanToCanonical(planId?: string | null): CanonicalPlanId {

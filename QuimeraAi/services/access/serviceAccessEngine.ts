@@ -6,6 +6,7 @@ import {
     getCanonicalPlanFeatures,
     getCanonicalPlanLimits,
     isFinitePlanLimit,
+    isInvalidSubscriptionPlanId,
     isPlatformUnlimitedUser,
     normalizePlanId,
     normalizePlanLimits,
@@ -259,7 +260,7 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
         return blocked('subscription_inactive', 'La suscripción no está activa', { upgradeRequired: true });
     }
 
-    if (input.planId === 'agency_client') {
+    if (isInvalidSubscriptionPlanId(input.planId)) {
         return blocked('invalid_plan', 'agency_client es un tipo de tenant, no un plan de suscripción');
     }
 

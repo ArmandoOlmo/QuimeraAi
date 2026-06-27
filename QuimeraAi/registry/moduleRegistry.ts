@@ -114,6 +114,22 @@ export type AgencyEngineDashboardTabId =
     | 'white-label'
     | 'client-portal';
 
+export type AgencyEngineClient360ModuleId =
+    | 'businessBlueprint'
+    | 'website-builder'
+    | 'storefront-builder'
+    | 'ecommerce'
+    | 'crm-leads'
+    | 'email-marketing'
+    | 'appointments'
+    | 'restaurants'
+    | 'realty'
+    | 'bio-page'
+    | 'chatcore'
+    | 'media-ai'
+    | 'finance'
+    | 'analytics';
+
 export interface AgencyEngineOperatingSurface {
     id: AgencyEngineOperatingSurfaceId;
     moduleId: string;
@@ -135,6 +151,18 @@ export interface AgencyEngineDashboardTab {
     requiredPermission: string;
 }
 
+export interface AgencyEngineClient360Module {
+    id: AgencyEngineClient360ModuleId;
+    canonicalSystem: CanonicalSystemId;
+    ownerModuleId: string;
+    labelKey: string;
+    label: string;
+    descriptionKey: string;
+    description: string;
+    activationSignals: string[];
+    route?: string;
+}
+
 export interface AgencyEngineOperatingSystemManifest {
     id: 'agency-engine';
     label: string;
@@ -147,6 +175,7 @@ export interface AgencyEngineOperatingSystemManifest {
     foundationalSystems: CanonicalSystemId[];
     operatingSurfaces: AgencyEngineOperatingSurface[];
     dashboardTabs: AgencyEngineDashboardTab[];
+    client360Modules: AgencyEngineClient360Module[];
 }
 
 const PLAN_RANK: Record<SubscriptionPlanId, number> = {
@@ -228,7 +257,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         requiredPermission: 'canManageSettings',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine', 'global-assistant'],
-        readsFrom: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
+        readsFrom: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage', 'media'],
         writesTo: ['analytics', 'finance', 'crm', 'emailMarketing'],
     },
     {
@@ -685,7 +714,7 @@ export const AGENCY_ENGINE_OPERATING_SURFACES: AgencyEngineOperatingSurface[] = 
         requiredPermission: 'canManageSettings',
         aiPowered: true,
         globalAssistantEnabled: true,
-        requiredSystems: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
+        requiredSystems: ['businessBlueprint', 'websiteBuilder', 'storefrontBuilder', 'ecommerce', 'crm', 'emailMarketing', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'chatbot', 'media', 'finance', 'analytics'],
     },
     {
         id: 'client-provisioning',
@@ -878,6 +907,154 @@ export const AGENCY_ENGINE_DASHBOARD_TABS: AgencyEngineDashboardTab[] = [
     },
 ];
 
+export const AGENCY_ENGINE_CLIENT_360_MODULES: AgencyEngineClient360Module[] = [
+    {
+        id: 'businessBlueprint',
+        canonicalSystem: 'businessBlueprint',
+        ownerModuleId: 'ai-business-blueprint',
+        labelKey: 'dashboard.agency.client360.moduleBusinessBlueprint',
+        label: 'BusinessBlueprint',
+        descriptionKey: 'dashboard.agency.client360.moduleBusinessBlueprintDesc',
+        description: 'AI-generated operating contract for the client business.',
+        activationSignals: ['businessBlueprint', 'business-blueprint', 'blueprint'],
+    },
+    {
+        id: 'website-builder',
+        canonicalSystem: 'websiteBuilder',
+        ownerModuleId: 'website-builder',
+        labelKey: 'dashboard.agency.client360.moduleWebsite',
+        label: 'Website Builder',
+        descriptionKey: 'dashboard.agency.client360.moduleWebsiteDesc',
+        description: 'Website draft, pages, content, sections, and launch workflow.',
+        activationSignals: ['projects', 'cms', 'website', 'website-builder'],
+        route: '/agency/projects',
+    },
+    {
+        id: 'storefront-builder',
+        canonicalSystem: 'storefrontBuilder',
+        ownerModuleId: 'storefront-builder',
+        labelKey: 'dashboard.agency.client360.moduleStorefront',
+        label: 'Storefront Builder',
+        descriptionKey: 'dashboard.agency.client360.moduleStorefrontDesc',
+        description: 'Storefront layout, product presentation, and commerce surface.',
+        activationSignals: ['ecommerce', 'storefront', 'storefront-builder'],
+        route: '/agency/projects',
+    },
+    {
+        id: 'ecommerce',
+        canonicalSystem: 'ecommerce',
+        ownerModuleId: 'ecommerce-engine',
+        labelKey: 'dashboard.agency.client360.moduleEcommerce',
+        label: 'Ecommerce',
+        descriptionKey: 'dashboard.agency.client360.moduleEcommerceDesc',
+        description: 'Products, orders, checkout readiness, and revenue operations.',
+        activationSignals: ['ecommerce', 'store', 'checkout'],
+        route: '/agency/billing',
+    },
+    {
+        id: 'crm-leads',
+        canonicalSystem: 'crm',
+        ownerModuleId: 'crm-leads',
+        labelKey: 'dashboard.agency.client360.moduleCrm',
+        label: 'CRM / Leads',
+        descriptionKey: 'dashboard.agency.client360.moduleCrmDesc',
+        description: 'Lead capture, customer records, intake, and follow-up pipeline.',
+        activationSignals: ['leads', 'crm', 'crm-leads'],
+    },
+    {
+        id: 'email-marketing',
+        canonicalSystem: 'emailMarketing',
+        ownerModuleId: 'email-marketing',
+        labelKey: 'dashboard.agency.client360.moduleEmail',
+        label: 'Email Marketing',
+        descriptionKey: 'dashboard.agency.client360.moduleEmailDesc',
+        description: 'Campaigns, automations, consent, and client communications.',
+        activationSignals: ['email', 'email-marketing', 'emailMarketing'],
+    },
+    {
+        id: 'appointments',
+        canonicalSystem: 'appointments',
+        ownerModuleId: 'appointments-engine',
+        labelKey: 'dashboard.agency.client360.moduleAppointments',
+        label: 'Appointments',
+        descriptionKey: 'dashboard.agency.client360.moduleAppointmentsDesc',
+        description: 'Bookings, availability, confirmations, and calendar operations.',
+        activationSignals: ['appointments', 'appointments-engine', 'bookings'],
+    },
+    {
+        id: 'restaurants',
+        canonicalSystem: 'restaurants',
+        ownerModuleId: 'restaurant-engine',
+        labelKey: 'dashboard.agency.client360.moduleRestaurants',
+        label: 'Restaurants',
+        descriptionKey: 'dashboard.agency.client360.moduleRestaurantsDesc',
+        description: 'Menu, reservations, restaurant content, and guest operations.',
+        activationSignals: ['restaurants', 'restaurant', 'restaurant-engine'],
+    },
+    {
+        id: 'realty',
+        canonicalSystem: 'realEstate',
+        ownerModuleId: 'real-estate-engine',
+        labelKey: 'dashboard.agency.client360.moduleRealty',
+        label: 'Realty',
+        descriptionKey: 'dashboard.agency.client360.moduleRealtyDesc',
+        description: 'Listings, property pages, leads, and showing workflows.',
+        activationSignals: ['realestate', 'realestateModule', 'real-estate', 'realty'],
+    },
+    {
+        id: 'bio-page',
+        canonicalSystem: 'bioPage',
+        ownerModuleId: 'bio-page-engine',
+        labelKey: 'dashboard.agency.client360.moduleBioPage',
+        label: 'Bio Page',
+        descriptionKey: 'dashboard.agency.client360.moduleBioPageDesc',
+        description: 'Bio links, QR flows, social surfaces, and profile landing pages.',
+        activationSignals: ['biopage', 'bio-page', 'bioPage'],
+    },
+    {
+        id: 'chatcore',
+        canonicalSystem: 'chatbot',
+        ownerModuleId: 'chatbot-engine',
+        labelKey: 'dashboard.agency.client360.moduleChatCore',
+        label: 'ChatCore',
+        descriptionKey: 'dashboard.agency.client360.moduleChatCoreDesc',
+        description: 'AI chatbot, knowledge, channels, and visitor conversations.',
+        activationSignals: ['chat', 'chatbot', 'chatcore', 'chatbot-engine'],
+    },
+    {
+        id: 'media-ai',
+        canonicalSystem: 'media',
+        ownerModuleId: 'media-assets',
+        labelKey: 'dashboard.agency.client360.moduleMediaAi',
+        label: 'Media AI',
+        descriptionKey: 'dashboard.agency.client360.moduleMediaAiDesc',
+        description: 'Generated image assets, creative library, and launch media.',
+        activationSignals: ['media', 'media-ai', 'mediaAssets', 'assets'],
+    },
+    {
+        id: 'finance',
+        canonicalSystem: 'finance',
+        ownerModuleId: 'finance',
+        labelKey: 'dashboard.agency.client360.moduleFinance',
+        label: 'Finance',
+        descriptionKey: 'dashboard.agency.client360.moduleFinanceDesc',
+        description: 'Billing, invoices, payment status, revenue, and accounting context.',
+        activationSignals: ['finance', 'billing'],
+        route: '/agency/billing',
+    },
+    {
+        id: 'analytics',
+        canonicalSystem: 'analytics',
+        ownerModuleId: 'analytics-engine',
+        labelKey: 'dashboard.agency.client360.moduleAnalytics',
+        label: 'Analytics',
+        descriptionKey: 'dashboard.agency.client360.moduleAnalyticsDesc',
+        description: 'Performance, usage, reports, recommendations, and portfolio metrics.',
+        activationSignals: ['analytics'],
+        route: '/agency/analytics',
+    },
+];
+
 export const AGENCY_ENGINE_OPERATING_SYSTEM: AgencyEngineOperatingSystemManifest = {
     id: 'agency-engine',
     label: 'Agency Engine',
@@ -894,6 +1071,7 @@ export const AGENCY_ENGINE_OPERATING_SYSTEM: AgencyEngineOperatingSystemManifest
     foundationalSystems: AGENCY_ENGINE_FOUNDATIONAL_SYSTEMS,
     operatingSurfaces: AGENCY_ENGINE_OPERATING_SURFACES,
     dashboardTabs: AGENCY_ENGINE_DASHBOARD_TABS,
+    client360Modules: AGENCY_ENGINE_CLIENT_360_MODULES,
 };
 
 export function canAccessModuleRegistryItem(item: ModuleRegistryItem, access: ModuleRegistryAccessContext = {}): boolean {

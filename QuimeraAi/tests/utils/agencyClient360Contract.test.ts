@@ -36,25 +36,29 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain("t('dashboard.agency.client360.billing'");
         expect(client360Panel).toContain("t('dashboard.agency.client360.moduleMap'");
         expect(client360Panel).toContain('buildClient360ModuleSignals(client, metrics)');
-        expect(client360Panel).toContain("id: 'businessBlueprint'");
-        expect(client360Panel).toContain("id: 'website-builder'");
-        expect(client360Panel).toContain("id: 'storefront-builder'");
-        expect(client360Panel).toContain("id: 'ecommerce'");
-        expect(client360Panel).toContain("id: 'crm-leads'");
-        expect(client360Panel).toContain("id: 'email-marketing'");
-        expect(client360Panel).toContain("id: 'appointments'");
-        expect(client360Panel).toContain("id: 'restaurants'");
-        expect(client360Panel).toContain("id: 'realty'");
-        expect(client360Panel).toContain("id: 'bio-page'");
-        expect(client360Panel).toContain("id: 'chatcore'");
-        expect(client360Panel).toContain("id: 'media-ai'");
-        expect(client360Panel).toContain("id: 'finance'");
-        expect(client360Panel).toContain("id: 'analytics'");
+        expect(client360Panel).toContain('getAgencyEngineOperatingSystemManifest().client360Modules');
+        expect(client360Panel).toContain('CLIENT_360_MODULE_ICONS');
+        expect(client360Panel).toContain('module.activationSignals');
+        expect(client360Panel).toContain('module.route');
         expect(client360Panel).toContain("t('dashboard.agency.client360.activity'");
         expect(client360Panel).toContain('ROUTES.AGENCY_BILLING');
-        expect(client360Panel).toContain('ROUTES.AGENCY_ANALYTICS');
         expect(client360Panel).toContain('ROUTES.AGENCY_REPORTS');
         expect(client360Panel).toContain('ROUTES.AGENCY_PROJECTS');
+        expect(registry).toContain('AGENCY_ENGINE_CLIENT_360_MODULES');
+        expect(registry).toContain("id: 'businessBlueprint'");
+        expect(registry).toContain("id: 'website-builder'");
+        expect(registry).toContain("id: 'storefront-builder'");
+        expect(registry).toContain("id: 'ecommerce'");
+        expect(registry).toContain("id: 'crm-leads'");
+        expect(registry).toContain("id: 'email-marketing'");
+        expect(registry).toContain("id: 'appointments'");
+        expect(registry).toContain("id: 'restaurants'");
+        expect(registry).toContain("id: 'realty'");
+        expect(registry).toContain("id: 'bio-page'");
+        expect(registry).toContain("id: 'chatcore'");
+        expect(registry).toContain("id: 'media-ai'");
+        expect(registry).toContain("id: 'finance'");
+        expect(registry).toContain("id: 'analytics'");
     });
 
     it('hands Client 360 report generation to the Agency AI operating layer with client context', () => {
@@ -74,7 +78,10 @@ describe('Agency Client 360 contract', () => {
     });
 
     it('ships all Client 360 labels through ES, EN, and FR locale files', () => {
-        const requiredKeys = Array.from(client360Panel.matchAll(/dashboard\.agency\.client360(?:\.[A-Za-z0-9]+)+/g))
+        const requiredKeys = Array.from(new Set([
+            ...Array.from(client360Panel.matchAll(/dashboard\.agency\.client360(?:\.[A-Za-z0-9]+)+/g)),
+            ...Array.from(registry.matchAll(/dashboard\.agency\.client360(?:\.[A-Za-z0-9]+)+/g)),
+        ]))
             .map(match => match[0]);
         const locales = {
             es: readJson('locales/es/translation.json'),

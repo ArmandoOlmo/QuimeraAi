@@ -87,6 +87,9 @@ describe('Agency billing canonical contract', () => {
         expect(tenantContext).toContain('resolveServiceAccess({');
         expect(tenantContext).toContain('agencyPlanId: selectedAgencyPlanId || undefined');
         expect(tenantContext).toContain('assignPlanToClient(tenantId, selectedAgencyPlanId');
+        expect(tenantContext).toContain("normalizeTenantSubscriptionPlanForType('agency_client'");
+        expect(tenantContext).toContain("agencyClientBillingMode === 'direct' ? requestedClientPlan : inheritedAgencyPlan");
+        expect(tenantContext).not.toContain("subscriptionPlan: normalizePlanId(data.plan || parentTenant?.subscriptionPlan || 'individual')");
         expect(tenantContext).toContain(".from('agency_clients')");
         expect(tenantContext).toContain("onConflict: 'agency_tenant_id,client_tenant_id'");
     });

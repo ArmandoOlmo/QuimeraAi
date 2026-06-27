@@ -232,6 +232,23 @@ describe('moduleRegistry', () => {
             expect.objectContaining({ id: 'client-portal', surfaceId: 'client-portal', moduleId: 'agency-client-portal', route: '/agency/client-portal', requiredPermission: 'canManageSettings' }),
         ]));
         expect(new Set(manifest.dashboardTabs.map(tab => tab.id)).size).toBe(manifest.dashboardTabs.length);
+        expect(manifest.client360Modules).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: 'businessBlueprint', canonicalSystem: 'businessBlueprint', ownerModuleId: 'ai-business-blueprint' }),
+            expect.objectContaining({ id: 'website-builder', canonicalSystem: 'websiteBuilder', ownerModuleId: 'website-builder', route: '/agency/projects' }),
+            expect.objectContaining({ id: 'storefront-builder', canonicalSystem: 'storefrontBuilder', ownerModuleId: 'storefront-builder', route: '/agency/projects' }),
+            expect.objectContaining({ id: 'ecommerce', canonicalSystem: 'ecommerce', ownerModuleId: 'ecommerce-engine', route: '/agency/billing' }),
+            expect.objectContaining({ id: 'crm-leads', canonicalSystem: 'crm', ownerModuleId: 'crm-leads' }),
+            expect.objectContaining({ id: 'email-marketing', canonicalSystem: 'emailMarketing', ownerModuleId: 'email-marketing' }),
+            expect.objectContaining({ id: 'appointments', canonicalSystem: 'appointments', ownerModuleId: 'appointments-engine' }),
+            expect.objectContaining({ id: 'restaurants', canonicalSystem: 'restaurants', ownerModuleId: 'restaurant-engine' }),
+            expect.objectContaining({ id: 'realty', canonicalSystem: 'realEstate', ownerModuleId: 'real-estate-engine' }),
+            expect.objectContaining({ id: 'bio-page', canonicalSystem: 'bioPage', ownerModuleId: 'bio-page-engine' }),
+            expect.objectContaining({ id: 'chatcore', canonicalSystem: 'chatbot', ownerModuleId: 'chatbot-engine' }),
+            expect.objectContaining({ id: 'media-ai', canonicalSystem: 'media', ownerModuleId: 'media-assets' }),
+            expect.objectContaining({ id: 'finance', canonicalSystem: 'finance', ownerModuleId: 'finance', route: '/agency/billing' }),
+            expect.objectContaining({ id: 'analytics', canonicalSystem: 'analytics', ownerModuleId: 'analytics-engine', route: '/agency/analytics' }),
+        ]));
+        expect(new Set(manifest.client360Modules.map(module => module.id)).size).toBe(manifest.client360Modules.length);
 
         for (const moduleId of manifest.moduleIds) {
             const item = getModuleRegistryItem(moduleId);
@@ -254,6 +271,17 @@ describe('moduleRegistry', () => {
         for (const tab of manifest.dashboardTabs) {
             expect(manifest.moduleIds, tab.id).toContain(tab.moduleId);
             expect(manifest.operatingSurfaces.some(surface => surface.id === tab.surfaceId), tab.id).toBe(true);
+        }
+
+        for (const module of manifest.client360Modules) {
+            const item = getModuleRegistryItem(module.ownerModuleId);
+            expect(item, module.id).toBeDefined();
+            expect(item?.canonicalSystem, module.id).toBe(module.canonicalSystem);
+            expect(manifest.foundationalSystems, module.id).toContain(module.canonicalSystem);
+            expect(module.labelKey, module.id).toMatch(/^dashboard\.agency\.client360\./);
+            expect(module.descriptionKey, module.id).toMatch(/^dashboard\.agency\.client360\./);
+            expect(module.activationSignals.length, module.id).toBeGreaterThan(0);
+            if (module.route) expect(module.route, module.id).toMatch(/^\/agency\//);
         }
     });
 
