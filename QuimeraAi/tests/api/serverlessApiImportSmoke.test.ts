@@ -30,6 +30,12 @@ const CRON_ROUTES = [
     method: 'POST',
     load: () => import('../../api/mcp/jobs/run.ts'),
   },
+  {
+    name: 'production readiness probe',
+    source: 'api/ops/readiness.ts',
+    method: 'GET',
+    load: () => import('../../api/ops/readiness.ts'),
+  },
 ] as const;
 
 const SERVERLESS_SERVICE_IMPORTS = [

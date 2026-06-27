@@ -36,6 +36,10 @@ Smoke tests for each preview/prod deployment:
   `Cannot find module`, `ERR_MODULE_NOT_FOUND`, or cron route `500` burst.
 - [ ] Required before running an authenticated job in production: confirm queue
   volume and rate limits. Use a controlled window and low limits for beta.
+- [ ] Required before accepting beta customers: run the protected readiness
+  probe against the target deployment runtime with a valid `CRON_SECRET`; this
+  validates env shape and read-only provider connectivity without sending email,
+  syncing calendars, creating payments, or mutating Supabase data.
 
 Recommended unauthenticated smoke commands:
 
@@ -44,7 +48,28 @@ curl -i https://<preview-url>/api/email/jobs/run
 curl -i https://<preview-url>/api/appointments/jobs/run
 curl -i https://<preview-url>/api/appointments/google/jobs/run
 curl -i -X POST https://<preview-url>/api/mcp/jobs/run
+curl -i https://<preview-url>/api/ops/readiness
 ```
+
+Protected runtime readiness probe:
+
+```bash
+curl -sS \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  "https://<target-url>/api/ops/readiness?live=1&strict=1" | jq
+```
+
+For local/operator checks with Vercel env injection:
+
+```bash
+npm run readiness:probe:production -- --json
+```
+
+This npm command runs `vercel env run` from a temporary linked directory so
+local `.env` files cannot create false positives. If it reports every sensitive
+value as missing while Vercel env names are present, treat that as a CLI
+redaction/injection limitation and use the protected runtime endpoint for final
+evidence.
 
 Latest controlled-readiness evidence, 2026-06-27:
 
@@ -108,12 +133,17 @@ Verification notes:
 
 - Vercel env names can be checked safely by CLI, but production value validation
   may not be provable from `vercel env pull` because sensitive values can be
-  returned as empty/redacted in the local pull file. Treat this as names-present
-  evidence only.
+  returned as empty/redacted in the local pull file. `vercel env run` can also
+  be weak evidence if local `.env` files are loaded or if the CLI does not expose
+  sensitive values to the child process. Treat CLI-only output as names-present
+  evidence unless provider read-only checks pass.
+- Stronger evidence comes from `/api/ops/readiness?live=1&strict=1`, because it
+  runs inside the Vercel deployment runtime where the actual target environment
+  variables are loaded.
 - Before the first authorized production email/calendar/Stripe smoke, confirm
-  the actual values in the Vercel/Supabase dashboards or through a protected
-  runtime readiness probe that validates shape/connectivity without printing
-  secrets.
+  the actual values in the Vercel/Supabase dashboards or through the protected
+  runtime readiness probe. The probe validates shape/connectivity without
+  printing secrets.
 
 ## 4. Supabase Security Gate
 
@@ -179,6 +209,9 @@ Run against the final Vercel preview and again after production promotion:
 - [ ] Email outbox cron returns authorized success in a controlled window.
 - [ ] Email outbox records the expected send/review/suppression status.
 - [ ] Unsubscribe link/action records suppression and prevents future sends.
+- [ ] Protected readiness probe returns `200` with live provider connectivity
+  checks passing, or every warning/failure is explicitly accepted for controlled
+  beta scope.
 - [ ] Appointments dashboard loads.
 - [ ] Public appointment booking page renders.
 - [ ] Public appointment booking creates a test appointment.
