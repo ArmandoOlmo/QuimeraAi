@@ -130,11 +130,15 @@ describe('Agency billing canonical contract', () => {
         expect(agencyPlanSelector).toContain('disabled={!canAssignPlan || loading}');
 
         expect(clientBillingManager).toContain("import { useServiceAccess }");
+        expect(clientBillingManager).toContain("serviceAccess.canAccessModule('agency-billing'");
         expect(clientBillingManager).toContain("serviceAccess.canAccessModule('agency-service-plans'");
         expect(clientBillingManager).toContain("requiredPermission: 'canManageBilling'");
         expect(clientBillingManager).toContain('const requireAgencyBillingAccess = () =>');
+        expect(clientBillingManager).toContain('const requireAgencyPlanAssignmentAccess = () =>');
         expect(clientBillingManager).toContain('if (!requireAgencyBillingAccess()) return');
+        expect(clientBillingManager).toContain('if (!requireAgencyPlanAssignmentAccess()) return');
         expect(clientBillingManager).toContain('disabled={!canManageAgencyBilling}');
+        expect(clientBillingManager).toContain('disabled={!canAssignClientPlan}');
     });
 
     it('routes agency add-on capacity changes through Service Access Engine', () => {

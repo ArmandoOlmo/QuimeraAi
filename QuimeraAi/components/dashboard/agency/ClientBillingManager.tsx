@@ -51,11 +51,16 @@ export function ClientBillingManager() {
     const { subClients } = useAgency();
     const { currentTenant } = useTenant();
     const serviceAccess = useServiceAccess();
-    const agencyBillingAccess = serviceAccess.canAccessModule('agency-service-plans', {
+    const agencyBillingAccess = serviceAccess.canAccessModule('agency-billing', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageBilling',
+    });
+    const agencyPlanAssignmentAccess = serviceAccess.canAccessModule('agency-service-plans', {
         serviceId: 'agency',
         requiredPermission: 'canManageBilling',
     });
     const canManageAgencyBilling = !serviceAccess.isLoading && agencyBillingAccess.allowed;
+    const canAssignClientPlan = !serviceAccess.isLoading && agencyPlanAssignmentAccess.allowed;
     const [clientsBilling, setClientsBilling] = useState<ClientBillingInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -136,8 +141,22 @@ export function ClientBillingManager() {
         return true;
     };
 
+    const requireAgencyPlanAssignmentAccess = () => {
+        if (serviceAccess.isLoading) {
+            setError('Validando acceso a planes de servicio de agencia');
+            return false;
+        }
+
+        if (!agencyPlanAssignmentAccess.allowed) {
+            setError(agencyPlanAssignmentAccess.message);
+            return false;
+        }
+
+        return true;
+    };
+
     const handleOpenAssignPlan = (client: ClientBillingInfo) => {
-        if (!requireAgencyBillingAccess()) return;
+        if (!requireAgencyPlanAssignmentAccess()) return;
 
         setAssignPlanModal({
             isOpen: true,
@@ -426,7 +445,7 @@ export function ClientBillingManager() {
                                         {client.agencyPlanName ? (
                                             <button
                                                 onClick={() => handleOpenAssignPlan(client)}
-                                                disabled={!canManageAgencyBilling}
+                                                disabled={!canAssignClientPlan}
                                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Package className="h-3 w-3" />
@@ -435,7 +454,7 @@ export function ClientBillingManager() {
                                         ) : (
                                             <button
                                                 onClick={() => handleOpenAssignPlan(client)}
-                                                disabled={!canManageAgencyBilling}
+                                                disabled={!canAssignClientPlan}
                                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-q-text-muted hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Plus className="h-3 w-3" />

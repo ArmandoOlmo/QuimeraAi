@@ -7,6 +7,8 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 
 describe('Agency dashboard design contract', () => {
     const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
+    const dashboardMain = read('components/dashboard/agency/AgencyDashboardMain.tsx');
+    const legacyDashboard = read('components/dashboard/agency/AgencyDashboard.tsx');
     const dashboardSurfaces = [
         'components/dashboard/agency/AgencyOverview.tsx',
         'components/dashboard/agency/AgencyAnalytics.tsx',
@@ -20,6 +22,17 @@ describe('Agency dashboard design contract', () => {
         expect(designSystem).toContain('export function AgencyCommandCenter');
         expect(designSystem).toContain('export function AgencyReadinessPanel');
         expect(designSystem).toContain('export function AgencyNextAction');
+    });
+
+    it('keeps Agency Engine dashboards inside a bounded scroll shell', () => {
+        expect(designSystem).toContain("agencyShellClass = 'quimera-agency-dashboard flex h-[100dvh] min-h-0 overflow-hidden");
+        expect(designSystem).toContain("agencyContentClass = 'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden");
+        expect(dashboardMain).toContain('className={agencyShellClass}');
+        expect(dashboardMain).toContain('className={agencyContentClass}');
+        expect(dashboardMain).toContain('className="flex-1 min-h-0 min-w-0 overflow-hidden"');
+        expect(dashboardMain).toContain('overflow-x-auto');
+        expect(legacyDashboard).toContain("import { agencyContentClass } from './AgencyDesignSystem'");
+        expect(legacyDashboard).not.toContain('h-screen');
     });
 
     it('uses command-center and readiness primitives across agency dashboards', () => {
