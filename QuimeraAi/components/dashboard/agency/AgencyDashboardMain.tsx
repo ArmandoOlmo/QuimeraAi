@@ -171,7 +171,7 @@ const AgencyDashboardMain: React.FC = () => {
             />
 
             {/* Main Content */}
-            <div className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <header className="quimera-dashboard-header-bar h-auto min-h-14 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sticky top-0 z-40 relative">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
@@ -235,7 +235,7 @@ const AgencyDashboardMain: React.FC = () => {
                 <main id="main-content" className="flex-1 min-h-0 min-w-0 overflow-hidden">
                     {/* Landing Editor - Full width without container restrictions */}
                     {activeTab === 'landing' && !loadingClients && (
-                        <div className="flex-1 w-full h-full">
+                        <div className="flex h-full min-h-0 w-full min-w-0">
                             <AgencyLandingEditor />
                         </div>
                     )}

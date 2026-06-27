@@ -465,7 +465,7 @@ const readAgencyTenantId = (
     return tenantId;
 };
 
-const createAgencyClient360NavigationHandler = (): HandlerPatch => ({
+const createAgencyClient360NavigationHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: input => ({
         valid: Boolean(readString(input.clientTenantId)),
         errors: readString(input.clientTenantId) ? [] : ['clientTenantId is required before opening Agency Client 360.'],
@@ -474,6 +474,14 @@ const createAgencyClient360NavigationHandler = (): HandlerPatch => ({
         const clientTenantId = readString(input.clientTenantId);
         const section = readString(input.section) || 'overview';
         if (!clientTenantId) throw new Error('clientTenantId is required before opening Agency Client 360.');
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const client360 = snapshot.clients.find(client => client.clientTenantId === clientTenantId);
+
+        if (!client360) {
+            throw new Error('Agency Client 360 can only open clients managed by the active agency tenant.');
+        }
+
         return {
             afterSnapshot: {
                 navigation: {
@@ -482,18 +490,23 @@ const createAgencyClient360NavigationHandler = (): HandlerPatch => ({
                     moduleItem: 'client-360',
                     clientTenantId,
                     section,
-                    tenantId: getTenantId(action, context),
+                    tenantId: agencyTenantId,
                     actionType: action.actionType,
                     module: action.module,
                     sourceModule: 'global-assistant',
                     sourceComponent: 'OperatingLayer',
                     message: 'Open Agency Client 360.',
                 },
+                client360,
+                warnings: snapshot.warnings,
+                sourceTables: snapshot.sourceTables,
             },
             diff: {
                 opened: [`agency.client360.${clientTenantId}.${section}`],
                 clientTenantId,
                 section,
+                agencyTenantId,
+                sourceTables: snapshot.sourceTables,
             },
         };
     },
@@ -2361,7 +2374,7 @@ const buildAssistantProjectDraft = (
     }, {} as Record<PageSection, boolean>);
     const theme = cloneValue(DEFAULT_WEBSITE_THEME);
     const brandIdentity = {
-        ...(cloneValue(initialData.brandIdentity) as Record<string, unknown>),
+        ...(cloneValue(initialData.brandIdentity) as unknown as Record<string, unknown>),
         name: projectName,
         industry,
         source: 'global-assistant',
@@ -2386,7 +2399,7 @@ const buildAssistantProjectDraft = (
             title: 'Ready for review',
             description: 'This project was created as a draft and will not publish automatically.',
         },
-    } as PageData;
+    } as unknown as PageData;
     const pages: SitePage[] = [{
         id: 'home',
         title: 'Home',
@@ -8424,7 +8437,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_restaurants_dashboard: () => createNavigationHandler('restaurants', { label: 'Open Restaurants module.', requiresProject: true }),
     open_realty_dashboard: () => createNavigationHandler('real-estate', { label: 'Open Quimera Realty Suite.', requiresProject: true }),
     open_agency_command_center: () => createNavigationHandler('agency', { label: 'Open Agency Command Center.', moduleItem: 'command-center' }),
-    open_agency_client_360: () => createAgencyClient360NavigationHandler(),
+    open_agency_client_360: createAgencyClient360NavigationHandler,
     search_agency_clients: createSearchAgencyClientsHandler,
     summarize_agency_performance: createAgencyPerformanceSummaryHandler,
     open_analytics_dashboard: () => createNavigationHandler('superadmin', { label: 'Open platform analytics.', adminView: 'analytics' }),

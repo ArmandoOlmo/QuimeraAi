@@ -20,6 +20,12 @@ import { getAgencyPlans, assignPlanToClient } from '../../../../services/agencyP
 import { AgencyPlan, calculateMarkup } from '../../../../types/agencyPlans';
 import { formatPlanLimit } from '../../../../services/billing/planCatalog';
 import { useServiceAccess } from '../../../../hooks/useServiceAccess';
+import {
+    agencyModalBodyClass,
+    agencyModalFooterClass,
+    agencyModalOverlayClass,
+    agencyModalPanelClass,
+} from '../AgencyDesignSystem';
 
 // =============================================================================
 // DROPDOWN SELECTOR
@@ -430,10 +436,10 @@ export function AssignPlanModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
-            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-lg shadow-xl">
+        <div className={agencyModalOverlayClass}>
+            <div className={`${agencyModalPanelClass} max-w-lg`}>
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-q-border">
+                <div className="shrink-0 px-6 py-4 border-b border-q-border">
                     <h3 className="text-lg font-semibold text-foreground">Asignar Plan</h3>
                     <p className="text-sm text-q-text-muted">
                         Selecciona un plan para <span className="font-medium text-foreground">{clientName}</span>
@@ -441,7 +447,7 @@ export function AssignPlanModal({
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
+                <div className={`${agencyModalBodyClass} p-6`}>
                     {error && (
                         <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
                             <AlertCircle className="w-4 h-4" />
@@ -458,7 +464,7 @@ export function AssignPlanModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
+                <div className={`${agencyModalFooterClass} px-6 py-4 flex flex-wrap justify-end gap-3`}>
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-foreground hover:bg-muted rounded-lg transition-colors"

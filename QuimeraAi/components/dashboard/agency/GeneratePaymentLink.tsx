@@ -10,6 +10,11 @@ import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { AgencyPlanCardSelector } from './plans';
 import { AgencyPlan } from '../../../types/agencyPlans';
 import {
+    agencyModalBodyClass,
+    agencyModalOverlayClass,
+    agencyModalPanelClass,
+} from './AgencyDesignSystem';
+import {
     Link2,
     Copy,
     CheckCircle,
@@ -140,17 +145,17 @@ export function GeneratePaymentLink({
         : selectedPlan?.price || 0;
 
     return (
-        <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-q-surface rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className={agencyModalOverlayClass}>
+            <div className={`${agencyModalPanelClass} max-w-lg`}>
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-q-border flex items-center justify-between sticky top-0 bg-q-surface rounded-t-xl z-10">
-                    <div className="flex items-center gap-3">
+                <div className="shrink-0 px-6 py-4 border-b border-q-border flex items-center justify-between gap-3 bg-q-surface">
+                    <div className="flex min-w-0 items-center gap-3">
                         <Link2 className="w-5 h-5 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
-                        <div>
-                            <h3 className="text-lg font-semibold text-foreground">
+                        <div className="min-w-0">
+                            <h3 className="truncate text-lg font-semibold text-foreground">
                                 Generar Link de Pago
                             </h3>
-                            <p className="text-xs text-q-text-muted">
+                            <p className="truncate text-xs text-q-text-muted">
                                 Para: <span className="font-medium text-foreground">{clientName}</span>
                             </p>
                         </div>
@@ -163,7 +168,7 @@ export function GeneratePaymentLink({
                     </button>
                 </div>
 
-                <div className="p-6 space-y-6">
+                <div className={`${agencyModalBodyClass} p-6 space-y-6`}>
                     {/* Error */}
                     {error && (
                         <div className="flex items-start gap-2 p-3 bg-q-error/10 dark:bg-q-error/12 border border-q-error/25 dark:border-q-error/30 rounded-lg text-sm text-q-error dark:text-q-error">

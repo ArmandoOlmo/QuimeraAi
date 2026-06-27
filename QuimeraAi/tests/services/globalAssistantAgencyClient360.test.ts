@@ -1,0 +1,261 @@
+import { describe, expect, it } from 'vitest';
+import {
+    attachDefaultGlobalAssistantActionHandlers,
+    GLOBAL_ASSISTANT_ACTIONS,
+    GlobalAssistantActionRegistry,
+    resolveCurrentAssistantContext,
+} from '../../services/globalAssistant';
+import type { AssistantAction } from '../../types/globalAssistant';
+
+type Row = Record<string, any>;
+
+class FakeSupabaseQuery {
+    private operation: 'select' | 'insert' | 'update' | 'delete' = 'select';
+    private payload: Row[] = [];
+    private updatePayload: Row = {};
+    private filters: Array<(row: Row) => boolean> = [];
+
+    constructor(
+        private readonly table: string,
+        private readonly rowsByTable: Record<string, Row[]>,
+        private readonly nextId: (table: string) => string,
+    ) {}
+
+    insert(payload: Row | Row[]) {
+        this.operation = 'insert';
+        this.payload = Array.isArray(payload) ? payload : [payload];
+        return this;
+    }
+
+    update(payload: Row) {
+        this.operation = 'update';
+        this.updatePayload = payload;
+        return this;
+    }
+
+    delete() {
+        this.operation = 'delete';
+        return this;
+    }
+
+    select() {
+        return this;
+    }
+
+    eq(field: string, value: unknown) {
+        this.filters.push(row => row[field] === value);
+        return this;
+    }
+
+    in(field: string, values: unknown[]) {
+        this.filters.push(row => values.includes(row[field]));
+        return this;
+    }
+
+    limit() {
+        return this;
+    }
+
+    maybeSingle() {
+        return Promise.resolve(this.execute(true));
+    }
+
+    single() {
+        return Promise.resolve(this.execute(true));
+    }
+
+    then(resolve: (value: any) => void, reject: (reason: unknown) => void) {
+        return Promise.resolve(this.execute(false)).then(resolve, reject);
+    }
+
+    private execute(single: boolean) {
+        const rows = this.rowsByTable[this.table] || (this.rowsByTable[this.table] = []);
+
+        if (this.operation === 'insert') {
+            const inserted = this.payload.map(row => ({
+                id: row.id || this.nextId(this.table),
+                ...row,
+            }));
+            rows.push(...inserted);
+            return { data: single ? inserted[0] : inserted, error: null };
+        }
+
+        if (this.operation === 'delete') {
+            const keep = rows.filter(row => !this.filters.every(filter => filter(row)));
+            this.rowsByTable[this.table] = keep;
+            return { data: null, error: null };
+        }
+
+        if (this.operation === 'update') {
+            const updated = rows
+                .filter(row => this.filters.every(filter => filter(row)))
+                .map(row => {
+                    Object.assign(row, this.updatePayload);
+                    return row;
+                });
+            return { data: single ? updated[0] || null : updated, error: null };
+        }
+
+        const filtered = rows.filter(row => this.filters.every(filter => filter(row)));
+        return { data: single ? filtered[0] || null : filtered, error: null };
+    }
+}
+
+const createFakeSupabase = () => {
+    const rowsByTable: Record<string, Row[]> = {};
+    let counter = 0;
+
+    return {
+        rowsByTable,
+        from(table: string) {
+            return new FakeSupabaseQuery(table, rowsByTable, prefix => `${prefix}_${++counter}`);
+        },
+    };
+};
+
+const buildAgencyRuntime = () => {
+    const fakeSupabase = createFakeSupabase();
+    const definitions = attachDefaultGlobalAssistantActionHandlers(GLOBAL_ASSISTANT_ACTIONS, {
+        supabase: fakeSupabase,
+        now: () => '2026-06-26T13:30:00.000Z',
+        createId: prefix => `${prefix}_fixed`,
+    });
+    const registry = new GlobalAssistantActionRegistry(definitions);
+    const context = resolveCurrentAssistantContext({
+        userId: 'user-1',
+        tenantId: 'agency-1',
+        role: 'owner',
+        mode: 'owner',
+        activeProject: {
+            id: 'project-1',
+            name: 'Agency HQ',
+            status: 'Draft',
+            tenantId: 'agency-1',
+            userId: 'user-1',
+        },
+        activeServices: ['agency'],
+        featureFlags: ['agencyModule'],
+    });
+
+    return { fakeSupabase, registry, context };
+};
+
+const buildAgencyClient360Action = (input: Row): AssistantAction => ({
+    id: 'action-open-agency-client-360',
+    taskId: 'task-agency',
+    actionType: 'open_agency_client_360',
+    module: 'agency',
+    target: { module: 'agency' },
+    input,
+    projectId: 'project-1',
+    tenantId: 'agency-1',
+    userId: 'user-1',
+    mode: 'owner',
+    requiresConfirmation: false,
+    status: 'previewed',
+    createdAt: '2026-06-26T13:00:00.000Z',
+    updatedAt: '2026-06-26T13:00:00.000Z',
+});
+
+describe('Global Assistant Agency Client 360 handler', () => {
+    it('opens Client 360 with a canonical managed-client snapshot', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+            billing_mode: 'direct',
+            onboarding_status: 'active',
+            lifecycle_stage: 'operating',
+            updated_at: '2026-06-26T14:00:00.000Z',
+        }];
+        fakeSupabase.rowsByTable.agency_service_plans = [{
+            id: 'plan-growth',
+            tenant_id: 'agency-1',
+            name: 'Growth Ops',
+            price: 240,
+            base_cost: 29,
+            is_active: true,
+            is_archived: false,
+            client_count: 1,
+        }];
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'client-1',
+            name: 'Client One',
+            email: 'client@example.test',
+            type: 'agency_client',
+            billing: { agencyPlanId: 'plan-growth', monthlyPrice: 260, mode: 'direct' },
+            subscription_plan: 'individual',
+            usage: { projectCount: 3 },
+            updated_at: '2026-06-26T14:10:00.000Z',
+        }];
+
+        const definition = registry.get('open_agency_client_360');
+        const input = {
+            tenantId: 'agency-1',
+            clientTenantId: 'client-1',
+            section: 'billing',
+        };
+
+        const result = await definition!.execute!(input, {
+            action: buildAgencyClient360Action(input),
+            context,
+        }) as Row;
+
+        expect(result.afterSnapshot).toMatchObject({
+            navigation: {
+                type: 'view',
+                view: 'agency',
+                moduleItem: 'client-360',
+                tenantId: 'agency-1',
+                clientTenantId: 'client-1',
+                section: 'billing',
+                sourceModule: 'global-assistant',
+            },
+            client360: {
+                clientTenantId: 'client-1',
+                name: 'Client One',
+                email: 'client@example.test',
+                agencyPlanId: 'plan-growth',
+                agencyPlanName: 'Growth Ops',
+                billingMode: 'direct',
+                lifecycleStage: 'operating',
+                monthlyPrice: 260,
+                projectCount: 3,
+            },
+            sourceTables: ['agency_clients', 'agency_service_plans', 'tenants'],
+        });
+        expect(result.diff).toMatchObject({
+            opened: ['agency.client360.client-1.billing'],
+            agencyTenantId: 'agency-1',
+            sourceTables: ['agency_clients', 'agency_service_plans', 'tenants'],
+        });
+    });
+
+    it('blocks Client 360 navigation for tenants outside the active agency', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+        }];
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'external-client',
+            owner_tenant_id: 'other-agency',
+            name: 'External Client',
+            type: 'agency_client',
+        }];
+
+        const definition = registry.get('open_agency_client_360');
+        const input = {
+            tenantId: 'agency-1',
+            clientTenantId: 'external-client',
+            section: 'overview',
+        };
+
+        await expect(definition!.execute!(input, {
+            action: buildAgencyClient360Action(input),
+            context,
+        })).rejects.toThrow('Agency Client 360 can only open clients managed by the active agency tenant.');
+    });
+});

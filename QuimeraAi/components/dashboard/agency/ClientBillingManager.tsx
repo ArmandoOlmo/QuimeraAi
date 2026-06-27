@@ -24,7 +24,13 @@ import {
 } from 'lucide-react';
 import { AssignPlanModal } from './plans';
 import { GeneratePaymentLink } from './GeneratePaymentLink';
-import { AgencyPanel } from './AgencyDesignSystem';
+import {
+    AgencyPanel,
+    agencyModalBodyClass,
+    agencyModalFooterClass,
+    agencyModalOverlayClass,
+    agencyModalPanelClass,
+} from './AgencyDesignSystem';
 
 
 
@@ -617,15 +623,15 @@ export function ClientBillingManager() {
 
             {/* Edit Limits Modal */}
             {editLimitsClient && (
-                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
-                    <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-q-border">
+                <div className={agencyModalOverlayClass}>
+                    <div className={`${agencyModalPanelClass} max-w-md`}>
+                        <div className="shrink-0 px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
                                 Gestionar Límites del Plan
                             </h3>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className={`${agencyModalBodyClass} p-6 space-y-4`}>
                             <p className="text-sm text-q-text-muted mb-4">
                                 Ajusta los límites de recursos para{' '}
                                 <span className="font-medium text-foreground">
@@ -681,7 +687,7 @@ export function ClientBillingManager() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
+                        <div className={`${agencyModalFooterClass} px-6 py-4 flex flex-wrap justify-end gap-3`}>
                             <button
                                 onClick={() => {
                                     setEditLimitsClient(null);
@@ -713,15 +719,15 @@ export function ClientBillingManager() {
 
             {/* Setup Modal */}
             {setupModalClient && (
-                <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
-                    <div className="bg-q-surface rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-q-border">
+                <div className={agencyModalOverlayClass}>
+                    <div className={`${agencyModalPanelClass} max-w-md`}>
+                        <div className="shrink-0 px-6 py-4 border-b border-q-border">
                             <h3 className="text-lg font-semibold text-foreground">
                                 Configurar Facturación
                             </h3>
                         </div>
 
-                        <div className="px-6 py-4 space-y-4">
+                        <div className={`${agencyModalBodyClass} px-6 py-4 space-y-4`}>
                             <p className="text-sm text-q-text-muted">
                                 Configura el precio mensual para{' '}
                                 {clientsBilling.find((c) => c.clientId === setupModalClient)?.clientName}
@@ -751,7 +757,7 @@ export function ClientBillingManager() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
+                        <div className={`${agencyModalFooterClass} px-6 py-4 flex flex-wrap justify-end gap-3`}>
                             <button
                                 onClick={() => {
                                     setSetupModalClient(null);

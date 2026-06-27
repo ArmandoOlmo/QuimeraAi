@@ -4,12 +4,22 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AppCard, AppIcon, StatusBadge } from '../../ui/system';
 import { cn } from '../../../utils';
 
-export const agencyShellClass = 'quimera-agency-dashboard flex h-screen min-h-0 overflow-hidden bg-q-bg text-foreground';
+export const agencyShellClass = 'quimera-agency-dashboard flex h-[100dvh] min-h-0 overflow-hidden overscroll-contain bg-q-bg text-foreground';
 
-export const agencyContentClass = 'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8';
+export const agencyContentClass = 'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-3 sm:p-6 lg:p-8';
 
 export const agencyPanelClass =
-    'quimera-dashboard-panel-card border-border-subtle bg-q-surface text-q-text shadow-[var(--q-shadow-card)]';
+    'quimera-dashboard-panel-card min-w-0 overflow-hidden border-border-subtle bg-q-surface text-q-text shadow-[var(--q-shadow-card)]';
+
+export const agencyModalOverlayClass =
+    'fixed inset-0 z-50 flex min-h-0 items-center justify-center overflow-y-auto overscroll-contain bg-q-text/50 p-4 backdrop-blur-sm';
+
+export const agencyModalPanelClass =
+    'flex max-h-[calc(100dvh-2rem)] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-q-border bg-q-surface shadow-2xl';
+
+export const agencyModalBodyClass = 'min-h-0 flex-1 overflow-y-auto';
+
+export const agencyModalFooterClass = 'shrink-0 border-t border-q-border';
 
 export type AgencyTone = 'default' | 'success' | 'warning' | 'danger' | 'accent' | 'info';
 
@@ -164,15 +174,15 @@ export function AgencyPanel({
     return (
         <section className={cn(agencyPanelClass, '!p-0', className)}>
             {title && (
-                <div className="flex items-center justify-between gap-3 border-b border-q-border/70 px-4 py-3 sm:px-5">
+                <div className="flex min-w-0 items-center justify-between gap-3 border-b border-q-border/70 px-4 py-3 sm:px-5">
                     <div className="flex min-w-0 items-center gap-3">
                         {Icon && <AppIcon icon={Icon} size="md" className="quimera-dashboard-header-icon" strokeWidth={2} />}
                         <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">{title}</h3>
                     </div>
-                    {action}
+                    {action && <div className="shrink-0">{action}</div>}
                 </div>
             )}
-            <div className={cn(title ? 'p-4 sm:p-5' : 'p-4 sm:p-5', contentClassName)}>
+            <div className={cn(title ? 'min-w-0 p-4 sm:p-5' : 'min-w-0 p-4 sm:p-5', contentClassName)}>
                 {children}
             </div>
         </section>
@@ -205,7 +215,7 @@ export function AgencyCommandCenter({
 }) {
     return (
         <section className={cn(agencyPanelClass, 'p-5 sm:p-6', className)}>
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1 space-y-4">
                     <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-q-accent/10 quimera-status-card-accent-text">
@@ -227,7 +237,7 @@ export function AgencyCommandCenter({
                         </p>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="grid min-w-0 grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-4">
                         {metrics.map((metric) => {
                             const MetricIcon = metric.icon;
                             const metricBody = (
@@ -268,7 +278,7 @@ export function AgencyCommandCenter({
                 </div>
 
                 {action && (
-                    <div className="w-full lg:w-[320px]">
+                    <div className="w-full min-w-0 lg:w-[320px]">
                         {action}
                     </div>
                 )}
