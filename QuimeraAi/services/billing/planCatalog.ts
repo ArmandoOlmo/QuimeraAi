@@ -404,10 +404,10 @@ export function getCanonicalAgencyPlanBillingDetails(planId?: string | null): Ca
     return {
         planId: id as CanonicalAgencyPlanBillingDetails['planId'],
         baseFee: PLAN_META[id].price.monthly,
-        projectCost: limits.projectCost,
+        projectCost: Number(limits.projectCost ?? 0),
         poolCredits: limits.maxAiCredits,
-        includedProjects: limits.includedProjects,
-        maxBillableProjects: limits.maxBillableProjects,
+        includedProjects: Number(limits.includedProjects ?? 0),
+        maxBillableProjects: Number(limits.maxBillableProjects ?? 0),
     };
 }
 

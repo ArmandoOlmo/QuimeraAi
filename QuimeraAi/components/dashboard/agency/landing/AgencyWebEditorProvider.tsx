@@ -208,9 +208,11 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             theme: theme,
             userId: user?.id || '',
             status: 'draft',
+            componentOrder,
+            sectionVisibility,
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString()
-        } as Project
+        } as unknown as Project
     };
 
     // Construct the customized Editor Context

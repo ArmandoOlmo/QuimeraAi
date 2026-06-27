@@ -26,6 +26,8 @@ export interface AgencyArticle {
     authorImage?: string;
     readTime?: number;
     views?: number;
+    language?: string;
+    translationGroup?: string;
     createdAt: string;
     updatedAt: string;
     publishedAt?: string;
@@ -58,6 +60,7 @@ export interface AgencyNavigation {
     id: string;
     header: AgencyNavSection;
     footer: AgencyFooterConfig;
+    links?: AgencyNavItem[];
     updatedAt: string;
     updatedBy?: string;
 }
@@ -132,6 +135,8 @@ export interface AgencyLegalPage {
     type: AgencyLegalPageType;
     title: string;
     subtitle?: string;
+    language?: string;
+    content?: string;
     lastUpdated: string;
     sections: AgencyLegalPageSection[];
     contactEmail?: string;
@@ -147,6 +152,9 @@ export const AGENCY_LEGAL_PAGE_LABELS: Record<AgencyLegalPageType, string> = {
     'terms-of-service': 'Términos de Servicio',
     'cookie-policy': 'Política de Cookies',
 };
+
+export type LegalPage = AgencyLegalPage;
+export type LegalPageSection = AgencyLegalPageSection;
 
 export const AGENCY_CATEGORY_LABELS: Record<AgencyArticleCategory, string> = {
     'blog': 'Blog',

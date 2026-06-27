@@ -57,6 +57,8 @@ Additional direct blueprint mutation paths also append snapshots before writing 
 - Ecommerce starter content and Ecommerce cross-module sync snapshot `ecommerceBlueprint`/`BusinessBlueprint` before creating AI-backed draft content.
 - Realty Engine cross-module and offer sync snapshot the current `BusinessBlueprint` before writing generated integration drafts.
 - Chatbot Engine configuration writes a `manual_checkpoint` before changing `chatbotBlueprint`.
+- MCP generated content and generated image apply tools write an `ai_action` / `before_regeneration` snapshot before replacing project, page, or section data.
+- Agency Project Transfer writes an `agency_transfer` / `transfer_checkpoint` snapshot into the copied draft project so the source blueprint state remains auditable and restorable after handoff.
 
 ## Restore Behavior
 

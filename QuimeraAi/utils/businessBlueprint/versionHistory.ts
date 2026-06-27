@@ -189,12 +189,14 @@ export function getSnapshotLabel(snapshot: Pick<BlueprintSnapshot, 'source' | 's
         manual_save: 'Manual save',
         publish: 'Publish',
         restore: 'Restore',
+        agency_transfer: 'Agency transfer',
         system: 'System',
         import: 'Import',
     };
     const changeLabel: Record<SnapshotChangeType, string> = {
         before_regeneration: 'before regeneration',
         before_restore: 'before restore',
+        transfer_checkpoint: 'transfer checkpoint',
         manual_checkpoint: 'manual checkpoint',
         publish_checkpoint: 'publish checkpoint',
         system_checkpoint: 'system checkpoint',
@@ -202,10 +204,14 @@ export function getSnapshotLabel(snapshot: Pick<BlueprintSnapshot, 'source' | 's
     const target = snapshot.sectionId
         ? `section ${snapshot.sectionId}`
         : snapshot.moduleKey || snapshot.scope;
+    if (snapshot.source === 'agency_transfer' && snapshot.changeType === 'transfer_checkpoint') {
+        return `Agency transfer checkpoint: ${target}`;
+    }
     return `${sourceLabel[snapshot.source]} ${changeLabel[snapshot.changeType]}: ${target}`;
 }
 
 export function getSnapshotSummary(snapshot: Pick<BlueprintSnapshot, 'scope' | 'moduleKey' | 'sectionId' | 'source' | 'changeType'>): string {
+    if (snapshot.source === 'agency_transfer') return 'Captured the project before Agency Project Transfer.';
     if (snapshot.sectionId) return `Captured section ${snapshot.sectionId} before changes.`;
     if (snapshot.moduleKey) return `Captured ${snapshot.moduleKey} before changes.`;
     if (snapshot.scope === 'businessBlueprint') return 'Captured the Business Blueprint before changes.';

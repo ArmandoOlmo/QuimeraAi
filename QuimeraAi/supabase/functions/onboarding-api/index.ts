@@ -187,6 +187,99 @@ function cleanForInsert<T extends Record<string, unknown>>(value: T): Record<str
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
 }
 
+const AGENCY_TRANSFER_SNAPSHOT_LIMIT = 50;
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function getProjectDataVersionHistory(projectData: Record<string, unknown>) {
+  const history = asRecord(projectData.versionHistory);
+  const snapshots = Array.isArray(history.blueprintSnapshots)
+    ? history.blueprintSnapshots.filter(Boolean)
+    : [];
+  return {
+    ...history,
+    blueprintSnapshots: snapshots,
+  };
+}
+
+function stripVersionHistoryFromProjectData(projectData: Record<string, unknown>) {
+  const copy = cloneJson<Record<string, unknown>>(projectData, {});
+  delete copy.versionHistory;
+  delete copy.blueprintSnapshots;
+  return copy;
+}
+
+function createAgencyTransferSnapshot(input: {
+  sourceProject: Record<string, unknown>;
+  sourceData: Record<string, unknown>;
+  sourceBlueprint: Record<string, unknown> | null;
+  targetProjectId: string;
+  targetTenantId: string;
+  agencyTenantId: string;
+  userId: string;
+  now: string;
+  transferMetadata: Record<string, unknown>;
+  projectName: string;
+}) {
+  const title = "Agency transfer checkpoint";
+  const description = "Captured the source project before Agency Project Transfer.";
+  return cleanForInsert({
+    id: `snapshot_${crypto.randomUUID()}`,
+    projectId: input.targetProjectId,
+    tenantId: input.targetTenantId,
+    blueprintVersion: typeof input.sourceBlueprint?.blueprintVersion === "string"
+      ? input.sourceBlueprint.blueprintVersion
+      : undefined,
+    createdAt: input.now,
+    createdBy: input.userId,
+    source: "agency_transfer",
+    scope: "project",
+    changeType: "transfer_checkpoint",
+    title,
+    description,
+    label: title,
+    summary: description,
+    metadata: cleanForInsert({
+      ...input.transferMetadata,
+      projectName: input.projectName,
+      sourceProjectName: input.sourceProject.name || null,
+      agencyTenantId: input.agencyTenantId,
+      tenantId: input.targetTenantId,
+      createdBy: input.userId,
+      userId: input.userId,
+      module: "agency-project-transfer",
+      actionType: "agency_project_transfer_copy",
+      source: "agency-project-transfer",
+      copiedAsDraft: true,
+      noAutoPublish: true,
+      noRuntimeActivated: true,
+    }),
+    snapshotData: stripVersionHistoryFromProjectData(input.sourceData),
+    ...(input.sourceBlueprint ? { businessBlueprint: input.sourceBlueprint } : {}),
+  });
+}
+
+function appendAgencyTransferSnapshot(
+  projectData: Record<string, unknown>,
+  snapshot: Record<string, unknown> & { id: string; createdAt: string },
+) {
+  const history = getProjectDataVersionHistory(projectData);
+  const previousSnapshots = Array.isArray(history.blueprintSnapshots) ? history.blueprintSnapshots : [];
+  return {
+    ...projectData,
+    versionHistory: {
+      ...history,
+      blueprintSnapshots: [
+        snapshot,
+        ...previousSnapshots.filter((item) => asRecord(item).id !== snapshot.id),
+      ].slice(0, AGENCY_TRANSFER_SNAPSHOT_LIMIT),
+      lastSnapshotAt: snapshot.createdAt,
+    },
+  };
+}
+
 function selectedModules(payload: Record<string, unknown>) {
   const enabledFeatures = Array.isArray(payload.enabledFeatures)
     ? payload.enabledFeatures.map((feature) => String(feature).trim()).filter(Boolean)
@@ -1402,7 +1495,8 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
 
   const now = new Date().toISOString();
   const newProjectId = crypto.randomUUID();
-  const transferMetadata = {
+  const projectName = String(payload.name || sourceProject.name || "Transferred Project").trim();
+  const transferMetadataBase = {
     agencyTenantId,
     clientTenantId: targetClientTenantId,
     originalProjectId: sourceProject.id,
@@ -1416,6 +1510,24 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
   const sourceBlueprint = sourceData.businessBlueprint && typeof sourceData.businessBlueprint === "object"
     ? sourceData.businessBlueprint as Record<string, unknown>
     : null;
+  const transferSnapshot = createAgencyTransferSnapshot({
+    sourceProject,
+    sourceData,
+    sourceBlueprint,
+    targetProjectId: newProjectId,
+    targetTenantId: targetClientTenantId,
+    agencyTenantId,
+    userId,
+    now,
+    transferMetadata: transferMetadataBase,
+    projectName,
+  }) as Record<string, unknown> & { id: string; createdAt: string };
+  const transferMetadata = {
+    ...transferMetadataBase,
+    versionSnapshotId: transferSnapshot.id,
+    versionHistoryPreserved: true,
+  };
+  const versionedSourceData = appendAgencyTransferSnapshot(sourceData, transferSnapshot);
   const nextBusinessBlueprint = sourceBlueprint
     ? {
       ...sourceBlueprint,
@@ -1436,7 +1548,7 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
     }
     : undefined;
   const nextData = cleanForInsert({
-    ...sourceData,
+    ...versionedSourceData,
     ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
     transferredFrom: {
       agencyTenantId,
@@ -1447,7 +1559,6 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
     agencyTransfer: transferMetadata,
   });
 
-  const projectName = String(payload.name || sourceProject.name || "Transferred Project").trim();
   const { data: createdProject, error: insertError } = await supabase
     .from("projects")
     .insert(cleanForInsert({

@@ -47,12 +47,13 @@ interface AgencyContentDashboardProps {
 const CATEGORY_LABELS: Record<AgencyArticleCategory, string> = {
     'blog': 'Blog',
     'news': 'Noticias',
-    'services': 'Servicios',
+    'tutorial': 'Tutorial',
     'case-study': 'Caso de Éxito',
     'announcement': 'Anuncio',
+    'guide': 'Guía',
+    'update': 'Actualización',
+    'help': 'Ayuda',
     'portfolio': 'Portfolio',
-    'testimonial': 'Testimonial',
-    'about': 'Sobre Nosotros'
 };
 
 const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack }) => {

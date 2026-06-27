@@ -31,7 +31,7 @@ import {
     ChevronUp,
     ChevronDown
 } from 'lucide-react';
-import { LegalPage, LegalPageSection, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
+import { AgencyLegalPage, AgencyLegalPageSection, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
 import AppSelect from '../../ui/AppSelect';
 
 interface AgencyLegalPageEditorProps {
@@ -59,7 +59,7 @@ const getIconComponent = (iconName?: string) => {
 
 const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType, onClose }) => {
     const { t } = useTranslation();
-    const { getLegalPageByType, saveAgencyLegalPage } = useAgencyContent();
+    const { getLegalPageByType, saveLegalPage } = useAgencyContent();
     const { showToast } = useToast();
 
     const [isSaving, setIsSaving] = useState(false);
@@ -68,7 +68,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
     const [deleteSectionId, setDeleteSectionId] = useState<string | null>(null);
 
     // Form state
-    const [formData, setFormData] = useState<LegalPage>({
+    const [formData, setFormData] = useState<AgencyLegalPage>({
         id: pageType,
         type: pageType,
         title: AGENCY_LEGAL_PAGE_LABELS[pageType],
@@ -79,6 +79,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
         sections: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        language: 'es',
     });
 
     // Load existing page data
@@ -107,14 +108,14 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
         }
     };
 
-    const updateForm = <K extends keyof LegalPage>(field: K, value: LegalPage[K]) => {
+    const updateForm = <K extends keyof AgencyLegalPage>(field: K, value: AgencyLegalPage[K]) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setHasChanges(true);
     };
 
     // Section management
     const addSection = () => {
-        const newSection: LegalPageSection = {
+        const newSection: AgencyLegalPageSection = {
             id: `section_${Date.now()}`,
             title: 'Nueva Sección',
             icon: 'FileText',
@@ -124,7 +125,7 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
         setExpandedSection(newSection.id);
     };
 
-    const updateSection = (id: string, updates: Partial<LegalPageSection>) => {
+    const updateSection = (id: string, updates: Partial<AgencyLegalPageSection>) => {
         updateForm('sections', formData.sections.map(s =>
             s.id === id ? { ...s, ...updates } : s
         ));
@@ -390,7 +391,6 @@ const AgencyLegalPageEditor: React.FC<AgencyLegalPageEditorProps> = ({ pageType,
 };
 
 export default AgencyLegalPageEditor;
-
 
 
 

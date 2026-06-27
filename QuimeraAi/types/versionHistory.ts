@@ -8,12 +8,14 @@ export type SnapshotSource =
     | 'manual_save'
     | 'publish'
     | 'restore'
+    | 'agency_transfer'
     | 'system'
     | 'import';
 
 export type SnapshotChangeType =
     | 'before_regeneration'
     | 'before_restore'
+    | 'transfer_checkpoint'
     | 'manual_checkpoint'
     | 'publish_checkpoint'
     | 'system_checkpoint';

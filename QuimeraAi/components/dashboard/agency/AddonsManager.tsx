@@ -29,6 +29,16 @@ interface Addon {
   currentQuantity: number;
 }
 
+const normalizeAddonQuantities = (addons?: {
+  extraSubClients?: number;
+  extraStorageGB?: number;
+  extraAiCredits?: number;
+} | null): Record<string, number> => ({
+  extraSubClients: Number(addons?.extraSubClients || 0),
+  extraStorageGB: Number(addons?.extraStorageGB || 0),
+  extraAiCredits: Number(addons?.extraAiCredits || 0),
+});
+
 export function AddonsManager() {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
@@ -112,11 +122,7 @@ export function AddonsManager() {
   const loadCurrentAddons = async () => {
     if (!currentTenant) return;
 
-    const currentAddons = currentTenant.billing?.addons || {
-      extraSubClients: 0,
-      extraStorageGB: 0,
-      extraAiCredits: 0,
-    };
+    const currentAddons = normalizeAddonQuantities(currentTenant.billing?.addons);
 
     setAddons(currentAddons);
     setPendingAddons(currentAddons);

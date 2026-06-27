@@ -4,6 +4,8 @@ import {
     createBlueprintSnapshot,
     createSnapshotBeforeRegeneration,
     diffBlueprintSnapshots,
+    getSnapshotLabel,
+    getSnapshotSummary,
     getBlueprintSnapshots,
     restoreBlueprintModule,
     restoreBlueprintSection,
@@ -140,6 +142,17 @@ describe('blueprint version history', () => {
         expect(snapshot.changeType).toBe('before_regeneration');
         expect(snapshot.moduleKey).toBe('websiteBlueprint');
         expect(getBlueprintSnapshots(nextProjectData)).toHaveLength(1);
+    });
+
+    it('labels Agency Project Transfer checkpoints', () => {
+        const checkpoint = {
+            source: 'agency_transfer' as const,
+            scope: 'project' as const,
+            changeType: 'transfer_checkpoint' as const,
+        };
+
+        expect(getSnapshotLabel(checkpoint)).toBe('Agency transfer checkpoint: project');
+        expect(getSnapshotSummary(checkpoint)).toBe('Captured the project before Agency Project Transfer.');
     });
 
     it('restores a full project while preserving protected modules', () => {

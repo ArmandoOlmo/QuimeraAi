@@ -77,6 +77,11 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // Published articles only
     const publishedArticles = articles.filter(a => a.status === 'published');
 
+    const getNavLinkText = (value: NavLink['text']): string => {
+        if (typeof value === 'string') return value;
+        return value.es || value.en || Object.values(value)[0] || '';
+    };
+
     // Expose save state to parent
     useEffect(() => {
         if (onSaveReady) {
@@ -377,7 +382,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                                 <GripVertical size={14} className="text-q-text-muted" />
                                                 <input
                                                     type="text"
-                                                    value={link.text}
+                                                    value={getNavLinkText(link.text)}
                                                     onChange={(e) => updateHeaderLink(index, { text: e.target.value })}
                                                     className="flex-1 px-2 py-1 bg-q-bg border border-q-border rounded text-sm"
                                                     placeholder="Texto"

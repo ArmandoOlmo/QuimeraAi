@@ -12,10 +12,12 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import {
     AgencyArticle,
+    AgencyNavItem,
     AgencyNavigation,
     AgencyContentContextType,
     DEFAULT_AGENCY_NAVIGATION,
     AgencyLegalPage,
+    AgencyLegalPageSection,
     AgencyLegalPageType,
     DEFAULT_AGENCY_PRIVACY_POLICY,
     DEFAULT_AGENCY_DATA_DELETION,
@@ -57,6 +59,86 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         ARTICLES: 'agency_articles',
         NAVIGATION: 'agency_navigation',
         LEGAL_PAGES: 'agency_legal_pages',
+    };
+
+    const normalizeNavigationItem = (item: any, index: number): AgencyNavItem => ({
+        id: String(item?.id || `link_${index + 1}`),
+        label: resolveProjectName(item?.label || item?.text || `Link ${index + 1}`),
+        href: String(item?.href || '#'),
+        type: ['link', 'anchor', 'dropdown', 'article'].includes(item?.type) ? item.type : 'link',
+        ...(item?.target ? { target: item.target } : {}),
+        ...(Array.isArray(item?.children) ? { children: item.children.map(normalizeNavigationItem) } : {}),
+        ...(item?.articleSlug ? { articleSlug: String(item.articleSlug) } : {}),
+        ...(item?.icon ? { icon: String(item.icon) } : {}),
+        ...(item?.isNew !== undefined ? { isNew: Boolean(item.isNew) } : {}),
+    });
+
+    const normalizeAgencyNavigation = (record: any): AgencyNavigation => {
+        const links = Array.isArray(record?.links)
+            ? record.links.map(normalizeNavigationItem)
+            : DEFAULT_AGENCY_NAVIGATION.header.items;
+        const headerItems = Array.isArray(record?.header?.items)
+            ? record.header.items.map(normalizeNavigationItem)
+            : links;
+
+        return {
+            ...DEFAULT_AGENCY_NAVIGATION,
+            ...(record || {}),
+            id: String(record?.id || DEFAULT_AGENCY_NAVIGATION.id),
+            header: {
+                ...DEFAULT_AGENCY_NAVIGATION.header,
+                ...(record?.header && typeof record.header === 'object' ? record.header : {}),
+                items: headerItems,
+            },
+            footer: {
+                ...DEFAULT_AGENCY_NAVIGATION.footer,
+                ...(record?.footer && typeof record.footer === 'object' ? record.footer : {}),
+            },
+            links,
+            updatedAt: record?.updatedAt || record?.updated_at || DEFAULT_AGENCY_NAVIGATION.updatedAt,
+        };
+    };
+
+    const parseLegalContent = (item: any): Pick<AgencyLegalPage, 'subtitle' | 'contactEmail' | 'sections' | 'content'> => {
+        const rawContent = typeof item?.content === 'string' ? item.content : '';
+        try {
+            const parsed = JSON.parse(rawContent);
+            if (parsed && typeof parsed === 'object') {
+                return {
+                    subtitle: typeof parsed.subtitle === 'string' ? parsed.subtitle : undefined,
+                    contactEmail: typeof parsed.contactEmail === 'string' ? parsed.contactEmail : undefined,
+                    sections: Array.isArray(parsed.sections) ? parsed.sections as AgencyLegalPageSection[] : [],
+                    content: rawContent,
+                };
+            }
+        } catch {
+            // Plain text legal pages are supported as a single editable section.
+        }
+
+        return {
+            sections: rawContent
+                ? [{ id: 'content', title: resolveProjectName(item?.title || 'Content'), icon: 'FileText', content: rawContent }]
+                : [],
+            content: rawContent,
+        };
+    };
+
+    const mapLegalPageRecord = (item: any): AgencyLegalPage => {
+        const parsedContent = parseLegalContent(item);
+        return {
+            id: String(item.id),
+            type: item.type as AgencyLegalPageType,
+            language: item.language || 'es',
+            title: resolveProjectName(item.title),
+            subtitle: parsedContent.subtitle,
+            contactEmail: parsedContent.contactEmail,
+            content: parsedContent.content,
+            sections: parsedContent.sections,
+            status: item.status === 'published' ? 'published' : 'draft',
+            lastUpdated: item.last_updated || item.updated_at || new Date().toISOString(),
+            createdAt: item.created_at || new Date().toISOString(),
+            updatedAt: item.updated_at || item.last_updated || new Date().toISOString(),
+        };
     };
 
     // ==========================================================================
@@ -248,7 +330,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                 .maybeSingle();
 
             if (!error && data) {
-                setNavigation(data as AgencyNavigation);
+                setNavigation(normalizeAgencyNavigation(data));
             } else {
                 setNavigation(DEFAULT_AGENCY_NAVIGATION);
             }
@@ -283,7 +365,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                 .maybeSingle();
 
             if (!error && data) {
-                setNavigation(data as AgencyNavigation);
+                setNavigation(normalizeAgencyNavigation(data));
             } else {
                 setNavigation(DEFAULT_AGENCY_NAVIGATION);
             }
@@ -305,7 +387,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                 .upsert({
                     id: 'main',
                     tenant_id: tenantId,
-                    links: nav.links,
+                    links: nav.header.items,
                     updated_at: new Date().toISOString()
                 });
 
@@ -334,13 +416,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
                 .order('type', { ascending: true });
 
             if (!error && data && data.length > 0) {
-                const pagesData = data.map(item => ({
-                    ...item,
-                    createdAt: item.created_at,
-                    updatedAt: item.updated_at,
-                    lastUpdated: item.last_updated
-                })) as AgencyLegalPage[];
-                setLegalPages(pagesData);
+                setLegalPages(data.map(mapLegalPageRecord));
             } else {
                 setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
             }
@@ -376,13 +452,7 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
             if (error) throw error;
 
             if (data && data.length > 0) {
-                const pagesData = data.map(item => ({
-                    ...item,
-                    createdAt: item.created_at,
-                    updatedAt: item.updated_at,
-                    lastUpdated: item.last_updated
-                })) as AgencyLegalPage[];
-                setLegalPages(pagesData);
+                setLegalPages(data.map(mapLegalPageRecord));
             } else {
                 setLegalPages([DEFAULT_AGENCY_PRIVACY_POLICY, DEFAULT_AGENCY_DATA_DELETION, DEFAULT_AGENCY_TERMS, DEFAULT_AGENCY_COOKIE_POLICY]);
             }
@@ -413,16 +483,25 @@ export const AgencyContentProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!tenantId) throw new Error('No tenant selected');
 
         try {
-            const { id, createdAt, updatedAt, lastUpdated, ...data } = page;
+            const { createdAt } = page;
             const now = new Date().toISOString();
 
             // Using type_language as document ID to match global content approach
             const docId = `${page.type}_${page.language || 'es'}`;
+            const serializedContent = JSON.stringify({
+                subtitle: page.subtitle || '',
+                contactEmail: page.contactEmail || '',
+                sections: page.sections || [],
+            });
             
             const payload = {
-                ...data,
                 id: docId,
                 tenant_id: tenantId,
+                type: page.type,
+                language: page.language || 'es',
+                title: page.title,
+                content: serializedContent,
+                status: page.status,
                 last_updated: now,
                 updated_at: now,
                 created_at: createdAt || now

@@ -91,4 +91,24 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
         expect(onboardingApi).toContain('moduleId: "agency-client-portal"');
         expect(onboardingApi).toContain('action: "agency-client-approval-response"');
     });
+
+    it('preserves a Version History checkpoint during Agency Project Transfer', () => {
+        [
+            'moduleId: "agency-project-transfer"',
+            'requiredPermission: "canManageProjects"',
+            'source: "agency_transfer"',
+            'changeType: "transfer_checkpoint"',
+            'createAgencyTransferSnapshot({',
+            'appendAgencyTransferSnapshot(sourceData, transferSnapshot)',
+            'versionSnapshotId: transferSnapshot.id',
+            'versionHistoryPreserved: true',
+            'stripVersionHistoryFromProjectData(input.sourceData)',
+            'data: nextData,',
+            'status: "Draft"',
+            'published_data: null',
+            'published_at: null',
+            '.from("agency_project_transfers")',
+            '.from("agency_client_approvals")',
+        ].forEach((expected) => expect(onboardingApi).toContain(expected));
+    });
 });

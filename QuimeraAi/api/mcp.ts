@@ -160,6 +160,100 @@ async function updateProjectData(projectId: string, updates: Record<string, any>
   return data;
 }
 
+const MCP_BLUEPRINT_SNAPSHOT_LIMIT = 50;
+
+function cloneJson<T>(value: T, fallback: T): T {
+  if (value === undefined || value === null) return fallback;
+  try {
+    return JSON.parse(JSON.stringify(value)) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function getProjectDataVersionHistory(projectData: Record<string, any>) {
+  const history = projectData.versionHistory && typeof projectData.versionHistory === 'object' && !Array.isArray(projectData.versionHistory)
+    ? projectData.versionHistory as Record<string, any>
+    : {};
+  const snapshots = Array.isArray(history.blueprintSnapshots)
+    ? history.blueprintSnapshots.filter(Boolean)
+    : [];
+  return {
+    ...history,
+    blueprintSnapshots: snapshots,
+  };
+}
+
+function stripVersionHistoryFromProjectData(projectData: Record<string, any>) {
+  const copy = cloneJson<Record<string, any>>(projectData, {});
+  delete copy.versionHistory;
+  delete copy.blueprintSnapshots;
+  return copy;
+}
+
+function createAiApplySnapshotData(
+  project: Record<string, any>,
+  auth: McpAuthContext,
+  tenantId: string,
+  actionType: string,
+  target: { sectionId?: string; pageId?: string } = {},
+): Record<string, any> {
+  const projectData = project.data && typeof project.data === 'object' && !Array.isArray(project.data)
+    ? project.data as Record<string, any>
+    : {};
+  const businessBlueprint = projectData.businessBlueprint && typeof projectData.businessBlueprint === 'object'
+    ? projectData.businessBlueprint as Record<string, any>
+    : null;
+  const scope = target.sectionId ? 'section' : 'project';
+  const targetLabel = target.sectionId ? `section ${target.sectionId}` : scope;
+  const now = new Date().toISOString();
+  const snapshot = {
+    id: `snapshot_${randomUUID()}`,
+    projectId: project.id,
+    tenantId,
+    ...(typeof businessBlueprint?.blueprintVersion === 'string' ? { blueprintVersion: businessBlueprint.blueprintVersion } : {}),
+    createdAt: now,
+    createdBy: auth.userId || auth.agentId || null,
+    source: 'ai_action',
+    scope,
+    changeType: 'before_regeneration',
+    ...(target.sectionId ? { sectionId: target.sectionId } : {}),
+    title: `AI action before regeneration: ${targetLabel}`,
+    description: target.sectionId
+      ? `Captured section ${target.sectionId} before MCP AI changes.`
+      : 'Captured the project before MCP AI changes.',
+    label: `AI action before regeneration: ${targetLabel}`,
+    summary: target.sectionId
+      ? `Captured section ${target.sectionId} before MCP AI changes.`
+      : 'Captured the project before MCP AI changes.',
+    metadata: {
+      tenantId,
+      userId: auth.userId || null,
+      createdBy: auth.userId || auth.agentId || null,
+      actionType,
+      module: 'mcp',
+      pageId: target.pageId,
+      source: 'mcp-api',
+      apiKeyId: auth.apiKeyId,
+      agentId: auth.agentId,
+    },
+    snapshotData: stripVersionHistoryFromProjectData(projectData),
+    ...(businessBlueprint ? { businessBlueprint } : {}),
+  };
+  const history = getProjectDataVersionHistory(projectData);
+  return {
+    ...projectData,
+    versionHistory: {
+      ...history,
+      blueprintSnapshots: [
+        snapshot,
+        ...history.blueprintSnapshots.filter((item: any) => item?.id !== snapshot.id),
+      ].slice(0, MCP_BLUEPRINT_SNAPSHOT_LIMIT),
+      lastSnapshotAt: snapshot.createdAt,
+    },
+  };
+}
+
 function limitNumber(value: unknown, fallback = 50, max = 100): number {
   const parsed = Number(value || fallback);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
@@ -1508,6 +1602,10 @@ const toolHandlers: Record<string, ToolHandler> = {
     const project = await getProjectForTenant(projectId, tenantId);
     const content = args.content?.structured || args.content?.content || args.content;
     if (content === undefined) throw Object.assign(new Error('content is required.'), { status: 400 });
+    const versionedData = createAiApplySnapshotData(project, auth, tenantId, 'ai_apply_generated_content', {
+      sectionId: args.section,
+      pageId: args.pageId,
+    });
 
     if (args.pageId) {
       const pages = Array.isArray(project.pages) ? [...project.pages] : [];
@@ -1524,7 +1622,10 @@ const toolHandlers: Record<string, ToolHandler> = {
         pages[pageIndex] = { ...pages[pageIndex], ...content, updatedAt: new Date().toISOString() };
       }
 
-      await updateProjectData(projectId, { pages });
+      await updateProjectData(projectId, {
+        data: versionedData,
+        pages,
+      });
       return { status: 'success', projectId, pageId: args.pageId, section: args.section };
     }
 
@@ -1534,7 +1635,12 @@ const toolHandlers: Record<string, ToolHandler> = {
     } else {
       writeContext.updateSection(args.section, (sectionState) => ({ ...sectionState, ...content }));
     }
-    await updateProjectData(projectId, { data: writeContext.buildDataColumn() });
+    await updateProjectData(projectId, {
+      data: {
+        ...writeContext.buildDataColumn(),
+        versionHistory: versionedData.versionHistory,
+      },
+    });
     return { status: 'success', projectId, section: args.section };
   },
 
@@ -1553,6 +1659,10 @@ const toolHandlers: Record<string, ToolHandler> = {
     const pages = Array.isArray(project.pages) ? [...project.pages] : [];
     const writeContext = getProjectDataWriteContext(project);
     const updatedAssetIds: string[] = [];
+    const versionedData = createAiApplySnapshotData(project, auth, tenantId, 'ai_apply_generated_images', {
+      sectionId: replacements[0]?.section,
+      pageId: args.pageId || replacements[0]?.pageId,
+    });
 
     for (const replacement of replacements) {
       if (!replacement.url || !replacement.section || !replacement.path) {
@@ -1580,7 +1690,10 @@ const toolHandlers: Record<string, ToolHandler> = {
     }
 
     await updateProjectData(projectId, {
-      data: writeContext.buildDataColumn(),
+      data: {
+        ...writeContext.buildDataColumn(),
+        versionHistory: versionedData.versionHistory,
+      },
       ...(pages.length ? { pages } : {}),
     });
     return { status: 'success', projectId, updatedAssetIds };

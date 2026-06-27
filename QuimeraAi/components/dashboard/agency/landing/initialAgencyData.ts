@@ -97,7 +97,7 @@ export const initialAgencyData = {
             showSocial: true,
             linkColumns: []
         }
-    } as PageData,
+    } as unknown as PageData,
 
     componentOrder: [
         'header',
