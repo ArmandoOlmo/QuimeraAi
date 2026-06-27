@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -23,7 +23,7 @@ import {
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Plus, Sparkles, Globe2, Image, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3 } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3 } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -51,6 +51,9 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
     const [aiPrompt, setAiPrompt] = useState('');
+    const [selectedQuickActionId, setSelectedQuickActionId] = useState<string | null>(null);
+    const [hoveredQuickActionId, setHoveredQuickActionId] = useState<string | null>(null);
+    const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
     const toggleUpgradeMinimized = () => setUpgradeMinimized((prev) => !prev);
     const userRole = String(userDocument?.role || '').toLowerCase();
@@ -78,6 +81,9 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         hasActiveProject: Boolean(activeProjectId),
         canUseAdminMode: canUseAdminQuickActions,
     }), [activeProjectId, allUserProjectsCount, canUseAdminQuickActions]);
+    const selectedQuickAction = quickActions.find(action => action.id === selectedQuickActionId) || null;
+    const hoveredQuickAction = quickActions.find(action => action.id === hoveredQuickActionId) || null;
+    const visibleModeAction = hoveredQuickAction || selectedQuickAction;
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -100,7 +106,13 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const handlePromptSubmit = (event?: React.FormEvent) => {
         event?.preventDefault();
-        const request = aiPrompt.trim();
+        const rawRequest = aiPrompt.trim();
+        if (!rawRequest && selectedQuickAction) {
+            promptInputRef.current?.focus();
+            return;
+        }
+
+        const request = rawRequest;
         const route = routeDashboardAssistantEntry(request);
 
         if (route.destination === 'none') {
@@ -118,21 +130,24 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     entryPoint: 'dashboard_input',
                     projectCount: allUserProjectsCount,
                     routingReason: route.reason,
-                    activeModule: route.activeModule,
+                    activeModule: selectedQuickAction?.module || route.activeModule,
                     activeProjectId,
                     activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
                     activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
                     activeTenantName: tenantContext?.currentTenant?.name || null,
+                    quickAction: selectedQuickAction,
                 }),
             }));
         }
 
         setAiPrompt('');
+        setSelectedQuickActionId(null);
     };
 
     const quickActionIcon = (action: DashboardAssistantQuickAction) => {
         if (action.id === 'create_website') return <Globe2 size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'generate_hero_image') return <Image size={13} className="text-q-accent" aria-hidden="true" />;
+        if (action.id === 'create_video') return <Video size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'review_leads') return <Users size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_email') return <Mail size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'open_ecommerce') return <ShoppingBag size={13} className="text-q-accent" aria-hidden="true" />;
@@ -145,23 +160,22 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     };
 
     const handleQuickAction = (action: DashboardAssistantQuickAction) => {
-        const request = t(action.promptKey, action.promptFallback);
-        dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
-            source: 'dashboard_quick_action',
-            surface: action.module === 'admin' ? 'admin' : 'dashboard',
-            metadata: buildDashboardAssistantEntryMetadata({
-                entryPoint: 'dashboard_quick_action',
-                projectCount: allUserProjectsCount,
-                routingReason: 'dashboard_quick_action_routes_to_global_operating_layer',
-                activeModule: action.module,
-                activeProjectId,
-                activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
-                activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
-                activeTenantName: tenantContext?.currentTenant?.name || null,
-                quickAction: action,
-            }),
-        }));
+        setSelectedQuickActionId(current => current === action.id ? null : action.id);
+        window.requestAnimationFrame(() => promptInputRef.current?.focus());
     };
+
+    const selectedModeLabel = selectedQuickAction
+        ? t(selectedQuickAction.labelKey, selectedQuickAction.labelFallback)
+        : '';
+    const visibleModeLabel = visibleModeAction
+        ? t(visibleModeAction.labelKey, visibleModeAction.labelFallback)
+        : '';
+    const promptPlaceholder = selectedQuickAction
+        ? t('dashboard.aiModePromptPlaceholder', {
+            mode: selectedModeLabel,
+            defaultValue: `${selectedModeLabel}: describe lo que quieres...`,
+        })
+        : t('dashboard.aiPromptPlaceholder', '¿Qué quieres hacer?');
 
     const showUpgradeButton = !canAccessSuperAdmin && nextPlan && currentPlanId !== 'enterprise';
     const planNeedsAttention = !canAccessSuperAdmin && (
@@ -314,21 +328,12 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     className="quimera-ai-launcher quimera-ai-launcher-enter mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
                 >
                     <label className="sr-only" htmlFor="dashboard-ai-prompt">
-                        {t('dashboard.createWithAI')}
+                        {t('dashboard.assistantInputLabel', 'Escribe tu solicitud')}
                     </label>
                     <div className="flex items-start gap-2">
-                        <AppButton
-                            variant="icon"
-                            size="icon-md"
-                            type="button"
-                            onClick={() => handleOpenAIStudio()}
-                            className="mt-0.5 h-9 w-9 flex-shrink-0 flex items-center justify-center rounded-lg text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/60 transition-colors"
-                            title={t('dashboard.createWithAI')}
-                        >
-                            <Plus className="size-[17px]" />
-                        </AppButton>
                         <textarea
                             id="dashboard-ai-prompt"
+                            ref={promptInputRef}
                             value={aiPrompt}
                             onChange={(event) => setAiPrompt(event.target.value)}
                             onKeyDown={(event) => {
@@ -338,23 +343,42 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 }
                             }}
                             rows={2}
-                            placeholder={t(
-                                'dashboard.aiPromptPlaceholder',
-                                'Ask Quimera to create, edit, open, analyze, or run anything...',
-                            )}
+                            placeholder={promptPlaceholder}
                             className="min-h-[64px] flex-1 resize-none bg-transparent px-1 py-2 text-sm sm:text-base text-q-text placeholder:text-q-text-secondary/65 focus:outline-none"
                         />
                     </div>
                     <div className="flex items-center justify-between gap-3 pt-2">
-                        <AppButton
-                            variant="outline"
-                            type="button"
-                            onClick={() => handleOpenAIStudio()}
-                            className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/60 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/40 hover:bg-q-accent/10 hover:!text-q-text"
+                        <div
+                            className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5"
+                            onMouseLeave={() => setHoveredQuickActionId(null)}
                         >
-                            <Sparkles size={13} className="text-q-accent" />
-                            <span className="truncate">{t('dashboard.webDesignStudio', 'Web Design Studio')}</span>
-                        </AppButton>
+                            {quickActions.map(action => {
+                                const label = t(action.labelKey, action.labelFallback);
+                                const isSelected = selectedQuickActionId === action.id;
+                                return (
+                                    <AppButton
+                                        key={action.id}
+                                        variant="icon"
+                                        size="icon-sm"
+                                        type="button"
+                                        onClick={() => handleQuickAction(action)}
+                                        onMouseEnter={() => setHoveredQuickActionId(action.id)}
+                                        onFocus={() => setHoveredQuickActionId(action.id)}
+                                        onBlur={() => setHoveredQuickActionId(null)}
+                                        aria-label={label}
+                                        aria-pressed={isSelected}
+                                        title={label}
+                                        className={`no-min-touch !size-8 !h-8 !w-8 !min-w-8 rounded-full border transition-colors ${
+                                            isSelected
+                                                ? 'border-q-accent/60 bg-q-accent/15 text-q-text'
+                                                : 'border-transparent text-q-text-secondary hover:border-q-accent/35 hover:bg-q-surface-overlay/70 hover:text-q-text'
+                                        }`}
+                                    >
+                                        {quickActionIcon(action)}
+                                    </AppButton>
+                                );
+                            })}
+                        </div>
                         <div className="flex flex-shrink-0 items-center gap-2">
                             <AppButton
                                 variant="icon"
@@ -371,27 +395,20 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                 size="icon-md"
                                 type="submit"
                                 className="no-min-touch !size-9 !h-9 !w-9 !min-w-9 flex shrink-0 items-center justify-center !rounded-full !p-0 bg-q-accent text-q-text-on-accent shadow-lg shadow-q-accent/20 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-q-accent/40 touch-manipulation"
-                                title={t('dashboard.createWithAI')}
+                                title={t('dashboard.sendAssistantRequest', 'Enviar')}
                             >
                                 <ArrowUp className="size-[17px]" />
                             </AppButton>
                         </div>
                     </div>
-                    {quickActions.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2 pt-3">
-                            {quickActions.map(action => (
-                                <AppButton
-                                    key={action.id}
-                                    variant="outline"
-                                    type="button"
-                                    onClick={() => handleQuickAction(action)}
-                                    className="inline-flex min-w-0 !h-auto items-center gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/50 px-3 py-1.5 text-xs font-medium !text-q-text-secondary transition-colors hover:border-q-accent/40 hover:bg-q-accent/10 hover:!text-q-text"
-                                    title={t(action.promptKey, action.promptFallback)}
-                                >
-                                    {quickActionIcon(action)}
-                                    <span className="truncate">{t(action.labelKey, action.labelFallback)}</span>
-                                </AppButton>
-                            ))}
+                    {visibleModeAction && (
+                        <div className="mt-1 flex min-w-0 items-center gap-2 px-3 text-xs font-semibold text-q-text">
+                            {quickActionIcon(visibleModeAction)}
+                            <span className="truncate">
+                                {selectedQuickAction?.id === visibleModeAction.id
+                                    ? t('dashboard.aiModeSelected', { mode: visibleModeLabel, defaultValue: visibleModeLabel })
+                                    : visibleModeLabel}
+                            </span>
                         </div>
                     )}
                 </form>

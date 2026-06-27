@@ -39,10 +39,25 @@ export interface ChatbotEngineKnowledgeSummary extends ChatbotEngineCountSummary
 export type ChatbotEngineSurfaceSummary = ChatbotEngineDeploymentSurfaceStatus;
 
 export interface ChatbotEngineCapabilitySummary {
-    id: 'leadCapture' | 'handoff' | 'appointments' | 'ecommerce' | 'restaurants' | 'realEstate' | 'bioPage' | 'finance' | 'voice';
+    id: 'leadCapture' | 'handoff' | 'appointments' | 'ecommerce' | 'restaurants' | 'realEstate' | 'bioPage' | 'finance' | 'mediaAi' | 'voice';
     enabled: boolean;
     needsReview: boolean;
     status: ChatbotEngineReadinessStatus;
+}
+
+export interface ChatbotEngineAppearanceSummary {
+    status: ChatbotEngineReadinessStatus;
+    source: string;
+    designSystemSource: string;
+    usesProjectTokens: boolean;
+    designStarAligned: boolean;
+    brandColorCount: number;
+    primaryColor?: string;
+    accentColor?: string;
+    logoConfigured: boolean;
+    avatarConfigured: boolean;
+    blockers: string[];
+    warnings: string[];
 }
 
 export interface ChatbotEngineDashboardSummary {
@@ -55,6 +70,7 @@ export interface ChatbotEngineDashboardSummary {
     warnings: string[];
     supportedLanguages: string[];
     agentName?: string;
+    appearance: ChatbotEngineAppearanceSummary;
     training: {
         businessKnowledgeCount: number;
         productKnowledgeCount: number;
@@ -164,11 +180,94 @@ function summarizeActions(actions: ChatbotActionBlueprint[]): ChatbotEngineActio
     return counts;
 }
 
+function stringSetting(record: Record<string, unknown>, key: string): string {
+    const value = record[key];
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function boolSetting(record: Record<string, unknown>, key: string): boolean {
+    return record[key] === true;
+}
+
+function collectAppearanceColors(settings: Record<string, unknown>): Record<string, string> {
+    const brandColors = isPlainRecord(settings.brandColors) ? settings.brandColors : {};
+    const colorEntries = [
+        ['primary', stringSetting(brandColors, 'primary') || stringSetting(settings, 'primaryColor')],
+        ['secondary', stringSetting(brandColors, 'secondary') || stringSetting(settings, 'secondaryColor')],
+        ['accent', stringSetting(brandColors, 'accent') || stringSetting(settings, 'accentColor')],
+        ['background', stringSetting(brandColors, 'background') || stringSetting(settings, 'backgroundColor')],
+        ['surface', stringSetting(brandColors, 'surface') || stringSetting(settings, 'surfaceColor')],
+        ['text', stringSetting(brandColors, 'text') || stringSetting(settings, 'textColor')],
+        ['border', stringSetting(brandColors, 'border') || stringSetting(settings, 'borderColor')],
+    ];
+
+    return Object.fromEntries(colorEntries.filter(([, value]) => Boolean(value)));
+}
+
+function summarizeAppearance(blueprint: ChatbotBlueprint): ChatbotEngineAppearanceSummary {
+    const settings = isPlainRecord(blueprint.deployment.appearanceSettings)
+        ? blueprint.deployment.appearanceSettings
+        : {};
+    const colors = collectAppearanceColors(settings);
+    const source = stringSetting(settings, 'source') || 'missing';
+    const designSystemSource = stringSetting(settings, 'designSystemSource') || 'missing';
+    const usesProjectTokens = boolSetting(settings, 'useQuimeraTokens');
+    const designStarAligned = designSystemSource === 'Design Star' || boolSetting(settings, 'designStarAligned');
+    const primaryColor = colors.primary || stringSetting(settings, 'primaryColor') || undefined;
+    const accentColor = colors.accent || stringSetting(settings, 'accentColor') || undefined;
+    const logoConfigured = Boolean(
+        stringSetting(settings, 'logoUrl')
+        || blueprint.agentProfile.avatarUrl,
+    );
+    const avatarConfigured = Boolean(
+        blueprint.agentProfile.avatarUrl
+        || stringSetting(settings, 'avatarUrl')
+        || stringSetting(settings, 'botAvatarEmoji'),
+    );
+    const blockers = [
+        source === 'missing'
+            ? 'ES: Falta el contrato de apariencia del Chatbot Engine.\nEN: Chatbot Engine appearance contract is missing.'
+            : '',
+    ].filter(Boolean);
+    const warnings = [
+        !usesProjectTokens
+            ? 'ES: La apariencia no confirma uso de tokens del proyecto.\nEN: Appearance does not confirm project token usage.'
+            : '',
+        !designStarAligned
+            ? 'ES: La apariencia no declara alineación con Design Star.\nEN: Appearance does not declare Design Star alignment.'
+            : '',
+        Object.keys(colors).length < 3
+            ? 'ES: La paleta de marca del ChatCore necesita al menos tres colores revisables.\nEN: ChatCore brand palette needs at least three reviewable colors.'
+            : '',
+        !logoConfigured && !avatarConfigured
+            ? 'ES: Falta logo o avatar para mantener identidad visual en superficies públicas.\nEN: Logo or avatar is missing for visual identity across public surfaces.'
+            : '',
+    ].filter(Boolean);
+
+    return {
+        status: blockers.length > 0 ? 'blocked' : warnings.length > 0 ? 'review' : 'ready',
+        source,
+        designSystemSource,
+        usesProjectTokens,
+        designStarAligned,
+        brandColorCount: Object.keys(colors).length,
+        primaryColor,
+        accentColor,
+        logoConfigured,
+        avatarConfigured,
+        blockers,
+        warnings,
+    };
+}
+
 function buildCapabilitySummary(blueprint: ChatbotBlueprint): ChatbotEngineCapabilitySummary[] {
     const voiceSettings = blueprint.deployment.voiceSettings;
     const financeActions = blueprint.actions.filter(action => action.ownerModule === 'finance');
     const financeNeedsReview = financeActions.length === 0
         || financeActions.some(action => action.needsReview || action.status !== 'configured' || !action.enabled);
+    const mediaActions = blueprint.actions.filter(action => action.ownerModule === 'media-ai');
+    const mediaNeedsReview = mediaActions.length === 0
+        || mediaActions.some(action => action.needsReview || action.status !== 'configured' || !action.enabled);
     return [
         {
             id: 'leadCapture',
@@ -219,6 +318,12 @@ function buildCapabilitySummary(blueprint: ChatbotBlueprint): ChatbotEngineCapab
             status: financeActions.length === 0 ? 'blocked' : financeNeedsReview ? 'review' : 'ready',
         },
         {
+            id: 'mediaAi',
+            enabled: mediaActions.length > 0,
+            needsReview: mediaNeedsReview,
+            status: mediaActions.length === 0 ? 'blocked' : mediaNeedsReview ? 'review' : 'ready',
+        },
+        {
             id: 'voice',
             enabled: voiceSettings.enabled,
             needsReview: !voiceSettings.enabled || !voiceSettings.agentId,
@@ -227,7 +332,11 @@ function buildCapabilitySummary(blueprint: ChatbotBlueprint): ChatbotEngineCapab
     ];
 }
 
-function collectReadiness(blueprint: ChatbotBlueprint, surfaces: ChatbotEngineSurfaceSummary[]): {
+function collectReadiness(
+    blueprint: ChatbotBlueprint,
+    surfaces: ChatbotEngineSurfaceSummary[],
+    appearance: ChatbotEngineAppearanceSummary,
+): {
     status: ChatbotEngineReadinessStatus;
     readyCheckpoints: number;
     totalCheckpoints: number;
@@ -239,6 +348,7 @@ function collectReadiness(blueprint: ChatbotBlueprint, surfaces: ChatbotEngineSu
         ...blueprint.knowledgeSources.map(source => readinessStatus(source.readiness, source.needsReview || source.status !== 'ready')),
         ...blueprint.actions.map(action => readinessStatus(action.readiness, action.needsReview || action.status !== 'configured')),
         ...surfaces.map(surface => surface.readinessStatus),
+        appearance.status,
         readinessStatus(blueprint.testing.readiness, blueprint.testing.evaluationStatus !== 'passing'),
         readinessStatus(blueprint.deployment.readiness, blueprint.deployment.status !== 'deployed'),
     ];
@@ -248,6 +358,7 @@ function collectReadiness(blueprint: ChatbotBlueprint, surfaces: ChatbotEngineSu
         ...blueprint.knowledgeSources.flatMap(source => source.readiness.blockers),
         ...blueprint.actions.flatMap(action => action.readiness.blockers),
         ...surfaces.flatMap(surface => surface.blockers),
+        ...appearance.blockers,
         ...blueprint.testing.readiness.blockers,
         ...blueprint.deployment.readiness.blockers,
     ];
@@ -256,6 +367,7 @@ function collectReadiness(blueprint: ChatbotBlueprint, surfaces: ChatbotEngineSu
         ...blueprint.knowledgeSources.flatMap(source => source.readiness.warnings),
         ...blueprint.actions.flatMap(action => action.readiness.warnings),
         ...surfaces.flatMap(surface => surface.warnings),
+        ...appearance.warnings,
         ...blueprint.testing.readiness.warnings,
         ...blueprint.deployment.readiness.warnings,
     ];
@@ -286,6 +398,18 @@ export function buildChatbotEngineDashboardSummary(blueprint: ChatbotBlueprint |
             blockers: ['chatbot_blueprint_missing'],
             warnings: [],
             supportedLanguages: [],
+            appearance: {
+                status: 'blocked',
+                source: 'missing',
+                designSystemSource: 'missing',
+                usesProjectTokens: false,
+                designStarAligned: false,
+                brandColorCount: 0,
+                logoConfigured: false,
+                avatarConfigured: false,
+                blockers: ['chatbot_blueprint_missing'],
+                warnings: [],
+            },
             training: {
                 businessKnowledgeCount: 0,
                 productKnowledgeCount: 0,
@@ -343,7 +467,8 @@ export function buildChatbotEngineDashboardSummary(blueprint: ChatbotBlueprint |
 
     const surfaceManifest = buildChatbotEngineSurfaceDeploymentManifest(blueprint.channels);
     const surfaces = surfaceManifest.surfaces;
-    const readiness = collectReadiness(blueprint, surfaces);
+    const appearance = summarizeAppearance(blueprint);
+    const readiness = collectReadiness(blueprint, surfaces, appearance);
     const safetySettings = isPlainRecord(blueprint.deployment.safetySettings) ? blueprint.deployment.safetySettings : {};
     const trainingSections = [
         blueprint.businessKnowledge,
@@ -361,6 +486,7 @@ export function buildChatbotEngineDashboardSummary(blueprint: ChatbotBlueprint |
         warnings: readiness.warnings,
         supportedLanguages: blueprint.agentProfile.supportedLanguages,
         agentName: blueprint.agentProfile.agentName,
+        appearance,
         training: {
             businessKnowledgeCount: blueprint.businessKnowledge.length,
             productKnowledgeCount: blueprint.productKnowledge.length,

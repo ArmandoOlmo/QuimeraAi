@@ -20,6 +20,11 @@ import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../types/visualIdentity';
 import type { ImageReferenceCategory } from '../../types/visualIdentity';
 import AddToVisualKitModal from './AddToVisualKitModal';
 import AppSelect from './AppSelect';
+import {
+    MEDIA_GENERATOR_LAUNCH_EVENT,
+    consumeMediaGeneratorLaunchRequest,
+    readMediaGeneratorLaunchEvent,
+} from '../../utils/mediaGeneratorLaunch';
 
 interface ImageGeneratorPanelProps {
     destination: 'user' | 'global' | 'admin';
@@ -504,8 +509,10 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         }
     };
 
-    const handleGenerate = async () => {
-        if (!prompt.trim()) return;
+    const handleGenerate = async (promptOverride?: string) => {
+        const promptText = (promptOverride ?? prompt).trim();
+        if (!promptText) return;
+        setPrompt(promptText);
         setIsGenerating(true);
         setGenerationProgress(0);
         setSavedToLibrary(false);
@@ -525,7 +532,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             const allReferenceUrls = new Set(referenceImages);
             if (kitEnabled && kit) {
                 // Add contextual references triggered by the prompt
-                const contextualUrls = getContextualReferenceUrls(prompt);
+                const contextualUrls = getContextualReferenceUrls(promptText);
                 contextualUrls.forEach(url => allReferenceUrls.add(url));
             }
 
@@ -558,7 +565,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                 projectId: effectiveProjectId || undefined,
                 adminCategory,
                 adminTags: [style, aspectRatio].filter(s => s !== 'None'),
-                adminDescription: prompt,
+                adminDescription: promptText,
                 generationContext,
                 visualReferences: activeKitRefs.length > 0 ? activeKitRefs : undefined,
                 aiPromptHints: aiPromptHints.length > 0 ? aiPromptHints : undefined,
@@ -567,11 +574,11 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             console.log('✨ [ImageGeneratorPanel] Quimera options:', options);
             console.log('✨ [ImageGeneratorPanel] effectiveProjectId:', effectiveProjectId, 'destination:', effectiveDestination);
 
-            const imageDataUrl = await generateImage(prompt, options);
+            const imageDataUrl = await generateImage(promptText, options);
             setGeneratedImage(imageDataUrl);
 
             // Save the prompt and options used for the detail modal
-            setGeneratedPrompt(prompt);
+            setGeneratedPrompt(promptText);
             setGeneratedOptions({
                 model: selectedModel,
                 aspectRatio,
@@ -582,7 +589,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
             // Save the generated image to the project library (legacy storage + Supabase)
             // useAI().generateImage only returns a base64 data URL, it does NOT persist
-            const savedUrl = await saveToLibrary(imageDataUrl, prompt);
+            const savedUrl = await saveToLibrary(imageDataUrl, promptText);
 
             // Call callback with saved URL (legacy storage) or fallback to data URL
             if (onImageGenerated) {
@@ -598,6 +605,39 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             setTimeout(() => setIsGenerating(false), 300);
         }
     };
+
+    useEffect(() => {
+        const runLaunchRequest = (request: ReturnType<typeof readMediaGeneratorLaunchEvent>) => {
+            if (!request || request.mode !== 'image') return;
+            if (request.projectId && (!effectiveProjectId || request.projectId !== effectiveProjectId)) return;
+
+            const launchOptions = request.options || {};
+            if (launchOptions.aspectRatio && ASPECT_RATIOS.some(option => option.value === launchOptions.aspectRatio)) {
+                setAspectRatio(launchOptions.aspectRatio);
+            }
+            if (launchOptions.resolution && RESOLUTIONS.some(option => option.value === launchOptions.resolution)) {
+                setResolution(launchOptions.resolution as '1K' | '2K' | '4K');
+            }
+            if (launchOptions.style && STYLES.some(option => option.value === launchOptions.style)) {
+                setStyle(launchOptions.style);
+            }
+            setPrompt(request.prompt);
+            if (request.autoStart) {
+                window.setTimeout(() => {
+                    void handleGenerate(request.prompt);
+                }, 0);
+            }
+        };
+
+        runLaunchRequest(consumeMediaGeneratorLaunchRequest('image', effectiveProjectId));
+
+        const handleLaunchEvent = (event: Event) => {
+            runLaunchRequest(readMediaGeneratorLaunchEvent(event));
+        };
+
+        window.addEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleLaunchEvent);
+        return () => window.removeEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleLaunchEvent);
+    }, [effectiveProjectId, handleGenerate]);
 
     const handleEnhancePrompt = async () => {
         if (!prompt.trim()) return;

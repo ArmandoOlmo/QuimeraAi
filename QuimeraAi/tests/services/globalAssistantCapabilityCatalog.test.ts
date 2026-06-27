@@ -80,6 +80,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'generate_product_copy',
         ]));
         expect(crm?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_leads_dashboard',
             'search_leads',
             'create_lead',
             'update_lead',
@@ -87,6 +88,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'create_follow_up_task',
         ]));
         expect(media?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_media_library',
             'generate_image',
             'edit_image',
             'generate_video',
@@ -131,10 +133,12 @@ describe('globalAssistantCapabilityCatalog', () => {
         ]));
         expect(admin?.previewOnlyActionTypes).toEqual([]);
         expect(finance?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_finance_dashboard',
             'create_finance_record',
             'update_finance_record',
         ]));
         expect(bioPage?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_bio_page_builder',
             'create_bio_page',
             'edit_bio_link',
             'add_bio_block',
@@ -147,6 +151,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'deploy_chatbot_to_surface',
         ]));
         expect(restaurants?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_restaurants_dashboard',
             'create_menu_item',
             'update_menu',
             'create_reservation_flow',
@@ -154,6 +159,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'generate_restaurant_campaign',
         ]));
         expect(realEstate?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_realty_dashboard',
             'create_listing',
             'edit_listing',
             'create_open_house',

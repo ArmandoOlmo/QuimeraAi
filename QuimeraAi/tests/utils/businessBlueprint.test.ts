@@ -363,6 +363,23 @@ describe('businessBlueprint adapters', () => {
             provider: 'none',
         });
         expect(chatbot.deployment.voiceSettings.agentId).toBeUndefined();
+        expect(chatbot.deployment.appearanceSettings).toMatchObject({
+            source: 'businessBlueprint.brandProfile',
+            runtimeConfigPath: 'aiAssistantConfig.appearance',
+            designSystemSource: 'Design Star',
+            useQuimeraTokens: true,
+            primaryColor: '#0f766e',
+            accentColor: '#f59e0b',
+            visualStyle: 'clean service studio',
+        });
+        expect((chatbot.deployment.appearanceSettings.brandColors as Record<string, string>)).toMatchObject({
+            primary: '#0f766e',
+            secondary: '#111827',
+            accent: '#f59e0b',
+            background: '#f8fafc',
+            surface: '#ffffff',
+            text: '#111827',
+        });
     });
 
     it('migrates legacy ChatbotBlueprint data to V2 without losing legacy knowledge fields', () => {

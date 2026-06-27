@@ -91,6 +91,7 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('unpublish_website')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_asset_from_prompt')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('attach_asset_to_section')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_media_library')?.execute).toBe('function');
         expect(globalAssistantActionRegistry.get('summarize_business_blueprint')).toMatchObject({
             module: 'businessBlueprint',
             safetyLevel: 'low',
@@ -125,6 +126,7 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('update_inventory')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_discount')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_lead')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_leads_dashboard')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('search_leads')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_lead')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('summarize_leads')?.execute).toBe('function');
@@ -133,6 +135,7 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('update_appointment')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('configure_availability')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_bio_page')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_bio_page_builder')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_bio_link')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_bio_link')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('publish_bio_page')?.execute).toBe('function');
@@ -142,14 +145,17 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(typeof globalAssistantActionRegistry.get('deploy_chatbot_to_surface')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('deploy_chatbot_to_surface')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_finance_record')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_finance_dashboard')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_finance_record')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_menu_item')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_restaurants_dashboard')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_menu')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('update_menu')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_reservation_flow')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_reservation_flow')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_listing')?.execute).toBe('function');
+        expect(typeof globalAssistantActionRegistry.get('open_realty_dashboard')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_listing')?.execute).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('edit_listing')?.rollback).toBe('function');
         expect(typeof globalAssistantActionRegistry.get('create_showing_request_flow')?.execute).toBe('function');

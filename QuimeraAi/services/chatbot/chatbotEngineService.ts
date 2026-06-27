@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '../../supabase';
 import type {
+    BusinessBlueprint,
     BlueprintReadiness,
     ChatbotActionType,
     ChatbotBlueprint,
@@ -39,6 +40,7 @@ import {
 import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from '../chatbotEngine/chatbotEngineEventService';
 import {
     checkChatbotEcommerceOrderStatus,
+    createChatbotLead,
     createChatbotEcommerceBackInStockRequest,
     createChatbotEcommerceProductInquiry,
     createChatbotFinanceQuoteRequest,
@@ -46,15 +48,23 @@ import {
     explainChatbotEcommerceShippingPolicy,
     queueChatbotEmailFollowUpDraft,
     recommendChatbotEcommerceProducts,
+    requestChatbotMediaAssetDraft,
     requestChatbotHumanHandoff,
     requestChatbotRealtyLead,
     requestChatbotRestaurantReservation,
     searchChatbotEcommerceProducts,
+    scoreChatbotLead,
+    sendChatbotInternalAlert,
     startChatbotEcommerceCheckoutIntent,
     subscribeChatbotEmailAudience,
+    updateChatbotLead,
     type ChatbotHumanHandoffInput,
     type ChatbotEngineRuntimeScope,
 } from '../chatbotEngine/chatbotEngineRuntimeActionService';
+import {
+    createAppointmentFromChat,
+    getAvailableAppointmentSlots,
+} from '../appointments/appointmentEngineService';
 import {
     runChatbotTestScenarioInBlueprint,
     runProjectChatbotTestLab,
@@ -71,6 +81,16 @@ import type {
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type ConversationStatus = 'active' | 'closed' | 'pending' | 'escalated';
 type ConversationMessageRole = 'user' | 'model';
+type KnowledgeAnswerCitation = {
+    sourceId: string;
+    name: string;
+    type: ChatbotKnowledgeSourceBlueprint['type'];
+    ownerModule: ChatbotKnowledgeSourceBlueprint['ownerModule'];
+    visibility: ChatbotKnowledgeSourceBlueprint['visibility'];
+    freshness: ChatbotKnowledgeSourceBlueprint['freshness'];
+    confidence: number;
+    excerpt: string;
+};
 
 export interface ChatbotEngineReadinessSummary {
     projectId: string;
@@ -312,6 +332,8 @@ const conversationNotFoundMessage = [
     'EN: The conversation does not exist or does not belong to this project.',
 ].join('\n');
 
+const analyticsMetadataSensitiveKeyPattern = /email|phone|transcript|summary|note|message|secret|token|password|agentid|customerrequest|raw/i;
+
 function uniqueStrings(values: string[]): string[] {
     return Array.from(new Set(values.filter(Boolean)));
 }
@@ -346,6 +368,290 @@ function cleanTags(values: unknown): string[] {
     )).slice(0, 40);
 }
 
+function cleanNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+}
+
+function cleanMessageRole(value: unknown): ConversationMessageRole {
+    return value === 'model' ? 'model' : 'user';
+}
+
+function addDays(date: Date, days: number): Date {
+    const next = new Date(date);
+    next.setUTCDate(next.getUTCDate() + days);
+    return next;
+}
+
+function collectPrimitiveRecordValues(record: Record<string, unknown>, keys: string[], maxLength = 500): string[] {
+    return keys
+        .map((key) => cleanString(record[key], maxLength))
+        .filter((value): value is string => Boolean(value));
+}
+
+function cleanKnowledgeSnippet(value: unknown, maxLength = 900): string | undefined {
+    const cleaned = cleanString(value, maxLength);
+    if (!cleaned) return undefined;
+    return cleaned.replace(/\s+/g, ' ').trim().slice(0, maxLength) || undefined;
+}
+
+function summarizeBusinessProfile(blueprint: BusinessBlueprint): string[] {
+    const profile = blueprint.businessProfile;
+    const parts: string[] = [
+        profile.businessName ? `Business: ${profile.businessName}` : '',
+        profile.industry ? `Industry: ${profile.industry}` : '',
+        profile.subIndustry ? `Sub-industry: ${profile.subIndustry}` : '',
+        profile.description ? `Description: ${profile.description}` : '',
+        profile.tagline ? `Tagline: ${profile.tagline}` : '',
+        profile.targetAudience ? `Target audience: ${profile.targetAudience}` : '',
+    ].filter(Boolean);
+
+    const services = (profile.services || [])
+        .slice(0, 8)
+        .map(service => [service.name, service.description].filter(Boolean).join(': '))
+        .filter(Boolean);
+    if (services.length > 0) parts.push(`Services: ${services.join('; ')}`);
+
+    const contact = Object.entries(profile.contactInfo || {})
+        .filter(([, value]) => ['string', 'number'].includes(typeof value))
+        .slice(0, 8)
+        .map(([key, value]) => `${key}: ${String(value)}`);
+    if (contact.length > 0) parts.push(`Public contact: ${contact.join('; ')}`);
+
+    return parts;
+}
+
+function summarizeWebsiteKnowledge(blueprint: BusinessBlueprint): string[] {
+    const website = blueprint.websiteBlueprint;
+    const parts: string[] = [];
+    const pages = (website.pages || [])
+        .slice(0, 8)
+        .map(page => [page.title, page.slug ? `/${page.slug}` : ''].filter(Boolean).join(' '))
+        .filter(Boolean);
+    if (pages.length > 0) parts.push(`Website pages: ${pages.join('; ')}`);
+    if ((website.sections || []).length > 0) {
+        parts.push(`Visible section types: ${website.sections.slice(0, 14).join(', ')}`);
+    }
+    const sectionBlueprints = (website.sectionBlueprints || [])
+        .filter(section => section.visible !== false)
+        .slice(0, 10)
+        .map(section => [section.type, section.componentId, section.layoutVariant].filter(Boolean).join(' / '))
+        .filter(Boolean);
+    if (sectionBlueprints.length > 0) parts.push(`Visible section blueprints: ${sectionBlueprints.join('; ')}`);
+    if (website.chatbotPlacement && website.chatbotPlacement !== 'none') {
+        parts.push(`ChatCore placement: ${website.chatbotPlacement}`);
+    }
+    return parts;
+}
+
+function summarizeEcommerceKnowledge(blueprint: BusinessBlueprint): string[] {
+    const ecommerce = blueprint.ecommerceBlueprint;
+    const parts: string[] = [];
+    if ((ecommerce.categories || []).length > 0) parts.push(`Categories: ${ecommerce.categories.slice(0, 12).join(', ')}`);
+    const products = (ecommerce.starterProducts || [])
+        .slice(0, 8)
+        .map(product => [
+            product.name,
+            product.category ? `category ${product.category}` : '',
+            product.description || '',
+            typeof product.suggestedPrice === 'number' ? `suggested price ${product.suggestedPrice}` : '',
+        ].filter(Boolean).join(' - '))
+        .filter(Boolean);
+    if (products.length > 0) parts.push(`Catalog context: ${products.join('; ')}`);
+    const settings = [
+        ecommerce.inventoryMode ? `inventory ${ecommerce.inventoryMode}` : '',
+        ecommerce.fulfillmentMode ? `fulfillment ${ecommerce.fulfillmentMode}` : '',
+        ecommerce.paymentMode ? `payments ${ecommerce.paymentMode}` : '',
+        ecommerce.shippingMode ? `shipping ${ecommerce.shippingMode}` : '',
+        ecommerce.taxMode ? `tax ${ecommerce.taxMode}` : '',
+    ].filter(Boolean);
+    if (settings.length > 0) parts.push(`Store settings: ${settings.join(', ')}`);
+    return parts;
+}
+
+function summarizeAppointmentsKnowledge(blueprint: BusinessBlueprint): string[] {
+    const appointments = blueprint.appointmentsBlueprint;
+    const parts: string[] = [];
+    if ((appointments.serviceTypes || []).length > 0) parts.push(`Appointment service types: ${appointments.serviceTypes.join(', ')}`);
+    if ((appointments.services || []).length > 0) {
+        parts.push(`Appointment services: ${appointments.services.slice(0, 8).map(service => service.name).filter(Boolean).join(', ')}`);
+    }
+    if (appointments.availability) {
+        parts.push([
+            appointments.availability.timezone ? `timezone ${appointments.availability.timezone}` : '',
+            appointments.availability.intervalMinutes ? `interval ${appointments.availability.intervalMinutes} minutes` : '',
+            appointments.availability.minimumNoticeMinutes ? `minimum notice ${appointments.availability.minimumNoticeMinutes} minutes` : '',
+        ].filter(Boolean).join(', '));
+    }
+    if (appointments.bookingRules?.confirmationMode) {
+        parts.push(`Booking confirmation mode: ${appointments.bookingRules.confirmationMode}`);
+    }
+    return parts.filter(Boolean);
+}
+
+function summarizeRestaurantKnowledge(blueprint: BusinessBlueprint): string[] {
+    const restaurant = blueprint.restaurantBlueprint;
+    const parts = collectPrimitiveRecordValues(restaurant.profile as unknown as Record<string, unknown>, [
+        'name',
+        'cuisine',
+        'description',
+        'serviceStyle',
+        'address',
+    ], 500);
+    if ((restaurant.menuSignals || []).length > 0) parts.push(`Menu signals: ${restaurant.menuSignals.slice(0, 10).join(', ')}`);
+    if ((restaurant.reservationRules || []).length > 0) parts.push(`Reservation rules: ${restaurant.reservationRules.slice(0, 10).join(', ')}`);
+    return parts;
+}
+
+function summarizeRealtyKnowledge(blueprint: BusinessBlueprint): string[] {
+    const realty = blueprint.realEstateBlueprint;
+    const parts: string[] = [];
+    if (realty.profileType) parts.push(`Real estate profile: ${realty.profileType}`);
+    if ((realty.listingTypes || []).length > 0) parts.push(`Listing types: ${realty.listingTypes.slice(0, 10).join(', ')}`);
+    if ((realty.leadTypes || []).length > 0) parts.push(`Lead types: ${realty.leadTypes.slice(0, 10).join(', ')}`);
+    const listings = (realty.listingDrafts || [])
+        .filter(listing => listing.status === 'active')
+        .slice(0, 6)
+        .map(listing => [
+            listing.title,
+            listing.propertyType,
+            listing.transactionType,
+            typeof listing.price === 'number' ? listing.price : '',
+        ].filter(Boolean).join(' - '))
+        .filter(Boolean);
+    if (listings.length > 0) parts.push(`Active listings: ${listings.join('; ')}`);
+    return parts;
+}
+
+function summarizeBioPageKnowledge(blueprint: BusinessBlueprint): string[] {
+    const bioPage = blueprint.bioPageBlueprint;
+    if (!bioPage) return [];
+    return [
+        `Bio Page status: ${bioPage.status}`,
+        bioPage.enabled ? 'Bio Page is enabled in the reviewed blueprint.' : '',
+    ].filter(Boolean);
+}
+
+function buildKnowledgeSourceText(source: ChatbotKnowledgeSourceBlueprint, businessBlueprint: BusinessBlueprint): string {
+    const parts: string[] = [
+        source.name,
+        source.contentPreview || '',
+        source.sourceUrl ? `Source URL: ${source.sourceUrl}` : '',
+    ].filter(Boolean);
+
+    if (source.type === 'business_blueprint') parts.push(...summarizeBusinessProfile(businessBlueprint));
+    if (source.type === 'website_content') parts.push(...summarizeWebsiteKnowledge(businessBlueprint));
+    if (source.type === 'ecommerce_products' || source.type === 'ecommerce_policies') parts.push(...summarizeEcommerceKnowledge(businessBlueprint));
+    if (source.type === 'appointments_services') parts.push(...summarizeAppointmentsKnowledge(businessBlueprint));
+    if (source.type === 'restaurant_menu' || source.type === 'restaurant_reservations') parts.push(...summarizeRestaurantKnowledge(businessBlueprint));
+    if (source.type === 'realty_listings') parts.push(...summarizeRealtyKnowledge(businessBlueprint));
+    if (source.type === 'bio_page') parts.push(...summarizeBioPageKnowledge(businessBlueprint));
+
+    return parts
+        .map(part => cleanKnowledgeSnippet(part, 1200))
+        .filter((part): part is string => Boolean(part))
+        .join('. ');
+}
+
+function tokenizeKnowledge(value: string): Set<string> {
+    return new Set(value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .split(/\s+/)
+        .map(token => token.trim())
+        .filter(token => token.length > 2)
+        .filter(token => !['the', 'and', 'for', 'con', 'que', 'una', 'del', 'los', 'las', 'para', 'from', 'this', 'that'].includes(token)));
+}
+
+function rankKnowledgeSources(
+    sources: ChatbotKnowledgeSourceBlueprint[],
+    businessBlueprint: BusinessBlueprint,
+    question: string,
+): KnowledgeAnswerCitation[] {
+    const queryTokens = tokenizeKnowledge(question);
+    return sources
+        .map((source) => {
+            const text = buildKnowledgeSourceText(source, businessBlueprint);
+            const textTokens = tokenizeKnowledge(text);
+            const overlap = Array.from(queryTokens).filter(token => textTokens.has(token)).length;
+            const score = overlap + (source.confidence || 0) + (source.type === 'business_blueprint' ? 0.25 : 0);
+            return {
+                citation: {
+                    sourceId: source.id,
+                    name: source.name,
+                    type: source.type,
+                    ownerModule: source.ownerModule,
+                    visibility: source.visibility,
+                    freshness: source.freshness,
+                    confidence: source.confidence,
+                    excerpt: cleanKnowledgeSnippet(text, 700) || source.name,
+                },
+                score,
+            };
+        })
+        .filter(item => item.citation.excerpt)
+        .sort((left, right) => right.score - left.score)
+        .slice(0, 3)
+        .map(item => item.citation);
+}
+
+export function executeAnswerFromKnowledgeAction(
+    payload: Record<string, unknown>,
+    chatbotBlueprint: ChatbotBlueprint,
+    businessBlueprint: BusinessBlueprint,
+) {
+    const question = cleanString(payload.question, 12000)
+        || cleanString(payload.text, 12000)
+        || cleanString(payload.message, 12000)
+        || '';
+    const eligibleSources = (chatbotBlueprint.knowledgeSources || []).filter(source => (
+        source.status === 'ready'
+        && source.needsReview === false
+        && source.visibility === 'public'
+        && source.readiness?.isReady === true
+    ));
+    const citations = rankKnowledgeSources(eligibleSources, businessBlueprint, question || 'general project question');
+
+    if (citations.length === 0) {
+        return {
+            status: 'needs_review',
+            actionType: 'answer_from_knowledge',
+            answerStatus: 'no_reviewed_knowledge',
+            question: question || null,
+            answer: [
+                'ES: No tengo una fuente publica revisada suficiente para responder eso con seguridad. Puedo tomar tus datos o pasar esto a un humano.',
+                'EN: I do not have enough reviewed public knowledge to answer that safely. I can collect your details or hand this to a human.',
+            ].join('\n'),
+            citations,
+            sourceCount: 0,
+            needsHumanReview: true,
+            handoffRecommended: true,
+            knowledgePolicy: 'reviewed_public_sources_only',
+        };
+    }
+
+    const facts = citations.map(citation => citation.excerpt).join(' ');
+    return {
+        status: 'answered',
+        actionType: 'answer_from_knowledge',
+        answerStatus: 'answered_from_reviewed_public_knowledge',
+        question: question || null,
+        answer: [
+            `ES: Segun el conocimiento publico revisado del proyecto: ${facts}`,
+            `EN: Based on the project's reviewed public knowledge: ${facts}`,
+        ].join('\n'),
+        citations,
+        sourceCount: citations.length,
+        needsHumanReview: false,
+        handoffRecommended: false,
+        knowledgePolicy: 'reviewed_public_sources_only',
+    };
+}
+
 function compactMetadata(value: unknown): Record<string, unknown> {
     if (!isRecord(value)) return {};
     return Object.fromEntries(
@@ -353,6 +659,46 @@ function compactMetadata(value: unknown): Record<string, unknown> {
             .filter(([key, entry]) => key.length <= 80 && entry !== undefined)
             .slice(0, 60),
     );
+}
+
+function sanitizeAnalyticsMetadata(value: unknown, depth = 0): { metadata: Record<string, unknown>; redacted: boolean } {
+    if (!isRecord(value) || depth > 3) return { metadata: {}, redacted: false };
+
+    let redacted = false;
+    const entries: Array<[string, unknown]> = [];
+    for (const [key, entry] of Object.entries(value).slice(0, 60)) {
+        if (!key || key.length > 80 || analyticsMetadataSensitiveKeyPattern.test(key)) {
+            redacted = true;
+            continue;
+        }
+        if (entry === undefined || entry === null || entry === '') continue;
+        if (typeof entry === 'string') {
+            entries.push([key, entry.slice(0, 300)]);
+            continue;
+        }
+        if (typeof entry === 'number' || typeof entry === 'boolean') {
+            entries.push([key, entry]);
+            continue;
+        }
+        if (Array.isArray(entry)) {
+            const safeArray = entry
+                .filter(item => ['string', 'number', 'boolean'].includes(typeof item))
+                .slice(0, 12)
+                .map(item => typeof item === 'string' ? item.slice(0, 160) : item);
+            entries.push([key, safeArray]);
+            if (entry.length !== safeArray.length) redacted = true;
+            continue;
+        }
+        if (isRecord(entry)) {
+            const nested = sanitizeAnalyticsMetadata(entry, depth + 1);
+            if (Object.keys(nested.metadata).length > 0) entries.push([key, nested.metadata]);
+            if (nested.redacted) redacted = true;
+            continue;
+        }
+        redacted = true;
+    }
+
+    return { metadata: Object.fromEntries(entries), redacted };
 }
 
 function serviceIdempotencyKey(parts: unknown[]): string {
@@ -1224,17 +1570,303 @@ export async function linkConversationToLead(
     };
 }
 
+function requirePayloadString(payload: Record<string, unknown>, keys: string[], label: string, maxLength = 240): string {
+    for (const key of keys) {
+        const value = cleanString(payload[key], maxLength);
+        if (value) return value;
+    }
+    throw Object.assign(new Error(`ES: ${label} es requerido.\nEN: ${label} is required.`), {
+        code: 'CHATBOT_ACTION_PAYLOAD_REQUIRED',
+        status: 400,
+        field: keys[0],
+    });
+}
+
+function participantInfoFromPayload(payload: Record<string, unknown>): ChatbotConversationParticipantInfo {
+    const nested = isRecord(payload.participantInfo) ? payload.participantInfo : {};
+    return {
+        name: cleanString(nested.name, 200)
+            || cleanString(payload.participantName, 200)
+            || cleanString(payload.customerName, 200)
+            || cleanString(payload.name, 200)
+            || null,
+        email: cleanString(nested.email, 320)
+            || cleanString(payload.participantEmail, 320)
+            || cleanString(payload.customerEmail, 320)
+            || cleanString(payload.email, 320)
+            || null,
+        phone: cleanString(nested.phone, 80)
+            || cleanString(payload.participantPhone, 80)
+            || cleanString(payload.customerPhone, 80)
+            || cleanString(payload.phone, 80)
+            || null,
+        avatarUrl: cleanString(nested.avatarUrl, 1000) || cleanString(payload.avatarUrl, 1000) || null,
+    };
+}
+
+function runtimeCommon(scope: ChatbotEngineRuntimeScope, payload: Record<string, unknown>) {
+    return {
+        tenantId: scope.tenantId,
+        projectId: scope.projectId,
+        sourceSurface: cleanString(payload.sourceSurface, 120) || 'website',
+        sourceModule: cleanString(payload.sourceModule, 120) || 'chatcore',
+        chatbotEngineContext: isRecord(payload.chatbotEngineContext) ? payload.chatbotEngineContext as ChatbotEngineSurfaceContextInput : null,
+        metadata: compactMetadata(payload.metadata),
+        correlationId: cleanString(payload.correlationId, 240),
+        actorType: (cleanString(payload.actorType, 40) as ChatbotEngineActorType | undefined) || 'system',
+        actorId: cleanString(payload.actorId, 120),
+        idempotencyKey: cleanString(payload.idempotencyKey, 240),
+        now: cleanString(payload.now, 80),
+    };
+}
+
+async function executeSaveConversationAction(
+    scope: ChatbotEngineRuntimeScope,
+    payload: Record<string, unknown>,
+    client: SupabaseLike,
+) {
+    const common = runtimeCommon(scope, payload);
+    const conversationId = cleanString(payload.conversationId, 120);
+    if (conversationId) {
+        return updateConversationParticipant({
+            ...common,
+            conversationId,
+            participantInfo: participantInfoFromPayload(payload),
+            status: cleanString(payload.status, 40) as ConversationStatus | undefined,
+            tags: cleanTags(payload.tags),
+        }, client);
+    }
+
+    return getOrCreateConversation({
+        ...common,
+        channel: cleanString(payload.channel, 40) || 'web',
+        sessionId: cleanString(payload.sessionId, 120) || cleanString(payload.participantId, 120),
+        participantInfo: participantInfoFromPayload(payload),
+        tags: cleanTags(payload.tags),
+    }, client);
+}
+
+async function executeSaveMessageAction(
+    scope: ChatbotEngineRuntimeScope,
+    payload: Record<string, unknown>,
+    client: SupabaseLike,
+) {
+    const common = runtimeCommon(scope, payload);
+    return saveConversationMessage({
+        ...common,
+        conversationId: requirePayloadString(payload, ['conversationId'], 'conversationId'),
+        role: cleanMessageRole(payload.role),
+        text: requirePayloadString(payload, ['text', 'message'], 'text', 12000),
+        channel: cleanString(payload.channel, 40) || 'web',
+        isVoiceMessage: payload.isVoiceMessage === true,
+        messageType: cleanString(payload.messageType, 40),
+        mediaUrl: cleanString(payload.mediaUrl, 1000),
+        senderId: cleanString(payload.senderId, 120),
+        senderName: cleanString(payload.senderName, 200),
+        recipientId: cleanString(payload.recipientId, 120),
+    }, client);
+}
+
+function executeAnalyzeIntentAction(payload: Record<string, unknown>) {
+    const text = requirePayloadString(payload, ['text', 'message'], 'text', 12000);
+    return buildChatbotMessageIntentMetadata({
+        role: cleanMessageRole(payload.role),
+        text,
+        isVoiceMessage: payload.isVoiceMessage === true,
+        sourceSurface: cleanString(payload.sourceSurface, 120) || 'website',
+        sourceModule: cleanString(payload.sourceModule, 120) || 'chatcore',
+        chatbotEngineContext: isRecord(payload.chatbotEngineContext) ? payload.chatbotEngineContext as ChatbotEngineSurfaceContextInput : null,
+        previousConversationMetadata: isRecord(payload.previousConversationMetadata) ? payload.previousConversationMetadata : null,
+        previousConversationTags: cleanTags(payload.previousConversationTags),
+        now: cleanString(payload.now, 80),
+    });
+}
+
+async function executeRecordAnalyticsEventAction(
+    scope: ChatbotEngineRuntimeScope,
+    payload: Record<string, unknown>,
+    client: SupabaseLike,
+) {
+    const sourceSurface = cleanString(payload.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(payload.sourceModule, 120) || 'chatcore';
+    const eventType = cleanString(payload.eventType, 120)
+        || cleanString(payload.event_type, 120)
+        || 'chatbot_analytics_observed';
+    const safeMetadata = sanitizeAnalyticsMetadata({
+        ...(isRecord(payload.metadata) ? payload.metadata : {}),
+        category: payload.category,
+        label: payload.label,
+        value: payload.value,
+        currency: payload.currency,
+        surface: sourceSurface,
+        module: sourceModule,
+        sessionId: payload.sessionId,
+        sourceEventId: payload.sourceEventId,
+        analyticsEventType: eventType,
+    });
+    const event = await recordChatbotEvent({
+        tenantId: scope.tenantId,
+        projectId: scope.projectId,
+        eventType,
+        actionType: 'record_analytics_event',
+        actionStatus: 'observed',
+        sourceSurface,
+        sourceModule,
+        conversationId: cleanString(payload.conversationId, 120),
+        messageId: cleanString(payload.messageId, 120),
+        leadId: cleanString(payload.leadId, 120),
+        appointmentId: cleanString(payload.appointmentId, 120),
+        actorType: (cleanString(payload.actorType, 40) as ChatbotEngineActorType | undefined) || 'system',
+        actorId: cleanString(payload.actorId, 120),
+        idempotencyKey: cleanString(payload.analyticsIdempotencyKey, 240)
+            || cleanString(payload.eventId, 240)
+            || cleanString(payload.idempotencyKey, 240)
+            || serviceIdempotencyKey([
+                scope.projectId,
+                'analytics',
+                eventType,
+                sourceSurface,
+                sourceModule,
+                cleanString(payload.conversationId, 120),
+                cleanString(payload.sessionId, 120),
+            ]),
+        correlationId: cleanString(payload.correlationId, 240),
+        metadata: {
+            ...safeMetadata.metadata,
+            analyticsRuntime: true,
+            analyticsMetadataRedacted: safeMetadata.redacted,
+        },
+        now: cleanString(payload.now, 80),
+    }, client);
+
+    return {
+        status: 'recorded',
+        actionType: 'record_analytics_event',
+        eventType,
+        eventId: event.id,
+        duplicate: event.duplicate === true,
+        warning: event.warning,
+        metadataRedacted: safeMetadata.redacted,
+    };
+}
+
+async function executeCreateAppointmentAction(
+    scope: ChatbotEngineRuntimeScope,
+    payload: Record<string, unknown>,
+    client: SupabaseLike,
+) {
+    const sourceSurface = cleanString(payload.sourceSurface, 120) || 'booking_page';
+    const sourceModule = cleanString(payload.sourceModule, 120) || 'chatcore';
+    const notes = cleanString(payload.customerRequestSummary, 6000)
+        || cleanString(payload.notes, 6000)
+        || cleanString(payload.message, 6000)
+        || cleanString(payload.description, 6000)
+        || null;
+    return createAppointmentFromChat(client, {
+        projectId: scope.projectId,
+        tenantId: scope.tenantId,
+        title: cleanString(payload.title, 250) || 'ChatCore appointment',
+        description: cleanString(payload.description, 5000) || notes || '',
+        type: cleanString(payload.type, 80),
+        status: cleanString(payload.status, 80) as any,
+        startDate: requirePayloadString(payload, ['startDate', 'start_date'], 'startDate'),
+        endDate: requirePayloadString(payload, ['endDate', 'end_date'], 'endDate'),
+        timezone: cleanString(payload.timezone, 80),
+        participantName: participantInfoFromPayload(payload).name || undefined,
+        participantEmail: participantInfoFromPayload(payload).email || undefined,
+        participantPhone: participantInfoFromPayload(payload).phone || undefined,
+        linkedLeadId: cleanString(payload.linkedLeadId, 120) || cleanString(payload.leadId, 120),
+        sourceLeadId: cleanString(payload.sourceLeadId, 120) || cleanString(payload.leadId, 120),
+        sourceConversationId: cleanString(payload.conversationId, 120),
+        sourceModule,
+        sourceComponent: cleanString(payload.sourceComponent, 120) || 'ChatCore',
+        idempotencyKey: cleanString(payload.idempotencyKey, 240),
+        createdBy: scope.projectUserId || cleanString(payload.actorId, 120),
+        notes,
+        metadata: {
+            ...compactMetadata(payload.metadata),
+            chatbotEngine: true,
+            sourceSurface,
+            sourceModule,
+        },
+        createOrLinkLead: payload.createOrLinkLead !== false,
+        needsReview: payload.needsReview !== false,
+        generatedByAI: payload.generatedByAI !== false,
+    });
+}
+
+async function executeCheckAvailabilityAction(
+    scope: ChatbotEngineRuntimeScope,
+    payload: Record<string, unknown>,
+    client: SupabaseLike,
+) {
+    const rawStart = cleanString(payload.startDate, 80) || cleanString(payload.date, 40);
+    const startDate = rawStart ? new Date(rawStart) : new Date();
+    const days = Math.min(Math.max(cleanNumber(payload.days) || 14, 1), 60);
+    const rawEnd = cleanString(payload.endDate, 80);
+    const endDate = rawEnd ? new Date(rawEnd) : addDays(startDate, days);
+    const slots = await getAvailableAppointmentSlots(client, scope.projectId, {
+        startDate,
+        endDate,
+        durationMinutes: cleanNumber(payload.durationMinutes) || cleanNumber(payload.duration),
+        intervalMinutes: cleanNumber(payload.intervalMinutes),
+        minimumNoticeMinutes: cleanNumber(payload.minimumNoticeMinutes),
+        maxSlots: cleanNumber(payload.maxSlots),
+        weeklyHours: Array.isArray(payload.weeklyHours) ? payload.weeklyHours as any : undefined,
+        now: cleanString(payload.now, 80),
+    });
+
+    return {
+        projectId: scope.projectId,
+        sourceOfTruth: 'project_appointments',
+        blockedTimeSource: 'project_appointment_blocks',
+        slotCount: slots.length,
+        slots,
+    };
+}
+
 async function dispatchChatbotRuntimeAction(
     actionType: ChatbotActionType,
     scope: ChatbotEngineRuntimeScope,
     payload: Record<string, unknown>,
+    config: Pick<ChatbotEngineConfigResult, 'businessBlueprint' | 'chatbotBlueprint'>,
 ): Promise<unknown> {
     switch (actionType) {
         case 'answer_from_knowledge':
+            return executeAnswerFromKnowledgeAction(payload, config.chatbotBlueprint, config.businessBlueprint);
         case 'record_analytics_event':
-            return { status: 'observed', actionType };
+            return executeRecordAnalyticsEventAction(scope, payload, scope.supabase);
+        case 'save_conversation':
+            return executeSaveConversationAction(scope, payload, scope.supabase);
+        case 'save_message':
+            return executeSaveMessageAction(scope, payload, scope.supabase);
+        case 'analyze_intent':
+            return executeAnalyzeIntentAction(payload);
+        case 'link_conversation_to_lead':
+            return linkConversationToLead({
+                ...runtimeCommon(scope, payload),
+                conversationId: requirePayloadString(payload, ['conversationId'], 'conversationId'),
+                leadId: requirePayloadString(payload, ['leadId', 'linkedLeadId'], 'leadId'),
+            }, scope.supabase);
+        case 'create_lead':
+            return createChatbotLead({ ...scope, ...payload } as any);
+        case 'update_lead':
+            return updateChatbotLead({ ...scope, ...payload } as any);
+        case 'create_appointment':
+            return executeCreateAppointmentAction(scope, payload, scope.supabase);
+        case 'check_availability':
+            return executeCheckAvailabilityAction(scope, payload, scope.supabase);
+        case 'score_lead':
+            return scoreChatbotLead({ ...scope, ...payload } as any);
         case 'handoff_to_human':
             return requestChatbotHumanHandoff({ ...scope, ...payload } as any);
+        case 'create_support_ticket':
+            return requestChatbotHumanHandoff({
+                ...scope,
+                ...payload,
+                reason: cleanString(payload.reason, 120) || 'support_request',
+                summary: cleanString(payload.summary, 2000) || cleanString(payload.message, 2000) || 'Support requested from ChatCore.',
+            } as any);
         case 'request_restaurant_reservation':
             return requestChatbotRestaurantReservation({ ...scope, ...payload } as any);
         case 'request_realty_showing':
@@ -1260,8 +1892,12 @@ async function dispatchChatbotRuntimeAction(
             return subscribeChatbotEmailAudience({ ...scope, ...payload } as any);
         case 'queue_email_follow_up':
             return queueChatbotEmailFollowUpDraft({ ...scope, ...payload } as any);
+        case 'send_internal_alert':
+            return sendChatbotInternalAlert({ ...scope, ...payload } as any);
         case 'create_finance_quote_request':
             return createChatbotFinanceQuoteRequest({ ...scope, ...payload } as any);
+        case 'request_media_asset':
+            return requestChatbotMediaAssetDraft({ ...scope, ...payload } as any);
         default:
             throw Object.assign(new Error(unsupportedActionMessage), {
                 code: 'CHATBOT_ACTION_EXECUTOR_MISSING',
@@ -1318,7 +1954,26 @@ export async function executeChatbotAction(
         projectId: input.scope.projectId,
         projectUserId: input.scope.projectUserId,
     };
-    const result = await dispatchChatbotRuntimeAction(input.actionType, runtimeScope, input.payload || {});
+    const runtimePayload = {
+        ...(input.payload || {}),
+        sourceSurface: (input.payload || {}).sourceSurface ?? input.sourceSurface,
+        sourceModule: (input.payload || {}).sourceModule ?? input.sourceModule ?? 'chatbot-engine-service',
+        conversationId: (input.payload || {}).conversationId ?? input.conversationId,
+        leadId: (input.payload || {}).leadId ?? input.leadId,
+        appointmentId: (input.payload || {}).appointmentId ?? input.appointmentId,
+        idempotencyKey: (input.payload || {}).idempotencyKey ?? evaluation.idempotencyKey,
+        correlationId: (input.payload || {}).correlationId ?? input.correlationId,
+        actorType: (input.payload || {}).actorType ?? input.actorType ?? 'system',
+        actorId: (input.payload || {}).actorId ?? input.actorId,
+        now: (input.payload || {}).now ?? input.now,
+        metadata: {
+            ...(isRecord((input.payload || {}).metadata) ? (input.payload || {}).metadata as Record<string, unknown> : {}),
+            ...(input.metadata || {}),
+            canonicalService: true,
+            projectScoped: true,
+        },
+    };
+    const result = await dispatchChatbotRuntimeAction(input.actionType, runtimeScope, runtimePayload, config);
     const executedEvent = await recordChatbotEngineEvent(client, buildChatbotEngineExecutedEvent(evaluation, {
         resultRecorded: true,
         canonicalService: true,

@@ -305,4 +305,50 @@ describe('GlobalAssistantRuntime', () => {
         expect(taskEndIndex).toBeGreaterThan(-1);
         expect(firstActionIndex).toBeGreaterThan(taskEndIndex);
     });
+
+    it('cancels a waiting Operating Layer plan with auditable actions and blocks later apply', async () => {
+        const { runtime, persisted } = buildRuntimeWithPersistence();
+        const context = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            role: 'member',
+            activeProject,
+            activeRoute: '/dashboard/email',
+            activeServices: ['emailMarketing'],
+            featureFlags: ['emailMarketing'],
+        });
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea una campana de email para reservas',
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+
+        const cancelled = await runtime.cancelPlan({
+            taskId: planned.task.id,
+            cancelledBy: 'user-1',
+            cancelledAt: '2026-06-26T12:30:00.000Z',
+        });
+
+        expect(cancelled.task.status).toBe('cancelled');
+        expect(cancelled.plan.status).toBe('cancelled');
+        expect(cancelled.actions.every(action => action.status === 'cancelled')).toBe(true);
+        expect(cancelled.plan.approvals.every(approval => approval.cancelledAt === '2026-06-26T12:30:00.000Z')).toBe(true);
+        expect(persisted.tasks.at(-1)).toMatchObject({
+            id: planned.task.id,
+            status: 'cancelled',
+            result: {
+                cancelled: true,
+                cancelledBy: 'user-1',
+            },
+        });
+        expect(persisted.actions.filter(action => action.status === 'cancelled')).toHaveLength(cancelled.actions.length);
+        expect(persisted.events.map(event => event.type)).toContain('assistant_action_cancelled');
+        expect(() => runtime.confirmPlan({ taskId: planned.task.id, confirmedBy: 'user-1' })).toThrow(
+            'Cannot confirm a cancelled assistant plan.',
+        );
+        await expect(runtime.applyTask({ taskId: planned.task.id, context })).rejects.toThrow(
+            'Cannot apply a cancelled assistant plan.',
+        );
+    });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     checkChatbotEcommerceOrderStatus,
+    createChatbotLead,
     createChatbotFinanceQuoteRequest,
     createChatbotEcommerceBackInStockRequest,
     createChatbotEcommerceProductInquiry,
@@ -8,11 +9,15 @@ import {
     explainChatbotEcommerceShippingPolicy,
     queueChatbotEmailFollowUpDraft,
     requestChatbotHumanHandoff,
+    requestChatbotMediaAssetDraft,
     requestChatbotRealtyLead,
     requestChatbotRestaurantReservation,
     searchChatbotEcommerceProducts,
+    scoreChatbotLead,
+    sendChatbotInternalAlert,
     startChatbotEcommerceCheckoutIntent,
     subscribeChatbotEmailAudience,
+    updateChatbotLead,
 } from '../../services/chatbotEngine/chatbotEngineRuntimeActionService';
 
 type Tables = Record<string, any[]>;
@@ -220,16 +225,247 @@ describe('chatbotEngineRuntimeActionService', () => {
             customer_email: 'ana@example.com',
             source: 'aiAssistant',
         });
-        expect(client.tables.restaurant_reservations[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(client.tables.restaurant_reservations[0].notes).toContain('Lo que desea el cliente / What the customer wants: Window table');
-        expect(client.tables.restaurant_reservations[0].notes).toContain('Cita / Appointment: Restaurant reservation');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.restaurant_reservations[0].notes).toContain('ES: El cliente Ana Rivera, ana@example.com quiere: Window table.');
+        expect(client.tables.restaurant_reservations[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0]).toMatchObject({
             project_id: 'project-1',
             source: 'restaurant-reservation',
             email: 'ana@example.com',
         });
-        expect(client.tables.leads[0].notes).toContain('Lo que desea el cliente / What the customer wants: Window table');
+        expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.leads[0].notes).toContain('EN: The customer Ana Rivera, ana@example.com wants: Window table.');
+        expect(client.tables.leads[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Customer request summary');
+        expect(client.tables.leads[0].custom_data.customerRequestNote).toContain('Follow-up summary');
+    });
+
+    it('captures generic ChatCore leads with readable CRM notes and idempotency', async () => {
+        const client = createClient({
+            leads: [],
+        });
+
+        const result = await createChatbotLead({
+            supabase: client,
+            ...scope,
+            name: 'Carla Lead',
+            email: 'CARLA@EXAMPLE.COM',
+            phone: '+1 787 555 1111',
+            message: 'I want pricing for the premium package.',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: 'lead-key-1',
+            now: new Date('2026-06-26T10:00:00.000Z'),
+        });
+
+        expect(result).toMatchObject({
+            duplicate: false,
+            created: true,
+            reviewRequired: true,
+            email: 'carla@example.com',
+        });
+        expect(client.tables.leads[0]).toMatchObject({
+            project_id: 'project-1',
+            email: 'carla@example.com',
+            source: 'chatbot-widget',
+            status: 'new',
+            tags: expect.arrayContaining(['chatbot', 'chatcore', 'chatbot-widget', 'website']),
+        });
+        expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.leads[0].notes).toContain('I want pricing for the premium package.');
+        expect(client.tables.leads[0].custom_data).toMatchObject({
+            chatbotEngine: true,
+            actionType: 'create_lead',
+            sourceConversationId: 'conversation-1',
+            customerRequestSummary: expect.stringContaining('I want pricing for the premium package.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
+            customerRequestSummaryTarget: 'leads.custom_data.customerRequestSummary,leads.notes',
+            idempotencyKey: 'lead-key-1',
+        });
+
+        const duplicate = await createChatbotLead({
+            supabase: client,
+            ...scope,
+            name: 'Carla Lead',
+            email: 'carla@example.com',
+            idempotencyKey: 'lead-key-1',
+        });
+
+        expect(duplicate.duplicate).toBe(true);
+        expect(client.tables.leads).toHaveLength(1);
+    });
+
+    it('updates existing CRM leads with readable ChatCore notes and idempotency', async () => {
+        const client = createClient({
+            leads: [{
+                id: 'lead-1',
+                tenant_id: 'tenant-1',
+                project_id: 'project-1',
+                name: 'Carla Lead',
+                email: 'carla@example.com',
+                phone: null,
+                company: null,
+                status: 'new',
+                value: 0,
+                tags: ['chatbot'],
+                notes: 'Initial note',
+                custom_data: {
+                    chatbotEngine: true,
+                    existing: true,
+                },
+            }],
+        });
+
+        const result = await updateChatbotLead({
+            supabase: client,
+            ...scope,
+            leadId: 'lead-1',
+            status: 'qualified',
+            value: 1200,
+            message: 'Carla wants the premium package and asked for a call tomorrow.',
+            tags: ['premium', 'callback'],
+            leadScore: 82,
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: 'update-lead-key-1',
+            now: '2026-06-26T10:05:00.000Z',
+        });
+
+        expect(result).toMatchObject({
+            leadId: 'lead-1',
+            status: 'qualified',
+            duplicate: false,
+            updated: true,
+            reviewRequired: true,
+        });
+        expect(client.tables.leads[0]).toMatchObject({
+            status: 'qualified',
+            value: 1200,
+            tags: expect.arrayContaining(['chatbot', 'chatcore', 'chatbot-updated', 'premium', 'callback', 'website']),
+        });
+        expect(client.tables.leads[0].notes).toContain('Initial note');
+        expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.leads[0].notes).toContain('Carla wants the premium package and asked for a call tomorrow.');
+        expect(client.tables.leads[0].custom_data).toMatchObject({
+            chatbotEngine: true,
+            existing: true,
+            actionType: 'update_lead',
+            sourceConversationId: 'conversation-1',
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
+            leadScore: 82,
+            lastChatbotLeadUpdateAt: '2026-06-26T10:05:00.000Z',
+        });
+        expect(client.tables.leads[0].custom_data.chatbotEngineUpdates).toEqual([
+            expect.objectContaining({
+                idempotencyKey: 'update-lead-key-1',
+                actionType: 'update_lead',
+                status: 'qualified',
+            }),
+        ]);
+
+        const duplicate = await updateChatbotLead({
+            supabase: client,
+            ...scope,
+            leadId: 'lead-1',
+            message: 'Carla wants the premium package and asked for a call tomorrow.',
+            idempotencyKey: 'update-lead-key-1',
+        });
+
+        expect(duplicate).toMatchObject({
+            leadId: 'lead-1',
+            duplicate: true,
+            updated: false,
+        });
+        expect(client.tables.leads[0].custom_data.chatbotEngineUpdates).toHaveLength(1);
+    });
+
+    it('scores existing CRM leads from ChatCore intent signals and stores the result idempotently', async () => {
+        const client = createClient({
+            leads: [{
+                id: 'lead-score-1',
+                tenant_id: 'tenant-1',
+                project_id: 'project-1',
+                name: 'Diego Lead',
+                email: 'diego@example.com',
+                phone: '+1 787 555 0100',
+                company: 'Acme',
+                status: 'new',
+                source: 'chatbot-widget',
+                tags: ['chatbot', 'premium'],
+                notes: 'Initial request',
+                custom_data: {
+                    chatbotEngine: true,
+                    customerRequestSummary: 'Diego needs price and wants to schedule a demo.',
+                },
+            }],
+        });
+
+        const result = await scoreChatbotLead({
+            supabase: client,
+            ...scope,
+            leadId: 'lead-score-1',
+            message: 'Need price for the premium plan and schedule a demo this week.',
+            conversationTranscript: 'Visitor: Need price\nBot: I can help\nVisitor: schedule demo',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: 'score-lead-key-1',
+            now: '2026-06-26T11:00:00.000Z',
+        });
+
+        expect(result).toMatchObject({
+            leadId: 'lead-score-1',
+            duplicate: false,
+            scored: true,
+            highIntent: true,
+            reviewRequired: true,
+        });
+        expect(result.score).toBeGreaterThanOrEqual(80);
+        expect(result.probability).toBeGreaterThanOrEqual(60);
+        expect(client.tables.leads[0].tags).toEqual(expect.arrayContaining(['chatbot', 'premium', 'chatbot-scored', 'website']));
+        expect(client.tables.leads[0].custom_data).toMatchObject({
+            chatbotEngine: true,
+            actionType: 'score_lead',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            leadScore: result.score,
+            aiScore: result.score,
+            probability: result.probability,
+            scoreLeadAt: '2026-06-26T11:00:00.000Z',
+            scoreSource: 'chatbot-engine',
+            scoreSignals: expect.objectContaining({
+                hasEmail: true,
+                hasPhone: true,
+                hasCompany: true,
+                highIntent: true,
+                source: 'chatbot-widget',
+            }),
+        });
+        expect(client.tables.leads[0].custom_data.chatbotEngineUpdates).toEqual([
+            expect.objectContaining({
+                idempotencyKey: 'score-lead-key-1',
+                actionType: 'score_lead',
+                score: result.score,
+                probability: result.probability,
+            }),
+        ]);
+
+        const duplicate = await scoreChatbotLead({
+            supabase: client,
+            ...scope,
+            leadId: 'lead-score-1',
+            idempotencyKey: 'score-lead-key-1',
+        });
+
+        expect(duplicate).toMatchObject({
+            leadId: 'lead-score-1',
+            duplicate: true,
+            scored: false,
+            score: result.score,
+            probability: result.probability,
+        });
+        expect(client.tables.leads[0].custom_data.chatbotEngineUpdates).toHaveLength(1);
     });
 
     it('creates property leads for realty showing requests and keeps pipeline idempotency', async () => {
@@ -265,9 +501,11 @@ describe('chatbotEngineRuntimeActionService', () => {
             pipeline_idempotency_key: 'realty-key-1',
             pipeline_source: 'chatbot-engine',
         });
-        expect(client.tables.property_leads[0].message).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(client.tables.property_leads[0].message).toContain('Cita / Appointment: Realty showing request: Ocean View');
-        expect(client.tables.property_leads[0].metadata.customerRequestSummary).toContain('What the customer wants');
+        expect(client.tables.property_leads[0].message).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.property_leads[0].message).toContain('Realty showing request: Ocean View');
+        expect(client.tables.property_leads[0].message).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.property_leads[0].metadata.customerRequestSummary).toContain('Solicita informacion sobre Ocean View');
+        expect(client.tables.property_leads[0].metadata.customerRequestNote).toContain('Follow-up summary');
 
         const duplicate = await requestChatbotRealtyLead({
             supabase: client,
@@ -370,11 +608,13 @@ describe('chatbotEngineRuntimeActionService', () => {
             conversationId: 'conversation-1',
             html: '<p>Reviewed follow-up draft.</p>',
             text: 'Reviewed follow-up draft.',
-            customerRequestSummary: expect.stringContaining('What the customer wants: Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestSummary: expect.stringContaining('Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
             customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary,canonicalEmail.extra.customerRequestSummary',
         });
         expect(client.tables.email_logs[0].metadata.canonicalEmail).toMatchObject({
-            customerRequestSummary: expect.stringContaining('What the customer wants: Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestSummary: expect.stringContaining('Customer asked for a premium package quote and wants a callback tomorrow.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
             customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary',
         });
 
@@ -385,6 +625,77 @@ describe('chatbotEngineRuntimeActionService', () => {
             leadId: 'lead-1',
             marketingConsent: true,
             idempotencyKey: 'email-follow-up-key-1',
+        });
+        expect(duplicate.duplicate).toBe(true);
+        expect(client.tables.email_logs).toHaveLength(1);
+    });
+
+    it('records authenticated internal alert drafts without sending email automatically', async () => {
+        const client = createClient({
+            email_logs: [],
+        });
+
+        const result = await sendChatbotInternalAlert({
+            supabase: client,
+            ...scope,
+            recipientEmail: 'TEAM@EXAMPLE.COM',
+            recipientName: 'Team Ops',
+            subject: 'Lead needs review',
+            message: 'Visitor asked for enterprise pricing and wants a call today.',
+            priority: 'high',
+            alertType: 'lead_attention',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            idempotencyKey: 'internal-alert-key-1',
+            sourceSurface: 'admin_preview',
+            sourceModule: 'chatbot-engine-dashboard',
+        });
+
+        expect(result).toMatchObject({
+            recipientEmail: 'team@example.com',
+            duplicate: false,
+            status: 'skipped',
+            reviewRequired: true,
+            noEmailSent: true,
+        });
+        expect(client.tables.email_logs[0]).toMatchObject({
+            project_id: 'project-1',
+            type: 'chatbot_internal_alert',
+            email_kind: 'transactional',
+            recipient_email: 'team@example.com',
+            recipient_name: 'Team Ops',
+            subject: 'Lead needs review',
+            status: 'skipped',
+            skipped_reason: 'needs_review:chatbot_engine_internal_alert',
+            idempotency_key: 'internal-alert-key-1',
+            source_module: 'chatcore',
+            source_component: 'chatbot-engine-dashboard',
+            source_entity_type: 'lead',
+            source_entity_id: 'lead-1',
+            sent_at: null,
+        });
+        expect(client.tables.email_logs[0].metadata).toMatchObject({
+            canonicalEmailIntent: true,
+            needsReview: true,
+            sendMode: 'draft_only',
+            noEmailSent: true,
+            chatbotEngine: true,
+            actionType: 'send_internal_alert',
+            alertType: 'lead_attention',
+            priority: 'high',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            message: 'Visitor asked for enterprise pricing and wants a call today.',
+            customerRequestSummary: expect.stringContaining('Visitor asked for enterprise pricing and wants a call today.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
+        });
+
+        const duplicate = await sendChatbotInternalAlert({
+            supabase: client,
+            ...scope,
+            recipientEmail: 'team@example.com',
+            message: 'Different message should not create a second draft with same key.',
+            idempotencyKey: 'internal-alert-key-1',
         });
         expect(duplicate.duplicate).toBe(true);
         expect(client.tables.email_logs).toHaveLength(1);
@@ -434,9 +745,10 @@ describe('chatbotEngineRuntimeActionService', () => {
             source_entity_id: 'lead-1',
             idempotency_key: 'finance-quote-key-1',
         });
-        expect(client.tables.accounting_invoices[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(client.tables.accounting_invoices[0].notes).toContain('Lo que desea el cliente / What the customer wants: Formal quote for a consultation package.');
-        expect(client.tables.accounting_invoices[0].notes).toContain('Accion recomendada / Recommended action: ES: Revisar totales, impuestos y terminos antes de enviar o crear pago en Stripe.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.accounting_invoices[0].notes).toContain('ES: El cliente Lead Contact, lead@example.com quiere: Formal quote for a consultation package.');
+        expect(client.tables.accounting_invoices[0].notes).toContain('Próximo paso sugerido: ES: Revisar totales, impuestos y terminos antes de enviar o crear pago en Stripe.');
+        expect(client.tables.accounting_invoices[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.accounting_invoices[0].metadata).toMatchObject({
             chatbotEngine: true,
             financeQuoteRequest: true,
@@ -448,8 +760,9 @@ describe('chatbotEngineRuntimeActionService', () => {
             ledgerEntryCreated: false,
             leadId: 'lead-1',
             conversationId: 'conversation-1',
-            customerRequestSummary: expect.stringContaining('What the customer wants: Formal quote for a consultation package.'),
-            customerRequestSummaryTarget: 'accounting_invoices.notes',
+            customerRequestSummary: expect.stringContaining('Formal quote for a consultation package.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
+            customerRequestSummaryTarget: 'accounting_invoices.metadata.customerRequestSummary,accounting_invoices.notes',
         });
 
         const duplicate = await createChatbotFinanceQuoteRequest({
@@ -461,6 +774,87 @@ describe('chatbotEngineRuntimeActionService', () => {
         });
         expect(duplicate.duplicate).toBe(true);
         expect(client.tables.accounting_invoices).toHaveLength(1);
+    });
+
+    it('creates Media AI draft assets without generating or publishing', async () => {
+        const client = createClient({
+            media_assets: [],
+        });
+
+        const result = await requestChatbotMediaAssetDraft({
+            supabase: client,
+            ...scope,
+            prompt: 'Hero visual for a premium launch campaign.',
+            title: 'Premium campaign hero',
+            category: 'hero',
+            aspectRatio: '16:9',
+            style: 'Editorial product photography',
+            model: 'review-later',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            idempotencyKey: 'media-draft-key-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            now: new Date('2026-06-26T10:00:00.000Z'),
+        });
+
+        expect(result).toMatchObject({
+            duplicate: false,
+            reviewRequired: true,
+            generationStarted: false,
+            noAutoPublish: true,
+        });
+        expect(client.tables.media_assets[0]).toMatchObject({
+            name: 'Premium campaign hero',
+            type: 'image/svg+xml',
+            category: 'hero',
+            is_ai_generated: true,
+            ai_prompt: 'Hero visual for a premium launch campaign.',
+            is_system_asset: false,
+            usage_count: 0,
+            created_by: null,
+        });
+        expect(client.tables.media_assets[0].url).toContain('data:image/svg+xml');
+        expect(client.tables.media_assets[0].description).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.media_assets[0].description).toContain('Hero visual for a premium launch campaign.');
+        expect(client.tables.media_assets[0].metadata).toMatchObject({
+            projectId: 'project-1',
+            tenantId: 'tenant-1',
+            chatbotEngine: true,
+            actionType: 'request_media_asset',
+            sourceEvent: 'chatbot_media_asset_requested',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            generationStatus: 'draft_prompt',
+            generationMode: 'draft_prompt',
+            aspectRatio: '16:9',
+            style: 'Editorial product photography',
+            model: 'review-later',
+            generatedByAI: true,
+            needsReview: true,
+            readyForMediaAI: true,
+            noAutoPublish: true,
+            generationStarted: false,
+            providerJobCreated: false,
+            attachedToSurface: false,
+            published: false,
+            customerRequestSummary: expect.stringContaining('Hero visual for a premium launch campaign.'),
+            customerRequestNote: expect.stringContaining('Follow-up summary'),
+            customerRequestSummaryTarget: 'media_assets.metadata.customerRequestSummary,media_assets.description',
+            idempotencyKey: 'media-draft-key-1',
+        });
+
+        const duplicate = await requestChatbotMediaAssetDraft({
+            supabase: client,
+            ...scope,
+            prompt: 'Hero visual for a premium launch campaign.',
+            idempotencyKey: 'media-draft-key-1',
+        });
+
+        expect(duplicate.duplicate).toBe(true);
+        expect(client.tables.media_assets).toHaveLength(1);
     });
 
     it('blocks chatbot email follow-up drafts without marketing consent', async () => {
@@ -618,9 +1012,11 @@ describe('chatbotEngineRuntimeActionService', () => {
             sourceConversationId: 'conversation-1',
             actionType: 'create_product_inquiry',
         });
-        expect(client.tables.leads[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(client.tables.leads[0].notes).toContain('Lo que desea el cliente / What the customer wants: Is this safe for sensitive skin?');
-        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Ecommerce product inquiry for Radiant Serum');
+        expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(client.tables.leads[0].notes).toContain('ES: El cliente Marta Cruz, marta@example.com quiere: Is this safe for sensitive skin?');
+        expect(client.tables.leads[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Is this safe for sensitive skin?');
+        expect(client.tables.leads[0].custom_data.customerRequestNote).toContain('Follow-up summary');
     });
 
     it('explains shipping and returns only from configured ecommerce settings', async () => {
@@ -771,14 +1167,16 @@ describe('chatbotEngineRuntimeActionService', () => {
             email: 'buyer@example.com',
             value: 48,
         });
-        expect(client.tables.leads[0].notes).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(client.tables.leads[0].notes).toContain('Resumen de seguimiento / Follow-up summary');
         expect(client.tables.leads[0].notes).toContain('Wants to be notified when Radiant Serum is back in stock');
+        expect(client.tables.leads[0].notes).not.toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(client.tables.leads[0].custom_data).toMatchObject({
             actionType: 'back_in_stock_request',
             productId: 'product-1',
             stockNotificationId: 'store_stock_notifications_1',
         });
-        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Back-in-stock request for Radiant Serum');
+        expect(client.tables.leads[0].custom_data.customerRequestSummary).toContain('Radiant Serum');
+        expect(client.tables.leads[0].custom_data.customerRequestNote).toContain('Follow-up summary');
     });
 
     it('returns order status only after customer email verification', async () => {

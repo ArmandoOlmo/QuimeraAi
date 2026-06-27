@@ -17,6 +17,11 @@ import type { MediaCategory } from '../../types/media';
 import type { VideoFrameType } from '../../types/videoGeneration';
 import { useSafeMedia } from '../../contexts/media';
 import { useSafeFiles } from '../../contexts/files';
+import {
+    MEDIA_GENERATOR_LAUNCH_EVENT,
+    consumeMediaGeneratorLaunchRequest,
+    readMediaGeneratorLaunchEvent,
+} from '../../utils/mediaGeneratorLaunch';
 
 export interface VideoGenerationSectionProps {
     destination: 'user' | 'global' | 'admin';
@@ -101,6 +106,30 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
     useEffect(() => {
         if (initialEndFrame) setEndFrame(initialEndFrame);
     }, [initialEndFrame]);
+
+    useEffect(() => {
+        const runLaunchRequest = (request: ReturnType<typeof readMediaGeneratorLaunchEvent>) => {
+            if (!request || request.mode !== 'video') return;
+            if (request.projectId && (!projectId || request.projectId !== projectId)) return;
+
+            setPrompt(request.prompt);
+            if (request.options?.aspectRatio) {
+                setAspectRatio(request.options.aspectRatio);
+            }
+            if (request.options?.resolution) {
+                setResolution(request.options.resolution);
+            }
+        };
+
+        runLaunchRequest(consumeMediaGeneratorLaunchRequest('video', projectId));
+
+        const handleLaunchEvent = (event: Event) => {
+            runLaunchRequest(readMediaGeneratorLaunchEvent(event));
+        };
+
+        window.addEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleLaunchEvent);
+        return () => window.removeEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleLaunchEvent);
+    }, [projectId]);
 
     useEffect(() => {
         if (selectedModelId) return;

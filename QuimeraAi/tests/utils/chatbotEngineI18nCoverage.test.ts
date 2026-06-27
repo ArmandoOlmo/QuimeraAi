@@ -98,6 +98,7 @@ const requiredActionTypes = [
     'subscribe_email_audience',
     'queue_email_follow_up',
     'create_finance_quote_request',
+    'request_media_asset',
     'send_internal_alert',
     'handoff_to_human',
     'create_support_ticket',
@@ -152,7 +153,17 @@ const requiredKnowledgeTypes = [
     'faq',
 ];
 
+const requiredFieldKeys = [
+    'appearanceStatus',
+    'projectTokens',
+    'brandColors',
+    'visualIdentity',
+    'designStarAligned',
+    'designStarReview',
+];
+
 const requiredGroups: Record<string, string[]> = {
+    fields: requiredFieldKeys,
     actionTypes: requiredActionTypes,
     ownerModules: requiredOwnerModules,
     knowledgeTypes: requiredKnowledgeTypes,
@@ -167,12 +178,15 @@ const requiredGroups: Record<string, string[]> = {
         'chatbot_message_saved',
         'chatbot_conversation_created',
         'chatbot_conversation_reused',
+        'chatbot_participant_updated',
+        'chatbot_conversation_closed',
         'chatbot_conversation_linked_to_lead',
         'chatbot_handoff_requested',
         'chatbot_handoff_assigned',
         'chatbot_handoff_resolved',
         'chatbot_test_lab_run',
         'chatbot_finance_quote_request_created',
+        'chatbot_media_asset_requested',
         'chatbot_restaurant_reservation_requested',
         'chatbot_realty_showing_requested',
         'chatbot_ecommerce_product_inquiry',

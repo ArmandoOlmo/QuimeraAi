@@ -342,6 +342,13 @@ describe('globalAssistantSupabaseStore', () => {
         const fake = new FakeSupabase();
         const tasks = new SupabaseGlobalAssistantTaskRepository(fake as any);
         const audit = new SupabaseGlobalAssistantAuditRepository(fake as any);
+        const cancelledAction: AssistantAction = {
+            ...action,
+            id: 'asst_action_cancelled_1',
+            status: 'cancelled',
+            metadata: { safetyLevel: 'high', lifecycle: 'cancelled' },
+            updatedAt: '2026-06-26T12:00:04.000Z',
+        };
         const runtimeEvent: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'> = {
             type: 'assistant_request_started',
             userId: memory.userId,
@@ -350,18 +357,45 @@ describe('globalAssistantSupabaseStore', () => {
             taskId: task.id,
             metadata: { request: task.request },
         };
+        const cancelledEvent: Omit<AssistantRuntimeEvent, 'id' | 'createdAt'> = {
+            type: 'assistant_action_cancelled',
+            userId: memory.userId,
+            tenantId: memory.tenantId,
+            projectId: memory.projectId,
+            taskId: task.id,
+            actionId: cancelledAction.id,
+            metadata: { lifecycle: 'cancelled', actionIds: [cancelledAction.id] },
+        };
 
         expect(toAssistantTaskRow(task)).toMatchObject({ project_id: memory.projectId, draft_changes: null });
         expect(toAssistantActionRow(action)).toMatchObject({ action_type: 'create_email_campaign', requires_confirmation: true });
+        expect(toAssistantActionRow(cancelledAction)).toMatchObject({
+            id: cancelledAction.id,
+            status: 'cancelled',
+            metadata: { lifecycle: 'cancelled' },
+        });
         expect(toAssistantRuntimeEventRow(runtimeEvent)).toMatchObject({ type: 'assistant_request_started', task_id: task.id });
+        expect(toAssistantRuntimeEventRow(cancelledEvent)).toMatchObject({
+            type: 'assistant_action_cancelled',
+            action_id: cancelledAction.id,
+        });
 
         await tasks.upsertTask(task);
         await audit.recordAction(action);
+        await audit.recordAction(cancelledAction);
         await audit.recordRollbackSnapshot(rollbackSnapshot);
         await audit.recordEvent(runtimeEvent);
+        await audit.recordEvent(cancelledEvent);
 
         expect(await tasks.getTask(task.id)).toMatchObject({ id: task.id, status: 'waiting_for_confirmation' });
-        expect(await audit.listActionLogs({ projectId: memory.projectId })).toHaveLength(1);
+        expect(await audit.listActionLogs({ projectId: memory.projectId })).toHaveLength(2);
+        expect(await audit.listActionLogs({ projectId: memory.projectId, status: 'cancelled' })).toEqual([
+            expect.objectContaining({
+                id: cancelledAction.id,
+                status: 'cancelled',
+                metadata: expect.objectContaining({ lifecycle: 'cancelled' }),
+            }),
+        ]);
         expect(fromAssistantActionRowRollbackSnapshot(fake.tables.assistant_actions[0])).toMatchObject({
             actionId: action.id,
             beforeSnapshot: rollbackSnapshot.beforeSnapshot,
@@ -371,7 +405,14 @@ describe('globalAssistantSupabaseStore', () => {
             id: rollbackSnapshot.id,
             afterSnapshot: rollbackSnapshot.afterSnapshot,
         });
-        expect(await audit.listEvents({ taskId: task.id })).toHaveLength(1);
+        expect(await audit.listEvents({ taskId: task.id })).toHaveLength(2);
+        expect(await audit.listEvents({ taskId: task.id })).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                type: 'assistant_action_cancelled',
+                actionId: cancelledAction.id,
+                metadata: expect.objectContaining({ lifecycle: 'cancelled' }),
+            }),
+        ]));
     });
 
     it('persists runtime snapshots, tasks, action logs, and events through one adapter', async () => {

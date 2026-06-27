@@ -95,6 +95,7 @@ import { renderCtaNeonControls } from './sections/renderCtaNeonControls';
 import { renderPortfolioNeonControls } from './sections/renderPortfolioNeonControls';
 import { renderPricingNeonControls } from './sections/renderPricingNeonControls';
 import { renderFaqNeonControls } from './sections/renderFaqNeonControls';
+import { normalizeEditorControlData } from './normalizeControlData';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 const Controls: React.FC = () => {
@@ -121,7 +122,10 @@ const Controls: React.FC = () => {
   // CRITICAL: Use EditorContext data as source of truth for the editor preview.
   // The LandingPage reads from editorContext.data when in editor mode, so we
   // must read AND write from it. We also sync to ProjectContext for persistence.
-  const data = editorContext.data ?? projectData;
+  const data = useMemo(
+    () => normalizeEditorControlData(editorContext.data ?? projectData),
+    [editorContext.data, projectData]
+  );
   const setData: React.Dispatch<React.SetStateAction<any>> = (updater: any) => {
     setProjectData(updater);
     editorContext.setData(updater);

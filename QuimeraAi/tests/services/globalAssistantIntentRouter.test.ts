@@ -266,6 +266,38 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes explicit Media AI image and video work to specialized actions', () => {
+        expect(routeAssistantIntent('Genera una imagen para el hero de Casa Luna', context)).toMatchObject({
+            module: 'media',
+            intent: 'generate_image',
+            actionCandidates: ['generate_image'],
+        });
+
+        expect(routeAssistantIntent('Crea un video para redes sociales con una imagen de referencia', context)).toMatchObject({
+            module: 'media',
+            intent: 'generate_video',
+            actionCandidates: ['generate_video'],
+        });
+
+        expect(routeAssistantIntent('Crea un borrador revisado de video en Media AI o un prompt de generacion de video para el proyecto activo.', context)).toMatchObject({
+            module: 'media',
+            intent: 'generate_video',
+            actionCandidates: ['generate_video'],
+        });
+
+        expect(routeAssistantIntent('Crear video: para Instagram con mi producto', context)).toMatchObject({
+            module: 'media',
+            intent: 'generate_video',
+            actionCandidates: ['generate_video'],
+        });
+
+        expect(routeAssistantIntent('Edita una imagen existente para la campaña', context)).toMatchObject({
+            module: 'media',
+            intent: 'edit',
+            actionCandidates: ['edit_image'],
+        });
+    });
+
     it('routes generic Media AI asset creation to the draft asset action', () => {
         expect(routeAssistantIntent('Crea un asset visual para la campana de Casa Luna', context)).toMatchObject({
             module: 'media',
@@ -396,6 +428,45 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('routes command-center module opens to safe navigation actions', () => {
+        expect(routeAssistantIntent('Abre Media AI', context)).toMatchObject({
+            module: 'media',
+            intent: 'open',
+            actionCandidates: ['open_media_library'],
+            safetyLevel: 'low',
+        });
+
+        expect(routeAssistantIntent('Abre leads de Casa Luna', context)).toMatchObject({
+            module: 'crm',
+            intent: 'open',
+            actionCandidates: ['open_leads_dashboard'],
+        });
+
+        expect(routeAssistantIntent('Abre Bio Page', context)).toMatchObject({
+            module: 'bioPage',
+            intent: 'open',
+            actionCandidates: ['open_bio_page_builder'],
+        });
+
+        expect(routeAssistantIntent('Abre finance', context)).toMatchObject({
+            module: 'finance',
+            intent: 'open',
+            actionCandidates: ['open_finance_dashboard'],
+        });
+
+        expect(routeAssistantIntent('Abre restaurantes', context)).toMatchObject({
+            module: 'restaurants',
+            intent: 'open',
+            actionCandidates: ['open_restaurants_dashboard'],
+        });
+
+        expect(routeAssistantIntent('Abre realty', context)).toMatchObject({
+            module: 'realEstate',
+            intent: 'open',
+            actionCandidates: ['open_realty_dashboard'],
+        });
+    });
+
     it('routes analytics summaries, blockers, reports, and exports to explicit read actions', () => {
         expect(routeAssistantIntent('Revisa analytics del proyecto', context)).toMatchObject({
             module: 'analytics',
@@ -442,6 +513,17 @@ describe('globalAssistantIntentRouter', () => {
             module: 'ecommerce',
             intent: 'open',
             actionCandidates: ['switch_project', 'open_orders'],
+            projectResolution: {
+                projectId: 'project-2',
+                requiresProjectSwitch: true,
+                ambiguous: false,
+            },
+        });
+
+        expect(routeAssistantIntent('Abre Bio Page de Ocean Clinic', context)).toMatchObject({
+            module: 'bioPage',
+            intent: 'open',
+            actionCandidates: ['switch_project', 'open_bio_page_builder'],
             projectResolution: {
                 projectId: 'project-2',
                 requiresProjectSwitch: true,

@@ -5,6 +5,12 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { SocialConversation, SocialMessage } from '../../../types/socialChat';
+import { recordChatbotEvent } from '../../../services/chatbot/chatbotEngineService';
+import {
+    buildDirectConversationAuditIdempotencyKey,
+    buildDirectConversationAuditMetadata,
+    buildDirectParticipantUpdateAuditIdempotencyKey,
+} from '../../../utils/chatbotEngine/directConversationAudit';
 import { buildChatbotMessageIntentMetadata } from '../../../utils/chatbotEngine/messageIntentMetadata';
 import type { ChatbotEngineSurfaceContext } from '../../../utils/chatbotEngine/surfaceContext';
 
@@ -100,6 +106,54 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
         },
     }), [sourceSurface, sourceModule, chatbotEngineContext]);
 
+    const buildDirectAuditIdempotencyKey = useCallback(
+        (parts: Array<string | number | boolean | null | undefined>) => buildDirectConversationAuditIdempotencyKey(projectId, parts),
+        [projectId],
+    );
+
+    const recordDirectAuditEvent = useCallback(async (input: {
+        eventType: string;
+        actionType?: string;
+        actionStatus?: 'observed' | 'executed' | 'failed' | 'duplicate';
+        conversationId?: string | null;
+        messageId?: string | null;
+        leadId?: string | null;
+        actorType?: 'visitor' | 'project_user' | 'system' | 'anonymous';
+        idempotencyKey?: string | null;
+        metadata?: Record<string, unknown>;
+    }) => {
+        if (!shouldPersistToDatabase || !projectId) return;
+
+        try {
+            const result = await recordChatbotEvent({
+                projectId,
+                eventType: input.eventType,
+                actionType: input.actionType as any,
+                actionStatus: input.actionStatus || 'observed',
+                sourceSurface,
+                sourceModule,
+                conversationId: input.conversationId || undefined,
+                messageId: input.messageId || undefined,
+                leadId: input.leadId || undefined,
+                actorType: input.actorType || 'project_user',
+                actorId: userId,
+                idempotencyKey: input.idempotencyKey || undefined,
+                metadata: buildDirectConversationAuditMetadata({
+                    sessionId: sessionIdRef.current,
+                    sourceSurface,
+                    sourceModule,
+                    chatbotEngineContext,
+                    metadata: input.metadata,
+                }),
+            });
+            if (result.warning) {
+                console.warn('[useWebChatConversation] Chatbot Engine audit warning:', result.warning);
+            }
+        } catch (auditError) {
+            console.warn('[useWebChatConversation] Chatbot Engine audit event skipped:', auditError);
+        }
+    }, [chatbotEngineContext, projectId, shouldPersistToDatabase, sourceModule, sourceSurface, userId]);
+
     // ==========================================================================
     // CREATE OR GET CONVERSATION
     // ==========================================================================
@@ -167,9 +221,20 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             
             if (!existingSnapshot.empty) {
                 const existingId = existingSnapshot.docs[0].id;
+                const existingData = existingSnapshot.docs[0].data();
                 conversationIdRef.current = existingId;
                 setConversationId(existingId);
-                messageCountRef.current = existingSnapshot.docs[0].data().messageCount || 0;
+                messageCountRef.current = existingData.messageCount || 0;
+                await recordDirectAuditEvent({
+                    eventType: 'chatbot_conversation_reused',
+                    actionType: 'save_conversation',
+                    conversationId: existingId,
+                    actorType: 'project_user',
+                    idempotencyKey: buildDirectAuditIdempotencyKey(['conversation-reused', sessionIdRef.current]),
+                    metadata: {
+                        messageCount: messageCountRef.current,
+                    },
+                });
                 setIsLoading(false);
                 return existingId;
             }
@@ -208,6 +273,16 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             conversationIdRef.current = docRef.id;
             setConversationId(docRef.id);
             messageCountRef.current = 0;
+            await recordDirectAuditEvent({
+                eventType: 'chatbot_conversation_created',
+                actionType: 'save_conversation',
+                conversationId: docRef.id,
+                actorType: 'project_user',
+                idempotencyKey: buildDirectAuditIdempotencyKey(['conversation-created', sessionIdRef.current]),
+                metadata: {
+                    participantCaptured: Boolean(participantInfo?.name || participantInfo?.email || participantInfo?.phone),
+                },
+            });
             
             console.log('[useWebChatConversation] Created new conversation:', docRef.id);
             setIsLoading(false);
@@ -218,7 +293,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             setIsLoading(false);
             return null;
         }
-    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext, buildDirectAuditIdempotencyKey, recordDirectAuditEvent]);
 
     // ==========================================================================
     // SAVE MESSAGE
@@ -300,7 +375,7 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
 
             // Save message to socialMessages collection
             const messagesRef = collection(db, 'socialMessages');
-            await addDoc(messagesRef, messageData);
+            const messageRef = await addDoc(messagesRef, messageData);
 
             // Update conversation's lastMessageAt and messageCount
             messageCountRef.current += 1;
@@ -313,12 +388,45 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
                 ...(intentMetadata.conversationTags ? { tags: intentMetadata.conversationTags } : {}),
             });
 
+            await recordDirectAuditEvent({
+                eventType: 'chatbot_message_saved',
+                actionType: 'save_message',
+                actionStatus: 'observed',
+                conversationId: targetConvId,
+                messageId: messageRef.id,
+                actorType: message.role === 'user' ? 'visitor' : 'system',
+                idempotencyKey: buildDirectAuditIdempotencyKey(['message', messageRef.id]),
+                metadata: {
+                    role: message.role,
+                    direction: message.role === 'user' ? 'inbound' : 'outbound',
+                    messageLength: message.text.length,
+                    isVoiceMessage: message.isVoiceMessage === true,
+                    intent: intentMetadata.intent,
+                },
+            });
+
+            if (intentMetadata.intent) {
+                await recordDirectAuditEvent({
+                    eventType: 'chatbot_intent_analyzed',
+                    actionType: 'analyze_intent',
+                    actionStatus: 'observed',
+                    conversationId: targetConvId,
+                    messageId: messageRef.id,
+                    actorType: message.role === 'user' ? 'visitor' : 'system',
+                    idempotencyKey: buildDirectAuditIdempotencyKey(['intent', targetConvId, messageRef.id, intentMetadata.intent.primaryIntent]),
+                    metadata: {
+                        intent: intentMetadata.intent,
+                        customerRequestSignal: true,
+                    },
+                });
+            }
+
             return true;
         } catch (err: any) {
             console.error('[useWebChatConversation] Error saving message:', err);
             return false;
         }
-    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext]);
+    }, [projectId, conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, sourceSurface, sourceModule, chatbotEngineContext, buildDirectAuditIdempotencyKey, recordDirectAuditEvent]);
 
     // ==========================================================================
     // UPDATE PARTICIPANT INFO
@@ -354,13 +462,30 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             if (info.phone) updates.participantPhone = info.phone;
 
             await updateDoc(conversationRef, updates);
+            await recordDirectAuditEvent({
+                eventType: 'chatbot_participant_updated',
+                actionType: 'save_conversation',
+                conversationId: targetConvId,
+                actorType: 'project_user',
+                idempotencyKey: buildDirectParticipantUpdateAuditIdempotencyKey(projectId, {
+                    conversationId: targetConvId,
+                    name: info.name,
+                    email: info.email,
+                    phone: info.phone,
+                }),
+                metadata: {
+                    participantUpdated: Boolean(info.name || info.email || info.phone),
+                    hasEmail: Boolean(info.email),
+                    hasPhone: Boolean(info.phone),
+                },
+            });
             console.log('[useWebChatConversation] Updated participant info');
             return true;
         } catch (err: any) {
             console.error('[useWebChatConversation] Error updating participant:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, buildDirectAuditIdempotencyKey, recordDirectAuditEvent]);
 
     // ==========================================================================
     // CLOSE CONVERSATION
@@ -390,13 +515,23 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             await updateDoc(conversationRef, {
                 status: 'closed',
             });
+            await recordDirectAuditEvent({
+                eventType: 'chatbot_conversation_closed',
+                actionType: 'save_conversation',
+                conversationId: targetConvId,
+                actorType: 'project_user',
+                idempotencyKey: buildDirectAuditIdempotencyKey(['conversation-closed', targetConvId]),
+                metadata: {
+                    status: 'closed',
+                },
+            });
             console.log('[useWebChatConversation] Closed conversation');
             return true;
         } catch (err: any) {
             console.error('[useWebChatConversation] Error closing conversation:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, buildDirectAuditIdempotencyKey, recordDirectAuditEvent]);
 
     // ==========================================================================
     // LINK TO LEAD
@@ -426,13 +561,24 @@ export const useWebChatConversation = (projectId: string, userId?: string, optio
             await updateDoc(conversationRef, {
                 leadId,
             });
+            await recordDirectAuditEvent({
+                eventType: 'chatbot_conversation_linked_to_lead',
+                actionType: 'link_conversation_to_lead',
+                conversationId: targetConvId,
+                leadId,
+                actorType: 'project_user',
+                idempotencyKey: buildDirectAuditIdempotencyKey(['lead-link', targetConvId, leadId]),
+                metadata: {
+                    leadLinked: true,
+                },
+            });
             console.log('[useWebChatConversation] Linked to lead:', leadId);
             return true;
         } catch (err: any) {
             console.error('[useWebChatConversation] Error linking to lead:', err);
             return false;
         }
-    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload]);
+    }, [conversationId, shouldPersist, shouldPersistViaApi, callWidgetApi, getDataHelpers, buildContextPayload, buildDirectAuditIdempotencyKey, recordDirectAuditEvent]);
 
     // ==========================================================================
     // SAVE FULL TRANSCRIPT

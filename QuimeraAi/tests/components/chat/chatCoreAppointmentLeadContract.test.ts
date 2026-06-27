@@ -32,6 +32,29 @@ describe('ChatCore appointment lead contract', () => {
         });
     });
 
+    it('keeps ChatbotWidget appointment writes on the canonical Widget API and waits for a real leadId', () => {
+        const source = readSource('components/ChatbotWidget.tsx');
+
+        expect(source).not.toContain('createAppointmentFromChat');
+        expect(source).toContain('canonical Widget API appointment capture');
+        expect(source).toContain('fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(widgetApiProjectId)}/appointments`');
+        expect(source).toContain('if (data.leadId) {');
+        expect(source).toContain('Appointment saved but CRM leadId was not returned.');
+        expect(source).not.toContain('data.leadId || appointmentData.participantName || appointmentData.participantEmail');
+    });
+
+    it('gates live voice sessions through the canonical Widget API before starting the provider', () => {
+        const source = readSource('components/chat/ChatCore.tsx');
+
+        expect(source).toContain('type ChatCoreVoiceSessionResponse');
+        expect(source).toContain('const requestCanonicalVoiceSession = async');
+        expect(source).toContain('/voice/session');
+        expect(source).toContain('const canonicalSession = await requestCanonicalVoiceSession(sessionId)');
+        expect(source).toContain('if (canonicalSession?.agentId)');
+        expect(source).toContain('const session = await Conversation.startSession({');
+        expect(source).toContain('agentId,');
+    });
+
     it('wires public direct ChatCore hosts through surface context and deployment guards', () => {
         const embedWidget = readSource('components/chat/EmbedWidget.tsx');
         expect(embedWidget).toContain('buildChatbotEngineSurfaceContext');

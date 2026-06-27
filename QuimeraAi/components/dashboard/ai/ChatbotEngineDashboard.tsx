@@ -1133,6 +1133,7 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.ecommerceEvents')} value={runtimeSnapshot.analytics.ecommerceEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.emailMarketingEvents')} value={runtimeSnapshot.analytics.emailMarketingEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.financeEvents')} value={runtimeSnapshot.analytics.financeEvents} />
+                        <MetricTile label={t('aiAssistant.chatbotEngine.metrics.mediaEvents')} value={runtimeSnapshot.analytics.mediaEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.restaurantEvents')} value={runtimeSnapshot.analytics.restaurantEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.realtyEvents')} value={runtimeSnapshot.analytics.realtyEvents} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.metrics.voiceEvents')} value={runtimeSnapshot.analytics.voiceEvents} />
@@ -1309,6 +1310,26 @@ const ChatbotEngineDashboard: React.FC<ChatbotEngineDashboardProps> = ({
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                         <MetricTile label={t('aiAssistant.chatbotEngine.fields.agent')} value={summary.agentName || '-'} />
                         <MetricTile label={t('aiAssistant.chatbotEngine.fields.languages')} value={summary.supportedLanguages.join(', ') || '-'} />
+                        <MetricTile
+                            label={t('aiAssistant.chatbotEngine.fields.appearanceStatus')}
+                            value={<ReadinessPill status={summary.appearance.status} label={statusLabel(summary.appearance.status)} />}
+                            hint={summary.appearance.source}
+                        />
+                        <MetricTile
+                            label={t('aiAssistant.chatbotEngine.fields.projectTokens')}
+                            value={summary.appearance.usesProjectTokens ? t('aiAssistant.chatbotEngine.configured') : t('aiAssistant.chatbotEngine.notConfigured')}
+                            hint={summary.appearance.designSystemSource}
+                        />
+                        <MetricTile
+                            label={t('aiAssistant.chatbotEngine.fields.brandColors')}
+                            value={summary.appearance.brandColorCount}
+                            hint={[summary.appearance.primaryColor, summary.appearance.accentColor].filter(Boolean).join(' · ') || '-'}
+                        />
+                        <MetricTile
+                            label={t('aiAssistant.chatbotEngine.fields.visualIdentity')}
+                            value={summary.appearance.logoConfigured || summary.appearance.avatarConfigured ? t('aiAssistant.chatbotEngine.configured') : t('aiAssistant.chatbotEngine.notConfigured')}
+                            hint={summary.appearance.designStarAligned ? t('aiAssistant.chatbotEngine.fields.designStarAligned') : t('aiAssistant.chatbotEngine.fields.designStarReview')}
+                        />
                         <MetricTile label={t('aiAssistant.chatbotEngine.fields.voiceProvider')} value={tokenLabel('voiceProviders', summary.deployment.voiceProvider)} />
                         <MetricTile
                             label={t('aiAssistant.chatbotEngine.fields.voiceAgent')}

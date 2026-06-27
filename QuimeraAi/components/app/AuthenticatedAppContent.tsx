@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
-import { useProject } from '../../contexts/project';
+import { useSafeProject } from '../../contexts/project';
 import { useSafeAdmin } from '../../contexts/admin';
 import { useSEO } from '../../hooks/useSEO';
 import GlobalSEO from '../GlobalSEO';
@@ -41,11 +41,17 @@ const AuthenticatedAppContent: React.FC<AuthenticatedAppContentProps> = ({
 }) => {
   const { userDocument } = useAuth();
   const { view, setView, setAdminView, isSidebarOpen, setIsSidebarOpen, previewRef } = useUI();
-  const { activeProjectId, loadProject, data, isLoadingProjects } = useProject();
+  const projectContext = useSafeProject();
+  const activeProjectId = projectContext?.activeProjectId ?? null;
+  const loadProject = projectContext?.loadProject;
+  const data = projectContext?.data ?? null;
+  const isLoadingProjects = projectContext?.isLoadingProjects ?? false;
   const seoConfig = useSEO();
   const loadingRouteProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!loadProject) return;
+
     if (routeView && routeView !== view) {
       setView(routeView);
     }
@@ -64,6 +70,10 @@ const AuthenticatedAppContent: React.FC<AuthenticatedAppContentProps> = ({
       loadingRouteProjectRef.current = null;
     }
   }, [routeView, routeAdminView, routeProjectId, view, activeProjectId, setView, setAdminView, loadProject, isLoadingProjects, data]);
+
+  if (!projectContext) {
+    return <MinimalLoader />;
+  }
 
   return (
     <>

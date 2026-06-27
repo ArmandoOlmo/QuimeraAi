@@ -161,6 +161,9 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         aspectRatio: stringSchema(undefined, ['1:1', '16:9', '9:16', '4:3', '3:4']),
         style: stringSchema(),
     }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
+    action('media', 'open_media_library', 'Open Media AI and the asset library without mutating data.', objectSchema({
+        projectId: stringSchema('Optional project context for the media library.'),
+    }), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
     action('media', 'attach_asset_to_section', 'Attach a media asset to a website or Bio Page section.', objectSchema({
         projectId: stringSchema(),
         module: stringSchema(),
@@ -243,6 +246,9 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('crm', 'summarize_leads', 'Summarize lead pipeline.', objectSchema({
         projectId: stringSchema(),
     }, ['projectId']), 'low', { mutatesData: false, requiredService: 'crm', previewSupported: false, rollbackSupported: false }),
+    action('crm', 'open_leads_dashboard', 'Open the Leads/CRM dashboard without mutating data.', objectSchema({
+        projectId: stringSchema(),
+    }, ['projectId']), 'low', { mutatesData: false, requiredService: 'crm', previewSupported: false, rollbackSupported: false }),
     action('crm', 'create_follow_up_task', 'Create a lead follow-up task.', objectSchema({
         projectId: stringSchema(),
         leadId: stringSchema(),
@@ -310,6 +316,9 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         projectId: stringSchema(),
         prompt: stringSchema(),
     }, ['projectId', 'prompt']), 'medium', { requiredService: 'restaurants' }),
+    action('restaurants', 'open_restaurants_dashboard', 'Open the Restaurants module without mutating data.', objectSchema({
+        projectId: stringSchema(),
+    }, ['projectId']), 'low', { mutatesData: false, requiredService: 'restaurants', previewSupported: false, rollbackSupported: false }),
 
     action('realEstate', 'create_listing', 'Create a real estate listing draft.', objectSchema({
         projectId: stringSchema(),
@@ -333,6 +342,9 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         projectId: stringSchema(),
         prompt: stringSchema(),
     }, ['projectId', 'prompt']), 'medium', { requiredService: 'realEstate', requiredFeature: 'realEstateModule' }),
+    action('realEstate', 'open_realty_dashboard', 'Open Quimera Realty Suite without mutating data.', objectSchema({
+        projectId: stringSchema(),
+    }, ['projectId']), 'low', { mutatesData: false, requiredService: 'realEstate', requiredFeature: 'realEstateModule', previewSupported: false, rollbackSupported: false }),
 
     action('bioPage', 'create_bio_page', 'Create Bio Page draft.', objectSchema({
         projectId: stringSchema(),
@@ -351,6 +363,9 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('bioPage', 'publish_bio_page', 'Publish Bio Page.', objectSchema({
         projectId: stringSchema(),
     }, ['projectId']), 'critical'),
+    action('bioPage', 'open_bio_page_builder', 'Open Bio Page Builder without mutating data.', objectSchema({
+        projectId: stringSchema(),
+    }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
 
     action('chatbot', 'open_chatbot_dashboard', 'Open ChatCore dashboard.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'chatbot', previewSupported: false, rollbackSupported: false }),
     action('chatbot', 'create_chatbot_knowledge', 'Create ChatCore knowledge draft.', objectSchema({
@@ -374,6 +389,13 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'identify_blockers', 'Identify readiness blockers.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
+    action('analytics', 'open_analytics_dashboard', 'Open the platform analytics dashboard without mutating data.', objectSchema({}), 'low', {
+        mutatesData: false,
+        requiredPermissions: ['assistant:admin:use'],
+        requiredService: 'analytics',
+        previewSupported: false,
+        rollbackSupported: false,
+    }),
     action('analytics', 'export_report', 'Export analytics report.', objectSchema({ projectId: stringSchema(), format: stringSchema(undefined, ['pdf', 'csv', 'json']) }, ['projectId']), 'medium', { mutatesData: false, requiredService: 'analytics', previewSupported: true, rollbackSupported: false }),
 
     action('finance', 'create_finance_record', 'Create a finance record draft.', objectSchema({
@@ -385,10 +407,16 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         recordId: stringSchema(),
         updates: objectSchema(),
     }, ['projectId', 'recordId', 'updates']), 'critical', { requiredService: 'finance' }),
+    action('finance', 'open_finance_dashboard', 'Open the Finance dashboard without mutating data.', objectSchema({
+        projectId: stringSchema('Optional project context for Finance.'),
+    }), 'low', { mutatesData: false, requiredService: 'finance', previewSupported: false, rollbackSupported: false }),
 
     action('admin', 'search_tenants', 'Search tenants in Owner/Super Admin mode.', objectSchema({
         query: stringSchema(),
     }, ['query']), 'low', { mutatesData: false, requiredPermissions: ['assistant:admin:use'], previewSupported: false, rollbackSupported: false }),
+    action('admin', 'open_super_admin', 'Open Super Admin / Owner Mode without mutating data.', objectSchema({
+        adminView: stringSchema('Optional Super Admin section to open.'),
+    }), 'low', { mutatesData: false, requiredPermissions: ['assistant:admin:use'], previewSupported: false, rollbackSupported: false }),
     action('admin', 'open_tenant', 'Open a tenant in Super Admin.', objectSchema({
         tenantId: stringSchema(),
     }, ['tenantId']), 'low', { mutatesData: false, requiredPermissions: ['assistant:admin:use'], previewSupported: false, rollbackSupported: false }),

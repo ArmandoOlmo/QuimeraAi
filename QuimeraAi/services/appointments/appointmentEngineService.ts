@@ -229,6 +229,126 @@ const buildInitialMeetingNotes = (
     }];
 };
 
+async function createOrLinkLeadForCanonicalAppointment(
+    client: SupabaseLike,
+    input: CanonicalAppointmentInput,
+    appointment: Appointment,
+    startIso: string,
+    appointmentNotes: string | undefined,
+    metadata: Record<string, unknown>,
+    tags: string[] | undefined,
+): Promise<{ appointment: Appointment; leadId?: string; warnings: string[] }> {
+    const warnings: string[] = [];
+    let nextAppointment = appointment;
+    let leadId = input.linkedLeadId || input.sourceLeadId || appointment.sourceLeadId || appointment.linkedLeadIds?.[0] || undefined;
+
+    if (input.createOrLinkLead === false) {
+        return { appointment: nextAppointment, leadId, warnings };
+    }
+
+    const primaryParticipant = appointment.participants?.[0];
+    const leadResult = await createOrLinkLeadForAppointment(client, {
+        tenantId: input.tenantId || appointment.tenantId,
+        projectId: input.projectId,
+        appointmentId: appointment.id,
+        appointmentTitle: appointment.title,
+        appointmentStartIso: startIso,
+        linkedLeadId: leadId,
+        participantName: input.participantName || primaryParticipant?.name,
+        participantEmail: input.participantEmail || primaryParticipant?.email,
+        participantPhone: input.participantPhone || primaryParticipant?.phone,
+        source: input.source || appointment.source,
+        sourceComponent: input.sourceComponent || appointment.sourceComponent,
+        sourceModule: input.sourceModule || appointment.sourceModule,
+        conversationTranscript: input.conversationTranscript,
+        idempotencyKey: input.idempotencyKey || appointment.idempotencyKey,
+        correlationId: appointment.correlationId,
+        createdBy: input.createdBy || appointment.createdBy,
+        tags: tags || appointment.tags,
+        notes: appointmentNotes || appointment.description,
+        metadata,
+    });
+    leadId = leadResult.leadId || leadId;
+    warnings.push(...leadResult.warnings);
+
+    const linkedLeadIds = nextAppointment.linkedLeadIds || [];
+    const needsLeadLink = Boolean(leadId && !linkedLeadIds.includes(leadId));
+    const nextParticipants = leadId
+        ? nextAppointment.participants?.map((participant, index) => (
+            index === 0 && participant.type === 'lead' && !participant.leadId
+                ? { ...participant, leadId }
+                : participant
+        ))
+        : nextAppointment.participants;
+    const needsParticipantLink = Boolean(
+        leadId
+        && nextParticipants
+        && JSON.stringify(nextParticipants) !== JSON.stringify(nextAppointment.participants),
+    );
+    const readableAppointmentNotes = buildReadableChatbotCustomerRequestNote(appointmentNotes, appointment.description, {
+        customer: {
+            name: input.participantName || primaryParticipant?.name || null,
+            email: input.participantEmail || primaryParticipant?.email || null,
+            phone: input.participantPhone || primaryParticipant?.phone || null,
+        },
+        appointmentTitle: input.title || appointment.title || null,
+        appointmentDateTime: startIso,
+    });
+    const hasReadableAppointmentNote = Boolean(readableAppointmentNotes) && (nextAppointment.notes || []).some(note => (
+        typeof note.content === 'string'
+        && (
+            note.content.includes('Resumen de seguimiento / Follow-up summary')
+            || note.content.includes(readableAppointmentNotes.slice(0, 160))
+        )
+    ));
+    const repairedAppointmentNotes = readableAppointmentNotes && !hasReadableAppointmentNote
+        ? [
+            ...(nextAppointment.notes || []).filter(note => !(
+                note.aiGenerated === true
+                && typeof note.content === 'string'
+                && note.content.includes('Resumen de solicitud del cliente / Customer request summary')
+            )),
+            ...buildInitialMeetingNotes(
+                input,
+                readableAppointmentNotes,
+                (input.source || appointment.source || 'dashboard') as AppointmentSource,
+            ),
+        ]
+        : undefined;
+
+    if ((leadId && (needsLeadLink || needsParticipantLink)) || repairedAppointmentNotes) {
+        const nextLeadIds = uniqueStrings(nextAppointment.linkedLeadIds, [leadId]);
+        const updated = await client
+            .from('project_appointments')
+            .update({
+                ...(leadId && needsLeadLink ? {
+                    linked_lead_ids: nextLeadIds,
+                    source_lead_id: nextAppointment.sourceLeadId || leadId,
+                } : {}),
+                ...(needsParticipantLink ? { participants: nextParticipants } : {}),
+                ...(repairedAppointmentNotes ? { notes: repairedAppointmentNotes } : {}),
+                metadata: {
+                    ...(nextAppointment.metadata || {}),
+                    ...metadata,
+                    ...(leadId ? { linkedLeadId: leadId } : {}),
+                    ...(readableAppointmentNotes ? { customerRequestNote: readableAppointmentNotes } : {}),
+                    leadPipelineWarnings: warnings,
+                },
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', appointment.id)
+            .select('*')
+            .single();
+        if (updated.error) {
+            warnings.push(`appointment_lead_link_failed:${updated.error.message}`);
+        } else {
+            nextAppointment = mapAppointmentRowToAppointment(updated.data);
+        }
+    }
+
+    return { appointment: nextAppointment, leadId, warnings };
+}
+
 const DEFAULT_WEEKLY_HOURS: AppointmentWeeklyHoursRule[] = [
     { day: 'monday', enabled: true, startTime: '09:00', endTime: '17:00' },
     { day: 'tuesday', enabled: true, startTime: '09:00', endTime: '17:00' },
@@ -528,6 +648,61 @@ export async function createAppointmentCanonical(
         throw Object.assign(new Error('Appointment endDate must be after startDate.'), { status: 400, code: 'invalid_range' });
     }
 
+    const resolveDuplicateAppointment = async (row: any): Promise<CanonicalAppointmentResult> => {
+        const appointment = mapAppointmentRowToAppointment(row);
+        const appointmentNotes = normalizeString(input.notes, 6000);
+        const readableAppointmentNotes = buildReadableChatbotCustomerRequestNote(
+            appointmentNotes || (typeof appointment.metadata?.customerRequestSummary === 'string' ? appointment.metadata.customerRequestSummary : undefined),
+            input.description || appointment.description,
+            {
+                customer: {
+                    name: input.participantName || appointment.participants?.[0]?.name || null,
+                    email: input.participantEmail || appointment.participants?.[0]?.email || null,
+                    phone: input.participantPhone || appointment.participants?.[0]?.phone || null,
+                },
+                appointmentTitle: input.title || appointment.title || null,
+                appointmentDateTime: startIso,
+            },
+        );
+        const metadata = {
+            ...(appointment.metadata || {}),
+            ...(input.metadata || {}),
+            source: appointment.source || input.source || 'dashboard',
+            sourceComponent: input.sourceComponent || appointment.sourceComponent,
+            sourceModule: input.sourceModule || appointment.sourceModule,
+            sourceConversationId: input.sourceConversationId || appointment.sourceConversationId,
+            sourceLeadId: input.sourceLeadId || input.linkedLeadId || appointment.sourceLeadId,
+            publicSubmissionId: input.publicSubmissionId || appointment.publicSubmissionId,
+            syncKey: input.syncKey || appointment.syncKey,
+            idempotencyKey: input.idempotencyKey,
+            correlationId: input.correlationId || appointment.correlationId,
+            locale: input.locale || (typeof appointment.metadata?.locale === 'string' ? appointment.metadata.locale : undefined),
+            conversationTranscript: normalizeString(input.conversationTranscript, 20000)
+                || (typeof appointment.metadata?.conversationTranscript === 'string' ? appointment.metadata.conversationTranscript : undefined),
+            customerRequestSummary: readableAppointmentNotes
+                || appointmentNotes
+                || (typeof appointment.metadata?.customerRequestSummary === 'string' ? appointment.metadata.customerRequestSummary : undefined),
+            customerRequestNote: readableAppointmentNotes,
+            ...(appointmentNotes && appointmentNotes !== readableAppointmentNotes ? { customerRequestGeneratedSummary: appointmentNotes } : {}),
+        };
+        const linked = await createOrLinkLeadForCanonicalAppointment(
+            client,
+            input,
+            appointment,
+            startIso,
+            appointmentNotes,
+            metadata,
+            uniqueStrings(input.tags, appointment.tags),
+        );
+        return {
+            appointment: linked.appointment,
+            appointmentId: linked.appointment.id,
+            leadId: linked.leadId,
+            duplicate: true,
+            warnings: linked.warnings,
+        };
+    };
+
     if (input.idempotencyKey) {
         const existing = await client
             .from('project_appointments')
@@ -537,8 +712,7 @@ export async function createAppointmentCanonical(
             .maybeSingle();
         if (existing.error) throw existing.error;
         if (existing.data) {
-            const appointment = mapAppointmentRowToAppointment(existing.data);
-            return { appointment, appointmentId: appointment.id, duplicate: true, warnings: [] };
+            return resolveDuplicateAppointment(existing.data);
         }
     }
 
@@ -566,6 +740,7 @@ export async function createAppointmentCanonical(
         appointmentDateTime: startIso,
     });
     const initialNotes = buildInitialMeetingNotes(input, readableAppointmentNotes, source);
+    const tags = uniqueStrings(input.tags, [source, input.sourceModule, input.sourceComponent]);
     const metadata = {
         ...(input.metadata || {}),
         source,
@@ -579,8 +754,9 @@ export async function createAppointmentCanonical(
         correlationId: input.correlationId,
         locale: input.locale,
         conversationTranscript: normalizeString(input.conversationTranscript, 20000),
-        customerRequestSummary: appointmentNotes,
+        customerRequestSummary: readableAppointmentNotes || appointmentNotes,
         customerRequestNote: readableAppointmentNotes,
+        ...(appointmentNotes && appointmentNotes !== readableAppointmentNotes ? { customerRequestGeneratedSummary: appointmentNotes } : {}),
     };
 
     const row = {
@@ -605,7 +781,7 @@ export async function createAppointmentCanonical(
         follow_up_actions: [],
         ai_prep_enabled: true,
         linked_lead_ids: linkedLeadIds,
-        tags: uniqueStrings(input.tags, [source, input.sourceModule, input.sourceComponent]),
+        tags,
         source,
         source_component: input.sourceComponent || null,
         source_module: input.sourceModule || null,
@@ -645,66 +821,25 @@ export async function createAppointmentCanonical(
                 .maybeSingle();
             if (existing.error) throw existing.error;
             if (existing.data) {
-                const appointment = mapAppointmentRowToAppointment(existing.data);
-                return { appointment, appointmentId: appointment.id, duplicate: true, warnings: [] };
+                return resolveDuplicateAppointment(existing.data);
             }
         }
         throw inserted.error;
     }
 
     let appointment = mapAppointmentRowToAppointment(inserted.data);
-    const warnings: string[] = [];
-    let leadId = input.linkedLeadId || input.sourceLeadId || undefined;
-
-    if (input.createOrLinkLead !== false) {
-        const leadResult = await createOrLinkLeadForAppointment(client, {
-            tenantId: input.tenantId,
-            projectId: input.projectId,
-            appointmentId: appointment.id,
-            appointmentTitle: appointment.title,
-            appointmentStartIso: startIso,
-            linkedLeadId: leadId,
-            participantName: input.participantName || appointment.participants?.[0]?.name,
-            participantEmail: input.participantEmail || appointment.participants?.[0]?.email,
-            participantPhone: input.participantPhone || appointment.participants?.[0]?.phone,
-            source,
-            sourceComponent: input.sourceComponent,
-            sourceModule: input.sourceModule,
-            conversationTranscript: input.conversationTranscript,
-            idempotencyKey: input.idempotencyKey,
-            correlationId: appointment.correlationId,
-            createdBy: input.createdBy,
-            tags: row.tags,
-            notes: appointmentNotes || appointment.description,
-            metadata,
-        });
-        leadId = leadResult.leadId || leadId;
-        warnings.push(...leadResult.warnings);
-
-        if (leadId && !appointment.linkedLeadIds?.includes(leadId)) {
-            const nextLeadIds = uniqueStrings(appointment.linkedLeadIds, [leadId]);
-            const updated = await client
-                .from('project_appointments')
-                .update({
-                    linked_lead_ids: nextLeadIds,
-                    source_lead_id: appointment.sourceLeadId || leadId,
-                    metadata: {
-                        ...(appointment.metadata || {}),
-                        linkedLeadId: leadId,
-                        leadPipelineWarnings: warnings,
-                    },
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', appointment.id)
-                .select('*')
-                .single();
-            if (updated.error) {
-                warnings.push(`appointment_lead_link_failed:${updated.error.message}`);
-            } else {
-                appointment = mapAppointmentRowToAppointment(updated.data);
-            }
-        }
-    }
+    const linked = await createOrLinkLeadForCanonicalAppointment(
+        client,
+        input,
+        appointment,
+        startIso,
+        appointmentNotes,
+        metadata,
+        tags,
+    );
+    appointment = linked.appointment;
+    let leadId = linked.leadId;
+    const warnings = [...linked.warnings];
 
     const paymentResult = await createAppointmentPaymentDraft(client, appointment);
     warnings.push(...paymentResult.warnings);

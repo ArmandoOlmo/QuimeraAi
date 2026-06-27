@@ -9,6 +9,7 @@ import {
   type CanonicalAppointmentInput,
 } from '../../services/appointments/appointmentEngineService.js';
 import {
+  executeAnswerFromKnowledgeAction,
   getOrCreateConversation,
   linkConversationToLead,
   saveConversationMessage,
@@ -23,11 +24,13 @@ import {
   explainChatbotEcommerceReturnsPolicy,
   explainChatbotEcommerceShippingPolicy,
   queueChatbotEmailFollowUpDraft,
+  requestChatbotMediaAssetDraft,
   requestChatbotHumanHandoff,
   requestChatbotRealtyLead,
   requestChatbotRestaurantReservation,
   recommendChatbotEcommerceProducts,
   searchChatbotEcommerceProducts,
+  scoreChatbotLead,
   startChatbotEcommerceCheckoutIntent,
   subscribeChatbotEmailAudience,
 } from '../../services/chatbotEngine/chatbotEngineRuntimeActionService.js';
@@ -47,6 +50,10 @@ import {
 import { evaluateChatbotSurfaceDeployment } from '../../utils/chatbotEngine/deploymentGuard.js';
 import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig.js';
 import { appendWidgetCustomerRequestNotes } from '../../utils/chatbotEngine/widgetCustomerRequestNotes.js';
+import {
+  getChatCoreVoiceSessionReadiness,
+  resolveChatCoreVoiceSettings,
+} from '../../utils/chatbotEngine/voiceSettings.js';
 
 type ProjectRow = {
   id: string;
@@ -227,6 +234,22 @@ function getNestedRecord(source: Record<string, unknown>, key: string): Record<s
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
+function getWidgetParticipantInfo(body: Record<string, any>): Record<string, unknown> {
+  const metadata = normalizeMetadata(body.metadata);
+  const candidates = [
+    body.participantInfo,
+    body.customer,
+    body.contact,
+    metadata.participantInfo,
+    metadata.customer,
+    metadata.contact,
+  ];
+  const record = candidates.find(candidate => (
+    candidate && typeof candidate === 'object' && !Array.isArray(candidate)
+  ));
+  return record ? record as Record<string, unknown> : {};
+}
+
 function getWidgetContextRecord(body: Record<string, any>): Record<string, unknown> {
   const metadata = normalizeMetadata(body.metadata);
   const directContext = body.chatbotEngineContext || body.context || metadata.chatbotEngineContext;
@@ -295,6 +318,10 @@ function getWidgetContextMetadata(body: Record<string, any>): Record<string, unk
     sourceModule: context.sourceModule,
     chatbotEngineContext: context,
   };
+}
+
+function hashWidgetText(value: string): string {
+  return createHash('sha256').update(value).digest('hex').slice(0, 32);
 }
 
 function uniqueTags(values: Array<string | undefined | null>): string[] {
@@ -418,6 +445,52 @@ function customerRequestAuditMetadata(
   };
 }
 
+async function linkWidgetConversationLeadIfPossible(input: {
+  project: ProjectRow;
+  tenantId: string | null;
+  body: Record<string, any>;
+  conversationId?: string | null;
+  leadId?: string | null;
+  metadata?: Record<string, unknown>;
+}): Promise<{ linked: boolean; warning?: string }> {
+  const conversationId = normalizeString(input.conversationId, 120)
+    || normalizeString(input.body.sourceConversationId, 120)
+    || normalizeString(input.body.conversationId, 120);
+  const leadId = normalizeString(input.leadId, 120);
+
+  if (!conversationId || !leadId) return { linked: false };
+
+  try {
+    await linkConversationToLead({
+      tenantId: input.tenantId,
+      projectId: input.project.id,
+      conversationId,
+      leadId,
+      sourceSurface: getWidgetSourceSurface(input.body),
+      sourceModule: getWidgetSourceModule(input.body),
+      chatbotEngineContext: getWidgetSurfaceContext(input.body),
+      metadata: {
+        widgetApi: true,
+        endpoint: 'api/widget',
+        autoLinkedBy: 'widget-action-result',
+        ...getWidgetContextMetadata(input.body),
+        ...(input.metadata || {}),
+      },
+      tags: ['web-chat', 'lead-linked'],
+      correlationId: normalizeString(input.body.correlationId, 240),
+      actorType: 'visitor',
+      idempotencyKey: normalizeString(input.body.leadIdempotencyKey, 240),
+      now: new Date().toISOString(),
+    }, getSupabaseAdmin());
+
+    return { linked: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unknown';
+    console.warn('[WidgetApi] Could not link widget conversation to lead:', message);
+    return { linked: false, warning: `conversation_lead_link_failed:${message}` };
+  }
+}
+
 const WIDGET_RUNTIME_EVENT_TYPES = new Set([
   'chatbot_voice_session_requested',
   'chatbot_voice_session_started',
@@ -463,6 +536,27 @@ function safeVoiceRuntimeMetadata(body: Record<string, any>): Record<string, unk
       agentConfigured: safeBoolean(voice.agentConfigured),
     },
   };
+}
+
+function getWidgetVoiceConsentAccepted(body: Record<string, any>): boolean {
+  return body.consentAccepted === true
+    || body.voiceConsentAccepted === true
+    || body.consent === true;
+}
+
+function resolveWidgetVoiceSettings(project: ProjectRow) {
+  const businessBlueprint = migrateBusinessBlueprint(getProjectBusinessBlueprint(project));
+  return resolveChatCoreVoiceSettings(
+    resolveProjectAiAssistantConfig(project) as any,
+    {
+      ...project,
+      businessBlueprint,
+      data: {
+        ...(project.data || {}),
+        ...(businessBlueprint ? { businessBlueprint } : {}),
+      },
+    } as any,
+  );
 }
 
 function getActionErrorMetadata(error: unknown): Record<string, unknown> {
@@ -774,6 +868,104 @@ async function handleListAvailability(req: IncomingMessage, res: ServerResponse,
   });
 }
 
+async function handleAnswerFromKnowledge(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req, true, { requireAssistant: true });
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const question = normalizeString(body.question, 12000)
+    || normalizeString(body.text, 12000)
+    || normalizeString(body.message, 12000);
+
+  if (!question) {
+    throw Object.assign(new Error('Question is required.'), {
+      status: 400,
+      code: 'QUESTION_REQUIRED',
+    });
+  }
+
+  const businessBlueprint = migrateBusinessBlueprint(getProjectBusinessBlueprint(project));
+  if (!businessBlueprint?.chatbotBlueprint) {
+    throw Object.assign(new Error('Chatbot knowledge is not configured for this project.'), {
+      status: 404,
+      code: 'CHATBOT_KNOWLEDGE_NOT_CONFIGURED',
+    });
+  }
+
+  const questionHash = hashWidgetText(question);
+  const conversationId = normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120);
+  const knowledgeAction = await assertWidgetChatbotActionAllowed(req, project, tenantId, body, {
+    actionType: 'answer_from_knowledge',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      questionHash,
+      conversationId,
+      getWidgetSourceSurface(body),
+    ],
+    metadata: {
+      questionHash,
+      questionLength: question.length,
+      conversationId: conversationId || null,
+      answerMode: 'reviewed_public_knowledge',
+    },
+  });
+
+  const answerResult = await runAuditedWidgetAction(knowledgeAction, async () => executeAnswerFromKnowledgeAction({
+    question,
+    sourceSurface: getWidgetSourceSurface(body),
+    sourceModule: getWidgetSourceModule(body),
+    conversationId,
+    chatbotEngineContext: getWidgetSurfaceContext(body),
+    metadata: {
+      ...normalizeMetadata(body.metadata),
+      ...getWidgetContextMetadata(body),
+      questionHash,
+    },
+  }, businessBlueprint.chatbotBlueprint, businessBlueprint), {
+    actionStage: 'knowledge_answer',
+    questionHash,
+    questionLength: question.length,
+  }) as {
+    status: string;
+    actionType: string;
+    answerStatus: string;
+    question?: string | null;
+    answer: string;
+    citations: Array<Record<string, unknown>>;
+    sourceCount: number;
+    needsHumanReview: boolean;
+    handoffRecommended: boolean;
+    knowledgePolicy: string;
+  };
+
+  await recordWidgetChatbotEngineEvent(eventWithResult(knowledgeAction.auditEvent, {
+    event_type: 'chatbot_action_executed',
+    conversation_id: conversationId || undefined,
+  }, answerResult.status === 'answered' ? 'executed' : 'observed', {
+    answerStatus: answerResult.answerStatus,
+    sourceCount: answerResult.sourceCount,
+    citationSourceIds: answerResult.citations.map(citation => normalizeString(citation.sourceId, 120)).filter(Boolean),
+    needsHumanReview: answerResult.needsHumanReview,
+    handoffRecommended: answerResult.handoffRecommended,
+    knowledgePolicy: answerResult.knowledgePolicy,
+    questionHash,
+    questionLength: question.length,
+    questionRedactedFromEvent: true,
+    answerRedactedFromEvent: true,
+    citationExcerptsRedactedFromEvent: true,
+  }));
+
+  send(res, 200, {
+    projectId: project.id,
+    ...answerResult,
+    questionHash,
+    eventRedaction: {
+      question: true,
+      answer: true,
+      citationExcerpts: true,
+    },
+  });
+}
+
 async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
   const project = await loadProject(parsed, req);
   enforceWriteRateLimit(req, project.id);
@@ -874,14 +1066,116 @@ async function handleCreateLead(req: IncomingMessage, res: ServerResponse, parse
     actionStage: 'crm_lead_insert',
     leadSource: payload.source,
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    conversationId: normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120),
+    leadId: String(data.id),
+    metadata: {
+      actionType: 'create_lead',
+      leadSource: payload.source,
+    },
+  });
   await recordWidgetChatbotEngineEvent(eventWithResult(leadAction.auditEvent, {
     event_type: 'chatbot_action_executed',
     lead_id: String(data.id),
   }, 'executed', {
     leadId: data.id,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
     ...customerRequestAuditMetadata('leads.notes'),
   }));
-  send(res, 201, { leadId: data.id });
+  send(res, 201, {
+    leadId: data.id,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
+  });
+}
+
+async function handleScoreLead(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, leadId: string): Promise<void> {
+  const project = await loadProject(parsed, req);
+  enforceWriteRateLimit(req, project.id);
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const sourceSurface = getWidgetSourceSurface(body);
+  const sourceModule = getWidgetSourceModule(body);
+  const message = normalizeString(body.message, 5000)
+    || normalizeString(body.customerRequestSummary, 5000)
+    || normalizeString(body.notes, 5000);
+  const conversationTranscript = normalizeString(body.conversationTranscript, 20000);
+  const conversationId = normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120);
+  const messageHash = message ? hashWidgetText(message) : null;
+  const transcriptHash = conversationTranscript ? hashWidgetText(conversationTranscript) : null;
+  const safeActionBody = {
+    ...body,
+    sourceSurface,
+    sourceModule,
+    metadata: {},
+  };
+
+  const scoreAction = await assertWidgetChatbotActionAllowed(req, project, tenantId, safeActionBody, {
+    actionType: 'score_lead',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      leadId,
+      conversationId,
+      messageHash,
+      transcriptHash,
+      sourceSurface,
+    ],
+    metadata: {
+      leadId,
+      conversationId: conversationId || null,
+      messageHash,
+      messageLength: message?.length || 0,
+      transcriptHash,
+      transcriptLength: conversationTranscript?.length || 0,
+      messageRedactedFromEvent: true,
+      transcriptRedactedFromEvent: true,
+      scoringTarget: 'leads.custom_data.leadScore,leads.custom_data.aiScore,leads.custom_data.probability',
+    },
+  });
+
+  const result = await runAuditedWidgetAction(scoreAction, () => scoreChatbotLead({
+    supabase: getSupabaseAdmin(),
+    tenantId,
+    projectId: project.id,
+    projectUserId: project.user_id,
+    leadId,
+    message,
+    conversationTranscript,
+    conversationLength: normalizeNumber(body.conversationLength),
+    sourceSurface,
+    sourceModule,
+    idempotencyKey: scoreAction.idempotencyKey,
+    metadata: {
+      ...getWidgetContextMetadata(body),
+      scoreRequestedFromWidget: true,
+      messageHash,
+      messageLength: message?.length || 0,
+      transcriptHash,
+      transcriptLength: conversationTranscript?.length || 0,
+    },
+  }), {
+    actionStage: 'crm_lead_score',
+    leadId,
+  });
+
+  await recordWidgetChatbotEngineEvent(eventWithResult(scoreAction.auditEvent, {
+    event_type: 'chatbot_action_executed',
+    lead_id: result.leadId,
+  }, result.duplicate ? 'duplicate' : 'executed', {
+    leadId: result.leadId,
+    score: result.score,
+    aiScore: result.aiScore,
+    probability: result.probability,
+    highIntent: result.highIntent,
+    scoringStored: result.scored,
+    reviewRequired: result.reviewRequired,
+  }));
+
+  send(res, result.duplicate ? 200 : 201, result);
 }
 
 async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
@@ -903,21 +1197,31 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
   const source = normalizeString(body.source, 80) === 'chatbot' ? 'chatbot' : 'public_booking';
   const bookingChannel = normalizeString(body.bookingChannel, 120);
   const appointmentMetadata = normalizeMetadata(body.metadata);
+  const participantInfo = getWidgetParticipantInfo(body);
   const participantEmail = normalizeString(body.participantEmail, 320)
     || normalizeString(body.customerEmail, 320)
     || normalizeString(body.email, 320)
+    || normalizeString(participantInfo.email, 320)
+    || normalizeString(participantInfo.participantEmail, 320)
+    || normalizeString(participantInfo.customerEmail, 320)
     || normalizeString(appointmentMetadata.participantEmail, 320)
     || normalizeString(appointmentMetadata.customerEmail, 320)
     || normalizeString(appointmentMetadata.email, 320);
   const participantName = normalizeString(body.participantName, 200)
     || normalizeString(body.customerName, 200)
     || normalizeString(body.name, 200)
+    || normalizeString(participantInfo.name, 200)
+    || normalizeString(participantInfo.participantName, 200)
+    || normalizeString(participantInfo.customerName, 200)
     || normalizeString(appointmentMetadata.participantName, 200)
     || normalizeString(appointmentMetadata.customerName, 200)
     || normalizeString(appointmentMetadata.name, 200);
   const participantPhone = normalizeString(body.participantPhone, 80)
     || normalizeString(body.customerPhone, 80)
     || normalizeString(body.phone, 80)
+    || normalizeString(participantInfo.phone, 80)
+    || normalizeString(participantInfo.participantPhone, 80)
+    || normalizeString(participantInfo.customerPhone, 80)
     || normalizeString(appointmentMetadata.participantPhone, 80)
     || normalizeString(appointmentMetadata.customerPhone, 80)
     || normalizeString(appointmentMetadata.phone, 80);
@@ -969,7 +1273,7 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
       idempotencyParts: [
         participantEmail,
         participantName,
-        normalizeString(body.participantPhone, 80),
+        participantPhone,
         startDate.toISOString(),
         endDate.toISOString(),
         normalizeString(body.bookingServiceId, 120),
@@ -1046,6 +1350,18 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
     bookingChannel,
   })
     : createAppointment(getSupabaseAdmin(), appointmentPayload));
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    conversationId: sourceConversationId,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'create_appointment',
+      appointmentId: result.appointmentId,
+      duplicate: result.duplicate,
+    },
+  });
 
   if (appointmentAction) {
     await recordWidgetChatbotEngineEvent(eventWithResult(appointmentAction.auditEvent, {
@@ -1057,6 +1373,8 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
       leadId: result.leadId || null,
       duplicate: result.duplicate,
       paymentStatus: result.appointment.paymentStatus || null,
+      conversationLeadLinked: conversationLeadLink.linked,
+      conversationLeadLinkWarning: conversationLeadLink.warning || null,
       ...customerRequestAuditMetadata(
         result.leadId ? 'project_appointments.notes,leads.notes' : 'project_appointments.notes',
         result.duplicate ? 'existing_record' : 'stored',
@@ -1072,7 +1390,8 @@ async function handleCreateAppointment(req: IncomingMessage, res: ServerResponse
     ecommerceOrderId: result.appointment.ecommerceOrderId,
     paymentStatus: result.appointment.paymentStatus,
     paymentRequired: Boolean(result.appointment.ecommerceOrderId && result.appointment.paymentStatus && result.appointment.paymentStatus !== 'paid'),
-    warnings: result.warnings,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [...result.warnings, conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -1230,6 +1549,104 @@ async function handleRecordRuntimeEvent(req: IncomingMessage, res: ServerRespons
   send(res, 202, { recorded: true, eventType });
 }
 
+async function handleCreateVoiceSession(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req, true, { requireAssistant: true });
+  enforceWriteRateLimit(req, project.id);
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const sessionId = normalizeString(body.sessionId, 120) || randomUUID();
+  const conversationId = normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120);
+  const consentAccepted = getWidgetVoiceConsentAccepted(body);
+  const safeActionBody = {
+    ...body,
+    sourceSurface: 'voice',
+    sourceModule: getWidgetSourceModule(body),
+    metadata: {},
+  };
+  const voiceSettings = resolveWidgetVoiceSettings(project);
+  const readiness = getChatCoreVoiceSessionReadiness(voiceSettings, consentAccepted);
+  const voiceMetadata = {
+    widgetApi: true,
+    runtimeEvent: true,
+    sessionId,
+    sessionPhase: readiness.allowed ? 'requested' : 'blocked',
+    voice: {
+      provider: voiceSettings.provider,
+      source: voiceSettings.source,
+      languageMode: voiceSettings.languageMode,
+      consentRequired: voiceSettings.consentRequired,
+      consentAccepted,
+      agentConfigured: Boolean(voiceSettings.agentId),
+    },
+    agentIdRedactedFromEvent: true,
+  };
+
+  const voiceAction = await assertWidgetChatbotActionAllowed(req, project, tenantId, safeActionBody, {
+    actionType: 'record_analytics_event',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      'voice-session',
+      sessionId,
+      conversationId,
+      consentAccepted,
+      readiness.reason,
+    ],
+    metadata: {
+      ...voiceMetadata,
+      runtimeEventType: readiness.allowed
+        ? 'chatbot_voice_session_requested'
+        : 'chatbot_voice_session_blocked',
+    },
+  });
+
+  if (!readiness.allowed) {
+    await recordWidgetChatbotEngineEvent(eventWithResult(voiceAction.auditEvent, {
+      event_type: 'chatbot_voice_session_blocked',
+      conversation_id: conversationId || undefined,
+    }, 'blocked', {
+      ...voiceMetadata,
+      runtimeEventType: 'chatbot_voice_session_blocked',
+      reason: readiness.reason,
+      readinessReason: readiness.reason,
+      providerSessionStarted: false,
+    }));
+
+    send(res, readiness.reason === 'consent_required' ? 403 : 409, {
+      allowed: false,
+      reason: readiness.reason,
+      sessionId,
+      provider: voiceSettings.provider,
+      source: voiceSettings.source,
+      languageMode: voiceSettings.languageMode,
+      consentRequired: voiceSettings.consentRequired,
+      agentConfigured: Boolean(voiceSettings.agentId),
+    });
+    return;
+  }
+
+  await recordWidgetChatbotEngineEvent(eventWithResult(voiceAction.auditEvent, {
+    event_type: 'chatbot_voice_session_requested',
+    conversation_id: conversationId || undefined,
+  }, 'executed', {
+    ...voiceMetadata,
+    runtimeEventType: 'chatbot_voice_session_requested',
+    providerSessionStarted: false,
+  }));
+
+  send(res, 201, {
+    allowed: true,
+    sessionId,
+    provider: voiceSettings.provider,
+    source: voiceSettings.source,
+    agentId: voiceSettings.agentId,
+    languageMode: voiceSettings.languageMode,
+    consentRequired: voiceSettings.consentRequired,
+    eventRedaction: {
+      agentId: true,
+    },
+  });
+}
+
 async function handleUpdateConversation(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam, conversationId: string): Promise<void> {
   const project = await loadProject(parsed, req);
   enforceWriteRateLimit(req, project.id);
@@ -1348,6 +1765,17 @@ async function handleRequestHumanHandoff(req: IncomingMessage, res: ServerRespon
     actionStage: 'human_handoff_request',
     conversationId,
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    conversationId: result.conversationId || conversationId,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'handoff_to_human',
+      handoffReason: normalizeString(body.reason, 120) || 'human_requested',
+    },
+  });
 
   await recordWidgetChatbotEngineEvent(eventWithResult(handoffAction.auditEvent, {
     event_type: 'chatbot_action_executed',
@@ -1356,6 +1784,8 @@ async function handleRequestHumanHandoff(req: IncomingMessage, res: ServerRespon
   }, result.duplicate ? 'duplicate' : 'executed', {
     handoffReason: normalizeString(body.reason, 120) || 'human_requested',
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
   }));
 
   send(res, result.duplicate ? 200 : 201, {
@@ -1363,6 +1793,122 @@ async function handleRequestHumanHandoff(req: IncomingMessage, res: ServerRespon
     status: result.status,
     duplicate: result.duplicate,
     leadId: result.leadId,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
+  });
+}
+
+async function handleCreateSupportTicket(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req);
+  enforceWriteRateLimit(req, project.id);
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const conversationId = normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120);
+  if (!conversationId) {
+    throw Object.assign(new Error('Conversation ID is required for support tickets.'), {
+      status: 400,
+      code: 'CONVERSATION_REQUIRED',
+    });
+  }
+
+  const summary = normalizeString(body.summary, 5000)
+    || normalizeString(body.message, 5000)
+    || normalizeString(body.description, 5000);
+  const category = normalizeString(body.category, 120) || normalizeString(body.topic, 120) || 'support';
+  const priority = normalizeString(body.priority, 40) || 'normal';
+  const sourceSurface = getWidgetSourceSurface(body);
+  const sourceModule = getWidgetSourceModule(body);
+  const safeActionBody = {
+    ...body,
+    sourceSurface,
+    sourceModule,
+    metadata: {},
+  };
+  const summaryHash = summary ? hashWidgetText(summary) : null;
+
+  const supportAction = await assertWidgetChatbotActionAllowed(req, project, tenantId, safeActionBody, {
+    actionType: 'create_support_ticket',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      conversationId,
+      category,
+      priority,
+      summaryHash,
+    ],
+    metadata: {
+      conversationId,
+      category,
+      priority,
+      supportTicket: true,
+      summaryHash,
+      summaryLength: summary?.length || 0,
+      summaryRedactedFromEvent: true,
+    },
+  });
+
+  const result = await runAuditedWidgetAction(supportAction, () => requestChatbotHumanHandoff({
+    supabase: getSupabaseAdmin(),
+    tenantId,
+    projectId: project.id,
+    projectUserId: project.user_id,
+    conversationId,
+    reason: 'support_request',
+    priority,
+    summary,
+    requesterName: normalizeString(body.requesterName, 200) || normalizeString(body.name, 200),
+    requesterEmail: normalizeString(body.requesterEmail, 320) || normalizeString(body.email, 320),
+    requesterPhone: normalizeString(body.requesterPhone, 80) || normalizeString(body.phone, 80),
+    assignedTo: normalizeString(body.assignedTo, 120),
+    sourceSurface,
+    sourceModule,
+    idempotencyKey: supportAction.idempotencyKey,
+    metadata: {
+      ...normalizeMetadata(body.metadata),
+      ...getWidgetContextMetadata(body),
+      supportTicket: true,
+      supportCategory: category,
+      supportPriority: priority,
+      actionType: 'create_support_ticket',
+    },
+  }), {
+    actionStage: 'support_ticket_create',
+    conversationId,
+  });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    conversationId: result.conversationId || conversationId,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'create_support_ticket',
+      supportCategory: category,
+      duplicate: result.duplicate,
+    },
+  });
+
+  await recordWidgetChatbotEngineEvent(eventWithResult(supportAction.auditEvent, {
+    event_type: 'chatbot_action_executed',
+    conversation_id: result.conversationId,
+    lead_id: result.leadId ? String(result.leadId) : undefined,
+  }, result.duplicate ? 'duplicate' : 'executed', {
+    supportTicket: true,
+    supportCategory: category,
+    priority,
+    handoffReason: 'support_request',
+    duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
+  }));
+
+  send(res, result.duplicate ? 200 : 201, {
+    conversationId: result.conversationId,
+    status: result.status,
+    duplicate: result.duplicate,
+    leadId: result.leadId,
+    supportTicket: true,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -1414,6 +1960,18 @@ async function handleRequestRestaurantReservation(req: IncomingMessage, res: Ser
     actionStage: 'restaurant_reservation_request',
     restaurantId: normalizeString(body.restaurantId, 120),
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'request_restaurant_reservation',
+      restaurantReservationId: result.reservationId || null,
+      reservationStatus: result.status,
+      duplicate: result.duplicate,
+    },
+  });
 
   await recordWidgetChatbotEngineEvent(eventWithResult(reservationAction.auditEvent, {
     event_type: 'chatbot_action_executed',
@@ -1422,6 +1980,8 @@ async function handleRequestRestaurantReservation(req: IncomingMessage, res: Ser
     restaurantReservationId: result.reservationId || null,
     reservationStatus: result.status,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
     ...customerRequestAuditMetadata(
       result.leadId ? 'restaurant_reservations.notes,leads.notes' : 'restaurant_reservations.notes',
       result.duplicate ? 'existing_record' : 'stored',
@@ -1433,6 +1993,8 @@ async function handleRequestRestaurantReservation(req: IncomingMessage, res: Ser
     status: result.status,
     leadId: result.leadId,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -1490,6 +2052,18 @@ async function handleRequestRealtyLead(
     propertyId: normalizeString(body.propertyId, 120),
     realtyAction: actionType,
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    leadId: result.crmLeadId,
+    metadata: {
+      actionType,
+      propertyLeadId: result.propertyLeadId || null,
+      pipelineEventType: result.pipelineEventType,
+      duplicate: result.duplicate,
+    },
+  });
 
   await recordWidgetChatbotEngineEvent(eventWithResult(realtyAction.auditEvent, {
     event_type: 'chatbot_action_executed',
@@ -1499,6 +2073,8 @@ async function handleRequestRealtyLead(
     crmLeadId: result.crmLeadId || null,
     pipelineEventType: result.pipelineEventType,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
     ...customerRequestAuditMetadata(
       result.crmLeadId ? 'property_leads.message,leads.notes' : 'property_leads.message',
       result.duplicate ? 'existing_record' : 'stored',
@@ -1510,6 +2086,8 @@ async function handleRequestRealtyLead(
     crmLeadId: result.crmLeadId,
     pipelineEventType: result.pipelineEventType,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -1711,6 +2289,93 @@ async function handleCreateFinanceQuoteRequest(req: IncomingMessage, res: Server
     reviewRequired: result.reviewRequired,
     paymentCreated: false,
     paymentLinkCreated: false,
+  }));
+
+  send(res, result.duplicate ? 200 : 201, result);
+}
+
+async function handleRequestMediaAssetDraft(req: IncomingMessage, res: ServerResponse, parsed: ParsedProjectParam): Promise<void> {
+  const project = await loadProject(parsed, req);
+  enforceWriteRateLimit(req, project.id);
+  const tenantId = await resolveTenantId(project);
+  const body = await readJson(req);
+  const prompt = normalizeString(body.prompt, 5000)
+    || normalizeString(body.request, 5000)
+    || normalizeString(body.message, 5000);
+  const title = normalizeString(body.title, 160);
+  const category = normalizeString(body.category, 80);
+  const aspectRatio = normalizeString(body.aspectRatio, 40) || normalizeString(body.aspect_ratio, 40);
+  const conversationId = normalizeString(body.sourceConversationId, 120) || normalizeString(body.conversationId, 120);
+  const leadId = normalizeString(body.leadId, 120);
+  const sourceSurface = getWidgetSourceSurface(body);
+  const sourceModule = getWidgetSourceModule(body);
+  const safeActionBody = {
+    ...body,
+    sourceSurface,
+    sourceModule,
+    metadata: {},
+  };
+
+  const mediaAction = await assertWidgetChatbotActionAllowed(req, project, tenantId, safeActionBody, {
+    actionType: 'request_media_asset',
+    idempotencyKey: normalizeString(body.idempotencyKey, 240),
+    idempotencyParts: [
+      leadId || conversationId,
+      category,
+      aspectRatio,
+      prompt ? hashWidgetText(prompt) : null,
+    ],
+    metadata: {
+      promptHash: prompt ? hashWidgetText(prompt) : null,
+      promptLength: prompt?.length || 0,
+      title: title || null,
+      category: category || null,
+      aspectRatio: aspectRatio || null,
+      leadId: leadId || null,
+      conversationId: conversationId || null,
+      generationStarted: false,
+      noAutoPublish: true,
+      ...customerRequestAuditMetadata('media_assets.metadata.customerRequestSummary,media_assets.description'),
+    },
+  });
+
+  const result = await runAuditedWidgetAction(mediaAction, () => requestChatbotMediaAssetDraft({
+    supabase: getSupabaseAdmin(),
+    tenantId,
+    projectId: project.id,
+    projectUserId: project.user_id,
+    prompt,
+    request: normalizeString(body.request, 5000),
+    title,
+    category,
+    aspectRatio,
+    style: normalizeString(body.style, 120),
+    model: normalizeString(body.model, 120),
+    leadId,
+    conversationId,
+    sourceSurface,
+    sourceModule,
+    idempotencyKey: mediaAction.idempotencyKey,
+    metadata: {
+      ...normalizeMetadata(body.metadata),
+      ...getWidgetContextMetadata(body),
+    },
+  }), {
+    actionStage: 'media_asset_draft_request',
+    conversationId: conversationId || null,
+    leadId: leadId || null,
+  });
+
+  await recordWidgetChatbotEngineEvent(eventWithResult(mediaAction.auditEvent, {
+    event_type: 'chatbot_action_executed',
+    conversation_id: conversationId || undefined,
+    lead_id: leadId || undefined,
+  }, result.duplicate ? 'duplicate' : 'executed', {
+    assetId: result.assetId,
+    name: result.name,
+    reviewRequired: result.reviewRequired,
+    generationStarted: false,
+    noAutoPublish: true,
   }));
 
   send(res, result.duplicate ? 200 : 201, result);
@@ -1939,6 +2604,18 @@ async function handleCreateProductInquiry(req: IncomingMessage, res: ServerRespo
     productId: normalizeString(body.productId, 120),
     productSlug: normalizeString(body.productSlug, 240),
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'create_product_inquiry',
+      productId: result.product.id,
+      productSlug: result.product.slug,
+      duplicate: result.duplicate,
+    },
+  });
 
   await recordWidgetChatbotEngineEvent(eventWithResult(inquiryAction.auditEvent, {
     event_type: 'chatbot_action_executed',
@@ -1948,6 +2625,8 @@ async function handleCreateProductInquiry(req: IncomingMessage, res: ServerRespo
     productId: result.product.id,
     productSlug: result.product.slug,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
     ...customerRequestAuditMetadata('leads.notes', result.duplicate ? 'existing_record' : 'stored'),
   }));
 
@@ -1955,6 +2634,8 @@ async function handleCreateProductInquiry(req: IncomingMessage, res: ServerRespo
     leadId: result.leadId,
     product: result.product,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -2000,6 +2681,19 @@ async function handleBackInStockRequest(req: IncomingMessage, res: ServerRespons
     productId: normalizeString(body.productId, 120),
     productSlug: normalizeString(body.productSlug, 240),
   });
+  const conversationLeadLink = await linkWidgetConversationLeadIfPossible({
+    project,
+    tenantId,
+    body,
+    leadId: result.leadId,
+    metadata: {
+      actionType: 'back_in_stock_request',
+      notificationId: result.notificationId,
+      productId: result.product.id,
+      productSlug: result.product.slug,
+      duplicate: result.duplicate,
+    },
+  });
 
   await recordWidgetChatbotEngineEvent(eventWithResult(stockAction.auditEvent, {
     event_type: 'chatbot_action_executed',
@@ -2010,6 +2704,8 @@ async function handleBackInStockRequest(req: IncomingMessage, res: ServerRespons
     productId: result.product.id,
     productSlug: result.product.slug,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    conversationLeadLinkWarning: conversationLeadLink.warning || null,
     ...customerRequestAuditMetadata('leads.notes', result.duplicate ? 'existing_record' : 'stored'),
   }));
 
@@ -2018,6 +2714,8 @@ async function handleBackInStockRequest(req: IncomingMessage, res: ServerRespons
     leadId: result.leadId,
     product: result.product,
     duplicate: result.duplicate,
+    conversationLeadLinked: conversationLeadLink.linked,
+    warnings: [conversationLeadLink.warning].filter(Boolean),
   });
 }
 
@@ -2131,7 +2829,8 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
     if (req.method === 'GET' && !resource) return await handleGetWidget(req, res, parsed);
     if (req.method === 'GET' && resource === 'appointments') return await handleListAppointments(req, res, parsed);
     if (req.method === 'GET' && resource === 'availability') return await handleListAvailability(req, res, parsed);
-    if (req.method === 'POST' && resource === 'leads') return await handleCreateLead(req, res, parsed);
+    if (req.method === 'POST' && resource === 'leads' && id && subResource === 'score') return await handleScoreLead(req, res, parsed, id);
+    if (req.method === 'POST' && resource === 'leads' && !id) return await handleCreateLead(req, res, parsed);
     if (req.method === 'POST' && resource === 'appointments') return await handleCreateAppointment(req, res, parsed);
     if (req.method === 'POST' && resource === 'restaurant-reservations') return await handleRequestRestaurantReservation(req, res, parsed);
     if (req.method === 'POST' && resource === 'realty-showings') return await handleRequestRealtyLead(req, res, parsed, 'request_realty_showing');
@@ -2139,6 +2838,9 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
     if (req.method === 'POST' && resource === 'email-audience-subscriptions') return await handleSubscribeEmailAudience(req, res, parsed);
     if (req.method === 'POST' && resource === 'email-follow-up-drafts') return await handleQueueEmailFollowUpDraft(req, res, parsed);
     if (req.method === 'POST' && resource === 'finance' && id === 'quote-requests') return await handleCreateFinanceQuoteRequest(req, res, parsed);
+    if (req.method === 'POST' && resource === 'media' && id === 'asset-drafts') return await handleRequestMediaAssetDraft(req, res, parsed);
+    if (req.method === 'POST' && resource === 'support-tickets' && !id) return await handleCreateSupportTicket(req, res, parsed);
+    if (req.method === 'POST' && resource === 'knowledge' && id === 'answer') return await handleAnswerFromKnowledge(req, res, parsed);
     if (req.method === 'POST' && resource === 'products' && id === 'search') return await handleSearchProducts(req, res, parsed);
     if (req.method === 'POST' && resource === 'products' && id === 'recommendations') return await handleRecommendProducts(req, res, parsed);
     if (req.method === 'POST' && resource === 'products' && id === 'inquiries') return await handleCreateProductInquiry(req, res, parsed);
@@ -2147,6 +2849,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
     if (req.method === 'POST' && resource === 'policies' && id === 'returns') return await handleExplainReturnsPolicy(req, res, parsed);
     if (req.method === 'POST' && resource === 'orders' && id === 'status') return await handleCheckOrderStatus(req, res, parsed);
     if (req.method === 'POST' && resource === 'checkout' && id === 'intent') return await handleStartCheckoutIntent(req, res, parsed);
+    if (req.method === 'POST' && resource === 'voice' && id === 'session') return await handleCreateVoiceSession(req, res, parsed);
     if (req.method === 'POST' && resource === 'events' && !id) return await handleRecordRuntimeEvent(req, res, parsed);
     if (req.method === 'POST' && resource === 'conversations' && !id) return await handleCreateConversation(req, res, parsed);
     if (req.method === 'POST' && resource === 'conversations' && id && subResource === 'messages') {

@@ -8,7 +8,7 @@ import { Lead, AiAssistantConfig, PageSection } from '../types';
 import { getDefaultAppearanceConfig, getSizeClasses, getButtonSizeClasses, getShadowClasses, getButtonStyleClasses } from '../utils/chatThemes';
 import ChatCore, { ChatAppointmentData, type ChatAppointmentHandlerResult, AppointmentSlot } from './chat/ChatCore';
 import { supabase } from '../supabase';
-import { createAppointmentFromChat, getAppointmentsByProject } from '../services/appointments/appointmentEngineService';
+import { getAppointmentsByProject } from '../services/appointments/appointmentEngineService';
 import { buildCanonicalEmailDraftMetadata } from '../services/email/emailModuleIntentService.ts';
 import { useSafeAuth } from '../contexts/core/AuthContext';
 import { useSafeTenant } from '../contexts/tenant';
@@ -73,7 +73,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     const authContext = useSafeAuth();
     const user = authContext?.user || null;
     const tenantContext = useSafeTenant();
-    const currentTenantId = tenantContext?.currentTenant?.id || null;
     const hasWhiteLabelBranding = !!(tenantContext?.currentTenant?.branding?.companyName || tenantContext?.currentTenant?.branding?.logoUrl);
     const { t, i18n } = useTranslation();
 
@@ -544,13 +543,6 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
     // Handle creating appointment from chat
     const handleCreateAppointment = async (appointmentData: ChatAppointmentData): Promise<ChatAppointmentHandlerResult> => {
         const projectId = activeProject?.id || standaloneProject?.id;
-        const ownerId = activeProject?.userId || standaloneProject?.userId;
-        const resolvedTenantId = currentTenantId
-            || (activeProject as any)?.tenantId
-            || (activeProject as any)?.tenant_id
-            || (standaloneProject as any)?.tenantId
-            || (standaloneProject as any)?.tenant_id
-            || null;
         const customerRequestNotes = buildChatCoreAppointmentPayloadNotes({
             appointmentData: appointmentData as unknown as Record<string, unknown>,
             projectName: activeProject?.name || standaloneProject?.name,
@@ -566,63 +558,8 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             return undefined;
         }
 
-        // If user is authenticated and matches ownerId (e.g. inside Editor)
-        if (user && user.id === ownerId && resolvedTenantId) {
-            try {
-                const result = await createAppointmentFromChat(supabase, {
-                    projectId,
-                    tenantId: resolvedTenantId,
-                    title: appointmentData.title,
-                    description: appointmentData.description,
-                    notes: customerRequestNotes,
-                    type: appointmentData.type || 'consultation',
-                    startDate: appointmentData.startDate,
-                    endDate: appointmentData.endDate,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    organizerId: user.id,
-                    organizerName: (user.user_metadata?.full_name || user.user_metadata?.name || user.email || '') as string,
-                    organizerEmail: user.email || '',
-                    participantName: appointmentData.participantName,
-                    participantEmail: appointmentData.participantEmail,
-                    participantPhone: appointmentData.participantPhone,
-                    linkedLeadId: appointmentData.linkedLeadId,
-                    conversationTranscript: appointmentData.conversationTranscript,
-                    sourceConversationId: appointmentData.sourceConversationId,
-                    idempotencyKey: `chatbot:${projectId}:${appointmentData.participantEmail || appointmentData.participantName || 'guest'}:${appointmentData.startDate.toISOString()}`,
-                    createdBy: user.id,
-                    createdBySystem: true,
-                    generatedByAI: appointmentData.generatedByAI,
-                    locale: i18n.language,
-                    tags: ['chatbot', 'appointment-scheduled'],
-                    metadata: {
-                        ...(appointmentData.metadata || {}),
-                        ownerId,
-                        sourceSurface: effectiveChatbotEngineContext.sourceSurface,
-                        sourceModule: effectiveChatbotEngineContext.sourceModule,
-                        chatbotEngineContext: effectiveChatbotEngineContext,
-                        widgetMode: standaloneProject ? 'standalone' : 'editor',
-                        locale: i18n.language,
-                        bookingChannel: appointmentData.bookingChannel,
-                        customerRequestSummary: customerRequestNotes,
-                    },
-                });
-                if (result.leadId) setLeadCaptured(true);
-                console.log('[ChatbotWidget] ✅ Canonical appointment created:', result.appointmentId);
-                return {
-                    appointmentId: result.appointmentId,
-                    leadId: result.leadId,
-                    duplicate: result.duplicate,
-                    warnings: result.warnings,
-                };
-            } catch (error) {
-                console.error('[ChatbotWidget] ❌ Error creating canonical appointment:', error);
-                return undefined;
-            }
-        }
-
-        // Fallback: Save via API when in standalone mode (public site)
         try {
-            console.log('[ChatbotWidget] 🌐 specific API appointment capture (standalone mode)');
+            console.log('[ChatbotWidget] 🌐 canonical Widget API appointment capture');
 
             const appointmentPayload = {
                 title: appointmentData.title,
@@ -678,8 +615,13 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
             if (response.ok) {
                 const data = await response.json();
                 console.log('[ChatbotWidget] ✅ Appointment saved successfully via API:', data.appointmentId);
-                if (data.leadId || appointmentData.participantName || appointmentData.participantEmail) {
+                if (data.leadId) {
                     setLeadCaptured(true);
+                } else if (appointmentData.participantName || appointmentData.participantEmail || appointmentData.participantPhone) {
+                    console.warn('[ChatbotWidget] Appointment saved but CRM leadId was not returned.', {
+                        appointmentId: data.appointmentId,
+                        warnings: data.warnings || [],
+                    });
                 }
                 return {
                     appointmentId: data.appointmentId,

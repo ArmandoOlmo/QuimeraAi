@@ -130,6 +130,16 @@ describe('chatbotEngineDashboardService', () => {
             },
             {
                 id: 'event_10',
+                eventType: 'chatbot_media_asset_requested',
+                actionType: 'request_media_asset',
+                actionStatus: 'executed',
+                sourceSurface: 'website',
+                sourceModule: 'media-ai',
+                metadata: {},
+                createdAt: '2026-06-26T02:30:00.000Z',
+            },
+            {
+                id: 'event_11',
                 eventType: 'chatbot_voice_session_started',
                 actionType: 'record_analytics_event',
                 actionStatus: 'observed',
@@ -189,8 +199,8 @@ describe('chatbotEngineDashboardService', () => {
         });
 
         expect(snapshot.analytics).toMatchObject({
-            totalEvents: 10,
-            executedActions: 7,
+            totalEvents: 11,
+            executedActions: 8,
             blockedActions: 1,
             observedEvents: 2,
             leadEvents: 1,
@@ -199,6 +209,7 @@ describe('chatbotEngineDashboardService', () => {
             ecommerceEvents: 2,
             emailMarketingEvents: 1,
             financeEvents: 1,
+            mediaEvents: 1,
             restaurantEvents: 1,
             realtyEvents: 1,
             voiceEvents: 1,
@@ -208,7 +219,7 @@ describe('chatbotEngineDashboardService', () => {
         expect(snapshot.analytics.actionBreakdown[0]).toEqual({ actionType: 'create_lead', count: 1 });
         expect(snapshot.analytics.intentBreakdown[0]).toEqual({ intent: 'checkout_intent', count: 1 });
         expect(snapshot.analytics.surfaceBreakdown).toEqual([
-            { sourceSurface: 'website', count: 3 },
+            { sourceSurface: 'website', count: 4 },
             { sourceSurface: 'admin_preview', count: 1 },
             { sourceSurface: 'bio_page', count: 1 },
             { sourceSurface: 'booking_page', count: 1 },
@@ -224,6 +235,7 @@ describe('chatbotEngineDashboardService', () => {
             { sourceModule: 'chatcore', count: 1 },
             { sourceModule: 'email-marketing', count: 1 },
             { sourceModule: 'finance', count: 1 },
+            { sourceModule: 'media-ai', count: 1 },
             { sourceModule: 'real-estate', count: 1 },
             { sourceModule: 'restaurants', count: 1 },
             { sourceModule: 'website-builder', count: 1 },

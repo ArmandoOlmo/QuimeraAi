@@ -415,8 +415,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       transform: CSS.Transform.toString(transform),
       transition,
       opacity: isDraggingItem ? 0.5 : 1,
-      // Staggered animation on mobile menu open
-      animationDelay: isMobileOpen ? `${index * 30}ms` : '0ms',
     };
 
     // Para items de ecommerce, verificar también el subView
@@ -433,9 +431,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
     const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
     const navItemButtonClasses = [
-      'group relative mb-1 flex !h-auto items-center rounded-[var(--q-radius-md)] border border-transparent !px-3 !py-2 transition-all duration-200 touch-manipulation',
+      'group relative mb-1 flex !h-auto items-center rounded-[var(--q-radius-md)] border border-transparent !px-3 !py-2 transition-[background-color,border-color,color,box-shadow] duration-150 ease-out touch-manipulation active:scale-100',
       'min-h-[40px] md:min-h-[36px] md:px-3 md:py-2',
-      'active:scale-[0.98] md:active:scale-100',
       showExpanded ? 'w-full justify-start' : 'mx-auto w-12 justify-center',
       isLocked
         ? 'text-q-text-muted/60 hover:border-sidebar-control-border hover:bg-sidebar-control-hover'
@@ -451,15 +448,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     ].filter(Boolean).join(' ');
     const dragHandleClasses = [
       'hidden md:block absolute left-0 top-1/2 -translate-y-1/2 p-1',
-      'cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity',
+      'cursor-grab active:cursor-grabbing opacity-0 group-hover/drag:opacity-100 transition-opacity duration-150',
     ].join(' ');
     const iconClasses = [
       showExpanded ? (item.isFixed ? 'mr-3' : 'md:ml-5 mr-3') : '',
-      'flex-shrink-0 transition-all',
+      'flex-shrink-0 transition-colors duration-150',
       isLocked ? 'opacity-50' : '',
     ].filter(Boolean).join(' ');
     const labelClasses = [
-      'text-[15px] md:text-sm font-medium whitespace-nowrap overflow-hidden transition-all flex-1 text-left',
+      'text-[15px] md:text-sm font-medium whitespace-nowrap overflow-hidden transition-colors duration-150 flex-1 text-left',
       isLocked ? 'opacity-60' : '',
     ].filter(Boolean).join(' ');
 
@@ -493,10 +490,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       <div
         ref={setNodeRef}
         style={style}
-        className={`
-          relative group/drag
-          ${isMobileOpen ? 'animate-[slideInFromLeft_0.3s_ease-out_forwards]' : ''}
-        `}
+        className="relative group/drag"
       >
         <AppButton
           variant="ghost"
@@ -558,13 +552,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     );
   };
 
-  const sidebarSectionButtonClasses = 'w-full !h-auto justify-between !px-3 !py-2.5 rounded-[var(--q-radius-md)] border border-transparent text-q-text-muted hover:border-sidebar-control-border hover:bg-sidebar-control-hover hover:text-q-text active:bg-sidebar-control-active transition-all duration-200';
+  const sidebarSectionButtonClasses = 'w-full !h-auto justify-between !px-3 !py-2.5 rounded-[var(--q-radius-md)] border border-transparent text-q-text-muted hover:border-sidebar-control-border hover:bg-sidebar-control-hover hover:text-q-text active:bg-sidebar-control-active transition-[background-color,border-color,color] duration-150 ease-out active:scale-100';
   const sidebarSectionIconLabelClasses = 'flex items-center gap-2';
   const sidebarSectionLabelClasses = 'text-xs font-bold uppercase tracking-wider';
   const sidebarSectionChevronClasses = (isSectionCollapsed: boolean) =>
     `transition-transform duration-200 ${isSectionCollapsed ? '-rotate-90' : 'rotate-0'}`;
   const sidebarNestedListClasses = (isSectionCollapsed: boolean) =>
-    `overflow-hidden transition-all duration-300 ease-in-out ${isSectionCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`;
+    `overflow-hidden transition-[max-height,opacity] duration-200 ease-out ${isSectionCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`;
   const sidebarNestedListInnerClasses = 'pl-2 border-l border-divider ml-4 mt-1';
 
   return (
@@ -573,7 +567,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       <div
         className={`
           fixed inset-0 bg-q-text/60 backdrop-blur-sm z-40 md:hidden
-          transition-all duration-300 ease-out
+          transition-opacity duration-200 ease-out
           ${isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         onClick={onClose}
@@ -584,7 +578,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       <div className={`
         relative flex-shrink-0 h-screen z-50
         ${hiddenOnDesktop ? 'md:hidden' : ''}
-        ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
+        ${isDragging ? '' : 'transition-[width] duration-200 ease-out'}
         ${!isMobileOpen && isCollapsed ? 'md:w-[var(--q-layout-sidebar-collapsed-width)]' : ''}
         ${!isMobileOpen && !isCollapsed ? 'md:w-[var(--q-layout-sidebar-width)]' : ''}
       `}>
@@ -600,7 +594,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           className={`
               quimera-dashboard-sidebar-shell fixed md:relative z-50 h-[100dvh] md:h-full bg-sidebar/95 text-sidebar-foreground backdrop-blur-xl border-r border-sidebar-border
               shadow-[var(--shadow-elevated)] md:shadow-none flex flex-col
-              ${isDragging ? '' : 'transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]'}
+              ${isDragging ? '' : 'transition-transform duration-200 ease-out'}
               ${isMobileOpen ? 'translate-x-0 w-[85vw] max-w-[320px]' : '-translate-x-full md:translate-x-0'}
               md:w-full
           `}
@@ -614,7 +608,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           <div className="relative h-[72px] md:h-[80px] flex items-center justify-between px-4 md:px-0 md:justify-center border-b border-divider md:border-none flex-shrink-0">
             <div
               onClick={() => navigate(ROUTES.DASHBOARD)}
-              className={`flex items-center gap-3 transition-all duration-300 cursor-pointer ${isCollapsed ? 'md:px-0 md:justify-center md:gap-0' : 'md:px-6'}`}
+              className={`flex items-center gap-3 transition-[padding,gap] duration-200 cursor-pointer ${isCollapsed ? 'md:px-0 md:justify-center md:gap-0' : 'md:px-6'}`}
             >
               {/* Logo - Always show Quimera.ai branding in dashboard sidebar.
                   White Label branding (tenant.branding) is only for client-facing views
@@ -624,7 +618,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               <img
                 src={isCollapsed && !isMobileOpen ? QUIMERA_DEFAULT_LOGO : (themeMode === 'light' ? QUIMERA_FULL_LOGO_LIGHT : QUIMERA_FULL_LOGO)}
                 alt="Quimera.ai"
-                className={`object-contain flex-shrink-0 transition-all duration-300 ${isCollapsed && !isMobileOpen ? 'w-10 h-10' : 'h-10 w-auto max-w-[180px]'}`}
+                className={`object-contain flex-shrink-0 transition-[width,height,max-width] duration-200 ${isCollapsed && !isMobileOpen ? 'w-10 h-10' : 'h-10 w-auto max-w-[180px]'}`}
                 height={40}
                 loading="eager"
                 decoding="async"
@@ -638,7 +632,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               onClick={onClose}
               className="md:hidden !h-11 !w-11 !rounded-full
                           text-q-text-muted hover:text-q-text hover:bg-sidebar-control-hover
-                          active:scale-95 transition-all touch-manipulation flex-shrink-0"
+                          transition-colors duration-150 active:scale-100 touch-manipulation flex-shrink-0"
               aria-label={t('common.close')}
             >
               <AppIcon icon={X} size="lg" />
@@ -855,7 +849,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 variant="icon"
                 size="icon-sm"
                 onClick={() => setIsFooterCollapsed(!isFooterCollapsed)}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 !size-6 !h-6 !w-6 !rounded-full !p-0 !bg-q-surface border border-border-subtle flex items-center justify-center !text-q-text-muted hover:!bg-sidebar-control-hover hover:!text-q-text hover:border-sidebar-control-border transition-all shadow-[var(--shadow-card)]"
+                className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 !size-6 !h-6 !w-6 !rounded-full !p-0 !bg-q-surface border border-border-subtle flex items-center justify-center !text-q-text-muted hover:!bg-sidebar-control-hover hover:!text-q-text hover:border-sidebar-control-border transition-colors duration-150 active:scale-100 shadow-[var(--shadow-card)]"
                 aria-label={isFooterCollapsed ? t('common.expandFooter', 'Expandir') : t('common.collapseFooter', 'Colapsar')}
                 aria-expanded={!isFooterCollapsed}
               >
@@ -868,7 +862,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
             )}
 
             {/* Collapsible content wrapper */}
-            <div className={`p-3 pb-4 md:p-4 md:pb-4 transition-all duration-300 ease-in-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
+            <div className={`p-3 pb-4 md:p-4 md:pb-4 transition-[padding] duration-200 ease-out ${isFooterCollapsed && !isCollapsed && (!isMobileOpen || isMobileOpen) ? 'pt-4' : ''}`}>
 
               {isCollapsed && !isMobileOpen && (
                 <div className="mb-3 flex justify-center">
@@ -876,7 +870,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     variant="secondary"
                     size="icon-md"
                     onClick={() => setIsCollapsed(false)}
-                    className="flex !h-11 !w-11 flex-col items-center justify-center rounded-[var(--q-radius-md)] border border-sidebar-control-border !bg-sidebar-control !p-0 !text-q-accent transition-colors hover:border-sidebar-control-border hover:!bg-sidebar-control-hover"
+                    className="flex !h-11 !w-11 flex-col items-center justify-center rounded-[var(--q-radius-md)] border border-sidebar-control-border !bg-sidebar-control !p-0 !text-q-accent transition-colors duration-150 hover:border-sidebar-control-border hover:!bg-sidebar-control-hover active:scale-100"
                     title={creditsTitle}
                     aria-label={creditsTitle}
                     data-testid="sidebar-credits-compact"
@@ -890,7 +884,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               )}
 
               {/* Theme + Language (single compact bar) - Collapsible */}
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
+              <div className={`overflow-hidden transition-[max-height,opacity,margin] duration-200 ease-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
                 : 'max-h-20 opacity-100 mb-3'
                 }`}>
@@ -901,7 +895,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="icon"
                       size="icon-md"
                       onClick={() => setThemeMode('light')}
-                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'light'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-colors duration-150 active:scale-100 ${themeMode === 'light'
                         ? '!bg-q-surface !text-q-accent shadow-[var(--shadow-card)]'
                         : '!text-q-text-muted hover:!text-q-text hover:!bg-sidebar-control-hover'
                         }`}
@@ -915,7 +909,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="icon"
                       size="icon-md"
                       onClick={() => setThemeMode('dark')}
-                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'dark'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-colors duration-150 active:scale-100 ${themeMode === 'dark'
                         ? '!bg-q-surface !text-q-accent shadow-sm border border-border-subtle'
                         : '!text-q-text-muted hover:!text-q-text hover:!bg-sidebar-control-hover'
                         }`}
@@ -929,7 +923,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="icon"
                       size="icon-md"
                       onClick={() => setThemeMode('black')}
-                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-all ${themeMode === 'black'
+                      className={`!size-9 !h-9 !w-9 !rounded-lg !p-0 flex items-center justify-center transition-colors duration-150 active:scale-100 ${themeMode === 'black'
                         ? '!bg-q-surface !text-q-accent border border-q-accent/30 shadow-sm shadow-q-accent/20'
                         : '!text-q-text-muted hover:!text-q-text hover:!bg-sidebar-control-hover'
                         }`}
@@ -947,7 +941,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
               </div>
 
               {/* REFINED PRO PLAN WIDGET - Collapsible */}
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
+              <div className={`overflow-hidden transition-[max-height,opacity,margin] duration-200 ease-out ${isFooterCollapsed || (isCollapsed && !isMobileOpen)
                 ? 'max-h-0 opacity-0 mb-0'
                 : planNeedsAttention
                   ? 'max-h-52 opacity-100 mb-3 md:mb-4'
@@ -984,7 +978,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="ghost"
                       size="sm"
                       onClick={handleUpgradeClick}
-                      className="mt-1 w-full !h-auto justify-end !bg-transparent !p-1 text-right text-[11px] md:text-[10px] font-bold text-q-accent hover:!bg-transparent hover:text-q-text transition-colors touch-manipulation"
+                      className="mt-1 w-full !h-auto justify-end !bg-transparent !p-1 text-right text-[11px] md:text-[10px] font-bold text-q-accent hover:!bg-transparent hover:text-q-text transition-colors duration-150 touch-manipulation active:scale-100"
                     >
                       {t('common.upgrade')} →
                     </AppButton>
@@ -995,7 +989,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="danger"
                       size="md"
                       onClick={handlePlanAttentionClick}
-                      className="group mt-2 w-full !h-auto justify-start !whitespace-normal rounded-[var(--q-radius-md)] border border-q-error/35 !bg-q-error !px-2.5 !py-2 text-left !text-white shadow-sm transition-all duration-200 hover:!opacity-90"
+                      className="group mt-2 w-full !h-auto justify-start !whitespace-normal rounded-[var(--q-radius-md)] border border-q-error/35 !bg-q-error !px-2.5 !py-2 text-left !text-white shadow-sm transition-opacity duration-150 hover:!opacity-90 active:scale-100"
                     >
                       <span className="flex items-center gap-2">
                         <AlertTriangle className="icon-sm flex-shrink-0" />
@@ -1018,7 +1012,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                 <AppButton
                   variant="icon"
                   size="icon-md"
-                  className="relative group !h-11 !w-11 md:!h-10 md:!w-10 !rounded-full !p-0 touch-manipulation"
+                  className="relative group !h-11 !w-11 md:!h-10 md:!w-10 !rounded-full !p-0 touch-manipulation active:scale-100"
                   onClick={openProfileModal}
                   aria-label={t('common.profile', 'Perfil')}
                 >
@@ -1047,7 +1041,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       variant="ghost"
                       size="sm"
                       onClick={handleSignOut}
-                      className="!h-auto !w-auto !bg-transparent !p-2.5 md:!p-1.5 -mr-1 text-q-text-muted hover:!bg-transparent hover:text-destructive active:text-destructive transition-colors touch-manipulation active:scale-95"
+                      className="!h-auto !w-auto !bg-transparent !p-2.5 md:!p-1.5 -mr-1 text-q-text-muted hover:!bg-transparent hover:text-destructive active:text-destructive transition-colors duration-150 touch-manipulation active:scale-100"
                       aria-label={t('auth.logout')}
                     >
                       <AppIcon icon={LogOut} size="md" />
@@ -1064,7 +1058,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           variant="icon"
           size="icon-sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex absolute top-4 -right-3 z-[100] !size-6 !rounded-full !bg-q-surface border border-border-subtle text-q-text-muted hover:!bg-sidebar-control-hover hover:text-q-text hover:border-sidebar-control-border shadow-[var(--q-shadow-card)]"
+          className="hidden md:flex absolute top-4 -right-3 z-[100] !size-6 !rounded-full !bg-q-surface border border-border-subtle text-q-text-muted hover:!bg-sidebar-control-hover hover:text-q-text hover:border-sidebar-control-border transition-colors duration-150 active:scale-100 shadow-[var(--q-shadow-card)]"
           aria-label={isCollapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
           aria-expanded={!isCollapsed}
         >

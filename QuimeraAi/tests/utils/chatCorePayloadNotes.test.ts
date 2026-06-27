@@ -25,12 +25,12 @@ describe('ChatCore payload notes', () => {
         });
 
         expect(notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(notes).toContain('Proyecto / Project: Brasa Prime');
-        expect(notes).toContain('Origen / Source: restaurant_menu - restaurants');
-        expect(notes).toContain('Lo que desea el cliente / What the customer wants: Quiero una mesa privada para 8 personas este viernes.');
-        expect(notes).toContain('Interes detectado por IA / AI detected interest: Reserva de evento privado con urgencia media');
-        expect(notes).toContain('Accion recomendada / Recommended action: Confirmar disponibilidad y menu');
-        expect(notes).toContain('Urgencia / Urgency: unknown | Score: 84/100');
+        expect(notes).toContain('ES: El cliente Luis Rivera, luis@example.com, +1 787 555 0101 quiere: Quiero una mesa privada para 8 personas este viernes.');
+        expect(notes).toContain('EN: The customer Luis Rivera, luis@example.com, +1 787 555 0101 wants: Quiero una mesa privada para 8 personas este viernes.');
+        expect(notes).toContain('Próximo paso sugerido: Confirmar disponibilidad y menu');
+        expect(notes).not.toContain('Proyecto / Project');
+        expect(notes).not.toContain('Origen / Source');
+        expect(notes).not.toContain('Score:');
     });
 
     it('normalizes appointment payloads with lead, transcript, and requested time context', () => {
@@ -58,12 +58,15 @@ describe('ChatCore payload notes', () => {
             },
         });
 
-        expect(notes).toContain('Cita / Appointment: Consultation with Ana');
-        expect(notes).toContain('Fecha solicitada / Requested time: 2026-07-01T14:00:00.000Z');
-        expect(notes).toContain('Lead ID: lead-1');
-        expect(notes).toContain('Conversacion / Conversation: conversation-1');
-        expect(notes).toContain('Lo que desea el cliente / What the customer wants: Ana wants pricing for the premium package before booking.');
-        expect(notes).toContain('Resumen de conversacion / Conversation snapshot');
+        expect(notes).toContain('Cita: Consultation with Ana');
+        expect(notes).toContain('Appointment: Consultation with Ana');
+        expect(notes).toContain('July 1, 2026 at 2:00 PM');
+        expect(notes).toContain('Ana wants pricing for the premium package before booking.');
+        expect(notes).toContain('Contexto de la conversación');
+        expect(notes).not.toContain('Fecha solicitada / Requested time');
+        expect(notes).not.toContain('Lead ID: lead-1');
+        expect(notes).not.toContain('Conversacion / Conversation');
+        expect(notes).not.toContain('2026-07-01T14:00:00.000Z');
     });
 
     it('preserves an existing generated summary without duplicating it', () => {

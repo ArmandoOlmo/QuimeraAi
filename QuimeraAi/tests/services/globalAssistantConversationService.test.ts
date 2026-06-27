@@ -65,4 +65,42 @@ describe('globalAssistantConversationService', () => {
         });
         expect(messages[1]).toMatchObject({ role: 'user', text: 'Apply it after preview.' });
     });
+
+    it('persists project and module context after guide-only navigation', async () => {
+        const service = new GlobalAssistantConversationService(new InMemoryGlobalAssistantConversationAdapter());
+        const conversation = await service.createConversation({
+            userId: 'user_1',
+            tenantId: 'tenant_1',
+            projectId: 'project_old',
+            mode: 'owner',
+            title: 'Open ecommerce',
+            metadata: { source: 'dashboard_input', guideOnly: true },
+        });
+
+        const updatedConversation = await service.upsertConversation({
+            ...conversation,
+            tenantId: 'tenant_2',
+            projectId: 'project_new',
+            activeTaskId: null,
+            metadata: {
+                ...(conversation.metadata || {}),
+                lastNavigationTarget: 'ecommerce',
+                lastNavigationProjectId: 'project_new',
+                lastNavigationProjectName: 'Ganova',
+                guideOnly: true,
+            },
+        });
+
+        expect(updatedConversation).toMatchObject({
+            tenantId: 'tenant_2',
+            projectId: 'project_new',
+            activeTaskId: null,
+            metadata: expect.objectContaining({
+                lastNavigationTarget: 'ecommerce',
+                lastNavigationProjectId: 'project_new',
+                lastNavigationProjectName: 'Ganova',
+                guideOnly: true,
+            }),
+        });
+    });
 });

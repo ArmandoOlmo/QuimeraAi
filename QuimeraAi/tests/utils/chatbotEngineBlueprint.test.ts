@@ -51,7 +51,12 @@ function buildChatbotPlan(): WebsitePlan {
             { component: 'chatbot', reason: 'ChatCore entry point', confidence: 0.9 },
             { component: 'footer', reason: 'Navigation footer', confidence: 0.8 },
         ],
-        assetPlan: [],
+        assetPlan: [{
+            targetPath: 'media/hero-launch.png',
+            source: 'generate',
+            prompt: 'Premium fitness ecommerce hero image',
+            aspectRatio: '16:9',
+        }],
         qualityGoals: ['canonical chatbot engine'],
     };
 }
@@ -91,6 +96,7 @@ describe('chatbotEngine blueprint dashboard summary', () => {
         expect(blueprint?.engineVersion).toBe('v2');
         expect(blueprint?.actions.map(action => action.actionType)).toContain('create_lead');
         expect(blueprint?.actions.map(action => action.actionType)).toContain('create_finance_quote_request');
+        expect(blueprint?.actions.map(action => action.actionType)).toContain('request_media_asset');
         expect(blueprint?.knowledgeSources.map(source => source.type)).toContain('finance_invoices_private');
     });
 
@@ -104,6 +110,18 @@ describe('chatbotEngine blueprint dashboard summary', () => {
         expect(summary.training.businessKnowledgeCount).toBeGreaterThan(0);
         expect(summary.training.knowledgeSectionCount).toBeGreaterThan(0);
         expect(summary.training.eventIntentCount).toBeGreaterThan(0);
+        expect(summary.appearance).toMatchObject({
+            status: 'review',
+            source: 'businessBlueprint.brandProfile',
+            designSystemSource: 'Design Star',
+            usesProjectTokens: true,
+            designStarAligned: true,
+            primaryColor: '#0f766e',
+            accentColor: '#f59e0b',
+            logoConfigured: false,
+        });
+        expect(summary.appearance.brandColorCount).toBeGreaterThanOrEqual(5);
+        expect(summary.appearance.warnings.join('\n')).toContain('Logo or avatar is missing');
         expect(summary.knowledge.total).toBeGreaterThanOrEqual(4);
         expect(summary.actions.total).toBeGreaterThanOrEqual(10);
         expect(summary.actions.enabled).toBe(0);
@@ -144,13 +162,19 @@ describe('chatbotEngine blueprint dashboard summary', () => {
             'leadCapture',
             'ecommerce',
             'finance',
+            'mediaAi',
             'voice',
         ]));
         expect(summary.capabilities.find(capability => capability.id === 'finance')).toMatchObject({
             enabled: true,
             status: 'review',
         });
+        expect(summary.capabilities.find(capability => capability.id === 'mediaAi')).toMatchObject({
+            enabled: true,
+            status: 'review',
+        });
         expect(summary.testLab.scenarioCount).toBeGreaterThan(0);
+        expect(blueprint?.testing.expectedActions).toContain('request_media_asset');
         expect(summary.eventLog.events).toContain('chatbot_action_blocked');
         expect(summary.deployment.voiceEnabled).toBe(false);
         expect(summary.deployment.requireActionRegistry).toBe(true);

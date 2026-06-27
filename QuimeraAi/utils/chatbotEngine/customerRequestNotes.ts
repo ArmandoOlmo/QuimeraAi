@@ -26,6 +26,7 @@ export interface BuildChatbotCustomerRequestNotesInput {
     customerProvidedNotes?: string | null;
     appointmentTitle?: string | null;
     appointmentDateTime?: string | null;
+    appointmentTimezone?: string | null;
     sourceSurface?: string | null;
     sourceModule?: string | null;
     conversationId?: string | null;
@@ -38,10 +39,13 @@ export interface BuildReadableChatbotCustomerRequestNoteOptions {
     customer?: ChatbotCustomerRequestContact | null;
     appointmentTitle?: string | null;
     appointmentDateTime?: string | null;
+    appointmentTimezone?: string | null;
 }
 
 const MAX_NOTE_LENGTH = 6000;
 const MAX_SNIPPET_LENGTH = 700;
+const GENERATED_SUMMARY_MARKER = 'Resumen de solicitud del cliente / Customer request summary';
+const FOLLOW_UP_SUMMARY_MARKER = 'Resumen de seguimiento / Follow-up summary';
 
 const cleanText = (value: unknown, maxLength = 1200): string => {
     if (typeof value !== 'string') return '';
@@ -75,6 +79,142 @@ const uniqueNonEmpty = (values: Array<string | null | undefined>): string[] => {
         });
 };
 
+const normalizeDisplayWhitespace = (value: string): string => (
+    value.replace(/[\u00a0\u202f]/g, ' ').replace(/\s+/g, ' ').trim()
+);
+
+const safeTimeZone = (value?: string | null): string => {
+    const cleaned = cleanText(value, 80);
+    if (!cleaned) return 'UTC';
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: cleaned }).format(new Date());
+        return cleaned;
+    } catch {
+        return 'UTC';
+    }
+};
+
+const formatHumanDateTime = (
+    value?: string | null,
+    locale: 'es' | 'en' = 'es',
+    timeZone?: string | null,
+): string => {
+    const raw = cleanText(value, 250);
+    if (!raw) return '';
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+
+    const formatted = new Intl.DateTimeFormat(locale === 'es' ? 'es-US' : 'en-US', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+        timeZone: safeTimeZone(timeZone),
+    }).format(parsed);
+
+    return normalizeDisplayWhitespace(locale === 'es' ? formatted.replace(',', ' a las') : formatted);
+};
+
+const contactIdentity = (contact?: ChatbotCustomerRequestContact | null): string => (
+    uniqueNonEmpty([contact?.name, contact?.email, contact?.phone]).join(', ')
+);
+
+const readableUrgency = (value: string, locale: 'es' | 'en'): string => {
+    const normalized = cleanText(value, 80)
+        .split('|')[0]
+        .replace(/\bscore\b.*$/i, '')
+        .trim()
+        .toLowerCase();
+    if (!normalized || normalized === 'unknown') return '';
+
+    const map: Record<string, { es: string; en: string }> = {
+        urgent: { es: 'urgente', en: 'urgent' },
+        high: { es: 'alta', en: 'high' },
+        medium: { es: 'media', en: 'medium' },
+        normal: { es: 'normal', en: 'normal' },
+        low: { es: 'baja', en: 'low' },
+    };
+    return map[normalized]?.[locale] || cleanText(value, 80).split('|')[0].trim();
+};
+
+const formatConversationLine = (message: ChatbotCustomerRequestMessage, locale: 'es' | 'en'): string => {
+    const text = cleanText(message.text, MAX_SNIPPET_LENGTH);
+    if (!text) return '';
+    const role = message.role === 'user'
+        ? (locale === 'es' ? 'Cliente' : 'Customer')
+        : message.role === 'model' || message.role === 'assistant'
+            ? (locale === 'es' ? 'Asistente' : 'Assistant')
+            : (locale === 'es' ? 'Mensaje' : 'Message');
+    return `${role}: ${text}`;
+};
+
+const formatConversationContext = (
+    messages: ChatbotCustomerRequestMessage[] = [],
+    locale: 'es' | 'en',
+): string => (
+    messages
+        .filter(message => cleanText(message.text, MAX_SNIPPET_LENGTH))
+        .slice(-4)
+        .map(message => formatConversationLine(message, locale))
+        .filter(Boolean)
+        .join(' | ')
+);
+
+const buildConversationalSummary = (input: {
+    header: string;
+    customer?: ChatbotCustomerRequestContact | null;
+    request?: string | null;
+    appointmentTitle?: string | null;
+    appointmentDateTime?: string | null;
+    appointmentTimezone?: string | null;
+    urgency?: string | null;
+    recommendedAction?: string | null;
+    contextEs?: string | null;
+    contextEn?: string | null;
+}): string => {
+    const customer = contactIdentity(input.customer);
+    const request = cleanSentencePart(cleanText(input.request, 1400));
+    const appointmentTitle = cleanSentencePart(cleanText(input.appointmentTitle, 250));
+    const appointmentTimeEs = formatHumanDateTime(input.appointmentDateTime, 'es', input.appointmentTimezone);
+    const appointmentTimeEn = formatHumanDateTime(input.appointmentDateTime, 'en', input.appointmentTimezone);
+    const urgencyEs = readableUrgency(cleanText(input.urgency, 80), 'es');
+    const urgencyEn = readableUrgency(cleanText(input.urgency, 80), 'en');
+    const recommendedAction = cleanSentencePart(cleanText(input.recommendedAction, 1000));
+    const contextEs = cleanSentencePart(cleanText(input.contextEs, 1800));
+    const contextEn = cleanSentencePart(cleanText(input.contextEn, 1800));
+
+    const customerEs = customer ? `El cliente ${customer}` : 'El cliente';
+    const customerEn = customer ? `The customer ${customer}` : 'The customer';
+
+    const spanishSummary = compactParagraph([
+        request
+            ? `${customerEs} quiere: ${request}`
+            : `${customerEs} necesita seguimiento del equipo`,
+        appointmentTitle || appointmentTimeEs
+            ? `Cita: ${appointmentTitle || 'sin título'}${appointmentTimeEs ? ` para ${appointmentTimeEs}` : ''}`
+            : '',
+        urgencyEs ? `Prioridad: ${urgencyEs}` : '',
+        recommendedAction ? `Próximo paso sugerido: ${recommendedAction}` : '',
+        contextEs ? `Contexto de la conversación: ${contextEs}` : '',
+    ]);
+
+    const englishSummary = compactParagraph([
+        request
+            ? `${customerEn} wants: ${request}`
+            : `${customerEn} needs team follow-up`,
+        appointmentTitle || appointmentTimeEn
+            ? `Appointment: ${appointmentTitle || 'untitled'}${appointmentTimeEn ? ` for ${appointmentTimeEn}` : ''}`
+            : '',
+        urgencyEn ? `Priority: ${urgencyEn}` : '',
+        recommendedAction ? `Suggested next step: ${recommendedAction}` : '',
+        contextEn ? `Conversation context: ${contextEn}` : '',
+    ]);
+
+    return [
+        input.header,
+        spanishSummary ? `ES: ${spanishSummary}` : '',
+        englishSummary ? `EN: ${englishSummary}` : '',
+    ].filter(Boolean).join('\n').slice(0, MAX_NOTE_LENGTH);
+};
+
 const latestUserMessage = (messages: ChatbotCustomerRequestMessage[] = []) => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
         const message = messages[index];
@@ -102,42 +242,21 @@ export const buildChatbotCustomerRequestNotes = (input: BuildChatbotCustomerRequ
     const customerInterest = cleanText(intent.customerInterest, 1000);
     const primaryRequest = uniqueNonEmpty([explicitNotes, customerInterest, latestRequest])[0]
         || 'No especificado todavia / Not specified yet';
-    const contactParts = uniqueNonEmpty([
-        input.customer?.name,
-        input.customer?.email,
-        input.customer?.phone,
-    ]);
-    const sourceParts = uniqueNonEmpty([input.sourceSurface, input.sourceModule]);
-    const conversationSnapshot = formatConversationSnapshot(messages);
     const urgency = cleanText(intent.urgency || intent.urgencyLevel, 80) || 'unknown';
     const recommendedAction = cleanText(intent.recommendedAction, 1000);
-    const score = typeof intent.intentScore === 'number' && Number.isFinite(intent.intentScore)
-        ? String(Math.round(intent.intentScore))
-        : '';
-    const generatedAt = (input.generatedAt || new Date()).toISOString();
 
-    const lines = [
-        'Resumen de solicitud del cliente / Customer request summary',
-        `Proyecto / Project: ${cleanText(input.projectName, 250) || 'N/A'}`,
-        `Origen / Source: ${sourceParts.join(' - ') || 'ChatCore'}`,
-        contactParts.length ? `Cliente / Customer: ${contactParts.join(' | ')}` : '',
-        input.conversationId ? `Conversacion / Conversation: ${cleanText(input.conversationId, 160)}` : '',
-        input.leadId ? `Lead ID: ${cleanText(input.leadId, 160)}` : '',
-        input.appointmentTitle ? `Cita / Appointment: ${cleanText(input.appointmentTitle, 250)}` : '',
-        input.appointmentDateTime ? `Fecha solicitada / Requested time: ${cleanText(input.appointmentDateTime, 250)}` : '',
-        `Lo que desea el cliente / What the customer wants: ${primaryRequest}`,
-        explicitNotes && explicitNotes !== primaryRequest ? `Notas del cliente / Customer notes: ${explicitNotes}` : '',
-        customerInterest && customerInterest !== primaryRequest ? `Interes detectado por IA / AI detected interest: ${customerInterest}` : '',
-        latestRequest && latestRequest !== primaryRequest ? `Ultimo mensaje del cliente / Latest customer message: ${latestRequest}` : '',
-        `Urgencia / Urgency: ${urgency}${score ? ` | Score: ${score}/100` : ''}`,
-        recommendedAction ? `Accion recomendada / Recommended action: ${recommendedAction}` : '',
-        conversationSnapshot ? `Resumen de conversacion / Conversation snapshot:\n${conversationSnapshot}` : '',
-        `Generado por / Generated by: ${cleanText(input.agentName, 160) || 'ChatCore'}`,
-        `Idioma UI / UI language: ${cleanText(input.locale, 40) || 'unknown'}`,
-        `Generado en / Generated at: ${generatedAt}`,
-    ].filter(Boolean);
-
-    return lines.join('\n').slice(0, MAX_NOTE_LENGTH);
+    return buildConversationalSummary({
+        header: GENERATED_SUMMARY_MARKER,
+        customer: input.customer,
+        request: primaryRequest,
+        appointmentTitle: input.appointmentTitle,
+        appointmentDateTime: input.appointmentDateTime,
+        appointmentTimezone: input.appointmentTimezone,
+        urgency,
+        recommendedAction,
+        contextEs: formatConversationContext(messages, 'es'),
+        contextEn: formatConversationContext(messages, 'en'),
+    });
 };
 
 export const appendChatbotCustomerRequestNotes = (
@@ -192,6 +311,15 @@ const compactParagraph = (sentences: string[]): string => (
         .slice(0, MAX_NOTE_LENGTH)
 );
 
+const looksConversationalGeneratedNote = (value: string): boolean => (
+    (value.includes(GENERATED_SUMMARY_MARKER) || value.includes(FOLLOW_UP_SUMMARY_MARKER))
+    && value.includes('ES:')
+    && value.includes('EN:')
+    && !value.includes('Lead ID:')
+    && !value.includes('Generado en / Generated at:')
+    && !value.includes('Fecha solicitada / Requested time:')
+);
+
 export const buildReadableChatbotCustomerRequestNote = (
     customerRequestNotes?: string | null,
     fallback?: string | null,
@@ -199,7 +327,12 @@ export const buildReadableChatbotCustomerRequestNote = (
 ): string => {
     const raw = cleanNoteBlock(customerRequestNotes);
     if (!raw) return cleanNoteBlock(fallback);
-    if (!raw.includes('Resumen de solicitud del cliente / Customer request summary')) return raw;
+    if (looksConversationalGeneratedNote(raw)) {
+        return raw.includes(GENERATED_SUMMARY_MARKER)
+            ? raw.replace(GENERATED_SUMMARY_MARKER, FOLLOW_UP_SUMMARY_MARKER)
+            : raw;
+    }
+    if (!raw.includes(GENERATED_SUMMARY_MARKER)) return raw;
 
     const lines = raw
         .split('\n')
@@ -219,40 +352,20 @@ export const buildReadableChatbotCustomerRequestNote = (
     const latestMessage = valueAfterAnyLabel(lines, ['Ultimo mensaje del cliente / Latest customer message: ']);
     const context = conversationContextFromSummary(lines) || latestMessage;
 
-    const customerLabel = cleanSentencePart(customer);
-    const requestLabel = cleanSentencePart(request);
-    const appointmentLabel = cleanSentencePart(appointment);
-    const requestedTimeLabel = cleanSentencePart(requestedTime);
-    const urgencyLabel = cleanSentencePart(urgency);
-    const recommendedActionLabel = cleanSentencePart(recommendedAction);
-    const contextLabel = cleanSentencePart(context);
-
-    const spanishSummary = compactParagraph([
-        requestLabel
-            ? `${customerLabel ? `El cliente ${customerLabel}` : 'El cliente'} solicito: ${requestLabel}`
-            : `${customerLabel ? `El cliente ${customerLabel}` : 'El cliente'} necesita seguimiento desde ChatCore`,
-        appointmentLabel || requestedTimeLabel
-            ? `La cita relacionada es ${appointmentLabel || 'sin titulo'}${requestedTimeLabel ? ` para ${requestedTimeLabel}` : ''}`
-            : '',
-        urgencyLabel && urgencyLabel !== 'unknown' ? `Prioridad detectada: ${urgencyLabel}` : '',
-        recommendedActionLabel ? `Proximo paso sugerido: ${recommendedActionLabel}` : '',
-        contextLabel ? `Contexto de la conversacion: ${contextLabel}` : '',
-    ]);
-    const englishSummary = compactParagraph([
-        requestLabel
-            ? `${customerLabel ? `The customer ${customerLabel}` : 'The customer'} requested: ${requestLabel}`
-            : `${customerLabel ? `The customer ${customerLabel}` : 'The customer'} needs follow-up from ChatCore`,
-        appointmentLabel || requestedTimeLabel
-            ? `The related appointment is ${appointmentLabel || 'untitled'}${requestedTimeLabel ? ` for ${requestedTimeLabel}` : ''}`
-            : '',
-        urgencyLabel && urgencyLabel !== 'unknown' ? `Detected priority: ${urgencyLabel}` : '',
-        recommendedActionLabel ? `Suggested next step: ${recommendedActionLabel}` : '',
-        contextLabel ? `Conversation context: ${contextLabel}` : '',
-    ]);
-
-    return [
-        'Resumen de seguimiento / Follow-up summary',
-        spanishSummary ? `ES: ${spanishSummary}` : '',
-        englishSummary ? `EN: ${englishSummary}` : '',
-    ].filter(Boolean).join('\n').slice(0, MAX_NOTE_LENGTH);
+    return buildConversationalSummary({
+        header: FOLLOW_UP_SUMMARY_MARKER,
+        customer: {
+            name: customer || null,
+            email: null,
+            phone: null,
+        },
+        request,
+        appointmentTitle: appointment,
+        appointmentDateTime: requestedTime,
+        appointmentTimezone: options.appointmentTimezone,
+        urgency,
+        recommendedAction,
+        contextEs: context,
+        contextEn: context,
+    });
 };

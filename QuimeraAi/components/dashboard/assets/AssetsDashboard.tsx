@@ -15,6 +15,10 @@ import MediaGeneratorPanel from '../../media-generator/MediaGeneratorPanel';
 import VisualIdentityKitManager from '../visual/VisualIdentityKitManager';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import {
+    MEDIA_GENERATOR_LAUNCH_EVENT,
+    readMediaGeneratorLaunchEvent,
+} from '../../../utils/mediaGeneratorLaunch';
+import {
     Zap,
     Menu,
     ArrowLeft,
@@ -55,6 +59,18 @@ const AssetsDashboard: React.FC = () => {
             setSelectedProjectId(activeProjectId);
         }
     }, [activeProjectId]);
+
+    useEffect(() => {
+        const handleMediaLaunch = (event: Event) => {
+            const request = readMediaGeneratorLaunchEvent(event);
+            if (!request) return;
+            setShowKitManager(false);
+            setIsGeneratorCollapsed(false);
+        };
+
+        window.addEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleMediaLaunch);
+        return () => window.removeEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleMediaLaunch);
+    }, []);
 
     // Track last synced project to avoid infinite loops
     const lastSyncedProjectRef = useRef<string | null>(null);

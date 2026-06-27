@@ -84,17 +84,9 @@ const resolveModuleTags = (input: AppointmentLeadPipelineInput, leadSource: stri
     ].filter(Boolean) as string[];
 };
 
-const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, unknown> => ({
-    ...(input.metadata || {}),
-    appointmentId: input.appointmentId,
-    appointmentTitle: input.appointmentTitle,
-    appointmentStartIso: input.appointmentStartIso,
-    appointmentSource: input.source,
-    sourceComponent: input.sourceComponent,
-    sourceModule: input.sourceModule,
-    conversationTranscript: normalizeString(input.conversationTranscript, 20000),
-    customerRequestSummary: normalizeString(input.notes, 6000),
-    customerRequestNote: buildReadableChatbotCustomerRequestNote(input.notes, null, {
+const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, unknown> => {
+    const generatedSummary = normalizeString(input.notes, 6000);
+    const readableSummary = buildReadableChatbotCustomerRequestNote(input.notes, null, {
         customer: {
             name: input.participantName || null,
             email: input.participantEmail || null,
@@ -102,10 +94,24 @@ const buildLeadMetadata = (input: AppointmentLeadPipelineInput): Record<string, 
         },
         appointmentTitle: input.appointmentTitle || null,
         appointmentDateTime: input.appointmentStartIso || null,
-    }),
-    idempotencyKey: input.idempotencyKey,
-    correlationId: input.correlationId,
-});
+    });
+
+    return {
+        ...(input.metadata || {}),
+        appointmentId: input.appointmentId,
+        appointmentTitle: input.appointmentTitle,
+        appointmentStartIso: input.appointmentStartIso,
+        appointmentSource: input.source,
+        sourceComponent: input.sourceComponent,
+        sourceModule: input.sourceModule,
+        conversationTranscript: normalizeString(input.conversationTranscript, 20000),
+        customerRequestSummary: readableSummary || generatedSummary,
+        customerRequestNote: readableSummary,
+        ...(generatedSummary && generatedSummary !== readableSummary ? { customerRequestGeneratedSummary: generatedSummary } : {}),
+        idempotencyKey: input.idempotencyKey,
+        correlationId: input.correlationId,
+    };
+};
 
 export async function createOrLinkLeadForAppointment(
     client: SupabaseLike,

@@ -7,6 +7,9 @@ const mockState = vi.hoisted(() => ({
     requestChatbotRestaurantReservation: vi.fn(),
     createChatbotEcommerceProductInquiry: vi.fn(),
     queueChatbotEmailFollowUpDraft: vi.fn(),
+    requestChatbotMediaAssetDraft: vi.fn(),
+    requestChatbotHumanHandoff: vi.fn(),
+    scoreChatbotLead: vi.fn(),
     getOrCreateConversation: vi.fn(),
     saveConversationMessage: vi.fn(),
     updateConversationParticipant: vi.fn(),
@@ -29,15 +32,22 @@ vi.mock('../../services/chatbotEngine/chatbotEngineRuntimeActionService.js', asy
         requestChatbotRestaurantReservation: (...args: any[]) => mockState.requestChatbotRestaurantReservation(...args),
         createChatbotEcommerceProductInquiry: (...args: any[]) => mockState.createChatbotEcommerceProductInquiry(...args),
         queueChatbotEmailFollowUpDraft: (...args: any[]) => mockState.queueChatbotEmailFollowUpDraft(...args),
+        requestChatbotMediaAssetDraft: (...args: any[]) => mockState.requestChatbotMediaAssetDraft(...args),
+        requestChatbotHumanHandoff: (...args: any[]) => mockState.requestChatbotHumanHandoff(...args),
+        scoreChatbotLead: (...args: any[]) => mockState.scoreChatbotLead(...args),
     };
 });
 
-vi.mock('../../services/chatbot/chatbotEngineService.js', () => ({
-    getOrCreateConversation: (...args: any[]) => mockState.getOrCreateConversation(...args),
-    saveConversationMessage: (...args: any[]) => mockState.saveConversationMessage(...args),
-    updateConversationParticipant: (...args: any[]) => mockState.updateConversationParticipant(...args),
-    linkConversationToLead: (...args: any[]) => mockState.linkConversationToLead(...args),
-}));
+vi.mock('../../services/chatbot/chatbotEngineService.js', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../../services/chatbot/chatbotEngineService.js')>();
+    return {
+        executeAnswerFromKnowledgeAction: actual.executeAnswerFromKnowledgeAction,
+        getOrCreateConversation: (...args: any[]) => mockState.getOrCreateConversation(...args),
+        saveConversationMessage: (...args: any[]) => mockState.saveConversationMessage(...args),
+        updateConversationParticipant: (...args: any[]) => mockState.updateConversationParticipant(...args),
+        linkConversationToLead: (...args: any[]) => mockState.linkConversationToLead(...args),
+    };
+});
 
 vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
     getSupabaseAdmin: () => ({
@@ -64,6 +74,26 @@ function createAction(overrides: Record<string, any> = {}) {
         status: 'configured',
         readiness: { isReady: true, blockers: [], warnings: [] },
         needsReview: false,
+        ...overrides,
+    };
+}
+
+function createReadyKnowledgeSource(overrides: Record<string, any> = {}) {
+    return {
+        id: 'knowledge-business-blueprint',
+        name: 'Project BusinessBlueprint',
+        type: 'business_blueprint',
+        ownerModule: 'business-blueprint',
+        visibility: 'public',
+        status: 'ready',
+        freshness: 'fresh',
+        confidence: 0.92,
+        sourceEntityIds: ['businessBlueprint'],
+        contentPreview: 'Ganova provides operational consulting, process audits, and automation planning.',
+        readiness: { isReady: true, blockers: [], warnings: [] },
+        needsReview: false,
+        generatedByAI: true,
+        userModified: false,
         ...overrides,
     };
 }
@@ -149,6 +179,44 @@ function createProject(actionOverrides: Record<string, any> = {}) {
         menus: [],
         ai_assistant_config: { isActive: true },
     };
+}
+
+function createVoiceProject(actionOverrides: Record<string, any> = {}, voiceSettings: Record<string, any> = {}) {
+    const project = createProject({
+        id: 'chatbot-action-record_analytics_event',
+        actionType: 'record_analytics_event',
+        ownerModule: 'analytics',
+        ...actionOverrides,
+    });
+    const chatbotBlueprint = project.data.businessBlueprint.chatbotBlueprint;
+    chatbotBlueprint.deployment = {
+        ...(chatbotBlueprint.deployment || {}),
+        deployedSurfaces: ['voice'],
+        safetySettings: {
+            requireExplicitSurfaceDeployment: true,
+        },
+        voiceSettings: {
+            enabled: true,
+            provider: 'elevenlabs',
+            agentId: 'voice_agent_1',
+            languageMode: 'visitor_language',
+            consentRequired: true,
+            ...voiceSettings,
+        },
+    };
+    chatbotBlueprint.channels = {
+        ...(chatbotBlueprint.channels || {}),
+        voice: {
+            enabled: true,
+            status: 'deployed',
+            sourceSurface: 'voice',
+            routePattern: 'voice://project/:projectId',
+            contextKeys: ['projectId', 'voiceSessionId', 'consent'],
+            readiness: { isReady: true, blockers: [], warnings: [] },
+            needsReview: false,
+        },
+    };
+    return project;
 }
 
 function createSupabaseTableQuery(table: string) {
@@ -251,6 +319,9 @@ describe('widget availability action audit', () => {
         mockState.requestChatbotRestaurantReservation.mockReset();
         mockState.createChatbotEcommerceProductInquiry.mockReset();
         mockState.queueChatbotEmailFollowUpDraft.mockReset();
+        mockState.requestChatbotMediaAssetDraft.mockReset();
+        mockState.requestChatbotHumanHandoff.mockReset();
+        mockState.scoreChatbotLead.mockReset();
         mockState.getOrCreateConversation.mockReset();
         mockState.saveConversationMessage.mockReset();
         mockState.updateConversationParticipant.mockReset();
@@ -308,6 +379,32 @@ describe('widget availability action audit', () => {
             status: 'skipped',
             reviewRequired: true,
             reviewQueueUrl: '/email?projectId=project-1&tab=review',
+        });
+        mockState.requestChatbotMediaAssetDraft.mockResolvedValue({
+            assetId: 'media-asset-1',
+            name: 'Launch hero',
+            url: 'data:image/svg+xml;base64,stub',
+            duplicate: false,
+            reviewRequired: true,
+            generationStarted: false,
+            noAutoPublish: true,
+        });
+        mockState.requestChatbotHumanHandoff.mockResolvedValue({
+            conversationId: 'conversation-1',
+            duplicate: false,
+            status: 'escalated',
+            leadId: 'lead-1',
+        });
+        mockState.scoreChatbotLead.mockResolvedValue({
+            leadId: 'lead-1',
+            score: 88,
+            aiScore: 88,
+            probability: 76,
+            duplicate: false,
+            scored: true,
+            highIntent: true,
+            reviewRequired: true,
+            tags: ['chatbot', 'chatbot-scored'],
         });
         mockState.getOrCreateConversation.mockResolvedValue({
             projectId: 'project-1',
@@ -480,6 +577,63 @@ describe('widget availability action audit', () => {
         }), expect.anything());
     });
 
+    it('links direct ChatCore lead captures back to the active widget conversation', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_lead',
+            actionType: 'create_lead',
+            ownerModule: 'crm',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/leads', {
+            name: 'Elena Rivera',
+            email: 'elena@example.com',
+            phone: '+1 787 555 0177',
+            message: 'Necesito una propuesta para automatizar ventas.',
+            conversationId: 'conversation-1',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            leadId: 'row-1',
+            conversationLeadLinked: true,
+            warnings: [],
+        });
+        expect(mockState.linkConversationToLead).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            leadId: 'row-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            actorType: 'visitor',
+            metadata: expect.objectContaining({
+                autoLinkedBy: 'widget-action-result',
+                actionType: 'create_lead',
+            }),
+        }), expect.anything());
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'create_lead',
+            action_status: 'executed',
+            lead_id: 'row-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            leadId: 'row-1',
+            conversationLeadLinked: true,
+            customerRequestSummaryTarget: 'leads.notes',
+            customerRequestSummaryRedactedFromEvent: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('automatizar ventas');
+    });
+
     it('checks appointment availability through Action Registry and records an executed event', async () => {
         const response = await callAvailability('/api/widget/project-1/availability?startDate=2026-07-01&days=1&durationMinutes=60&sourceSurface=booking_page');
 
@@ -561,6 +715,219 @@ describe('widget availability action audit', () => {
         });
     });
 
+    it('answers public widget questions from reviewed ChatCore knowledge without storing raw question or answer in events', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-answer_from_knowledge',
+            actionType: 'answer_from_knowledge',
+            ownerModule: 'chatbot-engine',
+            requiresConfirmation: false,
+            idempotencyRequired: false,
+        });
+        mockState.projectRow.data.businessBlueprint.chatbotBlueprint.knowledgeSources = [
+            createReadyKnowledgeSource(),
+            createReadyKnowledgeSource({
+                id: 'knowledge-crm-leads-private',
+                name: 'Private CRM notes',
+                type: 'crm_leads_private',
+                ownerModule: 'crm',
+                visibility: 'private',
+                status: 'ready',
+                contentPreview: 'Private VIP lead history should never be used in public answers.',
+            }),
+        ];
+
+        const response = await callWidgetPost('/api/widget/project-1/knowledge/answer', {
+            question: 'What services does Ganova offer to improve operations?',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            projectId: 'project-1',
+            status: 'answered',
+            actionType: 'answer_from_knowledge',
+            answerStatus: 'answered_from_reviewed_public_knowledge',
+            knowledgePolicy: 'reviewed_public_sources_only',
+            needsHumanReview: false,
+            eventRedaction: {
+                question: true,
+                answer: true,
+                citationExcerpts: true,
+            },
+        });
+        expect(response.body.answer).toContain('operational consulting');
+        expect(response.body.citations.map((citation: any) => citation.sourceId)).toContain('knowledge-business-blueprint');
+        expect(response.body.citations.map((citation: any) => citation.sourceId)).not.toContain('knowledge-crm-leads-private');
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'answer_from_knowledge',
+            action_status: 'executed',
+            conversation_id: 'conversation-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            answerStatus: 'answered_from_reviewed_public_knowledge',
+            sourceCount: expect.any(Number),
+            citationSourceIds: expect.arrayContaining(['knowledge-business-blueprint']),
+            questionRedactedFromEvent: true,
+            answerRedactedFromEvent: true,
+            citationExcerptsRedactedFromEvent: true,
+            questionHash: expect.any(String),
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('What services does Ganova offer');
+        expect(eventJson).not.toContain('operational consulting');
+        expect(eventJson).not.toContain('Private VIP lead history');
+    });
+
+    it('blocks public knowledge answers when answer_from_knowledge is disabled', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-answer_from_knowledge',
+            actionType: 'answer_from_knowledge',
+            ownerModule: 'chatbot-engine',
+            enabled: false,
+            status: 'disabled',
+            requiresConfirmation: false,
+        });
+        mockState.projectRow.data.businessBlueprint.chatbotBlueprint.knowledgeSources = [
+            createReadyKnowledgeSource(),
+        ];
+
+        const response = await callWidgetPost('/api/widget/project-1/knowledge/answer', {
+            question: 'Tell me private pricing notes',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(403);
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_blocked',
+            action_type: 'answer_from_knowledge',
+            action_status: 'blocked',
+            conversation_id: 'conversation-1',
+        });
+        expect(mockState.recordedEvents[0].metadata.blockers).toEqual(expect.arrayContaining([
+            'action_disabled',
+            'action_status_disabled',
+        ]));
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('private pricing notes');
+    });
+
+    it('scores CRM leads through the public ChatCore Action Registry without exposing message text', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-score_lead',
+            actionType: 'score_lead',
+            ownerModule: 'crm',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/leads/lead-1/score', {
+            conversationId: 'conversation-1',
+            message: 'Private high intent request about premium pricing.',
+            conversationTranscript: 'Visitor: I need premium pricing\nAssistant: I can help.',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            metadata: {
+                customerRequestSummary: 'Do not expose this scoring context.',
+            },
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            leadId: 'lead-1',
+            score: 88,
+            aiScore: 88,
+            probability: 76,
+            duplicate: false,
+            scored: true,
+            highIntent: true,
+            reviewRequired: true,
+        });
+        expect(mockState.scoreChatbotLead).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            projectUserId: 'owner-1',
+            leadId: 'lead-1',
+            message: 'Private high intent request about premium pricing.',
+            conversationTranscript: 'Visitor: I need premium pricing\nAssistant: I can help.',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: expect.any(String),
+            metadata: expect.objectContaining({
+                scoreRequestedFromWidget: true,
+                messageHash: expect.any(String),
+                transcriptHash: expect.any(String),
+            }),
+        }));
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'score_lead',
+            action_status: 'executed',
+            lead_id: 'lead-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            messageHash: expect.any(String),
+            transcriptHash: expect.any(String),
+            messageRedactedFromEvent: true,
+            transcriptRedactedFromEvent: true,
+            scoringTarget: 'leads.custom_data.leadScore,leads.custom_data.aiScore,leads.custom_data.probability',
+            score: 88,
+            aiScore: 88,
+            probability: 76,
+            highIntent: true,
+            scoringStored: true,
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('Private high intent request');
+        expect(eventJson).not.toContain('premium pricing');
+        expect(eventJson).not.toContain('Do not expose this scoring context');
+    });
+
+    it('blocks public lead scoring when score_lead is disabled in the Action Registry', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-score_lead',
+            actionType: 'score_lead',
+            ownerModule: 'crm',
+            enabled: false,
+            status: 'disabled',
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/leads/lead-1/score', {
+            conversationId: 'conversation-1',
+            message: 'Private score request that must not run.',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(403);
+        expect(mockState.scoreChatbotLead).not.toHaveBeenCalled();
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_blocked',
+            action_type: 'score_lead',
+            action_status: 'blocked',
+        });
+        expect(mockState.recordedEvents[0].metadata.blockers).toEqual(expect.arrayContaining([
+            'action_disabled',
+            'action_status_disabled',
+        ]));
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('must not run');
+    });
+
     it('creates ChatCore appointments with a linked CRM lead when payload uses generic contact fields', async () => {
         mockState.projectRow = createProject({
             id: 'chatbot-action-create_appointment',
@@ -590,6 +957,7 @@ describe('widget availability action audit', () => {
         expect(response.body).toMatchObject({
             appointmentId: 'appointment-1',
             leadId: 'lead-1',
+            conversationLeadLinked: true,
         });
         expect(mockState.createAppointmentFromChat).toHaveBeenCalledWith(
             expect.anything(),
@@ -604,6 +972,20 @@ describe('widget availability action audit', () => {
                 notes: expect.stringContaining('Maria quiere una consulta para comparar el paquete premium.'),
             }),
         );
+        expect(mockState.linkConversationToLead).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            leadId: 'lead-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            actorType: 'visitor',
+            metadata: expect.objectContaining({
+                autoLinkedBy: 'widget-action-result',
+                actionType: 'create_appointment',
+                appointmentId: 'appointment-1',
+            }),
+        }), expect.anything());
         expect(mockState.recordedEvents).toHaveLength(1);
         expect(mockState.recordedEvents[0]).toMatchObject({
             project_id: 'project-1',
@@ -616,10 +998,266 @@ describe('widget availability action audit', () => {
         expect(mockState.recordedEvents[0].metadata).toMatchObject({
             appointmentId: 'appointment-1',
             leadId: 'lead-1',
+            conversationLeadLinked: true,
             customerRequestSummaryTarget: 'project_appointments.notes,leads.notes',
             customerRequestSummaryRedactedFromEvent: true,
         });
         expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('paquete premium');
+    });
+
+    it('uses participantInfo as appointment contact data so ChatCore can create the linked CRM lead', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_appointment',
+            actionType: 'create_appointment',
+            ownerModule: 'appointments',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/appointments', {
+            source: 'chatbot',
+            title: 'Consulta desde participantInfo',
+            description: 'Quiere agendar una llamada.',
+            startDate: '2026-07-11T16:00:00.000Z',
+            endDate: '2026-07-11T16:30:00.000Z',
+            participantInfo: {
+                name: 'Carlos Rivera',
+                email: 'carlos@example.com',
+                phone: '+1 787 555 0199',
+            },
+            conversationId: 'conversation-participant-1',
+            customerRequestSummary: 'Carlos quiere una llamada para revisar opciones de automatizacion.',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            appointmentId: 'appointment-1',
+            leadId: 'lead-1',
+        });
+        expect(mockState.createAppointmentFromChat).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({
+                participantName: 'Carlos Rivera',
+                participantEmail: 'carlos@example.com',
+                participantPhone: '+1 787 555 0199',
+                sourceConversationId: 'conversation-participant-1',
+                idempotencyKey: 'chatbot:project-1:carlos@example.com:2026-07-11T16:00:00.000Z',
+                notes: expect.stringContaining('Carlos quiere una llamada para revisar opciones de automatizacion.'),
+            }),
+        );
+    });
+
+    it('returns repaired lead links for duplicate ChatCore appointment requests without exposing notes in events', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_appointment',
+            actionType: 'create_appointment',
+            ownerModule: 'appointments',
+            requiresConsent: true,
+        });
+        mockState.createAppointmentFromChat.mockResolvedValueOnce({
+            appointmentId: 'appointment-existing-1',
+            leadId: 'lead-repaired-1',
+            duplicate: true,
+            warnings: [],
+            appointment: {
+                id: 'appointment-existing-1',
+                paymentStatus: null,
+                ecommerceOrderId: null,
+                metadata: {
+                    linkedLeadId: 'lead-repaired-1',
+                    customerRequestNote: 'ES: El cliente Maria Gomez solicito seguimiento. EN: The customer Maria Gomez requested follow-up.',
+                },
+            },
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/appointments', {
+            source: 'chatbot',
+            title: 'Consulta duplicada de ChatCore',
+            description: 'Cita existente por idempotencia.',
+            startDate: '2026-07-10T14:00:00.000Z',
+            endDate: '2026-07-10T14:30:00.000Z',
+            name: 'Maria Gomez',
+            email: 'maria@example.com',
+            conversationId: 'conversation-1',
+            idempotencyKey: 'chatcore:project-1:conversation-1:appointment',
+            customerRequestSummary: 'Maria quiere confirmar la cita y comparar el paquete premium.',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toMatchObject({
+            appointmentId: 'appointment-existing-1',
+            leadId: 'lead-repaired-1',
+            duplicate: true,
+            conversationLeadLinked: true,
+        });
+        expect(mockState.createAppointmentFromChat).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.objectContaining({
+                participantName: 'Maria Gomez',
+                participantEmail: 'maria@example.com',
+                sourceConversationId: 'conversation-1',
+                idempotencyKey: 'chatcore:project-1:conversation-1:appointment',
+                notes: expect.stringContaining('Maria quiere confirmar la cita'),
+            }),
+        );
+        expect(mockState.linkConversationToLead).toHaveBeenCalledWith(expect.objectContaining({
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            leadId: 'lead-repaired-1',
+            sourceModule: 'chatcore',
+            metadata: expect.objectContaining({
+                actionType: 'create_appointment',
+                appointmentId: 'appointment-existing-1',
+                duplicate: true,
+            }),
+        }), expect.anything());
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'create_appointment',
+            action_status: 'duplicate',
+            appointment_id: 'appointment-existing-1',
+            lead_id: 'lead-repaired-1',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            appointmentId: 'appointment-existing-1',
+            leadId: 'lead-repaired-1',
+            duplicate: true,
+            conversationLeadLinked: true,
+            customerRequestSummaryTarget: 'project_appointments.notes,leads.notes',
+            customerRequestSummaryRedactedFromEvent: true,
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('paquete premium');
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('Maria quiere confirmar');
+    });
+
+    it('creates support tickets as audited ChatCore handoff escalations without exposing the issue text', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_support_ticket',
+            actionType: 'create_support_ticket',
+            ownerModule: 'chatbot-engine',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/support-tickets', {
+            conversationId: 'conversation-1',
+            message: 'Private support issue about VIP billing access.',
+            category: 'billing',
+            priority: 'high',
+            name: 'Ana Rivera',
+            email: 'ana@example.com',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            metadata: {
+                customerRequestSummary: 'Do not expose this support issue in audit metadata.',
+            },
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            conversationId: 'conversation-1',
+            status: 'escalated',
+            duplicate: false,
+            leadId: 'lead-1',
+            supportTicket: true,
+            conversationLeadLinked: true,
+        });
+        expect(mockState.requestChatbotHumanHandoff).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            projectUserId: 'owner-1',
+            conversationId: 'conversation-1',
+            reason: 'support_request',
+            priority: 'high',
+            summary: 'Private support issue about VIP billing access.',
+            requesterName: 'Ana Rivera',
+            requesterEmail: 'ana@example.com',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: expect.any(String),
+            metadata: expect.objectContaining({
+                supportTicket: true,
+                supportCategory: 'billing',
+                supportPriority: 'high',
+                actionType: 'create_support_ticket',
+            }),
+        }));
+        expect(mockState.linkConversationToLead).toHaveBeenCalledWith(expect.objectContaining({
+            projectId: 'project-1',
+            conversationId: 'conversation-1',
+            leadId: 'lead-1',
+            metadata: expect.objectContaining({
+                autoLinkedBy: 'widget-action-result',
+                actionType: 'create_support_ticket',
+                supportCategory: 'billing',
+            }),
+        }), expect.anything());
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'create_support_ticket',
+            action_status: 'executed',
+            conversation_id: 'conversation-1',
+            lead_id: 'lead-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            supportTicket: true,
+            supportCategory: 'billing',
+            priority: 'high',
+            handoffReason: 'support_request',
+            summaryHash: expect.any(String),
+            summaryLength: 47,
+            summaryRedactedFromEvent: true,
+            conversationLeadLinked: true,
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('Private support issue');
+        expect(eventJson).not.toContain('Do not expose this support issue');
+    });
+
+    it('blocks support tickets when create_support_ticket is disabled in the Action Registry', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-create_support_ticket',
+            actionType: 'create_support_ticket',
+            ownerModule: 'chatbot-engine',
+            enabled: false,
+            status: 'disabled',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/support-tickets', {
+            conversationId: 'conversation-1',
+            message: 'Private support issue that must not run.',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(403);
+        expect(mockState.requestChatbotHumanHandoff).not.toHaveBeenCalled();
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_blocked',
+            action_type: 'create_support_ticket',
+            action_status: 'blocked',
+            conversation_id: 'conversation-1',
+        });
+        expect(mockState.recordedEvents[0].metadata.blockers).toEqual(expect.arrayContaining([
+            'action_disabled',
+            'action_status_disabled',
+        ]));
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('must not run');
     });
 
     it('records restaurant reservation execution without copying customer request notes into the event', async () => {
@@ -759,6 +1397,217 @@ describe('widget availability action audit', () => {
         });
         expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('Private quote request details');
         expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('precio premium');
+    });
+
+    it('creates Media AI draft assets through the public ChatCore Action Registry', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-request_media_asset',
+            actionType: 'request_media_asset',
+            ownerModule: 'media-ai',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/media/asset-drafts', {
+            prompt: 'Private hero request for a premium launch campaign.',
+            title: 'Launch hero',
+            category: 'hero',
+            aspectRatio: '16:9',
+            style: 'Editorial product photography',
+            model: 'review-later',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            consent: true,
+            metadata: {
+                customerRequestSummary: 'Do not expose this full Media AI request in audit logs.',
+            },
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            assetId: 'media-asset-1',
+            name: 'Launch hero',
+            duplicate: false,
+            reviewRequired: true,
+            generationStarted: false,
+            noAutoPublish: true,
+        });
+        expect(mockState.requestChatbotMediaAssetDraft).toHaveBeenCalledWith(expect.objectContaining({
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            projectUserId: 'owner-1',
+            prompt: 'Private hero request for a premium launch campaign.',
+            title: 'Launch hero',
+            category: 'hero',
+            aspectRatio: '16:9',
+            style: 'Editorial product photography',
+            model: 'review-later',
+            leadId: 'lead-1',
+            conversationId: 'conversation-1',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            idempotencyKey: expect.any(String),
+        }));
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_executed',
+            action_type: 'request_media_asset',
+            action_status: 'executed',
+            lead_id: 'lead-1',
+            conversation_id: 'conversation-1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            promptHash: expect.any(String),
+            promptLength: 51,
+            title: 'Launch hero',
+            category: 'hero',
+            aspectRatio: '16:9',
+            customerRequestSummaryStatus: 'stored',
+            customerRequestSummaryStored: true,
+            customerRequestSummaryTarget: 'media_assets.metadata.customerRequestSummary,media_assets.description',
+            customerRequestSummaryRedactedFromEvent: true,
+            assetId: 'media-asset-1',
+            reviewRequired: true,
+            generationStarted: false,
+            noAutoPublish: true,
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('Private hero request');
+        expect(eventJson).not.toContain('Do not expose this full Media AI request');
+    });
+
+    it('blocks Media AI draft requests when the Action Registry disables request_media_asset', async () => {
+        mockState.projectRow = createProject({
+            id: 'chatbot-action-request_media_asset',
+            actionType: 'request_media_asset',
+            ownerModule: 'media-ai',
+            enabled: false,
+            status: 'disabled',
+            requiresConsent: true,
+        });
+
+        const response = await callWidgetPost('/api/widget/project-1/media/asset-drafts', {
+            prompt: 'Private hero request for a blocked campaign.',
+            consent: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(403);
+        expect(mockState.requestChatbotMediaAssetDraft).not.toHaveBeenCalled();
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_action_blocked',
+            action_type: 'request_media_asset',
+            action_status: 'blocked',
+        });
+        expect(mockState.recordedEvents[0].metadata.blockers).toEqual(expect.arrayContaining([
+            'action_disabled',
+            'action_status_disabled',
+        ]));
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('blocked campaign');
+    });
+
+    it('creates canonical ChatCore voice sessions with Deploy Settings and redacted audit metadata', async () => {
+        mockState.projectRow = createVoiceProject();
+
+        const response = await callWidgetPost('/api/widget/project-1/voice/session', {
+            sessionId: 'voice-session-1',
+            conversationId: 'conversation-1',
+            consentAccepted: true,
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            voice: {
+                agentId: 'client-leaked-agent',
+            },
+        });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toMatchObject({
+            allowed: true,
+            sessionId: 'voice-session-1',
+            provider: 'elevenlabs',
+            source: 'chatbotBlueprint',
+            agentId: 'voice_agent_1',
+            languageMode: 'visitor_language',
+            consentRequired: true,
+            eventRedaction: { agentId: true },
+        });
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_voice_session_requested',
+            action_type: 'record_analytics_event',
+            action_status: 'executed',
+            conversation_id: 'conversation-1',
+            source_surface: 'voice',
+            source_module: 'chatcore',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            runtimeEvent: true,
+            runtimeEventType: 'chatbot_voice_session_requested',
+            sessionId: 'voice-session-1',
+            sessionPhase: 'requested',
+            providerSessionStarted: false,
+            agentIdRedactedFromEvent: true,
+            voice: {
+                provider: 'elevenlabs',
+                source: 'chatbotBlueprint',
+                languageMode: 'visitor_language',
+                consentRequired: true,
+                consentAccepted: true,
+                agentConfigured: true,
+            },
+        });
+        const eventJson = JSON.stringify(mockState.recordedEvents[0].metadata);
+        expect(eventJson).not.toContain('voice_agent_1');
+        expect(eventJson).not.toContain('client-leaked-agent');
+    });
+
+    it('blocks canonical ChatCore voice sessions until visitor consent is accepted', async () => {
+        mockState.projectRow = createVoiceProject();
+
+        const response = await callWidgetPost('/api/widget/project-1/voice/session', {
+            sessionId: 'voice-session-2',
+            conversationId: 'conversation-2',
+            sourceModule: 'chatcore',
+        });
+
+        expect(response.status).toBe(403);
+        expect(response.body).toMatchObject({
+            allowed: false,
+            reason: 'consent_required',
+            sessionId: 'voice-session-2',
+            provider: 'elevenlabs',
+            source: 'chatbotBlueprint',
+            agentConfigured: true,
+        });
+        expect(mockState.recordedEvents).toHaveLength(1);
+        expect(mockState.recordedEvents[0]).toMatchObject({
+            project_id: 'project-1',
+            event_type: 'chatbot_voice_session_blocked',
+            action_type: 'record_analytics_event',
+            action_status: 'blocked',
+            conversation_id: 'conversation-2',
+            source_surface: 'voice',
+        });
+        expect(mockState.recordedEvents[0].metadata).toMatchObject({
+            runtimeEventType: 'chatbot_voice_session_blocked',
+            reason: 'consent_required',
+            readinessReason: 'consent_required',
+            providerSessionStarted: false,
+            voice: {
+                consentRequired: true,
+                consentAccepted: false,
+                agentConfigured: true,
+            },
+        });
+        expect(JSON.stringify(mockState.recordedEvents[0].metadata)).not.toContain('voice_agent_1');
     });
 
     it('records sanitized ChatCore voice runtime events as analytics observations', async () => {

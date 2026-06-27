@@ -386,6 +386,7 @@
         "ecommerceEvents": "Ecommerce",
         "emailMarketingEvents": "Email Marketing",
         "financeEvents": "Finance",
+        "mediaEvents": "Media AI",
         "restaurantEvents": "Restaurants",
         "realtyEvents": "Realty",
         "voiceEvents": "Voice",
@@ -442,6 +443,12 @@
         "sourceUrlPlaceholder": "https://...",
         "sourceContentPlaceholder": "Summary, FAQ, manual snippet, or reviewable content",
         "blockedByReadiness": "Blocked by readiness",
+        "appearanceStatus": "Appearance status",
+        "projectTokens": "Project tokens",
+        "brandColors": "Brand colors",
+        "visualIdentity": "Visual identity",
+        "designStarAligned": "Aligned to Design Star",
+        "designStarReview": "Review Design Star",
         "noVoiceProvider": "No voice provider",
         "voiceAgentPlaceholder": "Provider agent ID",
         "voiceConsentRequired": "Require visitor consent before voice starts"
@@ -510,6 +517,7 @@
         "realEstate": "Real estate",
         "bioPage": "Bio Page",
         "finance": "Finance",
+        "mediaAi": "Media AI",
         "voice": "Voice"
       },
       "actionTypes": {
@@ -528,6 +536,7 @@
         "subscribe_email_audience": "Subscribe to audience",
         "queue_email_follow_up": "Create email follow-up",
         "create_finance_quote_request": "Create quote request",
+        "request_media_asset": "Request Media AI asset",
         "send_internal_alert": "Send internal alert",
         "handoff_to_human": "Human handoff",
         "create_support_ticket": "Create ticket",
@@ -608,12 +617,15 @@
         "chatbot_message_saved": "Message saved",
         "chatbot_conversation_created": "Conversation created",
         "chatbot_conversation_reused": "Conversation reused",
+        "chatbot_participant_updated": "Participant updated",
+        "chatbot_conversation_closed": "Conversation closed",
         "chatbot_conversation_linked_to_lead": "Conversation linked to lead",
         "chatbot_handoff_requested": "Handoff requested",
         "chatbot_handoff_assigned": "Handoff assigned",
         "chatbot_handoff_resolved": "Handoff resolved",
         "chatbot_test_lab_run": "Test Lab run",
         "chatbot_finance_quote_request_created": "Quote request created",
+        "chatbot_media_asset_requested": "Media AI asset requested",
         "chatbot_restaurant_reservation_requested": "Reservation requested",
         "chatbot_realty_showing_requested": "Realty showing requested",
         "chatbot_ecommerce_product_inquiry": "Product inquiry",
@@ -3883,29 +3895,35 @@
     "startBuilding": "Start building your dream website",
     "createWithAI": "Create with AI",
     "createWithAIDesc": "Let AI build your site from a conversation",
-    "aiPromptPlaceholder": "Ask Quimera to create, edit, open, analyze, or run anything...",
+    "assistantInputLabel": "Write your request",
+    "sendAssistantRequest": "Send",
+    "aiPromptPlaceholder": "What do you want to do?",
+    "aiModePromptPlaceholder": "{{mode}}: describe what you want...",
+    "aiModeSelected": "{{mode}}",
     "webDesignStudio": "Web Design Studio",
     "assistantQuickActions": {
-      "createWebsite": "Create website",
-      "createWebsitePrompt": "Use AI Studio to create a new website project with business context, sections, copy, images, and next steps.",
-      "generateHeroImage": "Generate image",
-      "generateHeroImagePrompt": "Generate a hero image draft for the active project and keep it in review before applying it.",
-      "reviewLeads": "Review leads",
-      "reviewLeadsPrompt": "Review recent leads and propose prioritized follow-ups.",
-      "createEmail": "Create email",
-      "createEmailPrompt": "Create an email campaign draft for the active project using its brand context.",
-      "openEcommerce": "Open ecommerce",
-      "openEcommercePrompt": "Open the ecommerce area and summarize what needs attention.",
-      "trainChatCore": "Train ChatCore",
-      "trainChatCorePrompt": "Train ChatCore for the active project by syncing reviewed project knowledge, keeping visitor chat memory separate.",
-      "createAppointment": "Create appointment",
-      "createAppointmentPrompt": "Create an appointment draft for the active project and ask for any missing service, date, time, contact, and consent details.",
-      "improveBioPage": "Improve Bio Page",
-      "improveBioPagePrompt": "Review the active project Bio Page and propose safe link, block, lead capture, booking, and ChatCore improvements.",
-      "analyzeProject": "Analyze project",
-      "analyzeProjectPrompt": "Analyze the active project readiness, analytics, blockers, and next best actions across modules.",
-      "reviewPlatformErrors": "Review platform errors",
-      "reviewPlatformErrorsPrompt": "Review platform errors in Owner Mode and summarize the highest-priority issues."
+      "createWebsite": "AI Studio",
+      "createWebsitePrompt": "Use AI Studio for website questions, planning, content, images, and project guidance.",
+      "generateHeroImage": "Images",
+      "generateHeroImagePrompt": "Use the image generator for image questions, prompts, sizes, styles, and drafts.",
+      "createVideo": "Videos",
+      "createVideoPrompt": "Use the video area for video questions, prompts, scenes, formats, and drafts.",
+      "reviewLeads": "Leads",
+      "reviewLeadsPrompt": "Use Leads for questions, review, follow-ups, and lead management.",
+      "createEmail": "Email",
+      "createEmailPrompt": "Use Email Marketing for email questions, drafts, audiences, campaigns, and review.",
+      "openEcommerce": "Ecommerce",
+      "openEcommercePrompt": "Use Ecommerce for store questions, products, orders, inventory, and setup.",
+      "trainChatCore": "ChatCore",
+      "trainChatCorePrompt": "Use ChatCore for assistant questions, knowledge, training, tests, and visitor chat setup.",
+      "createAppointment": "Appointments",
+      "createAppointmentPrompt": "Use Appointments for schedule questions, bookings, services, availability, and contacts.",
+      "improveBioPage": "Bio Page",
+      "improveBioPagePrompt": "Use Bio Page for links, blocks, lead capture, booking, and ChatCore questions.",
+      "analyzeProject": "Analytics",
+      "analyzeProjectPrompt": "Use Analytics for project status, readiness, reports, blockers, and next steps.",
+      "reviewPlatformErrors": "Owner Mode",
+      "reviewPlatformErrorsPrompt": "Use Owner Mode for platform status, admin questions, errors, settings, and controls."
     },
     "heroSubtitlePart1": "You have",
     "heroSubtitlePart2": "projects",
@@ -13444,6 +13462,10 @@
       "save": "Save",
       "saving": "Saving...",
       "saved": "Saved",
+      "drawer": {
+        "preparing": "Preparing...",
+        "thinking": "Thinking..."
+      },
       "status": {
         "title": "Assistant Status",
         "description": "Enable or disable global chat assistant."
@@ -13506,7 +13528,7 @@
       "systemPrompt": {
         "title": "Base System Instruction",
         "description": "Define the core personality and behavior rules. This instruction is combined with enabled templates above, plus scope permissions and contextual data automatically.",
-        "placeholder": "You are the Quimera.ai Global Assistant. You have FULL CONTROL over the application...",
+        "placeholder": "You are the Quimera.ai Global Assistant. You guide the user and open the right module...",
         "greeting": "Initial Greeting",
         "greetingPlaceholder": "Hi! I'm your Quimera Assistant..."
       },
@@ -17433,59 +17455,59 @@
     "commands": {
       "action": {
         "create-website": {
-          "label": "Create website",
-          "description": "Start a website or business build request with the Global Assistant.",
-          "prompt": "Create a new website. Ask me for any missing business details before generating."
+          "label": "AI Studio",
+          "description": "Use AI Studio for website, business, content, and project guidance.",
+          "prompt": "Use AI Studio with me. Ask what I want to do before creating or changing anything."
         },
         "edit-website": {
-          "label": "Edit website section",
-          "description": "Plan a Website Builder edit for the active project.",
-          "prompt": "Help me edit a website section in the active project. Ask which section if it is not clear."
+          "label": "Website Builder",
+          "description": "Use Website Builder for page sections, copy, images, and layout guidance.",
+          "prompt": "Use Website Builder with me. Ask what I want to edit before changing anything."
         },
         "generate-image": {
-          "label": "Generate image",
-          "description": "Create a draft image asset for the active project.",
-          "prompt": "Generate a draft image asset for the active project. Ask for style, subject, and placement if missing."
+          "label": "Images",
+          "description": "Use Images for image questions, prompts, sizes, styles, and drafts.",
+          "prompt": "Use Images with me. Ask what is missing before preparing anything."
         },
         "create-video": {
-          "label": "Create video",
-          "description": "Create a video prompt or video asset task.",
-          "prompt": "Create a video asset draft or video generation prompt for the active project."
+          "label": "Videos",
+          "description": "Use Videos for video questions, prompts, scenes, formats, and drafts.",
+          "prompt": "Use Videos with me. Ask what is missing before preparing anything."
         },
         "create-email": {
-          "label": "Create email campaign",
-          "description": "Draft an email campaign for review.",
-          "prompt": "Create an email campaign draft for review. Do not send it without explicit confirmation."
+          "label": "Email",
+          "description": "Use Email for campaigns, copy, audiences, and review.",
+          "prompt": "Use Email with me. Ask what I need before preparing anything."
         },
         "create-product": {
-          "label": "Create product",
-          "description": "Draft a new ecommerce product.",
-          "prompt": "Create an ecommerce product draft for the active project. Ask for missing product details."
+          "label": "Ecommerce",
+          "description": "Use Ecommerce for products, orders, inventory, discounts, and store settings.",
+          "prompt": "Use Ecommerce with me. Ask what I need before changing anything."
         },
         "create-appointment": {
-          "label": "Create appointment",
-          "description": "Plan a new appointment or booking.",
-          "prompt": "Create an appointment draft for the active project. Ask for date, time, contact, and service if missing."
+          "label": "Appointments",
+          "description": "Use Appointments for calendar, services, availability, and bookings.",
+          "prompt": "Use Appointments with me. Ask what I need before preparing anything."
         },
         "review-leads": {
-          "label": "Review leads",
-          "description": "Summarize and prioritize CRM leads.",
-          "prompt": "Review the active project leads, summarize priorities, and suggest follow-up actions."
+          "label": "Leads",
+          "description": "Use Leads for contacts, status, follow-up, and lead management.",
+          "prompt": "Use Leads with me. Ask what lead or group I want to review."
         },
         "create-bio-page": {
-          "label": "Create Bio Page",
-          "description": "Create or improve a Bio Page draft.",
-          "prompt": "Create a Bio Page draft for the active project with links, CTA, booking, lead capture, and ChatCore context."
+          "label": "Bio Page",
+          "description": "Use Bio Page for links, blocks, lead capture, bookings, and public actions.",
+          "prompt": "Use Bio Page with me. Ask what I want to adjust before changing anything."
         },
         "train-chatcore": {
-          "label": "Train ChatCore",
-          "description": "Create or sync project knowledge for ChatCore.",
-          "prompt": "Train ChatCore for the active project by creating or syncing knowledge. Keep visitor chat memory separate."
+          "label": "ChatCore",
+          "description": "Use ChatCore for assistant knowledge, training, tests, and visitor chat setup.",
+          "prompt": "Use ChatCore with me. Ask what I want to review before changing anything."
         },
         "analyze-project": {
-          "label": "Analyze project",
-          "description": "Review project readiness, analytics, and blockers.",
-          "prompt": "Analyze the active project readiness, analytics, blockers, and next best actions."
+          "label": "Analytics",
+          "description": "Use Analytics for project status, readiness, reports, blockers, and next steps.",
+          "prompt": "Use Analytics with me. Ask what I want to review before taking action."
         }
       },
       "nav": {

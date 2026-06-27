@@ -5,6 +5,8 @@ import { isSuppressed } from '../email/emailSuppressionService.js';
 import type { ChatbotActionType } from '../../types/businessBlueprint';
 import { getSafeProductPrice, isRenderableStorefrontProduct } from '../../utils/ecommerce/productDisplayGuards.js';
 import { buildWidgetCustomerRequestNotes } from '../../utils/chatbotEngine/widgetCustomerRequestNotes.js';
+import { buildReadableChatbotCustomerRequestNote } from '../../utils/chatbotEngine/customerRequestNotes.js';
+import { calculateLeadScore, detectHighIntent } from '../../utils/leadScoring.js';
 
 type SupabaseLike = any;
 
@@ -100,6 +102,24 @@ export interface ChatbotEmailFollowUpDraftInput extends ChatbotEngineRuntimeScop
     metadata?: Record<string, unknown>;
 }
 
+export interface ChatbotInternalAlertInput extends ChatbotEngineRuntimeScope {
+    recipientEmail: string;
+    recipientName?: string | null;
+    subject?: string | null;
+    message?: string | null;
+    summary?: string | null;
+    priority?: 'low' | 'normal' | 'high' | 'urgent' | string | null;
+    alertType?: string | null;
+    conversationId?: string | null;
+    leadId?: string | null;
+    appointmentId?: string | null;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
+    sourceEvent?: string | null;
+    idempotencyKey?: string | null;
+    metadata?: Record<string, unknown>;
+}
+
 export interface ChatbotFinanceQuoteRequestItem {
     description?: string | null;
     quantity?: number | null;
@@ -122,6 +142,74 @@ export interface ChatbotFinanceQuoteRequestInput extends ChatbotEngineRuntimeSco
     sourceSurface?: string | null;
     sourceModule?: string | null;
     sourceEvent?: string | null;
+    idempotencyKey?: string | null;
+    metadata?: Record<string, unknown>;
+    now?: Date;
+}
+
+export interface ChatbotLeadCaptureInput extends ChatbotEngineRuntimeScope {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    company?: string | null;
+    message?: string | null;
+    value?: number | null;
+    status?: string | null;
+    tags?: string[];
+    conversationId?: string | null;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
+    idempotencyKey?: string | null;
+    metadata?: Record<string, unknown>;
+    now?: Date | string;
+}
+
+export interface ChatbotLeadUpdateInput extends ChatbotEngineRuntimeScope {
+    leadId?: string | null;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    company?: string | null;
+    message?: string | null;
+    notes?: string | null;
+    status?: string | null;
+    value?: number | string | null;
+    tags?: string[];
+    leadScore?: number | string | null;
+    aiScore?: number | string | null;
+    probability?: number | string | null;
+    conversationId?: string | null;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
+    idempotencyKey?: string | null;
+    metadata?: Record<string, unknown>;
+    now?: Date | string;
+}
+
+export interface ChatbotLeadScoreInput extends ChatbotEngineRuntimeScope {
+    leadId?: string | null;
+    message?: string | null;
+    conversationTranscript?: string | null;
+    conversationLength?: number | string | null;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
+    idempotencyKey?: string | null;
+    metadata?: Record<string, unknown>;
+    now?: Date | string;
+}
+
+export interface ChatbotMediaAssetDraftInput extends ChatbotEngineRuntimeScope {
+    prompt?: string | null;
+    request?: string | null;
+    title?: string | null;
+    category?: string | null;
+    aspectRatio?: string | null;
+    style?: string | null;
+    model?: string | null;
+    conversationId?: string | null;
+    leadId?: string | null;
+    sourceSurface?: string | null;
+    sourceModule?: string | null;
     idempotencyKey?: string | null;
     metadata?: Record<string, unknown>;
     now?: Date;
@@ -262,6 +350,57 @@ function uniqueStrings(values: unknown[]): string[] {
     return Array.from(new Set(values.map(value => cleanString(value, 120)).filter(Boolean)));
 }
 
+function isUuid(value: unknown): value is string {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanString(value, 120));
+}
+
+function escapeSvgText(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function readMediaCategory(value: unknown): string {
+    const category = cleanString(value, 80);
+    const allowed = new Set([
+        'brand',
+        'template',
+        'article',
+        'hero',
+        'background',
+        'icon',
+        'component',
+        'people',
+        'product',
+        'ai_generated',
+        'other',
+    ]);
+    return allowed.has(category) ? category : 'ai_generated';
+}
+
+function titleFromMediaPrompt(prompt: string, fallback = 'ChatCore Media AI draft'): string {
+    const compact = cleanString(prompt.replace(/\s+/g, ' '), 96);
+    if (!compact) return fallback;
+    return compact.length > 64 ? `${compact.slice(0, 61)}...` : compact;
+}
+
+function buildChatbotMediaDraftPlaceholderUrl(title: string): string {
+    const safeTitle = escapeSvgText(title).slice(0, 96);
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">',
+        '<rect width="1280" height="720" fill="#101828"/>',
+        '<rect x="72" y="72" width="1136" height="576" rx="32" fill="#182230" stroke="#344054" stroke-width="3"/>',
+        '<text x="108" y="178" fill="#f9fafb" font-family="Arial, sans-serif" font-size="48" font-weight="700">ChatCore Media AI draft</text>',
+        `<text x="108" y="258" fill="#d0d5dd" font-family="Arial, sans-serif" font-size="30">${safeTitle}</text>`,
+        '<text x="108" y="574" fill="#98a2b3" font-family="Arial, sans-serif" font-size="24">Pending generation and human review in Quimera Media AI</text>',
+        '</svg>',
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 function cleanStringList(value: unknown, maxItems = 12, maxLength = 240): string[] {
     if (!Array.isArray(value)) return [];
     return uniqueStrings(value.map(item => cleanString(item, maxLength))).slice(0, maxItems);
@@ -290,6 +429,51 @@ function buildRuntimeCustomerRequestNotes(input: {
         leadId: cleanString(input.leadId, 120) || null,
         generatedAt: input.generatedAt,
     });
+}
+
+function resolveRuntimeNoteContact(body: Record<string, unknown>): {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+} {
+    return {
+        name: cleanString(body.name, 200)
+            || cleanString(body.customerName, 200)
+            || cleanString(body.participantName, 200)
+            || cleanString(body.recipientName, 200)
+            || null,
+        email: cleanString(body.email, 320)
+            || cleanString(body.customerEmail, 320)
+            || cleanString(body.participantEmail, 320)
+            || cleanString(body.recipientEmail, 320)
+            || null,
+        phone: cleanString(body.phone, 80)
+            || cleanString(body.customerPhone, 80)
+            || cleanString(body.participantPhone, 80)
+            || null,
+    };
+}
+
+function buildRuntimeCustomerRequestArtifacts(input: Parameters<typeof buildRuntimeCustomerRequestNotes>[0]): {
+    customerRequestSummary: string;
+    customerRequestNote: string;
+} {
+    const customerRequestSummary = buildRuntimeCustomerRequestNotes(input);
+    const fallback = cleanString(input.customerProvidedNotes, 5000)
+        || cleanString(input.body.message, 5000)
+        || cleanString(input.body.notes, 5000)
+        || cleanString(input.body.description, 5000)
+        || null;
+    const customerRequestNote = buildReadableChatbotCustomerRequestNote(customerRequestSummary, fallback, {
+        customer: resolveRuntimeNoteContact(input.body),
+        appointmentTitle: input.appointmentTitle || null,
+        appointmentDateTime: input.appointmentDateTime || null,
+    });
+
+    return {
+        customerRequestSummary,
+        customerRequestNote: customerRequestNote || customerRequestSummary,
+    };
 }
 
 function assertValidDateAndTime(date: string, time: string, now = new Date()): void {
@@ -350,6 +534,42 @@ function dateOnly(value: Date): string {
 function cleanCurrency(value: unknown): string {
     const cleaned = cleanString(value, 12).toUpperCase().replace(/[^A-Z]/g, '');
     return cleaned.length >= 3 ? cleaned.slice(0, 3) : 'USD';
+}
+
+function cleanLeadStatus(value: unknown): string {
+    const status = cleanString(value, 40).toLowerCase();
+    return ['new', 'contacted', 'qualified', 'lost'].includes(status) ? status : 'new';
+}
+
+function resolveRuntimeNow(value: Date | string | null | undefined): Date {
+    const parsed = value instanceof Date
+        ? value
+        : value
+            ? new Date(value)
+            : new Date();
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function appendReadableNote(existing: unknown, note: string): string {
+    const current = cleanString(existing, 20000);
+    const next = cleanString(note, 6000);
+    if (!next) return current;
+    if (current.includes(next.slice(0, 180))) return current;
+    return [current, next].filter(Boolean).join('\n\n---\n');
+}
+
+function runtimeUpdateAlreadyApplied(customData: Record<string, unknown>, idempotencyKey: string): boolean {
+    const updates = Array.isArray(customData.chatbotEngineUpdates)
+        ? customData.chatbotEngineUpdates
+        : [];
+    return updates.some((entry) => isRecord(entry) && entry.idempotencyKey === idempotencyKey);
+}
+
+function appendRuntimeUpdate(customData: Record<string, unknown>, update: Record<string, unknown>) {
+    const updates = Array.isArray(customData.chatbotEngineUpdates)
+        ? customData.chatbotEngineUpdates.filter(isRecord)
+        : [];
+    return [...updates, update].slice(-12);
 }
 
 function cleanInvoiceNumberPart(value: string): string {
@@ -576,6 +796,8 @@ async function createRestaurantLead(input: {
     date: string;
     time: string;
     notes?: string | null;
+    customerRequestSummary?: string | null;
+    customerRequestNote?: string | null;
     conversationId?: string | null;
     metadata?: Record<string, unknown>;
 }) {
@@ -608,6 +830,8 @@ async function createRestaurantLead(input: {
                 time: input.time,
                 sourceConversationId: input.conversationId || null,
                 chatbotEngine: true,
+                customerRequestSummary: input.customerRequestSummary || input.notes || null,
+                customerRequestNote: input.customerRequestNote || input.notes || null,
                 ...compactMetadata(input.metadata),
             },
         })
@@ -616,6 +840,436 @@ async function createRestaurantLead(input: {
 
     if (error) throw error;
     return { leadId: data?.id ? String(data.id) : undefined, duplicate: false };
+}
+
+export async function createChatbotLead(input: ChatbotLeadCaptureInput) {
+    const email = cleanEmail(input.email);
+    const phone = cleanString(input.phone, 80);
+    const name = cleanString(input.name, 200) || email || phone;
+    const message = cleanString(input.message, 5000);
+    if (!name && !email && !phone) throw Object.assign(new Error(BILINGUAL_REQUIRED), { status: 400 });
+
+    const parsedNow = input.now instanceof Date
+        ? input.now
+        : input.now
+            ? new Date(input.now)
+            : new Date();
+    const now = Number.isNaN(parsedNow.getTime()) ? new Date() : parsedNow;
+    const nowIso = now.toISOString();
+    const conversationId = cleanString(input.conversationId, 120);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || buildRuntimeIdempotencyKey(input.projectId, 'create_lead', [
+            conversationId || sourceSurface,
+            email || phone || name,
+            message,
+        ]);
+
+    const existing = await input.supabase
+        .from('leads')
+        .select('id,email,status,custom_data')
+        .eq('project_id', input.projectId)
+        .contains('custom_data', {
+            chatbotEngine: true,
+            actionType: 'create_lead',
+            idempotencyKey,
+        })
+        .limit(1)
+        .maybeSingle();
+
+    if (existing.error) throw existing.error;
+    if (existing.data?.id) {
+        return {
+            leadId: String(existing.data.id),
+            email: cleanEmail(existing.data.email),
+            status: cleanLeadStatus(existing.data.status),
+            duplicate: true,
+            created: false,
+            reviewRequired: true,
+        };
+    }
+
+    const leadRequest = buildRuntimeCustomerRequestArtifacts({
+        body: {
+            name,
+            email,
+            phone,
+            company: input.company,
+            message,
+            aiAnalysis: 'ES: Lead capturado por ChatCore para revision y seguimiento en CRM. EN: Lead captured by ChatCore for CRM review and follow-up.',
+            recommendedAction: 'ES: Revisar intencion, datos de contacto y proximo paso antes de contactar. EN: Review intent, contact details, and next step before follow-up.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                sourceConversationId: conversationId || null,
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: message,
+        conversationId,
+        generatedAt: now,
+    });
+    const leadValue = Math.max(cleanNumber(input.value) ?? 0, 0);
+    const tags = uniqueStrings([
+        'chatbot',
+        'chatcore',
+        'chatbot-widget',
+        sourceSurface,
+        ...cleanStringList(input.tags, 20, 80),
+    ]);
+
+    const { data, error } = await input.supabase
+        .from('leads')
+        .insert({
+            tenant_id: input.tenantId || null,
+            project_id: input.projectId,
+            name: name || 'ChatCore lead',
+            email,
+            phone: phone || null,
+            company: cleanString(input.company, 200) || null,
+            status: cleanLeadStatus(input.status),
+            source: 'chatbot-widget',
+            value: leadValue,
+            tags,
+            notes: leadRequest.customerRequestNote,
+            custom_data: {
+                ...compactMetadata(input.metadata),
+                chatbotEngine: true,
+                actionType: 'create_lead',
+                sourceSurface,
+                sourceModule,
+                sourceConversationId: conversationId || null,
+                customerRequestSummary: leadRequest.customerRequestSummary,
+                customerRequestNote: leadRequest.customerRequestNote,
+                customerRequestSummaryTarget: 'leads.custom_data.customerRequestSummary,leads.notes',
+                needsReview: true,
+                generatedByAI: true,
+                idempotencyKey,
+            },
+            created_at: nowIso,
+            updated_at: nowIso,
+        })
+        .select('id,email,status')
+        .single();
+
+    if (error) throw error;
+
+    return {
+        leadId: String(data?.id || ''),
+        email: cleanEmail(data?.email || email),
+        status: cleanLeadStatus(data?.status),
+        duplicate: false,
+        created: true,
+        reviewRequired: true,
+    };
+}
+
+export async function updateChatbotLead(input: ChatbotLeadUpdateInput) {
+    const leadId = cleanString(input.leadId, 120);
+    if (!leadId) throw Object.assign(new Error(BILINGUAL_REQUIRED), { status: 400 });
+
+    const { data: lead, error: loadError } = await input.supabase
+        .from('leads')
+        .select('id,tenant_id,project_id,name,email,phone,company,status,value,tags,notes,custom_data')
+        .eq('project_id', input.projectId)
+        .eq('id', leadId)
+        .maybeSingle();
+    if (loadError) throw loadError;
+    if (!lead?.id) throw Object.assign(new Error(BILINGUAL_NOT_FOUND), { status: 404 });
+
+    const now = resolveRuntimeNow(input.now);
+    const nowIso = now.toISOString();
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const existingCustomData = isRecord(lead.custom_data) ? lead.custom_data : {};
+    const message = cleanString(input.message, 5000)
+        || cleanString(input.notes, 5000)
+        || cleanString(input.metadata?.customerRequestSummary, 5000);
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || buildRuntimeIdempotencyKey(input.projectId, 'update_lead', [
+            leadId,
+            cleanLeadStatus(input.status || lead.status),
+            cleanNumber(input.value),
+            message,
+            cleanStringList(input.tags, 20, 80).join(','),
+        ]);
+
+    if (runtimeUpdateAlreadyApplied(existingCustomData, idempotencyKey)) {
+        return {
+            leadId,
+            status: cleanLeadStatus(lead.status),
+            duplicate: true,
+            updated: false,
+            reviewRequired: true,
+        };
+    }
+
+    const artifacts = buildRuntimeCustomerRequestArtifacts({
+        body: {
+            name: input.name || lead.name,
+            email: input.email || lead.email,
+            phone: input.phone || lead.phone,
+            company: input.company || lead.company,
+            message,
+            aiAnalysis: 'ES: Lead actualizado por ChatCore con nueva intención o seguimiento. EN: Lead updated by ChatCore with new intent or follow-up.',
+            recommendedAction: 'ES: Revisar el cambio del lead y continuar el seguimiento desde CRM. EN: Review the lead change and continue follow-up from CRM.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                sourceConversationId: cleanString(input.conversationId, 120) || null,
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: message,
+        conversationId: cleanString(input.conversationId, 120),
+        generatedAt: now,
+    });
+    const tags = uniqueStrings([
+        ...(Array.isArray(lead.tags) ? lead.tags : []),
+        'chatbot',
+        'chatcore',
+        'chatbot-updated',
+        sourceSurface,
+        ...cleanStringList(input.tags, 20, 80),
+    ]);
+    const nextCustomData = {
+        ...existingCustomData,
+        ...compactMetadata(input.metadata),
+        chatbotEngine: true,
+        actionType: 'update_lead',
+        sourceSurface,
+        sourceModule,
+        sourceConversationId: cleanString(input.conversationId, 120) || existingCustomData.sourceConversationId || null,
+        customerRequestSummary: artifacts.customerRequestSummary,
+        customerRequestNote: artifacts.customerRequestNote,
+        customerRequestSummaryTarget: 'leads.custom_data.customerRequestSummary,leads.notes',
+        leadScore: cleanNumber(input.leadScore) ?? existingCustomData.leadScore,
+        aiScore: cleanNumber(input.aiScore) ?? existingCustomData.aiScore,
+        probability: cleanNumber(input.probability) ?? existingCustomData.probability,
+        needsReview: true,
+        generatedByAI: true,
+        lastChatbotLeadUpdateAt: nowIso,
+        chatbotEngineUpdates: appendRuntimeUpdate(existingCustomData, {
+            idempotencyKey,
+            updatedAt: nowIso,
+            actionType: 'update_lead',
+            sourceSurface,
+            sourceModule,
+            conversationId: cleanString(input.conversationId, 120) || null,
+            status: cleanLeadStatus(input.status || lead.status),
+        }),
+    };
+    const updatePayload = {
+        ...(cleanString(input.name, 200) ? { name: cleanString(input.name, 200) } : {}),
+        ...(cleanEmail(input.email) ? { email: cleanEmail(input.email) } : {}),
+        ...(cleanString(input.phone, 80) ? { phone: cleanString(input.phone, 80) } : {}),
+        ...(input.company !== undefined ? { company: cleanString(input.company, 200) || null } : {}),
+        ...(input.status !== undefined ? { status: cleanLeadStatus(input.status) } : {}),
+        ...(input.value !== undefined ? { value: Math.max(cleanNumber(input.value) ?? 0, 0) } : {}),
+        tags,
+        notes: appendReadableNote(lead.notes, artifacts.customerRequestNote),
+        custom_data: nextCustomData,
+        updated_at: nowIso,
+    };
+
+    const { data: updated, error: updateError } = await input.supabase
+        .from('leads')
+        .update(updatePayload)
+        .eq('id', leadId)
+        .eq('project_id', input.projectId)
+        .select('id,email,status,tags,custom_data')
+        .maybeSingle();
+    if (updateError) throw updateError;
+    if (!updated?.id) throw Object.assign(new Error(BILINGUAL_NOT_FOUND), { status: 404 });
+
+    return {
+        leadId: String(updated.id),
+        email: cleanEmail(updated.email || input.email || lead.email),
+        status: cleanLeadStatus(updated.status),
+        duplicate: false,
+        updated: true,
+        reviewRequired: true,
+        tags: Array.isArray(updated.tags) ? updated.tags : tags,
+    };
+}
+
+function calculateChatbotLeadProbability(input: {
+    score: number;
+    status: string;
+    source: string;
+    hasHighIntent: boolean;
+    conversationLength: number;
+}): number {
+    const statusBonus: Record<string, number> = {
+        new: 8,
+        contacted: 16,
+        qualified: 34,
+        negotiation: 54,
+        won: 100,
+        lost: 0,
+    };
+    const sourceBonus: Record<string, number> = {
+        'chatbot-widget': 8,
+        chatbot: 8,
+        'landing-chatbot': 8,
+        'embedded-widget': 8,
+        'bio_page': 6,
+        'realty-website': 9,
+        'contact-form': 8,
+        form: 8,
+        referral: 10,
+    };
+    const probability = Math.round(
+        input.score * 0.55
+        + (statusBonus[input.status] ?? 8)
+        + (sourceBonus[input.source] ?? 5)
+        + (input.hasHighIntent ? 10 : 0)
+        + Math.min(input.conversationLength, 8),
+    );
+    return Math.max(0, Math.min(100, probability));
+}
+
+export async function scoreChatbotLead(input: ChatbotLeadScoreInput) {
+    const leadId = cleanString(input.leadId, 120);
+    if (!leadId) throw Object.assign(new Error(BILINGUAL_REQUIRED), { status: 400 });
+
+    const { data: lead, error: loadError } = await input.supabase
+        .from('leads')
+        .select('id,tenant_id,project_id,name,email,phone,company,status,source,tags,notes,custom_data,created_at')
+        .eq('project_id', input.projectId)
+        .eq('id', leadId)
+        .maybeSingle();
+    if (loadError) throw loadError;
+    if (!lead?.id) throw Object.assign(new Error(BILINGUAL_NOT_FOUND), { status: 404 });
+
+    const now = resolveRuntimeNow(input.now);
+    const nowIso = now.toISOString();
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const existingCustomData = isRecord(lead.custom_data) ? lead.custom_data : {};
+    const tags = uniqueStrings([
+        ...(Array.isArray(lead.tags) ? lead.tags : []),
+        'chatbot-scored',
+        sourceSurface,
+    ]);
+    const message = cleanString(input.message, 5000)
+        || cleanString(input.metadata?.customerRequestSummary, 5000)
+        || cleanString(existingCustomData.customerRequestSummary, 5000)
+        || cleanString(lead.notes, 5000);
+    const conversationTranscript = cleanString(input.conversationTranscript, 20000)
+        || cleanString(existingCustomData.conversationTranscript, 20000);
+    const conversationLength = Math.max(
+        cleanNumber(input.conversationLength) ?? 0,
+        conversationTranscript ? conversationTranscript.split('\n').filter(Boolean).length : 0,
+    );
+    const source = cleanString(lead.source, 80) || 'chatbot-widget';
+    const hasHighIntent = detectHighIntent([
+        message,
+        conversationTranscript,
+        tags.join(' '),
+    ].filter(Boolean).join(' '));
+    const score = calculateLeadScore({
+        hasEmail: Boolean(cleanEmail(lead.email)),
+        hasPhone: Boolean(cleanString(lead.phone, 80)),
+        hasName: Boolean(cleanString(lead.name, 200)),
+        hasCompany: Boolean(cleanString(lead.company, 200)),
+        messageLength: message.length,
+        conversationLength,
+        hasHighIntentKeywords: hasHighIntent,
+        source: source as any,
+        tags,
+    });
+    const probability = calculateChatbotLeadProbability({
+        score,
+        status: cleanLeadStatus(lead.status),
+        source,
+        hasHighIntent,
+        conversationLength,
+    });
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || buildRuntimeIdempotencyKey(input.projectId, 'score_lead', [
+            leadId,
+            sourceSurface,
+            sourceModule,
+            score,
+            probability,
+        ]);
+
+    if (runtimeUpdateAlreadyApplied(existingCustomData, idempotencyKey)) {
+        return {
+            leadId,
+            score: cleanNumber(existingCustomData.leadScore) ?? score,
+            aiScore: cleanNumber(existingCustomData.aiScore) ?? score,
+            probability: cleanNumber(existingCustomData.probability) ?? probability,
+            duplicate: true,
+            scored: false,
+            highIntent: hasHighIntent,
+            reviewRequired: true,
+        };
+    }
+
+    const nextCustomData = {
+        ...existingCustomData,
+        ...compactMetadata(input.metadata),
+        chatbotEngine: true,
+        actionType: 'score_lead',
+        sourceSurface,
+        sourceModule,
+        leadScore: score,
+        aiScore: score,
+        probability,
+        scoreLeadAt: nowIso,
+        scoreSource: 'chatbot-engine',
+        scoreSignals: {
+            hasEmail: Boolean(cleanEmail(lead.email)),
+            hasPhone: Boolean(cleanString(lead.phone, 80)),
+            hasName: Boolean(cleanString(lead.name, 200)),
+            hasCompany: Boolean(cleanString(lead.company, 200)),
+            messageLength: message.length,
+            conversationLength,
+            highIntent: hasHighIntent,
+            tagCount: tags.length,
+            source,
+        },
+        chatbotEngineUpdates: appendRuntimeUpdate(existingCustomData, {
+            idempotencyKey,
+            updatedAt: nowIso,
+            actionType: 'score_lead',
+            sourceSurface,
+            sourceModule,
+            score,
+            probability,
+        }),
+    };
+
+    const { data: updated, error: updateError } = await input.supabase
+        .from('leads')
+        .update({
+            tags,
+            custom_data: nextCustomData,
+            updated_at: nowIso,
+        })
+        .eq('id', leadId)
+        .eq('project_id', input.projectId)
+        .select('id,tags,custom_data')
+        .maybeSingle();
+    if (updateError) throw updateError;
+    if (!updated?.id) throw Object.assign(new Error(BILINGUAL_NOT_FOUND), { status: 404 });
+
+    return {
+        leadId: String(updated.id),
+        score,
+        aiScore: score,
+        probability,
+        duplicate: false,
+        scored: true,
+        highIntent: hasHighIntent,
+        reviewRequired: true,
+        tags: Array.isArray(updated.tags) ? updated.tags : tags,
+    };
 }
 
 export async function searchChatbotEcommerceProducts(input: ChatbotEcommerceProductSearchInput) {
@@ -755,7 +1409,7 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
     const message = cleanString(input.message, 5000);
     const sourceSurface = cleanString(input.sourceSurface, 120) || 'storefront';
     const sourceModule = cleanString(input.sourceModule, 120) || 'ecommerce';
-    const productInquiryNotes = buildRuntimeCustomerRequestNotes({
+    const productInquiryRequest = buildRuntimeCustomerRequestArtifacts({
         body: {
             name,
             email,
@@ -796,7 +1450,7 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
             source: 'product-inquiry',
             value: product.price * Math.max(quantity || 1, 1),
             tags: uniqueStrings(['ecommerce', 'product-inquiry', 'chatbot-widget', `product:${product.id}`, product.categoryName]),
-            notes: productInquiryNotes,
+            notes: productInquiryRequest.customerRequestNote,
             custom_data: {
                 productId: product.id,
                 productSlug: product.slug,
@@ -808,7 +1462,8 @@ export async function createChatbotEcommerceProductInquiry(input: ChatbotEcommer
                 sourceModule,
                 chatbotEngine: true,
                 actionType: 'create_product_inquiry',
-                customerRequestSummary: productInquiryNotes,
+                customerRequestSummary: productInquiryRequest.customerRequestSummary,
+                customerRequestNote: productInquiryRequest.customerRequestNote,
                 idempotencyKey,
                 ...compactMetadata(input.metadata),
             },
@@ -878,7 +1533,7 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
     if (!leadId) {
         const sourceSurface = cleanString(input.sourceSurface, 120) || 'storefront';
         const sourceModule = cleanString(input.sourceModule, 120) || 'ecommerce';
-        const backInStockNotes = buildRuntimeCustomerRequestNotes({
+        const backInStockRequest = buildRuntimeCustomerRequestArtifacts({
             body: {
                 name: cleanString(input.name, 200) || email,
                 email,
@@ -900,10 +1555,10 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
                     ...compactMetadata(input.metadata),
                 },
             },
-            sourceSurface,
-            sourceModule,
-            conversationId: input.conversationId,
-        });
+                sourceSurface,
+                sourceModule,
+                conversationId: input.conversationId,
+            });
         const { data: lead, error: leadError } = await input.supabase
             .from('leads')
             .insert({
@@ -915,7 +1570,7 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
                 source: 'back-in-stock-request',
                 value: product.price,
                 tags: uniqueStrings(['ecommerce', 'back-in-stock', 'chatbot-widget', `product:${product.id}`, product.categoryName]),
-                notes: backInStockNotes,
+                notes: backInStockRequest.customerRequestNote,
                 custom_data: {
                     productId: product.id,
                     productSlug: product.slug,
@@ -927,7 +1582,8 @@ export async function createChatbotEcommerceBackInStockRequest(input: ChatbotEco
                     sourceModule,
                     chatbotEngine: true,
                     actionType: 'back_in_stock_request',
-                    customerRequestSummary: backInStockNotes,
+                    customerRequestSummary: backInStockRequest.customerRequestSummary,
+                    customerRequestNote: backInStockRequest.customerRequestNote,
                     idempotencyKey,
                     ...compactMetadata(input.metadata),
                 },
@@ -1178,7 +1834,7 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
     const sourceModule = cleanString(input.sourceModule, 120) || 'restaurants';
     const metadata = compactMetadata(input.metadata);
     const customerNotes = cleanString(input.notes, 5000);
-    const reservationNotes = buildRuntimeCustomerRequestNotes({
+    const reservationRequest = buildRuntimeCustomerRequestArtifacts({
         body: {
             customerName,
             customerEmail,
@@ -1224,7 +1880,7 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
             party_size: partySize,
             table_preference: cleanString(input.tablePreference, 200) || null,
             status: 'pending',
-            notes: reservationNotes,
+            notes: reservationRequest.customerRequestNote,
             source,
         })
         .select('id,status')
@@ -1245,13 +1901,16 @@ export async function requestChatbotRestaurantReservation(input: ChatbotRestaura
             partySize,
             date,
             time,
-            notes: reservationNotes,
+            notes: reservationRequest.customerRequestNote,
+            customerRequestSummary: reservationRequest.customerRequestSummary,
+            customerRequestNote: reservationRequest.customerRequestNote,
             conversationId: input.conversationId,
             metadata: {
                 ...metadata,
                 sourceSurface,
                 sourceModule,
-                customerRequestSummary: reservationNotes,
+                customerRequestSummary: reservationRequest.customerRequestSummary,
+                customerRequestNote: reservationRequest.customerRequestNote,
                 idempotencyKey,
             },
         })
@@ -1343,7 +2002,7 @@ export async function requestChatbotRealtyLead(input: ChatbotRealtyLeadInput) {
     const sourceSurface = cleanString(input.sourceSurface, 120) || 'realty_property';
     const sourceModule = cleanString(input.sourceModule, 120) || 'realty';
     const rawMessage = cleanString(input.message, 5000);
-    const realtyNotes = buildRuntimeCustomerRequestNotes({
+    const realtyRequest = buildRuntimeCustomerRequestArtifacts({
         body: {
             name,
             email,
@@ -1387,7 +2046,8 @@ export async function requestChatbotRealtyLead(input: ChatbotRealtyLeadInput) {
         sourceSurface,
         sourceModule,
         rawMessage: rawMessage || null,
-        customerRequestSummary: realtyNotes,
+        customerRequestSummary: realtyRequest.customerRequestSummary,
+        customerRequestNote: realtyRequest.customerRequestNote,
         chatbotEngine: true,
         actionType: input.actionType,
         idempotencyKey,
@@ -1404,7 +2064,7 @@ export async function requestChatbotRealtyLead(input: ChatbotRealtyLeadInput) {
             name,
             email,
             phone: cleanString(input.phone, 80) || null,
-            message: realtyNotes,
+            message: realtyRequest.customerRequestNote,
             stage: 'new',
             lead_type: 'buyer',
             preferred_date: preferredDate || null,
@@ -1501,7 +2161,7 @@ export async function createChatbotFinanceQuoteRequest(input: ChatbotFinanceQuot
     const currency = cleanCurrency(input.currency);
     const sourceSurface = cleanString(input.sourceSurface, 120) || null;
     const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
-    const financeRequestNotes = buildRuntimeCustomerRequestNotes({
+    const financeRequest = buildRuntimeCustomerRequestArtifacts({
         body: {
             customerName,
             customerEmail,
@@ -1554,7 +2214,7 @@ export async function createChatbotFinanceQuoteRequest(input: ChatbotFinanceQuot
             currency,
             payment_terms: cleanString(input.paymentTerms, 200) || 'Due on receipt',
             reminder_note: 'Generated as a Chatbot Engine finance draft for human review.',
-            notes: financeRequestNotes,
+            notes: financeRequest.customerRequestNote,
             source_module: sourceModule,
             source_component: sourceModule,
             source_event: sourceEvent,
@@ -1579,8 +2239,9 @@ export async function createChatbotFinanceQuoteRequest(input: ChatbotFinanceQuot
                 sourceEvent,
                 leadId: leadId || null,
                 conversationId: conversationId || null,
-                customerRequestSummary: financeRequestNotes,
-                customerRequestSummaryTarget: 'accounting_invoices.notes',
+                customerRequestSummary: financeRequest.customerRequestSummary,
+                customerRequestNote: financeRequest.customerRequestNote,
+                customerRequestSummaryTarget: 'accounting_invoices.metadata.customerRequestSummary,accounting_invoices.notes',
                 tenantId: input.tenantId || null,
                 projectUserId: input.projectUserId || null,
                 idempotencyKey,
@@ -1602,6 +2263,153 @@ export async function createChatbotFinanceQuoteRequest(input: ChatbotFinanceQuot
         reviewRequired: true,
         paymentCreated: false,
         paymentLinkCreated: false,
+    };
+}
+
+export async function requestChatbotMediaAssetDraft(input: ChatbotMediaAssetDraftInput) {
+    const prompt = cleanString(input.prompt, 5000) || cleanString(input.request, 5000);
+    if (!prompt) throw Object.assign(new Error(BILINGUAL_REQUIRED), { status: 400 });
+
+    const now = input.now || new Date();
+    const nowIso = now.toISOString();
+    const conversationId = cleanString(input.conversationId, 120);
+    const leadId = cleanString(input.leadId, 120);
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'website';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'media-ai';
+    const aspectRatio = cleanString(input.aspectRatio, 40) || '16:9';
+    const category = readMediaCategory(input.category);
+    const title = cleanString(input.title, 160) || titleFromMediaPrompt(prompt);
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || buildRuntimeIdempotencyKey(input.projectId, 'request_media_asset', [
+            conversationId || leadId || sourceSurface,
+            category,
+            aspectRatio,
+            prompt,
+        ]);
+
+    const existing = await input.supabase
+        .from('media_assets')
+        .select('id,name,url,metadata')
+        .contains('metadata', {
+            projectId: input.projectId,
+            chatbotEngine: true,
+            actionType: 'request_media_asset',
+            idempotencyKey,
+        })
+        .limit(1)
+        .maybeSingle();
+
+    if (existing.error) throw existing.error;
+    if (existing.data?.id) {
+        return {
+            assetId: String(existing.data.id),
+            name: String(existing.data.name || title),
+            url: String(existing.data.url || ''),
+            duplicate: true,
+            reviewRequired: true,
+            generationStarted: false,
+            noAutoPublish: true,
+        };
+    }
+
+    const mediaRequest = buildRuntimeCustomerRequestArtifacts({
+        body: {
+            title,
+            message: prompt,
+            aiAnalysis: 'ES: Solicitud de asset de Media AI creada por ChatCore para revision humana. EN: Media AI asset request created by ChatCore for human review.',
+            recommendedAction: 'ES: Revisar el prompt, estilo y uso previsto antes de generar, adjuntar o publicar el asset. EN: Review the prompt, style, and intended use before generating, attaching, or publishing the asset.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                sourceConversationId: conversationId || null,
+                sourceLeadId: leadId || null,
+                category,
+                aspectRatio,
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: prompt,
+        conversationId,
+        leadId,
+        generatedAt: now,
+    });
+    const createdBy = isUuid(input.projectUserId) ? input.projectUserId : null;
+    const folderSafeKey = idempotencyKey.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'draft';
+
+    const { data, error } = await input.supabase
+        .from('media_assets')
+        .insert({
+            name: title,
+            url: buildChatbotMediaDraftPlaceholderUrl(title),
+            size: 0,
+            type: 'image/svg+xml',
+            category,
+            folder_path: `media/ai-generated/chatcore/${folderSafeKey}`,
+            tags: uniqueStrings([
+                'chatbot-engine',
+                'chatcore',
+                'media-ai',
+                'ai-generated',
+                'needs-review',
+                sourceSurface,
+                aspectRatio,
+            ]),
+            description: mediaRequest.customerRequestNote,
+            is_ai_generated: true,
+            ai_prompt: prompt,
+            is_system_asset: false,
+            used_in: [],
+            usage_count: 0,
+            metadata: {
+                ...compactMetadata(input.metadata),
+                projectId: input.projectId,
+                tenantId: input.tenantId || null,
+                projectUserId: input.projectUserId || null,
+                chatbotEngine: true,
+                actionType: 'request_media_asset',
+                sourceSurface,
+                sourceModule,
+                sourceEvent: 'chatbot_media_asset_requested',
+                conversationId: conversationId || null,
+                leadId: leadId || null,
+                mediaKind: 'asset',
+                generationStatus: 'draft_prompt',
+                generationMode: 'draft_prompt',
+                aspectRatio,
+                style: cleanString(input.style, 120) || null,
+                model: cleanString(input.model, 120) || null,
+                generatedByAI: true,
+                needsReview: true,
+                safeToEdit: true,
+                readyForMediaAI: true,
+                noAutoPublish: true,
+                generationStarted: false,
+                providerJobCreated: false,
+                attachedToSurface: false,
+                published: false,
+                customerRequestSummary: mediaRequest.customerRequestSummary,
+                customerRequestNote: mediaRequest.customerRequestNote,
+                customerRequestSummaryTarget: 'media_assets.metadata.customerRequestSummary,media_assets.description',
+                idempotencyKey,
+            },
+            created_by: createdBy,
+            created_at: nowIso,
+            updated_at: nowIso,
+        })
+        .select('id,name,url,metadata')
+        .maybeSingle();
+
+    if (error) throw error;
+
+    return {
+        assetId: String(data?.id || ''),
+        name: String(data?.name || title),
+        url: String(data?.url || ''),
+        duplicate: false,
+        reviewRequired: true,
+        generationStarted: false,
+        noAutoPublish: true,
     };
 }
 
@@ -1698,7 +2506,7 @@ export async function queueChatbotEmailFollowUpDraft(input: ChatbotEmailFollowUp
     const text = cleanString(input.text, 12000) || DEFAULT_EMAIL_FOLLOW_UP_TEXT;
     const sourceSurface = cleanString(input.sourceSurface, 120) || null;
     const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
-    const customerRequestSummary = buildRuntimeCustomerRequestNotes({
+    const emailRequest = buildRuntimeCustomerRequestArtifacts({
         body: {
             name: input.name,
             email,
@@ -1722,6 +2530,8 @@ export async function queueChatbotEmailFollowUpDraft(input: ChatbotEmailFollowUp
         conversationId,
         leadId,
     });
+    const customerRequestSummary = emailRequest.customerRequestSummary;
+    const customerRequestNote = emailRequest.customerRequestNote;
     const canonicalEmail = buildCanonicalEmailDraftMetadata({
         sourceModule: 'chatcore',
         sourceComponent: sourceModule,
@@ -1744,6 +2554,7 @@ export async function queueChatbotEmailFollowUpDraft(input: ChatbotEmailFollowUp
             leadId: leadId || null,
             customerId: cleanString(input.customerId, 120) || null,
             customerRequestSummary,
+            customerRequestNote,
             customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary',
             ...compactMetadata(input.metadata),
         },
@@ -1787,6 +2598,7 @@ export async function queueChatbotEmailFollowUpDraft(input: ChatbotEmailFollowUp
             leadId: leadId || null,
             customerId: cleanString(input.customerId, 120) || null,
             customerRequestSummary,
+            customerRequestNote,
             customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary,canonicalEmail.extra.customerRequestSummary',
         },
     });
@@ -1797,6 +2609,161 @@ export async function queueChatbotEmailFollowUpDraft(input: ChatbotEmailFollowUp
         duplicate: false,
         status: String(log?.status || 'skipped'),
         reviewRequired: true,
+        reviewQueueUrl: `/email?projectId=${encodeURIComponent(input.projectId)}&tab=review&sourceModule=chatcore&sourceEntityType=${encodeURIComponent(sourceEntityType)}&sourceEntityId=${encodeURIComponent(sourceEntityId)}`,
+    };
+}
+
+export async function sendChatbotInternalAlert(input: ChatbotInternalAlertInput) {
+    const recipientEmail = cleanEmail(input.recipientEmail);
+    if (!recipientEmail) throw Object.assign(new Error(BILINGUAL_REQUIRED), { status: 400 });
+
+    const conversationId = cleanString(input.conversationId, 120);
+    const leadId = cleanString(input.leadId, 120);
+    const appointmentId = cleanString(input.appointmentId, 120);
+    const sourceEntityType = leadId ? 'lead' : appointmentId ? 'appointment' : conversationId ? 'conversation' : 'chatbot_internal_alert';
+    const sourceEntityId = leadId || appointmentId || conversationId || recipientEmail;
+    const sourceEvent = cleanString(input.sourceEvent, 120) || 'chatbot_internal_alert_requested';
+    const alertType = cleanString(input.alertType, 120) || 'chatbot_internal_alert';
+    const priority = cleanString(input.priority, 40) || 'normal';
+    const subject = cleanString(input.subject, 240) || 'ChatCore internal alert / Alerta interna de ChatCore';
+    const message = cleanString(input.message, 5000) || cleanString(input.summary, 5000) || subject;
+    const sourceSurface = cleanString(input.sourceSurface, 120) || 'admin_preview';
+    const sourceModule = cleanString(input.sourceModule, 120) || 'chatcore';
+    const idempotencyKey = cleanString(input.idempotencyKey, 240)
+        || buildRuntimeIdempotencyKey(input.projectId, 'send_internal_alert', [
+            sourceEvent,
+            sourceEntityType,
+            sourceEntityId,
+            recipientEmail,
+            alertType,
+        ]);
+    const existing = await findEmailLogByIdempotencyKey({
+        supabase: input.supabase,
+        projectId: input.projectId,
+        idempotencyKey,
+    });
+
+    if (existing) {
+        return {
+            emailLogId: String(existing.id || ''),
+            recipientEmail,
+            duplicate: true,
+            status: String(existing.status || 'skipped'),
+            reviewRequired: true,
+            noEmailSent: true,
+            reviewQueueUrl: `/email?projectId=${encodeURIComponent(input.projectId)}&tab=review&sourceModule=chatcore&sourceEntityType=${encodeURIComponent(sourceEntityType)}&sourceEntityId=${encodeURIComponent(sourceEntityId)}`,
+        };
+    }
+
+    const alertRequest = buildRuntimeCustomerRequestArtifacts({
+        body: {
+            recipientEmail,
+            recipientName: input.recipientName,
+            subject,
+            message,
+            priority,
+            alertType,
+            aiAnalysis: 'ES: Alerta interna preparada por ChatCore para revision humana. EN: Internal alert prepared by ChatCore for human review.',
+            recommendedAction: 'ES: Revisar el contexto antes de notificar al equipo o contactar al cliente. EN: Review context before notifying the team or contacting the customer.',
+            sourceSurface,
+            sourceModule,
+            metadata: {
+                sourceConversationId: conversationId || null,
+                sourceLeadId: leadId || null,
+                sourceAppointmentId: appointmentId || null,
+                alertType,
+                priority,
+            },
+        },
+        sourceSurface,
+        sourceModule,
+        customerProvidedNotes: message,
+        conversationId,
+        leadId,
+    });
+    const canonicalEmail = buildCanonicalEmailDraftMetadata({
+        sourceModule: 'chatcore',
+        sourceComponent: sourceModule,
+        sourceEvent,
+        sourceEntityType,
+        sourceEntityId,
+        projectId: input.projectId,
+        recipientEmail,
+        generatedByAI: true,
+        needsReview: true,
+        safeToEdit: true,
+        consentSource: sourceModule,
+        marketingConsent: null,
+        transactionalConsent: true,
+        extra: {
+            chatbotEngine: true,
+            actionType: 'send_internal_alert',
+            sourceSurface,
+            sourceModule,
+            conversationId: conversationId || null,
+            leadId: leadId || null,
+            appointmentId: appointmentId || null,
+            alertType,
+            priority,
+            customerRequestSummary: alertRequest.customerRequestSummary,
+            customerRequestNote: alertRequest.customerRequestNote,
+            customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary',
+            ...compactMetadata(input.metadata),
+        },
+    });
+
+    const log = await recordEmailLog({
+        supabase: input.supabase,
+        projectId: input.projectId,
+        tenantId: input.tenantId,
+        userId: input.projectUserId,
+        type: 'chatbot_internal_alert',
+        emailKind: 'transactional',
+        templateId: 'chatbot_internal_alert',
+        recipientEmail,
+        recipientName: cleanString(input.recipientName, 200) || null,
+        subject,
+        status: 'skipped',
+        idempotencyKey,
+        sourceModule: 'chatcore',
+        sourceComponent: sourceModule,
+        sourceEvent,
+        sourceEntityType,
+        sourceEntityId,
+        correlationId: idempotencyKey,
+        skippedReason: 'needs_review:chatbot_engine_internal_alert',
+        metadata: {
+            canonicalEmail,
+            canonicalEmailIntent: true,
+            canonicalEmailIntentVersion: 1,
+            generatedByAI: true,
+            needsReview: true,
+            safeToEdit: true,
+            sendMode: 'draft_only',
+            noEmailSent: true,
+            chatbotEngine: true,
+            actionType: 'send_internal_alert',
+            sourceSurface,
+            conversationId: conversationId || null,
+            leadId: leadId || null,
+            appointmentId: appointmentId || null,
+            alertType,
+            priority,
+            subject,
+            message,
+            customerRequestSummary: alertRequest.customerRequestSummary,
+            customerRequestNote: alertRequest.customerRequestNote,
+            customerRequestSummaryTarget: 'email_logs.metadata.customerRequestSummary,canonicalEmail.extra.customerRequestSummary',
+        },
+    });
+
+    return {
+        emailLogId: String(log?.id || ''),
+        recipientEmail,
+        duplicate: false,
+        status: String(log?.status || 'skipped'),
+        reviewRequired: true,
+        noEmailSent: true,
         reviewQueueUrl: `/email?projectId=${encodeURIComponent(input.projectId)}&tab=review&sourceModule=chatcore&sourceEntityType=${encodeURIComponent(sourceEntityType)}&sourceEntityId=${encodeURIComponent(sourceEntityId)}`,
     };
 }

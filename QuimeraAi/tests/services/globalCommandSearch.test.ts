@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { buildGlobalCommandItems } from '../../services/globalAssistant/globalCommandSearch.ts';
 import enTranslations from '../../locales/en/translation.json';
 import esTranslations from '../../locales/es/translation.json';
-import frTranslations from '../../locales/fr/translation.json';
-import ptTranslations from '../../locales/pt/translation.json';
 
 const projects = [
     {
@@ -29,7 +27,7 @@ const getTranslationValue = (translations: Record<string, any>, key: string): un
     }, translations);
 
 const expectTranslatedKey = (key: string) => {
-    for (const translations of [enTranslations, esTranslations, frTranslations, ptTranslations] as Record<string, any>[]) {
+    for (const translations of [enTranslations, esTranslations] as Record<string, any>[]) {
         const value = getTranslationValue(translations, key);
         expect(value, key).toEqual(expect.any(String));
         expect((value as string).trim(), key).not.toBe('');

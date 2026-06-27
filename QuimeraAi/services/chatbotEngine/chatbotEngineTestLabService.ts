@@ -8,6 +8,11 @@ import type {
 } from '../../types/businessBlueprint';
 import { supabase } from '../../supabase';
 import { evaluateChatbotAction } from '../../utils/chatbotEngine/actionRegistry';
+import {
+    buildChatbotEngineSurfaceDeploymentManifest,
+    type ChatbotEngineDeploymentSurfaceId,
+    type ChatbotEngineDeploymentReadinessStatus,
+} from '../../utils/chatbotEngine/surfaceDeploymentManifest';
 import { recordChatbotEngineEvent } from './chatbotEngineEventService';
 import {
     getChatbotConfig,
@@ -49,9 +54,21 @@ export interface ChatbotTestLabRunResult {
     status: ChatbotBlueprint['testing']['evaluationStatus'];
     passed: boolean;
     scenarioResults: ChatbotTestLabScenarioResult[];
+    deploymentCoverage: ChatbotTestLabDeploymentCoverage;
     eventId?: string;
     warnings: string[];
     chatbotBlueprint: ChatbotBlueprint;
+}
+
+export interface ChatbotTestLabDeploymentCoverage {
+    status: ChatbotEngineDeploymentReadinessStatus;
+    requiredSurfaceCount: number;
+    deployedRequiredSurfaceCount: number;
+    missingRequiredSurfaceIds: ChatbotEngineDeploymentSurfaceId[];
+    blockedSurfaceIds: ChatbotEngineDeploymentSurfaceId[];
+    reviewSurfaceIds: ChatbotEngineDeploymentSurfaceId[];
+    blockers: string[];
+    warnings: string[];
 }
 
 const RESTRICTED_PROMPT_TERMS = [
@@ -189,6 +206,101 @@ function evaluateScenarioSources(
     };
 }
 
+function evaluateDeploymentCoverage(blueprint: ChatbotBlueprint): ChatbotTestLabDeploymentCoverage {
+    const manifest = buildChatbotEngineSurfaceDeploymentManifest(blueprint.channels);
+    const requiredSurfaceIds = new Set(
+        manifest.surfaces
+            .filter(surface => surface.requiredForCanonicalDeployment)
+            .map(surface => surface.id),
+    );
+    const requiredBlockedSurfaceIds = manifest.blockedSurfaceIds.filter(surfaceId => requiredSurfaceIds.has(surfaceId));
+    const requiredReviewSurfaceIds = manifest.reviewSurfaceIds.filter(surfaceId => requiredSurfaceIds.has(surfaceId));
+    const blockers = uniqueStrings([
+        ...manifest.missingRequiredSurfaceIds.map(surfaceId => `surface:${surfaceId}:not_deployed`),
+        ...requiredBlockedSurfaceIds.map(surfaceId => `surface:${surfaceId}:blocked`),
+    ]);
+    const warnings = uniqueStrings([
+        ...requiredReviewSurfaceIds
+            .filter(surfaceId => !manifest.missingRequiredSurfaceIds.includes(surfaceId))
+            .map(surfaceId => `surface:${surfaceId}:needs_review`),
+    ]);
+
+    return {
+        status: blockers.length > 0 ? 'blocked' : manifest.coverageStatus,
+        requiredSurfaceCount: manifest.requiredSurfaceCount,
+        deployedRequiredSurfaceCount: manifest.deployedRequiredSurfaceCount,
+        missingRequiredSurfaceIds: manifest.missingRequiredSurfaceIds,
+        blockedSurfaceIds: requiredBlockedSurfaceIds,
+        reviewSurfaceIds: requiredReviewSurfaceIds,
+        blockers,
+        warnings,
+    };
+}
+
+function resolveTestLabStatus(
+    scenarioResults: ChatbotTestLabScenarioResult[],
+    deploymentCoverage: ChatbotTestLabDeploymentCoverage,
+): ChatbotBlueprint['testing']['evaluationStatus'] {
+    if (scenarioResults.length === 0) return 'not_run';
+    if (scenarioResults.some(result => !result.passed) || deploymentCoverage.blockers.length > 0) return 'failing';
+    if (deploymentCoverage.warnings.length > 0 || deploymentCoverage.status === 'review') return 'needs_review';
+    return 'passing';
+}
+
+function buildTestLabReadiness(
+    status: ChatbotBlueprint['testing']['evaluationStatus'],
+    deploymentCoverage: ChatbotTestLabDeploymentCoverage,
+): ChatbotBlueprint['testing']['readiness'] {
+    const deploymentBlocker = [
+        'ES: Faltan superficies requeridas de ChatCore para el despliegue canonico.',
+        'EN: Required ChatCore surfaces are missing for canonical deployment.',
+    ].join('\n');
+    const deploymentWarning = [
+        'ES: Algunas superficies de ChatCore requieren revision antes del despliegue canonico.',
+        'EN: Some ChatCore surfaces need review before canonical deployment.',
+    ].join('\n');
+
+    if (status === 'passing') return { isReady: true, blockers: [], warnings: [] };
+    if (deploymentCoverage.blockers.length > 0) {
+        return {
+            isReady: false,
+            blockers: [
+                deploymentBlocker,
+                ...deploymentCoverage.blockers,
+            ],
+            warnings: deploymentCoverage.warnings,
+        };
+    }
+    if (deploymentCoverage.warnings.length > 0 || status === 'needs_review') {
+        return {
+            isReady: false,
+            blockers: [],
+            warnings: [
+                deploymentWarning,
+                ...deploymentCoverage.warnings,
+            ],
+        };
+    }
+    if (status === 'failing') {
+        return {
+            isReady: false,
+            blockers: [[
+                'ES: El Test Lab encontro escenarios fallidos.',
+                'EN: Test Lab found failing scenarios.',
+            ].join('\n')],
+            warnings: [],
+        };
+    }
+    return {
+        isReady: false,
+        blockers: [],
+        warnings: [[
+            'ES: El Test Lab aun no se ha ejecutado.',
+            'EN: Test Lab has not run yet.',
+        ].join('\n')],
+    };
+}
+
 export function runChatbotTestScenarioInBlueprint(
     blueprint: ChatbotBlueprint,
     scenario: ChatbotTestScenarioBlueprint,
@@ -224,7 +336,12 @@ export function runChatbotTestScenarioInBlueprint(
 export function runChatbotTestLabInBlueprint(
     blueprint: ChatbotBlueprint,
     input: ChatbotTestLabRunInput = {},
-): { blueprint: ChatbotBlueprint; scenarioResults: ChatbotTestLabScenarioResult[]; status: ChatbotBlueprint['testing']['evaluationStatus'] } {
+): {
+    blueprint: ChatbotBlueprint;
+    scenarioResults: ChatbotTestLabScenarioResult[];
+    deploymentCoverage: ChatbotTestLabDeploymentCoverage;
+    status: ChatbotBlueprint['testing']['evaluationStatus'];
+} {
     const now = input.now || new Date().toISOString();
     const projectId = input.projectId || 'project';
     const sourceSurface = input.sourceSurface || 'admin_preview';
@@ -236,18 +353,29 @@ export function runChatbotTestLabInBlueprint(
         sourceModule,
         now,
     }));
+    const deploymentCoverage = evaluateDeploymentCoverage(blueprint);
 
-    const nextBlueprint = scenarioResults.reduce((current, result) => updateChatbotTestScenarioInBlueprint(current, {
+    const scenarioUpdatedBlueprint = scenarioResults.reduce((current, result) => updateChatbotTestScenarioInBlueprint(current, {
         scenarioId: result.scenarioId,
         status: result.status,
         actorId: input.actorId,
         now,
     }), blueprint);
+    const status = resolveTestLabStatus(scenarioResults, deploymentCoverage);
+    const nextBlueprint = {
+        ...scenarioUpdatedBlueprint,
+        testing: {
+            ...scenarioUpdatedBlueprint.testing,
+            evaluationStatus: status,
+            readiness: buildTestLabReadiness(status, deploymentCoverage),
+        },
+    };
 
     return {
         blueprint: nextBlueprint,
         scenarioResults,
-        status: nextBlueprint.testing.evaluationStatus,
+        deploymentCoverage,
+        status,
     };
 }
 
@@ -288,6 +416,16 @@ export async function runProjectChatbotTestLab(
             scenarioCount: testRun.scenarioResults.length,
             passedCount: testRun.scenarioResults.filter(result => result.passed).length,
             failedCount: testRun.scenarioResults.filter(result => !result.passed).length,
+            deploymentCoverage: {
+                status: testRun.deploymentCoverage.status,
+                requiredSurfaceCount: testRun.deploymentCoverage.requiredSurfaceCount,
+                deployedRequiredSurfaceCount: testRun.deploymentCoverage.deployedRequiredSurfaceCount,
+                missingRequiredSurfaceIds: testRun.deploymentCoverage.missingRequiredSurfaceIds,
+                blockedSurfaceIds: testRun.deploymentCoverage.blockedSurfaceIds,
+                reviewSurfaceIds: testRun.deploymentCoverage.reviewSurfaceIds,
+                blockers: testRun.deploymentCoverage.blockers,
+                warnings: testRun.deploymentCoverage.warnings,
+            },
             scenarioResults: testRun.scenarioResults.map(result => ({
                 scenarioId: result.scenarioId,
                 status: result.status,
@@ -305,6 +443,7 @@ export async function runProjectChatbotTestLab(
         status: persisted.chatbotBlueprint.testing.evaluationStatus,
         passed: persisted.chatbotBlueprint.testing.evaluationStatus === 'passing',
         scenarioResults: testRun.scenarioResults,
+        deploymentCoverage: testRun.deploymentCoverage,
         eventId: event.id,
         warnings: event.warning ? [event.warning] : [],
         chatbotBlueprint: persisted.chatbotBlueprint,

@@ -16,6 +16,7 @@ export interface BuildWidgetCustomerRequestNotesInput {
     customerProvidedNotes?: string | null;
     appointmentTitle?: string | null;
     appointmentDateTime?: string | null;
+    appointmentTimezone?: string | null;
     conversationId?: string | null;
     leadId?: string | null;
     locale?: string | null;
@@ -266,6 +267,7 @@ export const buildWidgetCustomerRequestNotes = (
         customerProvidedNotes,
         appointmentTitle: input.appointmentTitle || firstText(input.body.title),
         appointmentDateTime: input.appointmentDateTime || firstText(input.body.startDate, input.body.appointmentDateTime),
+        appointmentTimezone: input.appointmentTimezone || firstText(input.body.timezone, input.body.appointmentTimezone, metadata.timezone, metadata.appointmentTimezone),
         sourceSurface,
         sourceModule,
         conversationId,

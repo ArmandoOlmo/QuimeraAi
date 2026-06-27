@@ -21,6 +21,7 @@ export type ChatbotMessageIntent =
     | 'email_subscription'
     | 'email_follow_up'
     | 'finance_quote_request'
+    | 'media_asset_request'
     | 'human_handoff'
     | 'support_request'
     | 'visual_context'
@@ -155,6 +156,12 @@ const RULES: IntentRule[] = [
         actionType: 'create_finance_quote_request',
         urgency: 'high',
         signals: ['send invoice', 'invoice me', 'payment request', 'quote request', 'formal quote', 'send estimate', 'enviar factura', 'facturame', 'solicitud de pago', 'cotizacion formal', 'enviar cotizacion', 'enviar estimado'],
+    },
+    {
+        intent: 'media_asset_request',
+        actionType: 'request_media_asset',
+        urgency: 'medium',
+        signals: ['generate image', 'create image', 'hero image', 'visual asset', 'campaign visual', 'make a video', 'create video', 'media asset', 'generar imagen', 'crear imagen', 'imagen hero', 'asset visual', 'visual de campana', 'crear video', 'generar video'],
     },
     {
         intent: 'pricing_request',

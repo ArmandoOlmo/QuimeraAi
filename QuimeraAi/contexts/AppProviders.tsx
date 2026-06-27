@@ -35,9 +35,9 @@ const FeatureProviders = lazy(() => import('./AppFeatureProviders'));
 const AuthGatedProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, loadingAuth } = useAuth();
 
-    // If Supabase already has a user while auth is still settling, keep authenticated
-    // children inside the feature tree so route-level hooks never mount without providers.
-    if (!user) {
+    // Keep private-route children inside the feature tree while auth is settling.
+    // Otherwise route-level hooks can briefly mount before ProjectProvider exists.
+    if (!user && !loadingAuth) {
         return <>{children}</>;
     }
 

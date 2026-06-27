@@ -39,33 +39,28 @@ import {
     type GlobalAssistantEntryPayload,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
 import {
-    buildGlobalAssistantPlanMemoryMetadata,
-    defaultGlobalAssistantFeatureFlags,
-    formatGlobalAssistantPlanMessage,
-    formatOperatingLayerApplyMessage,
-    listEnabledPlatformServices,
-    resolveGlobalAssistantAppContext,
     resolveOperatingLayerAccessContext,
     resolveOperatingLayerTenantContext,
-    shouldAutoApplyOperatingLayerPlan,
-    shouldContinueAfterRuntimePlan,
 } from '../../services/globalAssistant/globalAssistantCommandCenter';
+import { resolveModuleFromRoute } from '../../services/globalAssistant/globalAssistantContextResolver';
 import {
     isAssistantPlanCancellation,
     isAssistantPlanConfirmation,
 } from '../../services/globalAssistant/globalAssistantConfirmation';
 import { globalAssistantConversationService } from '../../services/globalAssistant/globalAssistantConversationService';
 import {
-    buildOperatingLayerProjectLoadRequest,
-    findOperatingLayerNavigation,
-    formatOperatingLayerNavigationMessage,
-    readOperatingLayerNavigationTargets,
-} from '../../services/globalAssistant/globalAssistantNavigation';
+    dispatchMediaGeneratorLaunchRequest,
+    storeMediaGeneratorLaunchRequest,
+} from '../../utils/mediaGeneratorLaunch';
 import {
-    globalAssistantRuntime,
-    type AssistantLifecycleResult,
-    type GlobalAssistantRuntimeResult,
-} from '../../services/globalAssistant/globalAssistantRuntime';
+    isSpanishLocale,
+    resolveComponentHelpGuideResponse,
+    resolveDirectModuleGuideDecision,
+    resolveGuideOnlyActionResponse,
+    resolveGuideOnlyFallbackResponse,
+    resolveProjectMentionFromRequest,
+} from '../../services/globalAssistant/globalAssistantModuleGuide';
+import { globalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime';
 import type {
     AssistantContextSnapshot,
     AssistantConversation,
@@ -91,8 +86,6 @@ interface PendingOperatingLayerTask {
     context: AssistantContextSnapshot;
     actionLabels: string[];
 }
-
-const isSpanishLocale = (locale?: string | null) => (locale || '').toLowerCase().startsWith('es');
 
 // --- Tools Definition ---
 const EDITOR_SECTION_IDS = [
@@ -1095,7 +1088,14 @@ const GlobalAiAssistant: React.FC = () => {
 
     const { user } = useAuth();
     const tenantContext = useSafeTenant();
-    const { view, setView, onSectionSelect: uiOnSectionSelect, onSectionItemSelect } = useUI();
+    const {
+        view,
+        setView,
+        setIsOnboardingOpen,
+        setOnboardingMode,
+        onSectionSelect: uiOnSectionSelect,
+        onSectionItemSelect,
+    } = useUI();
     const { navigate, navigateToEditor, navigateToView, path } = useRouter();
     const {
         projects,
@@ -1357,22 +1357,17 @@ const GlobalAiAssistant: React.FC = () => {
         }
     };
 
-    const syncAssistantConversationTask = (result: GlobalAssistantRuntimeResult) => {
+    const clearAssistantConversationTask = (taskId: string, planStatus: string) => {
         const conversation = assistantConversationRef.current;
         if (!conversation) return;
 
         const nextConversation: AssistantConversation = {
             ...conversation,
-            tenantId: result.context.tenant.tenantId || conversation.tenantId,
-            projectId: result.context.project.projectId || conversation.projectId,
-            activeTaskId: result.task.id,
+            activeTaskId: conversation.activeTaskId === taskId ? null : conversation.activeTaskId,
             metadata: {
                 ...(conversation.metadata || {}),
-                lastTaskId: result.task.id,
-                lastContextSnapshotId: result.context.id,
-                lastModule: result.plan.intent.module,
-                lastIntent: result.plan.intent.intent,
-                lastPlanStatus: result.plan.status,
+                lastTaskId: taskId,
+                lastPlanStatus: planStatus,
             },
         };
         assistantConversationRef.current = nextConversation;
@@ -1382,7 +1377,7 @@ const GlobalAiAssistant: React.FC = () => {
                 assistantConversationIdRef.current = saved.id;
             })
             .catch(error => {
-                console.warn('[Global Assistant] Failed to sync assistant conversation task:', error);
+                console.warn('[Global Assistant] Failed to clear assistant conversation task:', error);
             });
     };
 
@@ -2777,7 +2772,18 @@ const GlobalAiAssistant: React.FC = () => {
             dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE (AVAILABLE PATHS):\n${schema}\n\nEDITING RULES:\n1. Use 'update_site_content' with 'path' matching the schema (e.g. 'hero.headline', 'hero.colors.primary').\n2. Use 'manage_section_items' for paths ending in [] (e.g. 'features.items[]') to add/remove list items.\n3. Do NOT invent keys not shown in the schema.`;
         }
 
-        const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}.`;
+        const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}. Route: ${path}.`;
+        const guideBehavior = [
+            'GLOBAL ASSISTANT BEHAVIOR:',
+            '- Always use the current route, view, visible screen, active project, and recent conversation as context.',
+            '- Answer in the same language the user is using.',
+            '- Keep answers short and clear for non-technical users.',
+            '- Never reveal internal reasoning, chain of thought, tool plans, JSON, schemas, or technical system details unless the user explicitly asks.',
+            '- Act as a guide first: open the right module, explain the next simple step, and let the user press final action buttons inside that module.',
+            '- If the user clearly names a module or task destination, open that module first and explain only the next real step there.',
+            '- For image or video requests from the global input, open Media AI and prepare the prompt/options when provided. Do not generate inside the chat.',
+            '- Only say an action is done after the app actually navigated or the real action completed.',
+        ].join('\n');
 
         // Components context
         const enabledComponents = Object.entries(componentStatusRef.current || {})
@@ -2798,7 +2804,7 @@ const GlobalAiAssistant: React.FC = () => {
 
         // 5. Compile final instruction
         // 5. Compile final instruction
-        return `${baseInstruction}\n\n${templatesInstruction}\n\n${scopeText}\n\n${crmInstructions}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
+        return `${baseInstruction}\n\n${templatesInstruction}\n\n${guideBehavior}\n\n${scopeText}\n\n${crmInstructions}\n\n${projectContext}\n${dataStructureContext}\n${cmsContext}\n${leadsContext}\n${domainsContext}\n${componentsContext}\n${customContext}\n${activeContext}`;
     };
 
 
@@ -3543,84 +3549,12 @@ const GlobalAiAssistant: React.FC = () => {
         return null;
     };
 
-    const planOperatingLayerRequest = async (request: string, entry: GlobalAssistantEntryPayload) => {
-        const project = activeProjectRef.current;
-        const userDoc = userDocumentRef.current as any;
-        const tenantContext = tenantContextRef.current;
-        const tenant = resolveOperatingLayerTenantContext({
-            activeProject: project,
-            currentTenant: tenantContext?.currentTenant,
-            currentMembership: tenantContext?.currentMembership,
-            userDocument: userDoc,
-        });
-        const access = resolveOperatingLayerAccessContext({
-            userRole: userDoc?.role || null,
-            tenantRole: tenant.tenantRole,
-            tenantPermissions: tenantContext?.currentMembership?.permissions,
-        });
-        const enabledServices = isLoadingServices
-            ? listEnabledPlatformServices(() => true)
-            : listEnabledPlatformServices(canAccessService);
-        const featureFlags = defaultGlobalAssistantFeatureFlags();
-        const entryMetadata = entry.metadata || {};
-        const activeTaskId = pendingOperatingLayerTaskRef.current?.taskId
-            || assistantConversationRef.current?.activeTaskId
-            || null;
-        const context = resolveGlobalAssistantAppContext({
-            userId: user?.id || userDoc?.id || null,
-            email: user?.email || userDoc?.email || null,
-            role: userDoc?.role || null,
-            mode: access.mode,
-            tenantId: tenant.tenantId,
-            tenantName: tenant.tenantName,
-            tenantRole: tenant.tenantRole,
-            tenantPlan: tenant.tenantPlan,
-            activeProject: project ? {
-                id: project.id,
-                name: project.name,
-                status: project.status,
-                tenantId: project.tenantId,
-                userId: project.userId,
-            } : null,
-            conversationId: assistantConversationIdRef.current,
-            activeRoute: path,
-            currentSurface: entry.surface,
-            activeModule: typeof entryMetadata.activeModule === 'string' ? entryMetadata.activeModule as any : undefined,
-            selectedSection: typeof entryMetadata.selectedSection === 'string' ? entryMetadata.selectedSection : null,
-            activeEntityType: typeof entryMetadata.activeEntityType === 'string' ? entryMetadata.activeEntityType : null,
-            activeEntityId: typeof entryMetadata.activeEntityId === 'string' ? entryMetadata.activeEntityId : null,
-            locale: i18n.language,
-            view: viewRef.current || 'dashboard',
-            activeServices: enabledServices,
-            featureFlags,
-            availableProjects: projectsRef.current,
-            snapshot: {
-                entrySource: entry.source,
-                entryMetadata,
-                activeProjectId: project?.id || null,
-                activeTaskId,
-                activeTenantId: tenant.tenantId,
-                activeTenantName: tenant.tenantName,
-                tenantRole: tenant.tenantRole,
-                tenantPlan: tenant.tenantPlan,
-                assistantMode: access.mode,
-                assistantPermissions: access.userPermissions,
-            },
-        });
-
-        return globalAssistantRuntime.planRequest({
-            request,
-            context,
-            userPermissions: access.userPermissions,
-            enabledServices,
-            enabledFeatures: featureFlags,
-        });
-    };
-
     const buildManualOperatingLayerEntry = (request: string): GlobalAssistantEntryPayload => {
         const project = activeProjectRef.current;
         const tenantContext = tenantContextRef.current;
-        const activeModule = inferGlobalAssistantEntryModule(request);
+        const inferredModule = inferGlobalAssistantEntryModule(request);
+        const routeModule = resolveModuleFromRoute(path);
+        const activeModule = inferredModule || (routeModule && routeModule !== 'project' ? routeModule : null);
 
         return createGlobalAssistantEntryPayload(request, {
             source: 'global_assistant',
@@ -3634,6 +3568,7 @@ const GlobalAiAssistant: React.FC = () => {
                 commandCenter: true,
                 memoryScopeHint: 'user_tenant_project_module_session_task',
                 activeModule,
+                routeModule,
                 activeProjectId: project?.id || null,
                 activeProjectName: typeof project?.name === 'string' ? project.name : null,
                 activeTenantId: tenantContext?.currentTenant?.id || project?.tenantId || null,
@@ -3651,59 +3586,266 @@ const GlobalAiAssistant: React.FC = () => {
             entry.surface === 'admin'
         ));
 
-    const rememberPendingOperatingLayerTask = (result: Awaited<ReturnType<typeof planOperatingLayerRequest>>) => {
-        if (result.plan.status === 'blocked' || shouldContinueAfterRuntimePlan(result)) {
-            setPendingOperatingLayerTask(null);
-            return;
-        }
+    const getEntryActiveModule = (entry?: GlobalAssistantEntryPayload): unknown =>
+        entry?.metadata && typeof entry.metadata.activeModule === 'string'
+            ? entry.metadata.activeModule
+            : null;
 
-        setPendingOperatingLayerTask({
-            taskId: result.task.id,
-            context: result.context,
-            actionLabels: result.plan.actions.map(action => `${action.module}.${action.actionType}`),
-        });
+    const getEntryRouteModule = (entry?: GlobalAssistantEntryPayload): unknown =>
+        entry?.metadata && typeof entry.metadata.routeModule === 'string'
+            ? entry.metadata.routeModule
+            : null;
+
+    const getEntryQuickActionId = (entry?: GlobalAssistantEntryPayload): string | null =>
+        entry?.metadata && typeof entry.metadata.quickActionId === 'string'
+            ? entry.metadata.quickActionId
+            : null;
+
+    const openAIStudioFromAssistant = (request: string): void => {
+        const prompt = request.trim();
+        if (typeof window !== 'undefined') {
+            if (prompt) {
+                window.localStorage.setItem('aiStudioInitialPrompt', prompt);
+            } else {
+                window.localStorage.removeItem('aiStudioInitialPrompt');
+            }
+            window.localStorage.setItem('onboardingMode', 'ai-studio');
+        }
+        setOnboardingMode('ai-studio');
+        setIsOnboardingOpen(true);
     };
 
-    const applyOperatingLayerNavigation = async (result: AssistantLifecycleResult): Promise<string | null> => {
-        const navigation = findOperatingLayerNavigation(result);
-        if (!navigation) return null;
+    const appendProjectGuideContext = (message: string, projectName?: string | null): string => {
+        if (!projectName) return message;
+        const label = isSpanishLocale(i18n.language) ? 'Proyecto' : 'Project';
+        return `${message}\n${label}: ${projectName}.`;
+    };
 
-        const {
-            targetProjectId,
-            targetView,
-            adminView,
-        } = readOperatingLayerNavigationTargets(navigation);
+    const resolveDirectNavigationProject = async (request: string): Promise<{
+        blocked: boolean;
+        message?: string;
+        projectId?: string | null;
+        projectName?: string | null;
+    }> => {
+        const resolution = resolveProjectMentionFromRequest({
+            request,
+            projects: projectsRef.current,
+            activeProjectId: activeProjectRef.current?.id || null,
+            locale: i18n.language,
+        });
 
-        if (targetProjectId && activeProjectRef.current?.id !== targetProjectId) {
-            const project = projectsRef.current.find(entry => entry.id === targetProjectId);
-            const loadRequest = buildOperatingLayerProjectLoadRequest(navigation);
-            if (loadRequest) {
-                await Promise.resolve(loadProjectRef.current(
-                    loadRequest.projectId,
-                    loadRequest.fromAdmin,
-                    loadRequest.navigateToEditor,
-                ));
-            }
-            if (project) {
-                activeProjectRef.current = project;
-                dataRef.current = project.data;
+        if (resolution.status === 'ambiguous' || resolution.status === 'not_found') {
+            return {
+                blocked: true,
+                message: resolution.message || resolveGuideOnlyFallbackResponse({ request, locale: i18n.language }).message,
+            };
+        }
+
+        if (resolution.status !== 'matched' || !resolution.projectId) {
+            return {
+                blocked: false,
+                projectId: activeProjectRef.current?.id || null,
+                projectName: null,
+            };
+        }
+
+        const project = projectsRef.current.find(candidate => candidate.id === resolution.projectId);
+        if (activeProjectRef.current?.id !== resolution.projectId) {
+            try {
+                await Promise.resolve(loadProjectRef.current(resolution.projectId, false, false));
+                if (project) {
+                    activeProjectRef.current = project;
+                    dataRef.current = project.data;
+                }
+            } catch (error) {
+                console.warn('[Global Assistant] Failed to switch project for direct navigation:', error);
+                return {
+                    blocked: true,
+                    message: isSpanishLocale(i18n.language)
+                        ? `No pude abrir el proyecto "${resolution.projectName || resolution.projectId}". Revisa el nombre e inténtalo otra vez.`
+                        : `I could not open the project "${resolution.projectName || resolution.projectId}". Check the name and try again.`,
+                };
             }
         }
 
-        if (targetView === 'editor') {
-            const projectId = targetProjectId || activeProjectRef.current?.id;
-            if (!projectId) return 'No project is available to open in the Website Builder.';
-            setViewRef.current('editor');
-            navigateToEditorRef.current(projectId);
-        } else if (targetView) {
-            if (targetView === 'superadmin' && adminView) {
-                setAdminViewRef.current(adminView as AdminView);
-            }
-            setViewRef.current(targetView as View);
-            navigateToViewRef.current(targetView as View, adminView as AdminView || undefined);
+        return {
+            blocked: false,
+            projectId: resolution.projectId,
+            projectName: resolution.projectName || project?.name || null,
+        };
+    };
+
+    interface DirectModuleNavigationResult {
+        message: string;
+        target: string;
+        projectId?: string | null;
+        projectName?: string | null;
+    }
+
+    const maybeHandleDirectModuleNavigation = async (
+        request: string,
+        entry?: GlobalAssistantEntryPayload,
+    ): Promise<DirectModuleNavigationResult | null> => {
+        const quickActionId = getEntryQuickActionId(entry);
+        const activeModule = getEntryActiveModule(entry);
+        const decision = resolveDirectModuleGuideDecision({
+            request,
+            activeModule: typeof activeModule === 'string' ? activeModule : null,
+            quickActionId,
+            locale: i18n.language,
+        });
+
+        if (!decision) return null;
+
+        const navigationProject = await resolveDirectNavigationProject(request);
+        if (navigationProject.blocked) {
+            return {
+                target: 'project_resolution',
+                message: navigationProject.message || resolveGuideOnlyFallbackResponse({ request, locale: i18n.language }).message,
+                projectId: null,
+                projectName: null,
+            };
         }
 
-        return formatOperatingLayerNavigationMessage(navigation);
+        if (decision.target === 'aiStudio') {
+            openAIStudioFromAssistant(decision.prompt || '');
+            return {
+                target: decision.target,
+                message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                projectId: navigationProject.projectId || null,
+                projectName: navigationProject.projectName || null,
+            };
+        }
+
+        if (decision.target === 'image' || decision.target === 'video') {
+            const launch = storeMediaGeneratorLaunchRequest({
+                mode: decision.target === 'video' ? 'video' : 'image',
+                prompt: decision.prompt,
+                autoStart: false,
+                projectId: navigationProject.projectId || activeProjectRef.current?.id || null,
+                source: 'global_assistant',
+                options: decision.options,
+            });
+            setViewRef.current('assets');
+            navigateRef.current(ROUTES.ASSETS);
+            if (launch) {
+                window.setTimeout(() => dispatchMediaGeneratorLaunchRequest(launch), 350);
+            }
+            return {
+                target: decision.target,
+                message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                projectId: navigationProject.projectId || null,
+                projectName: navigationProject.projectName || null,
+            };
+        }
+
+        if (decision.target === 'websiteBuilder' || decision.target === 'businessBlueprint') {
+            const projectId = navigationProject.projectId || activeProjectRef.current?.id;
+            if (projectId) {
+                setViewRef.current('editor');
+                navigateToEditorRef.current(projectId);
+            } else {
+                setViewRef.current('websites');
+                navigateRef.current(ROUTES.WEBSITES);
+            }
+            return {
+                target: decision.target,
+                message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                projectId: projectId || null,
+                projectName: navigationProject.projectName || null,
+            };
+        }
+
+        const targetViews: Record<string, { view: View; route: string; adminView?: AdminView }> = {
+            media: { view: 'assets', route: ROUTES.ASSETS },
+            storefront: { view: 'ecommerce', route: ROUTES.ECOMMERCE },
+            leads: { view: 'leads', route: ROUTES.LEADS },
+            email: { view: 'email', route: ROUTES.EMAIL },
+            ecommerce: { view: 'ecommerce', route: ROUTES.ECOMMERCE },
+            chatcore: { view: 'ai-assistant', route: ROUTES.AI_ASSISTANT },
+            appointments: { view: 'appointments', route: ROUTES.APPOINTMENTS },
+            bioPage: { view: 'biopage', route: ROUTES.BIOPAGE },
+            analytics: { view: 'dashboard', route: ROUTES.DASHBOARD },
+            finance: { view: 'finance', route: ROUTES.FINANCE },
+            restaurants: { view: 'restaurants', route: ROUTES.RESTAURANTS },
+            realEstate: { view: 'real-estate', route: ROUTES.REAL_ESTATE },
+            projects: { view: 'websites', route: ROUTES.WEBSITES },
+            settings: { view: 'settings', route: ROUTES.SETTINGS },
+            designSystem: { view: 'superadmin', route: ROUTES.ADMIN_DESIGN_TOKENS, adminView: 'design-tokens' },
+            ownerMode: { view: 'superadmin', route: ROUTES.SUPERADMIN, adminView: 'main' },
+        };
+        const route = targetViews[decision.target];
+        if (!route) return null;
+
+        if (route.adminView) {
+            setAdminView(route.adminView);
+        }
+        setViewRef.current(route.view);
+        navigateRef.current(route.route);
+
+        return {
+            target: decision.target,
+            message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+            projectId: navigationProject.projectId || null,
+            projectName: navigationProject.projectName || null,
+        };
+    };
+
+    const syncAssistantConversationNavigation = (
+        navigation: DirectModuleNavigationResult,
+        entry?: GlobalAssistantEntryPayload,
+    ) => {
+        const conversation = assistantConversationRef.current;
+        if (!conversation) return;
+
+        const project = navigation.projectId
+            ? projectsRef.current.find(candidate => candidate.id === navigation.projectId) || activeProjectRef.current
+            : activeProjectRef.current;
+        const tenantContext = tenantContextRef.current;
+        const nextTenantId = project?.tenantId || tenantContext?.currentTenant?.id || conversation.tenantId;
+        const nextProjectId = navigation.projectId || conversation.projectId;
+
+        const nextConversation: AssistantConversation = {
+            ...conversation,
+            tenantId: nextTenantId || null,
+            projectId: nextProjectId || null,
+            activeTaskId: null,
+            metadata: {
+                ...(conversation.metadata || {}),
+                lastNavigationTarget: navigation.target,
+                lastNavigationProjectId: nextProjectId || null,
+                lastNavigationProjectName: navigation.projectName || project?.name || null,
+                lastNavigationRoute: path,
+                lastNavigationAt: new Date().toISOString(),
+                lastEntrySource: entry?.source || null,
+                lastEntryMetadata: entry?.metadata || {},
+                guideOnly: true,
+            },
+        };
+
+        assistantConversationRef.current = nextConversation;
+        void globalAssistantConversationService.upsertConversation(nextConversation)
+            .then(saved => {
+                assistantConversationRef.current = saved;
+                assistantConversationIdRef.current = saved.id;
+            })
+            .catch(error => {
+                console.warn('[Global Assistant] Failed to sync direct navigation context:', error);
+            });
+    };
+
+    const formatComponentHelpResponse = (
+        request: string,
+        entry?: GlobalAssistantEntryPayload,
+    ): { targetId: string; message: string } | null => {
+        return resolveComponentHelpGuideResponse({
+            request,
+            activeModule: getEntryActiveModule(entry) as string | null,
+            activeRoute: typeof entry?.metadata?.route === 'string' ? entry.metadata.route : path,
+            activeRouteModule: getEntryRouteModule(entry) as string | null,
+            quickActionId: getEntryQuickActionId(entry),
+            locale: i18n.language,
+        });
     };
 
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
@@ -3733,18 +3875,57 @@ const GlobalAiAssistant: React.FC = () => {
                     metadata: operatingLayerEntry.metadata,
                 } : undefined);
 
+                const componentHelpResponse = formatComponentHelpResponse(userMsg, operatingLayerEntry);
+                if (componentHelpResponse) {
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: componentHelpResponse.message,
+                        metadata: {
+                            source: 'component_help',
+                            targetId: componentHelpResponse.targetId,
+                        },
+                    }]);
+                    setIsThinking(false);
+                    return;
+                }
+
+                const directModuleNavigation = await maybeHandleDirectModuleNavigation(userMsg, operatingLayerEntry);
+                if (directModuleNavigation) {
+                    setPendingOperatingLayerTask(null);
+                    syncAssistantConversationNavigation(directModuleNavigation, operatingLayerEntry);
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: directModuleNavigation.message,
+                        metadata: {
+                            source: 'direct_module_navigation',
+                            target: directModuleNavigation.target,
+                            projectId: directModuleNavigation.projectId || null,
+                        },
+                    }]);
+                    setIsThinking(false);
+                    return;
+                }
+
                 const pendingOperatingLayer = pendingOperatingLayerTaskRef.current;
                 if (pendingOperatingLayer && isAssistantPlanCancellation(userMsg)) {
+                    const cancelled = await globalAssistantRuntime.cancelPlan({
+                        taskId: pendingOperatingLayer.taskId,
+                        cancelledBy: user?.id || userDocumentRef.current?.id || null,
+                    });
                     setPendingOperatingLayerTask(null);
+                    clearAssistantConversationTask(cancelled.task.id, cancelled.plan.status);
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: isSpanishLocale(i18n.language)
                             ? `Plan cancelado: ${pendingOperatingLayer.actionLabels.join(', ')}`
                             : `Plan cancelled: ${pendingOperatingLayer.actionLabels.join(', ')}`,
                         contextSnapshotId: pendingOperatingLayer.context.id,
+                        actionIds: cancelled.actions.map(action => action.id),
                         metadata: {
                             source: 'operating_layer_cancel',
-                            taskId: pendingOperatingLayer.taskId,
+                            taskId: cancelled.task.id,
+                            planStatus: cancelled.plan.status,
+                            actionStatuses: cancelled.actions.map(action => action.status),
                             actionLabels: pendingOperatingLayer.actionLabels,
                         },
                     }]);
@@ -3753,26 +3934,44 @@ const GlobalAiAssistant: React.FC = () => {
                 }
 
                 if (pendingOperatingLayer && isAssistantPlanConfirmation(userMsg)) {
-                    globalAssistantRuntime.confirmPlan({
+                    const cancelled = await globalAssistantRuntime.cancelPlan({
                         taskId: pendingOperatingLayer.taskId,
-                        confirmedBy: user?.id || userDocumentRef.current?.id || null,
+                        cancelledBy: user?.id || userDocumentRef.current?.id || null,
                     });
-                    const applied = await globalAssistantRuntime.applyTask({
-                        taskId: pendingOperatingLayer.taskId,
-                        context: pendingOperatingLayer.context,
-                    });
-                    const navigationMessage = await applyOperatingLayerNavigation(applied);
+                    setPendingOperatingLayerTask(null);
+                    clearAssistantConversationTask(cancelled.task.id, cancelled.plan.status);
+                    setMessages(prev => [...prev, {
+                        role: 'model',
+                        text: isSpanishLocale(i18n.language)
+                            ? 'No hice cambios. Te puedo llevar al módulo correcto para que lo revises y lo apliques desde ahí.'
+                            : 'I did not make changes. I can take you to the right module so you can review and apply it there.',
+                        contextSnapshotId: pendingOperatingLayer.context.id,
+                        actionIds: cancelled.actions.map(action => action.id),
+                        metadata: {
+                            source: 'guide_only_confirmation_blocked',
+                            taskId: cancelled.task.id,
+                            planStatus: cancelled.plan.status,
+                            actionStatuses: cancelled.actions.map(action => action.status),
+                            actionLabels: pendingOperatingLayer.actionLabels,
+                        },
+                    }]);
+                    setIsThinking(false);
+                    return;
+                }
+
+                const guideOnlyActionResponse = resolveGuideOnlyActionResponse({
+                    request: userMsg,
+                    activeModule: getEntryActiveModule(operatingLayerEntry) as string | null,
+                    quickActionId: getEntryQuickActionId(operatingLayerEntry),
+                    locale: i18n.language,
+                });
+                if (guideOnlyActionResponse) {
                     setPendingOperatingLayerTask(null);
                     setMessages(prev => [...prev, {
                         role: 'model',
-                        text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
-                        contextSnapshotId: pendingOperatingLayer.context.id,
-                        actionIds: applied.actions.map(action => action.id),
+                        text: guideOnlyActionResponse.message,
                         metadata: {
-                            source: 'operating_layer_apply',
-                            taskId: applied.task.id,
-                            planStatus: applied.plan.status,
-                            actionStatuses: applied.actions.map(action => action.status),
+                            source: 'guide_only_action_request',
                         },
                     }]);
                     setIsThinking(false);
@@ -3780,53 +3979,21 @@ const GlobalAiAssistant: React.FC = () => {
                 }
 
                 if (shouldRouteEntryToOperatingLayer(operatingLayerEntry)) {
-                    const operatingLayerPlan = await planOperatingLayerRequest(userMsg, operatingLayerEntry);
-                    syncAssistantConversationTask(operatingLayerPlan);
-                    rememberPendingOperatingLayerTask(operatingLayerPlan);
+                    const guideOnlyFallback = resolveGuideOnlyFallbackResponse({
+                        request: userMsg,
+                        locale: i18n.language,
+                    });
+                    setPendingOperatingLayerTask(null);
                     setMessages(prev => [...prev, {
                         role: 'model',
-                        text: formatGlobalAssistantPlanMessage(operatingLayerPlan, i18n.language),
-                        contextSnapshotId: operatingLayerPlan.context.id,
-                        memoryIds: operatingLayerPlan.memoryUsed.map(memory => memory.id),
-                        actionIds: operatingLayerPlan.plan.actions.map(action => action.id),
+                        text: guideOnlyFallback.message,
                         metadata: {
-                            source: 'operating_layer_plan',
-                            taskId: operatingLayerPlan.task.id,
-                            module: operatingLayerPlan.plan.intent.module,
-                            intent: operatingLayerPlan.plan.intent.intent,
-                            planStatus: operatingLayerPlan.plan.status,
-                            requiresConfirmation: operatingLayerPlan.plan.requiresConfirmation,
-                            memoryContext: buildGlobalAssistantPlanMemoryMetadata(operatingLayerPlan),
+                            source: 'guide_only_operating_layer_fallback',
+                            guideOnly: true,
                         },
                     }]);
-
-                    if (shouldAutoApplyOperatingLayerPlan(operatingLayerPlan)) {
-                        const applied = await globalAssistantRuntime.applyTask({
-                            taskId: operatingLayerPlan.task.id,
-                            context: operatingLayerPlan.context,
-                        });
-                        const navigationMessage = await applyOperatingLayerNavigation(applied);
-                        setMessages(prev => [...prev, {
-                            role: 'model',
-                            text: navigationMessage || formatOperatingLayerApplyMessage(applied, i18n.language),
-                            contextSnapshotId: operatingLayerPlan.context.id,
-                            actionIds: applied.actions.map(action => action.id),
-                            metadata: {
-                                source: 'operating_layer_apply',
-                                taskId: applied.task.id,
-                                planStatus: applied.plan.status,
-                                actionStatuses: applied.actions.map(action => action.status),
-                                autoApplied: true,
-                            },
-                        }]);
-                        setIsThinking(false);
-                        return;
-                    }
-
-                    if (!shouldContinueAfterRuntimePlan(operatingLayerPlan)) {
-                        setIsThinking(false);
-                        return;
-                    }
+                    setIsThinking(false);
+                    return;
                 }
 
                 // ============================================================
@@ -4235,7 +4402,7 @@ Usuario: ${userMsg}`;
                             {msg.role === 'model' && !msg.isToolOutput ? (
                                 <ReactMarkdown
                                     components={{
-                                        p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed" {...props} />,
+                                        p: ({ node, ...props }) => <p className="mb-4 last:mb-0 leading-relaxed whitespace-pre-wrap break-words" {...props} />,
                                         ul: ({ node, ...props }) => <ul className="mb-4 last:mb-0 list-disc pl-5 space-y-1" {...props} />,
                                         ol: ({ node, ...props }) => <ol className="mb-4 last:mb-0 list-decimal pl-5 space-y-1" {...props} />,
                                         li: ({ node, ...props }) => <li className="mb-1" {...props} />,
@@ -4261,7 +4428,7 @@ Usuario: ${userMsg}`;
                     </div>
                 ))}
 
-                {/* Executing Commands */}
+                {/* Preparing guidance */}
                 {isExecutingCommands && (
                     <div className="flex justify-start">
                         <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mr-2 shrink-0 overflow-hidden">
@@ -4269,7 +4436,7 @@ Usuario: ${userMsg}`;
                         </div>
                         <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
                             <img src="/logos/quimera-icon.svg" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
-                            <span>Ejecutando acciones...</span>
+                            <span>{t('superadmin.globalAssistant.drawer.preparing', 'Preparando...')}</span>
                         </div>
                     </div>
                 )}
@@ -4282,7 +4449,7 @@ Usuario: ${userMsg}`;
                         </div>
                         <div className="bg-q-surface border border-q-border px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 text-sm text-q-text-muted">
                             <img src="/logos/quimera-icon.svg" alt="Loading..." className="w-4 h-4 object-contain animate-pulse" />
-                            <span>Pensando...</span>
+                            <span>{t('superadmin.globalAssistant.drawer.thinking', 'Pensando...')}</span>
                         </div>
                     </div>
                 )}

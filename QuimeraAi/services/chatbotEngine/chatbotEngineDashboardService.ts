@@ -74,6 +74,7 @@ export interface ChatbotEngineRuntimeSnapshot {
         ecommerceEvents: number;
         emailMarketingEvents: number;
         financeEvents: number;
+        mediaEvents: number;
         restaurantEvents: number;
         realtyEvents: number;
         voiceEvents: number;
@@ -128,6 +129,7 @@ const EMPTY_ANALYTICS: ChatbotEngineRuntimeSnapshot['analytics'] = {
     ecommerceEvents: 0,
     emailMarketingEvents: 0,
     financeEvents: 0,
+    mediaEvents: 0,
     restaurantEvents: 0,
     realtyEvents: 0,
     voiceEvents: 0,
@@ -157,6 +159,10 @@ const EMAIL_MARKETING_ACTIONS = new Set([
 
 const FINANCE_ACTIONS = new Set([
     'create_finance_quote_request',
+]);
+
+const MEDIA_ACTIONS = new Set([
+    'request_media_asset',
 ]);
 
 const RESTAURANT_ACTIONS = new Set([
@@ -392,6 +398,12 @@ export function buildChatbotEngineRuntimeSnapshot(input: {
                 FINANCE_ACTIONS,
                 ['finance', 'accounting'],
                 ['finance', 'invoice', 'quote'],
+            )).length,
+            mediaEvents: events.filter(event => eventMatchesDomain(
+                event,
+                MEDIA_ACTIONS,
+                ['media-ai', 'media_ai', 'media'],
+                ['media', 'asset', 'image', 'video'],
             )).length,
             restaurantEvents: events.filter(event => eventMatchesDomain(
                 event,

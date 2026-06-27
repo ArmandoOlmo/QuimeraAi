@@ -25,13 +25,12 @@ describe('widget customer request notes', () => {
         });
 
         expect(notes).toContain('Resumen de solicitud del cliente / Customer request summary');
-        expect(notes).toContain('Proyecto / Project: Brasa Prime');
-        expect(notes).toContain('Origen / Source: restaurant_menu - restaurants');
-        expect(notes).toContain('Cliente / Customer: Luis Rivera | luis@example.com | +1 787 555 0111');
-        expect(notes).toContain('Lo que desea el cliente / What the customer wants: Necesito cotizacion para una mesa privada esta noche.');
-        expect(notes).toContain('Interes detectado por IA / AI detected interest: Reserva urgente para cena privada');
-        expect(notes).toContain('Accion recomendada / Recommended action: Confirmar disponibilidad y llamar al cliente');
-        expect(notes).toContain('Urgencia / Urgency: unknown | Score: 91/100');
+        expect(notes).toContain('ES: El cliente Luis Rivera, luis@example.com, +1 787 555 0111 quiere: Necesito cotizacion para una mesa privada esta noche.');
+        expect(notes).toContain('EN: The customer Luis Rivera, luis@example.com, +1 787 555 0111 wants: Necesito cotizacion para una mesa privada esta noche.');
+        expect(notes).toContain('Próximo paso sugerido: Confirmar disponibilidad y llamar al cliente');
+        expect(notes).not.toContain('Proyecto / Project');
+        expect(notes).not.toContain('Origen / Source');
+        expect(notes).not.toContain('Score:');
     });
 
     it('extracts transcript messages for appointment summaries', () => {
@@ -68,10 +67,14 @@ describe('widget customer request notes', () => {
             generatedAt: new Date('2026-06-26T12:00:00.000Z'),
         });
 
-        expect(notes).toContain('Cita / Appointment: Showing con Maria Gomez');
-        expect(notes).toContain('Fecha solicitada / Requested time: 2026-07-02T19:00:00.000Z');
-        expect(notes).toContain('Lo que desea el cliente / What the customer wants: Prefiero despues de las 3pm.');
-        expect(notes).toContain('Resumen de conversacion / Conversation snapshot');
+        expect(notes).toContain('Cita: Showing con Maria Gomez');
+        expect(notes).toContain('Appointment: Showing con Maria Gomez');
+        expect(notes).toContain('2 de julio de 2026');
+        expect(notes).toContain('July 2, 2026 at 7:00 PM');
+        expect(notes).toContain('Prefiero despues de las 3pm.');
+        expect(notes).toContain('Contexto de la conversación');
+        expect(notes).not.toContain('Fecha solicitada / Requested time');
+        expect(notes).not.toContain('2026-07-02T19:00:00.000Z');
     });
 
     it('does not duplicate an existing generated summary', () => {

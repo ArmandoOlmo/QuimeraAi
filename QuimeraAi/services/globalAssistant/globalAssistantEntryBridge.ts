@@ -132,10 +132,17 @@ const BUSINESS_CREATION_TARGET_TERMS = [
     'para un',
     'para una',
     'para mi',
+    'por un',
+    'por una',
     'for a',
     'for my',
     'negocio',
     'business',
+    'firma',
+    'arquitecto',
+    'arquitectura',
+    'architect',
+    'architecture',
     'restaurante',
     'clinica',
     'clinic',
@@ -157,11 +164,11 @@ const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: stri
     },
     {
         module: 'businessBlueprint',
-        terms: ['business blueprint', 'blueprint', 'business map', 'mapa de negocio'],
+        terms: ['business blueprint', 'blueprint', 'business map', 'mapa de negocio', 'plan del negocio', 'plan de negocio'],
     },
     {
         module: 'storefront',
-        terms: ['storefront', 'escaparate', 'storefront builder', 'product card', 'catalog section'],
+        terms: ['storefront', 'escaparate', 'storefront builder', 'store builder', 'public store', 'tienda publica', 'product card', 'catalog section'],
     },
     {
         module: 'ecommerce',
@@ -208,8 +215,16 @@ const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: stri
         terms: ['website', 'web', 'pagina', 'editor', 'hero', 'seccion', 'section', 'website builder'],
     },
     {
+        module: 'settings',
+        terms: ['settings', 'ajustes', 'configuracion', 'workspace', 'team', 'equipo', 'cuenta', 'account', 'tenant'],
+    },
+    {
+        module: 'designSystem',
+        terms: ['design system', 'design tokens', 'tokens de diseno', 'tokens de diseño', 'colores globales', 'tipografias globales', 'tipografías globales'],
+    },
+    {
         module: 'project',
-        terms: ['proyecto', 'proyectos', 'project', 'projects', 'cambia de proyecto', 'switch project'],
+        terms: ['proyecto', 'proyectos', 'project', 'projects', 'websites', 'cambia de proyecto', 'switch project'],
     },
 ];
 
@@ -225,6 +240,12 @@ export function inferDashboardAssistantModule(request: string): AssistantModuleT
     if (includesAny(text, AI_STUDIO_OPEN_TERMS) || includesAny(text, AI_STUDIO_CREATION_TERMS) || isNewWebsiteCreationRequest(text)) {
         return 'aiStudio';
     }
+    if (
+        includesAny(text, ['video', 'reel', 'short', 'media ai'])
+        || (includesAny(text, ['imagen', 'image', 'foto', 'hero image']) && includesAny(text, ['crea', 'crear', 'create', 'genera', 'generar', 'generate']))
+    ) {
+        return 'media';
+    }
 
     const match = DASHBOARD_MODULE_TERMS.find(({ terms }) => includesAny(text, terms));
     return match?.module || null;
@@ -237,9 +258,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'create_website',
         module: 'aiStudio',
         labelKey: 'dashboard.assistantQuickActions.createWebsite',
-        labelFallback: 'Create website',
+        labelFallback: 'AI Studio',
         promptKey: 'dashboard.assistantQuickActions.createWebsitePrompt',
-        promptFallback: 'Use AI Studio to create a new website project with business context, sections, copy, images, and next steps.',
+        promptFallback: 'Use AI Studio for website questions, planning, content, images, and project guidance.',
         category: 'create',
         requiresProject: false,
     },
@@ -247,9 +268,19 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'generate_hero_image',
         module: 'media',
         labelKey: 'dashboard.assistantQuickActions.generateHeroImage',
-        labelFallback: 'Generate image',
+        labelFallback: 'Images',
         promptKey: 'dashboard.assistantQuickActions.generateHeroImagePrompt',
-        promptFallback: 'Generate a hero image draft for the active project and keep it in review before applying it.',
+        promptFallback: 'Use the image generator for image questions, prompts, sizes, styles, and drafts.',
+        category: 'create',
+        requiresProject: true,
+    },
+    {
+        id: 'create_video',
+        module: 'media',
+        labelKey: 'dashboard.assistantQuickActions.createVideo',
+        labelFallback: 'Videos',
+        promptKey: 'dashboard.assistantQuickActions.createVideoPrompt',
+        promptFallback: 'Use the video area for video questions, prompts, scenes, formats, and drafts.',
         category: 'create',
         requiresProject: true,
     },
@@ -257,9 +288,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'review_leads',
         module: 'crm',
         labelKey: 'dashboard.assistantQuickActions.reviewLeads',
-        labelFallback: 'Review leads',
+        labelFallback: 'Leads',
         promptKey: 'dashboard.assistantQuickActions.reviewLeadsPrompt',
-        promptFallback: 'Review recent leads and propose prioritized follow-ups.',
+        promptFallback: 'Use Leads for questions, review, follow-ups, and lead management.',
         category: 'analyze',
         requiresProject: true,
     },
@@ -267,9 +298,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'create_email',
         module: 'emailMarketing',
         labelKey: 'dashboard.assistantQuickActions.createEmail',
-        labelFallback: 'Create email',
+        labelFallback: 'Email',
         promptKey: 'dashboard.assistantQuickActions.createEmailPrompt',
-        promptFallback: 'Create an email campaign draft for the active project using its brand context.',
+        promptFallback: 'Use Email Marketing for email questions, drafts, audiences, campaigns, and review.',
         category: 'create',
         requiresProject: true,
     },
@@ -277,9 +308,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'open_ecommerce',
         module: 'ecommerce',
         labelKey: 'dashboard.assistantQuickActions.openEcommerce',
-        labelFallback: 'Open ecommerce',
+        labelFallback: 'Ecommerce',
         promptKey: 'dashboard.assistantQuickActions.openEcommercePrompt',
-        promptFallback: 'Open the ecommerce area and summarize what needs attention.',
+        promptFallback: 'Use Ecommerce for store questions, products, orders, inventory, and setup.',
         category: 'open',
         requiresProject: true,
     },
@@ -287,9 +318,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'train_chatcore',
         module: 'chatbot',
         labelKey: 'dashboard.assistantQuickActions.trainChatCore',
-        labelFallback: 'Train ChatCore',
+        labelFallback: 'ChatCore',
         promptKey: 'dashboard.assistantQuickActions.trainChatCorePrompt',
-        promptFallback: 'Train ChatCore for the active project by syncing reviewed project knowledge, keeping visitor chat memory separate.',
+        promptFallback: 'Use ChatCore for assistant questions, knowledge, training, tests, and visitor chat setup.',
         category: 'analyze',
         requiresProject: true,
     },
@@ -297,9 +328,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'create_appointment',
         module: 'appointments',
         labelKey: 'dashboard.assistantQuickActions.createAppointment',
-        labelFallback: 'Create appointment',
+        labelFallback: 'Appointments',
         promptKey: 'dashboard.assistantQuickActions.createAppointmentPrompt',
-        promptFallback: 'Create an appointment draft for the active project and ask for any missing service, date, time, contact, and consent details.',
+        promptFallback: 'Use Appointments for schedule questions, bookings, services, availability, and contacts.',
         category: 'create',
         requiresProject: true,
     },
@@ -307,9 +338,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'improve_bio_page',
         module: 'bioPage',
         labelKey: 'dashboard.assistantQuickActions.improveBioPage',
-        labelFallback: 'Improve Bio Page',
+        labelFallback: 'Bio Page',
         promptKey: 'dashboard.assistantQuickActions.improveBioPagePrompt',
-        promptFallback: 'Review the active project Bio Page and propose safe link, block, lead capture, booking, and ChatCore improvements.',
+        promptFallback: 'Use Bio Page for links, blocks, lead capture, booking, and ChatCore questions.',
         category: 'analyze',
         requiresProject: true,
     },
@@ -317,9 +348,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'analyze_project',
         module: 'analytics',
         labelKey: 'dashboard.assistantQuickActions.analyzeProject',
-        labelFallback: 'Analyze project',
+        labelFallback: 'Analytics',
         promptKey: 'dashboard.assistantQuickActions.analyzeProjectPrompt',
-        promptFallback: 'Analyze the active project readiness, analytics, blockers, and next best actions across modules.',
+        promptFallback: 'Use Analytics for project status, readiness, reports, blockers, and next steps.',
         category: 'analyze',
         requiresProject: true,
     },
@@ -327,9 +358,9 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         id: 'review_platform_errors',
         module: 'admin',
         labelKey: 'dashboard.assistantQuickActions.reviewPlatformErrors',
-        labelFallback: 'Review platform errors',
+        labelFallback: 'Owner Mode',
         promptKey: 'dashboard.assistantQuickActions.reviewPlatformErrorsPrompt',
-        promptFallback: 'Review platform errors in Owner Mode and summarize the highest-priority issues.',
+        promptFallback: 'Use Owner Mode for platform status, admin questions, errors, settings, and controls.',
         category: 'admin',
         requiresProject: false,
         adminOnly: true,
@@ -342,7 +373,7 @@ export function getDashboardAssistantQuickActions(input: {
     canUseAdminMode?: boolean;
     limit?: number;
 }): DashboardAssistantQuickAction[] {
-    const limit = input.limit ?? 10;
+    const limit = input.limit ?? 12;
     const hasProjectTarget = input.hasProjects || input.hasActiveProject === true;
     return DASHBOARD_ASSISTANT_QUICK_ACTIONS
         .filter(action => !action.requiresProject || hasProjectTarget)

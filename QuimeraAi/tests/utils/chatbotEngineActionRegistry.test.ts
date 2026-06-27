@@ -152,6 +152,33 @@ describe('chatbotEngine Action Registry', () => {
         expect(result.auditEvent.metadata.ownerModule).toBe('finance');
     });
 
+    it('registers Media AI asset requests as public consented review-only actions', () => {
+        const blueprint = buildBlueprint();
+        const mediaAction = blueprint.actions.find(action => action.actionType === 'request_media_asset');
+
+        expect(mediaAction).toMatchObject({
+            ownerModule: 'media-ai',
+            publicAllowed: true,
+            requiresConsent: true,
+            enabled: false,
+            needsReview: true,
+        });
+        expect(mediaAction?.readiness.warnings.join(' ')).toContain('does not generate, attach, or publish automatically');
+
+        const result = evaluateChatbotAction({
+            blueprint: configureAction(blueprint, 'request_media_asset'),
+            projectId: 'project_chatbot',
+            actionType: 'request_media_asset',
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            hasConsent: true,
+            idempotencyParts: ['lead@example.com', 'hero-asset'],
+        });
+
+        expect(result.allowed).toBe(true);
+        expect(result.auditEvent.metadata.ownerModule).toBe('media-ai');
+    });
+
     it('keeps legacy projects compatible when no ChatbotBlueprint V2 exists', () => {
         const result = evaluateChatbotAction({
             blueprint: null,

@@ -191,7 +191,7 @@ describe('appointmentEngineService', () => {
         });
         expect(appointmentInsert?.row.notes).toEqual([
             expect.objectContaining({
-                content: expect.stringContaining('ES: El cliente Ana Client | ana@example.com solicito: Ana wants a consultation package.'),
+                content: expect.stringContaining('ES: El cliente Ana Client | ana@example.com quiere: Ana wants a consultation package.'),
                 isPrivate: false,
                 aiGenerated: true,
                 pinned: true,
@@ -202,10 +202,13 @@ describe('appointmentEngineService', () => {
             sourceComponent: 'ChatCore',
             sourceModule: 'chatcore',
             conversationTranscript: 'The client asked ChatCore to book a consultation.',
-            customerRequestSummary: expect.stringContaining('Ana wants a consultation package.'),
-            customerRequestNote: expect.stringContaining('EN: The customer Ana Client | ana@example.com requested: Ana wants a consultation package.'),
+            customerRequestSummary: expect.stringContaining('Resumen de seguimiento / Follow-up summary'),
+            customerRequestNote: expect.stringContaining('EN: The customer Ana Client | ana@example.com wants: Ana wants a consultation package.'),
             locale: 'es',
         });
+        expect(appointmentInsert?.row.metadata.customerRequestSummary).toContain('Ana wants a consultation package.');
+        expect(appointmentInsert?.row.metadata.customerRequestSummary).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(appointmentInsert?.row.metadata.customerRequestGeneratedSummary).toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(emailInsert?.row).toMatchObject({
             project_id: 'project-1',
             type: 'appointment_request_received',
@@ -259,26 +262,29 @@ describe('appointmentEngineService', () => {
         expect(result.leadId).toBe('leads-inserted-1');
         expect(appointmentInsert?.row.notes).toEqual([
             expect.objectContaining({
-                content: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 solicito: Maria wants a property showing after 3pm and needs parking details.'),
+                content: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 quiere: Maria wants a property showing after 3pm and needs parking details.'),
                 aiGenerated: true,
                 pinned: true,
             }),
         ]);
         expect(appointmentInsert?.row.notes[0].content).not.toContain('Generado en / Generated at');
         expect(appointmentInsert?.row.metadata).toMatchObject({
-            customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
-            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 requested: Maria wants a property showing after 3pm and needs parking details.'),
+            customerRequestSummary: expect.stringContaining('Resumen de seguimiento / Follow-up summary'),
+            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 wants: Maria wants a property showing after 3pm and needs parking details.'),
             conversationTranscript: 'Cliente: Quiero ver la propiedad despues de las 3pm.',
             sourceModule: 'realty',
             sourceConversationId: 'conversation-1',
         });
+        expect(appointmentInsert?.row.metadata.customerRequestSummary).toContain('Maria wants a property showing after 3pm and needs parking details.');
+        expect(appointmentInsert?.row.metadata.customerRequestSummary).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(appointmentInsert?.row.metadata.customerRequestGeneratedSummary).toContain('Resumen de solicitud del cliente / Customer request summary');
         expect(leadInsert?.row).toMatchObject({
             tenant_id: 'tenant-1',
             project_id: 'project-1',
             name: 'Maria Gomez',
             email: 'maria@example.com',
             source: 'chatbot-widget',
-            notes: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 solicito: Maria wants a property showing after 3pm and needs parking details.'),
+            notes: expect.stringContaining('ES: El cliente Maria Gomez | maria@example.com | +1 787 555 0123 quiere: Maria wants a property showing after 3pm and needs parking details.'),
         });
         expect(leadInsert?.row.notes).not.toContain('Generado en / Generated at');
         expect(leadInsert?.row.custom_data).toMatchObject({
@@ -286,9 +292,105 @@ describe('appointmentEngineService', () => {
             appointmentTitle: 'Property showing with Maria',
             sourceModule: 'realty',
             sourceConversationId: 'conversation-1',
-            customerRequestSummary: expect.stringContaining('Maria wants a property showing after 3pm and needs parking details.'),
-            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 requested: Maria wants a property showing after 3pm and needs parking details.'),
+            customerRequestSummary: expect.stringContaining('Resumen de seguimiento / Follow-up summary'),
+            customerRequestNote: expect.stringContaining('EN: The customer Maria Gomez | maria@example.com | +1 787 555 0123 wants: Maria wants a property showing after 3pm and needs parking details.'),
         });
+        expect(leadInsert?.row.custom_data.customerRequestSummary).toContain('Maria wants a property showing after 3pm and needs parking details.');
+        expect(leadInsert?.row.custom_data.customerRequestSummary).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(leadInsert?.row.custom_data.customerRequestGeneratedSummary).toContain('Resumen de solicitud del cliente / Customer request summary');
+    });
+
+    it('repairs the CRM lead link when a ChatCore appointment request is idempotent', async () => {
+        const supabase = new FakeSupabase({
+            project_appointments: [{
+                id: 'appointment-existing-1',
+                tenant_id: 'tenant-1',
+                project_id: 'project-1',
+                title: 'Consulta con Luis',
+                description: 'Consulta solicitada por ChatCore',
+                type: 'consultation',
+                status: 'scheduled',
+                priority: 'medium',
+                start_date: '2026-07-04T15:00:00.000Z',
+                end_date: '2026-07-04T15:30:00.000Z',
+                timezone: 'UTC',
+                participants: [{
+                    id: 'participant-1',
+                    type: 'lead',
+                    name: 'Luis Rivera',
+                    email: 'luis@example.com',
+                    role: 'attendee',
+                    status: 'pending',
+                }],
+                notes: [],
+                reminders: [],
+                linked_lead_ids: [],
+                tags: ['chatbot', 'chatcore'],
+                source: 'chatbot',
+                source_component: 'ChatCore',
+                source_module: 'chatcore',
+                source_conversation_id: 'conversation-1',
+                idempotency_key: 'chatcore:project-1:conversation-1:appointment',
+                created_by_system: true,
+                generated_by_ai: true,
+                correlation_id: 'correlation-1',
+                metadata: {},
+                created_at: '2026-06-26T12:00:00.000Z',
+                updated_at: '2026-06-26T12:00:00.000Z',
+            }],
+        });
+        const customerRequestSummary = [
+            'Resumen de solicitud del cliente / Customer request summary',
+            'Lo que desea el cliente / What the customer wants: Luis quiere una consulta sobre servicios premium.',
+            'Resumen de conversacion / Conversation snapshot:',
+            '- Cliente / Customer: Quiero una consulta sobre servicios premium.',
+        ].join('\n');
+
+        const result = await createAppointmentFromChat(supabase as any, {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            title: 'Consulta con Luis',
+            startDate: '2026-07-04T15:00:00.000Z',
+            endDate: '2026-07-04T15:30:00.000Z',
+            participantName: 'Luis Rivera',
+            participantEmail: 'luis@example.com',
+            sourceConversationId: 'conversation-1',
+            idempotencyKey: 'chatcore:project-1:conversation-1:appointment',
+            notes: customerRequestSummary,
+            conversationTranscript: 'Cliente: Quiero una consulta sobre servicios premium.',
+            allowConflicts: true,
+        });
+
+        const appointmentInsert = supabase.inserts.find(insert => insert.table === 'project_appointments');
+        const leadInsert = supabase.inserts.find(insert => insert.table === 'leads');
+        const updatedAppointment = supabase.tables.project_appointments[0];
+
+        expect(result.duplicate).toBe(true);
+        expect(result.appointmentId).toBe('appointment-existing-1');
+        expect(result.leadId).toBe('leads-inserted-1');
+        expect(appointmentInsert).toBeUndefined();
+        expect(leadInsert?.row).toMatchObject({
+            project_id: 'project-1',
+            name: 'Luis Rivera',
+            email: 'luis@example.com',
+            source: 'chatbot-widget',
+            notes: expect.stringContaining('ES: El cliente Luis Rivera | luis@example.com quiere: Luis quiere una consulta sobre servicios premium.'),
+        });
+        expect(updatedAppointment.linked_lead_ids).toEqual(['leads-inserted-1']);
+        expect(updatedAppointment.source_lead_id).toBe('leads-inserted-1');
+        expect(updatedAppointment.participants[0]).toMatchObject({
+            leadId: 'leads-inserted-1',
+        });
+        expect(updatedAppointment.notes[0]).toMatchObject({
+            content: expect.stringContaining('ES: El cliente Luis Rivera | luis@example.com quiere: Luis quiere una consulta sobre servicios premium.'),
+            aiGenerated: true,
+            pinned: true,
+        });
+        expect(updatedAppointment.notes[0].content).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(updatedAppointment.metadata.customerRequestSummary).toContain('Resumen de seguimiento / Follow-up summary');
+        expect(updatedAppointment.metadata.customerRequestSummary).not.toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(updatedAppointment.metadata.customerRequestGeneratedSummary).toContain('Resumen de solicitud del cliente / Customer request summary');
+        expect(updatedAppointment.metadata.customerRequestNote).toContain('EN: The customer Luis Rivera | luis@example.com wants: Luis quiere una consulta sobre servicios premium.');
     });
 
     it('marks public booking submissions for review while using the same canonical table', async () => {

@@ -274,6 +274,7 @@ export type ChatbotActionType =
     | 'subscribe_email_audience'
     | 'queue_email_follow_up'
     | 'create_finance_quote_request'
+    | 'request_media_asset'
     | 'send_internal_alert'
     | 'handoff_to_human'
     | 'create_support_ticket'

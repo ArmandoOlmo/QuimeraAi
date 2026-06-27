@@ -290,6 +290,93 @@ describe('canonical chatbotEngineService facade', () => {
         });
     });
 
+    it('executes configured analytics events through the canonical Action Registry', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'record_analytics_event',
+            enabled: true,
+            actorId: 'user_analytics',
+            now: '2026-06-26T14:11:00.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'record_analytics_event',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                eventType: 'chatbot_checkout_cta_clicked',
+                category: 'conversion',
+                label: 'Checkout CTA',
+                value: 1,
+                sessionId: 'session_1',
+                conversationId: 'conversation_1',
+                metadata: {
+                    locale: 'es-PR',
+                    customerRequestSummary: 'Private customer notes',
+                    email: 'lead@example.com',
+                    voice: {
+                        provider: 'elevenlabs',
+                        agentId: 'secret-agent-id',
+                    },
+                },
+            },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            publicRequest: true,
+            actorType: 'visitor',
+            idempotencyKey: 'analytics-key-1',
+            now: '2026-06-26T14:11:00.000Z',
+        }, client as any);
+
+        expect(result.result).toMatchObject({
+            status: 'recorded',
+            actionType: 'record_analytics_event',
+            eventType: 'chatbot_checkout_cta_clicked',
+            eventId: 'chatbot_engine_events_2',
+            metadataRedacted: true,
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_checkout_cta_clicked',
+            'chatbot_action_executed',
+        ]);
+        expect(client.getEvents()[1]).toMatchObject({
+            project_id: 'project_chatbot',
+            event_type: 'chatbot_checkout_cta_clicked',
+            action_type: 'record_analytics_event',
+            action_status: 'observed',
+            conversation_id: 'conversation_1',
+            source_surface: 'website',
+            source_module: 'chatcore',
+            idempotency_key: 'analytics-key-1',
+        });
+        expect(client.getEvents()[1].metadata).toMatchObject({
+            locale: 'es-PR',
+            category: 'conversion',
+            label: 'Checkout CTA',
+            value: 1,
+            sessionId: 'session_1',
+            analyticsRuntime: true,
+            analyticsMetadataRedacted: true,
+            voice: {
+                provider: 'elevenlabs',
+            },
+        });
+        const metadataJson = JSON.stringify(client.getEvents()[1].metadata);
+        expect(metadataJson).not.toContain('Private customer notes');
+        expect(metadataJson).not.toContain('lead@example.com');
+        expect(metadataJson).not.toContain('secret-agent-id');
+    });
+
     it('reuses or creates project-scoped conversations through the canonical Inbox contract', async () => {
         const client = createProjectClient({ businessBlueprint: buildBusinessBlueprint() }, {
             social_conversations: [
@@ -550,8 +637,20 @@ describe('canonical chatbotEngineService facade', () => {
 
     it('executes configured non-mutating knowledge actions through one canonical facade', async () => {
         const businessBlueprint = buildBusinessBlueprint();
-        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+        const withAction = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
             actionType: 'answer_from_knowledge',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:30:00.000Z',
+        }) as ChatbotBlueprint;
+        const withBusinessKnowledge = reviewChatbotKnowledgeSourceInBlueprint(withAction, {
+            sourceId: 'knowledge-business-blueprint',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:30:00.000Z',
+        }) as ChatbotBlueprint;
+        const chatbotBlueprint = reviewChatbotKnowledgeSourceInBlueprint(withBusinessKnowledge, {
+            sourceId: 'knowledge-website-content',
             enabled: true,
             actorId: 'user_engine',
             now: '2026-06-26T14:30:00.000Z',
@@ -570,6 +669,9 @@ describe('canonical chatbotEngineService facade', () => {
                 projectId: 'project_chatbot',
                 projectUserId: 'user_chatbot',
             },
+            payload: {
+                question: 'What services does this business offer?',
+            },
             sourceSurface: 'website',
             sourceModule: 'chatcore',
             publicRequest: true,
@@ -579,7 +681,423 @@ describe('canonical chatbotEngineService facade', () => {
         expect(result).toMatchObject({
             projectId: 'project_chatbot',
             actionType: 'answer_from_knowledge',
-            result: { status: 'observed', actionType: 'answer_from_knowledge' },
+            result: expect.objectContaining({
+                status: 'answered',
+                actionType: 'answer_from_knowledge',
+                answerStatus: 'answered_from_reviewed_public_knowledge',
+                knowledgePolicy: 'reviewed_public_sources_only',
+                needsHumanReview: false,
+            }),
+        });
+        const answerResult = result.result as any;
+        expect(answerResult.answer).toContain('Bilingual business using ChatCore as the canonical engine.');
+        expect(answerResult.citations.length).toBeGreaterThan(0);
+        expect(answerResult.citations.every((citation: any) => citation.visibility === 'public')).toBe(true);
+        expect(answerResult.citations.map((citation: any) => citation.sourceId)).not.toContain('knowledge-crm-leads-private');
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_action_executed',
+        ]);
+    });
+
+    it('executes configured lead capture through the canonical facade and writes CRM notes', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'create_lead',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:00.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        }, {
+            leads: [],
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'create_lead',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                name: 'Marta Lead',
+                email: 'MARTA@EXAMPLE.COM',
+                message: 'Necesito precios para el paquete premium.',
+                conversationId: 'conversation_1',
+            },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            publicRequest: true,
+            hasConsent: true,
+            now: '2026-06-26T14:35:00.000Z',
+        }, client as any);
+
+        expect(result).toMatchObject({
+            projectId: 'project_chatbot',
+            actionType: 'create_lead',
+            result: expect.objectContaining({
+                email: 'marta@example.com',
+                created: true,
+                reviewRequired: true,
+            }),
+        });
+        expect(client.tables.leads[0]).toMatchObject({
+            tenant_id: 'tenant_chatbot',
+            project_id: 'project_chatbot',
+            email: 'marta@example.com',
+            source: 'chatbot-widget',
+            notes: expect.stringContaining('Resumen de seguimiento / Follow-up summary'),
+            custom_data: expect.objectContaining({
+                chatbotEngine: true,
+                actionType: 'create_lead',
+                sourceConversationId: 'conversation_1',
+                customerRequestNote: expect.stringContaining('Follow-up summary'),
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_action_executed',
+        ]);
+    });
+
+    it('executes authenticated CRM lead updates through the canonical facade', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'update_lead',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:30.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        }, {
+            leads: [{
+                id: 'lead_1',
+                tenant_id: 'tenant_chatbot',
+                project_id: 'project_chatbot',
+                name: 'Marta Lead',
+                email: 'marta@example.com',
+                status: 'new',
+                value: 0,
+                tags: ['chatbot'],
+                notes: 'Initial CRM note',
+                custom_data: { chatbotEngine: true },
+            }],
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'update_lead',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                leadId: 'lead_1',
+                status: 'qualified',
+                value: 900,
+                message: 'Marta confirmed interest in the premium plan.',
+                conversationId: 'conversation_1',
+                tags: ['premium'],
+            },
+            sourceSurface: 'admin_preview',
+            sourceModule: 'chatbot-engine-dashboard',
+            publicRequest: false,
+            hasAuth: true,
+            actorType: 'project_user',
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:30.000Z',
+        }, client as any);
+
+        expect(result).toMatchObject({
+            projectId: 'project_chatbot',
+            actionType: 'update_lead',
+            result: expect.objectContaining({
+                leadId: 'lead_1',
+                status: 'qualified',
+                updated: true,
+                reviewRequired: true,
+            }),
+        });
+        expect(client.tables.leads[0]).toMatchObject({
+            status: 'qualified',
+            value: 900,
+            tags: expect.arrayContaining(['chatbot', 'chatcore', 'chatbot-updated', 'premium']),
+            notes: expect.stringContaining('Resumen de seguimiento / Follow-up summary'),
+            custom_data: expect.objectContaining({
+                chatbotEngine: true,
+                actionType: 'update_lead',
+                sourceConversationId: 'conversation_1',
+                customerRequestNote: expect.stringContaining('Follow-up summary'),
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_action_executed',
+        ]);
+    });
+
+    it('scores CRM leads through the canonical facade and persists AI score metadata', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'score_lead',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:40.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        }, {
+            leads: [{
+                id: 'lead_score_1',
+                tenant_id: 'tenant_chatbot',
+                project_id: 'project_chatbot',
+                name: 'Marta Lead',
+                email: 'marta@example.com',
+                phone: '+1 787 555 0100',
+                company: 'Acme',
+                status: 'new',
+                source: 'chatbot-widget',
+                tags: ['chatbot'],
+                notes: 'Initial CRM note',
+                custom_data: { chatbotEngine: true },
+            }],
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'score_lead',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                leadId: 'lead_score_1',
+                message: 'Marta needs pricing and wants to schedule a demo.',
+                conversationTranscript: 'Visitor: pricing\nAssistant: details\nVisitor: demo',
+            },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            publicRequest: true,
+            actorType: 'visitor',
+            now: '2026-06-26T14:35:40.000Z',
+        }, client as any);
+
+        expect(result).toMatchObject({
+            projectId: 'project_chatbot',
+            actionType: 'score_lead',
+            result: expect.objectContaining({
+                leadId: 'lead_score_1',
+                scored: true,
+                highIntent: true,
+                reviewRequired: true,
+            }),
+        });
+        expect((result.result as any).score).toBeGreaterThanOrEqual(80);
+        expect(client.tables.leads[0].custom_data).toMatchObject({
+            chatbotEngine: true,
+            actionType: 'score_lead',
+            leadScore: (result.result as any).score,
+            aiScore: (result.result as any).score,
+            probability: (result.result as any).probability,
+            scoreSource: 'chatbot-engine',
+            scoreSignals: expect.objectContaining({
+                hasEmail: true,
+                hasPhone: true,
+                hasCompany: true,
+                highIntent: true,
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_action_executed',
+        ]);
+    });
+
+    it('executes authenticated internal alerts through Email Marketing review logs', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'send_internal_alert',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:42.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        }, {
+            email_logs: [],
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'send_internal_alert',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                recipientEmail: 'TEAM@EXAMPLE.COM',
+                recipientName: 'Team Ops',
+                subject: 'ChatCore lead attention',
+                message: 'Marta asked for enterprise pricing and wants a same-day call.',
+                priority: 'urgent',
+                alertType: 'lead_attention',
+                leadId: 'lead_score_1',
+                conversationId: 'conversation_1',
+            },
+            sourceSurface: 'admin_preview',
+            sourceModule: 'chatbot-engine-dashboard',
+            publicRequest: false,
+            hasAuth: true,
+            actorType: 'project_user',
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:42.000Z',
+        }, client as any);
+
+        expect(result).toMatchObject({
+            projectId: 'project_chatbot',
+            actionType: 'send_internal_alert',
+            result: expect.objectContaining({
+                recipientEmail: 'team@example.com',
+                duplicate: false,
+                status: 'skipped',
+                reviewRequired: true,
+                noEmailSent: true,
+            }),
+        });
+        expect(client.tables.email_logs[0]).toMatchObject({
+            project_id: 'project_chatbot',
+            type: 'chatbot_internal_alert',
+            email_kind: 'transactional',
+            recipient_email: 'team@example.com',
+            status: 'skipped',
+            skipped_reason: 'needs_review:chatbot_engine_internal_alert',
+            source_entity_type: 'lead',
+            source_entity_id: 'lead_score_1',
+            metadata: expect.objectContaining({
+                chatbotEngine: true,
+                actionType: 'send_internal_alert',
+                noEmailSent: true,
+                needsReview: true,
+                sendMode: 'draft_only',
+                customerRequestNote: expect.stringContaining('Follow-up summary'),
+            }),
+        });
+        expect(client.getEvents().map(event => event.event_type)).toEqual([
+            'chatbot_action_allowed',
+            'chatbot_action_executed',
+        ]);
+    });
+
+    it('blocks public CRM lead updates without authenticated project context', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'update_lead',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:35:45.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        }, {
+            leads: [{
+                id: 'lead_1',
+                tenant_id: 'tenant_chatbot',
+                project_id: 'project_chatbot',
+                name: 'Marta Lead',
+                email: 'marta@example.com',
+                status: 'new',
+                value: 0,
+                tags: ['chatbot'],
+                custom_data: {},
+            }],
+        });
+
+        await expect(executeChatbotAction({
+            actionType: 'update_lead',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                leadId: 'lead_1',
+                status: 'qualified',
+            },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            publicRequest: true,
+            now: '2026-06-26T14:35:45.000Z',
+        }, client as any)).rejects.toMatchObject({
+            code: 'CHATBOT_ACTION_BLOCKED',
+            status: 403,
+        });
+        expect(client.tables.leads[0].status).toBe('new');
+        expect(client.getEvents()).toHaveLength(1);
+        expect(client.getEvents()[0]).toMatchObject({
+            event_type: 'chatbot_action_blocked',
+            action_type: 'update_lead',
+            action_status: 'blocked',
+        });
+    });
+
+    it('executes configured intent analysis and routes Media AI requests', async () => {
+        const businessBlueprint = buildBusinessBlueprint();
+        const chatbotBlueprint = reviewChatbotActionInBlueprint(businessBlueprint.chatbotBlueprint, {
+            actionType: 'analyze_intent',
+            enabled: true,
+            actorId: 'user_engine',
+            now: '2026-06-26T14:36:00.000Z',
+        }) as ChatbotBlueprint;
+        const client = createProjectClient({
+            businessBlueprint: {
+                ...businessBlueprint,
+                chatbotBlueprint,
+            },
+        });
+
+        const result = await executeChatbotAction({
+            actionType: 'analyze_intent',
+            scope: {
+                tenantId: 'tenant_chatbot',
+                projectId: 'project_chatbot',
+                projectUserId: 'user_chatbot',
+            },
+            payload: {
+                role: 'user',
+                text: 'Necesito generar imagen hero para esta campaña.',
+            },
+            sourceSurface: 'website',
+            sourceModule: 'chatcore',
+            publicRequest: true,
+            now: '2026-06-26T14:36:00.000Z',
+        }, client as any);
+
+        expect(result.result).toMatchObject({
+            intent: {
+                primaryIntent: 'media_asset_request',
+                actionType: 'request_media_asset',
+            },
+            messageMetadata: expect.objectContaining({
+                direction: 'inbound',
+            }),
         });
         expect(client.getEvents().map(event => event.event_type)).toEqual([
             'chatbot_action_allowed',

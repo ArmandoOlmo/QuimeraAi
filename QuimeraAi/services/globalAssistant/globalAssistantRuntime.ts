@@ -57,6 +57,12 @@ export interface ConfirmAssistantPlanInput {
     confirmedAt?: string;
 }
 
+export interface CancelAssistantPlanInput {
+    taskId: string;
+    cancelledBy?: string | null;
+    cancelledAt?: string;
+}
+
 export interface ApplyAssistantTaskInput {
     taskId: string;
     actionIds?: string[];
@@ -303,6 +309,12 @@ export class GlobalAssistantRuntime {
         if (plan.status === 'blocked') {
             throw new Error('Cannot confirm a blocked assistant plan.');
         }
+        if (plan.status === 'cancelled' || task.status === 'cancelled') {
+            throw new Error('Cannot confirm a cancelled assistant plan.');
+        }
+        if (plan.status === 'complete' || task.status === 'completed') {
+            throw new Error('Cannot confirm a completed assistant plan.');
+        }
 
         const actionIds = new Set(input.actionIds || plan.actions.map(action => action.id));
         const timestamp = input.confirmedAt || nowIso();
@@ -360,11 +372,86 @@ export class GlobalAssistantRuntime {
         return { task: nextTask, plan: nextPlan, actions };
     }
 
+    async cancelPlan(input: CancelAssistantPlanInput): Promise<AssistantLifecycleResult> {
+        const task = this.getTaskOrThrow(input.taskId);
+        const plan = this.getPlanOrThrow(task);
+        if (plan.status === 'complete' || task.status === 'completed') {
+            throw new Error('Cannot cancel a completed assistant plan. Use rollback for applied actions.');
+        }
+        if (plan.actions.some(action => action.status === 'applied')) {
+            throw new Error('Cannot cancel a plan with applied actions. Use rollback for applied actions.');
+        }
+
+        const timestamp = input.cancelledAt || nowIso();
+        const actions = plan.actions.map(action => {
+            if (action.status === 'rolled_back') return action;
+            const nextAction: AssistantAction = {
+                ...action,
+                status: 'cancelled',
+                updatedAt: timestamp,
+                metadata: {
+                    ...(action.metadata || {}),
+                    lifecycle: 'cancelled',
+                    cancelledBy: input.cancelledBy ?? action.userId,
+                },
+            };
+            this.recordAction(nextAction, {
+                metadata: {
+                    cancelledBy: input.cancelledBy ?? action.userId,
+                    lifecycle: 'cancelled',
+                },
+            });
+            this.recordEvent({
+                type: 'assistant_action_cancelled',
+                userId: nextAction.userId,
+                tenantId: nextAction.tenantId,
+                projectId: nextAction.projectId,
+                taskId: task.id,
+                actionId: nextAction.id,
+                metadata: {
+                    cancelledBy: input.cancelledBy ?? nextAction.userId,
+                    actionType: nextAction.actionType,
+                    module: nextAction.module,
+                },
+            });
+            return nextAction;
+        });
+        const approvals = plan.approvals.map(approval => ({
+            ...approval,
+            cancelledAt: approval.cancelledAt || timestamp,
+        }));
+        const nextPlan: AssistantExecutionPlan = {
+            ...plan,
+            actions,
+            approvals,
+            status: 'cancelled',
+            blockers: [],
+            updatedAt: timestamp,
+        };
+        const nextTask = this.taskService.updateTask(task.id, {
+            plan: nextPlan,
+            status: 'cancelled',
+            errors: [],
+            result: {
+                cancelled: true,
+                cancelledBy: input.cancelledBy ?? task.userId,
+                actionIds: actions.map(action => action.id),
+            },
+        });
+        this.recordTask(nextTask);
+        await this.flushPersistence();
+
+        return { task: nextTask, plan: nextPlan, actions };
+    }
+
     async applyTask(input: ApplyAssistantTaskInput): Promise<AssistantLifecycleResult> {
         const task = this.getTaskOrThrow(input.taskId);
         const plan = this.getPlanOrThrow(task);
         if (plan.status === 'blocked') {
             throw new Error('Cannot apply a blocked assistant plan.');
+        }
+        if (plan.status === 'cancelled' || task.status === 'cancelled') {
+            throw new Error('Cannot apply a cancelled assistant plan.');
         }
 
         const selectedIds = new Set(input.actionIds || plan.actions.map(action => action.id));

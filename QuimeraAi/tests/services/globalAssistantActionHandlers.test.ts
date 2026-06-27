@@ -562,12 +562,18 @@ describe('Global Assistant default action handlers', () => {
             expect.objectContaining({
                 id: 'project-chatcore',
                 module: 'chatbot',
+                canGuideGlobalActions: false,
                 canExecuteGlobalActions: false,
+                canMutateProjectData: true,
+                executionBoundary: 'module_local',
                 memoryScope: 'project_chat_config',
             }),
             expect.objectContaining({
                 id: 'global-operating-layer',
-                canExecuteGlobalActions: true,
+                canGuideGlobalActions: true,
+                canExecuteGlobalActions: false,
+                canMutateProjectData: false,
+                executionBoundary: 'guide_and_navigate',
                 memoryScope: 'global_assistant_memory',
             }),
         ]));

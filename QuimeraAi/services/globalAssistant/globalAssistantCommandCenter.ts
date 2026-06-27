@@ -287,6 +287,7 @@ export function shouldContinueAfterRuntimePlan(result: GlobalAssistantRuntimeRes
 }
 
 const AUTO_APPLY_NAVIGATION_ACTIONS = new Set([
+    'switch_project',
     'open_project',
     'open_website_builder',
     'open_storefront_builder',
@@ -294,8 +295,124 @@ const AUTO_APPLY_NAVIGATION_ACTIONS = new Set([
     'open_email_hub',
     'open_calendar',
     'open_chatbot_dashboard',
+    'open_media_library',
+    'open_leads_dashboard',
+    'open_bio_page_builder',
+    'open_finance_dashboard',
+    'open_restaurants_dashboard',
+    'open_realty_dashboard',
+    'open_analytics_dashboard',
+    'open_super_admin',
     'open_tenant',
 ]);
+
+const ACTION_COPY: Record<string, { es: string; en: string }> = {
+    switch_project: { es: 'cambiar al proyecto correcto', en: 'switch to the right project' },
+    open_project: { es: 'abrir el proyecto', en: 'open the project' },
+    open_website_builder: { es: 'abrir el editor del sitio', en: 'open the site editor' },
+    open_storefront_builder: { es: 'abrir el editor de la tienda', en: 'open the store editor' },
+    open_orders: { es: 'abrir la tienda', en: 'open the store' },
+    open_email_hub: { es: 'abrir emails', en: 'open emails' },
+    open_calendar: { es: 'abrir citas', en: 'open appointments' },
+    open_chatbot_dashboard: { es: 'abrir ChatCore', en: 'open ChatCore' },
+    open_media_library: { es: 'abrir imagenes y videos', en: 'open images and videos' },
+    open_leads_dashboard: { es: 'abrir leads', en: 'open leads' },
+    open_bio_page_builder: { es: 'abrir Bio Page', en: 'open Bio Page' },
+    open_finance_dashboard: { es: 'abrir finanzas', en: 'open finance' },
+    open_restaurants_dashboard: { es: 'abrir restaurantes', en: 'open restaurants' },
+    open_realty_dashboard: { es: 'abrir Realty', en: 'open Realty' },
+    open_analytics_dashboard: { es: 'abrir analytics', en: 'open analytics' },
+    open_super_admin: { es: 'abrir Super Admin', en: 'open Super Admin' },
+    open_tenant: { es: 'abrir el tenant', en: 'open the tenant' },
+    create_project_from_prompt: { es: 'crear un proyecto nuevo', en: 'create a new project' },
+    create_website_from_prompt: { es: 'crear un sitio web', en: 'create a website' },
+    edit_website_section: { es: 'editar una seccion del sitio', en: 'edit a site section' },
+    update_section_copy: { es: 'actualizar texto del sitio', en: 'update site text' },
+    update_section_image: { es: 'actualizar una imagen del sitio', en: 'update a site image' },
+    generate_image: { es: 'generar una imagen', en: 'generate an image' },
+    edit_image: { es: 'editar una imagen', en: 'edit an image' },
+    generate_video: { es: 'crear un video', en: 'create a video' },
+    create_asset_from_prompt: { es: 'crear una imagen o video', en: 'create an image or video' },
+    create_email_campaign: { es: 'crear una campana de email', en: 'create an email campaign' },
+    generate_email_copy: { es: 'escribir un email', en: 'write an email' },
+    create_product: { es: 'crear un producto', en: 'create a product' },
+    edit_product: { es: 'editar un producto', en: 'edit a product' },
+    create_lead: { es: 'crear un lead', en: 'create a lead' },
+    summarize_leads: { es: 'revisar leads', en: 'review leads' },
+    create_appointment: { es: 'crear una cita', en: 'create an appointment' },
+    create_bio_page: { es: 'crear una Bio Page', en: 'create a Bio Page' },
+    sync_chatbot_knowledge: { es: 'entrenar ChatCore', en: 'train ChatCore' },
+    test_chatbot: { es: 'probar ChatCore', en: 'test ChatCore' },
+    summarize_analytics: { es: 'revisar analytics', en: 'review analytics' },
+    identify_blockers: { es: 'identificar bloqueos', en: 'identify blockers' },
+    create_finance_record: { es: 'crear un registro financiero', en: 'create a finance record' },
+    update_finance_record: { es: 'actualizar un registro financiero', en: 'update a finance record' },
+    review_errors: { es: 'revisar errores de plataforma', en: 'review platform errors' },
+    summarize_business_blueprint: { es: 'revisar el proyecto', en: 'review the project' },
+    summarize_operating_layer_capabilities: { es: 'revisar lo que puedo hacer', en: 'review what I can do' },
+    run_project_report: { es: 'preparar un reporte', en: 'prepare a report' },
+    export_report: { es: 'exportar un reporte', en: 'export a report' },
+};
+
+const humanizeAction = (actionType: string, spanish: boolean): string => {
+    const copy = ACTION_COPY[actionType];
+    if (copy) return spanish ? copy.es : copy.en;
+    return actionType.replace(/_/g, ' ');
+};
+
+const stripActionPrefix = (blocker: string): string =>
+    blocker.replace(/^[a-z0-9_]+:\s*/i, '').trim();
+
+const humanizeBlocker = (blocker: string, spanish: boolean): string => {
+    const reason = stripActionPrefix(blocker);
+    const normalized = reason.toLowerCase();
+
+    if (normalized.includes('which project should i use')) {
+        return spanish
+            ? 'Elige un proyecto.'
+            : 'I need to know which project to use.';
+    }
+    if (normalized.includes('which matching project should i use')) {
+        return spanish
+            ? 'Hay mas de un proyecto posible. Escribe el nombre exacto.'
+            : 'I found more than one matching project. Type the exact project name.';
+    }
+    if (normalized.includes('no execute handler registered')) {
+        return spanish
+            ? 'Todavia no puedo hacer eso automaticamente.'
+            : 'This action is not connected to real execution yet.';
+    }
+    if (normalized.includes('required service is not available')) {
+        return spanish
+            ? 'Esta funcion no esta disponible en este momento.'
+            : reason;
+    }
+    if (normalized.includes('required feature is not enabled')) {
+        return spanish
+            ? 'Esta funcion no esta activa para este workspace.'
+            : reason;
+    }
+
+    return reason;
+};
+
+const formatAvailableProjectHint = (
+    result: GlobalAssistantRuntimeResult,
+    spanish: boolean,
+): string | null => {
+    const projects = Array.isArray(result.context.snapshot?.availableProjects)
+        ? result.context.snapshot.availableProjects.map(asRecord)
+        : [];
+    const names = projects
+        .map(project => asText(project.name))
+        .filter(Boolean)
+        .slice(0, 4);
+    if (!names.length) return null;
+    const suffix = projects.length > names.length ? ', ...' : '';
+    return spanish
+        ? `Opciones: ${names.join(', ')}${suffix}`
+        : `Options: ${names.join(', ')}${suffix}`;
+};
 
 const formatMemoryContextSummary = (result: GlobalAssistantRuntimeResult): string => {
     const manifest = result.memoryContext;
@@ -384,32 +501,21 @@ const formatBusinessBlueprintResultLines = (
     const enabledModuleCount = asNumber(summary.enabledModuleCount) ?? 0;
     const readyModuleCount = asNumber(summary.readyModuleCount) ?? 0;
     const reviewModuleCount = asNumber(summary.reviewModuleCount) ?? 0;
-    const blockerCount = asNumber(summary.blockerCount) ?? asArray(snapshot.blockers).length;
-    const warningCount = asNumber(summary.warningCount) ?? asArray(snapshot.warnings).length;
-    const reviewModules = formatValueList(summary.reviewModules, 6);
     const recommendation = formatValueList(snapshot.recommendations, 1);
 
     const lines = [
         spanish
-            ? `BusinessBlueprint: ${businessName || 'proyecto activo'}`
-            : `BusinessBlueprint: ${businessName || 'active project'}`,
+            ? `Proyecto: ${businessName || 'proyecto activo'}`
+            : `Project: ${businessName || 'active project'}`,
         spanish
-            ? `Modulos evaluados: ${selectedModuleCount}; habilitados: ${enabledModuleCount}; listos: ${readyModuleCount}; en revision: ${reviewModuleCount}.`
-            : `Modules evaluated: ${selectedModuleCount}; enabled: ${enabledModuleCount}; ready: ${readyModuleCount}; needs review: ${reviewModuleCount}.`,
-        spanish
-            ? `Blockers: ${blockerCount}; warnings: ${warningCount}.`
-            : `Blockers: ${blockerCount}; warnings: ${warningCount}.`,
+            ? `Listo: ${readyModuleCount} de ${enabledModuleCount || selectedModuleCount} areas activas. Por revisar: ${reviewModuleCount}.`
+            : `Ready: ${readyModuleCount} of ${enabledModuleCount || selectedModuleCount} active areas. To review: ${reviewModuleCount}.`,
     ];
 
-    if (reviewModules) {
-        lines.push(spanish
-            ? `Requieren revision: ${reviewModules}.`
-            : `Need review: ${reviewModules}.`);
-    }
     if (recommendation) {
         lines.push(spanish
-            ? `Siguiente paso: ${recommendation}.`
-            : `Next step: ${recommendation}.`);
+            ? `Siguiente: ${recommendation}.`
+            : `Next: ${recommendation}.`);
     }
 
     return lines;
@@ -431,17 +537,17 @@ const formatAnalyticsResultLines = (
 
     const lines = [
         spanish
-            ? `Analytics: ${projectName || 'proyecto activo'}`
-            : `Analytics: ${projectName || 'active project'}`,
+            ? `Resumen: ${projectName || 'proyecto activo'}`
+            : `Summary: ${projectName || 'active project'}`,
         spanish
-            ? `Senales: ${totalSignals}; bloqueos: ${blockerCount}; warnings: ${warningCount}.`
-            : `Signals: ${totalSignals}; blockers: ${blockerCount}; warnings: ${warningCount}.`,
+            ? `${totalSignals} senales revisadas. ${blockerCount} bloqueos y ${warningCount} avisos.`
+            : `${totalSignals} signals checked. ${blockerCount} blockers and ${warningCount} warnings.`,
     ];
 
     if (blockers) {
         lines.push(spanish
-            ? `Bloqueos detectados: ${blockers}.`
-            : `Detected blockers: ${blockers}.`);
+            ? `Bloqueos: ${blockers}.`
+            : `Blockers: ${blockers}.`);
     }
     if (fileName) {
         lines.push(spanish
@@ -463,65 +569,49 @@ const formatOperatingLayerCapabilityResultLines = (
     const moduleNames = modules
         .map(module => asText(module.module))
         .filter(Boolean)
-        .slice(0, 8)
+        .slice(0, 5)
         .join(', ');
-    const actionCount = asNumber(summary.actionCount) ?? 0;
     const availableActionCount = asNumber(summary.availableActionCount) ?? 0;
-    const executableActionCount = asNumber(summary.executableActionCount) ?? 0;
-    const previewActionCount = asNumber(summary.previewActionCount) ?? 0;
-    const rollbackActionCount = asNumber(summary.rollbackActionCount) ?? 0;
-    const rollbackExecutableActionCount = asNumber(summary.rollbackExecutableActionCount) ?? rollbackActionCount;
-    const rollbackGapActionCount = asNumber(summary.rollbackGapActionCount) ?? 0;
-    const confirmationActionCount = asNumber(summary.confirmationActionCount) ?? 0;
-    const highRiskActionCount = asNumber(summary.highRiskActionCount) ?? 0;
     const unavailableActionCount = asNumber(summary.unavailableActionCount) ?? 0;
     const blockedServices = formatValueList(blockedBy.services, 5);
     const blockedFeatures = formatValueList(blockedBy.features, 5);
-    const currentSurfaceId = asText(assistantSurfaces.currentSurfaceId);
-    const globalActionSurfaceId = asText(assistantSurfaces.globalActionSurfaceId);
     const surfaceCount = asNumber(assistantSurfaces.surfaceCount) ?? asArray(assistantSurfaces.surfaces).length;
     const recommendation = formatValueList(snapshot.recommendations, 1);
 
     const lines = [
         spanish
-            ? `Operating Layer: ${modules.length} modulos; ${actionCount} acciones; ${availableActionCount} disponibles en este contexto.`
-            : `Operating Layer: ${modules.length} modules; ${actionCount} actions; ${availableActionCount} available in this context.`,
+            ? `Puedo ayudarte en ${modules.length} areas.`
+            : `I can help in ${modules.length} areas.`,
         spanish
-            ? `Ejecutables: ${executableActionCount}; preview: ${previewActionCount}; rollback declarado: ${rollbackActionCount}; rollback ejecutable: ${rollbackExecutableActionCount}; confirmacion: ${confirmationActionCount}; alto riesgo: ${highRiskActionCount}.`
-            : `Executable: ${executableActionCount}; preview: ${previewActionCount}; declared rollback: ${rollbackActionCount}; executable rollback: ${rollbackExecutableActionCount}; confirmation: ${confirmationActionCount}; high risk: ${highRiskActionCount}.`,
-        moduleNames
-            ? (spanish ? `Modulos cubiertos: ${moduleNames}.` : `Covered modules: ${moduleNames}.`)
-            : '',
+            ? `${availableActionCount} acciones estan disponibles ahora.`
+            : `${availableActionCount} actions are available now.`,
     ].filter(Boolean);
 
-    if (unavailableActionCount > 0) {
-        lines.push(spanish
-            ? `Acciones bloqueadas por contexto: ${unavailableActionCount}.`
-            : `Actions blocked by context: ${unavailableActionCount}.`);
-    }
-    if (rollbackGapActionCount > 0) {
-        const gapActions = formatValueList(summary.rollbackGapActionTypes, 5);
-        lines.push(spanish
-            ? `Gaps de rollback: ${rollbackGapActionCount}${gapActions ? ` (${gapActions})` : ''}.`
-            : `Rollback gaps: ${rollbackGapActionCount}${gapActions ? ` (${gapActions})` : ''}.`);
-    }
     if (blockedServices) {
         lines.push(spanish
-            ? `Servicios requeridos no activos: ${blockedServices}.`
+            ? `Servicios por activar: ${blockedServices}.`
             : `Required inactive services: ${blockedServices}.`);
     }
     if (blockedFeatures) {
         lines.push(spanish
-            ? `Feature flags requeridos: ${blockedFeatures}.`
+            ? `Funciones por activar: ${blockedFeatures}.`
             : `Required feature flags: ${blockedFeatures}.`);
+    }
+    if (unavailableActionCount > 0 && lines.length < 4) {
+        lines.push(spanish
+            ? `${unavailableActionCount} acciones necesitan permisos o servicios activos.`
+            : `Actions blocked by context: ${unavailableActionCount}.`);
+    }
+    if (moduleNames && lines.length < 4) {
+        lines.push(spanish ? `Ejemplos: ${moduleNames}.` : `Examples: ${moduleNames}.`);
     }
     if (surfaceCount > 0) {
         lines.push(spanish
-            ? `Superficies de chat: ${surfaceCount}; activa: ${currentSurfaceId || 'sin detectar'}; acciones globales: ${globalActionSurfaceId || 'global-operating-layer'}.`
-            : `Chat surfaces: ${surfaceCount}; active: ${currentSurfaceId || 'not detected'}; global actions: ${globalActionSurfaceId || 'global-operating-layer'}.`);
+            ? `${surfaceCount} chats detectados; este es el asistente global.`
+            : `${surfaceCount} chat surfaces detected; this is the global assistant.`);
     }
     if (recommendation) {
-        lines.push(spanish ? `Siguiente paso: ${recommendation}.` : `Next step: ${recommendation}.`);
+        lines.push(spanish ? `Siguiente: ${recommendation}.` : `Next: ${recommendation}.`);
     }
 
     return lines;
@@ -539,8 +629,8 @@ const formatLeadSummaryResultLines = (
 
     return [
         spanish
-            ? `CRM/Leads: ${totalLeads} leads; tareas abiertas: ${openTasks}; actividades: ${activityCount}.`
-            : `CRM/Leads: ${totalLeads} leads; open tasks: ${openTasks}; activities: ${activityCount}.`,
+            ? `Leads: ${totalLeads}; tareas abiertas: ${openTasks}; actividades: ${activityCount}.`
+            : `Leads: ${totalLeads}; open tasks: ${openTasks}; activities: ${activityCount}.`,
         totalValue > 0
             ? (spanish ? `Valor estimado: ${totalValue}.` : `Estimated value: ${totalValue}.`)
             : '',
@@ -607,29 +697,36 @@ export function formatOperatingLayerApplyMessage(
     locale?: string | null,
 ): string {
     const spanish = isSpanish(locale);
-    const actionLabels = result.actions.map(action => `${action.module}.${action.actionType} (${action.status})`);
-    const rollbackCount = result.actions.filter(action => action.metadata?.rollbackSupported === true).length;
     const blockers = result.plan.blockers || [];
     const resultLines = formatAppliedActionResultLines(result, spanish);
+    const actionLabels = result.actions
+        .filter(action => action.status === 'applied')
+        .map(action => humanizeAction(action.actionType, spanish));
 
     if (spanish) {
+        if (blockers.length > 0) {
+            return [
+                'No pude terminarlo.',
+                humanizeBlocker(blockers[0], true),
+            ].join('\n');
+        }
+
         return [
-            'Resultado del Operating Layer',
-            `Estado: ${result.task.status}`,
-            actionLabels.length ? `Acciones: ${actionLabels.join(', ')}` : 'Acciones: ninguna',
-            ...(resultLines.length ? ['Resultados:', ...resultLines.map(line => `- ${line}`)] : []),
-            `Rollback disponible: ${rollbackCount}`,
-            ...(blockers.length ? [`Bloqueos: ${blockers.join(' | ')}`] : []),
+            actionLabels.length ? `Listo. Ya pude ${actionLabels.join(' y ')}.` : 'Listo.',
+            ...resultLines.slice(0, 3),
+        ].join('\n');
+    }
+
+    if (blockers.length > 0) {
+        return [
+            'I could not finish that.',
+            humanizeBlocker(blockers[0], false),
         ].join('\n');
     }
 
     return [
-        'Operating Layer result',
-        `Status: ${result.task.status}`,
-        actionLabels.length ? `Actions: ${actionLabels.join(', ')}` : 'Actions: none',
-        ...(resultLines.length ? ['Results:', ...resultLines.map(line => `- ${line}`)] : []),
-        `Rollback available: ${rollbackCount}`,
-        ...(blockers.length ? [`Blockers: ${blockers.join(' | ')}`] : []),
+        actionLabels.length ? `Done. I finished: ${actionLabels.join(' and ')}.` : 'Done.',
+        ...resultLines.slice(0, 3),
     ].join('\n');
 }
 
@@ -695,10 +792,7 @@ export function shouldAutoApplyOperatingLayerPlan(result: GlobalAssistantRuntime
 
     return result.plan.actions.every(action =>
         action.metadata?.mutatesData !== true
-        && (
-            AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
-            || action.metadata?.executable === true
-        )
+        && AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
     );
 }
 
@@ -708,86 +802,71 @@ export function formatGlobalAssistantPlanMessage(
 ): string {
     const spanish = isSpanish(locale);
     const projectName = getPlanProjectLabel(result, spanish ? 'sin proyecto activo' : 'no active project');
-    const actionLabels = result.plan.actions.map(action => `${action.module}.${action.actionType}`);
+    const actionLabels = result.plan.actions.map(action => humanizeAction(action.actionType, spanish));
     const blocked = result.plan.blockers.length > 0;
-    const approvals = result.plan.approvals.length;
-    const previews = result.plan.previews.length;
-    const memorySummary = formatMemoryContextSummary(result);
-    const memoryContextLines = formatMemoryContextDetailLines(result, spanish);
-    const previewNeedsApplyConfirmation = !blocked
-        && previews > 0
-        && result.plan.status === 'preview'
-        && !result.plan.requiresConfirmation;
+    const blockerLines = result.plan.blockers
+        .map(blocker => humanizeBlocker(blocker, spanish))
+        .filter(Boolean);
+    const projectHint = formatAvailableProjectHint(result, spanish);
+    const navigationOnly = result.plan.actions.length > 0 && result.plan.actions.every(action =>
+        action.metadata?.mutatesData !== true
+        && AUTO_APPLY_NAVIGATION_ACTIONS.has(action.actionType)
+    );
+
+    if (blocked) {
+        const primaryAction = actionLabels[0] || (spanish ? 'hacer eso' : 'do that');
+        const primaryBlocker = blockerLines[0] || (spanish ? 'Necesito mas informacion.' : 'I need more information.');
+        const isProjectMissing = primaryBlocker.toLowerCase().includes(spanish ? 'proyecto' : 'project');
+
+        if (spanish) {
+            return [
+                isProjectMissing ? '¿Para qué proyecto?' : 'No pude hacerlo todavía.',
+                `Puedo ${primaryAction}, pero ${primaryBlocker.charAt(0).toLowerCase()}${primaryBlocker.slice(1)}`,
+                projectHint,
+                'No hice cambios.',
+            ].filter(line => line !== null && line !== undefined).join('\n');
+        }
+
+        return [
+            isProjectMissing ? 'Which project should I use?' : 'I could not do that yet.',
+            `I can ${primaryAction}, but ${primaryBlocker}`,
+            projectHint,
+            'I did not make changes.',
+        ].filter(line => line !== null && line !== undefined).join('\n');
+    }
+
+    const primaryAction = actionLabels[0] || (spanish ? 'hacer eso' : 'do that');
+    const joinedActions = actionLabels.join(spanish ? ' y ' : ' and ');
+
+    if (navigationOnly && !result.plan.requiresConfirmation && result.plan.status !== 'preview') {
+        if (spanish) {
+            return [
+                `Voy a ${joinedActions || primaryAction}.`,
+                projectName ? `Proyecto: ${projectName}` : null,
+            ].filter(Boolean).join('\n');
+        }
+
+        return [
+            `I will ${joinedActions || primaryAction}.`,
+            projectName ? `Project: ${projectName}` : null,
+        ].filter(Boolean).join('\n');
+    }
 
     if (spanish) {
         const lines = [
-            'Plan del Operating Layer',
-            `Modulo: ${result.plan.intent.module}`,
-            `Intencion: ${result.plan.intent.intent}`,
-            `Estado: ${result.plan.status}`,
-            `Proyecto: ${projectName}`,
-            `Modelo planificado: ${result.modelId}`,
-            `Tarea: ${result.task.id}`,
-            `Memoria usada: ${memorySummary}`,
-            ...memoryContextLines,
+            'No hice cambios.',
+            `Para ${joinedActions || primaryAction}${projectName ? ` en ${projectName}` : ''}, abre el módulo correcto y revísalo allí.`,
+            'Te puedo llevar al módulo correcto si me dices cuál quieres abrir.',
         ];
-
-        if (actionLabels.length > 0) {
-            lines.push(`Acciones propuestas: ${actionLabels.join(', ')}`);
-        }
-        if (previews > 0) {
-            lines.push(`Previews: ${previews}`);
-            lines.push(...result.plan.previews.slice(0, 4).map(preview => previewLine(preview, true)));
-        }
-        if (approvals > 0) {
-            lines.push(`Confirmaciones requeridas: ${approvals}`);
-        }
-        if (blocked) {
-            lines.push(`Bloqueos: ${result.plan.blockers.join(' | ')}`);
-        }
-        if (result.plan.requiresConfirmation) {
-            lines.push('No voy a aplicar cambios hasta que confirmes el preview.');
-            lines.push('Responde "confirmar" para aplicar o "cancelar" para descartarlo.');
-        } else if (previewNeedsApplyConfirmation) {
-            lines.push('Preview listo. No voy a aplicar cambios hasta que confirmes.');
-            lines.push('Responde "confirmar" para aplicar o "cancelar" para descartarlo.');
-        }
 
         return lines.join('\n');
     }
 
     const lines = [
-        'Operating Layer plan',
-        `Module: ${result.plan.intent.module}`,
-        `Intent: ${result.plan.intent.intent}`,
-        `Status: ${result.plan.status}`,
-        `Project: ${projectName}`,
-        `Planned model: ${result.modelId}`,
-        `Task: ${result.task.id}`,
-        `Memory used: ${memorySummary}`,
-        ...memoryContextLines,
+        'I did not make changes.',
+        `To ${joinedActions || primaryAction}${projectName ? ` for ${projectName}` : ''}, open the right module and review it there.`,
+        'I can take you to the right module if you tell me which one to open.',
     ];
-
-    if (actionLabels.length > 0) {
-        lines.push(`Proposed actions: ${actionLabels.join(', ')}`);
-    }
-    if (previews > 0) {
-        lines.push(`Previews: ${previews}`);
-        lines.push(...result.plan.previews.slice(0, 4).map(preview => previewLine(preview, false)));
-    }
-    if (approvals > 0) {
-        lines.push(`Confirmations required: ${approvals}`);
-    }
-    if (blocked) {
-        lines.push(`Blockers: ${result.plan.blockers.join(' | ')}`);
-    }
-    if (result.plan.requiresConfirmation) {
-        lines.push('I will not apply changes until you confirm the preview.');
-        lines.push('Reply "confirm" to apply or "cancel" to discard it.');
-    } else if (previewNeedsApplyConfirmation) {
-        lines.push('Preview ready. I will not apply changes until you confirm.');
-        lines.push('Reply "confirm" to apply or "cancel" to discard it.');
-    }
 
     return lines.join('\n');
 }

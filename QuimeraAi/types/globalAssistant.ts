@@ -88,6 +88,7 @@ export type AssistantActionStatus =
     | 'previewed'
     | 'applied'
     | 'failed'
+    | 'cancelled'
     | 'rolled_back';
 
 export type AssistantMessageRole = 'user' | 'assistant' | 'system' | 'tool';
@@ -393,7 +394,7 @@ export interface AssistantExecutionPlan {
     approvals: AssistantApprovalRequest[];
     safetyLevel: AssistantSafetyLevel;
     requiresConfirmation: boolean;
-    status: 'draft' | 'preview' | 'apply' | 'blocked' | 'complete';
+    status: 'draft' | 'preview' | 'apply' | 'blocked' | 'complete' | 'cancelled';
     blockers: string[];
     createdAt: string;
     updatedAt?: string;
@@ -416,6 +417,7 @@ export interface AssistantRuntimeEvent {
         | 'assistant_memory_loaded'
         | 'assistant_action_previewed'
         | 'assistant_action_confirmed'
+        | 'assistant_action_cancelled'
         | 'assistant_action_applied'
         | 'assistant_action_failed'
         | 'assistant_action_rolled_back'

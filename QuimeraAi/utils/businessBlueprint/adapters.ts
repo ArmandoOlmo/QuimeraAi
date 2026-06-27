@@ -55,8 +55,12 @@ type ChatbotBlueprintDraftInput = {
     tagline?: string;
     services: Array<{ name?: string; description?: string }>;
     contactInfo?: Record<string, any>;
+    brandColors?: Record<string, string>;
+    logoUrl?: string;
+    visualStyle?: string;
     hasEcommerce?: boolean;
     sections?: PageSection[];
+    hasMedia?: boolean;
     now: string;
 };
 
@@ -88,6 +92,43 @@ function bi(es: string, en: string): string {
 
 function uniqueStrings(values: string[]): string[] {
     return Array.from(new Set(values.filter(Boolean)));
+}
+
+function cleanOptionalString(value: unknown, maxLength = 500): string | undefined {
+    return typeof value === 'string' && value.trim()
+        ? value.trim().slice(0, maxLength)
+        : undefined;
+}
+
+function pickBrandColor(colors: Record<string, string> | undefined, keys: string[]): string | undefined {
+    return keys.map(key => cleanOptionalString(colors?.[key], 80)).find(Boolean);
+}
+
+function buildChatbotAppearanceSettings(input: ChatbotBlueprintDraftInput): Record<string, unknown> {
+    const colors = input.brandColors || {};
+    const brandColors = {
+        primary: pickBrandColor(colors, ['primary', 'primaryColor']),
+        secondary: pickBrandColor(colors, ['secondary', 'secondaryColor']),
+        accent: pickBrandColor(colors, ['accent', 'accentColor']),
+        background: pickBrandColor(colors, ['background', 'backgroundColor']),
+        surface: pickBrandColor(colors, ['surface', 'surfaceColor']),
+        text: pickBrandColor(colors, ['text', 'textColor']),
+        border: pickBrandColor(colors, ['border', 'borderColor']),
+    };
+
+    return {
+        source: 'businessBlueprint.brandProfile',
+        runtimeConfigPath: 'aiAssistantConfig.appearance',
+        designSystemSource: 'Design Star',
+        useQuimeraTokens: true,
+        brandName: input.businessName,
+        brandColors: Object.fromEntries(Object.entries(brandColors).filter(([, value]) => Boolean(value))),
+        primaryColor: brandColors.primary,
+        accentColor: brandColors.accent,
+        logoUrl: cleanOptionalString(input.logoUrl, 1000),
+        visualStyle: cleanOptionalString(input.visualStyle, 240),
+        reviewRequired: true,
+    };
 }
 
 function metadata(now: string, generatedBy: BlueprintEditableMetadata['generatedBy'] = 'ai'): BlueprintEditableMetadata {
@@ -654,6 +695,7 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
     const hasEcommerce = Boolean(input.hasEcommerce);
     const hasRestaurant = normalizedIndustry === 'restaurant';
     const hasRealEstate = normalizedIndustry === 'real-estate';
+    const hasMedia = Boolean(input.hasMedia);
     const serviceNames = input.services.map(service => service.name).filter((name): name is string => Boolean(name));
     const hasFinance = hasEcommerce || hasRealEstate || serviceNames.length > 0;
     const businessKnowledge = [
@@ -904,6 +946,10 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                 'El runtime crea una factura/cotizacion borrador en Finance; no crea enlaces de pago ni cargos de Stripe.',
                 'Runtime creates a draft invoice/quote in Finance; it does not create payment links or Stripe charges.',
             )] }),
+            chatbotAction('request_media_asset', 'media-ai', { publicAllowed: true, requiresConsent: true, warnings: [bi(
+                'El runtime crea un asset borrador en Media AI para revision; no genera, adjunta ni publica automaticamente.',
+                'Runtime creates a draft asset in Media AI for review; it does not generate, attach, or publish automatically.',
+            )] }),
             chatbotAction('send_internal_alert', 'email-marketing', { requiresAuth: true }),
             chatbotAction('handoff_to_human', 'chatbot-engine', { publicAllowed: true, requiresConfirmation: false }),
             chatbotAction('create_support_ticket', 'chatbot-engine', { publicAllowed: true, requiresConsent: true }),
@@ -1136,6 +1182,16 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
                     status: 'draft' as const,
                     needsReview: true,
                 }] : []),
+                ...(hasMedia ? [{
+                    id: 'chatbot-test-media-ai-draft',
+                    name: bi('Solicita asset en Media AI sin publicar', 'Requests a Media AI asset without publishing'),
+                    persona: 'media_requester',
+                    prompt: bi('Necesito una imagen hero para esta campaña, pero quiero revisarla antes de publicarla.', 'I need a hero image for this campaign, but I want to review it before publishing.'),
+                    expectedActions: ['request_media_asset'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedActions'],
+                    expectedSources: ['business_blueprint', 'website_content'] as ChatbotBlueprint['testing']['testScenarios'][number]['expectedSources'],
+                    status: 'draft' as const,
+                    needsReview: true,
+                }] : []),
             ];
 
             return {
@@ -1185,7 +1241,7 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
             status: 'draft',
             deployedSurfaces: [],
             embedSettings: { publicWidgetApi: 'api/widget/[project]/[resource].ts', requirePublishedProject: true },
-            appearanceSettings: { source: 'aiAssistantConfig.appearance', useQuimeraTokens: true },
+            appearanceSettings: buildChatbotAppearanceSettings(input),
             voiceSettings: {
                 enabled: false,
                 provider: 'none',
@@ -1225,6 +1281,9 @@ function createChatbotBlueprintFromInput(input: ChatbotBlueprintDraftInput): Cha
 }
 
 function createChatbotBlueprint(plan: WebsitePlan, now: string): ChatbotBlueprint {
+    const hasMedia = plan.assetPlan.some(asset => asset.source !== 'none')
+        || Boolean(plan.contentMap.extractedImages?.length);
+
     return createChatbotBlueprintFromInput({
         businessName: plan.businessProfile.businessName,
         industry: plan.businessProfile.industry,
@@ -1232,8 +1291,12 @@ function createChatbotBlueprint(plan: WebsitePlan, now: string): ChatbotBlueprin
         tagline: plan.businessProfile.tagline,
         services: plan.businessProfile.services,
         contactInfo: plan.businessProfile.contactInfo || {},
+        brandColors: plan.brandProfile.colors as Record<string, string>,
+        logoUrl: plan.brandProfile.logoUrl,
+        visualStyle: plan.brandProfile.visualStyle,
         hasEcommerce: plan.businessProfile.hasEcommerce,
         sections: getPlannedSections(plan),
+        hasMedia,
         now,
     });
 }
@@ -1300,6 +1363,10 @@ export function normalizeChatbotBlueprint(
         deployment: {
             ...base.deployment,
             ...(existing.deployment || {}),
+            appearanceSettings: {
+                ...base.deployment.appearanceSettings,
+                ...(existing.deployment?.appearanceSettings || {}),
+            },
             voiceSettings: {
                 ...base.deployment.voiceSettings,
                 ...(existing.deployment?.voiceSettings || {}),
@@ -3006,6 +3073,9 @@ export function migrateBusinessBlueprint(value: unknown): BusinessBlueprint | nu
                 tagline: value.businessProfile.tagline,
                 services: value.businessProfile.services,
                 contactInfo: value.businessProfile.contactInfo,
+                brandColors: value.brandProfile.colors,
+                logoUrl: value.brandProfile.logoUrl,
+                visualStyle: value.brandProfile.visualStyle,
                 hasEcommerce: value.ecommerceBlueprint.enabled,
                 sections: value.websiteBlueprint.sections,
                 now: value.updatedAt || value.generatedAt,

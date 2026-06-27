@@ -97,11 +97,15 @@ describe('globalAssistantCommandCenter', () => {
         expect((context.snapshot.assistantSurfaces as any).surfaces).toEqual(expect.arrayContaining([
             expect.objectContaining({
                 id: 'global-operating-layer',
-                canExecuteGlobalActions: true,
+                canGuideGlobalActions: true,
+                canExecuteGlobalActions: false,
+                canMutateProjectData: false,
+                executionBoundary: 'guide_and_navigate',
                 memoryScope: 'global_assistant_memory',
             }),
             expect.objectContaining({
                 id: 'project-chatcore',
+                canGuideGlobalActions: false,
                 canExecuteGlobalActions: false,
                 memoryScope: 'project_chat_config',
             }),
@@ -147,16 +151,20 @@ describe('globalAssistantCommandCenter', () => {
         expect(adminDrawerMap.currentSurfaceId).toBe('global-operating-layer');
         expect(studioMap.currentSurfaceId).toBe('ai-website-studio');
         expect(dashboardMap.surfaces.find(surface => surface.id === 'global-operating-layer')).toMatchObject({
-            canExecuteGlobalActions: true,
+            canGuideGlobalActions: true,
+            canExecuteGlobalActions: false,
+            canMutateProjectData: false,
+            executionBoundary: 'guide_and_navigate',
             memoryScope: 'global_assistant_memory',
         });
         expect(dashboardMap.surfaces.find(surface => surface.id === 'project-chatcore')).toMatchObject({
+            canGuideGlobalActions: false,
             canExecuteGlobalActions: false,
             memoryScope: 'project_chat_config',
             module: 'chatbot',
         });
         expect(dashboardMap.guardrails).toEqual(expect.arrayContaining([
-            expect.stringContaining('Only global-operating-layer'),
+            expect.stringContaining('does not apply project or tenant changes'),
             expect.stringContaining('Project ChatCore'),
         ]));
     });
@@ -267,7 +275,7 @@ describe('globalAssistantCommandCenter', () => {
         expect(memberAccess.userPermissions).not.toContain('assistant:finance:use');
     });
 
-    it('formats runtime plans in Spanish and English with safety context', () => {
+    it('formats runtime plans as user-facing previews without internal reasoning fields', () => {
         const result = {
             modelId: 'anthropic/claude-opus-4.7',
             memoryUsed: [{ id: 'memory-1' }],
@@ -279,30 +287,52 @@ describe('globalAssistantCommandCenter', () => {
                 status: 'preview',
                 safetyLevel: 'high',
                 requiresConfirmation: true,
-                blockers: ['requires_owner_confirmation'],
+                blockers: [],
                 approvals: [{ id: 'approval-1' }],
                 previews: [{
                     actionId: 'action-1',
                     module: 'chatbot',
-                    actionType: 'train_chatbot_knowledge',
+                    actionType: 'sync_chatbot_knowledge',
                 }],
                 intent: { module: 'chatbot', intent: 'edit' },
                 actions: [
                     {
                         module: 'chatbot',
-                        actionType: 'train_chatbot_knowledge',
+                        actionType: 'sync_chatbot_knowledge',
                     },
                 ],
             },
         } as unknown as GlobalAssistantRuntimeResult;
 
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Plan del Operating Layer');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Confirmaciones requeridas: 1');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('chatbot.train_chatbot_knowledge');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('No voy a aplicar cambios');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Operating Layer plan');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Confirmations required: 1');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('I will not apply changes');
+        const spanish = formatGlobalAssistantPlanMessage(result, 'es');
+        expect(spanish).toContain('No hice cambios.');
+        expect(spanish).toContain('Para entrenar ChatCore en Tienda Demo, abre el módulo correcto y revísalo allí.');
+        expect(spanish).toContain('Te puedo llevar al módulo correcto si me dices cuál quieres abrir.');
+        expect(spanish.split('\n')).toHaveLength(3);
+        expect(spanish).not.toContain('Plan del Operating Layer');
+        expect(spanish).not.toContain('Modulo:');
+        expect(spanish).not.toContain('Intencion:');
+        expect(spanish).not.toContain('Tarea:');
+        expect(spanish).not.toContain('Memoria usada:');
+        expect(spanish).not.toContain('anthropic/claude');
+        expect(spanish).not.toContain('Preview');
+        expect(spanish).not.toContain('rollback');
+        expect(spanish).not.toContain('confirmar');
+        expect(spanish).not.toContain('aplicar');
+
+        const english = formatGlobalAssistantPlanMessage(result, 'en');
+        expect(english).toContain('I did not make changes.');
+        expect(english).toContain('To train ChatCore for Tienda Demo, open the right module and review it there.');
+        expect(english).toContain('I can take you to the right module if you tell me which one to open.');
+        expect(english.split('\n')).toHaveLength(3);
+        expect(english).not.toContain('Operating Layer plan');
+        expect(english).not.toContain('Module:');
+        expect(english).not.toContain('Intent:');
+        expect(english).not.toContain('Task:');
+        expect(english).not.toContain('Preview');
+        expect(english).not.toContain('rollback');
+        expect(english).not.toContain('confirm');
+        expect(english).not.toContain('apply');
     });
 
     it('formats cross-project plans with the resolved target project name', () => {
@@ -365,11 +395,65 @@ describe('globalAssistantCommandCenter', () => {
             },
         } as unknown as GlobalAssistantRuntimeResult;
 
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Proyecto: Ocean Clinic');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Contexto usado: workspace tenant-1, proyecto project-2, modulo ecommerce, modo owner.');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Guardrails: admin visible por modo Owner/Super Admin; Project/module memories require project project-2.');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Project: Ocean Clinic');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Context used: workspace tenant-1, project project-2, module ecommerce, mode owner.');
+        const spanish = formatGlobalAssistantPlanMessage(result, 'es');
+        expect(spanish).toContain('No hice cambios.');
+        expect(spanish).toContain('Para cambiar al proyecto correcto y abrir la tienda en Ocean Clinic, abre el módulo correcto y revísalo allí.');
+        expect(spanish.split('\n')).toHaveLength(3);
+        expect(spanish).not.toContain('Contexto usado:');
+        expect(spanish).not.toContain('Guardrails:');
+        expect(spanish).not.toContain('confirmar');
+        expect(spanish).not.toContain('aplicar');
+
+        const english = formatGlobalAssistantPlanMessage(result, 'en');
+        expect(english).toContain('I did not make changes.');
+        expect(english).toContain('To switch to the right project and open the store for Ocean Clinic, open the right module and review it there.');
+        expect(english.split('\n')).toHaveLength(3);
+        expect(english).not.toContain('Context used:');
+        expect(english).not.toContain('confirm');
+        expect(english).not.toContain('apply');
+    });
+
+    it('formats missing-project dashboard quick actions as clear user questions', () => {
+        const result = {
+            modelId: 'google/gemini-3-pro-image',
+            memoryUsed: [],
+            context: {
+                project: { projectId: null, projectName: null },
+                snapshot: {
+                    availableProjects: [
+                        { id: 'project-1', name: 'Casa Luna' },
+                        { id: 'project-2', name: 'Ocean Clinic' },
+                    ],
+                },
+            },
+            task: { id: 'task-1' },
+            plan: {
+                status: 'blocked',
+                safetyLevel: 'medium',
+                requiresConfirmation: false,
+                blockers: ['generate_video: Clarification required: Which project should I use for this request?'],
+                approvals: [],
+                previews: [],
+                intent: { module: 'media', intent: 'generate_video' },
+                actions: [
+                    {
+                        module: 'media',
+                        actionType: 'generate_video',
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult;
+
+        const spanish = formatGlobalAssistantPlanMessage(result, 'es');
+        expect(spanish).toContain('¿Para qué proyecto?');
+        expect(spanish).toContain('Puedo crear un video, pero elige un proyecto.');
+        expect(spanish).toContain('Opciones: Casa Luna, Ocean Clinic');
+        expect(spanish).toContain('No hice cambios.');
+        expect(spanish.split('\n')).toHaveLength(4);
+        expect(spanish).not.toContain('Estado: blocked');
+        expect(spanish).not.toContain('generate_video:');
+        expect(spanish).not.toContain('Clarification required');
+        expect(spanish).not.toContain('Operating Layer');
     });
 
     it('builds structured memory metadata for persisted Operating Layer messages', () => {
@@ -447,7 +531,7 @@ describe('globalAssistantCommandCenter', () => {
         });
     });
 
-    it('tells users to confirm preview-first plans even without critical approvals', () => {
+    it('keeps preview-first plans guide-only without asking users to confirm in chat', () => {
         const result = {
             modelId: 'google/gemini-3-pro-image',
             memoryUsed: [],
@@ -478,10 +562,19 @@ describe('globalAssistantCommandCenter', () => {
             },
         } as unknown as GlobalAssistantRuntimeResult;
 
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Preview listo');
-        expect(formatGlobalAssistantPlanMessage(result, 'es')).toContain('Responde "confirmar"');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Preview ready');
-        expect(formatGlobalAssistantPlanMessage(result, 'en')).toContain('Reply "confirm"');
+        const spanish = formatGlobalAssistantPlanMessage(result, 'es');
+        const english = formatGlobalAssistantPlanMessage(result, 'en');
+
+        expect(spanish).toContain('No hice cambios.');
+        expect(spanish).toContain('Para generar una imagen en Tienda Demo, abre el módulo correcto y revísalo allí.');
+        expect(spanish).not.toContain('Preview:');
+        expect(spanish).not.toContain('confirmar');
+        expect(spanish).not.toContain('aplicar');
+        expect(english).toContain('I did not make changes.');
+        expect(english).toContain('To generate an image for Tienda Demo, open the right module and review it there.');
+        expect(english).not.toContain('Preview:');
+        expect(english).not.toContain('confirm');
+        expect(english).not.toContain('apply');
     });
 
     it('only lets low-risk non-mutating plans continue to legacy execution', () => {
@@ -524,7 +617,7 @@ describe('globalAssistantCommandCenter', () => {
         } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
     });
 
-    it('auto-applies safe navigation and read-only non-preview executable plans', () => {
+    it('auto-applies only safe navigation plans', () => {
         const navigationResult = {
             plan: {
                 status: 'draft',
@@ -546,12 +639,28 @@ describe('globalAssistantCommandCenter', () => {
                 ...navigationResult.plan,
                 actions: [
                     {
+                        actionType: 'switch_project',
+                        metadata: { mutatesData: false },
+                    },
+                    {
+                        actionType: 'open_orders',
+                        metadata: { mutatesData: false },
+                    },
+                ],
+            },
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        expect(shouldAutoApplyOperatingLayerPlan({
+            ...navigationResult,
+            plan: {
+                ...navigationResult.plan,
+                actions: [
+                    {
                         actionType: 'summarize_business_blueprint',
                         metadata: { mutatesData: false, executable: true },
                     },
                 ],
             },
-        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
         expect(shouldAutoApplyOperatingLayerPlan({
             ...navigationResult,
             plan: {
@@ -563,7 +672,7 @@ describe('globalAssistantCommandCenter', () => {
                     },
                 ],
             },
-        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
         expect(shouldAutoApplyOperatingLayerPlan({
             ...navigationResult,
             plan: {
@@ -575,7 +684,7 @@ describe('globalAssistantCommandCenter', () => {
                     },
                 ],
             },
-        } as unknown as GlobalAssistantRuntimeResult)).toBe(true);
+        } as unknown as GlobalAssistantRuntimeResult)).toBe(false);
         expect(shouldAutoApplyOperatingLayerPlan({
             ...navigationResult,
             plan: {
@@ -639,11 +748,19 @@ describe('globalAssistantCommandCenter', () => {
             }],
         } as any;
 
-        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('BusinessBlueprint: Casa Luna');
-        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('Modulos evaluados: 16; habilitados: 14; listos: 9; en revision: 5.');
-        expect(formatOperatingLayerApplyMessage(result, 'es')).toContain('Requieren revision: websiteBlueprint, chatbotBlueprint.');
-        expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Modules evaluated: 16; enabled: 14; ready: 9; needs review: 5.');
-        expect(formatOperatingLayerApplyMessage(result, 'en')).toContain('Next step: Review AI-generated module drafts before they are exposed publicly or sent to customers.');
+        const spanish = formatOperatingLayerApplyMessage(result, 'es');
+        expect(spanish).toContain('Listo. Ya pude revisar el proyecto.');
+        expect(spanish).toContain('Proyecto: Casa Luna');
+        expect(spanish).toContain('Listo: 9 de 14 areas activas. Por revisar: 5.');
+        expect(spanish.split('\n').length).toBeLessThanOrEqual(4);
+        expect(spanish).not.toContain('BusinessBlueprint');
+        expect(spanish).not.toContain('Blockers:');
+
+        const english = formatOperatingLayerApplyMessage(result, 'en');
+        expect(english).toContain('review the project');
+        expect(english).toContain('Project: Casa Luna');
+        expect(english).toContain('Ready: 9 of 14 active areas. To review: 5.');
+        expect(english.split('\n').length).toBeLessThanOrEqual(4);
     });
 
     it('formats auto-applied Operating Layer capability diagnostics with tool coverage', () => {
@@ -690,18 +807,19 @@ describe('globalAssistantCommandCenter', () => {
         } as any;
 
         const spanish = formatOperatingLayerApplyMessage(result, 'es');
-        expect(spanish).toContain('Operating Layer: 3 modulos; 52 acciones; 45 disponibles en este contexto.');
-        expect(spanish).toContain('Ejecutables: 49; preview: 34; rollback declarado: 28; rollback ejecutable: 24; confirmacion: 30; alto riesgo: 27.');
-        expect(spanish).toContain('Gaps de rollback: 4 (create_email_campaign, create_product).');
-        expect(spanish).toContain('Servicios requeridos no activos: ecommerce.');
-        expect(spanish).toContain('Superficies de chat: 7; activa: global-operating-layer; acciones globales: global-operating-layer.');
+        expect(spanish).toContain('Listo. Ya pude revisar lo que puedo hacer.');
+        expect(spanish).toContain('Puedo ayudarte en 3 areas.');
+        expect(spanish).toContain('45 acciones estan disponibles ahora.');
+        expect(spanish).toContain('Servicios por activar: ecommerce.');
+        expect(spanish.split('\n').length).toBeLessThanOrEqual(4);
+        expect(spanish).not.toContain('rollback');
+        expect(spanish).not.toContain('feature flag');
 
         const english = formatOperatingLayerApplyMessage(result, 'en');
-        expect(english).toContain('Operating Layer: 3 modules; 52 actions; 45 available in this context.');
-        expect(english).toContain('declared rollback: 28; executable rollback: 24');
-        expect(english).toContain('Rollback gaps: 4 (create_email_campaign, create_product).');
-        expect(english).toContain('Required feature flags: ecommerceEnabled.');
-        expect(english).toContain('Chat surfaces: 7; active: global-operating-layer; global actions: global-operating-layer.');
+        expect(english).toContain('review what I can do');
+        expect(english).toContain('I can help in 3 areas.');
+        expect(english).toContain('45 actions are available now.');
+        expect(english.split('\n').length).toBeLessThanOrEqual(4);
     });
 
     it('formats auto-applied analytics and lead summaries without losing module evidence', () => {
@@ -746,12 +864,15 @@ describe('globalAssistantCommandCenter', () => {
         } as any;
 
         const spanish = formatOperatingLayerApplyMessage(result, 'es');
-        expect(spanish).toContain('Analytics: Casa Luna');
-        expect(spanish).toContain('Bloqueos detectados: crm_has_no_leads, ecommerce_has_no_orders.');
-        expect(spanish).toContain('CRM/Leads: 8 leads; tareas abiertas: 3; actividades: 11.');
+        expect(spanish).toContain('Listo. Ya pude identificar bloqueos y revisar leads.');
+        expect(spanish).toContain('Resumen: Casa Luna');
+        expect(spanish).toContain('Bloqueos: crm_has_no_leads, ecommerce_has_no_orders.');
+        expect(spanish.split('\n').length).toBeLessThanOrEqual(4);
+        expect(spanish).not.toContain('CRM/Leads');
 
         const english = formatOperatingLayerApplyMessage(result, 'en');
-        expect(english).toContain('Signals: 12; blockers: 2; warnings: 1.');
-        expect(english).toContain('CRM/Leads: 8 leads; open tasks: 3; activities: 11.');
+        expect(english).toContain('identify blockers and review leads');
+        expect(english).toContain('12 signals checked. 2 blockers and 1 warnings.');
+        expect(english.split('\n').length).toBeLessThanOrEqual(4);
     });
 });

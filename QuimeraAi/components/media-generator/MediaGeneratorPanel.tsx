@@ -5,6 +5,11 @@ import ImageGeneratorPanel from '../ui/ImageGeneratorPanel';
 import VideoGenerationSection from './VideoGenerationSection';
 import MediaModeToggle from './shared/MediaModeToggle';
 import type { CreateVideoFromImageDetail, MediaGeneratorMode } from '../../types/videoGeneration';
+import {
+    MEDIA_GENERATOR_LAUNCH_EVENT,
+    peekMediaGeneratorLaunchRequest,
+    readMediaGeneratorLaunchEvent,
+} from '../../utils/mediaGeneratorLaunch';
 
 export interface MediaGeneratorPanelProps {
     destination: 'user' | 'global' | 'admin';
@@ -83,6 +88,24 @@ const MediaGeneratorPanel: React.FC<MediaGeneratorPanelProps> = ({
         window.addEventListener('assets:create-video-from-image', handleCreateVideo);
         return () => window.removeEventListener('assets:create-video-from-image', handleCreateVideo);
     }, [allowedModes, trackSessionImage]);
+
+    useEffect(() => {
+        const pending = peekMediaGeneratorLaunchRequest(projectId);
+        if (pending && allowedModes.includes(pending.mode)) {
+            setMode(pending.mode);
+        }
+    }, [allowedModes, projectId]);
+
+    useEffect(() => {
+        const handleMediaLaunch = (event: Event) => {
+            const request = readMediaGeneratorLaunchEvent(event);
+            if (!request || !allowedModes.includes(request.mode)) return;
+            setMode(request.mode);
+        };
+
+        window.addEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleMediaLaunch);
+        return () => window.removeEventListener(MEDIA_GENERATOR_LAUNCH_EVENT, handleMediaLaunch);
+    }, [allowedModes]);
 
     useEffect(() => {
         if (initialStartFrame) setVideoStartFrame(initialStartFrame);

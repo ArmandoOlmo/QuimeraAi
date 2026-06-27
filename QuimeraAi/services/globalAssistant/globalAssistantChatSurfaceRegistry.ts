@@ -27,8 +27,10 @@ export interface GlobalAssistantChatSurfaceDefinition {
     routes: string[];
     dataContract: string;
     memoryScope: 'global_assistant_memory' | 'project_chat_config' | 'studio_session' | 'module_runtime' | 'public_marketing_config' | 'social_conversation';
+    canGuideGlobalActions: boolean;
     canExecuteGlobalActions: boolean;
     canMutateProjectData: boolean;
+    executionBoundary: 'guide_and_navigate' | 'module_local' | 'public_readonly' | 'social_channel';
     aliases: string[];
     guardrail: string;
 }
@@ -79,8 +81,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/dashboard', '/admin/global-assistant'],
         dataContract: 'AssistantContextSnapshot + GlobalAssistantRuntime',
         memoryScope: 'global_assistant_memory',
-        canExecuteGlobalActions: true,
-        canMutateProjectData: true,
+        canGuideGlobalActions: true,
+        canExecuteGlobalActions: false,
+        canMutateProjectData: false,
+        executionBoundary: 'guide_and_navigate',
         aliases: [
             'global assistant',
             'global assistant drawer',
@@ -91,7 +95,7 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
             'dashboard input',
             'authenticated app',
         ],
-        guardrail: 'This is the only chat surface allowed to plan cross-module platform actions.',
+        guardrail: 'Global Assistant guides and navigates to the right module; project or tenant changes must be reviewed and applied inside the destination module.',
     },
     {
         id: 'project-chatcore',
@@ -103,8 +107,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/ai-assistant', '/website-preview', '/widget-embed'],
         dataContract: 'AiAssistantConfig + Project + ChatbotEngine blueprint',
         memoryScope: 'project_chat_config',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: true,
+        executionBoundary: 'module_local',
         aliases: ['chatcore', 'chatbot', 'project assistant', 'website widget'],
         guardrail: 'Customer-facing ChatCore can create leads or appointments, but it must not execute Global Assistant admin actions.',
     },
@@ -118,8 +124,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/ai-studio', '/onboarding'],
         dataContract: 'WebsitePlan + BusinessBlueprint generation state',
         memoryScope: 'studio_session',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: true,
+        executionBoundary: 'module_local',
         aliases: ['ai studio', 'website studio', 'generation studio', 'onboarding chat'],
         guardrail: 'AI Studio creates or revises generation plans; Operating Layer actions must wrap platform-wide execution.',
     },
@@ -133,8 +141,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/email', '/admin/email-hub'],
         dataContract: 'Email campaign, automation, audience, and review queue drafts',
         memoryScope: 'module_runtime',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: true,
+        executionBoundary: 'module_local',
         aliases: ['email ai studio', 'email studio', 'email hub chat'],
         guardrail: 'Email Studio drafts and reviews marketing assets inside Email Hub, not cross-module admin plans.',
     },
@@ -148,8 +158,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/', '/admin/landing-chatbot'],
         dataContract: 'LandingChatbotConfig + public marketing FAQ',
         memoryScope: 'public_marketing_config',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: false,
+        executionBoundary: 'public_readonly',
         aliases: ['landing chatbot', 'public chatbot', 'marketing chatbot'],
         guardrail: 'The public landing chatbot answers Quimera marketing questions and must stay outside tenant project memory.',
     },
@@ -163,8 +175,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/ai-assistant'],
         dataContract: 'Social conversation threads + CRM lead handoff',
         memoryScope: 'social_conversation',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: true,
+        executionBoundary: 'social_channel',
         aliases: ['social chat', 'whatsapp', 'facebook messenger', 'instagram dm', 'inbox'],
         guardrail: 'Social channels manage external conversations and lead handoff, not global command execution.',
     },
@@ -178,8 +192,10 @@ export const GLOBAL_ASSISTANT_CHAT_SURFACES: GlobalAssistantChatSurfaceDefinitio
         routes: ['/cms', '/seo', '/admin/content', '/admin/news'],
         dataContract: 'Module-local content drafts and settings',
         memoryScope: 'module_runtime',
+        canGuideGlobalActions: false,
         canExecuteGlobalActions: false,
         canMutateProjectData: true,
+        executionBoundary: 'module_local',
         aliases: ['seo assistant', 'cms assistant', 'content assistant', 'news studio'],
         guardrail: 'Module assistants should stay scoped to their local content contract unless routed through the Operating Layer.',
     },
@@ -221,7 +237,7 @@ export function buildGlobalAssistantChatSurfaceMap(
         globalActionSurfaceId: 'global-operating-layer',
         surfaces: GLOBAL_ASSISTANT_CHAT_SURFACES,
         guardrails: [
-            'Only global-operating-layer can plan and apply cross-module Operating Layer actions.',
+            'Global Assistant is the global guide and navigation surface; it does not apply project or tenant changes from the drawer.',
             'Project ChatCore remains customer-facing and uses AiAssistantConfig, not GlobalAssistantMemory.',
             'Studio and module assistants keep their local draft contracts unless the dashboard input routes them through GlobalAssistantRuntime.',
             'Public landing chatbot memory is not tenant or project memory.',

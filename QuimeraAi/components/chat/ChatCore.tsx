@@ -47,6 +47,17 @@ const CHATCORE_VOICE_RUNTIME_EVENTS = {
 
 type ChatCoreVoiceRuntimeEventType = typeof CHATCORE_VOICE_RUNTIME_EVENTS[keyof typeof CHATCORE_VOICE_RUNTIME_EVENTS];
 
+type ChatCoreVoiceSessionResponse = {
+    allowed: boolean;
+    sessionId: string;
+    provider?: string;
+    source?: string;
+    agentId?: string;
+    languageMode?: string;
+    consentRequired?: boolean;
+    reason?: string;
+};
+
 function createChatCoreRuntimeEventId(): string {
     if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
         return window.crypto.randomUUID();
@@ -1222,6 +1233,38 @@ ${suggestAvailableSlots()}
             : true,
         agentConfigured: Boolean(liveVoiceSettings.agentId),
     });
+
+    const requestCanonicalVoiceSession = async (sessionId: string): Promise<ChatCoreVoiceSessionResponse | null> => {
+        if (!publicConversationProjectId) return null;
+
+        const response = await fetch(`${WIDGET_API_BASE_URL}/${encodeURIComponent(publicConversationProjectId)}/voice/session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionId,
+                consentAccepted: liveVoiceSettings.consentRequired
+                    ? voiceConsentAcceptedRef.current
+                    : true,
+                conversationId: conversationIdRef.current || undefined,
+                sourceSurface: 'voice',
+                sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+                chatbotEngineContext: {
+                    ...(chatbotEngineContext || {}),
+                    sourceSurface: 'voice',
+                    sourceModule: chatbotEngineContext?.sourceModule || 'chatcore',
+                },
+                correlationId: sessionId,
+                voice: getVoiceRuntimeMetadata(),
+            }),
+        });
+        const payload = await response.json().catch(() => ({})) as Partial<ChatCoreVoiceSessionResponse> & { error?: string };
+        if (!response.ok || payload.allowed === false) {
+            const reason = payload.reason || payload.error || `voice_session_${response.status}`;
+            throw Object.assign(new Error(reason), { reason, status: response.status });
+        }
+
+        return payload as ChatCoreVoiceSessionResponse;
+    };
 
     const recordVoiceRuntimeEvent = async (
         eventType: ChatCoreVoiceRuntimeEventType,
@@ -2549,11 +2592,9 @@ ${suggestAvailableSlots()}
     // =============================================================================
 
     const startLiveSession = async () => {
-        voiceRuntimeSessionIdRef.current = createChatCoreRuntimeEventId();
+        const sessionId = createChatCoreRuntimeEventId();
+        voiceRuntimeSessionIdRef.current = sessionId;
         voiceRuntimeStartedAtRef.current = null;
-        void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.requested, {
-            sessionPhase: 'requested',
-        });
 
         const readiness = getChatCoreVoiceSessionReadiness(liveVoiceSettings, voiceConsentAccepted);
         if (!readiness.allowed) {
@@ -2588,10 +2629,37 @@ ${suggestAvailableSlots()}
         }
 
         setIsConnecting(true);
+        let agentId = liveVoiceSettings.agentId;
+
+        try {
+            const canonicalSession = await requestCanonicalVoiceSession(sessionId);
+            if (canonicalSession?.agentId) {
+                agentId = canonicalSession.agentId;
+            } else if (!canonicalSession) {
+                void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.requested, {
+                    sessionPhase: 'requested',
+                });
+            }
+        } catch (error) {
+            setIsConnecting(false);
+            const reason = (error as { reason?: string })?.reason
+                || normalizeRuntimeError(error).errorMessage
+                || 'voice_session_not_ready';
+            void recordVoiceRuntimeEvent(CHATCORE_VOICE_RUNTIME_EVENTS.blocked, {
+                sessionPhase: 'blocked',
+                reason,
+                readinessReason: reason,
+                error,
+            });
+            alert(reason === 'agent_missing' || reason === 'provider_missing'
+                ? t('chatbotWidget.liveVoiceNotConfigured')
+                : t('chatbotWidget.liveVoiceDisabled'));
+            return;
+        }
 
         try {
             const session = await Conversation.startSession({
-                agentId: liveVoiceSettings.agentId,
+                agentId,
                 onConnect: () => {
                     setIsConnecting(false);
                     setIsLiveActive(true);
