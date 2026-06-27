@@ -15,6 +15,7 @@ describe('Agency billing canonical contract', () => {
     const agencyPlansService = read('services/agencyPlansService.ts');
     const agencyPlanSelector = read('components/dashboard/agency/plans/AgencyPlanSelector.tsx');
     const clientBillingManager = read('components/dashboard/agency/ClientBillingManager.tsx');
+    const addonsManager = read('components/dashboard/agency/AddonsManager.tsx');
 
     it('stores agency client payment links in a canonical Supabase table with RLS', () => {
         expect(migration).toContain('create or replace function public.quimera_can_manage_agency(p_agency_tenant_id text)');
@@ -124,5 +125,15 @@ describe('Agency billing canonical contract', () => {
         expect(clientBillingManager).toContain('const requireAgencyBillingAccess = () =>');
         expect(clientBillingManager).toContain('if (!requireAgencyBillingAccess()) return');
         expect(clientBillingManager).toContain('disabled={!canManageAgencyBilling}');
+    });
+
+    it('routes agency add-on capacity changes through Service Access Engine', () => {
+        expect(addonsManager).toContain("import { useServiceAccess }");
+        expect(addonsManager).toContain("serviceAccess.canAccessModule('agency-service-plans'");
+        expect(addonsManager).toContain("requiredPermission: 'canManageBilling'");
+        expect(addonsManager).toContain('const requireAgencyAddonsAccess = () =>');
+        expect(addonsManager).toContain('if (!requireAgencyAddonsAccess()) return');
+        expect(addonsManager).toContain("action: 'updateSubscriptionAddons'");
+        expect(addonsManager).toContain('disabled={loading || !canManageAddons}');
     });
 });

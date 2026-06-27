@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useAgencyContent } from '../../../contexts/agency/AgencyContentContext';
 import { useToast } from '../../../contexts/ToastContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import {
     getAgencyLanding,
     saveAgencyLanding,
@@ -46,6 +47,7 @@ import {
     Linkedin,
     Youtube,
     Github,
+    Lock,
 } from 'lucide-react';
 import { AgencyPanel, AgencySectionHeader } from './AgencyDesignSystem';
 
@@ -59,6 +61,12 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     const { currentTenant } = useTenant();
     const { articles } = useAgencyContent();
     const { showToast } = useToast();
+    const serviceAccess = useServiceAccess();
+    const navigationAccess = serviceAccess.canAccessModule('agency-white-label', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageSettings',
+    });
+    const canManageNavigation = !serviceAccess.isLoading && navigationAccess.allowed;
 
     // States
     const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +89,20 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
         if (typeof value === 'string') return value;
         return value.es || value.en || Object.values(value)[0] || '';
     };
+
+    const requireAgencyNavigationAccess = useCallback(() => {
+        if (serviceAccess.isLoading) {
+            showToast(t('dashboard.agency.navigation.validatingAccess', 'Validando acceso a navegación White Label'), 'error');
+            return false;
+        }
+
+        if (!navigationAccess.allowed) {
+            showToast(navigationAccess.message, 'error');
+            return false;
+        }
+
+        return true;
+    }, [navigationAccess.allowed, navigationAccess.message, serviceAccess.isLoading, showToast, t]);
 
     // Expose save state to parent
     useEffect(() => {
@@ -146,6 +168,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // Save changes
     const handleSave = async () => {
         if (!currentTenant?.id || !landingConfig) return;
+        if (!requireAgencyNavigationAccess()) return;
 
         setIsSaving(true);
         try {
@@ -184,11 +207,13 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // HEADER LINKS
     // ==========================================================================
     const addHeaderLink = (text: string, href: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setHeaderLinks(prev => [...prev, { text, href }]);
         setHasChanges(true);
     };
 
     const updateHeaderLink = (index: number, updates: Partial<NavLink>) => {
+        if (!requireAgencyNavigationAccess()) return;
         setHeaderLinks(prev => {
             const newLinks = [...prev];
             newLinks[index] = { ...newLinks[index], ...updates };
@@ -198,6 +223,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     };
 
     const removeHeaderLink = (index: number) => {
+        if (!requireAgencyNavigationAccess()) return;
         setHeaderLinks(prev => prev.filter((_, i) => i !== index));
         setHasChanges(true);
     };
@@ -206,11 +232,13 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     // FOOTER COLUMNS
     // ==========================================================================
     const addFooterColumn = () => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => [...prev, { title: 'Nueva Columna', links: [] }]);
         setHasChanges(true);
     };
 
     const updateFooterColumn = (index: number, title: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => {
             const newColumns = [...prev];
             newColumns[index] = { ...newColumns[index], title };
@@ -220,11 +248,13 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     };
 
     const removeFooterColumn = (index: number) => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => prev.filter((_, i) => i !== index));
         setHasChanges(true);
     };
 
     const addFooterLink = (columnIndex: number, text: string, href: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => {
             const newColumns = [...prev];
             newColumns[columnIndex].links = [...newColumns[columnIndex].links, { text, href }];
@@ -234,6 +264,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     };
 
     const updateFooterLink = (columnIndex: number, linkIndex: number, updates: Partial<FooterLink>) => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => {
             const newColumns = [...prev];
             newColumns[columnIndex].links = newColumns[columnIndex].links.map((link, i) =>
@@ -245,6 +276,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     };
 
     const removeFooterLink = (columnIndex: number, linkIndex: number) => {
+        if (!requireAgencyNavigationAccess()) return;
         setFooterColumns(prev => {
             const newColumns = [...prev];
             newColumns[columnIndex].links = newColumns[columnIndex].links.filter((_, i) => i !== linkIndex);
@@ -266,16 +298,19 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     ];
 
     const addSocialLink = (platform: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setSocialLinks(prev => [...prev, { id: `social-${Date.now()}`, platform, url: '' }]);
         setHasChanges(true);
     };
 
     const updateSocialLink = (id: string, url: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setSocialLinks(prev => prev.map(link => link.id === id ? { ...link, url } : link));
         setHasChanges(true);
     };
 
     const removeSocialLink = (id: string) => {
+        if (!requireAgencyNavigationAccess()) return;
         setSocialLinks(prev => prev.filter(link => link.id !== id));
         setHasChanges(true);
     };
@@ -301,7 +336,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                 actions={(
                 <button
                     onClick={handleSave}
-                    disabled={isSaving || !hasChanges}
+                    disabled={isSaving || !hasChanges || !canManageNavigation}
                     className="quimera-guide-cta disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -312,9 +347,17 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
 
             {/* Info Banner */}
             <div className="quimera-dashboard-panel-card flex items-start gap-3 p-4">
-                <MenuIcon className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
+                {canManageNavigation ? (
+                    <MenuIcon className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
+                ) : (
+                    <Lock className="h-5 w-5 text-q-warning flex-shrink-0 mt-0.5" strokeWidth={2} />
+                )}
                 <p className="text-sm text-foreground">
-                    Aquí configuras los <strong>enlaces de navegación</strong> del header, las <strong>columnas del footer</strong> con sus enlaces, y tus <strong>redes sociales</strong>. Los aspectos visuales se configuran desde el editor del Landing Page.
+                    {canManageNavigation
+                        ? <>Aquí configuras los <strong>enlaces de navegación</strong> del header, las <strong>columnas del footer</strong> con sus enlaces, y tus <strong>redes sociales</strong>. Los aspectos visuales se configuran desde el editor del Landing Page.</>
+                        : (serviceAccess.isLoading
+                            ? t('dashboard.agency.navigation.validatingAccess', 'Validando acceso a navegación White Label')
+                            : navigationAccess.message)}
                 </p>
             </div>
 

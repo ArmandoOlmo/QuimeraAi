@@ -7,6 +7,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { TenantBranding } from '../../../types/multiTenant';
 import { supabase } from '../../../supabase';
 import ColorControl from '../../ui/ColorControl';
@@ -25,6 +26,7 @@ import {
     Eye,
     Palette,
     Info,
+    Lock,
     Sparkles,
 } from 'lucide-react';
 import { AgencyPanel, AgencySectionHeader } from './AgencyDesignSystem';
@@ -32,6 +34,12 @@ import { AgencyPanel, AgencySectionHeader } from './AgencyDesignSystem';
 export function WhiteLabelSettings() {
     const { t } = useTranslation();
     const { currentTenant, updateTenant } = useTenant();
+    const serviceAccess = useServiceAccess();
+    const whiteLabelAccess = serviceAccess.canAccessModule('agency-white-label', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageSettings',
+    });
+    const canManageWhiteLabel = !serviceAccess.isLoading && whiteLabelAccess.allowed;
 
     // Form state
     const [branding, setBranding] = useState<TenantBranding>({
@@ -56,6 +64,20 @@ export function WhiteLabelSettings() {
 
     const logoInputRef = useRef<HTMLInputElement>(null);
     const faviconInputRef = useRef<HTMLInputElement>(null);
+
+    const requireWhiteLabelAccess = useCallback(() => {
+        if (serviceAccess.isLoading) {
+            toast.error(t('dashboard.agency.whiteLabel.validatingAccess', 'Validando acceso a White Label'));
+            return false;
+        }
+
+        if (!whiteLabelAccess.allowed) {
+            toast.error(whiteLabelAccess.message);
+            return false;
+        }
+
+        return true;
+    }, [serviceAccess.isLoading, t, whiteLabelAccess.allowed, whiteLabelAccess.message]);
 
     // Load existing branding from tenant
     useEffect(() => {
@@ -91,6 +113,7 @@ export function WhiteLabelSettings() {
     const handleLogoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !currentTenant) return;
+        if (!requireWhiteLabelAccess()) return;
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
@@ -115,12 +138,13 @@ export function WhiteLabelSettings() {
         } finally {
             setUploadingLogo(false);
         }
-    }, [currentTenant, uploadFile, updateField, t]);
+    }, [currentTenant, uploadFile, updateField, t, requireWhiteLabelAccess]);
 
     // Handle favicon upload
     const handleFaviconUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !currentTenant) return;
+        if (!requireWhiteLabelAccess()) return;
 
         if (!file.type.startsWith('image/')) {
             toast.error(t('dashboard.agency.whiteLabel.invalidImageType'));
@@ -143,11 +167,12 @@ export function WhiteLabelSettings() {
         } finally {
             setUploadingFavicon(false);
         }
-    }, [currentTenant, uploadFile, updateField, t]);
+    }, [currentTenant, uploadFile, updateField, t, requireWhiteLabelAccess]);
 
     // Save branding to Supabase
     const handleSave = useCallback(async () => {
         if (!currentTenant) return;
+        if (!requireWhiteLabelAccess()) return;
 
         setSaving(true);
         try {
@@ -160,7 +185,7 @@ export function WhiteLabelSettings() {
         } finally {
             setSaving(false);
         }
-    }, [currentTenant, branding, updateTenant, t]);
+    }, [currentTenant, branding, updateTenant, t, requireWhiteLabelAccess]);
 
     return (
         <div className="space-y-6">
@@ -172,7 +197,7 @@ export function WhiteLabelSettings() {
                 actions={(
                 <button
                     onClick={handleSave}
-                    disabled={saving || !hasChanges}
+                    disabled={saving || !hasChanges || !canManageWhiteLabel}
                     className="quimera-guide-cta disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {saving ? (
@@ -187,9 +212,17 @@ export function WhiteLabelSettings() {
 
             {/* Info Banner */}
             <div className="quimera-dashboard-panel-card flex items-start gap-3 p-4">
-                <Info className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
+                {canManageWhiteLabel ? (
+                    <Info className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
+                ) : (
+                    <Lock className="h-5 w-5 text-q-warning flex-shrink-0 mt-0.5" strokeWidth={2} />
+                )}
                 <p className="text-sm text-foreground">
-                    {t('dashboard.agency.whiteLabel.infoBanner')}
+                    {canManageWhiteLabel
+                        ? t('dashboard.agency.whiteLabel.infoBanner')
+                        : (serviceAccess.isLoading
+                            ? t('dashboard.agency.whiteLabel.validatingAccess', 'Validando acceso a White Label')
+                            : whiteLabelAccess.message)}
                 </p>
             </div>
 
@@ -281,6 +314,7 @@ export function WhiteLabelSettings() {
                                         <div className="flex justify-center gap-2">
                                             <button
                                                 onClick={() => logoInputRef.current?.click()}
+                                                disabled={!canManageWhiteLabel}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                                             >
                                                 <Upload className="h-3 w-3" />
@@ -288,6 +322,7 @@ export function WhiteLabelSettings() {
                                             </button>
                                             <button
                                                 onClick={() => updateField('logoUrl', '')}
+                                                disabled={!canManageWhiteLabel}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-q-error/10 text-q-error rounded-lg hover:bg-q-error/20 transition-colors"
                                             >
                                                 <Trash2 className="h-3 w-3" />
@@ -298,7 +333,7 @@ export function WhiteLabelSettings() {
                                 ) : (
                                     <button
                                         onClick={() => logoInputRef.current?.click()}
-                                        disabled={uploadingLogo}
+                                        disabled={uploadingLogo || !canManageWhiteLabel}
                                         className="w-full py-4 flex flex-col items-center gap-2 text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         {uploadingLogo ? (
@@ -342,6 +377,7 @@ export function WhiteLabelSettings() {
                                         <div className="flex justify-center gap-2">
                                             <button
                                                 onClick={() => faviconInputRef.current?.click()}
+                                                disabled={!canManageWhiteLabel}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                                             >
                                                 <Upload className="h-3 w-3" />
@@ -349,6 +385,7 @@ export function WhiteLabelSettings() {
                                             </button>
                                             <button
                                                 onClick={() => updateField('faviconUrl', '')}
+                                                disabled={!canManageWhiteLabel}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-q-error/10 text-q-error rounded-lg hover:bg-q-error/20 transition-colors"
                                             >
                                                 <Trash2 className="h-3 w-3" />
@@ -359,7 +396,7 @@ export function WhiteLabelSettings() {
                                 ) : (
                                     <button
                                         onClick={() => faviconInputRef.current?.click()}
-                                        disabled={uploadingFavicon}
+                                        disabled={uploadingFavicon || !canManageWhiteLabel}
                                         className="w-full py-4 flex flex-col items-center gap-2 text-q-text-muted hover:text-foreground transition-colors"
                                     >
                                         {uploadingFavicon ? (
@@ -521,7 +558,7 @@ export function WhiteLabelSettings() {
                 <div className="sticky bottom-4 flex justify-center pb-4">
                     <button
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || !canManageWhiteLabel}
                         className="quimera-guide-cta px-8 py-3 disabled:opacity-50"
                     >
                         {saving ? (

@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgencyContent } from '../../../contexts/agency/AgencyContentContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import AgencyArticleEditor from './AgencyArticleEditor';
 import AgencyLegalPageEditor from './AgencyLegalPageEditor';
 import AgencyContentCreatorAssistant from './AgencyContentCreatorAssistant';
@@ -59,11 +60,18 @@ const CATEGORY_LABELS: Record<AgencyArticleCategory, string> = {
 const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const { articles, isLoadingArticles, loadArticles, deleteArticle, saveArticle, legalPages } = useAgencyContent();
+    const serviceAccess = useServiceAccess();
+    const contentAccess = serviceAccess.canAccessModule('agency-white-label', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageSettings',
+    });
+    const canManageAgencyContent = !serviceAccess.isLoading && contentAccess.allowed;
 
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingArticle, setEditingArticle] = useState<AgencyArticle | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [accessError, setAccessError] = useState<string | null>(null);
 
     // Tab state: 'articles' or 'legal'
     const [activeTab, setActiveTab] = useState<'articles' | 'legal'>('articles');
@@ -102,23 +110,42 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
         init();
     }, []);
 
+    const requireAgencyContentAccess = () => {
+        if (serviceAccess.isLoading) {
+            setAccessError(t('dashboard.agency.content.validatingAccess', 'Validando acceso a contenido White Label'));
+            return false;
+        }
+
+        if (!contentAccess.allowed) {
+            setAccessError(contentAccess.message);
+            return false;
+        }
+
+        setAccessError(null);
+        return true;
+    };
+
     const handleCreateNew = () => {
+        if (!requireAgencyContentAccess()) return;
         setEditingArticle(null);
         setIsEditorOpen(true);
     };
 
     const handleEdit = (article: AgencyArticle) => {
+        if (!requireAgencyContentAccess()) return;
         setEditingArticle(article);
         setIsEditorOpen(true);
     };
 
     const handleDelete = async (id: string) => {
+        if (!requireAgencyContentAccess()) return;
         console.log('[AgencyContentDashboard] Opening delete confirmation for id:', id);
         setDeleteConfirmId(id);
     };
 
     const confirmDelete = async () => {
         if (!deleteConfirmId) return;
+        if (!requireAgencyContentAccess()) return;
 
         console.log('[AgencyContentDashboard] User confirmed deletion via modal, calling deleteArticle...');
         setIsDeleting(true);
@@ -142,6 +169,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
     };
 
     const handleDuplicate = async (article: AgencyArticle) => {
+        if (!requireAgencyContentAccess()) return;
         const duplicatedArticle: AgencyArticle = {
             ...article,
             id: '',
@@ -164,10 +192,12 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
     // AI Assistant handlers
     const handleAiCreate = () => {
+        if (!requireAgencyContentAccess()) return;
         setIsAiAssistantOpen(true);
     };
 
     const handleArticleCreatedFromAi = async (article: AgencyArticle) => {
+        if (!requireAgencyContentAccess()) return;
         setIsAiAssistantOpen(false);
         console.log("📋 Dashboard: Article created from AI", article);
 
@@ -192,10 +222,12 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
     };
 
     const handleBulkDelete = () => {
+        if (!requireAgencyContentAccess()) return;
         setBulkDeleteConfirm(true);
     };
 
     const confirmBulkDelete = async () => {
+        if (!requireAgencyContentAccess()) return;
         setIsDeleting(true);
         try {
             await Promise.all(selectedArticles.map(id => deleteArticle(id)));
@@ -218,6 +250,11 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
         link.download = `app-articles-export-${Date.now()}.json`;
         link.click();
         URL.revokeObjectURL(url);
+    };
+
+    const handleEditLegalPage = (pageType: AgencyLegalPageType) => {
+        if (!requireAgencyContentAccess()) return;
+        setEditingLegalPageType(pageType);
     };
 
     // Advanced filtering and sorting with useMemo
@@ -334,6 +371,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                         )}
                         <button
                             onClick={handleAiCreate}
+                            disabled={!canManageAgencyContent}
                             className="flex h-10 items-center gap-2 rounded-lg border border-q-border bg-muted px-3 text-sm font-medium text-foreground hover:bg-secondary/70 transition-colors"
                         >
                             <Sparkles className="w-4 h-4 quimera-dashboard-header-icon" strokeWidth={2} />
@@ -341,7 +379,8 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                         </button>
                         <button
                             onClick={handleCreateNew}
-                            className="quimera-guide-cta h-10"
+                            disabled={!canManageAgencyContent}
+                            className="quimera-guide-cta h-10 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Plus className="w-4 h-4" />
                             <span>{t('contentManagement.newArticle', 'Nuevo Artículo')}</span>
@@ -350,6 +389,17 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                     </>
                 )}
             />
+
+            {(!canManageAgencyContent || accessError) && (
+                <div className="quimera-dashboard-panel-card flex items-start gap-3 p-4">
+                    <Lock className="h-5 w-5 text-q-warning flex-shrink-0 mt-0.5" strokeWidth={2} />
+                    <p className="text-sm text-foreground">
+                        {accessError || (serviceAccess.isLoading
+                            ? t('dashboard.agency.content.validatingAccess', 'Validando acceso a contenido White Label')
+                            : contentAccess.message)}
+                    </p>
+                </div>
+            )}
 
             <AgencyPanel contentClassName="space-y-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -453,8 +503,9 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
 
                                                 <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={() => setEditingLegalPageType(pageType)}
-                                                        className="quimera-guide-cta flex-1 justify-center"
+                                                        onClick={() => handleEditLegalPage(pageType)}
+                                                        disabled={!canManageAgencyContent}
+                                                        className="quimera-guide-cta flex-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         <Edit3 size={14} />
                                                         Editar
@@ -952,6 +1003,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                             handleEdit(previewArticle);
                                                             setPreviewArticle(null);
                                                         }}
+                                                        disabled={!canManageAgencyContent}
                                                         className="px-2.5 py-1.5 sm:px-3 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
                                                     >
                                                         Editar
@@ -1047,7 +1099,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                 </button>
                                 <button
                                     onClick={confirmDelete}
-                                    disabled={isDeleting}
+                                    disabled={isDeleting || !canManageAgencyContent}
                                     className="px-5 py-2.5 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors font-medium text-sm flex items-center gap-2"
                                 >
                                     {isDeleting ? (
@@ -1091,7 +1143,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                 </button>
                                 <button
                                     onClick={confirmBulkDelete}
-                                    disabled={isDeleting}
+                                    disabled={isDeleting || !canManageAgencyContent}
                                     className="px-5 py-2.5 rounded-lg bg-q-error hover:bg-q-error text-white transition-colors font-medium text-sm flex items-center gap-2"
                                 >
                                     {isDeleting ? (

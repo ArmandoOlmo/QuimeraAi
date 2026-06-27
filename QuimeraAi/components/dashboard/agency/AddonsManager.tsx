@@ -7,8 +7,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../supabase';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Plus, Minus, HardDrive, Zap, Users, Package, ChevronDown, ChevronUp, Info, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Minus, HardDrive, Zap, Users, Package, ChevronDown, ChevronUp, Info, CreditCard, TrendingUp, DollarSign, Lock } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import { StatusBadge } from '../../ui/system';
 import { AgencyCommandCenter, AgencyNextAction, AgencyPanel, AgencyReadinessPanel } from './AgencyDesignSystem';
@@ -29,6 +30,12 @@ interface Addon {
   currentQuantity: number;
 }
 
+const DEFAULT_ADDON_PRICING: AddonPricing = {
+  extraSubClients: 15,
+  extraStorageGB: 10,
+  extraAiCredits: 20,
+};
+
 const normalizeAddonQuantities = (addons?: {
   extraSubClients?: number;
   extraStorageGB?: number;
@@ -42,6 +49,12 @@ const normalizeAddonQuantities = (addons?: {
 export function AddonsManager() {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
+  const serviceAccess = useServiceAccess();
+  const addonsAccess = serviceAccess.canAccessModule('agency-service-plans', {
+    serviceId: 'agency',
+    requiredPermission: 'canManageBilling',
+  });
+  const canManageAddons = !serviceAccess.isLoading && addonsAccess.allowed;
 
   const [loading, setLoading] = useState(false);
   const [pricing, setPricing] = useState<AddonPricing | null>(null);
@@ -62,19 +75,22 @@ export function AddonsManager() {
   useEffect(() => {
     loadPricing();
     // loadCurrentAddons is now handled inside loadPricing
-  }, [currentTenant]);
+  }, [currentTenant?.id, serviceAccess.isLoading, addonsAccess.allowed]);
 
   const loadPricing = async () => {
-    if (!currentTenant) return;
+    if (!currentTenant || serviceAccess.isLoading) return;
 
-    // Default pricing values (used as fallback if Cloud Function unavailable)
-    const defaultPricing: AddonPricing = {
-      extraSubClients: 15, // $15 per additional sub-client
-      extraStorageGB: 10,  // $10 per 100GB block
-      extraAiCredits: 20,  // $20 per 1000 credits block
-    };
+    if (!addonsAccess.allowed) {
+      const currentAddons = normalizeAddonQuantities(currentTenant.billing?.addons);
+      setPricing(DEFAULT_ADDON_PRICING);
+      setAddons(currentAddons);
+      setPendingAddons(currentAddons);
+      setError(addonsAccess.message);
+      return;
+    }
 
     try {
+      setError(null);
       const result = await supabase.functions.invoke('stripe-api', {
         body: { action: 'getAddonsPricing', tenantId: currentTenant.id }
       });
@@ -84,7 +100,7 @@ export function AddonsManager() {
       // Extract pricing from addons array (backend returns 'addons' not 'availableAddons')
       const addonsArray = data.addons || data.availableAddons;
       if (addonsArray) {
-        const pricingObj: AddonPricing = { ...defaultPricing };
+        const pricingObj: AddonPricing = { ...DEFAULT_ADDON_PRICING };
 
         const currentAddonsFromBackend: Record<string, number> = {
           extraSubClients: 0,
@@ -112,7 +128,7 @@ export function AddonsManager() {
       console.error('Error loading pricing:', error);
       // Use default pricing as fallback when function is unavailable
       console.log('Using default pricing values');
-      setPricing(defaultPricing);
+      setPricing(DEFAULT_ADDON_PRICING);
       loadCurrentAddons();
       setError(t('dashboard.agency.addonsPage.errorLoadingPricing') + ' (usando precios por defecto)');
     }
@@ -151,8 +167,23 @@ export function AddonsManager() {
     return JSON.stringify(addons) !== JSON.stringify(pendingAddons);
   };
 
+  const requireAgencyAddonsAccess = () => {
+    if (serviceAccess.isLoading) {
+      setError(t('dashboard.agency.addonsPage.validatingAccess', 'Validando acceso a add-ons de agencia'));
+      return false;
+    }
+
+    if (!addonsAccess.allowed) {
+      setError(addonsAccess.message);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleUpdateSubscription = async () => {
     if (!currentTenant) return;
+    if (!requireAgencyAddonsAccess()) return;
 
     try {
       setLoading(true);
@@ -180,6 +211,11 @@ export function AddonsManager() {
     setPendingAddons(addons);
     setError(null);
     setSuccess(null);
+  };
+
+  const handleAddonQuantityChange = (addonKey: string, delta: number) => {
+    if (!requireAgencyAddonsAccess()) return;
+    handleQuantityChange(addonKey, delta);
   };
 
   if (!pricing) {
@@ -232,6 +268,16 @@ export function AddonsManager() {
   const hasPendingChanges = hasChanges();
   const addonsReadinessItems = [
     {
+      label: canManageAddons
+        ? t('dashboard.agency.addonsPage.readinessAccess', 'Acceso autorizado')
+        : t('dashboard.agency.addonsPage.readinessAccessBlocked', 'Acceso bloqueado'),
+      description: canManageAddons
+        ? t('dashboard.agency.addonsPage.readinessAccessDesc', 'Service Access permite gestionar add-ons.')
+        : addonsAccess.message,
+      complete: canManageAddons,
+      icon: Lock,
+    },
+    {
       label: t('dashboard.agency.addonsPage.readinessPricing', 'Precios cargados'),
       description: t('dashboard.agency.addonsPage.readinessPricingDesc', 'Tarifas disponibles para capacidad adicional.'),
       complete: Boolean(pricing),
@@ -261,7 +307,17 @@ export function AddonsManager() {
   const addonsReadinessScore = Math.round(
     (addonsReadinessItems.filter((item) => item.complete).length / addonsReadinessItems.length) * 100,
   );
-  const addonsNextAction = hasPendingChanges
+  const addonsNextAction = !canManageAddons
+    ? {
+      label: t('dashboard.agency.addonsPage.nextAccessBlocked', 'Acceso bloqueado'),
+      description: serviceAccess.isLoading
+        ? t('dashboard.agency.addonsPage.validatingAccess', 'Validando acceso a add-ons de agencia')
+        : addonsAccess.message,
+      icon: Lock,
+      tone: 'danger' as const,
+      onClick: requireAgencyAddonsAccess,
+    }
+    : hasPendingChanges
     ? {
       label: t('dashboard.agency.addonsPage.nextApplyChanges', 'Aplicar cambios'),
       description: pendingDelta >= 0
@@ -439,8 +495,8 @@ export function AddonsManager() {
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-4 mt-4">
                     <button
-                      onClick={() => handleQuantityChange(addon.id, -1)}
-                      disabled={addon.currentQuantity === 0 || loading}
+                      onClick={() => handleAddonQuantityChange(addon.id, -1)}
+                      disabled={addon.currentQuantity === 0 || loading || !canManageAddons}
                       className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-q-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <Minus className="w-4 h-4" />
@@ -456,8 +512,8 @@ export function AddonsManager() {
                     </div>
 
                     <button
-                      onClick={() => handleQuantityChange(addon.id, 1)}
-                      disabled={loading}
+                      onClick={() => handleAddonQuantityChange(addon.id, 1)}
+                      disabled={loading || !canManageAddons}
                       className="h-9 w-9 rounded-lg bg-secondary/50 hover:bg-secondary border border-q-border flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <Plus className="w-4 h-4" />
@@ -540,7 +596,7 @@ export function AddonsManager() {
           <div className="flex items-center gap-3 mt-4">
             <button
               onClick={handleUpdateSubscription}
-              disabled={loading}
+              disabled={loading || !canManageAddons}
               className="quimera-guide-cta flex-1 h-10 justify-center disabled:opacity-50"
             >
               {loading ? (
