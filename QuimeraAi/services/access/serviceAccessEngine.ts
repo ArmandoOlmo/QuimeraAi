@@ -39,6 +39,7 @@ export interface ServiceAccessDecision {
     currentPlan?: string;
     requiredFeature?: string;
     requiredService?: string;
+    requiredPermission?: string;
     limit?: number;
     used?: number;
     remaining?: number;
@@ -218,7 +219,11 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
     const registryItem = input.moduleId ? getModuleRegistryItem(input.moduleId) : undefined;
     const requiredService = input.serviceId || registryItem?.requiredService;
     const requiredFeature = input.featureKey || registryItem?.requiredFeature;
-    const requiredPermission = input.requiredPermission || registryItem?.requiredPermission;
+    const requiredPermissions = Array.from(new Set([
+        registryItem?.requiredPermission,
+        input.requiredPermission,
+    ].filter((permission): permission is string => Boolean(permission))));
+    const requiredPermission = requiredPermissions[0];
     const serviceStatus = getServiceStatus(input, requiredService);
 
     if (!input.userId) {
@@ -238,6 +243,7 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
             adminOverride: true,
             requiredService,
             requiredFeature: requiredFeature ? String(requiredFeature) : undefined,
+            requiredPermission,
         });
     }
 
@@ -264,6 +270,7 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
         return blocked('module_disabled', 'Este módulo está desactivado para el workspace o proyecto', {
             requiredService,
             requiredFeature: requiredFeature ? String(requiredFeature) : undefined,
+            requiredPermission,
         });
     }
 
@@ -284,14 +291,17 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
             currentPlan: planId,
             requiredFeature: String(requiredFeature),
             requiredService,
+            requiredPermission,
             upgradeRequired: true,
         });
     }
 
-    if (requiredPermission && !hasPermission(input, requiredPermission)) {
+    const missingPermission = requiredPermissions.find(permission => !hasPermission(input, permission));
+    if (missingPermission) {
         return blocked('permission_missing', 'Tu rol no tiene permiso para esta acción', {
             requiredFeature: requiredFeature ? String(requiredFeature) : undefined,
             requiredService,
+            requiredPermission: missingPermission,
         });
     }
 
@@ -311,6 +321,7 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
         currentPlan: planId,
         requiredFeature: requiredFeature ? String(requiredFeature) : undefined,
         requiredService,
+        requiredPermission,
     });
 }
 

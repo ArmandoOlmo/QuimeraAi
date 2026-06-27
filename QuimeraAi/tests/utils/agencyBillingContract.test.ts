@@ -58,4 +58,10 @@ describe('Agency billing canonical contract', () => {
         expect(stripeWebhook).toContain('billing_mode: billingMode');
         expect(stripeWebhook).toContain('mode: billingMode');
     });
+
+    it('guards agency client limit edits through the agency service-plan permission', () => {
+        expect(stripeApi).toContain('action: "updateTenantLimits"');
+        expect(stripeApi).toContain('moduleId: "agency-service-plans"');
+        expect(stripeApi).toContain('requiredPermission: "canManageBilling"');
+    });
 });

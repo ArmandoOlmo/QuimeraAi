@@ -3334,7 +3334,7 @@ async function updateTenantLimits(req: Request, userId: string, data: any) {
   const context = await requireAgencyClientBillingContext(req, userId, tenantId, {
     moduleId: "agency-service-plans",
     action: "updateTenantLimits",
-    requiredPermission: "canManageSettings",
+    requiredPermission: "canManageBilling",
   });
   const nextLimits = sanitizeTenantLimits({
     currentLimits: context.clientTenant?.limits,

@@ -37,11 +37,42 @@ describe('moduleRegistry', () => {
         expect(canAccessModuleRegistryItem(storefront!, {
             canAccessService: service => service === 'ecommerce',
             hasPlanFeature: feature => feature === 'ecommerceEnabled',
+            permissions: { canManageEcommerce: true },
         })).toBe(true);
         expect(canAccessModuleRegistryItem(storefront!, {
             canAccessService: () => true,
             hasPlanFeature: () => false,
+            permissions: { canManageEcommerce: true },
         })).toBe(false);
+    });
+
+    it('gates registry modules by required tenant permissions', () => {
+        const storefront = getModuleRegistryItem('storefront-builder');
+        const agencyBilling = getModuleRegistryItem('agency-billing');
+
+        const serviceAndFeatureAccess = {
+            canAccessService: () => true,
+            hasPlanFeature: () => true,
+        };
+
+        expect(canAccessModuleRegistryItem(storefront!, serviceAndFeatureAccess)).toBe(false);
+        expect(canAccessModuleRegistryItem(storefront!, {
+            ...serviceAndFeatureAccess,
+            permissions: { canManageEcommerce: true },
+        })).toBe(true);
+
+        expect(canAccessModuleRegistryItem(agencyBilling!, {
+            ...serviceAndFeatureAccess,
+            permissions: { canViewAnalytics: true },
+        })).toBe(false);
+        expect(canAccessModuleRegistryItem(agencyBilling!, {
+            ...serviceAndFeatureAccess,
+            permissions: { canManageBilling: true },
+        })).toBe(true);
+        expect(canAccessModuleRegistryItem(agencyBilling!, {
+            ...serviceAndFeatureAccess,
+            hasPermission: permission => permission === 'canManageBilling',
+        })).toBe(true);
     });
 
     it('keeps ungated core modules visible while filtering gated modules without access', () => {

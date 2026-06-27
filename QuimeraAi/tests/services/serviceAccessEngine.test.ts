@@ -273,6 +273,36 @@ describe('Service Access Engine', () => {
         });
     });
 
+    it('does not allow callers to weaken registry module permissions', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-service-plans',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageSettings',
+            permissions: { canManageSettings: true },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'permission_missing',
+            requiredPermission: 'canManageBilling',
+        });
+
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-service-plans',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageSettings',
+            permissions: { canManageSettings: true, canManageBilling: true },
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+            requiredPermission: 'canManageBilling',
+        });
+    });
+
     it('gates agency project transfer by project management permission', () => {
         expect(resolveServiceAccess({
             ...baseInput,

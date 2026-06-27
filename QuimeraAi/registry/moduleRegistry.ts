@@ -83,6 +83,8 @@ export interface ModuleRegistryAccessContext {
     currentPlan?: SubscriptionPlanId;
     hasPlanFeature?: (feature: keyof PlanFeatures) => boolean;
     canAccessService?: (service: PlatformServiceId) => boolean;
+    hasPermission?: (permission: string) => boolean;
+    permissions?: Record<string, unknown>;
 }
 
 const PLAN_RANK: Record<SubscriptionPlanId, number> = {
@@ -587,7 +589,23 @@ export function canAccessModuleRegistryItem(item: ModuleRegistryItem, access: Mo
     if (item.requiredPlan && access.currentPlan && PLAN_RANK[access.currentPlan] < PLAN_RANK[item.requiredPlan]) return false;
     if (item.requiredService && (!access.canAccessService || !access.canAccessService(item.requiredService))) return false;
     if (item.requiredFeature && (!access.hasPlanFeature || !access.hasPlanFeature(item.requiredFeature))) return false;
+    if (item.requiredPermission && !hasRegistryPermission(access, item.requiredPermission)) return false;
     return true;
+}
+
+function hasRegistryPermission(access: ModuleRegistryAccessContext, permission: string): boolean {
+    if (access.hasPermission) return access.hasPermission(permission);
+
+    const permissions = access.permissions || {};
+    if (permissions[permission] === true) return true;
+
+    const parts = permission.split('.');
+    let cursor: unknown = permissions;
+    for (const part of parts) {
+        if (!cursor || typeof cursor !== 'object' || !(part in cursor)) return false;
+        cursor = (cursor as Record<string, unknown>)[part];
+    }
+    return cursor === true;
 }
 
 export function getAccessibleModuleRegistry(access: ModuleRegistryAccessContext = {}): ModuleRegistryItem[] {
