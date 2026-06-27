@@ -31,7 +31,8 @@ import { defaultPrompts } from '../../data/defaultPrompts';
 import { initialData } from '../../data/initialData';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
-import { getCanonicalPlanLimits, normalizePlanId } from '../../services/billing/planCatalog';
+import { getCanonicalPlanLimits } from '../../services/billing/planCatalog';
+import { normalizeTenantSubscriptionPlanForType } from '../../types/multiTenant';
 
 // Build default component status
 const allComponents = initialData.componentOrder;
@@ -434,13 +435,8 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         companyName?: string
     }): Promise<string> => {
         try {
-            const canonicalPlan = normalizePlanId(data.plan);
+            const canonicalPlan = normalizeTenantSubscriptionPlanForType(data.type, data.plan);
             const limits = { ...getCanonicalPlanLimits(canonicalPlan) };
-
-            if (data.type === 'agency' && canonicalPlan !== 'agency_starter' && canonicalPlan !== 'agency_pro' && canonicalPlan !== 'agency_scale' && canonicalPlan !== 'enterprise') {
-                limits.maxUsers = Math.max(limits.maxUsers, 5);
-                limits.maxProjects = Math.max(limits.maxProjects, 10);
-            }
 
             const { data: newTenant, error } = await supabase.from('tenants').insert([{
                 type: data.type,
@@ -485,12 +481,21 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const updateTenant = async (tenantId: string, data: Partial<Tenant>) => {
         try {
             const updateData: any = { updated_at: new Date().toISOString() };
+            const existingTenant = tenants.find(t => t.id === tenantId);
+            const nextType = data.type || existingTenant?.type;
+            const nextPlan = data.subscriptionPlan || existingTenant?.subscriptionPlan;
+            const normalizedData = { ...data };
+
+            if ((data.type !== undefined || data.subscriptionPlan !== undefined) && nextType && nextPlan) {
+                normalizedData.subscriptionPlan = normalizeTenantSubscriptionPlanForType(nextType, nextPlan) as Tenant['subscriptionPlan'];
+            }
+
             if (data.type !== undefined) updateData.type = data.type;
             if (data.name !== undefined) updateData.name = data.name;
             if (data.email !== undefined) updateData.email = data.email;
             if (data.companyName !== undefined) updateData.company_name = data.companyName;
             if (data.status !== undefined) updateData.status = data.status;
-            if (data.subscriptionPlan !== undefined) updateData.subscription_plan = data.subscriptionPlan;
+            if (normalizedData.subscriptionPlan !== undefined) updateData.subscription_plan = normalizedData.subscriptionPlan;
             if (data.limits !== undefined) updateData.limits = data.limits;
             if (data.usage !== undefined) updateData.usage = data.usage;
             if (data.ownerUserId !== undefined) updateData.owner_user_id = data.ownerUserId;
@@ -498,7 +503,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (data.billingInfo !== undefined) updateData.billing_info = data.billingInfo;
 
             await supabase.from('tenants').update(updateData).eq('id', tenantId);
-            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, ...data } : t));
+            setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, ...normalizedData } : t));
         } catch (error) {
             console.error("Error updating tenant:", error);
             throw error;

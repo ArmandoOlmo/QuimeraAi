@@ -22,6 +22,7 @@ import {
     hasPermission,
     resolveTenantEffectiveLimits,
     resolveTenantEffectivePlan,
+    normalizeTenantSubscriptionPlanForType,
 } from '../../types/multiTenant';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
@@ -422,7 +423,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     effectivePlanId: normalizePlanId(parentTenant?.subscriptionPlan || data.plan || 'individual') as any,
                 },
             }, parentTenant)
-            : normalizePlanId(data.plan || 'free');
+            : normalizeTenantSubscriptionPlanForType(data.type, data.plan);
         const billing: TenantBilling | undefined = data.type === 'agency_client'
             ? {
                 mode: data.useParentCreditsPool === false ? 'direct' : 'included_in_parent',

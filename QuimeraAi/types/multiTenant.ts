@@ -424,6 +424,29 @@ export function isAgencyBillingPlan(plan: Tenant['subscriptionPlan']): boolean {
     return isAgencyPlan(plan);
 }
 
+export function normalizeTenantSubscriptionPlanForType(
+    type: TenantType,
+    plan?: Tenant['subscriptionPlan'] | string | null,
+): SubscriptionPlanId {
+    const rawPlan = String(plan || '').trim();
+    if (rawPlan === 'agency_client') {
+        throw new Error('agency_client es un tipo de tenant, no un plan de suscripción');
+    }
+
+    const fallbackPlan = type === 'agency' ? 'agency_starter' : 'free';
+    const normalizedPlan = normalizePlanId(rawPlan || fallbackPlan) as SubscriptionPlanId;
+
+    if (type === 'agency' && !isAgencyPlan(normalizedPlan)) {
+        throw new Error('Los tenants de agencia requieren un plan canónico de Agency Engine: agency_starter, agency_pro o agency_scale');
+    }
+
+    if (type === 'individual' && isAgencyPlan(normalizedPlan)) {
+        throw new Error('Los planes de Agency Engine no se asignan a tenants individuales');
+    }
+
+    return normalizedPlan;
+}
+
 /**
  * Get agency plan billing details
  */

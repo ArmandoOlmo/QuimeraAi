@@ -8,6 +8,7 @@ import { useAuth } from '../core/AuthContext';
 import { useTenant } from '../tenant/TenantContext';
 import { useAgencyMetrics } from '../../hooks/useAgencyMetrics';
 import { useServiceAccess } from '../../hooks/useServiceAccess';
+import { isAgencyPlan } from '../../services/billing/planCatalog';
 import type { Tenant } from '../../types/multiTenant';
 import type {
     AggregatedMetrics,
@@ -159,8 +160,7 @@ export function canAccessAgencyDashboard(
     if (!tenant || !role) return false;
 
     // Must be on an agency-enabled commercial plan. Enterprise is not agency by default.
-    const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale'];
-    if (!agencyPlans.includes(tenant.subscriptionPlan)) return false;
+    if (!isAgencyPlan(tenant.subscriptionPlan)) return false;
 
     // Must be owner or admin
     return role === 'agency_owner' || role === 'agency_admin';

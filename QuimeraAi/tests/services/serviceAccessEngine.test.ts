@@ -17,6 +17,7 @@ import {
     calculateAgencyMonthlyBill,
     getAgencyPlanBillingDetails,
     isAgencyBillingPlan,
+    normalizeTenantSubscriptionPlanForType,
     type Tenant,
 } from '../../types/multiTenant';
 
@@ -241,6 +242,19 @@ describe('Service Access Engine', () => {
 
         expect(calculateAgencyMonthlyBill('agency_pro', 3)).toBe(199 + (29 * 3));
         expect(calculateAgencyMonthlyBill('enterprise', 3)).toBe(0);
+    });
+
+    it('normalizes tenant creation plans by tenant type without treating enterprise or agency_client as agency plans', () => {
+        expect(normalizeTenantSubscriptionPlanForType('agency', 'agency_starter')).toBe('agency_starter');
+        expect(normalizeTenantSubscriptionPlanForType('agency', 'agency_plus')).toBe('agency_pro');
+        expect(normalizeTenantSubscriptionPlanForType('agency')).toBe('agency_starter');
+        expect(normalizeTenantSubscriptionPlanForType('individual', 'enterprise')).toBe('enterprise');
+
+        expect(() => normalizeTenantSubscriptionPlanForType('agency', 'enterprise')).toThrow(/Agency Engine/);
+        expect(() => normalizeTenantSubscriptionPlanForType('agency', 'individual')).toThrow(/Agency Engine/);
+        expect(() => normalizeTenantSubscriptionPlanForType('individual', 'agency_pro')).toThrow(/individuales/);
+        expect(normalizeTenantSubscriptionPlanForType('agency_client', 'agency_pro')).toBe('agency_pro');
+        expect(() => normalizeTenantSubscriptionPlanForType('agency', 'agency_client')).toThrow(/tipo de tenant/);
     });
 
     it('requires tenant permissions for agency billing submodules', () => {

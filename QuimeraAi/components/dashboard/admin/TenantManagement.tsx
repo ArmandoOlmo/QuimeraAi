@@ -19,7 +19,7 @@ import { db, collection, getDocs, query, where, orderBy, limit } from '@/utils/c
 import { doc, getDoc } from '@/utils/compatData';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
 import { addCredits } from '../../../services/aiCreditsService';
-import { formatPlanLimit } from '../../../services/billing/planCatalog';
+import { formatPlanLimit, isAgencyPlan } from '../../../services/billing/planCatalog';
 import AppSelect from '../../ui/AppSelect';
 
 interface TenantManagementProps {
@@ -37,6 +37,8 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
     const [statusFilter, setStatusFilter] = useState<TenantStatus | 'all'>('all');
     const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newTenantType, setNewTenantType] = useState<'individual' | 'agency'>('individual');
+    const [newTenantPlan, setNewTenantPlan] = useState('individual');
     const [expandedTenants, setExpandedTenants] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -76,6 +78,21 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
             return;
         }
         setPendingDeleteTenantId(tenantId);
+    };
+
+    const resetCreateTenantForm = () => {
+        setNewTenantType('individual');
+        setNewTenantPlan('individual');
+    };
+
+    const openCreateTenantModal = () => {
+        resetCreateTenantForm();
+        setShowCreateModal(true);
+    };
+
+    const closeCreateTenantModal = () => {
+        resetCreateTenantForm();
+        setShowCreateModal(false);
     };
 
     const confirmDeleteTenant = async () => {
@@ -367,7 +384,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
 
                                 {canPerform('canEditTenants') && (
                                     <button
-                                        onClick={() => setShowCreateModal(true)}
+                                        onClick={openCreateTenantModal}
                                         className="flex items-center gap-2 px-3 py-2 text-q-accent text-sm font-semibold hover:text-q-accent/80 transition-colors"
                                     >
                                         <Plus size={16} />
@@ -399,7 +416,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                 Intenta ajustar tus filtros o crea un nuevo tenant
                             </p>
                             <button
-                                onClick={() => setShowCreateModal(true)}
+                                onClick={openCreateTenantModal}
                                 className="inline-flex items-center gap-2 px-3 py-2 text-q-accent text-sm font-semibold hover:text-q-accent/80 transition-colors"
                             >
                                 <Plus size={16} />
@@ -429,7 +446,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             try {
                                 setLoading(true);
                                 await createTenant(data);
-                                setShowCreateModal(false);
+                                closeCreateTenantModal();
                                 // Refresh tenants list
                                 await fetchTenants();
                             } catch (error: any) {
@@ -463,6 +480,12 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">Tipo</label>
                                     <AppSelect
                                         name="type"
+                                        value={newTenantType}
+                                        onChange={(e) => {
+                                            const nextType = e.target.value as 'individual' | 'agency';
+                                            setNewTenantType(nextType);
+                                            setNewTenantPlan(nextType === 'agency' ? 'agency_starter' : 'individual');
+                                        }}
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
                                         <option value="individual">{t('superadmin.individual')}</option>
@@ -473,11 +496,23 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                                     <label className="block text-sm font-medium text-q-text-secondary mb-1">Plan</label>
                                     <AppSelect
                                         name="plan"
+                                        value={newTenantPlan}
+                                        onChange={(e) => setNewTenantPlan(e.target.value)}
                                         className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent"
                                     >
-                                        <option value="free">{t('superadmin.free')}</option>
-                                        <option value="pro">Pro</option>
-                                        <option value="enterprise">{t('superadmin.enterprise')}</option>
+                                        {newTenantType === 'agency' ? (
+                                            <>
+                                                <option value="agency_starter">Agency Starter</option>
+                                                <option value="agency_pro">Agency Pro</option>
+                                                <option value="agency_scale">Agency Scale</option>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <option value="free">{t('superadmin.free')}</option>
+                                                <option value="individual">Individual</option>
+                                                <option value="enterprise">{t('superadmin.enterprise')}</option>
+                                            </>
+                                        )}
                                     </AppSelect>
                                 </div>
                                 <div>
@@ -492,7 +527,7 @@ const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
                             <div className="flex gap-3 mt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowCreateModal(false)}
+                                    onClick={closeCreateTenantModal}
                                     className="flex-1 px-4 py-2 text-q-text-secondary hover:text-q-text transition-colors"
                                 >
                                     Cancelar
@@ -846,10 +881,20 @@ const TenantDetailsModal: React.FC<{
                                         {isEditing ? (
                                             <AppSelect
                                                 value={editData.type}
-                                                onChange={(e) => setEditData(prev => ({ ...prev, type: e.target.value as TenantType }))}
+                                                onChange={(e) => {
+                                                    const nextType = e.target.value as TenantType;
+                                                    setEditData(prev => ({
+                                                        ...prev,
+                                                        type: nextType,
+                                                        subscriptionPlan: nextType === 'agency'
+                                                            ? (isAgencyPlan(prev.subscriptionPlan) ? prev.subscriptionPlan : 'agency_starter')
+                                                            : (nextType === 'individual' && isAgencyPlan(prev.subscriptionPlan) ? 'individual' : prev.subscriptionPlan),
+                                                    }));
+                                                }}
                                                 className={selectClass}
                                             >
                                                 <option value="individual">Individual</option>
+                                                <option value="agency">Agencia</option>
                                                 <option value="agency_client">Cliente de Agencia</option>
                                             </AppSelect>
                                         ) : (
@@ -887,17 +932,22 @@ const TenantDetailsModal: React.FC<{
                                                 onChange={(e) => setEditData(prev => ({ ...prev, subscriptionPlan: e.target.value as Tenant['subscriptionPlan'] }))}
                                                 className={selectClass}
                                             >
-                                                <option value="free">Free</option>
-                                                <option value="hobby">Hobby</option>
-                                                <option value="starter">Starter</option>
-                                                <option value="individual">Individual</option>
-                                                <option value="pro">Pro</option>
-                                                <option value="agency">Agency</option>
-                                                <option value="agency_plus">Agency Plus</option>
-                                                <option value="agency_starter">Agency Starter</option>
-                                                <option value="agency_pro">Agency Pro</option>
-                                                <option value="agency_scale">Agency Scale</option>
-                                                <option value="enterprise">Enterprise</option>
+                                                {editData.type === 'agency' ? (
+                                                    <>
+                                                        <option value="agency_starter">Agency Starter</option>
+                                                        <option value="agency_pro">Agency Pro</option>
+                                                        <option value="agency_scale">Agency Scale</option>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <option value="free">Free</option>
+                                                        <option value="individual">Individual</option>
+                                                        {editData.type === 'agency_client' && isAgencyPlan(editData.subscriptionPlan) && (
+                                                            <option value={editData.subscriptionPlan}>{editData.subscriptionPlan.replaceAll('_', ' ')}</option>
+                                                        )}
+                                                        <option value="enterprise">Enterprise</option>
+                                                    </>
+                                                )}
                                             </AppSelect>
                                         ) : (
                                             <span className="px-2.5 py-1 bg-q-accent/10 text-q-accent rounded-md text-sm border border-q-accent/20 font-semibold capitalize inline-block">
