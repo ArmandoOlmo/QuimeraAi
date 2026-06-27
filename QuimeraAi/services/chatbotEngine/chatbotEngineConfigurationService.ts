@@ -17,6 +17,10 @@ import type {
     ChatbotTestScenarioBlueprint,
 } from '../../types/businessBlueprint';
 import { migrateBusinessBlueprint } from '../../utils/businessBlueprint';
+import {
+    appendBlueprintSnapshot,
+    createBlueprintSnapshot,
+} from '../../utils/businessBlueprint/versionHistory';
 import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from './chatbotEngineEventService';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
@@ -482,7 +486,23 @@ async function persistProjectChatbotBlueprint(
     now: string,
     client: SupabaseLike,
 ): Promise<PersistedChatbotConfig> {
-    const nextData = applyChatbotBlueprintToProjectData(projectData, chatbotBlueprint);
+    const snapshot = createBlueprintSnapshot({
+        projectId,
+        projectData,
+        moduleKey: 'chatbotBlueprint',
+        source: 'manual_save',
+        changeType: 'manual_checkpoint',
+        now,
+        metadata: {
+            userId: chatbotBlueprint.metadata.lastEditedBy || null,
+            createdBy: chatbotBlueprint.metadata.lastEditedBy || null,
+            actionType: 'chatbot_engine_configuration',
+            module: 'chatbot',
+            source: 'chatbot-engine',
+        },
+    });
+    const versionedData = appendBlueprintSnapshot(projectData, snapshot);
+    const nextData = applyChatbotBlueprintToProjectData(versionedData, chatbotBlueprint);
     const nextBusinessBlueprint = nextData.businessBlueprint as BusinessBlueprint;
 
     const updateResult = await client

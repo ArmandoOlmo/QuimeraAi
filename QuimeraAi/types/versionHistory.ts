@@ -38,12 +38,17 @@ export interface SnapshotMetadata {
 export interface BlueprintSnapshot {
     id: string;
     projectId: string;
+    tenantId?: string | null;
+    blueprintVersion?: string;
     createdAt: string;
+    createdBy?: string | null;
     source: SnapshotSource;
     scope: BlueprintSnapshotScope;
     changeType: SnapshotChangeType;
     moduleKey?: BusinessBlueprintModuleKey;
     sectionId?: string;
+    title?: string;
+    description?: string;
     label: string;
     summary: string;
     metadata: SnapshotMetadata;

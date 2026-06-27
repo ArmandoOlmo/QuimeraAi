@@ -67,6 +67,10 @@ import {
     previewCrossModuleSync,
     type CrossModuleSyncResult,
 } from '../../../utils/businessBlueprint/crossModuleSync';
+import {
+    appendBlueprintSnapshot,
+    createBlueprintSnapshot,
+} from '../../../utils/businessBlueprint/versionHistory';
 
 // Import views
 import ProductsView from './views/ProductsView';
@@ -803,8 +807,25 @@ const AiStarterContentPrompt: React.FC<AiStarterContentPromptProps> = ({
             status,
             now,
         });
+        const currentData = (project.data || {}) as Record<string, unknown>;
+        const snapshot = createBlueprintSnapshot({
+            projectId: project.id,
+            projectData: currentData,
+            moduleKey: 'ecommerceBlueprint',
+            source: status === 'created_draft' ? 'ai_action' : 'manual_save',
+            changeType: status === 'created_draft' ? 'before_regeneration' : 'manual_checkpoint',
+            now,
+            metadata: {
+                userId,
+                createdBy: userId,
+                actionType: `ecommerce_starter_content_${status}`,
+                module: 'ecommerce',
+                source: 'ecommerce-dashboard',
+            },
+        });
+        const versionedData = appendBlueprintSnapshot(currentData, snapshot);
         const nextData = {
-            ...(project.data || {}),
+            ...versionedData,
             businessBlueprint: nextBlueprint,
             lastUpdated: now,
         };
@@ -1059,10 +1080,34 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
     const isSynced = syncStatus === 'synced_draft';
     const summary = result?.summary;
 
-    const persistBlueprint = async (nextBlueprint: BusinessBlueprint) => {
+    const persistBlueprint = async (
+        nextBlueprint: BusinessBlueprint,
+        snapshotContext: {
+            source: 'ai_action' | 'manual_save';
+            changeType: 'before_regeneration' | 'manual_checkpoint';
+            actionType: string;
+        },
+    ) => {
         const now = new Date().toISOString();
+        const currentData = (project.data || {}) as Record<string, unknown>;
+        const snapshot = createBlueprintSnapshot({
+            projectId: project.id,
+            projectData: currentData,
+            scope: 'businessBlueprint',
+            source: snapshotContext.source,
+            changeType: snapshotContext.changeType,
+            now,
+            metadata: {
+                userId,
+                createdBy: userId,
+                actionType: snapshotContext.actionType,
+                module: 'crossModuleSync',
+                source: 'ecommerce-dashboard',
+            },
+        });
+        const versionedData = appendBlueprintSnapshot(currentData, snapshot);
         const nextData = {
-            ...(project.data || {}),
+            ...versionedData,
             businessBlueprint: nextBlueprint,
             lastUpdated: now,
         };
@@ -1132,7 +1177,11 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
                 return;
             }
 
-            await persistBlueprint(applyResult.businessBlueprint);
+            await persistBlueprint(applyResult.businessBlueprint, {
+                source: 'ai_action',
+                changeType: 'before_regeneration',
+                actionType: 'ecommerce_cross_module_sync_create_drafts',
+            });
             setLocalStatus('synced_draft');
         } catch (caughtError) {
             setError(caughtError instanceof Error ? caughtError.message : String(caughtError));
@@ -1146,7 +1195,11 @@ const AiCrossModuleSyncPrompt: React.FC<AiCrossModuleSyncPromptProps> = ({
         setError(null);
         try {
             const now = new Date().toISOString();
-            await persistBlueprint(createDismissedCrossModuleBlueprint(businessBlueprint, now));
+            await persistBlueprint(createDismissedCrossModuleBlueprint(businessBlueprint, now), {
+                source: 'manual_save',
+                changeType: 'manual_checkpoint',
+                actionType: 'ecommerce_cross_module_sync_dismiss',
+            });
             setLocalStatus('dismissed');
         } catch (caughtError) {
             setError(caughtError instanceof Error ? caughtError.message : String(caughtError));

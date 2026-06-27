@@ -232,17 +232,25 @@ export function createBlueprintSnapshot(input: CreateBlueprintSnapshotInput): Bl
         changeType,
     };
 
+    const label = input.metadata?.label as string || getSnapshotLabel(partial);
+    const summary = input.metadata?.summary as string || getSnapshotSummary(partial);
+
     return {
         id: createSnapshotId(),
         projectId: input.projectId,
+        ...(input.metadata?.tenantId !== undefined ? { tenantId: input.metadata.tenantId as string | null } : {}),
+        ...(businessBlueprint?.blueprintVersion ? { blueprintVersion: businessBlueprint.blueprintVersion } : {}),
         createdAt: now,
+        ...(input.metadata?.createdBy !== undefined ? { createdBy: input.metadata.createdBy as string | null } : {}),
         source,
         scope,
         changeType,
         ...(input.moduleKey ? { moduleKey: input.moduleKey } : {}),
         ...(input.sectionId ? { sectionId: input.sectionId } : {}),
-        label: input.metadata?.label as string || getSnapshotLabel(partial),
-        summary: input.metadata?.summary as string || getSnapshotSummary(partial),
+        title: label,
+        description: summary,
+        label,
+        summary,
         metadata: {
             ...(input.metadata || {}),
             ...(input.moduleKey ? { moduleKey: input.moduleKey } : {}),

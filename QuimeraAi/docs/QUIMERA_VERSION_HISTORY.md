@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Quimera Version History stores automatic blueprint snapshots before the Global Assistant mutates a project. The restore path is safe by default: modules or sections marked `userModified` or `lockedFromRegeneration` are preserved unless an explicit overwrite is requested.
+Quimera Version History stores automatic blueprint snapshots before AI or engine flows mutate a project. The restore path is safe by default: modules or sections marked `userModified` or `lockedFromRegeneration` are preserved unless an explicit overwrite is requested.
 
 ## Storage
 
@@ -51,6 +51,13 @@ Pure utilities live in `utils/businessBlueprint/versionHistory.ts`:
 
 If the pre-mutation snapshot cannot be written for a project-scoped action, the action does not continue.
 
+Additional direct blueprint mutation paths also append snapshots before writing new project data:
+
+- AI Website Studio preview regeneration carries the previous generated project into `versionHistory` before the regenerated preview is saved.
+- Ecommerce starter content and Ecommerce cross-module sync snapshot `ecommerceBlueprint`/`BusinessBlueprint` before creating AI-backed draft content.
+- Realty Engine cross-module and offer sync snapshot the current `BusinessBlueprint` before writing generated integration drafts.
+- Chatbot Engine configuration writes a `manual_checkpoint` before changing `chatbotBlueprint`.
+
 ## Restore Behavior
 
 Supported restore targets:
@@ -90,10 +97,11 @@ Focused test coverage is in:
 
 ```txt
 tests/utils/blueprintVersionHistory.test.ts
+tests/services/chatbotEngineConfigurationService.test.ts
 ```
 
 Run it with:
 
 ```bash
-npm run test:run -- tests/utils/blueprintVersionHistory.test.ts
+npm run test:run -- tests/utils/blueprintVersionHistory.test.ts tests/services/chatbotEngineConfigurationService.test.ts
 ```

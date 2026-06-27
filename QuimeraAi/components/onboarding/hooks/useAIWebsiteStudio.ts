@@ -49,7 +49,7 @@ import {
     sanitizeComponentOrder,
     validateGeneratedWebsite,
 } from '../../../utils/websitePlanEngine';
-import { attachAiStudioBusinessBlueprint } from '../../../utils/businessBlueprint';
+import { attachAiStudioBusinessBlueprint, createSnapshotBeforeRegeneration } from '../../../utils/businessBlueprint';
 import { resolveProjectAiAssistantConfig } from '../../../utils/chatbotEngine/projectAiAssistantConfig';
 import { applyProjectBioPageBlueprintDraft } from '../../../services/bioPage';
 import { createColorBriefFromWebsitePlan } from '../../../utils/colorSystemEngine';
@@ -925,6 +925,7 @@ export function useAIWebsiteStudio() {
     const [generatedProjectSaveError, setGeneratedProjectSaveError] = useState<string | null>(null);
     const isSavingGeneratedProjectRef = useRef(false);
     const regenerationBusinessBlueprintRef = useRef<Project['businessBlueprint'] | null>(null);
+    const regenerationProjectDataRef = useRef<Record<string, unknown> | null>(null);
 
     // ── Voice state ─────────────────────────────────────────────────────────
     const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -993,6 +994,7 @@ export function useAIWebsiteStudio() {
             setGenerationPhase(null);
             setIsOnboardingOpen(false);
             regenerationBusinessBlueprintRef.current = null;
+            regenerationProjectDataRef.current = null;
             return true;
         } catch (finalSaveErr) {
             console.warn('[AIWebsiteStudio] Final save failed:', finalSaveErr);
@@ -1150,6 +1152,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
         regenerationBusinessBlueprintRef.current = null;
+        regenerationProjectDataRef.current = null;
         setIsGenerating(false);
         setIsSavingGeneratedProject(false);
         isSavingGeneratedProjectRef.current = false;
@@ -1628,7 +1631,9 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         isGeneratingRef.current = true;
         setIsGenerating(true);
         const existingBusinessBlueprint = regenerationBusinessBlueprintRef.current;
+        const existingProjectDataForRegeneration = regenerationProjectDataRef.current;
         regenerationBusinessBlueprintRef.current = null;
+        regenerationProjectDataRef.current = null;
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
 
@@ -2115,6 +2120,32 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                     aiAssistantConfig: hydratedAiAssistantConfig as any,
                 };
             }
+            if (existingBusinessBlueprint && existingProjectDataForRegeneration) {
+                const { nextProjectData } = createSnapshotBeforeRegeneration(
+                    {
+                        ...existingProjectDataForRegeneration,
+                        businessBlueprint: existingBusinessBlueprint,
+                    },
+                    {
+                        projectId: finalProjectId,
+                        scope: 'project',
+                        source: 'ai_regeneration',
+                        now: fullProject.lastUpdated || new Date().toISOString(),
+                        metadata: {
+                            tenantId: currentTenantId,
+                            userId: user.id,
+                            createdBy: user.id,
+                            actionType: 'ai_website_studio_regenerate_preview',
+                            module: 'aiStudio',
+                            source: 'ai-website-studio',
+                        },
+                    },
+                );
+                fullProject = {
+                    ...fullProject,
+                    ...({ versionHistory: nextProjectData.versionHistory } as Record<string, unknown>),
+                };
+            }
 
             if (isDev) {
                 console.log('[AIWebsiteStudio] Commerce blueprints generated:', {
@@ -2295,11 +2326,25 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         if (isGeneratingRef.current || isSavingGeneratedProjectRef.current) return;
         const planForRegeneration = websitePlan || undefined;
         regenerationBusinessBlueprintRef.current = generatedProject?.businessBlueprint || null;
+        regenerationProjectDataRef.current = generatedProject ? {
+            name: generatedProject.name,
+            data: generatedProject.data,
+            theme: generatedProject.theme,
+            brandIdentity: generatedProject.brandIdentity,
+            componentOrder: generatedProject.componentOrder,
+            sectionVisibility: generatedProject.sectionVisibility,
+            pages: generatedProject.pages,
+            menus: generatedProject.menus,
+            aiAssistantConfig: generatedProject.aiAssistantConfig,
+            thumbnailUrl: generatedProject.thumbnailUrl,
+            businessBlueprint: generatedProject.businessBlueprint,
+            lastUpdated: generatedProject.lastUpdated,
+        } : null;
         setGeneratedProject(null);
         setGeneratedProjectSaveError(null);
         setGenerationPhase(null);
         await runGeneration(planForRegeneration);
-    }, [generatedProject?.businessBlueprint, runGeneration, websitePlan]);
+    }, [generatedProject, runGeneration, websitePlan]);
 
     const returnToPlanFromGeneratedPreview = useCallback(() => {
         if (isSavingGeneratedProjectRef.current) return;
@@ -2307,6 +2352,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         setGeneratedProjectSaveError(null);
         setGenerationPhase(null);
         regenerationBusinessBlueprintRef.current = null;
+        regenerationProjectDataRef.current = null;
         if (websitePlan) setShowPlanReview(true);
     }, [websitePlan]);
 

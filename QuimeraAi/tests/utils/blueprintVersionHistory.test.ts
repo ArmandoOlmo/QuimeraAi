@@ -110,9 +110,17 @@ describe('blueprint version history', () => {
             source: 'manual_save',
             changeType: 'manual_checkpoint',
             now: '2026-06-27T12:00:00.000Z',
+            metadata: {
+                tenantId: 'tenant-1',
+                createdBy: 'user-1',
+            },
         });
 
         expect(snapshot.projectId).toBe('project-1');
+        expect(snapshot.tenantId).toBe('tenant-1');
+        expect(snapshot.createdBy).toBe('user-1');
+        expect(snapshot.blueprintVersion).toBe('1.0.0');
+        expect(snapshot.title).toBe(snapshot.label);
         expect(snapshot.businessBlueprint?.websiteBlueprint).toBeTruthy();
         expect(snapshot.snapshotData.versionHistory).toBeUndefined();
     });

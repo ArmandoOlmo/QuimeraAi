@@ -109,6 +109,10 @@ import {
     type CrossModuleSyncResult,
 } from '../../../utils/businessBlueprint/crossModuleSync';
 import {
+    appendBlueprintSnapshot,
+    createBlueprintSnapshot,
+} from '../../../utils/businessBlueprint/versionHistory';
+import {
     buildRealtyMonetizationOfferDrafts,
 } from '../../../utils/realtyMonetization';
 import {
@@ -1246,12 +1250,37 @@ const RealtyDashboard: React.FC = () => {
         syncFinance: true,
     });
 
-    const persistEngineBlueprint = async (nextBlueprint: BusinessBlueprint) => {
+    const persistEngineBlueprint = async (
+        nextBlueprint: BusinessBlueprint,
+        snapshotContext: {
+            source: 'ai_action' | 'manual_save';
+            changeType: 'before_regeneration' | 'manual_checkpoint';
+            actionType: string;
+        },
+    ) => {
         if (!activeProject) throw new Error(t('realty.engine.syncMissingBlueprint'));
 
         const now = new Date().toISOString();
+        const currentData = (activeProject.data || {}) as Record<string, unknown>;
+        const snapshot = createBlueprintSnapshot({
+            projectId: activeProject.id,
+            projectData: currentData,
+            scope: 'businessBlueprint',
+            source: snapshotContext.source,
+            changeType: snapshotContext.changeType,
+            now,
+            metadata: {
+                tenantId: currentTenantId,
+                userId: user?.id || activeProject.userId || null,
+                createdBy: user?.id || activeProject.userId || null,
+                actionType: snapshotContext.actionType,
+                module: 'realtyCrossModuleSync',
+                source: 'realty-dashboard',
+            },
+        });
+        const versionedData = appendBlueprintSnapshot(currentData, snapshot);
         const nextData = {
-            ...(activeProject.data || {}),
+            ...versionedData,
             businessBlueprint: nextBlueprint,
             lastUpdated: now,
         };
@@ -1303,7 +1332,11 @@ const RealtyDashboard: React.FC = () => {
                 return;
             }
 
-            await persistEngineBlueprint(applyResult.businessBlueprint);
+            await persistEngineBlueprint(applyResult.businessBlueprint, {
+                source: 'ai_action',
+                changeType: 'before_regeneration',
+                actionType: 'realty_engine_cross_module_sync_create_drafts',
+            });
             setEngineSyncStatus('synced_draft');
         } catch (err) {
             setEngineSyncError(err instanceof Error ? err.message : String(err));
@@ -1346,7 +1379,11 @@ const RealtyDashboard: React.FC = () => {
                 return;
             }
 
-            await persistEngineBlueprint(applyResult.businessBlueprint);
+            await persistEngineBlueprint(applyResult.businessBlueprint, {
+                source: 'ai_action',
+                changeType: 'before_regeneration',
+                actionType: 'realty_engine_offer_sync_create_drafts',
+            });
             setOfferSyncStatus('synced_draft');
         } catch (err) {
             setOfferSyncError(err instanceof Error ? err.message : String(err));
