@@ -191,6 +191,7 @@ export const isComponentHelpQuestion = (value: string): boolean => {
     if (!text) return false;
     return includesTerm(text, [
         'como funciona',
+        'como funciona esta pantalla',
         'como se usa',
         'que hace',
         'para que sirve',
@@ -205,6 +206,7 @@ export const isComponentHelpQuestion = (value: string): boolean => {
         'ayuda',
         'help',
         'how does it work',
+        'how does this work',
         'how it works',
         'how do i use',
         'what does it do',
@@ -880,6 +882,33 @@ const getComponentHelpTargetId = (
     if (input.quickActionId) return input.quickActionId;
 
     const activeRoute = normalizeAssistantGuideText(input.activeRoute || '');
+    if (activeRoute.includes('ai studio')) return 'create_website';
+    if (activeRoute.includes('editor')) return 'open_website_builder';
+    if (activeRoute.includes('websites')) return 'open_projects';
+    if (activeRoute.includes('templates')) return 'open_templates';
+    if (activeRoute.includes('cms')) return 'open_cms';
+    if (activeRoute.includes('navigation')) return 'open_navigation';
+    if (activeRoute.includes('domains')) return 'open_domains';
+    if (activeRoute.includes('seo')) return 'open_seo';
+    if (activeRoute.includes('blog hub')) return 'open_blog';
+    if (activeRoute.includes('agency')) return 'open_agency';
+    if (activeRoute.includes('ecommerce')) return 'open_ecommerce';
+    if (activeRoute.includes('email')) return 'create_email';
+    if (activeRoute.includes('appointments')) return 'create_appointment';
+    if (activeRoute.includes('restaurants') || activeRoute.includes('menu')) return 'open_restaurants';
+    if (activeRoute.includes('real estate') || activeRoute.includes('realty')) return 'open_realty';
+    if (activeRoute.includes('biopage')) return 'improve_bio_page';
+    if (activeRoute.includes('ai assistant')) return 'train_chatcore';
+    if (activeRoute.includes('leads')) return 'review_leads';
+    if (activeRoute.includes('finance')) return 'open_finance';
+    if (activeRoute.includes('analytics')) return 'analyze_project';
+    if (activeRoute.includes('assets')) {
+        return includesTerm(normalizeAssistantGuideText(request), ['video', 'reel', 'short'])
+            ? 'create_video'
+            : 'generate_hero_image';
+    }
+    if (activeRoute.includes('settings')) return 'open_settings';
+    if (activeRoute.includes('admin')) return 'review_platform_errors';
     if (activeRoute === 'dashboard' || activeRoute.includes('dashboard')) {
         return 'open_dashboard';
     }
@@ -964,6 +993,34 @@ export const resolveComponentHelpGuideResponse = (
         open_business_blueprint: {
             es: 'BusinessBlueprint muestra el plan del negocio y cómo se conectan los módulos del proyecto.',
             en: 'BusinessBlueprint shows the business plan and how the project modules connect.',
+        },
+        open_cms: {
+            es: 'CMS sirve para crear, revisar y organizar contenido del proyecto.',
+            en: 'CMS helps create, review, and organize project content.',
+        },
+        open_domains: {
+            es: 'Domains sirve para conectar y revisar dominios del proyecto.',
+            en: 'Domains helps connect and review project domains.',
+        },
+        open_navigation: {
+            es: 'Navigation sirve para organizar páginas, enlaces y menús del sitio.',
+            en: 'Navigation helps organize site pages, links, and menus.',
+        },
+        open_seo: {
+            es: 'SEO sirve para revisar títulos, descripciones y visibilidad del sitio.',
+            en: 'SEO helps review titles, descriptions, and site visibility.',
+        },
+        open_templates: {
+            es: 'Templates sirve para elegir o revisar plantillas de sitio.',
+            en: 'Templates helps choose or review website templates.',
+        },
+        open_blog: {
+            es: 'Blog sirve para revisar artículos, categorías y contenido publicado.',
+            en: 'Blog helps review articles, categories, and published content.',
+        },
+        open_agency: {
+            es: 'Agency sirve para revisar clientes, reportes, facturación y servicios de agencia.',
+            en: 'Agency helps review clients, reports, billing, and agency services.',
         },
         open_storefront: {
             es: 'Storefront sirve para revisar la tienda pública, productos, secciones y ajustes de venta.',

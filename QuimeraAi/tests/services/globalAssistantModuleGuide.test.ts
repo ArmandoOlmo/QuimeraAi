@@ -323,6 +323,60 @@ describe('globalAssistantModuleGuide', () => {
             targetId: 'open_finance',
             message: 'Finance sirve para revisar facturas, ingresos, gastos y estado financiero del proyecto.',
         });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: '¿Qué hago aquí?',
+            activeRoute: '/cms',
+            locale: 'es',
+        })).toMatchObject({
+            targetId: 'open_cms',
+            message: 'CMS sirve para crear, revisar y organizar contenido del proyecto.',
+        });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: 'What can I do here?',
+            activeRoute: '/domains',
+            locale: 'en',
+        })).toMatchObject({
+            targetId: 'open_domains',
+            message: 'Domains helps connect and review project domains.',
+        });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: '¿Cómo funciona?',
+            activeRoute: '/navigation',
+            locale: 'es',
+        })).toMatchObject({
+            targetId: 'open_navigation',
+            message: 'Navigation sirve para organizar páginas, enlaces y menús del sitio.',
+        });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: 'How does this work?',
+            activeRoute: '/templates',
+            locale: 'en',
+        })).toMatchObject({
+            targetId: 'open_templates',
+            message: 'Templates helps choose or review website templates.',
+        });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: '¿Qué puedo hacer aquí?',
+            activeRoute: '/blog-hub',
+            locale: 'es',
+        })).toMatchObject({
+            targetId: 'open_blog',
+            message: 'Blog sirve para revisar artículos, categorías y contenido publicado.',
+        });
+
+        expect(resolveComponentHelpGuideResponse({
+            request: 'What can I do here?',
+            activeRoute: '/agency/reports',
+            locale: 'en',
+        })).toMatchObject({
+            targetId: 'open_agency',
+            message: 'Agency helps review clients, reports, billing, and agency services.',
+        });
     });
 
     it('covers Restaurants and Realty contextual help', () => {

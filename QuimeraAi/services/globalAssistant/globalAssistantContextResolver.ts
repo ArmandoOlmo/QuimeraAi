@@ -52,8 +52,13 @@ export function resolveModuleFromRoute(route?: string | null): AssistantModuleTa
     const path = (route || '').toLowerCase();
     if (!path) return null;
     if (path.includes('/admin')) return 'admin';
+    if (path.includes('/ai-studio')) return 'aiStudio';
     if (path.includes('/editor')) return 'website';
     if (path.includes('/websites')) return 'project';
+    if (path.includes('/templates')) return 'project';
+    if (path.includes('/cms')) return 'website';
+    if (path.includes('/navigation')) return 'website';
+    if (path.includes('/domains')) return 'settings';
     if (path.includes('/ecommerce')) return 'ecommerce';
     if (path.includes('/email')) return 'emailMarketing';
     if (path.includes('/appointments')) return 'appointments';
@@ -65,6 +70,8 @@ export function resolveModuleFromRoute(route?: string | null): AssistantModuleTa
     if (path.includes('/finance')) return 'finance';
     if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/assets')) return 'media';
+    if (path.includes('/blog-hub')) return 'website';
+    if (path.includes('/agency')) return 'tenant';
     if (path.includes('/seo')) return 'website';
     if (path.includes('/settings')) return 'settings';
     return 'project';
