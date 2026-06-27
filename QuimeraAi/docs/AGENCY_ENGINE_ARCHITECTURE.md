@@ -29,6 +29,7 @@ Agency Engine access must pass through Service Access Engine.
 - Agency plans: `agency_starter`, `agency_pro`, `agency_scale`
 - Enterprise is not an agency plan by default
 - `agency_client` is a tenant type, not a subscription plan
+- Agency Reports generation and exports require Service Access module `agency-reports` with permission `canViewAnalytics`, even when the dashboard tab is already gated
 - Owner and superadmin are the only platform-unlimited roles
 - Commercial limits must be finite numbers; `-1`, `Infinity`, and null are invalid for plan limits
 
@@ -79,7 +80,7 @@ For agency client tenants, `type = agency_client` is never a subscription plan. 
 
 `onboarding-api` action `transferProject` is the server-side entry point for copying an agency-owned project into an agency client workspace. It requires `projectId`, `sourceTenantId`, and `targetClientTenantId`.
 
-Project transfer requires Service Access Engine module `agency-project-transfer` with permission `canManageProjects`. The target tenant must be linked to the agency through `owner_tenant_id` or `agency_clients`.
+Project transfer requires Service Access Engine module `agency-project-transfer` with permission `canManageProjects` in both the dashboard modal and `onboarding-api`. The target tenant must be linked to the agency through `owner_tenant_id` or `agency_clients`.
 
 Transferred projects are always copied as drafts. The transfer clears `published_data` and `published_at`, stamps `data.transferredFrom`, updates `businessBlueprint.projectId` and `businessBlueprint.tenantId` when present, copies project module activations when available, writes `agency_project_transfers`, and emits `agency_activity.type = project_transferred`.
 
@@ -111,6 +112,8 @@ Public branded links generated from Agency Billing are stored in `agency_client_
 
 `stripe-webhook` treats metadata `source = agency-engine` and `billingFlow = agency_client_payment_link` as agency client billing. It updates `agency_client_payment_links`, `agency_clients`, and `tenant.billing` while preserving `subscription_plan` as the client's finite effective Quimera plan. The agency service plan remains in `tenant.billing.agencyPlanId`; it is not written as `subscription_plan`.
 
+Agency Billing UI must not infer a configured card from temporary IDs or fake payment methods. When Stripe subscriptions provide `default_payment_method`, the webhook stores only a safe display summary in `tenant.billing.paymentMethodDetails` (`brand`, `last4`, expiry, type). Client Billing renders that summary, or an honest Stripe Billing/checkout pending state when card details are unavailable.
+
 ## Metrics And Reports
 
 Agency revenue and reports use `store_orders`, not legacy `orders`. Client revenue is aggregated through client projects by `project_id`.
@@ -125,7 +128,7 @@ Single-client reports can be shared into the white-label Client Portal by saving
 
 Agency Command Center and Client 360 consume the same `agency_activity.metadata.clientPortalVisible` and `portalPublicationStatus` fields to label report delivery as shared or published in the Client Portal, keeping agency operators, client timelines, and portal inbox state aligned.
 
-Client 360 report quick actions also pass `activeEntityType = agency_client`, `clientTenantId`, and `publishToClientPortal = true` into the Global Assistant Operating Layer. `buildExecutionPlan` pre-fills `create_agency_report` inputs from that context, so single-client Client 360 reports can be previewed, approved, saved, and delivered to the Client Portal through the same canonical action handler instead of relying on prompt text alone.
+Client 360 report quick actions also pass `activeEntityType = agency_client`, `clientTenantId`, and `publishToClientPortal = true` into the Global Assistant Operating Layer. `buildExecutionPlan` pre-fills `create_agency_report` inputs from that context, so single-client Client 360 reports can be previewed, approved, saved, and delivered to the Client Portal through the same canonical action handler instead of relying on prompt text alone. The preview must name `agency_reports.$pending`, `agency_activity.$pending`, `clientPortal.visible`, and `clientPortalDelivery = sent` before confirmation so operators can approve the portal-visible side effect explicitly.
 
 Store order reads intentionally use `select('*')` and normalize totals from `total_amount`, `total`, `amount_total`, `pricing`, and `data` fallbacks. This avoids breaking live Supabase environments where newer numeric columns may not be exposed through the current PostgREST schema cache.
 

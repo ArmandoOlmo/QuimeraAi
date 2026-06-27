@@ -124,6 +124,15 @@ export interface TenantBilling {
     checkoutStartedAt?: string;
     checkoutCompletedAt?: string;
     paymentLinkToken?: string;
+    paymentMethodDetails?: {
+        provider?: string | null;
+        type?: string | null;
+        brand?: string | null;
+        last4?: string | null;
+        expMonth?: number | null;
+        expYear?: number | null;
+    } | null;
+    paymentMethodSource?: string | null;
     agencyTenantId?: string;
     agencyPlanId?: string;
     agencyPlanName?: string;

@@ -18,6 +18,7 @@ describe('Portal client reports contract', () => {
     const client360Panel = read('components/dashboard/agency/Client360Panel.tsx');
     const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
     const actionRegistry = read('services/globalAssistant/globalAssistantActionRegistry.ts');
+    const actionPreviews = read('services/globalAssistant/globalAssistantActionPreviews.ts');
     const migration = read('supabase/migrations/20260627071535_canonical_agency_engine.sql');
     const activityMigration = read('supabase/migrations/20260627072955_client_portal_activity_access.sql');
     const docs = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
@@ -73,6 +74,17 @@ describe('Portal client reports contract', () => {
 
         expect(docs).toContain("agency_reports.status = 'sent'");
         expect(docs).toContain('Multi-client reports remain internal drafts');
+    });
+
+    it('previews report storage, activity audit, and Client Portal delivery before approval', () => {
+        expect(actionPreviews).toContain("if (action.actionType === 'create_agency_report')");
+        expect(actionPreviews).toContain("operation: 'create_agency_report_snapshot'");
+        expect(actionPreviews).toContain("table: 'agency_reports'");
+        expect(actionPreviews).toContain("activityTable: 'agency_activity'");
+        expect(actionPreviews).toContain("'agency_reports.$pending'");
+        expect(actionPreviews).toContain("'agency_activity.$pending'");
+        expect(actionPreviews).toContain("clientPortalDelivery: publishToClientPortal ? 'sent' : 'not_requested'");
+        expect(actionPreviews).toContain('Single-client report will be visible in the Client Portal');
     });
 
     it('keeps agency-side timelines aligned with portal report delivery metadata', () => {

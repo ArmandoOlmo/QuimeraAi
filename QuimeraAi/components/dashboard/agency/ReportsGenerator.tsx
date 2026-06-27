@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { reportingService } from '../../../services/reportingService';
 import { pdfReportGenerator } from '../../../services/pdfGenerator';
 import type {
@@ -136,6 +137,13 @@ export function ReportsGenerator() {
     const { subClients: clients } = useAgency();
     const { currentTenant } = useTenant();
     const { user } = useAuth();
+    const serviceAccess = useServiceAccess();
+    const reportAccess = serviceAccess.canAccessModule('agency-reports', {
+        serviceId: 'agency',
+        featureKey: 'agencyModule',
+        requiredPermission: 'canViewAnalytics',
+    });
+    const canUseAgencyReports = !serviceAccess.isLoading && reportAccess.allowed;
 
     // Form state
     const [step, setStep] = useState<Step>('configure');
@@ -216,6 +224,13 @@ export function ReportsGenerator() {
     };
 
     const handleGenerateReport = async () => {
+        if (!canUseAgencyReports) {
+            setError(serviceAccess.isLoading
+                ? t('dashboard.agency.reports.validatingAccess', 'Validando acceso a reportes de agencia')
+                : reportAccess.message);
+            return;
+        }
+
         if (effectiveSelectedClientIds.length === 0) {
             setError(t('dashboard.agency.reports.errors.selectClient', 'Selecciona al menos un cliente'));
             return;
@@ -255,6 +270,12 @@ export function ReportsGenerator() {
 
     const handleDownloadPDF = async () => {
         if (!reportData || !currentTenant) return;
+        if (!canUseAgencyReports) {
+            setError(serviceAccess.isLoading
+                ? t('dashboard.agency.reports.validatingAccess', 'Validando acceso a reportes de agencia')
+                : reportAccess.message);
+            return;
+        }
 
         setStep('generating');
         setError(null);
@@ -291,6 +312,12 @@ export function ReportsGenerator() {
 
     const handleExportCSV = () => {
         if (!reportData) return;
+        if (!canUseAgencyReports) {
+            setError(serviceAccess.isLoading
+                ? t('dashboard.agency.reports.validatingAccess', 'Validando acceso a reportes de agencia')
+                : reportAccess.message);
+            return;
+        }
 
         // Create CSV content
         const headers = [
@@ -673,7 +700,7 @@ export function ReportsGenerator() {
                         {/* Generate Button */}
                         <button
                             onClick={handleGenerateReport}
-                            disabled={effectiveSelectedClientIds.length === 0 || selectedMetrics.length === 0}
+                            disabled={!canUseAgencyReports || effectiveSelectedClientIds.length === 0 || selectedMetrics.length === 0}
                             className="quimera-guide-cta w-full px-6 py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg flex items-center justify-center gap-3"
                         >
                             <FileText className="h-5 w-5" />
@@ -830,14 +857,16 @@ export function ReportsGenerator() {
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={handleDownloadPDF}
-                            className="quimera-guide-cta flex-1 px-6 py-4 rounded-xl transition-all font-semibold flex items-center justify-center gap-3"
+                            disabled={!canUseAgencyReports}
+                            className="quimera-guide-cta flex-1 px-6 py-4 rounded-xl transition-all font-semibold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download className="h-5 w-5" />
                             {t('dashboard.agency.reports.downloadPDF', 'Descargar PDF')}
                         </button>
                         <button
                             onClick={handleExportCSV}
-                            className="flex-1 px-6 py-4 bg-q-success hover:bg-q-success text-white rounded-xl transition-colors font-semibold flex items-center justify-center gap-3"
+                            disabled={!canUseAgencyReports}
+                            className="flex-1 px-6 py-4 bg-q-success hover:bg-q-success text-white rounded-xl transition-colors font-semibold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <FileSpreadsheet className="h-5 w-5" />
                             {t('dashboard.agency.reports.exportCSV', 'Exportar CSV')}

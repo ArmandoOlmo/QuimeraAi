@@ -57,6 +57,9 @@ describe('Agency billing canonical contract', () => {
         expect(stripeWebhook).toContain('agency_client_payment_links');
         expect(stripeWebhook).toContain('effectivePlanId');
         expect(stripeWebhook).toContain('agencyPlanId');
+        expect(stripeWebhook).toContain('resolveAgencySubscriptionPaymentMethod');
+        expect(stripeWebhook).toContain('default_payment_method');
+        expect(stripeWebhook).toContain('paymentMethodDetails');
     });
 
     it('reconciles agency-managed client billing as Agency billing, not platform plan billing', () => {
@@ -69,6 +72,20 @@ describe('Agency billing canonical contract', () => {
         expect(stripeWebhook).toContain('agency_client_managed_billing');
         expect(stripeWebhook).toContain('billing_mode: billingMode');
         expect(stripeWebhook).toContain('mode: billingMode');
+    });
+
+    it('surfaces real Stripe payment method summaries instead of placeholder payment methods', () => {
+        expect(stripeWebhook).toContain('summarizeStripePaymentMethod');
+        expect(stripeWebhook).toContain('paymentMethod.card.last4');
+        expect(stripeWebhook).toContain('paymentMethod.card.brand');
+        expect(stripeWebhook).toContain('paymentMethodSource: params.paymentMethodDetails ? "stripe_subscription.default_payment_method"');
+
+        expect(clientBillingManager).toContain('formatPaymentMethodSummary');
+        expect(clientBillingManager).toContain('billing.paymentMethodDetails');
+        expect(clientBillingManager).toContain("return { label: `${cardBrand} **** ${last4}`, status: 'configured' }");
+        expect(clientBillingManager).toContain("return { label: 'Stripe Billing', status: 'configured' }");
+        expect(clientBillingManager).not.toContain('pm_card_visa');
+        expect(clientBillingManager).not.toContain("client.paymentMethod === 'checkout_pending' ? 'Checkout pendiente' : 'Configurado'");
     });
 
     it('resolves client billing context through canonical agency relationships', () => {

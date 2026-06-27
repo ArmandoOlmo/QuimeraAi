@@ -20,6 +20,7 @@ describe('Agency Client 360 contract', () => {
     const activityFeed = read('components/dashboard/agency/ClientActivityFeed.tsx');
     const globalAssistant = read('components/ui/GlobalAiAssistant.tsx');
     const executionEngine = read('services/globalAssistant/globalAssistantExecutionEngine.ts');
+    const actionPreviews = read('services/globalAssistant/globalAssistantActionPreviews.ts');
     const entryBridge = read('services/globalAssistant/globalAssistantEntryBridge.ts');
     const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
     const registry = read('registry/moduleRegistry.ts');
@@ -96,6 +97,11 @@ describe('Agency Client 360 contract', () => {
         expect(executionEngine).toContain('isAgencyClientEntityType(context.activeEntityType)');
         expect(executionEngine).toContain('actionInput.clientTenantId = clientTenantId');
         expect(executionEngine).toContain('actionInput.publishToClientPortal = publishToClientPortal');
+
+        expect(actionPreviews).toContain("if (action.actionType === 'create_agency_report')");
+        expect(actionPreviews).toContain("operation: 'create_agency_report_snapshot'");
+        expect(actionPreviews).toContain("activityTable: 'agency_activity'");
+        expect(actionPreviews).toContain("clientPortalDelivery: publishToClientPortal ? 'sent' : 'not_requested'");
     });
 
     it('surfaces Client Portal report delivery state in Client 360 and Command Center timelines', () => {

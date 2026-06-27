@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { Project } from '../../../types';
 import { Tenant } from '../../../types/multiTenant';
 import { toast } from 'react-hot-toast';
@@ -52,6 +53,13 @@ export function ProjectTransferModal({
     const { t } = useTranslation();
     const { subClients, loadingClients } = useAgency();
     const { currentTenant } = useTenant();
+    const serviceAccess = useServiceAccess();
+    const projectTransferAccess = serviceAccess.canAccessModule('agency-project-transfer', {
+        serviceId: 'agency',
+        featureKey: 'agencyModule',
+        requiredPermission: 'canManageProjects',
+    });
+    const canTransferProjects = !serviceAccess.isLoading && projectTransferAccess.allowed;
 
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [isTransferring, setIsTransferring] = useState(false);
@@ -66,6 +74,14 @@ export function ProjectTransferModal({
 
     const handleTransfer = async () => {
         if (!selectedClientId || !currentTenant) return;
+        if (!canTransferProjects) {
+            const message = serviceAccess.isLoading
+                ? t('agency.validatingProjectTransferAccess', 'Validando acceso a transferencias')
+                : projectTransferAccess.message;
+            setTransferResult({ success: false, message });
+            toast.error(message);
+            return;
+        }
 
         setIsTransferring(true);
         setTransferResult(null);
@@ -150,6 +166,17 @@ export function ProjectTransferModal({
                 {/* Body */}
                 <div className={`${agencyModalBodyClass} p-6`}>
                     {/* Transfer Result */}
+                    {!serviceAccess.isLoading && !projectTransferAccess.allowed && (
+                        <div className="mb-6 rounded-xl border border-q-error/30 bg-q-error/10 p-4 text-q-error">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle size={18} />
+                                <span className="text-sm font-medium">
+                                    {projectTransferAccess.message}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     {transferResult && (
                         <div className={`mb-6 p-4 rounded-xl border ${transferResult.success
                                 ? 'bg-q-success/10 border-q-success/30 text-q-success'
@@ -211,11 +238,11 @@ export function ProjectTransferModal({
                                     <button
                                         key={client.id}
                                         onClick={() => !transferResult?.success && setSelectedClientId(client.id)}
-                                        disabled={isTransferring || transferResult?.success}
+                                        disabled={!canTransferProjects || isTransferring || transferResult?.success}
                                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${selectedClientId === client.id
                                                 ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
                                                 : 'border-q-border/50 hover:border-q-border hover:bg-secondary/30'
-                                            } ${(isTransferring || transferResult?.success) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                            } ${(!canTransferProjects || isTransferring || transferResult?.success) ? 'opacity-60 cursor-not-allowed' : ''}`}
                                     >
                                         <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${selectedClientId === client.id
                                                 ? 'bg-primary/20 text-primary'
@@ -265,7 +292,7 @@ export function ProjectTransferModal({
                     {!transferResult?.success && (
                         <button
                             onClick={handleTransfer}
-                            disabled={!selectedClientId || isTransferring}
+                            disabled={!canTransferProjects || !selectedClientId || isTransferring}
                             className="flex items-center gap-2 px-5 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isTransferring ? (

@@ -326,6 +326,26 @@ describe('GlobalAssistantActionRegistry', () => {
             clientTenantId: 'client-tenant-1',
             publishToClientPortal: true,
         });
+        expect(plan.previews[0].after).toMatchObject({
+            operation: 'create_agency_report_snapshot',
+            table: 'agency_reports',
+            activityTable: 'agency_activity',
+            status: 'sent',
+            clientTenantId: 'client-tenant-1',
+            clientPortal: {
+                publishRequested: true,
+                visible: true,
+                status: 'sent',
+                requiresSingleClient: true,
+            },
+        });
+        expect(plan.previews[0].diff).toMatchObject({
+            created: ['agency_reports.$pending', 'agency_activity.$pending'],
+            createdLabel: 'agency report shared with Client Portal',
+            reviewRequired: true,
+            clientPortalDelivery: 'sent',
+            rollback: 'delete_created_report_and_activity',
+        });
     });
 
     it('blocks actions when required services or feature flags are unavailable', () => {

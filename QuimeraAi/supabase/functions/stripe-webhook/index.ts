@@ -252,6 +252,42 @@ function resolveAgencyClientBillingMode(billingFlow?: string | null, paymentLink
   return "agency_managed";
 }
 
+function summarizeStripePaymentMethod(paymentMethod?: Stripe.PaymentMethod | null) {
+  if (!paymentMethod) return null;
+  if (paymentMethod.type === "card" && paymentMethod.card) {
+    return {
+      provider: "stripe",
+      type: "card",
+      brand: paymentMethod.card.brand || null,
+      last4: paymentMethod.card.last4 || null,
+      expMonth: paymentMethod.card.exp_month || null,
+      expYear: paymentMethod.card.exp_year || null,
+    };
+  }
+
+  return {
+    provider: "stripe",
+    type: paymentMethod.type,
+  };
+}
+
+async function resolveAgencySubscriptionPaymentMethod(subscription: Stripe.Subscription) {
+  const defaultPaymentMethod = subscription.default_payment_method;
+  if (!defaultPaymentMethod) return null;
+
+  if (typeof defaultPaymentMethod !== "string") {
+    return summarizeStripePaymentMethod(defaultPaymentMethod as Stripe.PaymentMethod);
+  }
+
+  try {
+    const paymentMethod = await stripe.paymentMethods.retrieve(defaultPaymentMethod);
+    return summarizeStripePaymentMethod(paymentMethod);
+  } catch (error: any) {
+    console.warn("[stripe-webhook] could not retrieve agency subscription payment method", defaultPaymentMethod, error.message);
+    return null;
+  }
+}
+
 async function handleAgencyClientCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const subscription = session.subscription
     ? await stripe.subscriptions.retrieve(String(session.subscription))
@@ -414,6 +450,8 @@ async function syncAgencyClientSubscription(
     return;
   }
 
+  const paymentMethodDetails = await resolveAgencySubscriptionPaymentMethod(subscription);
+
   await markAgencyPaymentLinkCompleted({
     tenantId,
     agencyTenantId: metadata.agencyTenantId,
@@ -428,6 +466,7 @@ async function syncAgencyClientSubscription(
     stripeCustomerId: String(subscription.customer),
     stripeCheckoutSessionId: options.checkoutSessionId || null,
     stripeSubscriptionId: subscription.id,
+    paymentMethodDetails,
     status: options.deleted
       ? "cancelled"
       : subscription.status === "trialing"
@@ -448,6 +487,7 @@ async function markAgencyPaymentLinkCompleted(params: {
   stripeCustomerId?: string | null;
   stripeCheckoutSessionId?: string | null;
   stripeSubscriptionId?: string | null;
+  paymentMethodDetails?: Record<string, unknown> | null;
   status?: string | null;
   currentPeriodEnd?: string | null;
 }) {
@@ -476,6 +516,9 @@ async function markAgencyPaymentLinkCompleted(params: {
     stripeCustomerId: params.stripeCustomerId || tenant.billing?.stripeCustomerId || null,
     stripeCheckoutSessionId: params.stripeCheckoutSessionId || tenant.billing?.stripeCheckoutSessionId || null,
     stripeSubscriptionId: params.stripeSubscriptionId || tenant.billing?.stripeSubscriptionId || null,
+    paymentMethod: params.paymentMethodDetails?.type || tenant.billing?.paymentMethod || null,
+    paymentMethodDetails: params.paymentMethodDetails || tenant.billing?.paymentMethodDetails || null,
+    paymentMethodSource: params.paymentMethodDetails ? "stripe_subscription.default_payment_method" : tenant.billing?.paymentMethodSource || null,
     currentPeriodEnd: params.currentPeriodEnd || tenant.billing?.currentPeriodEnd || null,
     nextBillingDate: params.currentPeriodEnd || tenant.billing?.nextBillingDate || null,
     checkoutCompletedAt: status === "cancelled" ? tenant.billing?.checkoutCompletedAt || null : new Date().toISOString(),

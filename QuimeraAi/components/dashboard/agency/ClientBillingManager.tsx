@@ -40,6 +40,7 @@ interface ClientBillingInfo {
     monthlyPrice?: number;
     status?: string;
     paymentMethod?: string;
+    paymentMethodStatus?: 'configured' | 'checkout_pending';
     nextBillingDate?: Date;
     subscriptionId?: string;
     agencyPlanId?: string;
@@ -106,23 +107,53 @@ export function ClientBillingManager() {
         return undefined;
     };
 
+    const formatPaymentMethodSummary = (billing: Record<string, any>): { label?: string; status?: ClientBillingInfo['paymentMethodStatus'] } => {
+        const details = billing.paymentMethodDetails && typeof billing.paymentMethodDetails === 'object'
+            ? billing.paymentMethodDetails
+            : null;
+        const type = typeof details?.type === 'string' ? details.type : '';
+        const brand = typeof details?.brand === 'string' ? details.brand : '';
+        const last4 = typeof details?.last4 === 'string' ? details.last4 : '';
+
+        if (type === 'card' && last4) {
+            const cardBrand = brand ? `${brand.charAt(0).toUpperCase()}${brand.slice(1)}` : 'Card';
+            return { label: `${cardBrand} **** ${last4}`, status: 'configured' };
+        }
+
+        if (type) {
+            return { label: `${type.replaceAll('_', ' ')} via Stripe`, status: 'configured' };
+        }
+
+        if (billing.stripeCheckoutSessionId && !billing.stripeSubscriptionId) {
+            return { label: 'Checkout pendiente', status: 'checkout_pending' };
+        }
+
+        if (billing.stripeSubscriptionId) {
+            return { label: 'Stripe Billing', status: 'configured' };
+        }
+
+        return {};
+    };
+
     const loadClientsBilling = () => {
-        const billingInfo: ClientBillingInfo[] = subClients.map((client) => ({
-            clientId: client.id,
-            clientName: client.name,
-            monthlyPrice: client.billing?.monthlyPrice,
-            status: (client.billing as any)?.status,
-            paymentMethod: client.billing?.stripeSubscriptionId
-                ? 'configured'
-                : client.billing?.stripeCheckoutSessionId
-                    ? 'checkout_pending'
-                    : undefined,
-            nextBillingDate: parseBillingDate(client.billing?.nextBillingDate || client.billing?.currentPeriodEnd),
-            subscriptionId: client.billing?.stripeSubscriptionId || client.billing?.stripeCheckoutSessionId,
-            agencyPlanId: (client as any).agencyPlanId || client.billing?.agencyPlanId,
-            agencyPlanName: (client as any).agencyPlanName || client.billing?.agencyPlanName,
-            limits: client.limits,
-        }));
+        const billingInfo: ClientBillingInfo[] = subClients.map((client) => {
+            const billing = (client.billing || {}) as Record<string, any>;
+            const paymentMethod = formatPaymentMethodSummary(billing);
+
+            return {
+                clientId: client.id,
+                clientName: client.name,
+                monthlyPrice: client.billing?.monthlyPrice,
+                status: (client.billing as any)?.status,
+                paymentMethod: paymentMethod.label,
+                paymentMethodStatus: paymentMethod.status,
+                nextBillingDate: parseBillingDate(client.billing?.nextBillingDate || client.billing?.currentPeriodEnd),
+                subscriptionId: client.billing?.stripeSubscriptionId || client.billing?.stripeCheckoutSessionId,
+                agencyPlanId: (client as any).agencyPlanId || client.billing?.agencyPlanId,
+                agencyPlanName: (client as any).agencyPlanName || client.billing?.agencyPlanName,
+                limits: client.limits,
+            };
+        });
 
         setClientsBilling(billingInfo);
     };
@@ -523,8 +554,8 @@ export function ClientBillingManager() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {client.paymentMethod ? (
                                             <div className="flex items-center gap-2 text-sm text-foreground">
-                                                <CreditCard className="h-4 w-4" />
-                                                <span>{client.paymentMethod === 'checkout_pending' ? 'Checkout pendiente' : 'Configurado'}</span>
+                                                <CreditCard className={client.paymentMethodStatus === 'checkout_pending' ? 'h-4 w-4 text-q-accent' : 'h-4 w-4 text-primary'} />
+                                                <span>{client.paymentMethod}</span>
                                             </div>
                                         ) : (
                                             <span className="text-sm text-q-text-muted">Sin configurar</span>

@@ -1153,6 +1153,64 @@ export function enrichAssistantExecutionPreview(
         };
     }
 
+    if (action.actionType === 'create_agency_report') {
+        const clientTenantId = asText(action.input.clientTenantId);
+        const publishToClientPortal = action.input.publishToClientPortal === true && Boolean(clientTenantId);
+        const reportType = asText(action.input.reportType) || 'executive_summary';
+        const periodStart = asText(action.input.periodStart);
+        const periodEnd = asText(action.input.periodEnd);
+        const reportStatus = publishToClientPortal ? 'sent' : 'draft';
+
+        return {
+            ...preview,
+            before: {
+                exists: false,
+                table: 'agency_reports',
+                clientTenantId: clientTenantId || null,
+            },
+            after: {
+                operation: 'create_agency_report_snapshot',
+                table: 'agency_reports',
+                activityTable: 'agency_activity',
+                reportType,
+                periodStart: periodStart || undefined,
+                periodEnd: periodEnd || undefined,
+                status: reportStatus,
+                clientTenantId: clientTenantId || null,
+                clientPortal: {
+                    publishRequested: action.input.publishToClientPortal === true,
+                    visible: publishToClientPortal,
+                    status: publishToClientPortal ? 'sent' : 'draft',
+                    requiresSingleClient: true,
+                },
+                sourceModule: 'global-assistant',
+                sourceComponent: 'OperatingLayer',
+                sourceEntityType: 'assistant_action',
+                sourceEntityId: action.id,
+            },
+            diff: {
+                created: [
+                    'agency_reports.$pending',
+                    'agency_activity.$pending',
+                ],
+                createdLabel: publishToClientPortal
+                    ? 'agency report shared with Client Portal'
+                    : 'agency report draft',
+                reviewRequired: true,
+                clientPortalDelivery: publishToClientPortal ? 'sent' : 'not_requested',
+                rollback: definition.rollbackSupported ? 'delete_created_report_and_activity' : 'not_available',
+            },
+            risks: [
+                ...preview.risks,
+                'Creates a canonical agency_reports row and an agency_activity audit entry after confirmation.',
+                publishToClientPortal
+                    ? 'Single-client report will be visible in the Client Portal with sent status after approval.'
+                    : 'Report remains an internal draft unless a single client and Client Portal delivery are selected.',
+                ...(definition.rollbackSupported ? ['Rollback removes the report row and matching activity audit entry.'] : []),
+            ],
+        };
+    }
+
     if (action.actionType === 'create_agency_client') {
         const businessName = compactRequestTitle(action.input.businessName, 'Agency client');
         const selectedPlanId = asText(action.input.selectedPlanId) || 'default_agency_service_plan';

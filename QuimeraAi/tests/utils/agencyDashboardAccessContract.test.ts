@@ -10,6 +10,8 @@ describe('Agency dashboard Service Access contract', () => {
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
     const sidebar = read('components/dashboard/DashboardSidebar.tsx');
     const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
+    const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
+    const projectTransferModal = read('components/dashboard/agency/ProjectTransferModal.tsx');
     const routes = read('routes/config.ts');
     const registry = read('registry/moduleRegistry.ts');
     const manifest = getAgencyEngineOperatingSystemManifest();
@@ -109,6 +111,32 @@ describe('Agency dashboard Service Access contract', () => {
             expect(routes).toContain(`moduleId: '${moduleId}'`);
             expect(routes).toContain(`requiredPermission: '${permission}'`);
         }
+    });
+
+    it('guards Agency Reports actions through Service Access Engine inside the report generator', () => {
+        expect(reportsGenerator).toContain("import { useServiceAccess }");
+        expect(reportsGenerator).toContain("serviceAccess.canAccessModule('agency-reports'");
+        expect(reportsGenerator).toContain("serviceId: 'agency'");
+        expect(reportsGenerator).toContain("featureKey: 'agencyModule'");
+        expect(reportsGenerator).toContain("requiredPermission: 'canViewAnalytics'");
+        expect(reportsGenerator).toContain('const canUseAgencyReports = !serviceAccess.isLoading && reportAccess.allowed');
+        expect(reportsGenerator).toContain('if (!canUseAgencyReports) {');
+        expect(reportsGenerator).toContain('reportAccess.message');
+        expect(reportsGenerator).toContain('disabled={!canUseAgencyReports || effectiveSelectedClientIds.length === 0 || selectedMetrics.length === 0}');
+        expect(reportsGenerator).toContain('disabled={!canUseAgencyReports}');
+    });
+
+    it('guards Project Transfer execution through Service Access Engine inside the modal', () => {
+        expect(projectTransferModal).toContain("import { useServiceAccess }");
+        expect(projectTransferModal).toContain("serviceAccess.canAccessModule('agency-project-transfer'");
+        expect(projectTransferModal).toContain("serviceId: 'agency'");
+        expect(projectTransferModal).toContain("featureKey: 'agencyModule'");
+        expect(projectTransferModal).toContain("requiredPermission: 'canManageProjects'");
+        expect(projectTransferModal).toContain('const canTransferProjects = !serviceAccess.isLoading && projectTransferAccess.allowed');
+        expect(projectTransferModal).toContain('if (!canTransferProjects) {');
+        expect(projectTransferModal).toContain('projectTransferAccess.message');
+        expect(projectTransferModal).toContain('disabled={!canTransferProjects || isTransferring || transferResult?.success}');
+        expect(projectTransferModal).toContain('disabled={!canTransferProjects || !selectedClientId || isTransferring}');
     });
 
     it('centralizes Agency dashboard scrolling inside the content viewport', () => {
