@@ -56,9 +56,11 @@ import {
     isSpanishLocale,
     resolveComponentHelpGuideResponse,
     resolveDirectModuleGuideDecision,
+    formatMissingProjectGuideMessage,
     resolveGuideOnlyActionResponse,
     resolveGuideOnlyFallbackResponse,
     resolveProjectMentionFromRequest,
+    isProjectScopedGuideTarget,
 } from '../../services/globalAssistant/globalAssistantModuleGuide';
 import { globalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime';
 import type {
@@ -3729,6 +3731,18 @@ const GlobalAiAssistant: React.FC = () => {
             };
         }
 
+        const resolvedProjectId = navigationProject.projectId || activeProjectRef.current?.id || null;
+        if (isProjectScopedGuideTarget(decision.target) && !resolvedProjectId) {
+            setViewRef.current('websites');
+            navigateRef.current(ROUTES.WEBSITES);
+            return {
+                target: 'project_required',
+                message: formatMissingProjectGuideMessage(decision.target, request, i18n.language),
+                projectId: null,
+                projectName: null,
+            };
+        }
+
         if (decision.target === 'aiStudio') {
             openAIStudioFromAssistant(decision.prompt || '');
             return {
@@ -3744,7 +3758,7 @@ const GlobalAiAssistant: React.FC = () => {
                 mode: decision.target === 'video' ? 'video' : 'image',
                 prompt: decision.prompt,
                 autoStart: false,
-                projectId: navigationProject.projectId || activeProjectRef.current?.id || null,
+                projectId: resolvedProjectId,
                 source: 'global_assistant',
                 options: decision.options,
             });
@@ -3756,13 +3770,13 @@ const GlobalAiAssistant: React.FC = () => {
             return {
                 target: decision.target,
                 message: appendProjectGuideContext(decision.message, navigationProject.projectName),
-                projectId: navigationProject.projectId || null,
+                projectId: resolvedProjectId,
                 projectName: navigationProject.projectName || null,
             };
         }
 
         if (decision.target === 'websiteBuilder' || decision.target === 'businessBlueprint') {
-            const projectId = navigationProject.projectId || activeProjectRef.current?.id;
+            const projectId = resolvedProjectId;
             if (projectId) {
                 setViewRef.current('editor');
                 navigateToEditorRef.current(projectId);
@@ -3808,7 +3822,7 @@ const GlobalAiAssistant: React.FC = () => {
         return {
             target: decision.target,
             message: appendProjectGuideContext(decision.message, navigationProject.projectName),
-            projectId: navigationProject.projectId || null,
+            projectId: resolvedProjectId,
             projectName: navigationProject.projectName || null,
         };
     };

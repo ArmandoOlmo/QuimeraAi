@@ -414,6 +414,9 @@ describe('globalAssistantEntryBridge', () => {
         expect(assistantSource).toContain('const maybeHandleDirectModuleNavigation = async');
         expect(assistantSource).toContain('await maybeHandleDirectModuleNavigation(userMsg, operatingLayerEntry)');
         expect(assistantSource).toContain('resolveDirectModuleGuideDecision');
+        expect(assistantSource).toContain('isProjectScopedGuideTarget(decision.target)');
+        expect(assistantSource).toContain('formatMissingProjectGuideMessage(decision.target, request, i18n.language)');
+        expect(assistantSource).toContain("target: 'project_required'");
         expect(assistantSource).toContain('resolveProjectMentionFromRequest');
         expect(assistantSource).toContain('loadProjectRef.current(resolution.projectId, false, false)');
         expect(assistantSource).toContain("target: 'project_resolution'");

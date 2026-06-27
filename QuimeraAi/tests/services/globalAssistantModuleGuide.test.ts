@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+    formatMissingProjectGuideMessage,
+    isProjectScopedGuideTarget,
     resolveComponentHelpGuideResponse,
     resolveDirectModuleGuideDecision,
     resolveGuideOnlyActionResponse,
@@ -447,6 +449,20 @@ describe('globalAssistantModuleGuide', () => {
         })).toEqual({
             message: 'I did not make changes. I can open the right area and explain what to do there. Tell me which area you want to use.',
         });
+    });
+
+    it('asks for a project before project-scoped module handoffs', () => {
+        expect(isProjectScopedGuideTarget('ecommerce')).toBe(true);
+        expect(isProjectScopedGuideTarget('image')).toBe(true);
+        expect(isProjectScopedGuideTarget('aiStudio')).toBe(false);
+        expect(isProjectScopedGuideTarget('settings')).toBe(false);
+
+        expect(formatMissingProjectGuideMessage('ecommerce', 'Abre Ecommerce', 'es')).toBe(
+            'Primero elige un proyecto. Abrí Websites para que selecciones uno; después puedo llevarte a Ecommerce.',
+        );
+        expect(formatMissingProjectGuideMessage('image', 'Open Images', 'en')).toBe(
+            'Choose a project first. I opened Websites so you can select one; then I can take you to Images.',
+        );
     });
 
     it('matches a named project before direct module navigation', () => {

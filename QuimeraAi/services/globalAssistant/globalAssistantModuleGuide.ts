@@ -115,6 +115,66 @@ const userTextLooksSpanish = (value: string): boolean => {
 export const shouldAnswerInSpanish = (value: string, locale?: string | null): boolean =>
     userTextLooksSpanish(value) || isSpanishLocale(locale);
 
+const PROJECT_SCOPED_GUIDE_TARGETS = new Set<GlobalAssistantGuideTarget>([
+    'businessBlueprint',
+    'media',
+    'image',
+    'video',
+    'leads',
+    'email',
+    'storefront',
+    'ecommerce',
+    'chatcore',
+    'appointments',
+    'bioPage',
+    'analytics',
+    'websiteBuilder',
+    'finance',
+    'restaurants',
+    'realEstate',
+]);
+
+export const isProjectScopedGuideTarget = (target: GlobalAssistantGuideTarget): boolean =>
+    PROJECT_SCOPED_GUIDE_TARGETS.has(target);
+
+const formatGuideTargetName = (target: GlobalAssistantGuideTarget): string => {
+    const names: Record<GlobalAssistantGuideTarget, string> = {
+        aiStudio: 'AI Studio',
+        businessBlueprint: 'BusinessBlueprint',
+        media: 'Media AI',
+        image: 'Images',
+        video: 'Videos',
+        leads: 'Leads',
+        email: 'Email',
+        storefront: 'Storefront',
+        ecommerce: 'Ecommerce',
+        chatcore: 'ChatCore',
+        appointments: 'Appointments',
+        bioPage: 'Bio Page',
+        analytics: 'Analytics',
+        ownerMode: 'Owner Mode',
+        websiteBuilder: 'Website Builder',
+        finance: 'Finance',
+        restaurants: 'Restaurants',
+        realEstate: 'Realty',
+        projects: 'Websites',
+        settings: 'Settings',
+        designSystem: 'Design',
+    };
+    return names[target];
+};
+
+export const formatMissingProjectGuideMessage = (
+    target: GlobalAssistantGuideTarget,
+    request: string,
+    locale?: string | null,
+): string => {
+    const targetName = formatGuideTargetName(target);
+    return shouldAnswerInSpanish(request, locale)
+        ? `Primero elige un proyecto. Abrí Websites para que selecciones uno; después puedo llevarte a ${targetName}.`
+        : `Choose a project first. I opened Websites so you can select one; then I can take you to ${targetName}.`;
+};
+
 const hasMediaCreationIntent = (text: string): boolean =>
     includesTerm(text, [
         'quiero',
