@@ -6,6 +6,7 @@ import {
     validateAgencyPlan,
     type AgencyPlan,
 } from '../../types/agencyPlans';
+import { isMissingCanonicalAgencyPlanTableError } from '../../services/agencyPlansService';
 
 const basePlan = {
     id: 'plan_test',
@@ -75,5 +76,22 @@ describe('Agency service plans', () => {
         expect(isFiniteAgencyLimit(-1)).toBe(false);
         expect(isFiniteAgencyLimit(Number.NaN)).toBe(false);
         expect(isFiniteAgencyLimit(Number.POSITIVE_INFINITY)).toBe(false);
+    });
+
+    it('does not treat canonical table permission failures as legacy-table fallback', () => {
+        expect(isMissingCanonicalAgencyPlanTableError({
+            code: 'PGRST205',
+            message: "Could not find the table 'public.agency_service_plans' in the schema cache",
+        })).toBe(true);
+
+        expect(isMissingCanonicalAgencyPlanTableError({
+            code: '42P01',
+            message: 'relation "public.agency_service_plans" does not exist',
+        })).toBe(true);
+
+        expect(isMissingCanonicalAgencyPlanTableError({
+            code: '42501',
+            message: 'permission denied for table agency_service_plans',
+        })).toBe(false);
     });
 });

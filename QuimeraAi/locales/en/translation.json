@@ -3797,6 +3797,8 @@
         "addAnotherClient": "Add Another Client",
         "addNewClient": "Add New Client",
         "completeOnboarding": "Complete the onboarding process to set up a new sub-client",
+        "checkingAccess": "Validating Agency access...",
+        "accessDenied": "You do not have access to create Agency clients.",
         "errorTitle": "Onboarding Error",
         "errorDescription": "A problem occurred during the setup process",
         "errorDetails": "Error Details:",

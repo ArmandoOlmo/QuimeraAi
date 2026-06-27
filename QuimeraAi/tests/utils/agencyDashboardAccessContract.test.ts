@@ -12,6 +12,7 @@ describe('Agency dashboard Service Access contract', () => {
     const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
     const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
     const projectTransferModal = read('components/dashboard/agency/ProjectTransferModal.tsx');
+    const onboardingWorkflow = read('components/dashboard/agency/OnboardingWorkflow.tsx');
     const routes = read('routes/config.ts');
     const registry = read('registry/moduleRegistry.ts');
     const manifest = getAgencyEngineOperatingSystemManifest();
@@ -137,6 +138,24 @@ describe('Agency dashboard Service Access contract', () => {
         expect(projectTransferModal).toContain('projectTransferAccess.message');
         expect(projectTransferModal).toContain('disabled={!canTransferProjects || isTransferring || transferResult?.success}');
         expect(projectTransferModal).toContain('disabled={!canTransferProjects || !selectedClientId || isTransferring}');
+    });
+
+    it('guards Agency client provisioning through Service Access Engine inside the onboarding workflow', () => {
+        expect(dashboard).toContain("import { OnboardingWorkflow } from './OnboardingWorkflow'");
+        expect(dashboard).toContain('<OnboardingWorkflow');
+        expect(dashboard).not.toContain("supabase.functions.invoke('onboarding-api'");
+        expect(dashboard).not.toContain("import { ClientIntakeForm } from './ClientIntakeForm'");
+
+        expect(onboardingWorkflow).toContain("import { useServiceAccess }");
+        expect(onboardingWorkflow).toContain("serviceAccess.canAccessModule('agency-client-provisioning'");
+        expect(onboardingWorkflow).toContain("serviceId: 'agency'");
+        expect(onboardingWorkflow).toContain("featureKey: 'agencyModule'");
+        expect(onboardingWorkflow).toContain("requiredPermission: 'canManageSettings'");
+        expect(onboardingWorkflow).toContain('const canProvisionAgencyClients = !serviceAccess.isLoading && clientProvisioningAccess.allowed');
+        expect(onboardingWorkflow).toContain('if (!canProvisionAgencyClients) {');
+        expect(onboardingWorkflow).toContain('disabled={!canProvisionAgencyClients}');
+        expect(onboardingWorkflow).toContain('disabledReason={provisioningDisabledReason}');
+        expect(onboardingWorkflow).toContain("supabase.functions.invoke('onboarding-api'");
     });
 
     it('centralizes Agency dashboard scrolling inside the content viewport', () => {

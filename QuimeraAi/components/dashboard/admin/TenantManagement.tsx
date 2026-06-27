@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin/AdminContext';
-import { Tenant, TenantStatus, TenantType, UserDocument } from '../../../types';
+import { Tenant, TenantStatus, TenantType, UserDocument, normalizeTenantSubscriptionPlanForType } from '../../../types';
 import DashboardSidebar from '../DashboardSidebar';
 import {
     Users, Trash2, Building2, User, Search, Filter,
@@ -24,6 +24,14 @@ import AppSelect from '../../ui/AppSelect';
 
 interface TenantManagementProps {
     onBack: () => void;
+}
+
+function normalizeAdminTenantSubscriptionPlan(type: TenantType, currentPlan: Tenant['subscriptionPlan']): Tenant['subscriptionPlan'] {
+    if (type === 'agency') {
+        return normalizeTenantSubscriptionPlanForType(type, isAgencyPlan(currentPlan) ? currentPlan : 'agency_starter') as Tenant['subscriptionPlan'];
+    }
+
+    return normalizeTenantSubscriptionPlanForType(type, isAgencyPlan(currentPlan) ? 'individual' : currentPlan) as Tenant['subscriptionPlan'];
 }
 
 const TenantManagement: React.FC<TenantManagementProps> = ({ onBack }) => {
@@ -886,9 +894,7 @@ const TenantDetailsModal: React.FC<{
                                                     setEditData(prev => ({
                                                         ...prev,
                                                         type: nextType,
-                                                        subscriptionPlan: nextType === 'agency'
-                                                            ? (isAgencyPlan(prev.subscriptionPlan) ? prev.subscriptionPlan : 'agency_starter')
-                                                            : (nextType === 'individual' && isAgencyPlan(prev.subscriptionPlan) ? 'individual' : prev.subscriptionPlan),
+                                                        subscriptionPlan: normalizeAdminTenantSubscriptionPlan(nextType, prev.subscriptionPlan),
                                                     }));
                                                 }}
                                                 className={selectClass}
@@ -942,9 +948,6 @@ const TenantDetailsModal: React.FC<{
                                                     <>
                                                         <option value="free">Free</option>
                                                         <option value="individual">Individual</option>
-                                                        {editData.type === 'agency_client' && isAgencyPlan(editData.subscriptionPlan) && (
-                                                            <option value={editData.subscriptionPlan}>{editData.subscriptionPlan.replaceAll('_', ' ')}</option>
-                                                        )}
                                                         <option value="enterprise">Enterprise</option>
                                                     </>
                                                 )}

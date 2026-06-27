@@ -464,8 +464,8 @@ export function normalizeTenantSubscriptionPlanForType(
         throw new Error('Los tenants de agencia requieren un plan canónico de Agency Engine: agency_starter, agency_pro o agency_scale');
     }
 
-    if (type === 'individual' && isAgencyPlan(normalizedPlan)) {
-        throw new Error('Los planes de Agency Engine no se asignan a tenants individuales');
+    if (type !== 'agency' && isAgencyPlan(normalizedPlan)) {
+        throw new Error('Los planes de Agency Engine no se asignan a tenants individuales ni agency_client; usa agencyPlanId para planes de servicio de Agencia');
     }
 
     return normalizedPlan;

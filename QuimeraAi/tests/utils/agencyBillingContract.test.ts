@@ -11,11 +11,13 @@ describe('Agency billing canonical contract', () => {
     const stripeWebhook = read('supabase/functions/stripe-webhook/index.ts');
     const checkoutPage = read('components/checkout/AgencyCheckoutPage.tsx');
     const tenantContext = read('contexts/tenant/TenantContext.tsx');
+    const adminContext = read('contexts/admin/AdminContext.tsx');
     const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
     const agencyPlansService = read('services/agencyPlansService.ts');
     const agencyPlanSelector = read('components/dashboard/agency/plans/AgencyPlanSelector.tsx');
     const clientBillingManager = read('components/dashboard/agency/ClientBillingManager.tsx');
     const addonsManager = read('components/dashboard/agency/AddonsManager.tsx');
+    const tenantManagement = read('components/dashboard/admin/TenantManagement.tsx');
 
     it('stores agency client payment links in a canonical Supabase table with RLS', () => {
         expect(migration).toContain('create or replace function public.quimera_can_manage_agency(p_agency_tenant_id text)');
@@ -116,6 +118,20 @@ describe('Agency billing canonical contract', () => {
         expect(tenantContext).toContain("onConflict: 'agency_tenant_id,client_tenant_id'");
     });
 
+    it('keeps Super Admin tenant edits from assigning Agency Engine plans to agency_client subscriptionPlan', () => {
+        expect(adminContext).toContain('function normalizeAdminTenantUpdatePlan');
+        expect(adminContext).toContain("type === 'agency'");
+        expect(adminContext).toContain("isAgencyPlan(plan) ? 'individual' : plan");
+        expect(adminContext).toContain('normalizedData.subscriptionPlan = normalizeAdminTenantUpdatePlan(nextType, nextPlan)');
+
+        expect(tenantManagement).toContain('normalizeTenantSubscriptionPlanForType');
+        expect(tenantManagement).toContain('function normalizeAdminTenantSubscriptionPlan');
+        expect(tenantManagement).toContain("type === 'agency'");
+        expect(tenantManagement).toContain("isAgencyPlan(currentPlan) ? 'individual' : currentPlan");
+        expect(tenantManagement).toContain('subscriptionPlan: normalizeAdminTenantSubscriptionPlan(nextType, prev.subscriptionPlan)');
+        expect(tenantManagement).not.toContain("editData.type === 'agency_client' && isAgencyPlan(editData.subscriptionPlan)");
+    });
+
     it('loads TenantContext sub-clients through canonical agency relationships with legacy fallback', () => {
         expect(tenantContext).toContain('async function fetchAgencyClientTenantRows(agencyTenantId: string)');
         expect(tenantContext).toContain(".from('agency_clients')");
@@ -140,6 +156,12 @@ describe('Agency billing canonical contract', () => {
     });
 
     it('assigns agency service plans without leaking them into platform subscription plans', () => {
+        expect(agencyPlansService).toContain('const AGENCY_PLANS_COLLECTION = \'agencyPlans\'');
+        expect(agencyPlansService).toContain('const AGENCY_SERVICE_PLANS_TABLE = \'agency_service_plans\'');
+        expect(agencyPlansService).toContain('export function isMissingCanonicalAgencyPlanTableError');
+        expect(agencyPlansService).toContain("code === '42P01' || code === 'PGRST205'");
+        expect(agencyPlansService).not.toContain("message.includes('agency_service_plans')");
+        expect(agencyPlansService).not.toContain("message.includes('agency_clients')");
         expect(agencyPlansService).toContain('function resolveAgencyClientEffectivePlanId');
         expect(agencyPlansService).toContain("if (rawPlanId === params.assignedAgencyPlanId) continue");
         expect(agencyPlansService).toContain("if (rawPlanId === 'agency_client') continue");

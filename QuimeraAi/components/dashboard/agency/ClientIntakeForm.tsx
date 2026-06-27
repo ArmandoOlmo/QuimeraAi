@@ -74,13 +74,15 @@ interface InitialUser {
 interface ClientIntakeFormProps {
   onSubmit: (data: ClientIntakeData) => Promise<void>;
   onCancel?: () => void;
+  disabled?: boolean;
+  disabledReason?: string | null;
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) {
+export function ClientIntakeForm({ onSubmit, onCancel, disabled = false, disabledReason }: ClientIntakeFormProps) {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
   const [currentStep, setCurrentStep] = useState(1);
@@ -775,6 +777,12 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
         </div>
       </div>
 
+      {disabled && disabledReason && (
+        <div className="mb-6 rounded-lg border border-q-warning/30 bg-q-warning/10 p-4 text-sm text-q-warning">
+          {disabledReason}
+        </div>
+      )}
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-q-surface rounded-lg shadow-sm p-8">
         {currentStep === 1 && renderStep1()}
@@ -798,7 +806,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 type="button"
                 onClick={handleBack}
                 className="px-6 py-2 text-q-text-muted hover:text-foreground"
-                disabled={isSubmitting}
+                disabled={isSubmitting || disabled}
               >
                 {t('dashboard.agency.newClientPage.back')}
               </button>
@@ -821,7 +829,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
                 type="button"
                 onClick={handleNext}
                 className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                disabled={isSubmitting}
+                disabled={isSubmitting || disabled}
               >
                 {t('dashboard.agency.newClientPage.next')}
               </button>
@@ -829,7 +837,7 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
               <button
                 type="submit"
                 className="px-8 py-2 bg-q-success text-white rounded-lg hover:bg-q-success disabled:opacity-50 flex items-center gap-2"
-                disabled={isSubmitting}
+                disabled={isSubmitting || disabled}
               >
                 {isSubmitting ? (
                   <>

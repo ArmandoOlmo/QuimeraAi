@@ -260,7 +260,9 @@ describe('Service Access Engine', () => {
         expect(() => normalizeTenantSubscriptionPlanForType('agency', 'enterprise')).toThrow(/Agency Engine/);
         expect(() => normalizeTenantSubscriptionPlanForType('agency', 'individual')).toThrow(/Agency Engine/);
         expect(() => normalizeTenantSubscriptionPlanForType('individual', 'agency_pro')).toThrow(/individuales/);
-        expect(normalizeTenantSubscriptionPlanForType('agency_client', 'agency_pro')).toBe('agency_pro');
+        expect(normalizeTenantSubscriptionPlanForType('agency_client', 'individual')).toBe('individual');
+        expect(normalizeTenantSubscriptionPlanForType('agency_client', 'enterprise')).toBe('enterprise');
+        expect(() => normalizeTenantSubscriptionPlanForType('agency_client', 'agency_pro')).toThrow(/agencyPlanId/);
         expect(() => normalizeTenantSubscriptionPlanForType('agency', 'agency_client')).toThrow(/tipo de tenant/);
     });
 

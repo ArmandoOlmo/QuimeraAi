@@ -3788,6 +3788,8 @@
         "addAnotherClient": "Agregar Otro Cliente",
         "addNewClient": "Agregar Nuevo Cliente",
         "completeOnboarding": "Completa el proceso de onboarding para configurar un nuevo sub-cliente",
+        "checkingAccess": "Validando acceso de Agencia...",
+        "accessDenied": "No tienes acceso para crear clientes de Agencia.",
         "errorTitle": "Error en el Onboarding",
         "errorDescription": "Ocurrió un problema durante el proceso de configuración",
         "errorDetails": "Detalles del Error:",

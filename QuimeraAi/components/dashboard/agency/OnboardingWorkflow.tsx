@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ClientIntakeForm, type ClientIntakeData } from './ClientIntakeForm';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 
 // ============================================================================
 // TYPES
@@ -109,6 +110,16 @@ export function OnboardingWorkflow({
 }: OnboardingWorkflowProps) {
   const { t } = useTranslation();
   const { currentTenant } = useTenant();
+  const serviceAccess = useServiceAccess();
+  const clientProvisioningAccess = serviceAccess.canAccessModule('agency-client-provisioning', {
+    serviceId: 'agency',
+    featureKey: 'agencyModule',
+    requiredPermission: 'canManageSettings',
+  });
+  const canProvisionAgencyClients = !serviceAccess.isLoading && clientProvisioningAccess.allowed;
+  const provisioningDisabledReason = serviceAccess.isLoading
+    ? t('dashboard.agency.onboardingPage.checkingAccess', 'Validando acceso de Agencia...')
+    : clientProvisioningAccess.message || t('dashboard.agency.onboardingPage.accessDenied', 'No tienes acceso para crear clientes de Agencia.');
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('form');
   const [progress, setProgress] = useState<ProvisioningProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +149,12 @@ export function OnboardingWorkflow({
   };
 
   const handleFormSubmit = async (data: ClientIntakeData) => {
+    if (!canProvisionAgencyClients) {
+      setError(provisioningDisabledReason);
+      setCurrentStep('error');
+      return;
+    }
+
     setCurrentStep('provisioning');
     setError(null);
     setProgress([]);
@@ -287,7 +304,12 @@ export function OnboardingWorkflow({
   // ============================================================================
 
   const renderFormStep = () => (
-    <ClientIntakeForm onSubmit={handleFormSubmit} onCancel={onCancel} />
+    <ClientIntakeForm
+      onSubmit={handleFormSubmit}
+      onCancel={onCancel}
+      disabled={!canProvisionAgencyClients}
+      disabledReason={provisioningDisabledReason}
+    />
   );
 
   const renderProvisioningStep = () => (

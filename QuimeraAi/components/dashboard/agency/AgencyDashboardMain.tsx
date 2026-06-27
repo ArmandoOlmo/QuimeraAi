@@ -12,14 +12,13 @@ import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { ROUTES } from '../../../routes/config';
 import { getAgencyEngineOperatingSystemManifest, type AgencyEngineDashboardTabId } from '../../../registry/moduleRegistry';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
-import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { AgencyOverview } from './AgencyOverview';
 import { AgencyAnalytics } from './AgencyAnalytics';
 import { AgencyLandingEditor } from './landing';
 import { BillingSettings } from './BillingSettings';
 import { ReportsGenerator } from './ReportsGenerator';
-import { ClientIntakeForm } from './ClientIntakeForm';
+import { OnboardingWorkflow } from './OnboardingWorkflow';
 import { AddonsManager } from './AddonsManager';
 import { AgencyPlanManager } from './plans';
 import AgencyContentDashboard from './AgencyContentDashboard';
@@ -27,7 +26,6 @@ import AgencyNavigationManagement from './AgencyNavigationManagement';
 import { AgencyProjects } from './AgencyProjects';
 import { WhiteLabelSettings } from './WhiteLabelSettings';
 import { AgencyClientPortalSettings } from './AgencyClientPortalSettings';
-import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '@/components/ui/HeaderBackButton';
 import { AgencySectionHeader, agencyContentClass, agencyShellClass } from './AgencyDesignSystem';
@@ -82,7 +80,6 @@ const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
     const { loadingClients } = useAgency();
-    const { currentTenant } = useTenant();
     const serviceAccess = useServiceAccess();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -273,65 +270,8 @@ const AgencyDashboardMain: React.FC = () => {
                                                 title={t('agency.newClient', 'Nuevo Cliente')}
                                                 subtitle={t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
                                             />
-                                            <ClientIntakeForm
-                                                onSubmit={async (data) => {
-                                                    try {
-                                                        console.log('Creating client via Cloud Function:', data);
-
-                                                        const { supabase } = await import('@/supabase');
-                                                        if (!currentTenant?.id) {
-                                                            throw new Error('No hay agencia activa para crear el cliente.');
-                                                        }
-
-                                                        const result = await supabase.functions.invoke('onboarding-api', {
-                                                            body: {
-                                                                action: 'autoProvision',
-                                                                agencyTenantId: currentTenant.id,
-                                                                businessName: data.businessName,
-                                                                industry: data.industry,
-                                                                contactEmail: data.contactEmail,
-                                                                contactPhone: data.contactPhone,
-                                                                projectTemplate: data.projectTemplate,
-                                                                enabledFeatures: data.enabledFeatures,
-                                                                initialUsers: data.initialUsers,
-                                                                primaryColor: data.primaryColor,
-                                                                secondaryColor: data.secondaryColor,
-                                                                monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
-                                                                selectedPlanId: data.selectedPlanId,
-                                                                selectedPlanName: data.selectedPlanName,
-                                                                setupBilling: data.setupBilling,
-                                                                aiStudioMode: data.aiStudioMode,
-                                                                generateWebsite: data.generateWebsite,
-                                                                generateStorefront: data.generateStorefront,
-                                                                generateEcommerce: data.generateEcommerce,
-                                                                generateChatbot: data.generateChatbot,
-                                                                generateEmailFlows: data.generateEmailFlows,
-                                                                generateAppointments: data.generateAppointments,
-                                                                generateRestaurantModule: data.generateRestaurantModule,
-                                                                generateRealtyModule: data.generateRealtyModule,
-                                                                generateBioPage: data.generateBioPage,
-                                                                generateMediaAssets: data.generateMediaAssets,
-                                                            }
-                                                        });
-
-                                                        if (result.error) throw result.error;
-                                                        const response = result.data?.data || result.data;
-
-                                                        if (response.success) {
-                                                            toast.success(
-                                                                `Cliente "${data.businessName}" creado exitosamente. ${response.invitesSent} invitaciones enviadas.`
-                                                            );
-                                                        }
-
-                                                        handleTabChange('overview');
-                                                    } catch (error: any) {
-                                                        console.error('Error creating client:', error);
-                                                        toast.error(
-                                                            error.message || 'Error al crear el cliente'
-                                                        );
-                                                        throw error;
-                                                    }
-                                                }}
+                                            <OnboardingWorkflow
+                                                onComplete={() => handleTabChange('overview')}
                                                 onCancel={() => handleTabChange('overview')}
                                             />
                                         </div>

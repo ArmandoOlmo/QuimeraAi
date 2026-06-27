@@ -31,7 +31,7 @@ import { defaultPrompts } from '../../data/defaultPrompts';
 import { initialData } from '../../data/initialData';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
-import { getCanonicalPlanLimits } from '../../services/billing/planCatalog';
+import { getCanonicalPlanLimits, isAgencyPlan } from '../../services/billing/planCatalog';
 import { normalizeTenantSubscriptionPlanForType } from '../../types/multiTenant';
 
 // Build default component status
@@ -118,6 +118,14 @@ interface AdminContextType {
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
+
+function normalizeAdminTenantUpdatePlan(type: Tenant['type'], plan: Tenant['subscriptionPlan']): Tenant['subscriptionPlan'] {
+    if (type === 'agency') {
+        return normalizeTenantSubscriptionPlanForType(type, isAgencyPlan(plan) ? plan : 'agency_starter') as Tenant['subscriptionPlan'];
+    }
+
+    return normalizeTenantSubscriptionPlanForType(type, isAgencyPlan(plan) ? 'individual' : plan) as Tenant['subscriptionPlan'];
+}
 
 export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
@@ -487,7 +495,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const normalizedData = { ...data };
 
             if ((data.type !== undefined || data.subscriptionPlan !== undefined) && nextType && nextPlan) {
-                normalizedData.subscriptionPlan = normalizeTenantSubscriptionPlanForType(nextType, nextPlan) as Tenant['subscriptionPlan'];
+                normalizedData.subscriptionPlan = normalizeAdminTenantUpdatePlan(nextType, nextPlan);
             }
 
             if (data.type !== undefined) updateData.type = data.type;

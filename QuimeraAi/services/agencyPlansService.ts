@@ -94,14 +94,15 @@ function generatePlanId(): string {
     return result;
 }
 
-function isMissingCanonicalTable(error: unknown): boolean {
+export function isMissingCanonicalAgencyPlanTableError(error: unknown): boolean {
     const err = error as { code?: string; message?: string } | null;
+    const code = String(err?.code || '');
+    if (code === '42P01' || code === 'PGRST205') return true;
+
     const message = String(err?.message || '').toLowerCase();
-    return err?.code === '42P01' ||
-        err?.code === 'PGRST205' ||
-        message.includes('agency_service_plans') ||
-        message.includes('agency_clients') ||
-        message.includes('could not find the table');
+    return message.includes('could not find the table') ||
+        /relation ["']?(public\.)?(agency_service_plans|agency_clients)["']? does not exist/.test(message) ||
+        /table ["']?(public\.)?(agency_service_plans|agency_clients)["']? does not exist/.test(message);
 }
 
 function rowToAgencyPlan(row: any): AgencyPlan {
@@ -163,7 +164,7 @@ async function unsetOtherCanonicalDefaults(tenantId: string, excludePlanId: stri
         .eq('is_default', true)
         .neq('id', excludePlanId);
 
-    if (error && !isMissingCanonicalTable(error)) throw error;
+    if (error && !isMissingCanonicalAgencyPlanTableError(error)) throw error;
 }
 
 async function getCanonicalAgencyPlanById(planId: string): Promise<{ plan: AgencyPlan | null; tableAvailable: boolean }> {
@@ -174,7 +175,7 @@ async function getCanonicalAgencyPlanById(planId: string): Promise<{ plan: Agenc
         .maybeSingle();
 
     if (error) {
-        if (isMissingCanonicalTable(error)) return { plan: null, tableAvailable: false };
+        if (isMissingCanonicalAgencyPlanTableError(error)) return { plan: null, tableAvailable: false };
         throw error;
     }
 
@@ -216,7 +217,7 @@ async function getCanonicalClientRelationshipPlanId(agencyTenantId: string, clie
         .maybeSingle();
 
     if (error) {
-        if (isMissingCanonicalTable(error)) return null;
+        if (isMissingCanonicalAgencyPlanTableError(error)) return null;
         throw error;
     }
 
@@ -230,7 +231,7 @@ async function refreshCanonicalPlanClientCount(planId: string): Promise<boolean>
         .eq('agency_plan_id', planId);
 
     if (error) {
-        if (isMissingCanonicalTable(error)) return false;
+        if (isMissingCanonicalAgencyPlanTableError(error)) return false;
         throw error;
     }
 
@@ -240,7 +241,7 @@ async function refreshCanonicalPlanClientCount(planId: string): Promise<boolean>
         .eq('id', planId);
 
     if (updateError) {
-        if (isMissingCanonicalTable(updateError)) return false;
+        if (isMissingCanonicalAgencyPlanTableError(updateError)) return false;
         throw updateError;
     }
 
@@ -281,7 +282,7 @@ export async function getAgencyPlans(
             return includeArchived ? plans : plans.filter(p => !p.isArchived);
         }
 
-        if (error && !isMissingCanonicalTable(error)) {
+        if (error && !isMissingCanonicalAgencyPlanTableError(error)) {
             throw error;
         }
 
@@ -335,7 +336,7 @@ export async function getAgencyPlanById(planId: string): Promise<AgencyPlan | nu
             return rowToAgencyPlan(data);
         }
 
-        if (error && !isMissingCanonicalTable(error)) {
+        if (error && !isMissingCanonicalAgencyPlanTableError(error)) {
             throw error;
         }
 
@@ -378,7 +379,7 @@ export async function getDefaultAgencyPlan(tenantId: string): Promise<AgencyPlan
             return rowToAgencyPlan(data);
         }
 
-        if (error && !isMissingCanonicalTable(error)) {
+        if (error && !isMissingCanonicalAgencyPlanTableError(error)) {
             throw error;
         }
 
@@ -442,7 +443,7 @@ export async function saveAgencyPlan(
             return { success: true, planId };
         }
 
-        if (!isMissingCanonicalTable(upsertError)) {
+        if (!isMissingCanonicalAgencyPlanTableError(upsertError)) {
             throw upsertError;
         }
 
@@ -551,7 +552,7 @@ export async function archiveAgencyPlan(
                 return { success: true };
             }
 
-            if (!isMissingCanonicalTable(error)) throw error;
+            if (!isMissingCanonicalAgencyPlanTableError(error)) throw error;
         }
         if (tableAvailable && !canonicalPlan) {
             // Continue to legacy fallback: existing workspaces may still have agencyPlans only.
@@ -619,7 +620,7 @@ export async function restoreAgencyPlan(
                 return { success: true };
             }
 
-            if (!isMissingCanonicalTable(error)) throw error;
+            if (!isMissingCanonicalAgencyPlanTableError(error)) throw error;
         }
         if (tableAvailable && !canonicalPlan) {
             // Continue to legacy fallback.
@@ -676,7 +677,7 @@ export async function deleteAgencyPlan(planId: string): Promise<{ success: boole
                 return { success: true };
             }
 
-            if (!isMissingCanonicalTable(error)) throw error;
+            if (!isMissingCanonicalAgencyPlanTableError(error)) throw error;
         }
         if (tableAvailable && !canonicalPlan) {
             // Continue to legacy fallback.
@@ -783,7 +784,7 @@ export async function assignPlanToClient(
                     updated_at: new Date().toISOString(),
                 }, { onConflict: 'agency_tenant_id,client_tenant_id' })
                 .then(({ error }) => {
-                    if (error && !isMissingCanonicalTable(error)) throw error;
+                    if (error && !isMissingCanonicalAgencyPlanTableError(error)) throw error;
                 });
 
             if (previousPlanId && previousPlanId !== planId) {
@@ -798,7 +799,7 @@ export async function assignPlanToClient(
             return { success: true };
         }
 
-        if (clientError && !isMissingCanonicalTable(clientError)) throw clientError;
+        if (clientError && !isMissingCanonicalAgencyPlanTableError(clientError)) throw clientError;
 
         // Legacy fallback.
         const clientDoc = await getDoc(doc(db, TENANTS_COLLECTION, clientTenantId));
@@ -875,7 +876,7 @@ export async function removePlanFromClient(
                 .limit(1)
                 .maybeSingle();
 
-            if (relationshipError && !isMissingCanonicalTable(relationshipError)) throw relationshipError;
+            if (relationshipError && !isMissingCanonicalAgencyPlanTableError(relationshipError)) throw relationshipError;
 
             const previousPlanId = relationshipRow?.agency_plan_id || clientRow.billing?.agencyPlanId || null;
             const billing = { ...(clientRow.billing || {}) };
@@ -894,12 +895,12 @@ export async function removePlanFromClient(
                 .update({ agency_plan_id: null, updated_at: new Date().toISOString() })
                 .eq('client_tenant_id', clientTenantId);
 
-            if (relationError && !isMissingCanonicalTable(relationError)) throw relationError;
+            if (relationError && !isMissingCanonicalAgencyPlanTableError(relationError)) throw relationError;
             if (previousPlanId) await decrementPlanClientCount(previousPlanId);
             return { success: true };
         }
 
-        if (clientError && !isMissingCanonicalTable(clientError)) throw clientError;
+        if (clientError && !isMissingCanonicalAgencyPlanTableError(clientError)) throw clientError;
 
         // Get the client tenant
         const clientDoc = await getDoc(doc(db, TENANTS_COLLECTION, clientTenantId));
@@ -1004,7 +1005,7 @@ export async function getClientsUsingPlan(planId: string): Promise<string[]> {
             return data.map(row => row.client_tenant_id).filter(Boolean);
         }
 
-        if (error && !isMissingCanonicalTable(error)) throw error;
+        if (error && !isMissingCanonicalAgencyPlanTableError(error)) throw error;
 
         const clientsQuery = query(
             collection(db, TENANTS_COLLECTION),
