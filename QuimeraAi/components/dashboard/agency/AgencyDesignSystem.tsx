@@ -78,7 +78,7 @@ export function AgencySectionHeader({
     className?: string;
 }) {
     return (
-        <div className={cn('flex flex-col gap-3 border-b border-divider pb-4 sm:flex-row sm:items-start sm:justify-between', className)}>
+        <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between', className)}>
             <div className="flex min-w-0 items-start gap-3">
                 {Icon && (
                     <AppIcon icon={Icon} size="lg" className="mt-0.5 quimera-dashboard-header-icon" strokeWidth={2} />
