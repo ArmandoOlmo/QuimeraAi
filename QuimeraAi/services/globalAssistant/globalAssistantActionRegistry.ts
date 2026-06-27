@@ -401,6 +401,15 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
         includeClients: booleanSchema('Whether to include a small Client 360 sample.'),
     }), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
+    action('agency', 'create_agency_report', 'Create a draft Agency Report with AI summary and Agency activity audit.', objectSchema({
+        tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
+        clientTenantId: stringSchema('Optional managed client tenant id for a client-specific report.'),
+        clientTenantIds: { type: 'array', items: stringSchema('Managed client tenant id.') },
+        reportType: stringSchema('Agency report type.', ['executive_summary', 'client_monthly', 'website_performance', 'ecommerce_performance', 'leads_crm', 'email_marketing', 'chatbot_performance', 'appointments', 'restaurant', 'real_estate', 'ai_usage']),
+        periodStart: stringSchema('Report period start date in YYYY-MM-DD format.'),
+        periodEnd: stringSchema('Report period end date in YYYY-MM-DD format.'),
+        includeClients: booleanSchema('Whether to include selected client snapshots in the report data.'),
+    }), 'medium', { requiredService: 'agency', requiredFeature: 'agencyModule' }),
 
     action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),

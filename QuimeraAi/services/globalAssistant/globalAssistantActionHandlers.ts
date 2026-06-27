@@ -465,6 +465,33 @@ const readAgencyTenantId = (
     return tenantId;
 };
 
+const dateOnlyFromIso = (value: string): string => value.slice(0, 10);
+
+const addDaysToDateOnly = (value: string, days: number): string => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    if (Number.isNaN(date.getTime())) return value;
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+};
+
+const normalizeAgencyReportType = (value: unknown): string => {
+    const allowed = new Set([
+        'executive_summary',
+        'client_monthly',
+        'website_performance',
+        'ecommerce_performance',
+        'leads_crm',
+        'email_marketing',
+        'chatbot_performance',
+        'appointments',
+        'restaurant',
+        'real_estate',
+        'ai_usage',
+    ]);
+    const reportType = readString(value) || 'executive_summary';
+    return allowed.has(reportType) ? reportType : 'executive_summary';
+};
+
 const createAgencyClient360NavigationHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
     validate: input => ({
         valid: Boolean(readString(input.clientTenantId)),
@@ -695,6 +722,144 @@ const createAgencyPerformanceSummaryHandler = (deps: GlobalAssistantActionHandle
                 reported: [`agency.performance.${agencyTenantId}`],
                 mutatesData: false,
                 sourceTables: snapshot.sourceTables,
+            },
+        };
+    },
+});
+
+const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const client = getClient(deps);
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const explicitClientIds = uniqueStringList([
+            readString(input.clientTenantId),
+            ...asArray(input.clientTenantIds).map(readString),
+        ].filter((id): id is string => Boolean(id)));
+        const selectedClientIds = explicitClientIds.length
+            ? explicitClientIds
+            : snapshot.clients.map(clientSnapshot => clientSnapshot.clientTenantId);
+        const managedClientIds = new Set(snapshot.clients.map(clientSnapshot => clientSnapshot.clientTenantId));
+        const unmanagedClientIds = selectedClientIds.filter(clientTenantId => !managedClientIds.has(clientTenantId));
+
+        if (unmanagedClientIds.length > 0) {
+            throw new Error('Agency reports can only include clients managed by the active agency tenant.');
+        }
+
+        const selectedClients = snapshot.clients.filter(clientSnapshot => selectedClientIds.includes(clientSnapshot.clientTenantId));
+        const reportType = normalizeAgencyReportType(input.reportType);
+        const now = getNow(deps);
+        const periodEnd = readDate(input.periodEnd, dateOnlyFromIso(now));
+        const periodStart = readDate(input.periodStart, addDaysToDateOnly(periodEnd, -30));
+        const totalMonthlyRevenue = selectedClients.reduce((sum, clientSnapshot) => sum + (readNumber(clientSnapshot.monthlyPrice) || 0), 0);
+        const totalProjects = selectedClients.reduce((sum, clientSnapshot) => sum + (readNumber(clientSnapshot.projectCount) || 0), 0);
+        const byBillingMode = selectedClients.reduce<Record<string, number>>((acc, clientSnapshot) => {
+            const key = readString(clientSnapshot.billingMode) || 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+        const byLifecycleStage = selectedClients.reduce<Record<string, number>>((acc, clientSnapshot) => {
+            const key = readString(clientSnapshot.lifecycleStage) || 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+        const reportData = {
+            source: 'global-assistant',
+            actionId: action.id,
+            taskId: action.taskId || null,
+            reportType,
+            period: { start: periodStart, end: periodEnd },
+            metrics: {
+                clientCount: selectedClients.length,
+                totalMonthlyRevenue,
+                totalProjects,
+                averageRevenuePerClient: selectedClients.length > 0 ? totalMonthlyRevenue / selectedClients.length : 0,
+                byBillingMode,
+                byLifecycleStage,
+            },
+            clients: readBoolean(input.includeClients) === false ? [] : selectedClients,
+            warnings: snapshot.warnings,
+            sourceTables: [...snapshot.sourceTables, 'agency_reports', 'agency_activity'],
+        };
+        const aiSummary = `Agency ${reportType.replace(/_/g, ' ')} report prepared for ${selectedClients.length} client${selectedClients.length === 1 ? '' : 's'} from ${periodStart} to ${periodEnd}.`;
+        const reportRow = await insertRow(client, 'agency_reports', {
+            agency_tenant_id: agencyTenantId,
+            client_tenant_id: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
+            report_type: reportType,
+            period_start: periodStart,
+            period_end: periodEnd,
+            data: reportData,
+            ai_summary: aiSummary,
+            status: 'draft',
+            generated_by: action.userId || context?.actor.userId || null,
+            created_at: now,
+        });
+        const reportId = readString(asRecord(reportRow).id);
+        const activityRow = await insertRow(client, 'agency_activity', {
+            agency_tenant_id: agencyTenantId,
+            client_tenant_id: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
+            type: 'report_generated',
+            title: 'Agency report generated',
+            description: aiSummary,
+            metadata: {
+                source: 'global-assistant',
+                actionId: action.id,
+                taskId: action.taskId || null,
+                reportId: reportId || null,
+                reportType,
+                selectedClientIds,
+                periodStart,
+                periodEnd,
+            },
+            created_by: action.userId || context?.actor.userId || null,
+            created_at: now,
+        });
+
+        return {
+            afterSnapshot: {
+                agencyTenantId,
+                report: reportRow,
+                activity: activityRow,
+                summary: reportData.metrics,
+                aiSummary,
+                status: 'draft',
+                sourceTables: reportData.sourceTables,
+            },
+            diff: {
+                reported: [`agency.report.${agencyTenantId}.${reportId || reportType}`],
+                inserted: {
+                    agency_reports: reportId || null,
+                    agency_activity: readString(asRecord(activityRow).id) || null,
+                },
+                selectedClientIds,
+                mutatesData: true,
+                sourceTables: reportData.sourceTables,
+            },
+        };
+    },
+    rollback: async (_input, { snapshot }) => {
+        const client = getClient(deps);
+        const after = asRecord(snapshot.afterSnapshot);
+        const reportId = readString(asRecord(after.report).id);
+        const activityId = readString(asRecord(after.activity).id);
+        const rolledBack = [
+            ...(activityId ? ['agency_activity'] : []),
+            ...(reportId ? ['agency_reports'] : []),
+        ];
+
+        if (activityId) await deleteRowById(client, 'agency_activity', activityId);
+        if (reportId) await deleteRowById(client, 'agency_reports', reportId);
+
+        return {
+            afterSnapshot: {
+                deleted: {
+                    agency_activity: activityId || null,
+                    agency_reports: reportId || null,
+                },
+            },
+            diff: {
+                rolledBack,
             },
         };
     },
@@ -6609,6 +6774,10 @@ const persistProjectSnapshotBeforeAssistantMutation = async (
     context: AssistantContextSnapshot | undefined,
     deps: GlobalAssistantActionHandlerDependencies,
 ): Promise<void> => {
+    if (definition.module === 'agency' && !readString(input.projectId) && !action.projectId) {
+        return;
+    }
+
     const projectId = resolveProjectIdForSnapshot(input, action, context);
     if (!projectId) return;
 
@@ -8440,6 +8609,7 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_agency_client_360: createAgencyClient360NavigationHandler,
     search_agency_clients: createSearchAgencyClientsHandler,
     summarize_agency_performance: createAgencyPerformanceSummaryHandler,
+    create_agency_report: createAgencyReportHandler,
     open_analytics_dashboard: () => createNavigationHandler('superadmin', { label: 'Open platform analytics.', adminView: 'analytics' }),
     open_super_admin: () => createNavigationHandler('superadmin', { label: 'Open Super Admin.' }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),

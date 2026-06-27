@@ -247,6 +247,13 @@ describe('globalAssistantIntentRouter', () => {
             actionCandidates: ['summarize_agency_performance'],
             requiresClarification: false,
         });
+
+        expect(routeAssistantIntent('Genera reporte mensual para mis clientes de agencia', agencyContext)).toMatchObject({
+            module: 'agency',
+            intent: 'report',
+            actionCandidates: ['create_agency_report'],
+            requiresClarification: false,
+        });
     });
 
     it('routes Website Builder edits to structured website actions', () => {

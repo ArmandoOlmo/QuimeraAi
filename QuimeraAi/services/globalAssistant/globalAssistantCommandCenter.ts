@@ -327,6 +327,7 @@ const ACTION_COPY: Record<string, { es: string; en: string }> = {
     open_agency_client_360: { es: 'abrir Client 360', en: 'open Client 360' },
     search_agency_clients: { es: 'buscar clientes de agencia', en: 'search agency clients' },
     summarize_agency_performance: { es: 'resumir performance de agencia', en: 'summarize agency performance' },
+    create_agency_report: { es: 'crear reporte de agencia', en: 'create agency report' },
     open_restaurants_dashboard: { es: 'abrir restaurantes', en: 'open restaurants' },
     open_realty_dashboard: { es: 'abrir Realty', en: 'open Realty' },
     open_analytics_dashboard: { es: 'abrir analytics', en: 'open analytics' },

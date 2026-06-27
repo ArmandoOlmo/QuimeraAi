@@ -5,7 +5,7 @@ describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
             enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate', 'crm', 'bioPage', 'agency'],
-            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule', 'websiteBuilder'],
+            enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule', 'websiteBuilder', 'agencyModule'],
         });
 
         const analytics = catalog.modules.find(module => module.module === 'analytics');
@@ -42,6 +42,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const openAgencyCommandCenter = catalog.actions.find(action => action.actionType === 'open_agency_command_center');
         const searchAgencyClients = catalog.actions.find(action => action.actionType === 'search_agency_clients');
         const summarizeAgencyPerformance = catalog.actions.find(action => action.actionType === 'summarize_agency_performance');
+        const createAgencyReport = catalog.actions.find(action => action.actionType === 'create_agency_report');
         const updateServiceAvailability = catalog.actions.find(action => action.actionType === 'update_service_availability');
         const updatePlan = catalog.actions.find(action => action.actionType === 'update_plan');
         const reviewErrors = catalog.actions.find(action => action.actionType === 'review_errors');
@@ -175,6 +176,7 @@ describe('globalAssistantCapabilityCatalog', () => {
             'open_agency_client_360',
             'search_agency_clients',
             'summarize_agency_performance',
+            'create_agency_report',
         ]));
         expect(agency?.serviceIds).toEqual(['agency']);
         expect(createEmail).toMatchObject({
@@ -269,6 +271,16 @@ describe('globalAssistantCapabilityCatalog', () => {
             requiresConfirmation: true,
             rollbackExecutable: true,
             requiredService: 'chatbot',
+        });
+        expect(createAgencyReport).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            mutatesData: true,
+            previewSupported: true,
+            rollbackSupported: true,
+            rollbackExecutable: true,
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
         });
         expect(deployChatbot).toMatchObject({
             executable: true,

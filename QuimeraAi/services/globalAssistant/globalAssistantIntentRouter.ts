@@ -425,7 +425,8 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             return ['open_agency_command_center'];
         }
         if (intent === 'search') return ['search_agency_clients'];
-        if (['analyze', 'report', 'explain'].includes(intent)) return ['summarize_agency_performance'];
+        if (intent === 'report') return ['create_agency_report'];
+        if (['analyze', 'explain'].includes(intent)) return ['summarize_agency_performance'];
         if (includesAny(text, ['clientes', 'clients', 'client', 'cliente'])) return ['search_agency_clients'];
         return ['summarize_agency_performance'];
     }
@@ -579,7 +580,7 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             open: ['open_agency_command_center'],
             search: ['search_agency_clients'],
             analyze: ['summarize_agency_performance'],
-            report: ['summarize_agency_performance'],
+            report: ['create_agency_report'],
             explain: ['summarize_agency_performance'],
         },
     };

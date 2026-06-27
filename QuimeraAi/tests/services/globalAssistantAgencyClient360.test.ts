@@ -157,6 +157,23 @@ const buildAgencyClient360Action = (input: Row): AssistantAction => ({
     updatedAt: '2026-06-26T13:00:00.000Z',
 });
 
+const buildAgencyReportAction = (input: Row): AssistantAction => ({
+    id: 'action-create-agency-report',
+    taskId: 'task-agency-report',
+    actionType: 'create_agency_report',
+    module: 'agency',
+    target: { module: 'agency' },
+    input,
+    projectId: null,
+    tenantId: 'agency-1',
+    userId: 'user-1',
+    mode: 'owner',
+    requiresConfirmation: false,
+    status: 'previewed',
+    createdAt: '2026-06-26T13:00:00.000Z',
+    updatedAt: '2026-06-26T13:00:00.000Z',
+});
+
 describe('Global Assistant Agency Client 360 handler', () => {
     it('opens Client 360 with a canonical managed-client snapshot', async () => {
         const { fakeSupabase, registry, context } = buildAgencyRuntime();
@@ -257,5 +274,151 @@ describe('Global Assistant Agency Client 360 handler', () => {
             action: buildAgencyClient360Action(input),
             context,
         })).rejects.toThrow('Agency Client 360 can only open clients managed by the active agency tenant.');
+    });
+
+    it('creates a draft agency report and activity event from managed clients', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+            billing_mode: 'agency_managed',
+            onboarding_status: 'active',
+            lifecycle_stage: 'operating',
+            updated_at: '2026-06-26T14:00:00.000Z',
+        }];
+        fakeSupabase.rowsByTable.agency_service_plans = [{
+            id: 'plan-growth',
+            tenant_id: 'agency-1',
+            name: 'Growth Ops',
+            price: 240,
+            base_cost: 29,
+            is_active: true,
+            is_archived: false,
+            client_count: 1,
+        }];
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'client-1',
+            name: 'Client One',
+            email: 'client@example.test',
+            type: 'agency_client',
+            billing: { agencyPlanId: 'plan-growth', monthlyPrice: 260, mode: 'agency_managed' },
+            subscription_plan: 'individual',
+            usage: { projectCount: 3 },
+            updated_at: '2026-06-26T14:10:00.000Z',
+        }];
+
+        const definition = registry.get('create_agency_report');
+        const input = {
+            tenantId: 'agency-1',
+            clientTenantId: 'client-1',
+            reportType: 'client_monthly',
+            periodStart: '2026-06-01',
+            periodEnd: '2026-06-26',
+        };
+
+        const result = await definition!.execute!(input, {
+            action: buildAgencyReportAction(input),
+            context,
+        }) as Row;
+
+        expect(fakeSupabase.rowsByTable.projects || []).toEqual([]);
+        expect(fakeSupabase.rowsByTable.agency_reports).toHaveLength(1);
+        expect(fakeSupabase.rowsByTable.agency_reports[0]).toMatchObject({
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            report_type: 'client_monthly',
+            period_start: '2026-06-01',
+            period_end: '2026-06-26',
+            status: 'draft',
+            generated_by: 'user-1',
+        });
+        expect(fakeSupabase.rowsByTable.agency_reports[0].data).toMatchObject({
+            source: 'global-assistant',
+            metrics: {
+                clientCount: 1,
+                totalMonthlyRevenue: 260,
+                totalProjects: 3,
+                byBillingMode: { agency_managed: 1 },
+                byLifecycleStage: { operating: 1 },
+            },
+            sourceTables: ['agency_clients', 'agency_service_plans', 'tenants', 'agency_reports', 'agency_activity'],
+        });
+        expect(fakeSupabase.rowsByTable.agency_activity).toHaveLength(1);
+        expect(fakeSupabase.rowsByTable.agency_activity[0]).toMatchObject({
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            type: 'report_generated',
+            title: 'Agency report generated',
+            created_by: 'user-1',
+        });
+        expect(fakeSupabase.rowsByTable.agency_activity[0].metadata).toMatchObject({
+            source: 'global-assistant',
+            actionId: 'action-create-agency-report',
+            reportType: 'client_monthly',
+            selectedClientIds: ['client-1'],
+            periodStart: '2026-06-01',
+            periodEnd: '2026-06-26',
+        });
+        expect(result.afterSnapshot).toMatchObject({
+            agencyTenantId: 'agency-1',
+            status: 'draft',
+            summary: {
+                clientCount: 1,
+                totalMonthlyRevenue: 260,
+                totalProjects: 3,
+            },
+            sourceTables: ['agency_clients', 'agency_service_plans', 'tenants', 'agency_reports', 'agency_activity'],
+        });
+        expect(result.diff).toMatchObject({
+            reported: ['agency.report.agency-1.agency_reports_1'],
+            selectedClientIds: ['client-1'],
+            mutatesData: true,
+        });
+
+        const rollback = await definition!.rollback!(input, {
+            action: buildAgencyReportAction(input),
+            context,
+            snapshot: {
+                id: 'snapshot-report-1',
+                actionId: 'action-create-agency-report',
+                beforeSnapshot: {},
+                afterSnapshot: result.afterSnapshot,
+                createdAt: '2026-06-26T13:31:00.000Z',
+            },
+        });
+
+        expect(rollback.diff).toMatchObject({
+            rolledBack: ['agency_activity', 'agency_reports'],
+        });
+        expect(fakeSupabase.rowsByTable.agency_reports).toHaveLength(0);
+        expect(fakeSupabase.rowsByTable.agency_activity).toHaveLength(0);
+    });
+
+    it('blocks agency reports for clients outside the active agency', async () => {
+        const { fakeSupabase, registry, context } = buildAgencyRuntime();
+        fakeSupabase.rowsByTable.agency_clients = [{
+            agency_tenant_id: 'agency-1',
+            client_tenant_id: 'client-1',
+            agency_plan_id: 'plan-growth',
+        }];
+        fakeSupabase.rowsByTable.tenants = [{
+            id: 'external-client',
+            owner_tenant_id: 'other-agency',
+            name: 'External Client',
+            type: 'agency_client',
+        }];
+
+        const definition = registry.get('create_agency_report');
+        const input = {
+            tenantId: 'agency-1',
+            clientTenantId: 'external-client',
+            reportType: 'client_monthly',
+        };
+
+        await expect(definition!.execute!(input, {
+            action: buildAgencyReportAction(input),
+            context,
+        })).rejects.toThrow('Agency reports can only include clients managed by the active agency tenant.');
     });
 });
