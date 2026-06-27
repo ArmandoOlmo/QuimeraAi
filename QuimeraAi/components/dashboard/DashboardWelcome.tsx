@@ -56,6 +56,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const [aiPrompt, setAiPrompt] = useState('');
     const [selectedQuickActionId, setSelectedQuickActionId] = useState<string | null>(null);
     const [hoveredQuickActionId, setHoveredQuickActionId] = useState<string | null>(null);
+    const [mobileChooserOpen, setMobileChooserOpen] = useState(false);
     const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
     const toggleUpgradeMinimized = () => setUpgradeMinimized((prev) => !prev);
@@ -94,6 +95,14 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
             setSelectedQuickActionId(null);
         }
     }, [quickActions, selectedQuickActionId]);
+
+    useEffect(() => {
+        if (!mobileChooserOpen) return;
+
+        const closeChooser = () => setMobileChooserOpen(false);
+        window.addEventListener('click', closeChooser);
+        return () => window.removeEventListener('click', closeChooser);
+    }, [mobileChooserOpen]);
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -187,6 +196,22 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const handleQuickAction = (action: DashboardAssistantQuickAction) => {
         setSelectedQuickActionId(current => current === action.id ? null : action.id);
+        window.requestAnimationFrame(() => promptInputRef.current?.focus());
+    };
+    const prioritizedMobileQuickActions = useMemo(() => {
+        const createWebsiteAction = quickActions.find(action => action.id === 'create_website');
+        if (!createWebsiteAction) return quickActions;
+        return [createWebsiteAction, ...quickActions.filter(action => action.id !== 'create_website')];
+    }, [quickActions]);
+    const mobileChooserAction = selectedQuickAction
+        || prioritizedMobileQuickActions[0]
+        || null;
+    const mobileChooserLabel = mobileChooserAction
+        ? t(mobileChooserAction.labelKey, mobileChooserAction.labelFallback)
+        : t('dashboard.assistantModeSelectorPlaceholder', 'Modo rápido');
+    const handleMobileQuickActionPick = (action: DashboardAssistantQuickAction) => {
+        setSelectedQuickActionId(action.id);
+        setMobileChooserOpen(false);
         window.requestAnimationFrame(() => promptInputRef.current?.focus());
     };
 
@@ -374,10 +399,51 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                         />
                     </div>
                     <div className="flex items-center justify-between gap-3 pt-2">
-                        <div
-                            className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5"
-                            onMouseLeave={() => setHoveredQuickActionId(null)}
-                        >
+                        <div className="min-w-0 flex-1">
+                            <div className="relative sm:hidden" onClick={(event) => event.stopPropagation()}>
+                                <AppButton
+                                    variant="icon"
+                                    size="icon-sm"
+                                    type="button"
+                                    onClick={() => setMobileChooserOpen((current) => !current)}
+                                    className="no-min-touch !h-8 w-full max-w-[190px] !min-w-0 justify-between gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/70 px-2.5 text-xs text-q-text"
+                                    aria-label={t('dashboard.assistantModeSelectorLabel', 'Seleccionar modo de asistente')}
+                                    aria-expanded={mobileChooserOpen}
+                                >
+                                    <span className="flex min-w-0 items-center gap-1.5">
+                                        {mobileChooserAction && quickActionIcon(mobileChooserAction)}
+                                        <span className="truncate">{mobileChooserLabel}</span>
+                                    </span>
+                                    <ChevronDown className={`size-3 text-q-text-secondary transition-transform ${mobileChooserOpen ? 'rotate-180' : ''}`} />
+                                </AppButton>
+                                {mobileChooserOpen && prioritizedMobileQuickActions.length > 0 && (
+                                    <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-[220px] max-w-[85vw] rounded-2xl border border-border-subtle bg-q-surface p-1.5 shadow-[var(--shadow-card)]">
+                                        {prioritizedMobileQuickActions.map((action) => {
+                                            const label = t(action.labelKey, action.labelFallback);
+                                            const isSelected = selectedQuickActionId === action.id;
+                                            return (
+                                                <button
+                                                    key={action.id}
+                                                    type="button"
+                                                    onClick={() => handleMobileQuickActionPick(action)}
+                                                    className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors ${
+                                                        isSelected
+                                                            ? 'bg-q-accent/15 text-q-text'
+                                                            : 'text-q-text-secondary hover:bg-q-surface-overlay/60 hover:text-q-text'
+                                                    }`}
+                                                >
+                                                    {quickActionIcon(action)}
+                                                    <span className="truncate">{label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                            <div
+                                className="hidden min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:flex"
+                                onMouseLeave={() => setHoveredQuickActionId(null)}
+                            >
                             {quickActions.map(action => {
                                 const label = t(action.labelKey, action.labelFallback);
                                 const isSelected = selectedQuickActionId === action.id;
@@ -404,6 +470,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     </AppButton>
                                 );
                             })}
+                            </div>
                         </div>
                         <div className="flex flex-shrink-0 items-center gap-2">
                             <AppButton

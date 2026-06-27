@@ -1,4 +1,4 @@
-import { buildFromHeader, isValidEmail, type EmailProviderName } from './emailProviderService.js';
+import { buildFromHeader, isValidEmail, type EmailProviderName } from './emailProviderService.ts';
 
 type SupabaseClient = any;
 

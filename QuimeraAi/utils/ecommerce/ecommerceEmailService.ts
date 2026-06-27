@@ -7,8 +7,8 @@ import type {
     EcommerceTransactionalEmailStatus,
     EcommerceTransactionalEmailType,
 } from '../../types/ecommerceEmail.ts';
-import type { EmailProvider } from '../../services/email/emailProviderService.js';
-import { dispatchCrossModuleTransactionalEmail } from '../../services/email/emailCrossModuleDispatcher.js';
+import type { EmailProvider } from '../../services/email/emailProviderService.ts';
+import { dispatchCrossModuleTransactionalEmail } from '../../services/email/emailCrossModuleDispatcher.ts';
 
 type SupabaseClient = any;
 

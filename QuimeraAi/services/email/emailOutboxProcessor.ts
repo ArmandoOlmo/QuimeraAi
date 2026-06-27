@@ -4,10 +4,10 @@ import {
     resolveEmailProvider,
     type EmailProvider,
     type EmailProviderRegistry,
-} from './emailProviderService.js';
-import { findEmailLogByIdempotencyKey, updateEmailLogStatus } from './emailLogService.js';
-import { isSuppressed } from './emailSuppressionService.js';
-import { assertEmailReadiness, getEmailSettings, getSenderHeader, type CanonicalEmailSettings } from './emailSettingsService.js';
+} from './emailProviderService.ts';
+import { findEmailLogByIdempotencyKey, updateEmailLogStatus } from './emailLogService.ts';
+import { isSuppressed } from './emailSuppressionService.ts';
+import { assertEmailReadiness, getEmailSettings, getSenderHeader, type CanonicalEmailSettings } from './emailSettingsService.ts';
 
 type SupabaseClient = any;
 
