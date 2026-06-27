@@ -417,7 +417,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     <ChevronDown className={`size-3 text-q-text-secondary transition-transform ${mobileChooserOpen ? 'rotate-180' : ''}`} />
                                 </AppButton>
                                 {mobileChooserOpen && prioritizedMobileQuickActions.length > 0 && (
-                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[80%] min-w-[220px] max-w-[80vw] rounded-xl border border-border-subtle bg-q-surface p-1 shadow-[var(--shadow-card)]">
+                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[80vw] max-w-[520px] rounded-xl border border-border-subtle bg-q-surface p-1 shadow-[var(--shadow-card)]">
                                         <div className="grid grid-cols-2 gap-1">
                                         {prioritizedMobileQuickActions.map((action) => {
                                             const label = t(action.labelKey, action.labelFallback);
