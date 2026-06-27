@@ -96,6 +96,8 @@ Required before beta:
 - [ ] Apply and review Supabase hardening migrations:
   `20260627201856_harden_function_search_paths.sql` and
   `20260627202043_revoke_anon_agency_security_definer_execute.sql`.
+- [ ] Apply and review public insert policy hardening migration:
+  `20260627204427_harden_public_insert_policies.sql`.
 - [ ] Re-run Supabase security advisors after migration.
 - [ ] Confirm no `Function Search Path Mutable` findings remain for:
   `set_realty_updated_at`, `normalize_realty_crm_status`,
@@ -107,9 +109,11 @@ Required before beta:
   `stripe-webhook`, `email-api`, `create-public-restaurant-reservation`.
 - [ ] Confirm leaked password protection remains enabled in Supabase Auth before
   open beta.
-- [ ] Review public `insert` policies for `platform_leads`,
-  `restaurant_analytics_events`, and `restaurant_reservations`; keep them only
-  if each route has product-approved anti-abuse controls.
+- [ ] Confirm public `insert` policies for `platform_leads`,
+  `restaurant_analytics_events`, and `restaurant_reservations` keep schema-level
+  validation predicates and do not regress to `WITH CHECK (true)`.
+- [ ] Confirm product-approved anti-abuse controls/rate limits for public lead,
+  analytics, and reservation routes before expanding beyond controlled pilots.
 - [ ] Review SECURITY DEFINER execute grants before expanding beyond controlled
   pilot accounts.
 - [ ] Confirm Agency Engine `SECURITY DEFINER` helpers are executable by
