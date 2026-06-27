@@ -17696,6 +17696,11 @@
           "description": "Usa Finanzas para facturas, ingresos, gastos y estado financiero.",
           "prompt": "Finanzas"
         },
+        "use-agency": {
+          "label": "Agency Command Center",
+          "description": "Usa Agency Engine para Client 360, planes de servicio, facturación, reportes, white label y transferencia de proyectos.",
+          "prompt": "Abrir Agency Command Center"
+        },
         "use-restaurants": {
           "label": "Restaurantes",
           "description": "Usa Restaurantes para menús, reservas, servicios y ajustes.",

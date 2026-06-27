@@ -148,7 +148,7 @@ describe('globalCommandSearch', () => {
 
     it('exposes guide-only command-center actions for supporting modules', () => {
         const items = buildGlobalCommandItems({
-            query: 'blog domains seo finance restaurants realty owner',
+            query: 'blog domains seo finance agency restaurants realty owner',
             projects,
             activeProjectId: 'project-1',
             canAccessAdmin: true,
@@ -161,17 +161,19 @@ describe('globalCommandSearch', () => {
             expect.objectContaining({ id: 'action:use-domains', type: 'action', assistantModule: 'settings' }),
             expect.objectContaining({ id: 'action:use-seo', type: 'action', assistantModule: 'website' }),
             expect.objectContaining({ id: 'action:use-finance', type: 'action', assistantModule: 'finance' }),
+            expect.objectContaining({ id: 'action:use-agency', type: 'action', assistantModule: 'agency', serviceId: 'agency' }),
             expect.objectContaining({ id: 'action:use-restaurants', type: 'action', assistantModule: 'restaurants' }),
             expect.objectContaining({ id: 'action:use-realty', type: 'action', assistantModule: 'realEstate' }),
             expect.objectContaining({ id: 'action:use-owner-mode', type: 'action', assistantModule: 'admin', requiresAdmin: true }),
         ]));
         expect(items.find(item => item.id === 'action:use-blog-hub')?.prompt).toBe('Blog Hub');
         expect(items.find(item => item.id === 'action:use-domains')?.prompt).toBe('Domains');
+        expect(items.find(item => item.id === 'action:use-agency')?.prompt).toBe('Open Agency Command Center');
     });
 
     it('keeps project and admin boundaries for new guide-only command actions', () => {
         const noProjectItems = buildGlobalCommandItems({
-            query: 'cms domains finance templates owner',
+            query: 'cms domains finance templates agency owner',
             projects,
             activeProjectId: null,
             canAccessAdmin: false,
@@ -185,7 +187,20 @@ describe('globalCommandSearch', () => {
         expect(noProjectItems.some(item => item.id === 'action:use-owner-mode')).toBe(false);
         expect(noProjectItems).toEqual(expect.arrayContaining([
             expect.objectContaining({ id: 'action:use-templates', assistantModule: 'project' }),
+            expect.objectContaining({ id: 'action:use-agency', assistantModule: 'agency' }),
         ]));
+
+        const noAgencyServiceItems = buildGlobalCommandItems({
+            query: 'agency command center',
+            projects,
+            activeProjectId: null,
+            canAccessAdmin: true,
+            canAccessService: serviceId => serviceId !== 'agency',
+            maxItems: 100,
+        });
+
+        expect(noAgencyServiceItems.some(item => item.id === 'action:use-agency')).toBe(false);
+        expect(noAgencyServiceItems.some(item => item.id === 'nav:agency')).toBe(false);
     });
 
     it('exposes i18n keys for command labels, descriptions, and prompts', () => {
@@ -203,6 +218,14 @@ describe('globalCommandSearch', () => {
             }),
             ...buildGlobalCommandItems({
                 query: 'crear imagen',
+                projects,
+                activeProjectId: 'project-1',
+                canAccessAdmin: true,
+                canAccessService: () => true,
+                maxItems: 100,
+            }),
+            ...buildGlobalCommandItems({
+                query: 'agency command center',
                 projects,
                 activeProjectId: 'project-1',
                 canAccessAdmin: true,

@@ -44,6 +44,7 @@ const context = resolveCurrentAssistantContext({
         'chatbot',
         'finance',
         'analytics',
+        'agency',
     ] as any,
     featureFlags: [
         'websiteBuilder',
@@ -213,6 +214,38 @@ describe('globalAssistantIntentRouter', () => {
             module: 'ecommerce',
             intent: 'generate_content',
             actionCandidates: ['generate_product_copy'],
+        });
+    });
+
+    it('routes Agency Engine operating requests without requiring an active project', () => {
+        const agencyContext = resolveCurrentAssistantContext({
+            userId: 'user-1',
+            tenantId: 'tenant-1',
+            role: 'agency_owner',
+            activeProject: null,
+            activeRoute: '/agency',
+            activeServices: ['agency'] as any,
+            featureFlags: ['agencyModule'],
+        });
+
+        expect(routeAssistantIntent('Abre Agency Command Center', agencyContext)).toMatchObject({
+            module: 'agency',
+            intent: 'open',
+            actionCandidates: ['open_agency_command_center'],
+            requiresClarification: false,
+        });
+
+        expect(routeAssistantIntent('Busca clientes de agencia con plan growth', agencyContext)).toMatchObject({
+            module: 'agency',
+            intent: 'search',
+            actionCandidates: ['search_agency_clients'],
+            requiresClarification: false,
+        });
+
+        expect(routeAssistantIntent('Resume performance de la agencia y billing', agencyContext)).toMatchObject({
+            module: 'agency',
+            actionCandidates: ['summarize_agency_performance'],
+            requiresClarification: false,
         });
     });
 

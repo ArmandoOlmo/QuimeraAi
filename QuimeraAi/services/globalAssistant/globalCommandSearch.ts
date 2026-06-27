@@ -263,6 +263,13 @@ const ACTION_COMMANDS: GlobalCommandItem[] = [
         { assistantModule: 'finance', serviceId: 'finance', requiresProject: true, keywords: ['finance', 'invoice', 'expense', 'revenue', 'finanzas', 'factura', 'gasto'] },
     ),
     actionCommand(
+        'action:use-agency',
+        'Agency Command Center',
+        'Use Agency Engine for Client 360, service plans, billing, reports, white label, and project transfer.',
+        'Open Agency Command Center',
+        { assistantModule: 'agency', serviceId: 'agency', keywords: ['agency', 'agencia', 'agency command center', 'client 360', 'cliente 360', 'service plans', 'planes agencia', 'facturacion agencia', 'white label', 'portal cliente'] },
+    ),
+    actionCommand(
         'action:use-restaurants',
         'Restaurants',
         'Use Restaurants for menus, reservations, services, and settings.',
@@ -304,7 +311,7 @@ const MODULE_COMMANDS: GlobalCommandItem[] = [
     moduleCommand('nav:biopage', 'Bio Page', 'biopage', { serviceId: 'bioPage', keywords: ['bio page', 'link in bio', 'pagina bio'] }),
     moduleCommand('nav:real-estate', 'Realty', 'real-estate', { serviceId: 'realEstate', keywords: ['real estate', 'realty', 'listings', 'inmobiliaria', 'propiedades'] }),
     moduleCommand('nav:templates', 'Templates', 'templates', { serviceId: 'templates', keywords: ['templates', 'library', 'plantillas', 'biblioteca'] }),
-    moduleCommand('nav:agency', 'Agency', 'agency', { serviceId: 'agency', keywords: ['agency', 'agencia', 'white label', 'clientes agencia', 'planes agencia', 'facturacion agencia'] }),
+    moduleCommand('nav:agency', 'Agency', 'agency', { serviceId: 'agency', keywords: ['agency', 'agencia', 'agency command center', 'client 360', 'cliente 360', 'white label', 'clientes agencia', 'planes agencia', 'facturacion agencia'] }),
     moduleCommand('nav:settings', 'Settings', 'settings', { type: 'navigation', keywords: ['settings', 'workspace', 'team', 'configuracion', 'equipo'] }),
     moduleCommand('admin:superadmin', 'Super Admin', 'superadmin', {
         type: 'admin',

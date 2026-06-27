@@ -17682,6 +17682,11 @@
           "description": "Use Finance for invoices, revenue, expenses, and financial status.",
           "prompt": "Finance"
         },
+        "use-agency": {
+          "label": "Agency Command Center",
+          "description": "Use Agency Engine for Client 360, service plans, billing, reports, white label, and project transfer.",
+          "prompt": "Open Agency Command Center"
+        },
         "use-restaurants": {
           "label": "Restaurants",
           "description": "Use Restaurants for menus, reservations, services, and settings.",

@@ -170,6 +170,35 @@ const PROJECT_SCOPED_MODULES = new Set<AssistantModuleTarget>([
     'finance',
 ]);
 
+const isAgencyModuleRequest = (text: string): boolean =>
+    includesAny(text, [
+        'agency',
+        'agencia',
+        'agency engine',
+        'agency command center',
+        'command center agencia',
+        'centro de comando agencia',
+        'client 360',
+        'cliente 360',
+        'client360',
+        'clientes agencia',
+        'clientes de agencia',
+        'agency clients',
+        'service plan',
+        'service plans',
+        'plan de servicio',
+        'planes de servicio',
+        'planes agencia',
+        'facturacion agencia',
+        'facturación agencia',
+        'agency billing',
+        'white label',
+        'portal cliente',
+        'client portal',
+        'project transfer',
+        'transferir proyecto',
+    ]);
+
 const inferIntent = (text: string): AssistantIntentCategory => {
     if (isOperatingLayerCapabilityRequest(text)) return 'explain';
     if (includesAny(text, ['elimina', 'borrar', 'delete', 'remove', 'quita'])) return 'delete';
@@ -201,6 +230,7 @@ const inferIntent = (text: string): AssistantIntentCategory => {
 
 const inferModule = (text: string, context: AssistantContextSnapshot): AssistantModuleTarget => {
     if (isOperatingLayerCapabilityRequest(text)) return 'project';
+    if (isAgencyModuleRequest(text)) return 'agency';
     if (includesAny(text, [
         'admin',
         'tenant',
@@ -389,6 +419,17 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
         return ['open_finance_dashboard'];
     }
 
+    if (module === 'agency') {
+        if (intent === 'open') {
+            if (includesAny(text, ['client 360', 'cliente 360', 'client360'])) return ['open_agency_client_360'];
+            return ['open_agency_command_center'];
+        }
+        if (intent === 'search') return ['search_agency_clients'];
+        if (['analyze', 'report', 'explain'].includes(intent)) return ['summarize_agency_performance'];
+        if (includesAny(text, ['clientes', 'clients', 'client', 'cliente'])) return ['search_agency_clients'];
+        return ['summarize_agency_performance'];
+    }
+
     if (module === 'admin') {
         if (includesAny(text, ['ai log', 'api log', 'logs', 'registro', 'registros'])) return ['review_ai_logs'];
         if (includesAny(text, ['error', 'errores', 'fallo', 'fallos', 'failed', 'crash'])) return ['review_errors'];
@@ -534,6 +575,13 @@ const actionCandidatesFor = (intent: AssistantIntentCategory, module: AssistantM
             create: ['create_finance_record'],
             edit: ['update_finance_record'],
         },
+        agency: {
+            open: ['open_agency_command_center'],
+            search: ['search_agency_clients'],
+            analyze: ['summarize_agency_performance'],
+            report: ['summarize_agency_performance'],
+            explain: ['summarize_agency_performance'],
+        },
     };
 
     return map[module]?.[intent] || map[module]?.create || [];
@@ -544,7 +592,7 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
     const intent = inferIntent(text);
     const module = inferModule(text, context);
     const safetyLevel = inferSafety(intent, module, text);
-    const requiresProject = !['admin', 'tenant', 'user'].includes(module);
+    const requiresProject = !['admin', 'agency', 'tenant', 'user'].includes(module);
     const missingProject = requiresProject && !context.project.projectId && !['project', 'aiStudio'].includes(module);
     const availableProjects = Array.isArray(context.snapshot?.availableProjects)
         ? context.snapshot.availableProjects as any[]
