@@ -398,9 +398,9 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             className="min-h-[64px] flex-1 resize-none bg-transparent px-1 py-2 text-sm sm:text-base text-q-text placeholder:text-q-text-secondary/65 focus:outline-none"
                         />
                     </div>
-                    <div className="flex items-center justify-between gap-3 pt-2">
+                    <div className="relative flex items-center justify-between gap-3 pt-2">
                         <div className="min-w-0 flex-1">
-                            <div className="relative z-[80] w-full sm:hidden" onClick={(event) => event.stopPropagation()}>
+                            <div className="z-[80] w-full sm:hidden" onClick={(event) => event.stopPropagation()}>
                                 <AppButton
                                     variant="icon"
                                     size="icon-sm"
@@ -417,7 +417,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     <ChevronDown className={`size-3 text-q-text-secondary transition-transform ${mobileChooserOpen ? 'rotate-180' : ''}`} />
                                 </AppButton>
                                 {mobileChooserOpen && prioritizedMobileQuickActions.length > 0 && (
-                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[min(80vw,680px)] max-w-[calc(100vw-1.5rem)] rounded-xl border border-border-subtle bg-q-surface p-1 shadow-[var(--shadow-card)]">
+                                    <div className="absolute left-1/2 top-[calc(100%+8px)] z-[90] w-[92%] -translate-x-1/2 rounded-xl border border-border-subtle bg-q-surface p-1 shadow-[var(--shadow-card)]">
                                         <div className="grid grid-cols-3 gap-1">
                                         {prioritizedMobileQuickActions.map((action) => {
                                             const label = t(action.labelKey, action.labelFallback);
