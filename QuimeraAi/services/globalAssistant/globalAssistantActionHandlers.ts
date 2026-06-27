@@ -36,7 +36,12 @@ import type {
     BusinessBlueprint,
 } from '../../types/businessBlueprint';
 import type { PropertyCampaign, PropertyOpenHouse, RealtyProperty } from '../../types/realty';
-import { migrateBusinessBlueprint, syncWebsiteBlueprintFromEditor } from '../../utils/businessBlueprint';
+import {
+    createSnapshotBeforeRegeneration,
+    mapAssistantModuleToBlueprintModuleKey,
+    migrateBusinessBlueprint,
+    syncWebsiteBlueprintFromEditor,
+} from '../../utils/businessBlueprint';
 import { mapPropertyCampaignToRow, mapPropertyOpenHouseToRow, mapRealtyPropertyToRow, toRealtySlug } from '../../utils/realty';
 import {
     STOREFRONT_SECTION_KINDS,
@@ -6569,6 +6574,65 @@ const updateProjectData = async (
     return result?.data || { projectId, data };
 };
 
+const resolveSnapshotSectionId = (input: Record<string, unknown>): string | undefined => {
+    const target = asRecord(input.target);
+    return readString(input.sectionId)
+        || readString(input.targetSectionId)
+        || readString(target.sectionId)
+        || readString(target.id);
+};
+
+const resolveProjectIdForSnapshot = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): string | null =>
+    readString(input.projectId) || action.projectId || context?.project.projectId || null;
+
+const persistProjectSnapshotBeforeAssistantMutation = async (
+    definition: AssistantActionDefinition,
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context: AssistantContextSnapshot | undefined,
+    deps: GlobalAssistantActionHandlerDependencies,
+): Promise<void> => {
+    const projectId = resolveProjectIdForSnapshot(input, action, context);
+    if (!projectId) return;
+
+    const client = getClient(deps);
+    const row = await loadProjectRowForAssistantScope(
+        client,
+        projectId,
+        action,
+        context,
+        `creating a Version History snapshot before ${definition.actionType}`,
+    );
+    const projectData = asRecord(row.data);
+    const now = getNow(deps);
+    const moduleKey = mapAssistantModuleToBlueprintModuleKey(definition.module);
+    const sectionId = resolveSnapshotSectionId(input);
+    const { nextProjectData } = createSnapshotBeforeRegeneration(projectData, {
+        projectId,
+        now,
+        moduleKey,
+        sectionId,
+        scope: sectionId ? 'section' : moduleKey ? 'module' : 'project',
+        metadata: {
+            projectName: readDisplayText(row.name),
+            tenantId: readProjectTenantId(row) || getTenantId(action, context),
+            userId: readProjectUserId(row) || action.userId || context?.actor.userId || null,
+            createdBy: action.userId || context?.actor.userId || null,
+            actionId: action.id,
+            actionType: definition.actionType,
+            taskId: action.taskId || null,
+            module: definition.module,
+            source: 'global-assistant',
+        },
+    });
+
+    await updateProjectData(client, projectId, nextProjectData, now);
+};
+
 const rollbackProjectDataSnapshot = (
     deps: GlobalAssistantActionHandlerDependencies,
     label: string,
@@ -8447,9 +8511,27 @@ export function attachDefaultGlobalAssistantActionHandlers(
     return definitions.map(definition => {
         const factory = HANDLER_FACTORIES[definition.actionType];
         if (!factory) return definition;
-        return {
+        const patch = factory(deps);
+        const nextDefinition = {
             ...definition,
-            ...factory(deps),
+            ...patch,
+        };
+        if (!nextDefinition.execute || !nextDefinition.mutatesData) {
+            return nextDefinition;
+        }
+        const execute = nextDefinition.execute;
+        return {
+            ...nextDefinition,
+            execute: async (input, executionContext) => {
+                await persistProjectSnapshotBeforeAssistantMutation(
+                    nextDefinition,
+                    input as Record<string, unknown>,
+                    executionContext.action,
+                    executionContext.context,
+                    deps,
+                );
+                return execute(input, executionContext);
+            },
         };
     });
 }

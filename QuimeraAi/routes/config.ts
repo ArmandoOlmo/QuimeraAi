@@ -221,6 +221,8 @@ export const ROUTES = {
   WEBSITES: '/websites',
   ASSETS: '/assets',
   TEMPLATES: '/templates',
+  VERSION_HISTORY: '/version-history',
+  PROJECT_VERSION_HISTORY: '/dashboard/project/:projectId/version-history',
 
   // Editor Routes
   EDITOR: '/editor/:projectId',
@@ -540,6 +542,25 @@ export const routeConfigs: RouteConfig[] = [
     ...TEMPLATES_ROUTE_GATE,
     showInNav: true,
     icon: 'FileCode',
+  },
+  {
+    path: ROUTES.VERSION_HISTORY,
+    view: 'version-history',
+    type: 'private',
+    title: 'Version History',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    showInNav: true,
+    icon: 'History',
+  },
+  {
+    path: ROUTES.PROJECT_VERSION_HISTORY,
+    view: 'version-history',
+    type: 'private',
+    title: 'Version History',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    icon: 'History',
   },
 
   // =========================================================================

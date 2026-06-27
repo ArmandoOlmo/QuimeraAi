@@ -2940,5 +2940,46 @@
         "service-availability": { "label": "Disponibilité des services" }
       }
     }
+  },
+  "versionHistory": {
+    "title": "Historique des versions",
+    "nav": "Historique des versions",
+    "projectSelect": "Projet",
+    "selectProject": "Selectionner un projet",
+    "noProject": "Aucun projet selectionne",
+    "snapshots": "Snapshots",
+    "latest": "Dernier",
+    "guardrails": "Protections",
+    "safeRestoreOn": "Restauration sure active",
+    "overwriteOn": "Ecrasement actif",
+    "history": "Historique",
+    "historyHint": "Snapshots automatiques crees avant les mutations AI.",
+    "emptyTitle": "Aucun snapshot",
+    "emptyDescription": "Les actions AI creeront des snapshots automatiques ici avant de modifier les donnees du projet.",
+    "view": "Voir",
+    "compare": "Comparer",
+    "restore": "Restaurer",
+    "scope": "Portee",
+    "module": "Module",
+    "diff": "Diff",
+    "selectedSnapshot": "Snapshot selectionne",
+    "selectSnapshot": "Selectionnez un snapshot pour l'inspecter.",
+    "restoreOptions": "Options de restauration",
+    "showRestore": "Afficher restore",
+    "showDiff": "Afficher diff",
+    "overwriteProtected": "Ecraser les changements manuels proteges",
+    "overwriteProtectedHint": "Laissez desactive pour preserver userModified et lockedFromRegeneration.",
+    "restoreModule": "Restaurer le module",
+    "restoreSection": "Restaurer la section par ID",
+    "sectionIdPlaceholder": "id de section",
+    "confirmRestoreProject": "Restaurer ce snapshot dans le projet actuel ? Les modules proteges seront preserves sauf si l'ecrasement est actif.",
+    "confirmRestoreTarget": "Restaurer cette cible depuis le snapshot selectionne ?",
+    "restoreSkipped": "La restauration a ete ignoree.",
+    "restoreProtected": "Restauration terminee. Les changements manuels proteges ont ete preserves.",
+    "restoreSuccess": "Snapshot restaure.",
+    "errors": {
+      "load": "Impossible de charger l'historique des versions.",
+      "restore": "Impossible de restaurer ce snapshot."
+    }
   }
 }

@@ -1165,6 +1165,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (menuFetchError) {
             console.warn('[ProjectContext] Could not fetch latest menus for save:', menuFetchError);
         }
+        const latestVersionHistory = menuRow?.data?.versionHistory || (project as any).versionHistory;
 
         const persistedStatus =
             menuRow?.published_at || menuRow?.status === 'Published' || project.status === 'Published'
@@ -1256,6 +1257,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Business Blueprint (A1 stores it in projects.data; no dedicated column yet)
             businessBlueprint,
+            ...(latestVersionHistory ? { versionHistory: latestVersionHistory } : {}),
         }));
 
         try {

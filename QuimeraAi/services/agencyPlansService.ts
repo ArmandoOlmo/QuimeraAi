@@ -30,7 +30,7 @@ import {
     DEFAULT_AGENCY_PLAN_FEATURES,
     sanitizeAgencyPlanLimits,
 } from '../types/agencyPlans';
-import { normalizePlanId } from './billing/planCatalog';
+import { normalizePlanId, type CanonicalPlanId } from './billing/planCatalog';
 
 // =============================================================================
 // CONSTANTS
@@ -40,6 +40,7 @@ const AGENCY_PLANS_COLLECTION = 'agencyPlans';
 const AGENCY_SERVICE_PLANS_TABLE = 'agency_service_plans';
 const AGENCY_CLIENTS_TABLE = 'agency_clients';
 const TENANTS_COLLECTION = 'tenants';
+const DEFAULT_CLIENT_EFFECTIVE_PLAN_ID: CanonicalPlanId = 'individual';
 
 // =============================================================================
 // CACHE
@@ -178,6 +179,72 @@ async function getCanonicalAgencyPlanById(planId: string): Promise<{ plan: Agenc
     }
 
     return { plan: data ? rowToAgencyPlan(data) : null, tableAvailable: true };
+}
+
+function resolveAgencyClientEffectivePlanId(params: {
+    billing?: Record<string, any> | null;
+    subscriptionPlan?: string | null;
+    subscription_plan?: string | null;
+    assignedAgencyPlanId?: string | null;
+}): CanonicalPlanId {
+    const candidates = [
+        params.billing?.effectivePlanId,
+        params.subscription_plan,
+        params.subscriptionPlan,
+    ];
+
+    for (const candidate of candidates) {
+        const rawPlanId = String(candidate || '').trim();
+        if (!rawPlanId) continue;
+        if (rawPlanId === params.assignedAgencyPlanId) continue;
+        if (rawPlanId === 'agency_client') continue;
+
+        const normalized = normalizePlanId(rawPlanId);
+        if (normalized === 'free' && rawPlanId !== 'free') continue;
+        return normalized;
+    }
+
+    return DEFAULT_CLIENT_EFFECTIVE_PLAN_ID;
+}
+
+async function getCanonicalClientRelationshipPlanId(agencyTenantId: string, clientTenantId: string): Promise<string | null> {
+    const { data, error } = await supabase
+        .from(AGENCY_CLIENTS_TABLE)
+        .select('agency_plan_id')
+        .eq('agency_tenant_id', agencyTenantId)
+        .eq('client_tenant_id', clientTenantId)
+        .maybeSingle();
+
+    if (error) {
+        if (isMissingCanonicalTable(error)) return null;
+        throw error;
+    }
+
+    return data?.agency_plan_id || null;
+}
+
+async function refreshCanonicalPlanClientCount(planId: string): Promise<boolean> {
+    const { count, error } = await supabase
+        .from(AGENCY_CLIENTS_TABLE)
+        .select('client_tenant_id', { count: 'exact', head: true })
+        .eq('agency_plan_id', planId);
+
+    if (error) {
+        if (isMissingCanonicalTable(error)) return false;
+        throw error;
+    }
+
+    const { error: updateError } = await supabase
+        .from(AGENCY_SERVICE_PLANS_TABLE)
+        .update({ client_count: count ?? 0, updated_at: new Date().toISOString() })
+        .eq('id', planId);
+
+    if (updateError) {
+        if (isMissingCanonicalTable(updateError)) return false;
+        throw updateError;
+    }
+
+    return true;
 }
 
 // =============================================================================
@@ -671,12 +738,14 @@ export async function assignPlanToClient(
             .maybeSingle();
 
         if (!clientError && clientRow) {
-            const previousPlanId = clientRow.billing?.agencyPlanId || null;
-            const effectivePlanId = normalizePlanId(
-                clientRow.billing?.effectivePlanId
-                || clientRow.subscription_plan
-                || 'individual',
-            );
+            const previousPlanId = await getCanonicalClientRelationshipPlanId(plan.tenantId, clientTenantId)
+                || clientRow.billing?.agencyPlanId
+                || null;
+            const effectivePlanId = resolveAgencyClientEffectivePlanId({
+                billing: clientRow.billing,
+                subscription_plan: clientRow.subscription_plan,
+                assignedAgencyPlanId: planId,
+            });
             const billing = {
                 ...(clientRow.billing || {}),
                 mode: clientRow.billing?.mode || 'included_in_parent',
@@ -738,13 +807,13 @@ export async function assignPlanToClient(
         }
 
         const clientData = clientDoc.data();
-        const previousPlanId = clientData.agencyPlanId;
-        const effectivePlanId = normalizePlanId(
-            clientData.billing?.effectivePlanId
-            || clientData.subscription_plan
-            || clientData.subscriptionPlan
-            || 'individual',
-        );
+        const previousPlanId = clientData.billing?.agencyPlanId || clientData.agencyPlanId;
+        const effectivePlanId = resolveAgencyClientEffectivePlanId({
+            billing: clientData.billing,
+            subscription_plan: clientData.subscription_plan,
+            subscriptionPlan: clientData.subscriptionPlan,
+            assignedAgencyPlanId: planId,
+        });
 
         await updateDoc(doc(db, TENANTS_COLLECTION, clientTenantId), {
             agencyPlanId: planId,
@@ -799,7 +868,16 @@ export async function removePlanFromClient(
             .maybeSingle();
 
         if (!clientError && clientRow) {
-            const previousPlanId = clientRow.billing?.agencyPlanId || null;
+            const { data: relationshipRow, error: relationshipError } = await supabase
+                .from(AGENCY_CLIENTS_TABLE)
+                .select('agency_plan_id')
+                .eq('client_tenant_id', clientTenantId)
+                .limit(1)
+                .maybeSingle();
+
+            if (relationshipError && !isMissingCanonicalTable(relationshipError)) throw relationshipError;
+
+            const previousPlanId = relationshipRow?.agency_plan_id || clientRow.billing?.agencyPlanId || null;
             const billing = { ...(clientRow.billing || {}) };
             delete billing.agencyPlanId;
             delete billing.agencyPlanName;
@@ -857,6 +935,10 @@ export async function removePlanFromClient(
  */
 async function incrementPlanClientCount(planId: string): Promise<void> {
     try {
+        if (await refreshCanonicalPlanClientCount(planId)) {
+            return;
+        }
+
         const { plan: canonicalPlan } = await getCanonicalAgencyPlanById(planId);
         if (canonicalPlan) {
             await supabase
@@ -883,6 +965,10 @@ async function incrementPlanClientCount(planId: string): Promise<void> {
  */
 async function decrementPlanClientCount(planId: string): Promise<void> {
     try {
+        if (await refreshCanonicalPlanClientCount(planId)) {
+            return;
+        }
+
         const { plan: canonicalPlan } = await getCanonicalAgencyPlanById(planId);
         if (canonicalPlan) {
             await supabase
@@ -1008,6 +1094,10 @@ export async function recalculateClientCounts(tenantId: string): Promise<void> {
         const plans = await getAgencyPlans(tenantId, true, true);
         
         for (const plan of plans) {
+            if (await refreshCanonicalPlanClientCount(plan.id)) {
+                continue;
+            }
+
             const clients = await getClientsUsingPlan(plan.id);
             
             if (clients.length !== plan.clientCount) {

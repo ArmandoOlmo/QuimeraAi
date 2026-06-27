@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useUI } from '../../contexts/core/UIContext';
 import { useAdmin } from '../../contexts/admin';
+import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle, type LucideIcon } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle, History, type LucideIcon } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import { AppButton, AppIcon } from '../ui/system';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
@@ -67,6 +68,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const { t } = useTranslation();
   const { user, userDocument, openProfileModal, canAccessSuperAdmin, isUserOwner, loadingAuth, logout } = useAuth();
   const { view, setView, setAdminView, themeMode, setThemeMode, sidebarOrder, setSidebarOrder, setIsOnboardingOpen } = useUI();
+  const { activeProjectId } = useProject();
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
 
   // Check role first (most reliable), then email-based owner check as fallback
@@ -223,8 +225,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const dashboardItem: NavItemData = { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard.title'), view: 'dashboard', route: ROUTES.DASHBOARD, isFixed: true };
 
   // Websites section items
+  const versionHistoryRoute = activeProjectId
+    ? ROUTES.PROJECT_VERSION_HISTORY.replace(':projectId', activeProjectId)
+    : ROUTES.VERSION_HISTORY;
   const websiteItems: NavItemData[] = [
     { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites', route: ROUTES.WEBSITES },
+    { id: 'version-history', icon: History, label: t('versionHistory.nav', 'Version History'), view: 'version-history', route: versionHistoryRoute },
     { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES, serviceId: 'templates', moduleId: 'templates-library' },
     { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation', route: ROUTES.NAVIGATION },
     { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic', serviceId: 'cms', moduleId: 'cms-engine' },

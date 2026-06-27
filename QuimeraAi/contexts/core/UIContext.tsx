@@ -29,6 +29,7 @@ const deriveInitialViewState = (): { view: View; adminView: AdminView } => {
 
     // Dashboard feature routes
     const featureMap: Record<string, View> = {
+        '/dashboard/project': 'version-history',
         '/dashboard': 'dashboard',
         '/websites': 'websites',
         '/cms': 'cms',
@@ -44,6 +45,7 @@ const deriveInitialViewState = (): { view: View; adminView: AdminView } => {
         '/email': 'email',
         '/assets': 'assets',
         '/templates': 'templates',
+        '/version-history': 'version-history',
         '/settings': 'settings',
         '/agency': 'agency',
         '/biopage': 'biopage',
@@ -322,4 +324,3 @@ export const useUI = (): UIContextType => {
     }
     return context;
 };
-

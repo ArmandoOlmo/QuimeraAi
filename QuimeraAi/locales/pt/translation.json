@@ -2543,5 +2543,46 @@
         "service-availability": { "label": "Disponibilidade de serviços" }
       }
     }
+  },
+  "versionHistory": {
+    "title": "Historico de Versoes",
+    "nav": "Historico de Versoes",
+    "projectSelect": "Projeto",
+    "selectProject": "Selecionar projeto",
+    "noProject": "Nenhum projeto selecionado",
+    "snapshots": "Snapshots",
+    "latest": "Mais recente",
+    "guardrails": "Protecoes",
+    "safeRestoreOn": "Restore seguro ativo",
+    "overwriteOn": "Sobrescrita ativa",
+    "history": "Historico",
+    "historyHint": "Snapshots automaticos criados antes de mutacoes de AI.",
+    "emptyTitle": "Ainda nao ha snapshots",
+    "emptyDescription": "As acoes de AI criarao snapshots automaticos aqui antes de alterar dados do projeto.",
+    "view": "Ver",
+    "compare": "Comparar",
+    "restore": "Restaurar",
+    "scope": "Escopo",
+    "module": "Modulo",
+    "diff": "Diff",
+    "selectedSnapshot": "Snapshot selecionado",
+    "selectSnapshot": "Selecione um snapshot para inspecionar.",
+    "restoreOptions": "Opcoes de restore",
+    "showRestore": "Mostrar restore",
+    "showDiff": "Mostrar diff",
+    "overwriteProtected": "Sobrescrever alteracoes manuais protegidas",
+    "overwriteProtectedHint": "Deixe desligado para preservar conteudo userModified e lockedFromRegeneration.",
+    "restoreModule": "Restaurar modulo",
+    "restoreSection": "Restaurar secao por ID",
+    "sectionIdPlaceholder": "id da secao",
+    "confirmRestoreProject": "Restaurar este snapshot no projeto atual? Modulos protegidos serao preservados salvo se sobrescrita estiver ativa.",
+    "confirmRestoreTarget": "Restaurar este alvo a partir do snapshot selecionado?",
+    "restoreSkipped": "O restore foi ignorado.",
+    "restoreProtected": "Restore concluido. Alteracoes manuais protegidas foram preservadas.",
+    "restoreSuccess": "Snapshot restaurado.",
+    "errors": {
+      "load": "Nao foi possivel carregar o historico de versoes.",
+      "restore": "Nao foi possivel restaurar este snapshot."
+    }
   }
 }

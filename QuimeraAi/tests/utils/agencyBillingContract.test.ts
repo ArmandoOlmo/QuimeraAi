@@ -12,6 +12,9 @@ describe('Agency billing canonical contract', () => {
     const checkoutPage = read('components/checkout/AgencyCheckoutPage.tsx');
     const tenantContext = read('contexts/tenant/TenantContext.tsx');
     const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
+    const agencyPlansService = read('services/agencyPlansService.ts');
+    const agencyPlanSelector = read('components/dashboard/agency/plans/AgencyPlanSelector.tsx');
+    const clientBillingManager = read('components/dashboard/agency/ClientBillingManager.tsx');
 
     it('stores agency client payment links in a canonical Supabase table with RLS', () => {
         expect(migration).toContain('create or replace function public.quimera_can_manage_agency(p_agency_tenant_id text)');
@@ -38,6 +41,7 @@ describe('Agency billing canonical contract', () => {
         expect(checkoutPage).not.toContain('CardElement');
         expect(checkoutPage).not.toContain('paymentMethodId');
         expect(checkoutPage).not.toContain('pm_card_visa');
+        expect(clientBillingManager).not.toContain('Stripe Elements');
     });
 
     it('keeps agency service-plan billing out of the platform subscription plan sync path', () => {
@@ -93,5 +97,32 @@ describe('Agency billing canonical contract', () => {
         expect(agencyMetricsHook).toContain(".from('store_orders')");
         expect(agencyMetricsHook).not.toContain(".from('orders')");
         expect(agencyMetricsHook).not.toContain('.from("orders")');
+    });
+
+    it('assigns agency service plans without leaking them into platform subscription plans', () => {
+        expect(agencyPlansService).toContain('function resolveAgencyClientEffectivePlanId');
+        expect(agencyPlansService).toContain("if (rawPlanId === params.assignedAgencyPlanId) continue");
+        expect(agencyPlansService).toContain("if (rawPlanId === 'agency_client') continue");
+        expect(agencyPlansService).toContain('return DEFAULT_CLIENT_EFFECTIVE_PLAN_ID');
+        expect(agencyPlansService).toContain('await getCanonicalClientRelationshipPlanId(plan.tenantId, clientTenantId)');
+        expect(agencyPlansService).toContain('subscription_plan: effectivePlanId');
+        expect(agencyPlansService).toContain(".select('client_tenant_id', { count: 'exact', head: true })");
+        expect(agencyPlansService).toContain(".eq('agency_plan_id', planId)");
+        expect(agencyPlansService).toContain('.update({ client_count: count ?? 0');
+        expect(agencyPlansService).toContain('if (await refreshCanonicalPlanClientCount(plan.id))');
+    });
+
+    it('routes agency billing UI actions through Service Access Engine', () => {
+        expect(agencyPlanSelector).toContain("import { useServiceAccess }");
+        expect(agencyPlanSelector).toContain("serviceAccess.canAccessModule('agency-service-plans'");
+        expect(agencyPlanSelector).toContain("requiredPermission: 'canManageBilling'");
+        expect(agencyPlanSelector).toContain('disabled={!canAssignPlan || loading}');
+
+        expect(clientBillingManager).toContain("import { useServiceAccess }");
+        expect(clientBillingManager).toContain("serviceAccess.canAccessModule('agency-service-plans'");
+        expect(clientBillingManager).toContain("requiredPermission: 'canManageBilling'");
+        expect(clientBillingManager).toContain('const requireAgencyBillingAccess = () =>');
+        expect(clientBillingManager).toContain('if (!requireAgencyBillingAccess()) return');
+        expect(clientBillingManager).toContain('disabled={!canManageAgencyBilling}');
     });
 });

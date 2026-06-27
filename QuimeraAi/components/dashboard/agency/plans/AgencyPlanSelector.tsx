@@ -19,6 +19,7 @@ import {
 import { getAgencyPlans, assignPlanToClient } from '../../../../services/agencyPlansService';
 import { AgencyPlan, calculateMarkup } from '../../../../types/agencyPlans';
 import { formatPlanLimit } from '../../../../services/billing/planCatalog';
+import { useServiceAccess } from '../../../../hooks/useServiceAccess';
 
 // =============================================================================
 // DROPDOWN SELECTOR
@@ -212,6 +213,7 @@ interface AgencyPlanCardSelectorProps {
     selectedPlanId?: string | null;
     onChange: (plan: AgencyPlan | null) => void;
     showDetails?: boolean;
+    disabled?: boolean;
 }
 
 export function AgencyPlanCardSelector({
@@ -219,6 +221,7 @@ export function AgencyPlanCardSelector({
     selectedPlanId,
     onChange,
     showDetails = true,
+    disabled = false,
 }: AgencyPlanCardSelectorProps) {
     const [plans, setPlans] = useState<AgencyPlan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -274,12 +277,14 @@ export function AgencyPlanCardSelector({
                     <button
                         key={plan.id}
                         type="button"
-                        onClick={() => onChange(isSelected ? null : plan)}
+                        onClick={() => !disabled && onChange(isSelected ? null : plan)}
+                        disabled={disabled}
                         className={`
                             relative p-4 rounded-xl border-2 text-left transition-all
+                            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
                             ${isSelected
                                 ? 'border-primary bg-primary/5'
-                                : 'border-q-border hover:border-primary/50 hover:bg-muted/30'
+                                : `border-q-border ${disabled ? '' : 'hover:border-primary/50 hover:bg-muted/30'}`
                             }
                         `}
                     >
@@ -379,6 +384,12 @@ export function AssignPlanModal({
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(currentPlanId || null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const serviceAccess = useServiceAccess();
+    const planAssignmentAccess = serviceAccess.canAccessModule('agency-service-plans', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageBilling',
+    });
+    const canAssignPlan = !serviceAccess.isLoading && planAssignmentAccess.allowed;
 
     useEffect(() => {
         if (isOpen) {
@@ -392,6 +403,11 @@ export function AssignPlanModal({
     const handleAssign = async () => {
         if (!selectedPlanId) {
             setError('Selecciona un plan');
+            return;
+        }
+
+        if (!canAssignPlan) {
+            setError(serviceAccess.isLoading ? 'Validando acceso a facturación' : planAssignmentAccess.message);
             return;
         }
 
@@ -437,6 +453,7 @@ export function AssignPlanModal({
                         tenantId={agencyTenantId}
                         selectedPlanId={selectedPlanId}
                         onChange={(plan) => setSelectedPlanId(plan?.id || null)}
+                        disabled={!canAssignPlan || loading}
                     />
                 </div>
 
@@ -450,7 +467,7 @@ export function AssignPlanModal({
                     </button>
                     <button
                         onClick={handleAssign}
-                        disabled={loading || !selectedPlanId}
+                        disabled={loading || !selectedPlanId || !canAssignPlan}
                         className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         {loading ? (

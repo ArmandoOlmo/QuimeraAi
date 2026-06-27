@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { supabase } from '../../../supabase';
 import {
     DollarSign,
@@ -43,6 +44,12 @@ interface ClientBillingInfo {
 export function ClientBillingManager() {
     const { subClients } = useAgency();
     const { currentTenant } = useTenant();
+    const serviceAccess = useServiceAccess();
+    const agencyBillingAccess = serviceAccess.canAccessModule('agency-service-plans', {
+        serviceId: 'agency',
+        requiredPermission: 'canManageBilling',
+    });
+    const canManageAgencyBilling = !serviceAccess.isLoading && agencyBillingAccess.allowed;
     const [clientsBilling, setClientsBilling] = useState<ClientBillingInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -109,7 +116,23 @@ export function ClientBillingManager() {
         setClientsBilling(billingInfo);
     };
 
+    const requireAgencyBillingAccess = () => {
+        if (serviceAccess.isLoading) {
+            setError('Validando acceso a facturación de agencia');
+            return false;
+        }
+
+        if (!agencyBillingAccess.allowed) {
+            setError(agencyBillingAccess.message);
+            return false;
+        }
+
+        return true;
+    };
+
     const handleOpenAssignPlan = (client: ClientBillingInfo) => {
+        if (!requireAgencyBillingAccess()) return;
+
         setAssignPlanModal({
             isOpen: true,
             clientId: client.clientId,
@@ -125,6 +148,7 @@ export function ClientBillingManager() {
 
     const handleUpdateLimits = async () => {
         if (!editLimitsClient || !editLimits) return;
+        if (!requireAgencyBillingAccess()) return;
 
         setProcessingAction(editLimitsClient);
         setError(null);
@@ -148,6 +172,8 @@ export function ClientBillingManager() {
     };
 
     const handleSetupBilling = async (clientId: string) => {
+        if (!requireAgencyBillingAccess()) return;
+
         if (!setupPrice || parseFloat(setupPrice) <= 0) {
             setError('Ingresa un precio válido');
             return;
@@ -189,6 +215,8 @@ export function ClientBillingManager() {
     };
 
     const handleUpdatePrice = async (clientId: string) => {
+        if (!requireAgencyBillingAccess()) return;
+
         if (!editPrice || parseFloat(editPrice) <= 0) {
             setError('Ingresa un precio válido');
             return;
@@ -221,12 +249,15 @@ export function ClientBillingManager() {
     };
 
     const handleCancelSubscription = (clientId: string, clientName: string) => {
+        if (!requireAgencyBillingAccess()) return;
+
         setCancelConfirm({ isOpen: true, clientId, clientName });
     };
 
     const confirmCancelSubscription = async () => {
         const { clientId } = cancelConfirm;
         setCancelConfirm({ isOpen: false, clientId: '', clientName: '' });
+        if (!requireAgencyBillingAccess()) return;
 
         setProcessingAction(clientId);
         setError(null);
@@ -389,7 +420,8 @@ export function ClientBillingManager() {
                                         {client.agencyPlanName ? (
                                             <button
                                                 onClick={() => handleOpenAssignPlan(client)}
-                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                                disabled={!canManageAgencyBilling}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Package className="h-3 w-3" />
                                                 {client.agencyPlanName}
@@ -397,7 +429,8 @@ export function ClientBillingManager() {
                                         ) : (
                                             <button
                                                 onClick={() => handleOpenAssignPlan(client)}
-                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-q-text-muted hover:bg-muted/80 transition-colors"
+                                                disabled={!canManageAgencyBilling}
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-q-text-muted hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Plus className="h-3 w-3" />
                                                 Asignar Plan
@@ -491,13 +524,18 @@ export function ClientBillingManager() {
                                         <div className="flex items-center justify-end gap-2">
                                             {!client.subscriptionId ? (
                                                 <button
-                                                    onClick={() => setPaymentLinkModal({
-                                                        isOpen: true,
-                                                        clientId: client.clientId,
-                                                        clientName: client.clientName,
-                                                        currentPlanId: client.agencyPlanId || null,
-                                                    })}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent hover:bg-q-accent/10 dark:hover:bg-q-accent/12 rounded-lg transition-colors"
+                                                    onClick={() => {
+                                                        if (!requireAgencyBillingAccess()) return;
+
+                                                        setPaymentLinkModal({
+                                                            isOpen: true,
+                                                            clientId: client.clientId,
+                                                            clientName: client.clientName,
+                                                            currentPlanId: client.agencyPlanId || null,
+                                                        });
+                                                    }}
+                                                    disabled={!canManageAgencyBilling}
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent hover:bg-q-accent/10 dark:hover:bg-q-accent/12 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Generar Link
@@ -507,10 +545,13 @@ export function ClientBillingManager() {
                                                     {client.status === 'active' && (
                                                         <button
                                                             onClick={() => {
+                                                                if (!requireAgencyBillingAccess()) return;
+
                                                                 setEditLimitsClient(client.clientId);
                                                                 setEditLimits({ ...(client as any).limits });
                                                             }}
-                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent"
+                                                            disabled={!canManageAgencyBilling}
+                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Editar límites"
                                                         >
                                                             <Settings className="h-4 w-4" />
@@ -519,12 +560,15 @@ export function ClientBillingManager() {
                                                     {client.status === 'active' && (
                                                         <button
                                                             onClick={() => {
+                                                                if (!requireAgencyBillingAccess()) return;
+
                                                                 setEditingClient(client.clientId);
                                                                 setEditPrice(
                                                                     client.monthlyPrice?.toString() || ''
                                                                 );
                                                             }}
-                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent"
+                                                            disabled={!canManageAgencyBilling}
+                                                            className="p-2 text-q-accent hover:text-q-accent dark:text-q-accent dark:hover:text-q-accent disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Editar precio"
                                                         >
                                                             <Edit2 className="h-4 w-4" />
@@ -539,9 +583,9 @@ export function ClientBillingManager() {
                                                                 )
                                                             }
                                                             disabled={
-                                                                processingAction === client.clientId
+                                                                processingAction === client.clientId || !canManageAgencyBilling
                                                             }
-                                                            className="p-2 text-q-error hover:text-q-error dark:text-q-error dark:hover:text-q-error disabled:opacity-50"
+                                                            className="p-2 text-q-error hover:text-q-error dark:text-q-error dark:hover:text-q-error disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Cancelar suscripción"
                                                         >
                                                             {processingAction === client.clientId ? (
@@ -650,8 +694,8 @@ export function ClientBillingManager() {
                             </button>
                             <button
                                 onClick={handleUpdateLimits}
-                                disabled={processingAction === editLimitsClient}
-                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
+                                disabled={processingAction === editLimitsClient || !canManageAgencyBilling}
+                                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {processingAction === editLimitsClient ? (
                                     <>
@@ -705,13 +749,6 @@ export function ClientBillingManager() {
                                     El cliente será facturado automáticamente cada mes
                                 </p>
                             </div>
-
-                            <div className="bg-q-accent/10 dark:bg-q-accent/12 border border-q-accent/25 dark:border-q-accent/30 rounded-lg p-3">
-                                <p className="text-sm text-q-accent dark:text-q-accent">
-                                    <strong>Nota:</strong> En producción, aquí se mostraría el formulario
-                                    de Stripe Elements para capturar el método de pago del cliente.
-                                </p>
-                            </div>
                         </div>
 
                         <div className="px-6 py-4 border-t border-q-border flex justify-end gap-3">
@@ -726,7 +763,7 @@ export function ClientBillingManager() {
                             </button>
                             <button
                                 onClick={() => handleSetupBilling(setupModalClient)}
-                                disabled={!setupPrice || processingAction === setupModalClient}
+                                disabled={!setupPrice || processingAction === setupModalClient || !canManageAgencyBilling}
                                 className="px-4 py-2 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                             >
                                 {processingAction === setupModalClient ? (

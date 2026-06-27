@@ -158,6 +158,15 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
         // Save draft to Supabase if requested
         if (projectSnapshot && saveDraftFirst) {
             console.log(`💾 [PublishService] Saving draft to Supabase first...`);
+            let currentVersionHistory = (project as any).versionHistory;
+            if (!currentVersionHistory) {
+                const { data: currentDraftRow } = await supabase
+                    .from('projects')
+                    .select('data')
+                    .eq('id', projectId)
+                    .maybeSingle();
+                currentVersionHistory = currentDraftRow?.data?.versionHistory;
+            }
             const fullDraftData = {
                 ...(project as any),
                 id: project.id || projectId,
@@ -176,6 +185,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
                 faviconUrl: project.faviconUrl || null,
                 thumbnailUrl: project.thumbnailUrl || null,
                 lastUpdated: new Date().toISOString(),
+                ...(currentVersionHistory ? { versionHistory: currentVersionHistory } : {}),
             };
             const draftData: Record<string, any> = {
                 last_updated: new Date().toISOString(),
