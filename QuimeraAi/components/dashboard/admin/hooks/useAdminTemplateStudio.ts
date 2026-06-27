@@ -2360,7 +2360,7 @@ COLOR PALETTE:
 - Text: ${brief.colorPalette.text}
 
 COLOR SYSTEM LOCK:
-The color palette above was produced by Quimera Color Expert. Use these exact color roles as semantic tokens.
+The color palette above was produced by Quimera Color Expert using the 60-30-10 proportion rule (60% dominant neutrals on background/surface, 30% brand colors on primary/secondary, 10% accent pop). Use these exact color roles as semantic tokens.
 Do not invent new brand hex colors, do not replace theme.globalColors, and do not make accessibility decisions with new colors.
 If a component needs button text, badge text, overlays, cards, or ecommerce colors, derive them from the provided semantic roles.
 

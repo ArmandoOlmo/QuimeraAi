@@ -35,6 +35,27 @@ const DEFAULT_LIGHT_TEXT = '#22252b';
 const DEFAULT_DARK_TEXT = '#e7e9ee';
 const KNOWN_NEUTRALS = new Set(['#ffffff', '#000000', '#fff', '#000', '#f8fafc', '#f9fafb']);
 
+/** 60-30-10 color proportion rule used by Quimera Color Expert and AI Studio. */
+export const COLOR_PROPORTION_RULE_603010 = {
+    id: '60-30-10',
+    label: '60-30-10 Rule',
+    labelEs: 'Regla 60-30-10',
+    description: '60% dominant neutrals (background/surface), 30% brand colors (primary/secondary), 10% accent pop.',
+    descriptionEs: '60% neutros dominantes (fondo/superficie), 30% colores de marca (primario/secundario), 10% acento.',
+    roles: {
+        dominant: ['background', 'surface', 'text', 'textMuted', 'heading', 'border'] as const,
+        brand: ['primary', 'secondary'] as const,
+        accent: ['accent'] as const,
+    },
+    targets: {
+        dominantMaxSaturation: 22,
+        brandMinSaturation: 36,
+        brandMaxSaturation: 78,
+        accentMinSaturationBoost: 8,
+        accentMinHueDistance: 24,
+    },
+} as const;
+
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const roundScore = (value: number) => Math.round(clamp(value, 0, 100));
 
@@ -555,6 +576,133 @@ function buildSystemFromStrategy(brief: ColorBrief, strategy: StrategyProfile, s
     }).colors;
 }
 
+function isNeutralColor(color: string, maxSaturation = COLOR_PROPORTION_RULE_603010.targets.dominantMaxSaturation): boolean {
+    return hexToHsl(color).s <= maxSaturation;
+}
+
+function isMonochromePalette(colors: GlobalColors): boolean {
+    const hues = [colors.primary, colors.secondary, colors.accent].map(color => hexToHsl(color).h);
+    const spread = Math.max(...hues) - Math.min(...hues);
+    return spread < 18;
+}
+
+function neutralizeForDominantRole(color: string, referenceHue: number, mode: 'light' | 'dark'): string {
+    const hsl = hexToHsl(color);
+    const targetSaturation = clamp(Math.min(hsl.s, COLOR_PROPORTION_RULE_603010.targets.dominantMaxSaturation), 4, COLOR_PROPORTION_RULE_603010.targets.dominantMaxSaturation);
+    const targetLightness = mode === 'dark'
+        ? clamp(hsl.l, 6, 18)
+        : clamp(hsl.l, 92, 98);
+    return hslToHex({
+        h: Number.isFinite(referenceHue) ? referenceHue : hsl.h,
+        s: targetSaturation,
+        l: targetLightness,
+    });
+}
+
+export function score603010Compliance(colors: GlobalColors, options: { allowMonochrome?: boolean } = {}): number {
+    const { targets } = COLOR_PROPORTION_RULE_603010;
+    const bgHsl = hexToHsl(colors.background);
+    const surfaceHsl = hexToHsl(colors.surface);
+    const primaryHsl = hexToHsl(colors.primary);
+    const secondaryHsl = hexToHsl(colors.secondary);
+    const accentHsl = hexToHsl(colors.accent);
+    const textHsl = hexToHsl(colors.text);
+    const monochrome = options.allowMonochrome ?? isMonochromePalette(colors);
+
+    let score = 42;
+
+    if (bgHsl.s <= targets.dominantMaxSaturation) score += 14;
+    else if (bgHsl.s <= targets.dominantMaxSaturation + 8) score += 7;
+
+    if (surfaceHsl.s <= targets.dominantMaxSaturation + 4) score += 10;
+    if (textHsl.s <= 14) score += 8;
+
+    if (primaryHsl.s >= targets.brandMinSaturation && primaryHsl.s <= targets.brandMaxSaturation) score += 10;
+    if (secondaryHsl.s >= targets.brandMinSaturation - 8 && secondaryHsl.s <= targets.brandMaxSaturation) score += 6;
+    if (primaryHsl.s >= secondaryHsl.s + 2) score += 5;
+
+    if (accentHsl.s >= primaryHsl.s + targets.accentMinSaturationBoost) score += 12;
+    else if (accentHsl.s >= primaryHsl.s + 3) score += 6;
+
+    if (monochrome) {
+        const brandSpread = Math.abs(primaryHsl.l - accentHsl.l);
+        if (brandSpread >= 8) score += 10;
+    } else if (hueDistance(colors.accent, colors.primary) >= targets.accentMinHueDistance) {
+        score += 10;
+    } else if (hueDistance(colors.accent, colors.secondary) >= targets.accentMinHueDistance) {
+        score += 6;
+    }
+
+    return roundScore(score);
+}
+
+export function apply603010Rule(colors: GlobalColors): { colors: GlobalColors; warnings: string[] } {
+    const warnings: string[] = [];
+    const { targets } = COLOR_PROPORTION_RULE_603010;
+    const mode: 'light' | 'dark' = getLuminance(colors.background) < 0.35 ? 'dark' : 'light';
+    const referenceHue = hexToHsl(colors.primary).h;
+    const monochrome = isMonochromePalette(colors);
+    const adjusted: GlobalColors = { ...colors };
+
+    if (!isNeutralColor(adjusted.background)) {
+        adjusted.background = neutralizeForDominantRole(adjusted.background, referenceHue, mode);
+        warnings.push('Adjusted background toward the 60% dominant neutral layer.');
+    }
+    if (!isNeutralColor(adjusted.surface, targets.dominantMaxSaturation + 4)) {
+        adjusted.surface = mode === 'dark'
+            ? mix(adjusted.background, '#ffffff', 0.08)
+            : mix(adjusted.background, '#ffffff', 0.72);
+        warnings.push('Adjusted surface to stay within the 60% dominant neutral layer.');
+    }
+
+    const primaryHsl = hexToHsl(adjusted.primary);
+    if (primaryHsl.s < targets.brandMinSaturation) {
+        adjusted.primary = ensureButtonReady(hslToHex({
+            ...primaryHsl,
+            s: clamp(primaryHsl.s + 10, targets.brandMinSaturation, targets.brandMaxSaturation),
+        }));
+        warnings.push('Boosted primary saturation for the 30% brand layer.');
+    }
+
+    const secondaryHsl = hexToHsl(adjusted.secondary);
+    const targetSecondarySaturation = clamp(primaryHsl.s - 8, targets.brandMinSaturation - 6, targets.brandMaxSaturation - 4);
+    if (secondaryHsl.s > primaryHsl.s + 4 || secondaryHsl.s < targets.brandMinSaturation - 10) {
+        adjusted.secondary = hslToHex({
+            ...secondaryHsl,
+            s: targetSecondarySaturation,
+        });
+        warnings.push('Rebalanced secondary color for the 30% brand layer.');
+    }
+
+    const accentHsl = hexToHsl(adjusted.accent);
+    const targetAccentSaturation = clamp(
+        Math.max(accentHsl.s, primaryHsl.s + targets.accentMinSaturationBoost),
+        targets.brandMinSaturation,
+        88,
+    );
+    let nextAccent = hslToHex({ ...accentHsl, s: targetAccentSaturation });
+
+    if (!monochrome && hueDistance(nextAccent, adjusted.primary) < targets.accentMinHueDistance) {
+        const accentPrimaryHueDelta = Math.min(
+            Math.abs(accentHsl.h - primaryHsl.h),
+            360 - Math.abs(accentHsl.h - primaryHsl.h),
+        );
+        nextAccent = rotateHue(
+            adjusted.primary,
+            accentPrimaryHueDelta >= 12 ? (accentHsl.h - primaryHsl.h) : 58,
+            targetAccentSaturation,
+            accentHsl.l,
+        );
+        warnings.push('Shifted accent hue to preserve the 10% pop layer.');
+    }
+    adjusted.accent = ensureButtonReady(nextAccent);
+    if (targetAccentSaturation > accentHsl.s) {
+        warnings.push('Boosted accent saturation for the 10% pop layer.');
+    }
+
+    return { colors: adjusted, warnings: [...new Set(warnings)] };
+}
+
 function scoreSystem(colors: GlobalColors, brief: ColorBrief, seed: string, strategy?: StrategyProfile | { style?: StrategyStyle; id?: string }): WebsiteColorSystem['scores'] {
     const textContrast = contrastRatio(colors.text, colors.background);
     const headingContrast = contrastRatio(colors.heading, colors.background);
@@ -583,12 +731,21 @@ function scoreSystem(colors: GlobalColors, brief: ColorBrief, seed: string, stra
         ? (contrastRatio(colors.error, colors.background) >= 3 ? 12 : 0) + (contrastRatio(colors.accent, colors.background) >= 2 ? 8 : 0)
         : 10;
     const componentReadiness = roundScore(55 + (buttonContrast >= 3 ? 18 : 0) + (surfaceDelta >= 0.04 ? 15 : 0) + ecommerceBoost);
+    const proportionBalance = score603010Compliance(colors, {
+        allowMonochrome: isMonochrome || strategy?.style === 'monochrome' || strategy?.id?.includes('mono'),
+    });
 
-    return { contrast, harmony, brandFit, componentReadiness };
+    return { contrast, harmony, brandFit, componentReadiness, proportionBalance };
 }
 
 function totalScore(scores: WebsiteColorSystem['scores']): number {
-    return roundScore(scores.contrast * 0.45 + scores.harmony * 0.25 + scores.brandFit * 0.20 + scores.componentReadiness * 0.10);
+    return roundScore(
+        scores.contrast * 0.40
+        + scores.harmony * 0.22
+        + scores.brandFit * 0.18
+        + scores.componentReadiness * 0.10
+        + scores.proportionBalance * 0.10,
+    );
 }
 
 function hueDistance(colorA: string, colorB: string): number {
@@ -748,15 +905,38 @@ export function validateColorSystem(systemOrColors: WebsiteColorSystem | GlobalC
         hexToHsl(colors.accent).h,
     ];
     const maxSpread = Math.max(...hueSpread) - Math.min(...hueSpread);
-    const allowsMonochrome = isSystem && (
+    const allowsMonochrome = (isSystem && (
         systemOrColors.strategy.includes('mono') ||
         systemOrColors.strategy.includes('monochrome')
-    );
+    )) || isMonochromePalette(colors);
     if (maxSpread < 18 && !allowsMonochrome) {
         issues.push({ severity: 'warning', path: 'primary/secondary/accent', message: 'Palette is too monochromatic for a full website system.' });
     }
 
-    const score = isSystem ? systemOrColors.score : 100 - issues.length * 18;
+    const proportionScore = score603010Compliance(colors, { allowMonochrome: allowsMonochrome });
+    if (proportionScore < 62) {
+        issues.push({
+            severity: 'warning',
+            path: '60-30-10',
+            message: 'Palette does not follow the 60-30-10 proportion rule closely enough (dominant neutrals, brand layer, accent pop).',
+        });
+    }
+    if (!isNeutralColor(colors.background)) {
+        issues.push({
+            severity: 'warning',
+            path: 'background/60-30-10',
+            message: 'Background should stay neutral as the 60% dominant layer.',
+        });
+    }
+    if (hexToHsl(colors.accent).s < hexToHsl(colors.primary).s + COLOR_PROPORTION_RULE_603010.targets.accentMinSaturationBoost - 2) {
+        issues.push({
+            severity: 'warning',
+            path: 'accent/60-30-10',
+            message: 'Accent should be the most vivid color in the 10% pop layer.',
+        });
+    }
+
+    const score = isSystem ? systemOrColors.score : roundScore(100 - issues.length * 18 + proportionScore * 0.08);
     return {
         valid: !issues.some(issue => issue.severity === 'error'),
         score: roundScore(score),
@@ -770,8 +950,11 @@ export function repairColorSystem(colors: Partial<GlobalColors>): { colors: Glob
         ...defaults,
         ...Object.fromEntries(
             Object.entries(colors)
-                .map(([key, value]) => [key, normalizeHexColor(String(value)) || value])
-                .filter(([, value]) => Boolean(value))
+                .map(([key, value]) => {
+                    const normalized = typeof value === 'string' ? normalizeHexColor(value) : null;
+                    return normalized ? [key, normalized] : null;
+                })
+                .filter((entry): entry is [string, string] => Boolean(entry))
         ),
     } as GlobalColors;
     const warnings: string[] = [];
@@ -818,7 +1001,28 @@ export function repairColorSystem(colors: Partial<GlobalColors>): { colors: Glob
     repaired.success = repaired.success || (bgIsDark ? '#4ade80' : '#16a34a');
     repaired.error = repaired.error || (bgIsDark ? '#f87171' : '#dc2626');
 
-    return { colors: repaired, warnings };
+    const proportionAdjusted = apply603010Rule(repaired);
+    warnings.push(...proportionAdjusted.warnings);
+    const finalColors = proportionAdjusted.colors;
+
+    if (contrastRatio(finalColors.text, finalColors.background) < 4.5) {
+        finalColors.text = readableText;
+        warnings.push('Re-adjusted text color after applying the 60-30-10 rule.');
+    }
+    if (contrastRatio(finalColors.heading, finalColors.background) < 4.5) {
+        finalColors.heading = readableHeading;
+        warnings.push('Re-adjusted heading color after applying the 60-30-10 rule.');
+    }
+    if (Math.max(contrastRatio(finalColors.primary, '#ffffff'), contrastRatio(finalColors.primary, '#111827')) < 3) {
+        finalColors.primary = ensureButtonReady(finalColors.primary);
+        warnings.push('Re-adjusted primary color after applying the 60-30-10 rule.');
+    }
+    if (Math.max(contrastRatio(finalColors.accent, '#ffffff'), contrastRatio(finalColors.accent, '#111827')) < 3) {
+        finalColors.accent = ensureButtonReady(finalColors.accent);
+        warnings.push('Re-adjusted accent color after applying the 60-30-10 rule.');
+    }
+
+    return { colors: finalColors, warnings: [...new Set(warnings)] };
 }
 
 export function generateColorCandidates(brief: ColorBrief): ColorCandidate[] {
@@ -889,7 +1093,7 @@ export function selectBestColorSystem(candidates: ColorCandidate[]): WebsiteColo
         mode: 'dark',
         colors: getDefaultGlobalColors(),
         score: 70,
-        scores: { contrast: 70, harmony: 70, brandFit: 70, componentReadiness: 70 },
+        scores: { contrast: 70, harmony: 70, brandFit: 70, componentReadiness: 70, proportionBalance: 70 },
         warnings: ['Using default colors because no candidates were available.'],
         sourceColors: [],
     };

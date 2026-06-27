@@ -50,6 +50,7 @@ export interface WebsiteColorSystem {
         harmony: number;
         brandFit: number;
         componentReadiness: number;
+        proportionBalance: number;
     };
     warnings: string[];
     sourceColors: string[];

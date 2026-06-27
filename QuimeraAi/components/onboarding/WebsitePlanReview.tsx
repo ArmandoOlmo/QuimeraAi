@@ -5,6 +5,7 @@ import type { WebsitePlan } from '../../types/websitePlan';
 import type { ColorCandidate } from '../../types/colorSystem';
 import { SortableComponentChips } from '../ui/SortableComponentChips';
 import ColorControl from '../ui/ColorControl';
+import { ColorExpertScores } from '../ui/ColorExpertScores';
 import { createColorBriefFromWebsitePlan, createImportedPaletteCandidates, generateColorCandidates, selectBestColorSystem } from '../../utils/colorSystemEngine';
 import AppSelect from '../ui/AppSelect';
 
@@ -180,6 +181,14 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
         Boolean(color) &&
         all.findIndex(item => String(item).toLowerCase() === String(color).toLowerCase()) === index
     ));
+    const selectedColorCandidate = useMemo(() => {
+        const selectedId = plan.brandProfile.selectedColorCandidateId;
+        if (!selectedId) return null;
+        return [
+            ...importedPaletteCandidates,
+            ...colorCandidates,
+        ].find(candidate => candidate.id === selectedId) || null;
+    }, [plan.brandProfile.selectedColorCandidateId, importedPaletteCandidates, colorCandidates]);
     const hasEcommerceColorPreview = Boolean(
         plan.businessProfile.hasEcommerce ||
         plan.componentPlan.some(item => ['announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown', 'productReviews', 'productBundle'].includes(item.component))
@@ -242,6 +251,15 @@ export const WebsitePlanReview: React.FC<WebsitePlanReviewProps> = ({
                                         Regenerate
                                     </button>
                                 </div>
+                                {selectedColorCandidate && (
+                                    <div className="rounded-lg border border-q-border bg-q-surface/60 p-3">
+                                        <p className="mb-2 text-[10px] uppercase tracking-wider text-q-text-secondary">Selected palette scores</p>
+                                        <ColorExpertScores
+                                            scores={selectedColorCandidate.system.scores}
+                                            totalScore={selectedColorCandidate.system.score}
+                                        />
+                                    </div>
+                                )}
                                 {importedColorSignals.length > 0 && (
                                     <div className="rounded-lg border border-q-border bg-q-surface/60 p-2">
                                         <p className="mb-2 text-[10px] uppercase tracking-wider text-q-text-secondary">Detected colors used by Color Expert</p>
@@ -545,7 +563,14 @@ const ColorCandidateButton: React.FC<{
             <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                     <p className="text-xs font-semibold text-q-text truncate">{candidate.labelEs || candidate.label}</p>
-                    <p className="mt-0.5 text-[10px] text-q-text-secondary">{candidate.system.score} · {candidate.system.mode}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                        <span className="text-[10px] text-q-text-secondary capitalize">{candidate.system.mode}</span>
+                        <ColorExpertScores
+                            scores={candidate.system.scores}
+                            totalScore={candidate.system.score}
+                            compact
+                        />
+                    </div>
                 </div>
                 <div className="flex gap-1">
                     {candidate.preview.slice(0, 5).map((color, index) => (

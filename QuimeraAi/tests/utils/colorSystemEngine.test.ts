@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+    COLOR_PROPORTION_RULE_603010,
     contrastRatio,
     createColorBriefFromWebsitePlan,
     createImportedPaletteCandidates,
     generateColorCandidates,
     repairColorSystem,
+    score603010Compliance,
     toGlobalColors,
     validateColorSystem,
 } from '../../utils/colorSystemEngine';
@@ -126,6 +128,21 @@ describe('colorSystemEngine', () => {
         expect(repaired.colors.surface).not.toBe('#2e2e2e');
     });
 
+    it('ignores invalid imported color values before contrast repair', () => {
+        const repaired = repairColorSystem({
+            primary: { color: '#be123c' },
+            secondary: '#0f766e',
+            accent: 'not-a-color',
+            background: '#fff7ed',
+            surface: '#ffffff',
+            text: '#1f2937',
+        } as any);
+
+        expect(repaired.colors.primary).toMatch(/^#[0-9a-f]{6}$/);
+        expect(repaired.colors.accent).toMatch(/^#[0-9a-f]{6}$/);
+        expect(contrastRatio(repaired.colors.text, repaired.colors.background)).toBeGreaterThanOrEqual(4.5);
+    });
+
     it('converts old import colors into a ColorBrief and preserves ecommerce context', () => {
         const brief = createColorBriefFromWebsitePlan(basePlan);
 
@@ -213,5 +230,45 @@ describe('colorSystemEngine', () => {
 
         expect(selectedPlan.brandProfile.selectedColorCandidateId).toBe('imported-palette-faithful');
         expect(selectedPlan.brandProfile.colors.primary).toBe(importedCandidates[0].system.colors.primary);
+    });
+
+    it('scores and repairs palettes toward the 60-30-10 proportion rule', () => {
+        const noisyPalette = {
+            primary: '#228fe4',
+            secondary: '#228fe4',
+            accent: '#228fe4',
+            background: '#1d4ed8',
+            surface: '#2563eb',
+            text: '#1e40af',
+            textMuted: '#1d4ed8',
+            heading: '#1e3a8a',
+            border: '#3b82f6',
+            success: '#16a34a',
+            error: '#dc2626',
+        };
+
+        expect(score603010Compliance(noisyPalette)).toBeLessThan(55);
+
+        const repaired = repairColorSystem(noisyPalette);
+        expect(score603010Compliance(repaired.colors)).toBeGreaterThanOrEqual(62);
+        expect(repaired.warnings.some(warning => /60-30-10|dominant|accent|brand layer/i.test(warning))).toBe(true);
+        expect(contrastRatio(repaired.colors.text, repaired.colors.background)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(repaired.colors.accent, repaired.colors.primary)).toBeGreaterThan(0);
+    });
+
+    it('includes proportionBalance in generated candidate scores', () => {
+        const brief = createColorBriefFromWebsitePlan(basePlan);
+        const candidates = generateColorCandidates(brief);
+
+        for (const candidate of candidates) {
+            expect(candidate.system.scores.proportionBalance).toBeGreaterThanOrEqual(55);
+        }
+    });
+
+    it('exports the 60-30-10 rule definition for AI Studio and Color Expert', () => {
+        expect(COLOR_PROPORTION_RULE_603010.id).toBe('60-30-10');
+        expect(COLOR_PROPORTION_RULE_603010.roles.dominant).toContain('background');
+        expect(COLOR_PROPORTION_RULE_603010.roles.brand).toContain('primary');
+        expect(COLOR_PROPORTION_RULE_603010.roles.accent).toContain('accent');
     });
 });
