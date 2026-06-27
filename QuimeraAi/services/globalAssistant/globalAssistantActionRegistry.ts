@@ -386,6 +386,22 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
         status: stringSchema(undefined, ['draft', 'test', 'deployed', 'paused', 'disabled']),
     }, ['projectId', 'surface']), 'critical', { requiredService: 'chatbot', requiredFeature: 'chatbotEnabled' }),
 
+    action('agency', 'open_agency_command_center', 'Open Agency Command Center without mutating data.', objectSchema({
+        section: stringSchema('Optional Agency Command Center section to open.'),
+    }), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
+    action('agency', 'open_agency_client_360', 'Open Agency Client 360 for a managed client without mutating data.', objectSchema({
+        clientTenantId: stringSchema('Managed client tenant id.'),
+        section: stringSchema('Optional Client 360 section to open.'),
+    }, ['clientTenantId']), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
+    action('agency', 'search_agency_clients', 'Search agency-managed clients and service-plan relationships.', objectSchema({
+        tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
+        query: stringSchema('Client, email, lifecycle, billing mode, or service-plan search query.'),
+    }), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
+    action('agency', 'summarize_agency_performance', 'Summarize Agency Engine clients, service plans, billing, and operating readiness.', objectSchema({
+        tenantId: stringSchema('Agency tenant id. Defaults to the active tenant.'),
+        includeClients: booleanSchema('Whether to include a small Client 360 sample.'),
+    }), 'low', { mutatesData: false, requiredService: 'agency', previewSupported: false, rollbackSupported: false }),
+
     action('analytics', 'run_project_report', 'Run a project report.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'summarize_analytics', 'Summarize analytics.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),
     action('analytics', 'identify_blockers', 'Identify readiness blockers.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'analytics', previewSupported: false, rollbackSupported: false }),

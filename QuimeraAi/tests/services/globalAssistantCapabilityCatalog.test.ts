@@ -4,7 +4,7 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate', 'crm', 'bioPage'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate', 'crm', 'bioPage', 'agency'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule', 'websiteBuilder'],
         });
 
@@ -23,6 +23,7 @@ describe('globalAssistantCapabilityCatalog', () => {
         const chatbot = catalog.modules.find(module => module.module === 'chatbot');
         const restaurants = catalog.modules.find(module => module.module === 'restaurants');
         const realEstate = catalog.modules.find(module => module.module === 'realEstate');
+        const agency = catalog.modules.find(module => module.module === 'agency');
         const createEmail = catalog.actions.find(action => action.actionType === 'create_email_campaign');
         const sendEmail = catalog.actions.find(action => action.actionType === 'send_email_campaign');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -38,6 +39,9 @@ describe('globalAssistantCapabilityCatalog', () => {
         const publishWebsite = catalog.actions.find(action => action.actionType === 'publish_website');
         const testChatbot = catalog.actions.find(action => action.actionType === 'test_chatbot');
         const deployChatbot = catalog.actions.find(action => action.actionType === 'deploy_chatbot_to_surface');
+        const openAgencyCommandCenter = catalog.actions.find(action => action.actionType === 'open_agency_command_center');
+        const searchAgencyClients = catalog.actions.find(action => action.actionType === 'search_agency_clients');
+        const summarizeAgencyPerformance = catalog.actions.find(action => action.actionType === 'summarize_agency_performance');
         const updateServiceAvailability = catalog.actions.find(action => action.actionType === 'update_service_availability');
         const updatePlan = catalog.actions.find(action => action.actionType === 'update_plan');
         const reviewErrors = catalog.actions.find(action => action.actionType === 'review_errors');
@@ -166,6 +170,13 @@ describe('globalAssistantCapabilityCatalog', () => {
             'create_showing_request_flow',
             'generate_realty_campaign',
         ]));
+        expect(agency?.executableActionTypes).toEqual(expect.arrayContaining([
+            'open_agency_command_center',
+            'open_agency_client_360',
+            'search_agency_clients',
+            'summarize_agency_performance',
+        ]));
+        expect(agency?.serviceIds).toEqual(['agency']);
         expect(createEmail).toMatchObject({
             executable: true,
             availableInContext: true,
@@ -267,6 +278,28 @@ describe('globalAssistantCapabilityCatalog', () => {
             rollbackExecutable: true,
             requiredFeature: 'chatbotEnabled',
         });
+        expect(openAgencyCommandCenter).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredService: 'agency',
+            mutatesData: false,
+            safeNavigation: true,
+            requiredPermissions: ['assistant:agency:use'],
+        });
+        expect(searchAgencyClients).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredService: 'agency',
+            mutatesData: false,
+            safeNavigation: true,
+        });
+        expect(summarizeAgencyPerformance).toMatchObject({
+            executable: true,
+            availableInContext: true,
+            requiredService: 'agency',
+            mutatesData: false,
+            safeNavigation: true,
+        });
         expect(updateServiceAvailability).toMatchObject({
             executable: true,
             safetyLevel: 'critical',
@@ -302,7 +335,9 @@ describe('globalAssistantCapabilityCatalog', () => {
         });
 
         expect(catalog.actions.some(action => action.actionType === 'create_product')).toBe(false);
+        expect(catalog.actions.some(action => action.actionType === 'open_agency_command_center')).toBe(false);
         expect(catalog.modules.some(module => module.module === 'ecommerce')).toBe(false);
+        expect(catalog.modules.some(module => module.module === 'agency')).toBe(false);
         expect(catalog.actions.some(action => action.blockedBy.length > 0)).toBe(false);
     });
 
@@ -331,10 +366,15 @@ describe('globalAssistantCapabilityCatalog', () => {
         });
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
+        const agencyCommandCenter = catalog.actions.find(action => action.actionType === 'open_agency_command_center');
 
         expect(createProduct).toMatchObject({
             availableInContext: false,
             blockedBy: ['service:ecommerce', 'feature:ecommerceEnabled'],
+        });
+        expect(agencyCommandCenter).toMatchObject({
+            availableInContext: false,
+            blockedBy: ['service:agency'],
         });
         expect(ecommerce?.unavailableActionTypes).toContain('create_product');
     });

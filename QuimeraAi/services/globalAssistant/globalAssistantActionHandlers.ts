@@ -433,6 +433,255 @@ const createNavigationHandler = (
     },
 });
 
+const safeAssistantRows = async (
+    builder: any,
+    source: string,
+): Promise<{ rows: Record<string, unknown>[]; warning?: string }> => {
+    try {
+        const result = await builder;
+        if (result?.error) throw result.error;
+        return { rows: asArray(result?.data).map(asRecord) };
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return { rows: [], warning: `${source}: ${message}` };
+    }
+};
+
+const withOptionalLimit = (builder: any, count: number): any =>
+    typeof builder?.limit === 'function' ? builder.limit(count) : builder;
+
+const readAgencyTenantId = (
+    input: Record<string, unknown>,
+    action: AssistantAction,
+    context?: AssistantContextSnapshot,
+): string => {
+    const tenantId = readString(input.tenantId) || getTenantId(action, context);
+    if (!tenantId) throw new Error('tenantId is required before using Agency Engine assistant actions.');
+    return tenantId;
+};
+
+const createAgencyClient360NavigationHandler = (): HandlerPatch => ({
+    validate: input => ({
+        valid: Boolean(readString(input.clientTenantId)),
+        errors: readString(input.clientTenantId) ? [] : ['clientTenantId is required before opening Agency Client 360.'],
+    }),
+    execute: async (input, { action, context }) => {
+        const clientTenantId = readString(input.clientTenantId);
+        const section = readString(input.section) || 'overview';
+        if (!clientTenantId) throw new Error('clientTenantId is required before opening Agency Client 360.');
+        return {
+            afterSnapshot: {
+                navigation: {
+                    type: 'view',
+                    view: 'agency',
+                    moduleItem: 'client-360',
+                    clientTenantId,
+                    section,
+                    tenantId: getTenantId(action, context),
+                    actionType: action.actionType,
+                    module: action.module,
+                    sourceModule: 'global-assistant',
+                    sourceComponent: 'OperatingLayer',
+                    message: 'Open Agency Client 360.',
+                },
+            },
+            diff: {
+                opened: [`agency.client360.${clientTenantId}.${section}`],
+                clientTenantId,
+                section,
+            },
+        };
+    },
+});
+
+const readAgencyClientsSnapshot = async (
+    deps: GlobalAssistantActionHandlerDependencies,
+    agencyTenantId: string,
+) => {
+    const client = getClient(deps);
+    const relationshipsQuery = withOptionalLimit(
+        client
+            .from('agency_clients')
+            .select('agency_tenant_id,client_tenant_id,agency_plan_id,billing_mode,onboarding_status,status,lifecycle_stage,metadata,updated_at')
+            .eq('agency_tenant_id', agencyTenantId),
+        100,
+    );
+    const plansQuery = withOptionalLimit(
+        client
+            .from('agency_service_plans')
+            .select('id,name,price,base_cost,is_active,is_default,is_archived,client_count,limits,features')
+            .eq('tenant_id', agencyTenantId),
+        100,
+    );
+    const tenantQuery = withOptionalLimit(
+        client
+            .from('tenants')
+            .select('id,name,email,type,billing,subscription_plan,usage,updated_at')
+            .eq('owner_tenant_id', agencyTenantId),
+        100,
+    );
+
+    const [relationshipsResult, plansResult, ownedTenantsResult] = await Promise.all([
+        safeAssistantRows(relationshipsQuery, 'agency_clients'),
+        safeAssistantRows(plansQuery, 'agency_service_plans'),
+        safeAssistantRows(tenantQuery, 'tenants'),
+    ]);
+
+    const ownedTenantsById = new Map(ownedTenantsResult.rows.map(row => [readString(row.id), row]));
+    const plansById = new Map(plansResult.rows.map(row => [readString(row.id), row]));
+    const relationshipClientIds = uniqueStringList(
+        relationshipsResult.rows
+            .map(row => readString(row.client_tenant_id))
+            .filter((id): id is string => Boolean(id)),
+    );
+    let relationshipTenantRows: Record<string, unknown>[] = [];
+    let relationshipTenantWarning: string | undefined;
+
+    if (relationshipClientIds.length > 0) {
+        const baseTenantQuery = client
+            .from('tenants')
+            .select('id,name,email,type,billing,subscription_plan,usage,updated_at');
+        if (typeof baseTenantQuery.in === 'function') {
+            const result = await safeAssistantRows(
+                withOptionalLimit(baseTenantQuery.in('id', relationshipClientIds), 100),
+                'tenants.by_relationship',
+            );
+            relationshipTenantRows = result.rows;
+            relationshipTenantWarning = result.warning;
+        }
+    }
+
+    relationshipTenantRows.forEach(row => {
+        const id = readString(row.id);
+        if (id) ownedTenantsById.set(id, row);
+    });
+
+    const relationshipsByClientId = new Map(
+        relationshipsResult.rows.map(row => [readString(row.client_tenant_id), row]),
+    );
+    const clientIds = uniqueStringList([
+        ...Array.from(ownedTenantsById.keys()).filter((id): id is string => Boolean(id)),
+        ...relationshipClientIds,
+    ]);
+    const clients = clientIds.map(clientTenantId => {
+        const tenant = asRecord(ownedTenantsById.get(clientTenantId));
+        const relationship = asRecord(relationshipsByClientId.get(clientTenantId));
+        const billing = asRecord(tenant.billing);
+        const planId = readString(relationship.agency_plan_id) || readString(billing.agencyPlanId);
+        const plan = asRecord(plansById.get(planId));
+        return {
+            clientTenantId,
+            name: readDisplayText(tenant.name) || readDisplayText(billing.clientName) || clientTenantId,
+            email: readString(tenant.email) || null,
+            agencyPlanId: planId || null,
+            agencyPlanName: readDisplayText(plan.name) || readDisplayText(billing.agencyPlanName) || null,
+            billingMode: readString(relationship.billing_mode) || readString(billing.mode) || 'unknown',
+            lifecycleStage: readString(relationship.lifecycle_stage) || readString(relationship.status) || readString(relationship.onboarding_status) || 'unknown',
+            monthlyPrice: readNumber(billing.monthlyPrice) ?? readNumber(plan.price) ?? 0,
+            projectCount: readNumber(asRecord(tenant.usage).projectCount) ?? readNumber(billing.projectCount) ?? 0,
+            updatedAt: readString(relationship.updated_at) || readString(tenant.updated_at) || null,
+        };
+    });
+
+    const activePlans = plansResult.rows.filter(plan => plan.is_archived !== true && plan.is_active !== false);
+    const warnings = [
+        relationshipsResult.warning,
+        plansResult.warning,
+        ownedTenantsResult.warning,
+        relationshipTenantWarning,
+    ].filter((warning): warning is string => Boolean(warning));
+
+    return {
+        agencyTenantId,
+        clients,
+        plans: plansResult.rows,
+        activePlans,
+        warnings,
+        sourceTables: ['agency_clients', 'agency_service_plans', 'tenants'],
+    };
+};
+
+const createSearchAgencyClientsHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const query = normalizeForSearch(readString(input.query) || readString(input.request) || '');
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const clients = query
+            ? snapshot.clients.filter(client => normalizeForSearch([
+                client.name,
+                client.email,
+                client.agencyPlanName,
+                client.billingMode,
+                client.lifecycleStage,
+                client.clientTenantId,
+            ].filter(Boolean).join(' ')).includes(query))
+            : snapshot.clients;
+
+        return {
+            afterSnapshot: {
+                agencyTenantId,
+                query,
+                clients: clients.slice(0, 25),
+                totalMatches: clients.length,
+                warnings: snapshot.warnings,
+                sourceTables: snapshot.sourceTables,
+            },
+            diff: {
+                searched: [`agency.clients.${agencyTenantId}`],
+                mutatesData: false,
+                totalMatches: clients.length,
+            },
+        };
+    },
+});
+
+const createAgencyPerformanceSummaryHandler = (deps: GlobalAssistantActionHandlerDependencies): HandlerPatch => ({
+    validate: noValidationErrors,
+    execute: async (input, { action, context }) => {
+        const agencyTenantId = readAgencyTenantId(input, action, context);
+        const includeClients = readBoolean(input.includeClients) === true;
+        const snapshot = await readAgencyClientsSnapshot(deps, agencyTenantId);
+        const totalMonthlyRevenue = snapshot.clients.reduce((sum, client) => sum + (readNumber(client.monthlyPrice) || 0), 0);
+        const totalProjects = snapshot.clients.reduce((sum, client) => sum + (readNumber(client.projectCount) || 0), 0);
+        const byBillingMode = snapshot.clients.reduce<Record<string, number>>((acc, client) => {
+            const key = readString(client.billingMode) || 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+        const byLifecycleStage = snapshot.clients.reduce<Record<string, number>>((acc, client) => {
+            const key = readString(client.lifecycleStage) || 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+
+        return {
+            afterSnapshot: {
+                agencyTenantId,
+                generatedAt: getNow(deps),
+                summary: {
+                    clientCount: snapshot.clients.length,
+                    activePlanCount: snapshot.activePlans.length,
+                    planCount: snapshot.plans.length,
+                    totalMonthlyRevenue,
+                    totalProjects,
+                    averageRevenuePerClient: snapshot.clients.length > 0 ? totalMonthlyRevenue / snapshot.clients.length : 0,
+                    byBillingMode,
+                    byLifecycleStage,
+                },
+                clients: includeClients ? snapshot.clients.slice(0, 10) : [],
+                warnings: snapshot.warnings,
+                sourceTables: snapshot.sourceTables,
+            },
+            diff: {
+                reported: [`agency.performance.${agencyTenantId}`],
+                mutatesData: false,
+                sourceTables: snapshot.sourceTables,
+            },
+        };
+    },
+});
+
 type ProjectMetadataUpdateDraft = {
     name?: string;
     status?: 'Published' | 'Draft' | 'Template';
@@ -8109,6 +8358,10 @@ const HANDLER_FACTORIES: Record<string, (deps: GlobalAssistantActionHandlerDepen
     open_finance_dashboard: () => createNavigationHandler('finance', { label: 'Open Finance dashboard.' }),
     open_restaurants_dashboard: () => createNavigationHandler('restaurants', { label: 'Open Restaurants module.', requiresProject: true }),
     open_realty_dashboard: () => createNavigationHandler('real-estate', { label: 'Open Quimera Realty Suite.', requiresProject: true }),
+    open_agency_command_center: () => createNavigationHandler('agency', { label: 'Open Agency Command Center.', moduleItem: 'command-center' }),
+    open_agency_client_360: () => createAgencyClient360NavigationHandler(),
+    search_agency_clients: createSearchAgencyClientsHandler,
+    summarize_agency_performance: createAgencyPerformanceSummaryHandler,
     open_analytics_dashboard: () => createNavigationHandler('superadmin', { label: 'Open platform analytics.', adminView: 'analytics' }),
     open_super_admin: () => createNavigationHandler('superadmin', { label: 'Open Super Admin.' }),
     open_tenant: () => createNavigationHandler('superadmin', { label: 'Open tenant in Super Admin.', adminView: 'tenants' }),
