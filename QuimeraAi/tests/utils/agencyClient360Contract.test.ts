@@ -4,6 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 const rootDir = process.cwd();
 const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+const readJson = (relativePath: string) => JSON.parse(read(relativePath)) as Record<string, unknown>;
+
+function getNestedValue(source: Record<string, unknown>, keyPath: string): unknown {
+    return keyPath.split('.').reduce<unknown>((cursor, key) => {
+        if (!cursor || typeof cursor !== 'object') return undefined;
+        return (cursor as Record<string, unknown>)[key];
+    }, source);
+}
 
 describe('Agency Client 360 contract', () => {
     const clientList = read('components/dashboard/agency/ClientListTable.tsx');
@@ -26,8 +34,25 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain("t('dashboard.agency.client360.eyebrow'");
         expect(client360Panel).toContain("t('dashboard.agency.client360.usage'");
         expect(client360Panel).toContain("t('dashboard.agency.client360.billing'");
+        expect(client360Panel).toContain("t('dashboard.agency.client360.moduleMap'");
+        expect(client360Panel).toContain('buildClient360ModuleSignals(client, metrics)');
+        expect(client360Panel).toContain("id: 'businessBlueprint'");
+        expect(client360Panel).toContain("id: 'website-builder'");
+        expect(client360Panel).toContain("id: 'storefront-builder'");
+        expect(client360Panel).toContain("id: 'ecommerce'");
+        expect(client360Panel).toContain("id: 'crm-leads'");
+        expect(client360Panel).toContain("id: 'email-marketing'");
+        expect(client360Panel).toContain("id: 'appointments'");
+        expect(client360Panel).toContain("id: 'restaurants'");
+        expect(client360Panel).toContain("id: 'realty'");
+        expect(client360Panel).toContain("id: 'bio-page'");
+        expect(client360Panel).toContain("id: 'chatcore'");
+        expect(client360Panel).toContain("id: 'media-ai'");
+        expect(client360Panel).toContain("id: 'finance'");
+        expect(client360Panel).toContain("id: 'analytics'");
         expect(client360Panel).toContain("t('dashboard.agency.client360.activity'");
         expect(client360Panel).toContain('ROUTES.AGENCY_BILLING');
+        expect(client360Panel).toContain('ROUTES.AGENCY_ANALYTICS');
         expect(client360Panel).toContain('ROUTES.AGENCY_REPORTS');
         expect(client360Panel).toContain('ROUTES.AGENCY_PROJECTS');
     });
@@ -42,8 +67,26 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain("quickActionCategory: 'analyze'");
         expect(client360Panel).toContain("activeEntityType: 'agency_client'");
         expect(client360Panel).toContain('clientTenantId: client.id');
+        expect(client360Panel).toContain('activeModuleIds: activeModuleSignals.map(module => module.id)');
+        expect(client360Panel).toContain('pendingModuleIds: pendingModuleSignals.map(module => module.id)');
         expect(client360Panel).toContain("'dashboard.agency.client360.generateAiReport'");
         expect(client360Panel).toContain("'dashboard.agency.client360.aiReportPrompt'");
+    });
+
+    it('ships all Client 360 labels through ES, EN, and FR locale files', () => {
+        const requiredKeys = Array.from(client360Panel.matchAll(/dashboard\.agency\.client360(?:\.[A-Za-z0-9]+)+/g))
+            .map(match => match[0]);
+        const locales = {
+            es: readJson('locales/es/translation.json'),
+            en: readJson('locales/en/translation.json'),
+            fr: readJson('locales/fr/translation.json'),
+        };
+
+        for (const [locale, messages] of Object.entries(locales)) {
+            for (const key of requiredKeys) {
+                expect(getNestedValue(messages, key), `${locale}:${key}`).toEqual(expect.any(String));
+            }
+        }
     });
 
     it('tracks the documented AG2 Client 360 consolidation item', () => {

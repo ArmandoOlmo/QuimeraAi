@@ -7,7 +7,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useProject } from '../../contexts/project';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
-import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle, History, type LucideIcon } from 'lucide-react';
+import { LogOut, LayoutDashboard, Globe, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, User as UserIcon, PenTool, Menu as MenuIcon, Sun, Moon, Circle, MessageSquare, Users, Link2, Search, DollarSign, GripVertical, LayoutTemplate, Calendar, X, Wrench, ShoppingBag, Package, FolderTree, ShoppingCart, Tag, TrendingUp, BarChart3, Mail, UserCheck, Lock, Building2, Sparkles, Newspaper, Home, Utensils, AlertTriangle, History, FileText, FolderOpen, Monitor, Shield, type LucideIcon } from 'lucide-react';
 import LanguageSelector from '../ui/LanguageSelector';
 import { AppButton, AppIcon } from '../ui/system';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
@@ -22,6 +22,7 @@ import { PlatformServiceId } from '../../types/serviceAvailability';
 import { PlanFeatures } from '../../types/subscription';
 import { UpgradeTrigger } from '../ui/UpgradeModal';
 import { isPlatformUnlimitedUser } from '../../services/billing/planCatalog';
+import { getAgencyEngineOperatingSystemManifest, type AgencyEngineDashboardTabId } from '../../registry/moduleRegistry';
 import {
   DndContext,
   closestCenter,
@@ -63,6 +64,24 @@ interface NavItemData {
   moduleId?: string;
   requiredPermission?: string;
 }
+
+const agencyDashboardTabs = getAgencyEngineOperatingSystemManifest().dashboardTabs;
+
+const AGENCY_SIDEBAR_ICONS: Record<AgencyEngineDashboardTabId, LucideIcon> = {
+  overview: BarChart3,
+  analytics: TrendingUp,
+  landing: Globe,
+  billing: DollarSign,
+  reports: FileText,
+  'new-client': UserCheck,
+  addons: Package,
+  plans: LayoutTemplate,
+  cms: PenTool,
+  navigation: MenuIcon,
+  projects: FolderOpen,
+  'white-label': Shield,
+  'client-portal': Monitor,
+};
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
   const { t } = useTranslation();
@@ -268,31 +287,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Blog - standalone outside tools section, above agency
   const blogItem: NavItemData = { id: 'blog-hub', icon: Newspaper, label: t('dashboard.blogHub', 'Blog'), view: 'blog-hub', route: ROUTES.BLOG_HUB, serviceId: 'cms', moduleId: 'cms-engine' };
 
-  // Agency button - standalone outside control panel area
-  const agencyItem: NavItemData = {
-    id: 'agency',
-    icon: Building2,
-    label: t('dashboard.agencySection', 'Agencia'),
-    view: 'agency',
-    route: ROUTES.AGENCY,
-    serviceId: 'agency',
-    moduleId: 'agency-engine',
-    requiredFeature: 'agencyModule',
-    requiredPermission: 'canManageSettings',
-    upgradeTrigger: 'generic',
-  };
-
   // Workspace Settings - standalone outside tools section, before Super Admin
   const settingsItem: NavItemData = { id: 'settings', icon: Settings, label: t('sidebar.workspace', 'Workspace'), view: 'settings', route: ROUTES.SETTINGS };
 
-  // Agency section items (for collapsible drawer - kept for backwards compatibility)
-  const agencyItems: NavItemData[] = [
-    { id: 'agency-overview', icon: BarChart3, label: t('agency.overview', 'Vista General'), view: 'agency', route: ROUTES.AGENCY_OVERVIEW, serviceId: 'agency', moduleId: 'agency-command-center', requiredFeature: 'agencyModule', requiredPermission: 'canViewAnalytics', upgradeTrigger: 'generic' },
-    { id: 'agency-billing', icon: DollarSign, label: t('agency.billing', 'Facturación'), view: 'agency', route: ROUTES.AGENCY_BILLING, serviceId: 'agency', moduleId: 'agency-billing', requiredFeature: 'agencyModule', requiredPermission: 'canManageBilling', upgradeTrigger: 'generic' },
-    { id: 'agency-reports', icon: TrendingUp, label: t('agency.reports', 'Reportes'), view: 'agency', route: ROUTES.AGENCY_REPORTS, serviceId: 'agency', moduleId: 'agency-reports', requiredFeature: 'agencyModule', requiredPermission: 'canViewAnalytics', upgradeTrigger: 'generic' },
-    { id: 'agency-new-client', icon: UserCheck, label: t('agency.newClient', 'Nuevo Cliente'), view: 'agency', route: ROUTES.AGENCY_NEW_CLIENT, serviceId: 'agency', moduleId: 'agency-client-provisioning', requiredFeature: 'agencyModule', requiredPermission: 'canManageSettings', upgradeTrigger: 'generic' },
-    { id: 'agency-addons', icon: Package, label: t('agency.addons', 'Add-ons'), view: 'agency', route: ROUTES.AGENCY_ADDONS, serviceId: 'agency', moduleId: 'agency-service-plans', requiredFeature: 'agencyModule', requiredPermission: 'canManageBilling', upgradeTrigger: 'generic' },
-  ];
+  const agencyItems: NavItemData[] = agencyDashboardTabs.map(tab => ({
+    id: `agency-${tab.id}`,
+    icon: AGENCY_SIDEBAR_ICONS[tab.id],
+    label: t(tab.labelKey, tab.label),
+    view: 'agency',
+    route: tab.route,
+    serviceId: 'agency',
+    moduleId: tab.moduleId,
+    requiredFeature: 'agencyModule',
+    requiredPermission: tab.requiredPermission,
+    upgradeTrigger: 'generic',
+  }));
 
   // All items combined for backwards compatibility with drag-and-drop
   const defaultNavItems: NavItemData[] = [dashboardItem, ...websiteItems, ...ecommerceItems, ...toolsItems, blogItem, ...agencyItems];
@@ -355,7 +364,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     const ids = navItems.map(item => item.id);
     // Add standalone items that are rendered as SortableNavItem but aren't in navItems
     if (!ids.includes(blogItem.id)) ids.push(blogItem.id);
-    if (!ids.includes(agencyItem.id)) ids.push(agencyItem.id);
     if (!ids.includes(settingsItem.id)) ids.push(settingsItem.id);
     if (canAccessSuperAdmin && !ids.includes('superadmin')) ids.push('superadmin');
     return ids;
@@ -745,12 +753,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     {isItemVisible(blogItem) && (
                       <SortableNavItem item={blogItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
                     )}
-                    {/* Agency button - standalone */}
-                    {isItemVisible(agencyItem) && (
-                      <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
-                    )}
+                    {/* Agency surfaces from canonical manifest */}
+                    {agencyItems.filter(isItemVisible).map((item, index) => (
+                      <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
+                    ))}
                     {/* Workspace Settings - standalone before Super Admin */}
-                    <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 3} />
+                    <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + agencyItems.length + 3} />
                   </>
                 ) : (
                   <>
@@ -856,12 +864,36 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                       />
                     )}
 
-                    {/* Agency Button - Standalone outside control panel area */}
-                    {isItemVisible(agencyItem) && (
-                      <SortableNavItem
-                        item={agencyItem}
-                        index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
-                      />
+                    {/* Agency Section - canonical Agency Engine surfaces */}
+                    {hasAccessibleItems(agencyItems) && (
+                      <div className="mt-3">
+                        <AppButton
+                          variant="ghost"
+                          size="md"
+                          onClick={() => toggleSection('agency')}
+                          className={sidebarSectionButtonClasses}
+                          aria-expanded={!collapsedSections.agency}
+                        >
+                          <div className={sidebarSectionIconLabelClasses}>
+                            <AppIcon icon={Building2} size="md" />
+                            <span className={sidebarSectionLabelClasses}>{t('dashboard.agencySection', 'Agencia')}</span>
+                          </div>
+                          <AppIcon
+                            icon={ChevronDown}
+                            size="sm"
+                            className={sidebarSectionChevronClasses(collapsedSections.agency)}
+                          />
+                        </AppButton>
+                        <div
+                          className={sidebarNestedListClasses(collapsedSections.agency)}
+                        >
+                          <div className={sidebarNestedListInnerClasses}>
+                            {agencyItems.filter(isItemVisible).map((item, index) => (
+                              <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     {/* Workspace Settings - Standalone outside tools section */}

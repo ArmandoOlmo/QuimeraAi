@@ -8,6 +8,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 
 describe('Agency dashboard Service Access contract', () => {
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
+    const sidebar = read('components/dashboard/DashboardSidebar.tsx');
     const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
     const routes = read('routes/config.ts');
     const registry = read('registry/moduleRegistry.ts');
@@ -57,6 +58,33 @@ describe('Agency dashboard Service Access contract', () => {
                 requiredPermission: permission,
             });
             expect(routes).toContain(`${routeKey}: '${route}'`);
+        }
+    });
+
+    it('mirrors every canonical Agency dashboard tab in the global dashboard sidebar', () => {
+        expect(sidebar).toContain("import { getAgencyEngineOperatingSystemManifest, type AgencyEngineDashboardTabId }");
+        expect(sidebar).toContain('const agencyDashboardTabs = getAgencyEngineOperatingSystemManifest().dashboardTabs;');
+        expect(sidebar).toContain('const AGENCY_SIDEBAR_ICONS: Record<AgencyEngineDashboardTabId, LucideIcon>');
+        expect(sidebar).toContain('const agencyItems: NavItemData[] = agencyDashboardTabs.map(tab => ({');
+        expect(sidebar).toContain('id: `agency-${tab.id}`');
+        expect(sidebar).toContain('label: t(tab.labelKey, tab.label)');
+        expect(sidebar).toContain("serviceId: 'agency'");
+        expect(sidebar).toContain('moduleId: tab.moduleId');
+        expect(sidebar).toContain("requiredFeature: 'agencyModule'");
+        expect(sidebar).toContain('requiredPermission: tab.requiredPermission');
+        expect(sidebar).toContain("toggleSection('agency')");
+        expect(sidebar).toContain('{hasAccessibleItems(agencyItems) && (');
+        expect(sidebar).toContain('agencyItems.filter(isItemVisible).map((item, index)');
+        expect(sidebar).toContain('Agency surfaces from canonical manifest');
+        expect(sidebar).not.toContain('const agencyItem: NavItemData');
+        expect(sidebar).not.toContain("id: 'agency',");
+
+        for (const [tab, moduleId, permission, , route] of tabContracts) {
+            expect(manifest.dashboardTabs.find(item => item.id === tab)).toMatchObject({
+                moduleId,
+                route,
+                requiredPermission: permission,
+            });
         }
     });
 

@@ -4,17 +4,25 @@ import {
     Activity,
     AlertTriangle,
     BarChart3,
+    Bot,
+    CalendarDays,
     CheckCircle,
     Clock,
     CreditCard,
     Download,
+    FileText,
     FolderOpen,
     Globe,
+    Home,
+    Image,
+    LayoutDashboard,
     Mail,
     Package,
+    ShoppingCart,
     Sparkles,
     Users,
     X,
+    type LucideIcon,
 } from 'lucide-react';
 
 import type { ActivityEvent, ClientMetricsSummary } from '../../../hooks/useAgencyMetrics';
@@ -84,6 +92,174 @@ function statusVariant(status?: Tenant['status']) {
     return 'warning';
 }
 
+type Client360ModuleSignal = {
+    id: string;
+    icon: LucideIcon;
+    labelKey: string;
+    label: string;
+    descriptionKey: string;
+    description: string;
+    active: boolean;
+    route?: string;
+};
+
+function readEnabledFeatures(client: Tenant): Set<string> {
+    const enabledFeatures = Array.isArray(client.settings?.enabledFeatures)
+        ? client.settings.enabledFeatures
+        : [];
+
+    return new Set(
+        enabledFeatures
+            .map((feature) => String(feature || '').trim().toLowerCase())
+            .filter(Boolean),
+    );
+}
+
+function hasAnyFeature(features: Set<string>, values: string[]): boolean {
+    return values.some(value => features.has(value.toLowerCase()));
+}
+
+function buildClient360ModuleSignals(client: Tenant, metrics: ClientMetricsSummary | null): Client360ModuleSignal[] {
+    const features = readEnabledFeatures(client);
+    const billing = (client.billing || {}) as Record<string, unknown>;
+    const projectCount = metrics?.usage.projectCount || client.usage?.projectCount || client.projectIds?.length || 0;
+    const hasBilling = Number(billing.mrr || billing.monthlyPrice || 0) > 0 || Boolean(billing.mode && billing.mode !== 'included_in_parent');
+
+    return [
+        {
+            id: 'businessBlueprint',
+            icon: Sparkles,
+            labelKey: 'dashboard.agency.client360.moduleBusinessBlueprint',
+            label: 'BusinessBlueprint',
+            descriptionKey: 'dashboard.agency.client360.moduleBusinessBlueprintDesc',
+            description: 'AI-generated operating contract for the client business.',
+            active: projectCount > 0 || features.size > 0,
+        },
+        {
+            id: 'website-builder',
+            icon: Globe,
+            labelKey: 'dashboard.agency.client360.moduleWebsite',
+            label: 'Website Builder',
+            descriptionKey: 'dashboard.agency.client360.moduleWebsiteDesc',
+            description: 'Website draft, pages, content, sections, and launch workflow.',
+            active: projectCount > 0 || hasAnyFeature(features, ['projects', 'cms', 'website', 'website-builder']),
+            route: ROUTES.AGENCY_PROJECTS,
+        },
+        {
+            id: 'storefront-builder',
+            icon: Package,
+            labelKey: 'dashboard.agency.client360.moduleStorefront',
+            label: 'Storefront Builder',
+            descriptionKey: 'dashboard.agency.client360.moduleStorefrontDesc',
+            description: 'Storefront layout, product presentation, and commerce surface.',
+            active: hasAnyFeature(features, ['ecommerce', 'storefront', 'storefront-builder']),
+            route: ROUTES.AGENCY_PROJECTS,
+        },
+        {
+            id: 'ecommerce',
+            icon: ShoppingCart,
+            labelKey: 'dashboard.agency.client360.moduleEcommerce',
+            label: 'Ecommerce',
+            descriptionKey: 'dashboard.agency.client360.moduleEcommerceDesc',
+            description: 'Products, orders, checkout readiness, and revenue operations.',
+            active: hasAnyFeature(features, ['ecommerce', 'store', 'checkout']),
+            route: ROUTES.AGENCY_BILLING,
+        },
+        {
+            id: 'crm-leads',
+            icon: Users,
+            labelKey: 'dashboard.agency.client360.moduleCrm',
+            label: 'CRM / Leads',
+            descriptionKey: 'dashboard.agency.client360.moduleCrmDesc',
+            description: 'Lead capture, customer records, intake, and follow-up pipeline.',
+            active: hasAnyFeature(features, ['leads', 'crm', 'crm-leads']),
+        },
+        {
+            id: 'email-marketing',
+            icon: Mail,
+            labelKey: 'dashboard.agency.client360.moduleEmail',
+            label: 'Email Marketing',
+            descriptionKey: 'dashboard.agency.client360.moduleEmailDesc',
+            description: 'Campaigns, automations, consent, and client communications.',
+            active: hasAnyFeature(features, ['email', 'email-marketing', 'emailMarketing']),
+        },
+        {
+            id: 'appointments',
+            icon: CalendarDays,
+            labelKey: 'dashboard.agency.client360.moduleAppointments',
+            label: 'Appointments',
+            descriptionKey: 'dashboard.agency.client360.moduleAppointmentsDesc',
+            description: 'Bookings, availability, confirmations, and calendar operations.',
+            active: hasAnyFeature(features, ['appointments', 'appointments-engine', 'bookings']),
+        },
+        {
+            id: 'restaurants',
+            icon: FileText,
+            labelKey: 'dashboard.agency.client360.moduleRestaurants',
+            label: 'Restaurants',
+            descriptionKey: 'dashboard.agency.client360.moduleRestaurantsDesc',
+            description: 'Menu, reservations, restaurant content, and guest operations.',
+            active: hasAnyFeature(features, ['restaurants', 'restaurant', 'restaurant-engine']),
+        },
+        {
+            id: 'realty',
+            icon: Home,
+            labelKey: 'dashboard.agency.client360.moduleRealty',
+            label: 'Realty',
+            descriptionKey: 'dashboard.agency.client360.moduleRealtyDesc',
+            description: 'Listings, property pages, leads, and showing workflows.',
+            active: hasAnyFeature(features, ['realestate', 'realestateModule', 'real-estate', 'realty']),
+        },
+        {
+            id: 'bio-page',
+            icon: FileText,
+            labelKey: 'dashboard.agency.client360.moduleBioPage',
+            label: 'Bio Page',
+            descriptionKey: 'dashboard.agency.client360.moduleBioPageDesc',
+            description: 'Bio links, QR flows, social surfaces, and profile landing pages.',
+            active: hasAnyFeature(features, ['biopage', 'bio-page', 'bioPage']),
+        },
+        {
+            id: 'chatcore',
+            icon: Bot,
+            labelKey: 'dashboard.agency.client360.moduleChatCore',
+            label: 'ChatCore',
+            descriptionKey: 'dashboard.agency.client360.moduleChatCoreDesc',
+            description: 'AI chatbot, knowledge, channels, and visitor conversations.',
+            active: hasAnyFeature(features, ['chat', 'chatbot', 'chatcore', 'chatbot-engine']),
+        },
+        {
+            id: 'media-ai',
+            icon: Image,
+            labelKey: 'dashboard.agency.client360.moduleMediaAi',
+            label: 'Media AI',
+            descriptionKey: 'dashboard.agency.client360.moduleMediaAiDesc',
+            description: 'Generated image assets, creative library, and launch media.',
+            active: hasAnyFeature(features, ['media', 'media-ai', 'mediaAssets', 'assets']),
+        },
+        {
+            id: 'finance',
+            icon: CreditCard,
+            labelKey: 'dashboard.agency.client360.moduleFinance',
+            label: 'Finance',
+            descriptionKey: 'dashboard.agency.client360.moduleFinanceDesc',
+            description: 'Billing, invoices, payment status, revenue, and accounting context.',
+            active: hasBilling || hasAnyFeature(features, ['finance', 'billing']),
+            route: ROUTES.AGENCY_BILLING,
+        },
+        {
+            id: 'analytics',
+            icon: BarChart3,
+            labelKey: 'dashboard.agency.client360.moduleAnalytics',
+            label: 'Analytics',
+            descriptionKey: 'dashboard.agency.client360.moduleAnalyticsDesc',
+            description: 'Performance, usage, reports, recommendations, and portfolio metrics.',
+            active: hasAnyFeature(features, ['analytics']) || projectCount > 0,
+            route: ROUTES.AGENCY_ANALYTICS,
+        },
+    ];
+}
+
 function UsageRow({
     label,
     value,
@@ -143,6 +319,9 @@ export function Client360Panel({
         client,
         t('dashboard.agency.client360.noServicePlan', 'No service plan'),
     );
+    const moduleSignals = buildClient360ModuleSignals(client, metrics);
+    const activeModuleSignals = moduleSignals.filter(module => module.active);
+    const pendingModuleSignals = moduleSignals.filter(module => !module.active);
 
     const goTo = (route: string) => {
         onClose();
@@ -177,6 +356,8 @@ export function Client360Panel({
                 reportRoute: ROUTES.AGENCY_REPORTS,
                 servicePlanLabel,
                 billingMode,
+                activeModuleIds: activeModuleSignals.map(module => module.id),
+                pendingModuleIds: pendingModuleSignals.map(module => module.id),
             },
         }));
     };
@@ -320,6 +501,86 @@ export function Client360Panel({
                                 </div>
                             </AgencyPanel>
                         </div>
+
+                        <AgencyPanel
+                            title={t('dashboard.agency.client360.moduleMap', 'Module operating map')}
+                            icon={LayoutDashboard}
+                        >
+                            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                                <p className="max-w-2xl text-sm text-q-text-muted">
+                                    {t('dashboard.agency.client360.moduleMapSubtitle', '{{active}}/{{total}} connected modules for this client business.', {
+                                        active: activeModuleSignals.length,
+                                        total: moduleSignals.length,
+                                    })}
+                                </p>
+                                <StatusBadge size="sm" variant={pendingModuleSignals.length === 0 ? 'success' : 'warning'}>
+                                    {pendingModuleSignals.length === 0
+                                        ? t('dashboard.agency.client360.moduleConfigured', 'Fully configured')
+                                        : t('dashboard.agency.client360.moduleNeedsSetup', '{{count}} pending', { count: pendingModuleSignals.length })}
+                                </StatusBadge>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                {moduleSignals.map((module) => {
+                                    const Icon = module.icon;
+                                    const content = (
+                                        <div className={cn(
+                                            'h-full rounded-lg border p-3 text-left transition-colors',
+                                            module.active
+                                                ? 'border-q-success/30 bg-q-success/5'
+                                                : 'border-q-border bg-q-surface/70 hover:bg-muted/50',
+                                        )}>
+                                            <div className="flex items-start gap-3">
+                                                <span className={cn(
+                                                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                                                    module.active ? 'bg-q-success/10 text-q-success' : 'bg-muted text-q-text-muted',
+                                                )}>
+                                                    <Icon className="h-4 w-4" />
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex min-w-0 items-center justify-between gap-2">
+                                                        <h3 className="truncate text-sm font-semibold text-foreground">
+                                                            {t(module.labelKey, module.label)}
+                                                        </h3>
+                                                        <span className={cn(
+                                                            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                                                            module.active
+                                                                ? 'bg-q-success/10 text-q-success'
+                                                                : 'bg-muted text-q-text-muted',
+                                                        )}>
+                                                            {module.active
+                                                                ? t('dashboard.agency.client360.moduleActive', 'Active')
+                                                                : t('dashboard.agency.client360.modulePending', 'Pending')}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 line-clamp-2 text-xs text-q-text-muted">
+                                                        {t(module.descriptionKey, module.description)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+
+                                    if (module.route) {
+                                        return (
+                                            <button
+                                                key={module.id}
+                                                type="button"
+                                                onClick={() => goTo(module.route!)}
+                                                className="block min-w-0 text-left"
+                                            >
+                                                {content}
+                                            </button>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={module.id} className="min-w-0">
+                                            {content}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </AgencyPanel>
 
                         <AgencyPanel
                             title={t('dashboard.agency.client360.actions', 'Operating actions')}

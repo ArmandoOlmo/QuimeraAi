@@ -5,6 +5,14 @@ import { getAgencyEngineOperatingSystemManifest } from '../../registry/moduleReg
 
 const rootDir = process.cwd();
 const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+const readJson = (relativePath: string) => JSON.parse(read(relativePath)) as Record<string, unknown>;
+
+function getNestedValue(source: Record<string, unknown>, keyPath: string): unknown {
+    return keyPath.split('.').reduce<unknown>((cursor, key) => {
+        if (!cursor || typeof cursor !== 'object') return undefined;
+        return (cursor as Record<string, unknown>)[key];
+    }, source);
+}
 
 describe('Agency Client Portal operating surface contract', () => {
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
@@ -50,5 +58,23 @@ describe('Agency Client Portal operating surface contract', () => {
         expect(clientPortalSettings).toContain('Transferred websites, storefronts, modules, and delivery status.');
         expect(clientPortalSettings).toContain('Shared performance reports, AI summaries, recommendations, and exports.');
         expect(clientPortalSettings).toContain('Plan, invoices, payment links, and agency-managed billing visibility.');
+    });
+
+    it('ships Client Portal and canonical Agency tab labels through locale files', () => {
+        const clientPortalKeys = Array.from(clientPortalSettings.matchAll(/agency\.clientPortal(?:\.[A-Za-z0-9]+)+/g))
+            .map(match => match[0]);
+        const manifestKeys = manifest.dashboardTabs.map(tab => tab.labelKey);
+        const requiredKeys = Array.from(new Set([...manifestKeys, ...clientPortalKeys]));
+        const locales = {
+            es: readJson('locales/es/translation.json'),
+            en: readJson('locales/en/translation.json'),
+            fr: readJson('locales/fr/translation.json'),
+        };
+
+        for (const [locale, messages] of Object.entries(locales)) {
+            for (const key of requiredKeys) {
+                expect(getNestedValue(messages, key), `${locale}:${key}`).toEqual(expect.any(String));
+            }
+        }
     });
 });
