@@ -400,13 +400,13 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     </div>
                     <div className="flex items-center justify-between gap-3 pt-2">
                         <div className="min-w-0 flex-1">
-                            <div className="relative z-[80] sm:hidden" onClick={(event) => event.stopPropagation()}>
+                            <div className="relative z-[80] w-full sm:hidden" onClick={(event) => event.stopPropagation()}>
                                 <AppButton
                                     variant="icon"
                                     size="icon-sm"
                                     type="button"
                                     onClick={() => setMobileChooserOpen((current) => !current)}
-                                    className="no-min-touch !h-8 w-full max-w-[190px] !min-w-0 justify-between gap-2 rounded-full border border-border-subtle bg-q-surface-overlay/70 px-2.5 text-xs text-q-text"
+                                    className="no-min-touch !h-8 w-full max-w-[170px] !min-w-0 justify-between gap-1.5 rounded-full border border-border-subtle bg-q-surface-overlay/70 px-2 text-xs text-q-text"
                                     aria-label={t('dashboard.assistantModeSelectorLabel', 'Seleccionar modo de asistente')}
                                     aria-expanded={mobileChooserOpen}
                                 >
@@ -417,7 +417,8 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                     <ChevronDown className={`size-3 text-q-text-secondary transition-transform ${mobileChooserOpen ? 'rotate-180' : ''}`} />
                                 </AppButton>
                                 {mobileChooserOpen && prioritizedMobileQuickActions.length > 0 && (
-                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[220px] max-w-[85vw] rounded-2xl border border-border-subtle bg-q-surface p-1.5 shadow-[var(--shadow-card)]">
+                                    <div className="absolute left-0 top-[calc(100%+8px)] z-[90] w-[80%] min-w-[220px] max-w-[80vw] rounded-xl border border-border-subtle bg-q-surface p-1 shadow-[var(--shadow-card)]">
+                                        <div className="grid grid-cols-2 gap-1">
                                         {prioritizedMobileQuickActions.map((action) => {
                                             const label = t(action.labelKey, action.labelFallback);
                                             const isSelected = selectedQuickActionId === action.id;
@@ -426,7 +427,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                                     key={action.id}
                                                     type="button"
                                                     onClick={() => handleMobileQuickActionPick(action)}
-                                                    className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition-colors ${
+                                                    className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[11px] transition-colors ${
                                                         isSelected
                                                             ? 'bg-q-accent/15 text-q-text'
                                                             : 'text-q-text-secondary hover:bg-q-surface-overlay/60 hover:text-q-text'
@@ -437,6 +438,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                                                 </button>
                                             );
                                         })}
+                                        </div>
                                     </div>
                                 )}
                             </div>
