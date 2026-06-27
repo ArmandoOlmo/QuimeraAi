@@ -85,7 +85,7 @@
         "npm:i18next@^25.6.3",
         "npm:jsdom@^27.2.0",
         "npm:jspdf-autotable@^5.0.7",
-        "npm:jspdf@4",
+        "npm:jspdf@^4.2.1",
         "npm:linkifyjs@^4.3.2",
         "npm:lucide-react@0.554",
         "npm:marked@^17.0.1",
