@@ -66,16 +66,29 @@ describe('globalAssistantEntryBridge', () => {
     });
 
     it('infers dashboard command-center modules without mixing ChatCore and Global Assistant', () => {
+        expect(inferDashboardAssistantModule('¿Cómo funciona AI Studio?')).toBe('aiStudio');
         expect(inferDashboardAssistantModule('Entrena ChatCore con el conocimiento del proyecto')).toBe('chatbot');
+        expect(inferDashboardAssistantModule('Abre Chat Core')).toBe('chatbot');
         expect(inferDashboardAssistantModule('Crea una campaña de email para leads nuevos')).toBe('emailMarketing');
         expect(inferDashboardAssistantModule('Abre ecommerce y revisa inventario')).toBe('ecommerce');
         expect(inferDashboardAssistantModule('Revisa platform errors en owner mode')).toBe('admin');
+        expect(inferDashboardAssistantModule('Abre SuperAdmin')).toBe('admin');
         expect(inferDashboardAssistantModule('Revisa BusinessBlueprint del proyecto')).toBe('businessBlueprint');
+        expect(inferDashboardAssistantModule('Open BusinessBlueprint')).toBe('businessBlueprint');
         expect(inferDashboardAssistantModule('Open storefront builder')).toBe('storefront');
+        expect(inferDashboardAssistantModule('Open StorefrontBuilder')).toBe('storefront');
         expect(inferDashboardAssistantModule('Abre Media AI')).toBe('media');
         expect(inferDashboardAssistantModule('Abre Imágenes')).toBe('media');
         expect(inferDashboardAssistantModule('Open Videos')).toBe('media');
         expect(inferDashboardAssistantModule('Abre Website Builder')).toBe('website');
+        expect(inferDashboardAssistantModule('Open WebsiteBuilder')).toBe('website');
+        expect(inferDashboardAssistantModule('Abre Finance')).toBe('finance');
+        expect(inferDashboardAssistantModule('Abre Restaurants')).toBe('restaurants');
+        expect(inferDashboardAssistantModule('Revisa bienes raíces')).toBe('realEstate');
+        expect(inferDashboardAssistantModule('Abre Bio Pages')).toBe('bioPage');
+        expect(inferDashboardAssistantModule('Abre Appointments')).toBe('appointments');
+        expect(inferDashboardAssistantModule('Revisa Analytics')).toBe('analytics');
+        expect(inferDashboardAssistantModule('Cambia de proyecto')).toBe('project');
         expect(inferDashboardAssistantModule('Abre settings del workspace')).toBe('settings');
         expect(inferDashboardAssistantModule('Revisa design tokens')).toBe('designSystem');
         expect(inferDashboardAssistantModule('Solo dime que puedes hacer')).toBe(null);
@@ -308,6 +321,16 @@ describe('globalAssistantEntryBridge', () => {
         expect(getTranslation(es, 'dashboard.sendAssistantRequest')).toBe('Enviar');
         expect(getTranslation(es, 'superadmin.globalAssistant.systemPrompt.placeholder')).not.toContain('CONTROL TOTAL');
         expect(getTranslation(en, 'superadmin.globalAssistant.systemPrompt.placeholder')).not.toContain('FULL CONTROL');
+    });
+
+    it('keeps Global Assistant language defaults limited to English and Spanish', () => {
+        const settingsSource = readFileSync(resolve(process.cwd(), 'components/dashboard/admin/GlobalAssistantSettings.tsx'), 'utf8');
+        const adminContextSource = readFileSync(resolve(process.cwd(), 'contexts/admin/AdminContext.tsx'), 'utf8');
+
+        expect(settingsSource).toContain("supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish'");
+        expect(adminContextSource).toContain("supportedLanguages: 'English, Spanish'");
+        expect(settingsSource).not.toContain('English, Spanish, French');
+        expect(adminContextSource).not.toContain('English, Spanish, French');
     });
 
     it('uses dashboard quick actions as icon mode selectors instead of immediate submit buttons', () => {

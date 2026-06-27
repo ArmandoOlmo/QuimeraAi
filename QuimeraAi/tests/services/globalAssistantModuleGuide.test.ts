@@ -187,6 +187,51 @@ describe('globalAssistantModuleGuide', () => {
             message: 'I opened the design area. Review colors, typography, and tokens based on your permissions.',
         });
 
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Abre Finance',
+            activeModule: 'finance',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'finance',
+            message: 'Abrí Finance. Revisa facturas, ingresos o gastos desde ahí.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Open Restaurants',
+            activeModule: 'restaurants',
+            locale: 'en',
+        })).toMatchObject({
+            target: 'restaurants',
+            message: 'I opened Restaurants. Review menu, reservations, or settings from there.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Abre Realty',
+            activeModule: 'realEstate',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'realEstate',
+            message: 'Abrí Realty. Revisa propiedades, listados o visitas desde ahí.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Abre Websites',
+            activeModule: 'project',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'projects',
+            message: 'Abrí Websites. Elige o cambia el proyecto que quieres usar.',
+        });
+
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Open Owner Mode',
+            activeModule: 'admin',
+            locale: 'en',
+        })).toMatchObject({
+            target: 'ownerMode',
+            message: 'I opened Owner Mode. Review status, errors, or admin controls from there.',
+        });
+
         expect(resolveComponentHelpGuideResponse({
             request: '¿Para qué sirve?',
             activeModule: 'storefront',

@@ -143,7 +143,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         temperature: 0.7,
         maxTokens: 500,
         autoDetectLanguage: true,
-        supportedLanguages: 'English, Spanish, French'
+        supportedLanguages: 'English, Spanish'
     });
 
     // Landing Chatbot Config

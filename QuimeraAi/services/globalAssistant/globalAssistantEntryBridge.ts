@@ -155,20 +155,24 @@ const BUSINESS_CREATION_TARGET_TERMS = [
 
 const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: string[] }> = [
     {
+        module: 'aiStudio',
+        terms: ['ai studio', 'web design studio', 'estudio de ia', 'studio de ia'],
+    },
+    {
         module: 'admin',
-        terms: ['admin', 'owner mode', 'super admin', 'platform error', 'errores plataforma', 'service availability', 'feature flag', 'ai log', 'api log'],
+        terms: ['admin', 'owner mode', 'modo owner', 'modo admin', 'super admin', 'superadmin', 'platform error', 'errores plataforma', 'service availability', 'feature flag', 'ai log', 'api log'],
     },
     {
         module: 'chatbot',
-        terms: ['chatcore', 'chatbot', 'knowledge', 'entrena', 'entrenar', 'train bot', 'visitor chat'],
+        terms: ['chatcore', 'chat core', 'chatbot', 'knowledge', 'conocimiento del chat', 'entrena', 'entrenar', 'train bot', 'visitor chat'],
     },
     {
         module: 'businessBlueprint',
-        terms: ['business blueprint', 'blueprint', 'business map', 'mapa de negocio', 'plan del negocio', 'plan de negocio'],
+        terms: ['businessblueprint', 'business blueprint', 'blueprint', 'business map', 'mapa de negocio', 'plan del negocio', 'plan de negocio'],
     },
     {
         module: 'storefront',
-        terms: ['storefront', 'escaparate', 'storefront builder', 'store builder', 'public store', 'tienda publica', 'product card', 'catalog section'],
+        terms: ['storefront', 'storefrontbuilder', 'escaparate', 'storefront builder', 'store builder', 'public store', 'tienda publica', 'product card', 'catalog section'],
     },
     {
         module: 'ecommerce',
@@ -188,7 +192,7 @@ const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: stri
     },
     {
         module: 'realEstate',
-        terms: ['realty', 'real estate', 'propiedad', 'listing', 'open house', 'inmobiliaria'],
+        terms: ['realty', 'real estate', 'bienes raices', 'propiedad', 'listing', 'open house', 'inmobiliaria'],
     },
     {
         module: 'bioPage',
@@ -212,7 +216,7 @@ const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: stri
     },
     {
         module: 'website',
-        terms: ['website', 'web', 'pagina', 'editor', 'hero', 'seccion', 'section', 'website builder'],
+        terms: ['website', 'websitebuilder', 'web', 'pagina', 'editor', 'hero', 'seccion', 'section', 'website builder'],
     },
     {
         module: 'settings',

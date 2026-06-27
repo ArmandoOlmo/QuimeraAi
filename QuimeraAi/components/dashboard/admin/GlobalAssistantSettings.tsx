@@ -81,7 +81,7 @@ const GlobalAssistantSettings: React.FC<GlobalAssistantSettingsProps> = ({ onBac
             temperature: globalAssistantConfig.temperature ?? 1.0,
             maxTokens: globalAssistantConfig.maxTokens ?? 2048,
             autoDetectLanguage: globalAssistantConfig.autoDetectLanguage ?? true,
-            supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish, French',
+            supportedLanguages: globalAssistantConfig.supportedLanguages || 'English, Spanish',
             enabledTemplates: globalAssistantConfig.enabledTemplates || getDefaultEnabledTemplates(),
             customInstructions: globalAssistantConfig.customInstructions || ''
         });
