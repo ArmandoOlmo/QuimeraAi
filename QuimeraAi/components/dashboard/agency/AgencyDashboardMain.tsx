@@ -3,11 +3,12 @@
  * Main dashboard view for Agency Plan - follows app design patterns
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield } from 'lucide-react';
+import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboard, BarChart3, Globe, Layers, PenTool, Navigation, FolderOpen, Shield, Lock } from 'lucide-react';
 
 import { useRouter } from '../../../hooks/useRouter';
+import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
@@ -29,13 +30,41 @@ import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '@/components/ui/HeaderBackButton';
 import { AgencySectionHeader, agencyContentClass, agencyShellClass } from './AgencyDesignSystem';
 
-type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
+export type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
+
+type AgencyTabAccessConfig = {
+    route: string;
+    moduleId: string;
+    requiredPermission: string;
+};
+
+export const AGENCY_TAB_ACCESS: Record<AgencyTab, AgencyTabAccessConfig> = {
+    overview: { route: ROUTES.AGENCY_OVERVIEW, moduleId: 'agency-command-center', requiredPermission: 'canViewAnalytics' },
+    analytics: { route: ROUTES.AGENCY_ANALYTICS, moduleId: 'agency-command-center', requiredPermission: 'canViewAnalytics' },
+    landing: { route: ROUTES.AGENCY_LANDING, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
+    billing: { route: ROUTES.AGENCY_BILLING, moduleId: 'agency-billing', requiredPermission: 'canManageBilling' },
+    reports: { route: ROUTES.AGENCY_REPORTS, moduleId: 'agency-reports', requiredPermission: 'canViewAnalytics' },
+    'new-client': { route: ROUTES.AGENCY_NEW_CLIENT, moduleId: 'agency-client-provisioning', requiredPermission: 'canManageSettings' },
+    addons: { route: ROUTES.AGENCY_ADDONS, moduleId: 'agency-service-plans', requiredPermission: 'canManageBilling' },
+    plans: { route: ROUTES.AGENCY_PLANS, moduleId: 'agency-service-plans', requiredPermission: 'canManageBilling' },
+    cms: { route: ROUTES.AGENCY_CMS, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
+    navigation: { route: ROUTES.AGENCY_NAVIGATION, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
+    projects: { route: ROUTES.AGENCY_PROJECTS, moduleId: 'agency-project-transfer', requiredPermission: 'canManageProjects' },
+    'white-label': { route: ROUTES.AGENCY_WHITE_LABEL, moduleId: 'agency-white-label', requiredPermission: 'canManageSettings' },
+};
+
+const HIDDEN_AGENCY_TAB_REASONS = new Set([
+    'service_not_public',
+    'service_in_development',
+    'module_disabled',
+]);
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
     const { loadingClients } = useAgency();
     const { currentTenant } = useTenant();
+    const serviceAccess = useServiceAccess();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -58,47 +87,10 @@ const AgencyDashboardMain: React.FC = () => {
     const activeTab = getTabFromPath();
 
     const handleTabChange = (tab: AgencyTab) => {
-        switch (tab) {
-            case 'overview':
-                navigate(ROUTES.AGENCY_OVERVIEW);
-                break;
-            case 'analytics':
-                navigate(ROUTES.AGENCY_ANALYTICS);
-                break;
-            case 'landing':
-                navigate(ROUTES.AGENCY_LANDING);
-                break;
-            case 'billing':
-                navigate(ROUTES.AGENCY_BILLING);
-                break;
-            case 'reports':
-                navigate(ROUTES.AGENCY_REPORTS);
-                break;
-            case 'new-client':
-                navigate(ROUTES.AGENCY_NEW_CLIENT);
-                break;
-            case 'addons':
-                navigate(ROUTES.AGENCY_ADDONS);
-                break;
-            case 'plans':
-                navigate(ROUTES.AGENCY_PLANS);
-                break;
-            case 'cms':
-                navigate(ROUTES.AGENCY_CMS);
-                break;
-            case 'navigation':
-                navigate(ROUTES.AGENCY_NAVIGATION);
-                break;
-            case 'projects':
-                navigate(ROUTES.AGENCY_PROJECTS);
-                break;
-            case 'white-label':
-                navigate(ROUTES.AGENCY_WHITE_LABEL);
-                break;
-        }
+        navigate(AGENCY_TAB_ACCESS[tab].route);
     };
 
-    const tabs = [
+    const rawTabs = useMemo(() => [
         {
             id: 'overview' as AgencyTab,
             label: t('agency.overview', 'Vista General'),
@@ -159,8 +151,44 @@ const AgencyDashboardMain: React.FC = () => {
             label: t('agency.whiteLabel.tab', 'White Label'),
             icon: Shield,
         },
-    ];
-    const activeTabConfig = tabs.find((tab) => tab.id === activeTab) || tabs[0];
+    ], [t]);
+
+    const tabAccessDecisions = useMemo(() => {
+        return rawTabs.reduce((acc, tab) => {
+            const access = AGENCY_TAB_ACCESS[tab.id];
+            acc[tab.id] = serviceAccess.canAccessModule(access.moduleId, {
+                serviceId: 'agency',
+                featureKey: 'agencyModule',
+                requiredPermission: access.requiredPermission,
+            });
+            return acc;
+        }, {} as Record<AgencyTab, ReturnType<typeof serviceAccess.canAccessModule>>);
+    }, [rawTabs, serviceAccess]);
+
+    const tabs = useMemo(() => {
+        if (serviceAccess.isLoading) return rawTabs;
+        return rawTabs.filter((tab) => !HIDDEN_AGENCY_TAB_REASONS.has(tabAccessDecisions[tab.id]?.reasonCode));
+    }, [rawTabs, serviceAccess.isLoading, tabAccessDecisions]);
+
+    const firstAllowedTab = useMemo(
+        () => tabs.find((tab) => tabAccessDecisions[tab.id]?.allowed)?.id || null,
+        [tabs, tabAccessDecisions],
+    );
+
+    const activeTabAccess = tabAccessDecisions[activeTab];
+    const activeTabConfig = tabs.find((tab) => tab.id === activeTab) || rawTabs[0];
+
+    useEffect(() => {
+        if (serviceAccess.isLoading || !activeTabAccess) return;
+        if (activeTabAccess.allowed) return;
+
+        if (firstAllowedTab) {
+            navigate(AGENCY_TAB_ACCESS[firstAllowedTab].route);
+            return;
+        }
+
+        navigate(ROUTES.DASHBOARD);
+    }, [activeTabAccess, firstAllowedTab, navigate, serviceAccess.isLoading]);
 
     return (
         <div className={agencyShellClass}>
@@ -214,17 +242,25 @@ const AgencyDashboardMain: React.FC = () => {
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
+                            const tabAccess = tabAccessDecisions[tab.id];
+                            const isDisabled = serviceAccess.isLoading || !tabAccess?.allowed;
                             return (
                                 <button
                                     key={tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all ${isActive
+                                    onClick={() => {
+                                        if (isDisabled) return;
+                                        handleTabChange(tab.id);
+                                    }}
+                                    disabled={isDisabled}
+                                    title={isDisabled ? tabAccess?.message : undefined}
+                                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all disabled:cursor-not-allowed disabled:opacity-50 ${isActive
                                         ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
                                         : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                         }`}
                                 >
                                     <Icon size={18} className={`shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
                                     <span>{tab.label}</span>
+                                    {isDisabled && !serviceAccess.isLoading && <Lock size={13} className="shrink-0" strokeWidth={1.8} />}
                                 </button>
                             );
                         })}

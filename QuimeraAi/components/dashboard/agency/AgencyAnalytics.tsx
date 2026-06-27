@@ -29,6 +29,7 @@ import {
 } from './charts';
 import { supabase } from '../../../supabase';
 import { getAgencyPoolBreakdown } from '../../../services/aiCreditsService';
+import { buildAgencyMrrHistory } from '../../../services/agencyAnalyticsService';
 import PurchaseCreditsModal from '../../ui/PurchaseCreditsModal';
 import { AgencyCommandCenter, AgencyNextAction, AgencyReadinessPanel, AgencySectionHeader } from './AgencyDesignSystem';
 
@@ -97,23 +98,9 @@ export function AgencyAnalytics() {
         loadCreditsBreakdown();
     }, [currentTenant?.id]);
 
-    // Generate mock MRR history data (in production, this would come from Supabase)
     const mrrHistoryData = useMemo(() => {
-        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const currentMonth = new Date().getMonth();
-        const currentMRR = aggregatedMetrics.mrr || 0;
-
-        // Generate historical data (simulated growth)
-        return Array.from({ length: 12 }, (_, i) => {
-            const monthIndex = (currentMonth - 11 + i + 12) % 12;
-            const growthFactor = 0.6 + (i * 0.04); // Start at 60% and grow
-            return {
-                month: months[monthIndex],
-                mrr: Math.round(currentMRR * growthFactor),
-                clients: Math.round((subClients.length || 1) * growthFactor),
-            };
-        });
-    }, [aggregatedMetrics.mrr, subClients.length]);
+        return buildAgencyMrrHistory(subClients, { months: 12, locale: 'es' });
+    }, [subClients]);
 
     // Transform sub-clients for revenue chart
     const revenueByClient = useMemo(() => {
