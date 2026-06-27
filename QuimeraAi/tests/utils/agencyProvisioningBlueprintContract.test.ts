@@ -10,6 +10,10 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
     const onboardingWorkflow = read('components/dashboard/agency/OnboardingWorkflow.tsx');
 
     it('maps agency AI generation flags to canonical client modules', () => {
+        expect(onboardingApi).toContain('const AGENCY_ENGINE_FOUNDATION_MODULES = [');
+        expect(onboardingApi).toContain('"ai-business-blueprint"');
+        expect(onboardingApi).toContain('"design-system"');
+        expect(onboardingApi).toContain('const modules = new Set<string>(AGENCY_ENGINE_FOUNDATION_MODULES)');
         expect(onboardingApi).toContain('modules.add("ecommerce-engine")');
         expect(onboardingApi).toContain('modules.add("storefront-builder")');
         expect(onboardingApi).toContain('modules.add("chatbot-engine")');
@@ -48,6 +52,40 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
             'analyticsBlueprint: {',
             'automationBlueprint: {',
             'crossModuleSync: {',
+            'agencyOperatingSystem,',
+        ].forEach((expected) => expect(onboardingApi).toContain(expected));
+    });
+
+    it('persists the Agency Operating System map for Client 360 and Command Center', () => {
+        [
+            'const AGENCY_ENGINE_CLIENT_360_MODULES = [',
+            '{ id: "businessBlueprint", canonicalSystem: "businessBlueprint", ownerModuleId: "ai-business-blueprint" }',
+            '{ id: "website-builder", canonicalSystem: "websiteBuilder", ownerModuleId: "website-builder" }',
+            '{ id: "storefront-builder", canonicalSystem: "storefrontBuilder", ownerModuleId: "storefront-builder" }',
+            '{ id: "ecommerce", canonicalSystem: "ecommerce", ownerModuleId: "ecommerce-engine" }',
+            '{ id: "crm-leads", canonicalSystem: "crm", ownerModuleId: "crm-leads" }',
+            '{ id: "email-marketing", canonicalSystem: "emailMarketing", ownerModuleId: "email-marketing" }',
+            '{ id: "appointments", canonicalSystem: "appointments", ownerModuleId: "appointments-engine" }',
+            '{ id: "restaurants", canonicalSystem: "restaurants", ownerModuleId: "restaurant-engine" }',
+            '{ id: "realty", canonicalSystem: "realEstate", ownerModuleId: "real-estate-engine" }',
+            '{ id: "bio-page", canonicalSystem: "bioPage", ownerModuleId: "bio-page-engine" }',
+            '{ id: "chatcore", canonicalSystem: "chatbot", ownerModuleId: "chatbot-engine" }',
+            '{ id: "media-ai", canonicalSystem: "media", ownerModuleId: "media-assets" }',
+            '{ id: "finance", canonicalSystem: "finance", ownerModuleId: "finance" }',
+            '{ id: "analytics", canonicalSystem: "analytics", ownerModuleId: "analytics-engine" }',
+            'function buildAgencyOperatingSystem(input: {',
+            'foundationModuleIds: Array.from(AGENCY_ENGINE_FOUNDATION_MODULES)',
+            'generatedModuleIds: input.modules',
+            'client360ModuleIds: AGENCY_ENGINE_CLIENT_360_MODULES.map((module) => module.id)',
+            'enabledClient360ModuleIds',
+            'serviceAccessRequired: true',
+            'moduleId: "agency-command-center"',
+            'moduleId: "agency-client-360"',
+            'moduleId: "agency-client-portal"',
+            'agencyOperatingSystem: "agencyOperatingSystem"',
+            'agencyOperatingSystem,',
+            'client360ModuleIds: agencyOperatingSystem.enabledClient360ModuleIds',
+            'foundationModuleIds: agencyOperatingSystem.foundationModuleIds',
         ].forEach((expected) => expect(onboardingApi).toContain(expected));
     });
 
@@ -83,8 +121,12 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
         expect(onboardingApi).toContain('fetchAgencyServicePlan(agencyTenantId, selectedPlanId)');
         expect(onboardingApi).toContain('agencyPlan?.id || selectedPlanId');
         expect(onboardingApi).toContain('const businessBlueprint = buildInitialBusinessBlueprint({');
+        expect(onboardingApi).toContain('const agencyOperatingSystem = businessBlueprint.agencyOperatingSystem');
         expect(onboardingApi).toContain('data: {');
         expect(onboardingApi).toContain('businessBlueprint,');
+        expect(onboardingApi).toContain('agencyOperatingSystem,');
+        expect(onboardingApi).toContain('effectivePlanId,');
+        expect(onboardingApi).toContain('billingMode,');
         expect(onboardingApi).toContain('moduleActivationsPrepared: true');
     });
 

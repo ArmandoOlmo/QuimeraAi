@@ -135,12 +135,66 @@ function hasAnyFeature(features: Set<string>, values: string[]): boolean {
     return values.some(value => features.has(value.toLowerCase()));
 }
 
+function readStringSet(value: unknown): Set<string> {
+    if (!Array.isArray(value)) return new Set();
+    return new Set(
+        value
+            .map(item => String(item || '').trim())
+            .filter(Boolean),
+    );
+}
+
+function readClientAgencyOperatingSystem(client: Tenant): Record<string, any> | null {
+    const candidates = [
+        client.agencyOperatingSystem,
+        client.agencyClientMetadata?.agencyOperatingSystem,
+        (client.billing as Record<string, unknown> | undefined)?.agencyOperatingSystem,
+    ];
+
+    for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'object') return candidate as Record<string, any>;
+    }
+
+    return null;
+}
+
+function readAgencyOperatingModuleState(
+    module: AgencyEngineClient360Module,
+    agencyOperatingSystem: Record<string, any> | null,
+): boolean | null {
+    if (!agencyOperatingSystem) return null;
+
+    const enabledClient360ModuleIds = readStringSet(agencyOperatingSystem.enabledClient360ModuleIds);
+    const generatedModuleIds = readStringSet(agencyOperatingSystem.generatedModuleIds);
+    const foundationModuleIds = readStringSet(agencyOperatingSystem.foundationModuleIds);
+    if (
+        enabledClient360ModuleIds.has(module.id) ||
+        generatedModuleIds.has(module.ownerModuleId) ||
+        foundationModuleIds.has(module.ownerModuleId)
+    ) {
+        return true;
+    }
+
+    const moduleRows = Array.isArray(agencyOperatingSystem.client360Modules)
+        ? agencyOperatingSystem.client360Modules
+        : [];
+    const moduleRow = moduleRows.find((row: Record<string, unknown>) =>
+        row?.id === module.id || row?.ownerModuleId === module.ownerModuleId,
+    );
+
+    if (!moduleRow) return null;
+    return moduleRow.enabled === true;
+}
+
 function isClient360ModuleActive(
     module: AgencyEngineClient360Module,
     features: Set<string>,
     projectCount: number,
     hasBilling: boolean,
+    agencyOperatingSystem: Record<string, any> | null,
 ): boolean {
+    const operatingState = readAgencyOperatingModuleState(module, agencyOperatingSystem);
+    if (operatingState !== null) return operatingState;
     if (module.id === 'businessBlueprint') return projectCount > 0 || features.size > 0;
     if (module.id === 'website-builder') return projectCount > 0 || hasAnyFeature(features, module.activationSignals);
     if (module.id === 'finance') return hasBilling || hasAnyFeature(features, module.activationSignals);
@@ -150,6 +204,7 @@ function isClient360ModuleActive(
 
 function buildClient360ModuleSignals(client: Tenant, metrics: ClientMetricsSummary | null): Client360ModuleSignal[] {
     const features = readEnabledFeatures(client);
+    const agencyOperatingSystem = readClientAgencyOperatingSystem(client);
     const billing = (client.billing || {}) as Record<string, unknown>;
     const projectCount = metrics?.usage.projectCount || client.usage?.projectCount || client.projectIds?.length || 0;
     const hasBilling = Number(billing.mrr || billing.monthlyPrice || 0) > 0 || Boolean(billing.mode && billing.mode !== 'included_in_parent');
@@ -157,7 +212,7 @@ function buildClient360ModuleSignals(client: Tenant, metrics: ClientMetricsSumma
     return getAgencyEngineOperatingSystemManifest().client360Modules.map(module => ({
         ...module,
         icon: CLIENT_360_MODULE_ICONS[module.id],
-        active: isClient360ModuleActive(module, features, projectCount, hasBilling),
+        active: isClient360ModuleActive(module, features, projectCount, hasBilling, agencyOperatingSystem),
     }));
 }
 
@@ -215,7 +270,8 @@ export function Client360Panel({
     const billing = (client.billing || {}) as Record<string, any>;
     const mrr = readClientMrr(client);
     const hasAlerts = Boolean(metrics?.alerts.length);
-    const billingMode = String(billing.mode || '-').replaceAll('_', ' ');
+    const agencyOperatingSystem = readClientAgencyOperatingSystem(client);
+    const billingMode = String(client.agencyBillingMode || billing.mode || '-').replaceAll('_', ' ');
     const servicePlanLabel = resolveAgencyClientServicePlanLabel(
         client,
         t('dashboard.agency.client360.noServicePlan', 'No service plan'),
@@ -254,6 +310,8 @@ export function Client360Panel({
                 activeEntityName: clientName,
                 clientTenantId: client.id,
                 clientName,
+                agencyOperatingSystemAvailable: Boolean(agencyOperatingSystem),
+                agencyOperatingSystemModuleIds: agencyOperatingSystem?.enabledClient360ModuleIds || null,
                 reportRoute: ROUTES.AGENCY_REPORTS,
                 servicePlanLabel,
                 billingMode,

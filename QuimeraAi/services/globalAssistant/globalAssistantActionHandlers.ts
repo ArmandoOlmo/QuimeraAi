@@ -634,6 +634,18 @@ const readAgencyClientsSnapshot = async (
         const tenant = asRecord(ownedTenantsById.get(clientTenantId));
         const relationship = asRecord(relationshipsByClientId.get(clientTenantId));
         const billing = asRecord(tenant.billing);
+        const relationshipMetadata = asRecord(relationship.metadata);
+        const agencyOperatingSystem = asRecord(relationshipMetadata.agencyOperatingSystem);
+        const enabledClient360ModuleIds = uniqueStringList(
+            asArray(agencyOperatingSystem.enabledClient360ModuleIds)
+                .map(value => readString(value) || '')
+                .filter(Boolean),
+        );
+        const generatedModuleIds = uniqueStringList(
+            asArray(agencyOperatingSystem.generatedModuleIds)
+                .map(value => readString(value) || '')
+                .filter(Boolean),
+        );
         const planId = readString(relationship.agency_plan_id) || readString(billing.agencyPlanId);
         const plan = asRecord(plansById.get(planId));
         return {
@@ -646,6 +658,9 @@ const readAgencyClientsSnapshot = async (
             lifecycleStage: readString(relationship.lifecycle_stage) || readString(relationship.status) || readString(relationship.onboarding_status) || 'unknown',
             monthlyPrice: readNumber(billing.monthlyPrice) ?? readNumber(plan.price) ?? 0,
             projectCount: readNumber(asRecord(tenant.usage).projectCount) ?? readNumber(billing.projectCount) ?? 0,
+            agencyOperatingSystem: Object.keys(agencyOperatingSystem).length > 0 ? agencyOperatingSystem : null,
+            enabledClient360ModuleIds,
+            generatedModuleIds,
             updatedAt: readString(relationship.updated_at) || readString(tenant.updated_at) || null,
         };
     });

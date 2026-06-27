@@ -53,4 +53,22 @@ describe('Agency dashboard design contract', () => {
         expect(renewals).toContain('onSelectClient?.(renewal.clientId)');
         expect(`${alerts}\n${renewals}`).not.toContain('/dashboard/agency/clients/');
     });
+
+    it('surfaces Agency Operating System module readiness in the command center', () => {
+        const overview = read('components/dashboard/agency/AgencyOverview.tsx');
+        const agencyMetrics = read('hooks/useAgencyMetrics.ts');
+
+        expect(agencyMetrics).toContain('export interface AgencyOperatingSystemMetrics');
+        expect(agencyMetrics).toContain('function calculateAgencyOperatingSystemMetrics(clients: Tenant[]): AgencyOperatingSystemMetrics');
+        expect(agencyMetrics).toContain('clientsWithOperatingSystem');
+        expect(agencyMetrics).toContain('activeModuleSlots');
+        expect(agencyMetrics).toContain('moduleReadinessRate');
+        expect(agencyMetrics).toContain('agencyOperatingSystem: calculateAgencyOperatingSystemMetrics(clients)');
+
+        expect(overview).toContain('const agencyOperatingSystem = safeMetrics.agencyOperatingSystem');
+        expect(overview).toContain('const operatingModuleValue = agencyOperatingSystem.totalModuleSlots > 0');
+        expect(overview).toContain("t('dashboard.agency.overviewPage.aiModulesShort'");
+        expect(overview).toContain("t('dashboard.agency.overviewPage.readinessModules'");
+        expect(overview).toContain("t('dashboard.agency.overviewPage.operatingModules'");
+    });
 });

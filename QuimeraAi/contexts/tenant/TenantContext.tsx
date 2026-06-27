@@ -100,6 +100,8 @@ function parseTenantJsonField<T>(value: T | string | null | undefined, fallback:
 }
 
 function mapTenantRowToTenant(tData: any): Tenant {
+    const agencyRelationship = tData.agency_relationship || {};
+    const agencyMetadata = parseTenantJsonField(agencyRelationship.metadata, {} as Record<string, unknown>);
     const raw = {
         id: tData.id,
         name: tData.name,
@@ -114,6 +116,13 @@ function mapTenantRowToTenant(tData: any): Tenant {
         branding: parseTenantJsonField(tData.branding, {} as Tenant['branding']),
         settings: parseTenantJsonField(tData.settings, {} as Tenant['settings']),
         billing: parseTenantJsonField(tData.billing, {} as Tenant['billing']),
+        agencyTenantId: agencyRelationship.agency_tenant_id || tData.owner_tenant_id,
+        agencyPlanId: agencyRelationship.agency_plan_id || undefined,
+        agencyBillingMode: agencyRelationship.billing_mode || undefined,
+        agencyLifecycleStage: agencyRelationship.lifecycle_stage || agencyRelationship.status || undefined,
+        agencyOnboardingStatus: agencyRelationship.onboarding_status || undefined,
+        agencyClientMetadata: agencyMetadata,
+        agencyOperatingSystem: agencyMetadata.agencyOperatingSystem || null,
         createdAt: tData.created_at,
         updatedAt: tData.updated_at
     } as any;
@@ -148,10 +157,11 @@ async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
 
 async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[]> {
     const tenantsById = new Map<string, any>();
+    const relationshipsByClientId = new Map<string, any>();
 
     const { data: relationships, error: relationshipError } = await supabase
         .from('agency_clients')
-        .select('client_tenant_id')
+        .select('agency_tenant_id,client_tenant_id,agency_plan_id,billing_mode,onboarding_status,status,lifecycle_stage,metadata,updated_at')
         .eq('agency_tenant_id', agencyTenantId);
 
     if (relationshipError && !isMissingAgencyEngineTable(relationshipError)) {
@@ -160,10 +170,16 @@ async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[
 
     if (!relationshipError && relationships?.length) {
         const canonicalClientIds = relationships
-            .map(row => row.client_tenant_id)
+            .map(row => {
+                if (row.client_tenant_id) relationshipsByClientId.set(row.client_tenant_id, row);
+                return row.client_tenant_id;
+            })
             .filter(Boolean);
         const canonicalRows = await fetchTenantRowsByIds(canonicalClientIds);
-        canonicalRows.forEach(row => tenantsById.set(row.id, row));
+        canonicalRows.forEach(row => {
+            const relationship = relationshipsByClientId.get(row.id);
+            tenantsById.set(row.id, relationship ? { ...row, agency_relationship: relationship } : row);
+        });
     }
 
     const { data: legacyRows, error: legacyError } = await supabase
@@ -172,7 +188,9 @@ async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[
         .eq('owner_tenant_id', agencyTenantId);
 
     if (legacyError) throw legacyError;
-    (legacyRows || []).forEach(row => tenantsById.set(row.id, row));
+    (legacyRows || []).forEach(row => {
+        if (!tenantsById.has(row.id)) tenantsById.set(row.id, row);
+    });
 
     return Array.from(tenantsById.values());
 }

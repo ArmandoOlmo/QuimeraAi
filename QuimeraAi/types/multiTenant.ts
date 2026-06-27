@@ -193,6 +193,16 @@ export interface Tenant {
     // Agency Pool (for sub-clients using shared credits)
     parentCreditsPoolId?: string;  // tenantId of the agency pool to use
 
+    // Canonical Agency Engine relationship metadata
+    agencyTenantId?: string;
+    agencyPlanId?: string | null;
+    agencyPlanName?: string | null;
+    agencyBillingMode?: TenantBilling['mode'] | string | null;
+    agencyLifecycleStage?: string | null;
+    agencyOnboardingStatus?: string | null;
+    agencyClientMetadata?: Record<string, unknown>;
+    agencyOperatingSystem?: Record<string, unknown> | null;
+
     // Metadata
     createdAt: { seconds: number; nanoseconds: number };
     updatedAt: { seconds: number; nanoseconds: number };

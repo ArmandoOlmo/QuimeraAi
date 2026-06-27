@@ -57,10 +57,17 @@ Provisioning creates:
 - Canonical effective plan on `subscription_plan`
 - Agency plan reference in `tenant.billing.agencyPlanId`
 - Initial project draft with `businessBlueprint`
+- `businessBlueprint.agencyOperatingSystem`, a draft-safe map of generated modules, Client 360 module IDs, foundational modules, review policy, Client Portal handoff, and Agency Command Center signals
 - Module activation rows when tables exist
 - Agency/client relationship in `agency_clients`
 - Client invites
 - Agency activity entry
+
+Every agency-provisioned client starts with the foundational modules `ai-business-blueprint`, `design-system`, `website-builder`, and `analytics-engine`. Optional generation flags add Ecommerce, Storefront Builder, CRM/Leads, Email Marketing, Appointments, Restaurants, Realty, Bio Page, ChatCore, Media AI, and Finance. The same `agencyOperatingSystem` map is stored in project data, agency client metadata, activity metadata, and the provisioning response so AI Studio, Client 360, Agency Command Center, Client Portal, reports, and future runtime activation jobs share one module contract.
+
+Agency client list hydration reads `agency_clients.metadata.agencyOperatingSystem` and attaches it to the Tenant model. Client 360 uses that map before fallback heuristics, while Global Assistant agency snapshots expose `enabledClient360ModuleIds`, `generatedModuleIds`, and the operating map for AI report and navigation actions.
+
+Agency Command Center aggregates the same map into `aggregatedMetrics.agencyOperatingSystem`, including clients with Agency OS, active module slots, total Client 360 module slots, module readiness rate, generated module IDs, and enabled Client 360 module IDs.
 
 Generated projects are drafts and require review. No runtime is auto-published.
 

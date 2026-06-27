@@ -103,6 +103,30 @@ type InitialClientUser = {
   role?: string;
 };
 
+const AGENCY_ENGINE_FOUNDATION_MODULES = [
+  "ai-business-blueprint",
+  "design-system",
+  "website-builder",
+  "analytics-engine",
+] as const;
+
+const AGENCY_ENGINE_CLIENT_360_MODULES = [
+  { id: "businessBlueprint", canonicalSystem: "businessBlueprint", ownerModuleId: "ai-business-blueprint" },
+  { id: "website-builder", canonicalSystem: "websiteBuilder", ownerModuleId: "website-builder" },
+  { id: "storefront-builder", canonicalSystem: "storefrontBuilder", ownerModuleId: "storefront-builder" },
+  { id: "ecommerce", canonicalSystem: "ecommerce", ownerModuleId: "ecommerce-engine" },
+  { id: "crm-leads", canonicalSystem: "crm", ownerModuleId: "crm-leads" },
+  { id: "email-marketing", canonicalSystem: "emailMarketing", ownerModuleId: "email-marketing" },
+  { id: "appointments", canonicalSystem: "appointments", ownerModuleId: "appointments-engine" },
+  { id: "restaurants", canonicalSystem: "restaurants", ownerModuleId: "restaurant-engine" },
+  { id: "realty", canonicalSystem: "realEstate", ownerModuleId: "real-estate-engine" },
+  { id: "bio-page", canonicalSystem: "bioPage", ownerModuleId: "bio-page-engine" },
+  { id: "chatcore", canonicalSystem: "chatbot", ownerModuleId: "chatbot-engine" },
+  { id: "media-ai", canonicalSystem: "media", ownerModuleId: "media-assets" },
+  { id: "finance", canonicalSystem: "finance", ownerModuleId: "finance" },
+  { id: "analytics", canonicalSystem: "analytics", ownerModuleId: "analytics-engine" },
+] as const;
+
 const CLIENT_ADMIN_PERMISSIONS = {
   canManageProjects: true,
   canManageLeads: true,
@@ -313,7 +337,7 @@ function selectedModules(payload: Record<string, unknown>) {
   const enabledFeatures = Array.isArray(payload.enabledFeatures)
     ? payload.enabledFeatures.map((feature) => String(feature).trim()).filter(Boolean)
     : [];
-  const modules = new Set<string>(["website-builder", "analytics-engine"]);
+  const modules = new Set<string>(AGENCY_ENGINE_FOUNDATION_MODULES);
 
   if (enabledFeatures.includes("cms") || payload.generateWebsite !== false) modules.add("cms-engine");
   if (enabledFeatures.includes("leads")) modules.add("crm-leads");
@@ -340,6 +364,78 @@ function selectedModules(payload: Record<string, unknown>) {
   }
 
   return Array.from(modules);
+}
+
+function buildAgencyOperatingSystem(input: {
+  modules: string[];
+  payload: Record<string, unknown>;
+  now: string;
+}) {
+  const moduleSet = new Set(input.modules);
+  const client360Modules = AGENCY_ENGINE_CLIENT_360_MODULES.map((module) => {
+    const enabled = moduleSet.has(module.ownerModuleId);
+
+    return {
+      id: module.id,
+      canonicalSystem: module.canonicalSystem,
+      ownerModuleId: module.ownerModuleId,
+      enabled,
+      status: enabled ? "draft" : "disabled",
+      needsReview: enabled,
+      noRuntimeActivated: true,
+      noAutoPublish: true,
+      source: "agency-engine",
+    };
+  });
+  const enabledClient360ModuleIds = client360Modules
+    .filter((module) => module.enabled)
+    .map((module) => module.id);
+
+  return {
+    source: "agency-engine",
+    status: "needs_review",
+    generatedByAI: true,
+    generatedAt: input.now,
+    updatedAt: input.now,
+    selectedPlanId: input.payload.selectedPlanId || null,
+    selectedPlanName: input.payload.selectedPlanName || null,
+    foundationModuleIds: Array.from(AGENCY_ENGINE_FOUNDATION_MODULES),
+    generatedModuleIds: input.modules,
+    client360ModuleIds: AGENCY_ENGINE_CLIENT_360_MODULES.map((module) => module.id),
+    enabledClient360ModuleIds,
+    client360Modules,
+    draftOnly: true,
+    needsReview: true,
+    noRuntimeActivated: true,
+    noAutoPublish: true,
+    serviceAccessRequired: true,
+    activationPolicy: {
+      serviceAccessEngine: true,
+      requiresAgencyReview: true,
+      requiresClientReview: true,
+      publishRequiresApproval: true,
+      modulesStartAsDrafts: true,
+    },
+    commandCenter: {
+      moduleId: "agency-command-center",
+      status: "draft",
+      surfacedMetrics: ["client_health", "module_readiness", "billing_status", "activity", "reports"],
+      needsReview: true,
+    },
+    client360: {
+      moduleId: "agency-client-360",
+      status: "draft",
+      enabledModuleIds: enabledClient360ModuleIds,
+      needsReview: true,
+    },
+    clientPortal: {
+      moduleId: "agency-client-portal",
+      status: "draft",
+      approvalQueueEnabled: true,
+      reportInboxEnabled: true,
+      needsReview: true,
+    },
+  };
 }
 
 function readiness(isReady: boolean, warnings: string[] = [], blockers: string[] = []) {
@@ -467,6 +563,11 @@ function buildInitialBusinessBlueprint(input: {
     "Generated content is draft-only.",
     "No runtime, public publishing, billing provider, email sending, appointment slot, menu item, listing, or checkout session was activated.",
   ];
+  const agencyOperatingSystem = buildAgencyOperatingSystem({
+    modules: input.modules,
+    payload: input.payload,
+    now,
+  });
 
   return {
     blueprintVersion: "1.0.0",
@@ -488,6 +589,7 @@ function buildInitialBusinessBlueprint(input: {
       selectedPlanName: "payload.selectedPlanName",
       enabledFeatures: "payload.enabledFeatures",
       modules: "agencyProvisioning.modules",
+      agencyOperatingSystem: "agencyOperatingSystem",
     },
     metadata: {
       generatedBy: "ai",
@@ -536,11 +638,15 @@ function buildInitialBusinessBlueprint(input: {
       selectedPlanName: input.payload.selectedPlanName || null,
       enabledFeatures,
       modules: input.modules,
+      agencyOperatingSystem,
+      client360ModuleIds: agencyOperatingSystem.enabledClient360ModuleIds,
+      foundationModuleIds: agencyOperatingSystem.foundationModuleIds,
       needsReview: true,
       generatedByAI: true,
       noRuntimeActivated: true,
       noAutoPublish: true,
     },
+    agencyOperatingSystem,
     websiteBlueprint: {
       ...buildDraftState(now, websiteEnabled, { sections: "agencyProvisioning.modules" }),
       pages: [{ id: "home", title: "Home", slug: "/", sections: baseSections }],
@@ -1259,9 +1365,17 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
   const effectivePlanId = resolveAgencyClientEffectivePlanId(agencyTenant, payload);
   const clientLimits = sanitizeFiniteLimits(agencyPlan?.limits, effectivePlanId);
   const monthlyPrice = Number(payload.monthlyPrice ?? agencyPlan?.price ?? 0);
+  const billingMode = payload.setupBilling ? "agency_managed" : "included_in_parent";
   const modules = selectedModules(payload);
   const slug = await ensureUniqueSlug(businessName);
   const now = new Date().toISOString();
+  const provisioningPayload = {
+    ...payload,
+    selectedPlanId: agencyPlan?.id || selectedPlanId,
+    selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+    effectivePlanId,
+    billingMode,
+  };
 
   const { data: tenant, error: tenantError } = await supabase
     .from("tenants")
@@ -1297,12 +1411,12 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
         timezone: "America/Puerto_Rico",
       },
       billing: {
-        mode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+        mode: billingMode,
         effectivePlanId,
         agencyPlanId: agencyPlan?.id || selectedPlanId,
         agencyPlanName: agencyPlan?.name || payload.selectedPlanName || null,
         monthlyPrice,
-        status: payload.setupBilling ? "pending_setup" : "included",
+        status: billingMode === "agency_managed" ? "pending_setup" : "included",
       },
       parent_credits_pool_id: agencyTenantId,
       created_at: now,
@@ -1332,8 +1446,9 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     contactEmail,
     contactPhone,
     modules,
-    payload,
+    payload: provisioningPayload,
   });
+  const agencyOperatingSystem = businessBlueprint.agencyOperatingSystem;
 
   const { data: project, error: projectError } = await supabase
     .from("projects")
@@ -1351,7 +1466,12 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
           clientTenantId: tenant.id,
           selectedPlanId: agencyPlan?.id || selectedPlanId,
           selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+          effectivePlanId,
+          billingMode,
           modules,
+          agencyOperatingSystem,
+          client360ModuleIds: agencyOperatingSystem.enabledClient360ModuleIds,
+          foundationModuleIds: agencyOperatingSystem.foundationModuleIds,
           createdAt: now,
         },
       },
@@ -1386,7 +1506,7 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     lifecycle_stage: "onboarding",
     health_score: 70,
     agency_plan_id: agencyPlan?.id || selectedPlanId,
-    billing_mode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+    billing_mode: billingMode,
     onboarding_status: "provisioned",
     project_count: 1,
     primary_project_id: project.id,
@@ -1395,6 +1515,8 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
       source: "onboarding-api",
       modules,
       selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+      effectivePlanId,
+      agencyOperatingSystem,
     },
     updated_at: now,
   }, { onConflict: "agency_tenant_id,client_tenant_id" });
@@ -1432,7 +1554,10 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     metadata: {
       selectedPlanId: agencyPlan?.id || selectedPlanId,
       selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+      effectivePlanId,
+      billingMode,
       modules,
+      agencyOperatingSystem,
       invitesSent: invites.length,
       source: "onboarding-api",
     },
@@ -1460,13 +1585,16 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
     limits: clientLimits,
     modules,
+    agencyOperatingSystem,
     invitesSent: invites.length,
     provisioningSummary: {
       tenantCreated: true,
       projectCreated: true,
       businessBlueprintCreated: true,
       moduleActivationsPrepared: true,
-      billingMode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+      billingMode,
+      effectivePlanId,
+      enabledClient360ModuleIds: agencyOperatingSystem.enabledClient360ModuleIds,
       activityLogged: true,
     },
   };

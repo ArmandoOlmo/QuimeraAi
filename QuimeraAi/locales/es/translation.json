@@ -3727,6 +3727,11 @@
         "teamMembers": "Miembros de equipos",
         "lastMonth": "Último mes",
         "revenueGenerated": "Ingresos Generados",
+        "aiModulesShort": "Módulos AI",
+        "readinessModules": "Módulos AI operativos",
+        "readinessModulesDesc": "{{active}}/{{total}} módulos Client 360 generados",
+        "operatingModules": "Módulos operativos",
+        "operatingModulesHint": "{{clients}} clientes con Agency OS",
         "clientEcommerce": "E-commerce de clientes",
         "recentActivity": "Actividad Reciente",
         "noActivity": "No hay actividad reciente"

@@ -75,6 +75,13 @@ describe('Agency Client Provisioning Global Assistant contract', () => {
         expect(onboardingApi).toContain('if (rawPlanId === "agency_client")');
         expect(onboardingApi).toContain('if (selectedServicePlanId && rawPlanId === selectedServicePlanId) continue');
         expect(onboardingApi).toContain('const effectivePlanId = resolveAgencyClientEffectivePlanId(agencyTenant, payload)');
+        expect(onboardingApi).toContain('const billingMode = payload.setupBilling ? "agency_managed" : "included_in_parent"');
+        expect(onboardingApi).toContain('const provisioningPayload = {');
+        expect(onboardingApi).toContain('payload: provisioningPayload');
+        expect(onboardingApi).toContain('function buildAgencyOperatingSystem(input: {');
+        expect(onboardingApi).toContain('const agencyOperatingSystem = businessBlueprint.agencyOperatingSystem');
+        expect(onboardingApi).toContain('agencyOperatingSystem,');
+        expect(onboardingApi).toContain('enabledClient360ModuleIds: agencyOperatingSystem.enabledClient360ModuleIds');
         expect(onboardingApi).toContain('agency_plan_id: agencyPlan?.id || selectedPlanId');
         expect(onboardingApi).toContain('businessBlueprintCreated: true');
         expect(onboardingApi).toContain('moduleActivationsPrepared: true');

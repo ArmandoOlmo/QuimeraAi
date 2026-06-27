@@ -42,6 +42,16 @@ export interface AggregatedMetrics {
     aiCreditsUsed: number;
     activeSubClients: number;
     mrr: number;  // Monthly Recurring Revenue
+    agencyOperatingSystem: AgencyOperatingSystemMetrics;
+}
+
+export interface AgencyOperatingSystemMetrics {
+    clientsWithOperatingSystem: number;
+    activeModuleSlots: number;
+    totalModuleSlots: number;
+    moduleReadinessRate: number;
+    enabledClient360ModuleIds: string[];
+    generatedModuleIds: string[];
 }
 
 export interface ActivityEvent {
@@ -89,6 +99,8 @@ function parseJsonField<T>(value: T | string | null | undefined, fallback: T): T
 }
 
 function mapTenantRow(row: any): Tenant {
+    const agencyRelationship = row.agency_relationship || {};
+    const agencyMetadata = parseJsonField(agencyRelationship.metadata, {} as Record<string, unknown>);
     return {
         id: row.id,
         name: resolveProjectName(row.name),
@@ -112,6 +124,13 @@ function mapTenantRow(row: any): Tenant {
         branding: parseJsonField(row.branding, {} as Tenant['branding']),
         settings: parseJsonField(row.settings, {} as Tenant['settings']),
         billing: parseJsonField(row.billing, {} as Tenant['billing']),
+        agencyTenantId: agencyRelationship.agency_tenant_id || row.owner_tenant_id,
+        agencyPlanId: agencyRelationship.agency_plan_id || undefined,
+        agencyBillingMode: agencyRelationship.billing_mode || undefined,
+        agencyLifecycleStage: agencyRelationship.lifecycle_stage || agencyRelationship.status || undefined,
+        agencyOnboardingStatus: agencyRelationship.onboarding_status || undefined,
+        agencyClientMetadata: agencyMetadata,
+        agencyOperatingSystem: agencyMetadata.agencyOperatingSystem || null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         lastActiveAt: row.last_active_at,
@@ -148,10 +167,11 @@ async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
 
 async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[]> {
     const tenantsById = new Map<string, any>();
+    const relationshipsByClientId = new Map<string, any>();
 
     const { data: relationships, error: relationshipError } = await supabase
         .from('agency_clients')
-        .select('client_tenant_id')
+        .select('agency_tenant_id,client_tenant_id,agency_plan_id,billing_mode,onboarding_status,status,lifecycle_stage,metadata,updated_at')
         .eq('agency_tenant_id', agencyTenantId);
 
     if (relationshipError && !isMissingAgencyRelationshipTable(relationshipError)) {
@@ -160,10 +180,16 @@ async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[
 
     if (!relationshipError && relationships?.length) {
         const canonicalClientIds = relationships
-            .map(row => row.client_tenant_id)
+            .map(row => {
+                if (row.client_tenant_id) relationshipsByClientId.set(row.client_tenant_id, row);
+                return row.client_tenant_id;
+            })
             .filter(Boolean);
         const canonicalRows = await fetchTenantRowsByIds(canonicalClientIds);
-        canonicalRows.forEach(row => tenantsById.set(row.id, row));
+        canonicalRows.forEach(row => {
+            const relationship = relationshipsByClientId.get(row.id);
+            tenantsById.set(row.id, relationship ? { ...row, agency_relationship: relationship } : row);
+        });
     }
 
     const { data: legacyRows, error: legacyError } = await supabase
@@ -173,7 +199,9 @@ async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[
         .in('status', ['active', 'trial', 'suspended']);
 
     if (legacyError) throw legacyError;
-    (legacyRows || []).forEach(row => tenantsById.set(row.id, row));
+    (legacyRows || []).forEach(row => {
+        if (!tenantsById.has(row.id)) tenantsById.set(row.id, row);
+    });
 
     return Array.from(tenantsById.values());
 }
@@ -226,6 +254,57 @@ function readClientMrr(client: Tenant): number {
     return 0;
 }
 
+function readStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return Array.from(new Set(
+        value
+            .map(item => String(item || '').trim())
+            .filter(Boolean),
+    ));
+}
+
+function readClientAgencyOperatingSystem(client: Tenant): Record<string, any> | null {
+    const candidate = client.agencyOperatingSystem || client.agencyClientMetadata?.agencyOperatingSystem;
+    return candidate && typeof candidate === 'object' ? candidate as Record<string, any> : null;
+}
+
+function calculateAgencyOperatingSystemMetrics(clients: Tenant[]): AgencyOperatingSystemMetrics {
+    let clientsWithOperatingSystem = 0;
+    let activeModuleSlots = 0;
+    let totalModuleSlots = 0;
+    const enabledClient360ModuleIds = new Set<string>();
+    const generatedModuleIds = new Set<string>();
+
+    clients.forEach(client => {
+        const agencyOperatingSystem = readClientAgencyOperatingSystem(client);
+        if (!agencyOperatingSystem) return;
+
+        clientsWithOperatingSystem += 1;
+        const enabledModules = readStringArray(agencyOperatingSystem.enabledClient360ModuleIds);
+        const totalModules = readStringArray(agencyOperatingSystem.client360ModuleIds);
+        const generatedModules = readStringArray(agencyOperatingSystem.generatedModuleIds);
+        const client360Rows = Array.isArray(agencyOperatingSystem.client360Modules)
+            ? agencyOperatingSystem.client360Modules
+            : [];
+        const totalFromRows = readStringArray(client360Rows.map((row: Record<string, unknown>) => row?.id));
+        const totalForClient = totalModules.length > 0 ? totalModules : totalFromRows;
+
+        activeModuleSlots += enabledModules.length;
+        totalModuleSlots += totalForClient.length > 0 ? totalForClient.length : enabledModules.length;
+        enabledModules.forEach(moduleId => enabledClient360ModuleIds.add(moduleId));
+        generatedModules.forEach(moduleId => generatedModuleIds.add(moduleId));
+    });
+
+    return {
+        clientsWithOperatingSystem,
+        activeModuleSlots,
+        totalModuleSlots,
+        moduleReadinessRate: totalModuleSlots > 0 ? Math.round((activeModuleSlots / totalModuleSlots) * 100) : 0,
+        enabledClient360ModuleIds: Array.from(enabledClient360ModuleIds).sort(),
+        generatedModuleIds: Array.from(generatedModuleIds).sort(),
+    };
+}
+
 export function useAgencyMetrics(agencyTenantId: string) {
     const [subClients, setSubClients] = useState<Tenant[]>([]);
     const [aggregatedMetrics, setAggregatedMetrics] = useState<AggregatedMetrics>({
@@ -237,6 +316,14 @@ export function useAgencyMetrics(agencyTenantId: string) {
         aiCreditsUsed: 0,
         activeSubClients: 0,
         mrr: 0,
+        agencyOperatingSystem: {
+            clientsWithOperatingSystem: 0,
+            activeModuleSlots: 0,
+            totalModuleSlots: 0,
+            moduleReadinessRate: 0,
+            enabledClient360ModuleIds: [],
+            generatedModuleIds: [],
+        },
     });
     const [resourceAlerts, setResourceAlerts] = useState<ResourceAlert[]>([]);
     const [upcomingRenewals, setUpcomingRenewals] = useState<UpcomingRenewal[]>([]);
@@ -255,6 +342,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
             aiCreditsUsed: 0,
             activeSubClients: clients.filter(c => c.status === 'active').length,
             mrr: 0,
+            agencyOperatingSystem: calculateAgencyOperatingSystemMetrics(clients),
         };
 
         clients.forEach(client => {

@@ -70,6 +70,14 @@ export function AgencyOverview() {
         storageUsedGB: 0,
         aiCreditsUsed: 0,
         totalRevenue: 0,
+        agencyOperatingSystem: {
+            clientsWithOperatingSystem: 0,
+            activeModuleSlots: 0,
+            totalModuleSlots: 0,
+            moduleReadinessRate: 0,
+            enabledClient360ModuleIds: [],
+            generatedModuleIds: [],
+        },
     };
 
     const totalClients = subClients?.length || 0;
@@ -78,6 +86,14 @@ export function AgencyOverview() {
     const activeClientRate = totalClients > 0
         ? Math.round((safeMetrics.activeSubClients / totalClients) * 100)
         : 0;
+    const agencyOperatingSystem = safeMetrics.agencyOperatingSystem || {
+        clientsWithOperatingSystem: 0,
+        activeModuleSlots: 0,
+        totalModuleSlots: 0,
+        moduleReadinessRate: 0,
+        enabledClient360ModuleIds: [],
+        generatedModuleIds: [],
+    };
 
     const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('en-US', {
@@ -91,6 +107,9 @@ export function AgencyOverview() {
     const formatNumber = (num: number): string => {
         return new Intl.NumberFormat('en-US').format(num);
     };
+    const operatingModuleValue = agencyOperatingSystem.totalModuleSlots > 0
+        ? `${formatNumber(agencyOperatingSystem.activeModuleSlots)}/${formatNumber(agencyOperatingSystem.totalModuleSlots)}`
+        : '0';
 
     const formatStorage = (gb: number): string => {
         if (gb < 1) {
@@ -122,6 +141,16 @@ export function AgencyOverview() {
             onClick: () => navigate(ROUTES.AGENCY_PROJECTS),
         },
         {
+            label: t('dashboard.agency.overviewPage.readinessModules', 'Módulos AI operativos'),
+            description: t('dashboard.agency.overviewPage.readinessModulesDesc', '{{active}}/{{total}} módulos Client 360 generados', {
+                active: agencyOperatingSystem.activeModuleSlots,
+                total: agencyOperatingSystem.totalModuleSlots,
+            }),
+            complete: agencyOperatingSystem.activeModuleSlots > 0,
+            icon: Sparkles,
+            onClick: totalClients > 0 ? () => setSelectedClientId(subClients.find(client => client.agencyOperatingSystem)?.id || subClients[0]?.id) : undefined,
+        },
+        {
             label: t('dashboard.agency.overviewPage.readinessLimits', 'Límites sanos'),
             description: t('dashboard.agency.overviewPage.readinessLimitsDesc', '{{count}} alertas críticas', { count: criticalAlerts }),
             complete: criticalAlerts === 0,
@@ -141,8 +170,11 @@ export function AgencyOverview() {
         recentActivity.length,
         resourceAlerts,
         safeMetrics.activeSubClients,
+        agencyOperatingSystem.activeModuleSlots,
+        agencyOperatingSystem.totalModuleSlots,
         safeMetrics.mrr,
         safeMetrics.totalProjects,
+        subClients,
         t,
         totalClients,
     ]);
@@ -233,6 +265,11 @@ export function AgencyOverview() {
                             onClick: () => navigate(ROUTES.AGENCY_PROJECTS),
                         },
                         {
+                            label: t('dashboard.agency.overviewPage.aiModulesShort', 'Módulos AI'),
+                            value: operatingModuleValue,
+                            icon: Sparkles,
+                        },
+                        {
                             label: t('dashboard.agency.overviewPage.mrrShort', 'MRR'),
                             value: formatCurrency(safeMetrics.mrr),
                             icon: DollarSign,
@@ -300,6 +337,15 @@ export function AgencyOverview() {
                     value={formatNumber(safeMetrics.aiCreditsUsed)}
                     icon={Sparkles}
                     tone="warning"
+                />
+                <AgencyStatCard
+                    label={t('dashboard.agency.overviewPage.operatingModules', 'Módulos operativos')}
+                    value={operatingModuleValue}
+                    icon={LayoutDashboard}
+                    tone={agencyOperatingSystem.moduleReadinessRate >= 70 ? 'success' : 'info'}
+                    hint={t('dashboard.agency.overviewPage.operatingModulesHint', '{{clients}} clientes con Agency OS', {
+                        clients: agencyOperatingSystem.clientsWithOperatingSystem,
+                    })}
                 />
                 <AgencyStatCard
                     label={t('dashboard.agency.overviewPage.revenueGenerated')}

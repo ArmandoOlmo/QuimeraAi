@@ -17,6 +17,7 @@ describe('Agency Client 360 contract', () => {
     const clientList = read('components/dashboard/agency/ClientListTable.tsx');
     const client360Panel = read('components/dashboard/agency/Client360Panel.tsx');
     const entryBridge = read('services/globalAssistant/globalAssistantEntryBridge.ts');
+    const actionHandlers = read('services/globalAssistant/globalAssistantActionHandlers.ts');
     const registry = read('registry/moduleRegistry.ts');
     const docs = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
 
@@ -39,6 +40,10 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain('getAgencyEngineOperatingSystemManifest().client360Modules');
         expect(client360Panel).toContain('CLIENT_360_MODULE_ICONS');
         expect(client360Panel).toContain('module.activationSignals');
+        expect(client360Panel).toContain('readClientAgencyOperatingSystem(client)');
+        expect(client360Panel).toContain('readAgencyOperatingModuleState(module, agencyOperatingSystem)');
+        expect(client360Panel).toContain('agencyOperatingSystem.enabledClient360ModuleIds');
+        expect(client360Panel).toContain('agencyOperatingSystem.generatedModuleIds');
         expect(client360Panel).toContain('module.route');
         expect(client360Panel).toContain("t('dashboard.agency.client360.activity'");
         expect(client360Panel).toContain('ROUTES.AGENCY_BILLING');
@@ -71,10 +76,20 @@ describe('Agency Client 360 contract', () => {
         expect(client360Panel).toContain("quickActionCategory: 'analyze'");
         expect(client360Panel).toContain("activeEntityType: 'agency_client'");
         expect(client360Panel).toContain('clientTenantId: client.id');
+        expect(client360Panel).toContain('agencyOperatingSystemAvailable: Boolean(agencyOperatingSystem)');
+        expect(client360Panel).toContain('agencyOperatingSystemModuleIds: agencyOperatingSystem?.enabledClient360ModuleIds || null');
         expect(client360Panel).toContain('activeModuleIds: activeModuleSignals.map(module => module.id)');
         expect(client360Panel).toContain('pendingModuleIds: pendingModuleSignals.map(module => module.id)');
         expect(client360Panel).toContain("'dashboard.agency.client360.generateAiReport'");
         expect(client360Panel).toContain("'dashboard.agency.client360.aiReportPrompt'");
+    });
+
+    it('feeds Agency Operating System module context into Global Assistant client snapshots', () => {
+        expect(actionHandlers).toContain('const relationshipMetadata = asRecord(relationship.metadata)');
+        expect(actionHandlers).toContain('const agencyOperatingSystem = asRecord(relationshipMetadata.agencyOperatingSystem)');
+        expect(actionHandlers).toContain('enabledClient360ModuleIds');
+        expect(actionHandlers).toContain('generatedModuleIds');
+        expect(actionHandlers).toContain('agencyOperatingSystem: Object.keys(agencyOperatingSystem).length > 0 ? agencyOperatingSystem : null');
     });
 
     it('ships all Client 360 labels through ES, EN, and FR locale files', () => {
