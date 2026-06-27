@@ -200,7 +200,7 @@ const AgencyDashboardMain: React.FC = () => {
 
             {/* Main Content */}
             <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                <header className="quimera-dashboard-header-bar h-auto min-h-14 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sticky top-0 z-40 relative">
+                <header className="quimera-dashboard-header-bar sticky top-0 z-40 flex h-auto min-h-14 flex-wrap items-center justify-between gap-2 px-3 py-2 sm:flex-nowrap sm:px-6 sm:py-0">
                     {/* Left Section - Menu Button & Title */}
                     <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
                         <button

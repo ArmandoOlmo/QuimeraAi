@@ -19,6 +19,7 @@ import { ROUTES } from '../../../routes/config';
 import { AgencyPanel } from './AgencyDesignSystem';
 import { StatusBadge } from '../../ui/system';
 import { Client360Panel } from './Client360Panel';
+import { resolveAgencyClientServicePlanLabel } from './agencyClientDisplay';
 
 interface ClientListTableProps {
     clients: Tenant[];
@@ -197,8 +198,8 @@ export function ClientListTable({ clients, onSelectClient, renderClient360 = tru
                                             {getStatusBadge(client.status)}
                                         </td>
                                         <td className="px-5 py-3.5 whitespace-nowrap">
-                                            <span className="text-sm text-foreground capitalize">
-                                                {(client.subscriptionPlan || 'individual').replace('_', ' ')}
+                                            <span className="text-sm text-foreground">
+                                                {resolveAgencyClientServicePlanLabel(client, 'Sin plan')}
                                             </span>
                                         </td>
                                         <td className="px-5 py-3.5 whitespace-nowrap">

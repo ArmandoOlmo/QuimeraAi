@@ -24,6 +24,7 @@ import { AgencyPanel } from './AgencyDesignSystem';
 import { StatusBadge } from '../../ui/system';
 import { formatTimeAgo } from '../../../contexts/agency/AgencyContext';
 import { cn } from '../../../utils';
+import { resolveAgencyClientServicePlanLabel } from './agencyClientDisplay';
 
 interface Client360PanelProps {
     client: Tenant | null;
@@ -133,6 +134,10 @@ export function Client360Panel({
     const mrr = readClientMrr(client);
     const hasAlerts = Boolean(metrics?.alerts.length);
     const billingMode = String(billing.mode || '-').replaceAll('_', ' ');
+    const servicePlanLabel = resolveAgencyClientServicePlanLabel(
+        client,
+        t('dashboard.agency.client360.noServicePlan', 'No service plan'),
+    );
 
     const goTo = (route: string) => {
         onClose();
@@ -195,7 +200,7 @@ export function Client360Panel({
                                             </span>
                                             <span className="flex min-w-0 items-center gap-2 capitalize">
                                                 <Package className="h-4 w-4 shrink-0" />
-                                                <span className="truncate">{(client.subscriptionPlan || 'individual').replaceAll('_', ' ')}</span>
+                                                <span className="truncate">{servicePlanLabel}</span>
                                             </span>
                                             <span className="flex min-w-0 items-center gap-2">
                                                 <Globe className="h-4 w-4 shrink-0" />
@@ -269,7 +274,7 @@ export function Client360Panel({
                                     </div>
                                     <div className="flex justify-between gap-3">
                                         <span className="text-q-text-muted">{t('dashboard.agency.client360.plan', 'Service plan')}</span>
-                                        <span className="font-medium text-foreground">{billing.agencyPlanName || client.subscriptionPlan}</span>
+                                        <span className="font-medium text-foreground">{servicePlanLabel}</span>
                                     </div>
                                     <div className="flex justify-between gap-3">
                                         <span className="text-q-text-muted">{t('dashboard.agency.client360.nextBilling', 'Next billing')}</span>

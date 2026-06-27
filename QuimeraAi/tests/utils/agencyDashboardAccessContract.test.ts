@@ -7,6 +7,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 
 describe('Agency dashboard Service Access contract', () => {
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
+    const designSystem = read('components/dashboard/agency/AgencyDesignSystem.tsx');
     const routes = read('routes/config.ts');
     const registry = read('registry/moduleRegistry.ts');
 
@@ -61,5 +62,15 @@ describe('Agency dashboard Service Access contract', () => {
             expect(routes).toContain(`moduleId: '${moduleId}'`);
             expect(routes).toContain(`requiredPermission: '${permission}'`);
         }
+    });
+
+    it('centralizes Agency dashboard scrolling inside the content viewport', () => {
+        expect(designSystem).toContain("agencyShellClass = 'quimera-agency-dashboard flex h-[100dvh] min-h-0 overflow-hidden");
+        expect(designSystem).toContain("agencyContentClass = 'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden");
+        expect(dashboard).toContain('className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"');
+        expect(dashboard).toContain('className="flex-1 min-h-0 min-w-0 overflow-hidden"');
+        expect(dashboard).toContain('className={agencyContentClass}');
+        expect(dashboard).toContain('quimera-dashboard-header-bar sticky top-0 z-40');
+        expect(dashboard).not.toContain('sticky top-0 z-40 relative');
     });
 });
