@@ -432,6 +432,21 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).not.toContain('globalAssistantRuntime.applyTask');
     });
 
+    it('exposes only navigation tools to the global assistant and blocks mutable legacy tools', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS');
+        expect(source).toContain('const isGuideOnlyToolName');
+        expect(source).toContain("GUIDE_ONLY_TOOL_NAMES.has(toolName) || toolName.startsWith('open_')");
+        expect(source).toContain('if (!isGuideOnlyToolName(name))');
+        expect(source).toContain('Guide-only block: ${name}');
+        expect(source).toContain('? GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS');
+        expect(source).toContain(': GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS.filter(tool =>');
+        expect(source).toContain('No hice cambios. Te llevé o te puedo llevar al módulo correcto');
+        expect(source).toContain('I did not make changes. I took you, or can take you, to the right module');
+        expect(source).not.toContain('? TOOLS\n                    : TOOLS.filter(tool =>');
+    });
+
     it('stops ambiguous global edit requests before planning or executing actions', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 

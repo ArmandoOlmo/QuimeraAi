@@ -673,6 +673,18 @@ const TOOLS: FunctionDeclaration[] = [
     }
 ];
 
+const GUIDE_ONLY_TOOL_NAMES = new Set([
+    'change_view',
+    'navigate_admin',
+    'load_project',
+    'select_section',
+    'open_section_item',
+]);
+
+const isGuideOnlyToolName = (toolName: string): boolean =>
+    GUIDE_ONLY_TOOL_NAMES.has(toolName) || toolName.startsWith('open_');
+
+const GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS = TOOLS.filter(tool => isGuideOnlyToolName(tool.name));
 const TOOL_NAMES = TOOLS.map(tool => tool.name);
 
 /**
@@ -1730,6 +1742,16 @@ const GlobalAiAssistant: React.FC = () => {
             if (lastCall && lastCall.name === name && lastCall.args === serializedArgs && now - lastCall.timestamp < 2000) {
                 console.log(`[Tool Execution] Duplicate call ignored: ${name}`);
                 return { result: `Ignored duplicate ${name} call.` };
+            }
+
+            if (!isGuideOnlyToolName(name)) {
+                const result = {
+                    result: isSpanishLocale(i18n.language)
+                        ? 'No hice cambios. Te llevé o te puedo llevar al módulo correcto para que lo hagas desde ahí.'
+                        : 'I did not make changes. I took you, or can take you, to the right module so you can do it there.',
+                };
+                console.warn(`[Tool Execution] Guide-only block: ${name}`, { args, mode });
+                return result;
             }
 
             lastToolCallRef.current = { name, args: serializedArgs, timestamp: now };
@@ -4060,8 +4082,8 @@ Usuario: ${userMsg}`;
 
                 // Prepare TOOLS for the REST API — filter by service availability
                 const availableTools = isLoadingServices
-                    ? TOOLS
-                    : TOOLS.filter(tool => {
+                    ? GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS
+                    : GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS.filter(tool => {
                         const requiredService = TOOL_SERVICE_MAP[tool.name];
                         return !requiredService || canAccessService(requiredService);
                     }).map(tool => {

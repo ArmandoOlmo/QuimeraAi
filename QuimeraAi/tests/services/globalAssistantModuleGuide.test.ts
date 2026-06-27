@@ -267,6 +267,19 @@ describe('globalAssistantModuleGuide', () => {
         })).toBeNull();
     });
 
+    it('opens Website Builder for website edit requests without editing from chat', () => {
+        expect(resolveDirectModuleGuideDecision({
+            request: 'Necesito editar el hero',
+            activeModule: 'website',
+            locale: 'es',
+        })).toMatchObject({
+            target: 'websiteBuilder',
+            preparedPrompt: false,
+            prompt: '',
+            message: 'Abrí Website Builder. Elige la sección que quieres editar y haz el cambio desde ahí.',
+        });
+    });
+
     it('falls back to short guide-only copy when the global request has no safe destination', () => {
         expect(resolveGuideOnlyFallbackResponse({
             request: 'Quiero revisar esto',
