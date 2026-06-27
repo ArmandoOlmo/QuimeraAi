@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Quimera Version History stores automatic blueprint snapshots before AI or engine flows mutate a project. The restore path is safe by default: modules or sections marked `userModified` or `lockedFromRegeneration` are preserved unless an explicit overwrite is requested.
+Quimera Version History stores automatic blueprint snapshots before AI, engine flows, or manual editor saves mutate a project. The restore path is safe by default: modules or sections marked `userModified` or `lockedFromRegeneration` are preserved unless an explicit overwrite is requested.
 
 ## Storage
 
@@ -53,6 +53,7 @@ If the pre-mutation snapshot cannot be written for a project-scoped action, the 
 
 Additional direct blueprint mutation paths also append snapshots before writing new project data:
 
+- Manual editor saves create a `manual_save` / `manual_checkpoint` snapshot of the previously persisted draft before overwriting `projects.data`. Timestamp-only saves are ignored so repeated clicks do not fill the history.
 - AI Website Studio preview regeneration carries the previous generated project into `versionHistory` before the regenerated preview is saved.
 - Ecommerce starter content and Ecommerce cross-module sync snapshot `ecommerceBlueprint`/`BusinessBlueprint` before creating AI-backed draft content.
 - Realty Engine cross-module and offer sync snapshot the current `BusinessBlueprint` before writing generated integration drafts.

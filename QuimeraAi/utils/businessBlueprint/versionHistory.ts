@@ -75,6 +75,10 @@ interface CreateSnapshotBeforeRegenerationInput extends Omit<CreateBlueprintSnap
     source?: SnapshotSource;
 }
 
+interface CreateSnapshotBeforeManualSaveInput extends Omit<CreateBlueprintSnapshotInput, 'source' | 'changeType' | 'projectData'> {
+    nextProjectData?: Record<string, unknown>;
+}
+
 interface RestoreOptions {
     confirmOverwriteProtected?: boolean;
     restoredAt?: string;
@@ -126,6 +130,37 @@ function stripVersionHistory(projectData: Record<string, unknown>): Record<strin
     delete copy[BLUEPRINT_VERSION_HISTORY_KEY];
     delete copy.blueprintSnapshots;
     return copy;
+}
+
+function stripVolatileSnapshotFields(value: unknown): unknown {
+    if (Array.isArray(value)) {
+        return value.map(item => stripVolatileSnapshotFields(item));
+    }
+    if (!value || typeof value !== 'object') return value;
+
+    const output: Record<string, unknown> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([key, entry]) => {
+        if (
+            key === BLUEPRINT_VERSION_HISTORY_KEY ||
+            key === 'blueprintSnapshots' ||
+            key === 'lastUpdated' ||
+            key === 'last_updated' ||
+            key === 'updatedAt' ||
+            key === 'updated_at'
+        ) {
+            return;
+        }
+        output[key] = stripVolatileSnapshotFields(entry);
+    });
+    return output;
+}
+
+export function hasMeaningfulSnapshotDataChange(
+    currentProjectData: Record<string, unknown>,
+    nextProjectData: Record<string, unknown>,
+): boolean {
+    return JSON.stringify(stripVolatileSnapshotFields(stripVersionHistory(currentProjectData))) !==
+        JSON.stringify(stripVolatileSnapshotFields(stripVersionHistory(nextProjectData)));
 }
 
 function withVersionHistory(
@@ -281,6 +316,37 @@ export function createSnapshotBeforeRegeneration(
     return {
         snapshot,
         nextProjectData: appendBlueprintSnapshot(projectData, snapshot),
+    };
+}
+
+export function createSnapshotBeforeManualSave(
+    projectData: Record<string, unknown>,
+    input: CreateSnapshotBeforeManualSaveInput,
+): { snapshot: BlueprintSnapshot | null; nextProjectData: Record<string, unknown>; skipped: boolean } {
+    if (input.nextProjectData && !hasMeaningfulSnapshotDataChange(projectData, input.nextProjectData)) {
+        return {
+            snapshot: null,
+            nextProjectData: projectData,
+            skipped: true,
+        };
+    }
+
+    const snapshot = createBlueprintSnapshot({
+        ...input,
+        projectData,
+        scope: input.scope || 'project',
+        source: 'manual_save',
+        changeType: 'manual_checkpoint',
+        metadata: {
+            ...(input.metadata || {}),
+            actionType: input.metadata?.actionType || 'manual_project_save',
+        },
+    });
+
+    return {
+        snapshot,
+        nextProjectData: appendBlueprintSnapshot(projectData, snapshot),
+        skipped: false,
     };
 }
 

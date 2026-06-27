@@ -25,6 +25,7 @@ import { mapSupabaseRowToProject, normalizeProjectComponentOrder, resolveProject
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 import { downloadProjectAsHtml } from '../../utils/projectExporter';
 import {
+    createSnapshotBeforeManualSave,
     syncWebsiteBlueprintFromEditor,
     type WebsiteEditorSyncInput,
 } from '../../utils/businessBlueprint';
@@ -1165,8 +1166,6 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (menuFetchError) {
             console.warn('[ProjectContext] Could not fetch latest menus for save:', menuFetchError);
         }
-        const latestVersionHistory = menuRow?.data?.versionHistory || (project as any).versionHistory;
-
         const persistedStatus =
             menuRow?.published_at || menuRow?.status === 'Published' || project.status === 'Published'
                 ? 'Published'
@@ -1217,7 +1216,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // Save ALL project fields to ensure Supabase stays in sync with editor
         // Use removeUndefinedValues to filter out undefined (Supabase doesn't accept undefined)
-        const updatedProject = removeUndefinedValues(sanitizeForStorage({
+        let updatedProject = removeUndefinedValues(sanitizeForStorage({
             // Core page data (from React state)
             data,
             theme,
@@ -1257,8 +1256,34 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
             // Business Blueprint (A1 stores it in projects.data; no dedicated column yet)
             businessBlueprint,
-            ...(latestVersionHistory ? { versionHistory: latestVersionHistory } : {}),
         }));
+        const persistedProjectData = isPlainRecord(menuRow?.data) ? menuRow.data as Record<string, unknown> : null;
+        const manualCheckpoint = persistedProjectData
+            ? createSnapshotBeforeManualSave(persistedProjectData, {
+                projectId: activeProjectId,
+                now,
+                metadata: {
+                    tenantId: currentTenantId || null,
+                    userId: user.id,
+                    createdBy: user.id,
+                    actionType: 'editor_manual_save',
+                    module: 'websiteEditor',
+                    source: 'project-context',
+                    projectName: project.name,
+                    summary: 'Captured the project before a manual editor save.',
+                },
+                nextProjectData: updatedProject as Record<string, unknown>,
+            })
+            : null;
+        const latestVersionHistory = manualCheckpoint?.nextProjectData.versionHistory
+            || persistedProjectData?.versionHistory
+            || (project as any).versionHistory;
+        if (latestVersionHistory) {
+            updatedProject = {
+                ...updatedProject,
+                versionHistory: latestVersionHistory,
+            };
+        }
 
         try {
             

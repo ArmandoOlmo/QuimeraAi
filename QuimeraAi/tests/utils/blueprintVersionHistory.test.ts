@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BusinessBlueprint } from '../../types/businessBlueprint';
 import {
     createBlueprintSnapshot,
+    createSnapshotBeforeManualSave,
     createSnapshotBeforeRegeneration,
     diffBlueprintSnapshots,
     getSnapshotLabel,
@@ -142,6 +143,57 @@ describe('blueprint version history', () => {
         expect(snapshot.changeType).toBe('before_regeneration');
         expect(snapshot.moduleKey).toBe('websiteBlueprint');
         expect(getBlueprintSnapshots(nextProjectData)).toHaveLength(1);
+    });
+
+    it('creates a manual checkpoint before an editor save changes the draft', () => {
+        const projectData = {
+            data: { hero: { headline: 'Before manual edit' } },
+            businessBlueprint: buildBlueprint(),
+            lastUpdated: '2026-06-27T11:00:00.000Z',
+        };
+        const nextDraft = {
+            ...projectData,
+            data: { hero: { headline: 'After manual edit' } },
+            lastUpdated: '2026-06-27T12:00:00.000Z',
+        };
+
+        const { snapshot, nextProjectData, skipped } = createSnapshotBeforeManualSave(projectData, {
+            projectId: 'project-1',
+            now: '2026-06-27T12:00:00.000Z',
+            nextProjectData: nextDraft,
+            metadata: {
+                createdBy: 'user-1',
+                actionType: 'editor_manual_save',
+            },
+        });
+
+        expect(skipped).toBe(false);
+        expect(snapshot?.source).toBe('manual_save');
+        expect(snapshot?.changeType).toBe('manual_checkpoint');
+        expect(snapshot?.snapshotData.data).toEqual({ hero: { headline: 'Before manual edit' } });
+        expect(getBlueprintSnapshots(nextProjectData)).toHaveLength(1);
+    });
+
+    it('skips manual checkpoints when only volatile save timestamps changed', () => {
+        const projectData = {
+            data: { hero: { headline: 'Same content' } },
+            businessBlueprint: buildBlueprint(),
+            lastUpdated: '2026-06-27T11:00:00.000Z',
+        };
+        const nextDraft = {
+            ...projectData,
+            lastUpdated: '2026-06-27T12:00:00.000Z',
+        };
+
+        const { snapshot, nextProjectData, skipped } = createSnapshotBeforeManualSave(projectData, {
+            projectId: 'project-1',
+            now: '2026-06-27T12:00:00.000Z',
+            nextProjectData: nextDraft,
+        });
+
+        expect(skipped).toBe(true);
+        expect(snapshot).toBeNull();
+        expect(getBlueprintSnapshots(nextProjectData)).toHaveLength(0);
     });
 
     it('labels Agency Project Transfer checkpoints', () => {
