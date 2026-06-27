@@ -9,10 +9,9 @@
 import React, { lazy, Suspense } from 'react';
 import { View, UserDocument, PageData } from '../types';
 import { useSafeTenant } from '../contexts/tenant/TenantContext';
-import { useServiceAvailability } from '../hooks/useServiceAvailability';
+import { useServiceAccess } from '../hooks/useServiceAccess';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
-import { PlatformServiceId } from '../types/serviceAvailability';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -101,20 +100,22 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'real-estate': RealtyDashboard,
 };
 
-/**
- * Map of view names to their required global service.
- * Views not listed here have no service requirement (always accessible).
- */
-const VIEW_SERVICE_MAP: Partial<Record<View, PlatformServiceId>> = {
-    'ecommerce': 'ecommerce',
-    'cms': 'cms',
-    'leads': 'crm',
-    'ai-assistant': 'chatbot',
-    'email': 'emailMarketing',
-    'appointments': 'appointments',
-    'domains': 'domains',
-    'finance': 'finance',
-    'real-estate': 'realEstate',
+const VIEW_MODULE_MAP: Partial<Record<View, string>> = {
+    agency: 'agency-engine',
+    ecommerce: 'ecommerce-engine',
+    cms: 'cms-engine',
+    leads: 'crm-leads',
+    'ai-assistant': 'chatbot-engine',
+    email: 'email-marketing',
+    appointments: 'appointments-engine',
+    domains: 'domains-management',
+    finance: 'finance',
+    'real-estate': 'real-estate-engine',
+    restaurants: 'restaurant-engine',
+    assets: 'media-assets',
+    templates: 'templates-library',
+    biopage: 'bio-page-engine',
+    'blog-hub': 'cms-engine',
 };
 
 /**
@@ -135,19 +136,59 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
     const tenantContext = useSafeTenant();
     const agencyLogoUrl = tenantContext?.currentTenant?.branding?.logoUrl;
-    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
-    const { replace } = useRouter();
+    const serviceAccess = useServiceAccess();
+    const { route, replace } = useRouter();
 
-    // ── Service Availability Guard ──────────────────────────────────────────
-    // If the current view requires a service that is globally disabled,
-    // redirect to the dashboard. Skip during initial loading to avoid flicker.
-    const requiredService = VIEW_SERVICE_MAP[view];
+    const routeAccess = React.useMemo(() => {
+        const moduleId = route?.moduleId || VIEW_MODULE_MAP[view];
+        const serviceId = route?.requiredService;
+        const featureKey = route?.requiredFeature;
+        const requiredPermission = route?.requiredPermission;
+
+        if (!moduleId && !serviceId && !featureKey && !requiredPermission) {
+            return null;
+        }
+
+        return {
+            moduleId,
+            serviceId,
+            featureKey,
+            requiredPermission,
+        };
+    }, [
+        route?.moduleId,
+        route?.requiredService,
+        route?.requiredFeature,
+        route?.requiredPermission,
+        view,
+    ]);
+
+    const accessDecision = React.useMemo(() => {
+        if (!routeAccess) return null;
+
+        const input = {
+            serviceId: routeAccess.serviceId,
+            featureKey: routeAccess.featureKey,
+            requiredPermission: routeAccess.requiredPermission,
+        };
+
+        if (routeAccess.moduleId) {
+            return serviceAccess.canAccessModule(routeAccess.moduleId, input);
+        }
+
+        if (routeAccess.serviceId) {
+            return serviceAccess.canAccessService(routeAccess.serviceId, input);
+        }
+
+        return serviceAccess.resolveAccess(input);
+    }, [routeAccess, serviceAccess]);
+
     React.useEffect(() => {
-        if (isLoadingServices) return; // Wait for Supabase data
-        if (requiredService && !canAccessService(requiredService)) {
+        if (serviceAccess.isLoading) return;
+        if (routeAccess && accessDecision && !accessDecision.allowed) {
             replace(ROUTES.DASHBOARD);
         }
-    }, [view, requiredService, canAccessService, isLoadingServices, replace]);
+    }, [routeAccess, accessDecision?.allowed, serviceAccess.isLoading, replace]);
 
     // SuperAdmin View
     if (view === 'superadmin' && hasAdminAccess(userDocument?.role)) {
@@ -158,8 +199,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
         );
     }
 
-    // ── Block disabled-service views (prevent flash before redirect) ────────
-    if (requiredService && !isLoadingServices && !canAccessService(requiredService)) {
+    if (routeAccess && !serviceAccess.isLoading && accessDecision && !accessDecision.allowed) {
         return <ViewLoading logoUrl={agencyLogoUrl} />;
     }
 

@@ -163,7 +163,7 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     }, ['prompt']), 'medium', { requiredService: 'aiFeatures' }),
     action('media', 'open_media_library', 'Open Media AI and the asset library without mutating data.', objectSchema({
         projectId: stringSchema('Optional project context for the media library.'),
-    }), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
+    }), 'low', { mutatesData: false, requiredService: 'aiFeatures', previewSupported: false, rollbackSupported: false }),
     action('media', 'attach_asset_to_section', 'Attach a media asset to a website or Bio Page section.', objectSchema({
         projectId: stringSchema(),
         module: stringSchema(),
@@ -349,23 +349,23 @@ export const GLOBAL_ASSISTANT_ACTIONS: AssistantActionDefinition[] = [
     action('bioPage', 'create_bio_page', 'Create Bio Page draft.', objectSchema({
         projectId: stringSchema(),
         prompt: stringSchema(),
-    }, ['projectId']), 'high'),
+    }, ['projectId']), 'high', { requiredService: 'bioPage' }),
     action('bioPage', 'edit_bio_link', 'Edit a Bio Page link.', objectSchema({
         projectId: stringSchema(),
         linkId: stringSchema(),
         updates: objectSchema(),
-    }, ['projectId', 'linkId', 'updates']), 'high'),
+    }, ['projectId', 'linkId', 'updates']), 'high', { requiredService: 'bioPage' }),
     action('bioPage', 'add_bio_block', 'Add a Bio Page block.', objectSchema({
         projectId: stringSchema(),
         blockType: stringSchema(),
         data: objectSchema(),
-    }, ['projectId', 'blockType']), 'high'),
+    }, ['projectId', 'blockType']), 'high', { requiredService: 'bioPage' }),
     action('bioPage', 'publish_bio_page', 'Publish Bio Page.', objectSchema({
         projectId: stringSchema(),
-    }, ['projectId']), 'critical'),
+    }, ['projectId']), 'critical', { requiredService: 'bioPage' }),
     action('bioPage', 'open_bio_page_builder', 'Open Bio Page Builder without mutating data.', objectSchema({
         projectId: stringSchema(),
-    }, ['projectId']), 'low', { mutatesData: false, previewSupported: false, rollbackSupported: false }),
+    }, ['projectId']), 'low', { mutatesData: false, requiredService: 'bioPage', previewSupported: false, rollbackSupported: false }),
 
     action('chatbot', 'open_chatbot_dashboard', 'Open ChatCore dashboard.', objectSchema({ projectId: stringSchema() }, ['projectId']), 'low', { mutatesData: false, requiredService: 'chatbot', previewSupported: false, rollbackSupported: false }),
     action('chatbot', 'create_chatbot_knowledge', 'Create ChatCore knowledge draft.', objectSchema({

@@ -142,7 +142,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
                     </Tabs>
 
                     {/* Content Area */}
-                    <PageContainer variant="narrow">
+                    <PageContainer variant="wide">
                         {activeTab === 'team' && <TeamSettings />}
                         {activeTab === 'branding' && <BrandingSettings />}
                         {activeTab === 'subscription' && <SubscriptionSettings />}
@@ -154,5 +154,3 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
 };
 
 export default SettingsPage;
-
-

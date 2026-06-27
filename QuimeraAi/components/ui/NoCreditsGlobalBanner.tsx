@@ -12,6 +12,7 @@ import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import PurchaseCreditsModal from './PurchaseCreditsModal';
+import { isPlatformUnlimitedUser } from '../../services/billing/planCatalog';
 
 interface NoCreditsGlobalBannerProps {
     className?: string;
@@ -20,16 +21,16 @@ interface NoCreditsGlobalBannerProps {
 const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className = '' }) => {
     const { t } = useTranslation();
     const { usage, isLoading } = useCreditsUsage();
-    const { canAccessSuperAdmin, isUserOwner, userDocument } = useAuth();
+    const { userDocument } = useAuth();
     const upgradeContext = useSafeUpgrade();
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
     // Check role hierarchy
     const userRole = userDocument?.role;
-    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+    const isOwner = isPlatformUnlimitedUser(userRole);
 
-    // Don't show for owners, super admins, or while loading
-    if (isLoading || isOwner || canAccessSuperAdmin) {
+    // Don't show for owner/superadmin platform bypass or while loading.
+    if (isLoading || isOwner) {
         return null;
     }
 

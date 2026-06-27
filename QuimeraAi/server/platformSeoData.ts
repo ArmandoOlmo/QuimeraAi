@@ -42,7 +42,7 @@ QuimeraAi is an advanced, AI-powered website builder designed to help agencies, 
 - CMS & Blog Hub
 
 ## Pricing
-We offer flexible pricing for solo creators and robust plans for agencies requiring white-labeling and unlimited client sites.
+We offer flexible pricing for solo creators and robust plans for agencies requiring white-labeling and high-volume client sites.
 
 Visit https://quimera.ai for more information.
 `;

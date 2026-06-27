@@ -20,11 +20,18 @@ const baseIntent: AssistantIntent = {
 };
 
 describe('globalAssistantModelRouter', () => {
-    it('keeps the orchestrator model compatible with tool loops', () => {
+    it('keeps Gemini 3 Flash as the conversational orchestrator model', () => {
         const orchestrator = getAssistantModelConfig('orchestrator');
 
-        expect(orchestrator.modelId).toBe('anthropic/claude-opus-4.7');
+        expect(orchestrator.modelId).toBe('google/gemini-3-flash-preview');
         expect(assertModelSupportsToolLoop(orchestrator)).toEqual([]);
+    });
+
+    it('keeps Gemini 3 Flash as the text fallback model', () => {
+        const fallback = getAssistantModelConfig('fallback');
+
+        expect(fallback.modelId).toBe('google/gemini-3-flash-preview');
+        expect(assertModelSupportsToolLoop(fallback)).toEqual([]);
     });
 
     it('marks fast image generation as non-tool-loop capable', () => {
@@ -32,6 +39,13 @@ describe('globalAssistantModelRouter', () => {
 
         expect(imageFast.modelId).toBe('google/gemini-3.1-flash-image');
         expect(assertModelSupportsToolLoop(imageFast)).toEqual(['tools', 'tool_choice']);
+    });
+
+    it('uses Gemini 3 Flash as the fast conversational model', () => {
+        const fast = getAssistantModelConfig('fast');
+
+        expect(fast.modelId).toBe('google/gemini-3-flash-preview');
+        expect(assertModelSupportsToolLoop(fast)).toEqual([]);
     });
 
     it('routes image intents to the image pro model', () => {
@@ -44,5 +58,14 @@ describe('globalAssistantModelRouter', () => {
         });
 
         expect(model.modelId).toBe('google/gemini-3-pro-image');
+    });
+
+    it('routes general requests to Gemini 3 Flash by default', () => {
+        const model = selectModelForIntent({
+            ...baseIntent,
+            safetyLevel: 'medium',
+        });
+
+        expect(model.modelId).toBe('google/gemini-3-flash-preview');
     });
 });

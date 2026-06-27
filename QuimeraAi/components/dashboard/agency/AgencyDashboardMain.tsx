@@ -10,6 +10,7 @@ import { Building2, Menu, CreditCard, FileText, UserPlus, Package, LayoutDashboa
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
+import { useTenant } from '../../../contexts/tenant/TenantContext';
 import DashboardSidebar from '../DashboardSidebar';
 import { AgencyOverview } from './AgencyOverview';
 import { AgencyAnalytics } from './AgencyAnalytics';
@@ -26,13 +27,15 @@ import { WhiteLabelSettings } from './WhiteLabelSettings';
 import { toast } from 'react-hot-toast';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import HeaderBackButton from '@/components/ui/HeaderBackButton';
+import { AgencySectionHeader, agencyContentClass, agencyShellClass } from './AgencyDesignSystem';
 
 type AgencyTab = 'overview' | 'analytics' | 'landing' | 'billing' | 'reports' | 'new-client' | 'addons' | 'plans' | 'cms' | 'navigation' | 'projects' | 'white-label';
 
 const AgencyDashboardMain: React.FC = () => {
     const { t } = useTranslation();
     const { path, navigate } = useRouter();
-    const { subClients, loadingClients } = useAgency();
+    const { loadingClients } = useAgency();
+    const { currentTenant } = useTenant();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -57,7 +60,7 @@ const AgencyDashboardMain: React.FC = () => {
     const handleTabChange = (tab: AgencyTab) => {
         switch (tab) {
             case 'overview':
-                navigate(ROUTES.AGENCY);
+                navigate(ROUTES.AGENCY_OVERVIEW);
                 break;
             case 'analytics':
                 navigate(ROUTES.AGENCY_ANALYTICS);
@@ -157,80 +160,57 @@ const AgencyDashboardMain: React.FC = () => {
             icon: Shield,
         },
     ];
+    const activeTabConfig = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
+        <div className={agencyShellClass}>
             {/* Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
             />
 
-            {/* Section Navigation Panel — Desktop only (mirrors Web Editor Controls pattern) */}
-            <div className="hidden md:flex flex-col w-56 lg:w-64 border-r border-q-border bg-q-surface/50 flex-shrink-0 overflow-hidden">
-                {/* Panel Header */}
-                <div className="h-14 px-4 border-b border-q-border flex items-center gap-2 flex-shrink-0">
-                    <Building2 size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                    <h2 className="text-sm font-bold text-foreground truncate">
-                        {t('agency.title', 'Agency Dashboard')}
-                    </h2>
-                </div>
-
-                {/* Section List */}
-                <nav className="flex-1 overflow-y-auto py-2 px-2">
-                    <div className="space-y-0.5">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => handleTabChange(tab.id)}
-                                    className={`
-                                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                        ${isActive
-                                            ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
-                                            : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'
-                                        }
-                                    `}
-                                >
-                                    <Icon size={18} className={`flex-shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
-                                    <span className="truncate">{tab.label}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </nav>
-            </div>
-
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header — Title + right-aligned back action (tabs moved to sidebar panel) */}
- <header className="quimera-dashboard-header-bar h-14 px-2 sm:px-6 flex items-center z-20 sticky top-0">
+            <div className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <header className="quimera-dashboard-header-bar h-auto min-h-14 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sticky top-0 z-40 relative">
                     {/* Left Section - Menu Button & Title */}
-                    <div className="flex items-center gap-1 sm:gap-4 flex-shrink-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4">
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            className="lg:hidden h-9 w-9 flex-shrink-0 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             aria-label={t('dashboard.agency.openNavMenu')}
                         >
                             <Menu className="w-5 h-5" />
                         </button>
-                        <div className="flex items-center gap-1 sm:gap-2">
-                            <Building2 size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                            <h1 className="text-lg sm:text-xl font-bold text-foreground hidden sm:block">
-                                {t('agency.title', 'Agency Dashboard')}
-                            </h1>
+                        <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+                            <Building2 size={20} className="quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
+                            <div className="min-w-0">
+                                <h1 className="max-w-[12rem] truncate text-sm font-semibold text-foreground sm:max-w-none sm:text-lg">
+                                    {t('agency.title', 'Agency Dashboard')}
+                                </h1>
+                                <p className="hidden truncate text-xs text-q-text-muted md:block">
+                                    {activeTabConfig.label}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div className="ml-auto flex items-center gap-2">
+                    {activeTab === 'landing' && !loadingClients && (
+                        <div
+                            id="agency-landing-header-device-controls"
+                            className="hidden md:flex absolute left-1/2 -translate-x-1/2"
+                        />
+                    )}
+
+                    <div className="flex flex-shrink-0 items-center gap-1 sm:gap-3">
+                        {activeTab === 'landing' && !loadingClients && (
+                            <div id="agency-landing-header-actions" className="flex items-center gap-1 sm:gap-2" />
+                        )}
                         <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>
                 </header>
 
-                {/* Mobile Tabs - Scroll Horizontal */}
-                <div className="md:hidden border-b border-q-border bg-q-surface/80 backdrop-blur-md px-4 py-3 sticky top-14 z-10">
-                    <div className="flex overflow-x-auto gap-2 items-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="overflow-hidden border-b border-q-border bg-q-surface/30 px-3 sm:px-6">
+                    <nav className="-mx-3 flex gap-1 overflow-x-auto px-3 py-2 scrollbar-hide sm:mx-0 sm:px-0">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -238,21 +218,21 @@ const AgencyDashboardMain: React.FC = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabChange(tab.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${isActive
-                                        ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text border border-[color-mix(in_srgb,var(--quimera-status-accent-from)_30%,transparent)]'
-                                        : 'bg-q-bg border border-q-border text-q-text-muted hover:text-foreground hover:border-q-text-muted/50'
+                                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap transition-all ${isActive
+                                        ? 'bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text'
+                                        : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                         }`}
                                 >
-                                    <Icon size={16} className={`shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
+                                    <Icon size={18} className={`shrink-0 ${isActive ? 'quimera-status-card-accent-text' : ''}`} strokeWidth={isActive ? 2 : 1.5} />
                                     <span>{tab.label}</span>
                                 </button>
                             );
                         })}
-                    </div>
+                    </nav>
                 </div>
 
                 {/* Main Content Area */}
-                <main id="main-content" className="flex-1 overflow-hidden flex flex-col">
+                <main id="main-content" className="flex-1 min-h-0 min-w-0 overflow-hidden">
                     {/* Landing Editor - Full width without container restrictions */}
                     {activeTab === 'landing' && !loadingClients && (
                         <div className="flex-1 w-full h-full">
@@ -262,8 +242,8 @@ const AgencyDashboardMain: React.FC = () => {
 
                     {/* Other tabs with standard container */}
                     {activeTab !== 'landing' && (
-                        <div className="w-full h-full overflow-y-auto p-4 sm:p-6 lg:p-8">
-                            <div className="max-w-7xl mx-auto">
+                        <div className={agencyContentClass}>
+                            <div className="mx-auto max-w-7xl space-y-6">
                             {loadingClients ? (
                                 <div className="flex items-center justify-center h-64">
                                     <QuimeraLoader size="md" />
@@ -279,15 +259,12 @@ const AgencyDashboardMain: React.FC = () => {
                                     )}
 
                                     {activeTab === 'billing' && (
-                                        <div>
-                                            <div className="mb-6">
-                                                <h2 className="text-2xl font-bold text-foreground">
-                                                    {t('agency.billing', 'Facturación')}
-                                                </h2>
-                                                <p className="text-q-text-muted mt-1">
-                                                    {t('agency.billingDesc', 'Gestiona Stripe Connect y facturación de clientes')}
-                                                </p>
-                                            </div>
+                                        <div className="space-y-6">
+                                            <AgencySectionHeader
+                                                icon={CreditCard}
+                                                title={t('agency.billing', 'Facturación')}
+                                                subtitle={t('agency.billingDesc', 'Gestiona Stripe Connect y facturación de clientes')}
+                                            />
                                             <BillingSettings />
                                         </div>
                                     )}
@@ -300,24 +277,26 @@ const AgencyDashboardMain: React.FC = () => {
                                     )}
 
                                     {activeTab === 'new-client' && (
-                                        <div>
-                                            <div className="mb-6">
-                                                <h2 className="text-2xl font-bold text-foreground">
-                                                    {t('agency.newClient', 'Nuevo Cliente')}
-                                                </h2>
-                                                <p className="text-q-text-muted mt-1">
-                                                    {t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
-                                                </p>
-                                            </div>
+                                        <div className="space-y-6">
+                                            <AgencySectionHeader
+                                                icon={UserPlus}
+                                                title={t('agency.newClient', 'Nuevo Cliente')}
+                                                subtitle={t('agency.newClientDesc', 'Onboarding automatizado para sub-clientes')}
+                                            />
                                             <ClientIntakeForm
                                                 onSubmit={async (data) => {
                                                     try {
                                                         console.log('Creating client via Cloud Function:', data);
 
                                                         const { supabase } = await import('@/supabase');
+                                                        if (!currentTenant?.id) {
+                                                            throw new Error('No hay agencia activa para crear el cliente.');
+                                                        }
+
                                                         const result = await supabase.functions.invoke('onboarding-api', {
                                                             body: {
                                                                 action: 'autoProvision',
+                                                                agencyTenantId: currentTenant.id,
                                                                 businessName: data.businessName,
                                                                 industry: data.industry,
                                                                 contactEmail: data.contactEmail,
@@ -328,6 +307,20 @@ const AgencyDashboardMain: React.FC = () => {
                                                                 primaryColor: data.primaryColor,
                                                                 secondaryColor: data.secondaryColor,
                                                                 monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+                                                                selectedPlanId: data.selectedPlanId,
+                                                                selectedPlanName: data.selectedPlanName,
+                                                                setupBilling: data.setupBilling,
+                                                                aiStudioMode: data.aiStudioMode,
+                                                                generateWebsite: data.generateWebsite,
+                                                                generateStorefront: data.generateStorefront,
+                                                                generateEcommerce: data.generateEcommerce,
+                                                                generateChatbot: data.generateChatbot,
+                                                                generateEmailFlows: data.generateEmailFlows,
+                                                                generateAppointments: data.generateAppointments,
+                                                                generateRestaurantModule: data.generateRestaurantModule,
+                                                                generateRealtyModule: data.generateRealtyModule,
+                                                                generateBioPage: data.generateBioPage,
+                                                                generateMediaAssets: data.generateMediaAssets,
                                                             }
                                                         });
 
@@ -355,15 +348,12 @@ const AgencyDashboardMain: React.FC = () => {
                                     )}
 
                                     {activeTab === 'addons' && (
-                                        <div>
-                                            <div className="mb-6">
-                                                <h2 className="text-2xl font-bold text-foreground">
-                                                    {t('agency.addons', 'Add-ons')}
-                                                </h2>
-                                                <p className="text-q-text-muted mt-1">
-                                                    {t('agency.addonsDesc', 'Gestiona complementos de tu subscription')}
-                                                </p>
-                                            </div>
+                                        <div className="space-y-6">
+                                            <AgencySectionHeader
+                                                icon={Package}
+                                                title={t('agency.addons', 'Add-ons')}
+                                                subtitle={t('agency.addonsDesc', 'Gestiona complementos de tu subscription')}
+                                            />
                                             <AddonsManager />
                                         </div>
                                     )}

@@ -72,7 +72,7 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
 
     if (isLoading) {
         return (
-            <div className="bg-q-surface border border-q-border rounded-xl p-6">
+            <div className="quimera-dashboard-panel-card p-5">
                 <div className="animate-pulse">
                     <div className="h-6 w-40 bg-q-surface-overlay rounded mb-4" />
                     <div className="h-64 bg-q-surface-overlay rounded" />
@@ -82,7 +82,7 @@ export function RevenueByClientChart({ data, isLoading }: RevenueByClientChartPr
     }
 
     return (
-        <MotionCard motionDelay={0.1} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
+        <MotionCard motionDelay={0.1} hoverMotion className="quimera-dashboard-panel-card p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>

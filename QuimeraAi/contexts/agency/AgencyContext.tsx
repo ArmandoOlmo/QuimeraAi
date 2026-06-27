@@ -3,10 +3,11 @@
  * Global state management for agency dashboard
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useAuth } from '../core/AuthContext';
 import { useTenant } from '../tenant/TenantContext';
 import { useAgencyMetrics } from '../../hooks/useAgencyMetrics';
+import { useServiceAccess } from '../../hooks/useServiceAccess';
 import type { Tenant } from '../../types/multiTenant';
 import type {
     AggregatedMetrics,
@@ -61,17 +62,9 @@ interface AgencyProviderProps {
 export function AgencyProvider({ children }: AgencyProviderProps) {
     const { user } = useAuth();
     const { currentTenant } = useTenant();
-    const [isAgencyPlan, setIsAgencyPlan] = useState(false);
-
-    // Check if current tenant is an agency plan
-    useEffect(() => {
-        if (currentTenant) {
-            const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
-            setIsAgencyPlan(agencyPlans.includes(currentTenant.subscriptionPlan));
-        } else {
-            setIsAgencyPlan(false);
-        }
-    }, [currentTenant]);
+    const agencyAccess = useServiceAccess();
+    const agencyAccessDecision = agencyAccess.canAccessModule('agency-engine');
+    const canLoadAgencyMetrics = agencyAccessDecision.allowed;
 
     // Use the agency metrics hook
     const {
@@ -84,7 +77,7 @@ export function AgencyProvider({ children }: AgencyProviderProps) {
         error,
         getClientMetrics,
         refreshMetrics,
-    } = useAgencyMetrics(isAgencyPlan ? (currentTenant?.id || '') : '');
+    } = useAgencyMetrics(canLoadAgencyMetrics ? (currentTenant?.id || '') : '');
 
     // Export client data (CSV format)
     const exportClientData = async (clientId: string): Promise<void> => {
@@ -165,8 +158,8 @@ export function canAccessAgencyDashboard(
 ): boolean {
     if (!tenant || !role) return false;
 
-    // Must be on agency plan (new structure: agency_starter, agency_pro, agency_scale)
-    const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
+    // Must be on an agency-enabled commercial plan. Enterprise is not agency by default.
+    const agencyPlans = ['agency_starter', 'agency_pro', 'agency_scale'];
     if (!agencyPlans.includes(tenant.subscriptionPlan)) return false;
 
     // Must be owner or admin
@@ -213,6 +206,8 @@ export function getActivityIcon(type: ActivityEvent['type']): string {
         payment_received: 'DollarSign',
         project_created: 'FolderPlus',
         project_published: 'Globe',
+        project_transferred: 'FolderPlus',
+        approval_responded: 'UserCheck',
     };
     return icons[type] || 'Activity';
 }
@@ -228,6 +223,8 @@ export function getActivityColor(type: ActivityEvent['type']): string {
         payment_received: 'text-emerald-400',
         project_created: 'text-cyan-400',
         project_published: 'text-orange-400',
+        project_transferred: 'text-blue-400',
+        approval_responded: 'text-green-400',
     };
     return colors[type] || 'text-gray-400';
 }

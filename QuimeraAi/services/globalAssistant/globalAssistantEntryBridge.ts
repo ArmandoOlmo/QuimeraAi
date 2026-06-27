@@ -1,4 +1,5 @@
 import type { AssistantModuleTarget } from '../../types/globalAssistant';
+import type { PlatformServiceId } from '../../types/serviceAvailability';
 
 export const GLOBAL_ASSISTANT_ENTRY_EVENT = 'quimera:global-assistant-entry';
 export const GLOBAL_ASSISTANT_ENTRY_STORAGE_KEY = 'quimera_global_assistant_entry_request';
@@ -29,6 +30,7 @@ export interface DashboardAssistantEntryRoute {
 export interface DashboardAssistantQuickAction {
     id: string;
     module: AssistantModuleTarget;
+    serviceId?: PlatformServiceId;
     labelKey: string;
     labelFallback: string;
     promptKey: string;
@@ -43,6 +45,8 @@ export interface DashboardAssistantEntryMetadataInput {
     routingReason: string;
     entryPoint: 'dashboard_input' | 'dashboard_quick_action';
     activeModule?: AssistantModuleTarget | null;
+    blockedModule?: AssistantModuleTarget | null;
+    blockedServiceId?: PlatformServiceId | null;
     activeProjectId?: string | null;
     activeProjectName?: string | null;
     activeTenantId?: string | null;
@@ -211,6 +215,10 @@ const DASHBOARD_MODULE_TERMS: Array<{ module: AssistantModuleTarget; terms: stri
         terms: ['finance', 'finanzas', 'invoice', 'factura', 'gasto', 'accounting'],
     },
     {
+        module: 'agency',
+        terms: ['agency', 'agencia', 'white label', 'clientes agencia', 'agency clients', 'planes agencia', 'facturacion agencia', 'facturación agencia'],
+    },
+    {
         module: 'media',
         terms: ['imagen', 'image', 'foto', 'video', 'asset', 'media', 'hero image'],
     },
@@ -267,16 +275,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use AI Studio for website questions, planning, content, images, and project guidance.',
         category: 'create',
         requiresProject: false,
-    },
-    {
-        id: 'open_business_blueprint',
-        module: 'businessBlueprint',
-        labelKey: 'dashboard.assistantQuickActions.openBusinessBlueprint',
-        labelFallback: 'BusinessBlueprint',
-        promptKey: 'dashboard.assistantQuickActions.openBusinessBlueprintPrompt',
-        promptFallback: 'Use BusinessBlueprint to review the business plan, module readiness, and project structure.',
-        category: 'analyze',
-        requiresProject: true,
+        serviceId: 'aiFeatures',
     },
     {
         id: 'open_website_builder',
@@ -297,6 +296,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Storefront for public store sections, product cards, catalog layout, and selling settings.',
         category: 'open',
         requiresProject: true,
+        serviceId: 'ecommerce',
     },
     {
         id: 'generate_hero_image',
@@ -307,6 +307,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use the image generator for image questions, prompts, sizes, styles, and drafts.',
         category: 'create',
         requiresProject: true,
+        serviceId: 'aiFeatures',
     },
     {
         id: 'create_video',
@@ -317,6 +318,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use the video area for video questions, prompts, scenes, formats, and drafts.',
         category: 'create',
         requiresProject: true,
+        serviceId: 'aiFeatures',
     },
     {
         id: 'review_leads',
@@ -327,6 +329,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Leads for questions, review, follow-ups, and lead management.',
         category: 'analyze',
         requiresProject: true,
+        serviceId: 'crm',
     },
     {
         id: 'create_email',
@@ -337,6 +340,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Email Marketing for email questions, drafts, audiences, campaigns, and review.',
         category: 'create',
         requiresProject: true,
+        serviceId: 'emailMarketing',
     },
     {
         id: 'open_ecommerce',
@@ -347,6 +351,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Ecommerce for store questions, products, orders, inventory, and setup.',
         category: 'open',
         requiresProject: true,
+        serviceId: 'ecommerce',
     },
     {
         id: 'open_finance',
@@ -357,6 +362,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Finance for invoices, revenue, expenses, and project financial status.',
         category: 'analyze',
         requiresProject: true,
+        serviceId: 'finance',
     },
     {
         id: 'open_restaurants',
@@ -367,6 +373,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Restaurants for menus, reservations, services, and restaurant settings.',
         category: 'open',
         requiresProject: true,
+        serviceId: 'restaurants',
     },
     {
         id: 'open_realty',
@@ -377,6 +384,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Realty for properties, listings, showings, leads, and real estate campaigns.',
         category: 'open',
         requiresProject: true,
+        serviceId: 'realEstate',
     },
     {
         id: 'train_chatcore',
@@ -387,6 +395,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use ChatCore for assistant questions, knowledge, training, tests, and visitor chat setup.',
         category: 'analyze',
         requiresProject: true,
+        serviceId: 'chatbot',
     },
     {
         id: 'create_appointment',
@@ -397,6 +406,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Appointments for schedule questions, bookings, services, availability, and contacts.',
         category: 'create',
         requiresProject: true,
+        serviceId: 'appointments',
     },
     {
         id: 'improve_bio_page',
@@ -407,27 +417,7 @@ const DASHBOARD_ASSISTANT_QUICK_ACTIONS: DashboardAssistantQuickAction[] = [
         promptFallback: 'Use Bio Page for links, blocks, lead capture, booking, and ChatCore questions.',
         category: 'analyze',
         requiresProject: true,
-    },
-    {
-        id: 'analyze_project',
-        module: 'analytics',
-        labelKey: 'dashboard.assistantQuickActions.analyzeProject',
-        labelFallback: 'Analytics',
-        promptKey: 'dashboard.assistantQuickActions.analyzeProjectPrompt',
-        promptFallback: 'Use Analytics for project status, readiness, reports, blockers, and next steps.',
-        category: 'analyze',
-        requiresProject: true,
-    },
-    {
-        id: 'review_platform_errors',
-        module: 'admin',
-        labelKey: 'dashboard.assistantQuickActions.reviewPlatformErrors',
-        labelFallback: 'Owner Mode',
-        promptKey: 'dashboard.assistantQuickActions.reviewPlatformErrorsPrompt',
-        promptFallback: 'Use Owner Mode for platform status, admin questions, errors, settings, and controls.',
-        category: 'admin',
-        requiresProject: false,
-        adminOnly: true,
+        serviceId: 'bioPage',
     },
 ];
 
@@ -435,6 +425,7 @@ export function getDashboardAssistantQuickActions(input: {
     hasProjects: boolean;
     hasActiveProject?: boolean;
     canUseAdminMode?: boolean;
+    canAccessService?: (serviceId: PlatformServiceId) => boolean;
     limit?: number;
 }): DashboardAssistantQuickAction[] {
     const limit = input.limit ?? 18;
@@ -442,6 +433,7 @@ export function getDashboardAssistantQuickActions(input: {
     return DASHBOARD_ASSISTANT_QUICK_ACTIONS
         .filter(action => !action.requiresProject || hasProjectTarget)
         .filter(action => !action.adminOnly || input.canUseAdminMode === true)
+        .filter(action => !action.serviceId || input.canAccessService?.(action.serviceId) !== false)
         .slice(0, limit);
 }
 
@@ -502,6 +494,8 @@ export function buildDashboardAssistantEntryMetadata(input: DashboardAssistantEn
 
     const activeModule = input.activeModule || input.quickAction?.module || null;
     if (activeModule) metadata.activeModule = activeModule;
+    if (input.blockedModule) metadata.blockedModule = input.blockedModule;
+    if (input.blockedServiceId) metadata.blockedServiceId = input.blockedServiceId;
     if (input.activeProjectId) metadata.activeProjectId = input.activeProjectId;
     if (input.activeProjectName) metadata.activeProjectName = input.activeProjectName;
     if (input.activeTenantId) metadata.activeTenantId = input.activeTenantId;

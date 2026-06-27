@@ -33,6 +33,7 @@ import {
     getUsageColor,
     calculateCreditsUsagePercentage,
 } from '../types/subscription';
+import { isPlatformUnlimitedUser } from '../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -104,10 +105,10 @@ export interface UseAiCreditsResult {
 
 export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     const { tenantId, userId, autoRefresh = true, refreshInterval = 60000 } = options;
-    const { userDocument, isUserOwner, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth } = useAuth();
     // Check role first (most reliable), then email-based owner check as fallback
     const userRole = userDocument?.role;
-    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+    const isOwner = isPlatformUnlimitedUser(userRole);
 
     // State
     const [isLoading, setIsLoading] = useState(true);
@@ -194,7 +195,10 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
             };
         }
 
-        const result = await consumeCredits(tenantId, userId, operation, consumeOptions);
+        const result = await consumeCredits(tenantId, userId, operation, {
+            ...consumeOptions,
+            userRole,
+        });
 
         // Refresh data after consuming
         if (result.success) {
@@ -455,7 +459,6 @@ export function useConsumeWithConfirmation(
 }
 
 export default useAiCredits;
-
 
 
 

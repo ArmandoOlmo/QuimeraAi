@@ -16,6 +16,7 @@ import {
     DollarSign,
     TrendingUp,
     HelpCircle,
+    Users,
     ChevronDown,
     ChevronUp,
     Building2,
@@ -30,6 +31,13 @@ import {
 import { supabase } from '../../../supabase';
 import { ClientBillingManager } from './ClientBillingManager';
 import { InvoiceHistory } from './InvoiceHistory';
+import {
+    AgencyCommandCenter,
+    AgencyNextAction,
+    AgencyPanel,
+    AgencyReadinessPanel,
+    AgencyStatCard,
+} from './AgencyDesignSystem';
 
 
 
@@ -122,6 +130,64 @@ export function BillingSettings() {
         }
     };
 
+    const billingReady = connectStatus.status === 'active' && connectStatus.charges_enabled && connectStatus.payouts_enabled;
+    const billingReadinessItems = [
+        {
+            label: t('dashboard.agency.billingPage.readinessConnect', 'Stripe Connect'),
+            description: connectStatus.status === 'active'
+                ? t('dashboard.agency.billingPage.readinessConnectReady', 'Cuenta conectada')
+                : t('dashboard.agency.billingPage.readinessConnectPending', 'Pendiente de conexión'),
+            complete: connectStatus.status === 'active',
+            icon: CreditCard,
+            onClick: connectStatus.status === 'active' ? openStripeDashboard : handleSetupStripeConnect,
+        },
+        {
+            label: t('dashboard.agency.billingPage.readinessCharges', 'Cobros habilitados'),
+            description: connectStatus.charges_enabled
+                ? t('dashboard.agency.billingPage.readinessChargesReady', 'Puedes cobrar clientes')
+                : t('dashboard.agency.billingPage.readinessChargesPending', 'Completa verificación'),
+            complete: connectStatus.charges_enabled,
+            icon: DollarSign,
+            onClick: connectStatus.charges_enabled ? undefined : handleSetupStripeConnect,
+        },
+        {
+            label: t('dashboard.agency.billingPage.readinessPayouts', 'Payouts habilitados'),
+            description: connectStatus.payouts_enabled
+                ? t('dashboard.agency.billingPage.readinessPayoutsReady', 'Retiros disponibles')
+                : t('dashboard.agency.billingPage.readinessPayoutsPending', 'Stripe requiere datos adicionales'),
+            complete: connectStatus.payouts_enabled,
+            icon: Landmark,
+            onClick: connectStatus.payouts_enabled ? undefined : handleSetupStripeConnect,
+        },
+        {
+            label: t('dashboard.agency.billingPage.readinessClientBilling', 'Billing de clientes'),
+            description: billingReady
+                ? t('dashboard.agency.billingPage.readinessClientBillingReady', 'Gestión por cliente disponible')
+                : t('dashboard.agency.billingPage.readinessClientBillingBlocked', 'Requiere Connect activo'),
+            complete: billingReady,
+            icon: Users,
+            onClick: billingReady ? () => setActiveTab('clients') : handleSetupStripeConnect,
+        },
+    ];
+    const billingReadinessScore = Math.round(
+        (billingReadinessItems.filter((item) => item.complete).length / billingReadinessItems.length) * 100,
+    );
+    const billingNextAction = billingReady
+        ? {
+            label: t('dashboard.agency.billingPage.nextOpenStripe', 'Abrir Stripe Dashboard'),
+            description: t('dashboard.agency.billingPage.nextOpenStripeDesc', 'Revisa payouts, disputas y balance.'),
+            icon: ExternalLink,
+            tone: 'success' as const,
+            onClick: openStripeDashboard,
+        }
+        : {
+            label: t('dashboard.agency.billingPage.nextConnectStripe', 'Conectar Stripe'),
+            description: t('dashboard.agency.billingPage.nextConnectStripeDesc', 'Activa cobros y suscripciones de clientes.'),
+            icon: CreditCard,
+            tone: 'warning' as const,
+            onClick: handleSetupStripeConnect,
+        };
+
     if (loading && connectStatus.status === 'not_configured') {
         return (
             <div className="flex items-center justify-center h-64">
@@ -145,8 +211,63 @@ export function BillingSettings() {
                 </div>
             )}
 
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+                <AgencyCommandCenter
+                    icon={CreditCard}
+                    eyebrow={t('dashboard.agency.billingPage.commandCenter', 'Billing center')}
+                    title={t('dashboard.agency.billingPage.commandTitle', 'Cobros de agencia')}
+                    subtitle={t('dashboard.agency.billingPage.commandSubtitle', 'Stripe Connect, suscripciones de clientes, payouts e historial financiero.')}
+                    metrics={[
+                        {
+                            label: t('dashboard.agency.billingPage.connectStatus', 'Connect'),
+                            value: connectStatus.status === 'active'
+                                ? t('dashboard.agency.billingPage.statusActive', 'Activo')
+                                : connectStatus.status === 'pending'
+                                    ? t('dashboard.agency.billingPage.statusPending', 'Pendiente')
+                                    : t('dashboard.agency.billingPage.statusMissing', 'Sin conectar'),
+                            icon: CreditCard,
+                        },
+                        {
+                            label: t('dashboard.agency.billingPage.chargesStatus', 'Cobros'),
+                            value: connectStatus.charges_enabled ? t('common.enabled', 'Activo') : t('common.disabled', 'Inactivo'),
+                            icon: DollarSign,
+                        },
+                        {
+                            label: t('dashboard.agency.billingPage.payoutsStatus', 'Payouts'),
+                            value: connectStatus.payouts_enabled ? t('common.enabled', 'Activo') : t('common.disabled', 'Inactivo'),
+                            icon: Landmark,
+                        },
+                        {
+                            label: t('dashboard.agency.billingPage.mrrTotal'),
+                            value: `$${currentTenant?.billing?.mrr?.toLocaleString() || '0'}`,
+                            icon: TrendingUp,
+                        },
+                    ]}
+                    action={
+                        <AgencyNextAction
+                            label={billingNextAction.label}
+                            description={billingNextAction.description}
+                            icon={billingNextAction.icon}
+                            tone={billingNextAction.tone}
+                            onClick={billingNextAction.onClick}
+                        />
+                    }
+                />
+
+                <AgencyReadinessPanel
+                    title={t('dashboard.agency.billingPage.readinessTitle', 'Readiness de billing')}
+                    subtitle={t('dashboard.agency.billingPage.readinessSubtitle', '{{ready}}/{{total}} señales listas', {
+                        ready: billingReadinessItems.filter((item) => item.complete).length,
+                        total: billingReadinessItems.length,
+                    })}
+                    score={billingReadinessScore}
+                    items={billingReadinessItems}
+                    tone={billingReadinessScore >= 80 ? 'success' : billingReadinessScore >= 50 ? 'warning' : 'danger'}
+                />
+            </div>
+
             {/* Collapsible Instructions Section */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <AgencyPanel contentClassName="!p-0">
                 <button
                     onClick={() => setShowInstructions(!showInstructions)}
                     className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
@@ -165,13 +286,13 @@ export function BillingSettings() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-primary">
+                        <span className="text-sm font-medium quimera-status-card-accent-text">
                             {showInstructions ? 'Ocultar guía' : 'Ver guía'}
                         </span>
                         {showInstructions ? (
-                            <ChevronUp className="h-5 w-5 text-primary" />
+                            <ChevronUp className="h-5 w-5 text-q-text-muted" />
                         ) : (
-                            <ChevronDown className="h-5 w-5 text-primary" />
+                            <ChevronDown className="h-5 w-5 text-q-text-muted" />
                         )}
                     </div>
                 </button>
@@ -417,11 +538,11 @@ export function BillingSettings() {
                         </div>
                     </div>
                 )}
-            </div>
+            </AgencyPanel>
 
             {/* Stripe Connect Setup */}
             {connectStatus.status === 'not_configured' ? (
-                <div className="bg-q-surface rounded-lg border border-q-border p-8">
+                <AgencyPanel contentClassName="p-8">
                     <div className="max-w-2xl mx-auto text-center">
                         <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-q-accent/10 dark:bg-q-accent/12 mb-4">
                             <CreditCard className="h-8 w-8 text-q-accent dark:text-q-accent" />
@@ -460,7 +581,7 @@ export function BillingSettings() {
                         <button
                             onClick={handleSetupStripeConnect}
                             disabled={loading}
-                            className="px-8 py-3 bg-q-accent text-q-text-on-accent rounded-lg hover:bg-q-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2"
+                            className="quimera-guide-cta mx-auto px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
@@ -479,11 +600,11 @@ export function BillingSettings() {
                             {t('dashboard.agency.billingPage.redirectNotice')}
                         </p>
                     </div>
-                </div>
+                </AgencyPanel>
             ) : (
                 <>
                     {/* Stripe Connect Status Card */}
-                    <div className="bg-q-surface rounded-lg border border-q-border p-6">
+                    <AgencyPanel>
                         <div className="flex items-start justify-between">
                             <div className="flex items-start gap-4">
                                 <div
@@ -571,7 +692,7 @@ export function BillingSettings() {
                                 </button>
                             </div>
                         )}
-                    </div>
+                    </AgencyPanel>
 
                     {/* Tabs */}
                     <div className="border-b border-q-border">
@@ -609,53 +730,26 @@ export function BillingSettings() {
                     {/* Tab Content */}
                     {activeTab === 'overview' && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* MRR Card */}
-                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <DollarSign className="h-5 w-5 text-q-success" />
-                                    <span className="text-sm font-medium text-q-text-muted dark:text-gray-400">
-                                        {t('dashboard.agency.billingPage.mrrTotal')}
-                                    </span>
-                                </div>
-                                <p className="text-3xl font-bold text-q-text dark:text-white">
-                                    ${currentTenant?.billing?.mrr?.toLocaleString() || '0'}
-                                </p>
-                                <p className="text-sm text-q-text-muted dark:text-gray-500 mt-1">
-                                    {t('dashboard.agency.billingPage.mrrDescription')}
-                                </p>
-                            </div>
-
-                            {/* Active Subscriptions */}
-                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <TrendingUp className="h-5 w-5 text-q-accent" />
-                                    <span className="text-sm font-medium text-q-text-muted">
-                                        {t('dashboard.agency.billingPage.activeSubscriptions')}
-                                    </span>
-                                </div>
-                                <p className="text-3xl font-bold text-foreground">
-                                    0
-                                </p>
-                                <p className="text-sm text-q-text-muted mt-1">
-                                    {t('dashboard.agency.billingPage.activeSubsDescription')}
-                                </p>
-                            </div>
-
-                            {/* Next Payout */}
-                            <div className="bg-q-surface rounded-lg border border-q-border p-6">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <CreditCard className="h-5 w-5 text-q-accent" />
-                                    <span className="text-sm font-medium text-q-text-muted">
-                                        {t('dashboard.agency.billingPage.nextPayout')}
-                                    </span>
-                                </div>
-                                <p className="text-3xl font-bold text-foreground">
-                                    $0
-                                </p>
-                                <p className="text-sm text-q-text-muted mt-1">
-                                    {t('dashboard.agency.billingPage.availableInStripe')}
-                                </p>
-                            </div>
+                            <AgencyStatCard
+                                icon={DollarSign}
+                                label={t('dashboard.agency.billingPage.mrrTotal')}
+                                value={`$${currentTenant?.billing?.mrr?.toLocaleString() || '0'}`}
+                                tone="success"
+                                hint={t('dashboard.agency.billingPage.mrrDescription')}
+                            />
+                            <AgencyStatCard
+                                icon={TrendingUp}
+                                label={t('dashboard.agency.billingPage.activeSubscriptions')}
+                                value="0"
+                                tone="accent"
+                                hint={t('dashboard.agency.billingPage.activeSubsDescription')}
+                            />
+                            <AgencyStatCard
+                                icon={CreditCard}
+                                label={t('dashboard.agency.billingPage.nextPayout')}
+                                value="$0"
+                                hint={t('dashboard.agency.billingPage.availableInStripe')}
+                            />
                         </div>
                     )}
 

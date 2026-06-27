@@ -30,6 +30,26 @@ export const DEFAULT_AGENCY_PLAN_LIMITS: AgencyPlanLimits = {
     maxEmailsPerMonth: 1000,
 };
 
+export function isFiniteAgencyLimit(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+export function sanitizeAgencyPlanLimits(limits?: Partial<AgencyPlanLimits> | null): AgencyPlanLimits {
+    const next = { ...DEFAULT_AGENCY_PLAN_LIMITS };
+    if (!limits) return next;
+
+    (Object.keys(next) as Array<keyof AgencyPlanLimits>).forEach((key) => {
+        const value = limits[key];
+        if (isFiniteAgencyLimit(value)) {
+            next[key] = value;
+        }
+    });
+
+    next.maxProjects = Math.max(1, next.maxProjects);
+    next.maxUsers = Math.max(1, next.maxUsers);
+    return next;
+}
+
 // =============================================================================
 // AGENCY PLAN FEATURES
 // =============================================================================
@@ -232,23 +252,29 @@ export function validateAgencyPlan(plan: Partial<AgencyPlan>): AgencyPlanValidat
         errors.push('El nombre del plan no puede exceder 50 caracteres');
     }
     
-    if (plan.price === undefined || plan.price < 0) {
-        errors.push('El precio debe ser un número positivo');
+    if (plan.price === undefined || !Number.isFinite(plan.price) || plan.price < 0) {
+        errors.push('El precio debe ser un número positivo y finito');
     }
     
     if (plan.price !== undefined && plan.price < QUIMERA_PROJECT_COST) {
         errors.push(`El precio mínimo debe ser $${QUIMERA_PROJECT_COST} (costo base de Quimera)`);
     }
+
+    if (plan.baseCost !== undefined && (!Number.isFinite(plan.baseCost) || plan.baseCost < 0)) {
+        errors.push('El costo base debe ser un número positivo y finito');
+    }
     
     if (plan.limits) {
-        if (plan.limits.maxProjects < 1) {
+        (Object.entries(plan.limits) as Array<[keyof AgencyPlanLimits, number]>).forEach(([key, value]) => {
+            if (!isFiniteAgencyLimit(value)) {
+                errors.push(`El límite ${String(key)} debe ser finito y no puede ser negativo`);
+            }
+        });
+        if (isFiniteAgencyLimit(plan.limits.maxProjects) && plan.limits.maxProjects < 1) {
             errors.push('Debe permitir al menos 1 proyecto');
         }
-        if (plan.limits.maxUsers < 1) {
+        if (isFiniteAgencyLimit(plan.limits.maxUsers) && plan.limits.maxUsers < 1) {
             errors.push('Debe permitir al menos 1 usuario');
-        }
-        if (plan.limits.maxAiCredits < 0) {
-            errors.push('Los créditos AI deben ser un número positivo');
         }
     }
     

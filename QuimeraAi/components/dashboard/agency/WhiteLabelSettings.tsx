@@ -21,15 +21,13 @@ import {
     Building2,
     Save,
     Loader2,
-    CheckCircle,
-    AlertCircle,
     Trash2,
     Eye,
     Palette,
-    ExternalLink,
     Info,
     Sparkles,
 } from 'lucide-react';
+import { AgencyPanel, AgencySectionHeader } from './AgencyDesignSystem';
 
 export function WhiteLabelSettings() {
     const { t } = useTranslation();
@@ -165,22 +163,17 @@ export function WhiteLabelSettings() {
     }, [currentTenant, branding, updateTenant, t]);
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-6">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Shield className="h-6 w-6 text-primary" />
-                        {t('dashboard.agency.whiteLabel.title')}
-                    </h2>
-                    <p className="text-q-text-muted mt-1">
-                        {t('dashboard.agency.whiteLabel.subtitle')}
-                    </p>
-                </div>
+            <AgencySectionHeader
+                icon={Shield}
+                title={t('dashboard.agency.whiteLabel.title')}
+                subtitle={t('dashboard.agency.whiteLabel.subtitle')}
+                actions={(
                 <button
                     onClick={handleSave}
                     disabled={saving || !hasChanges}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                    className="quimera-guide-cta disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {saving ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -189,11 +182,12 @@ export function WhiteLabelSettings() {
                     )}
                     {saving ? t('common.saving') : t('common.save')}
                 </button>
-            </div>
+                )}
+            />
 
             {/* Info Banner */}
-            <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
-                <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="quimera-dashboard-panel-card flex items-start gap-3 p-4">
+                <Info className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
                 <p className="text-sm text-foreground">
                     {t('dashboard.agency.whiteLabel.infoBanner')}
                 </p>
@@ -202,14 +196,11 @@ export function WhiteLabelSettings() {
             {/* ================================================================= */}
             {/* SECTION 1: Company Identity */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.companyIdentity')}
-                    </h3>
-                </div>
-                <div className="p-6 space-y-5">
+            <AgencyPanel
+                title={t('dashboard.agency.whiteLabel.companyIdentity')}
+                icon={Building2}
+                contentClassName="space-y-5"
+            >
                     {/* Company Name */}
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -265,20 +256,12 @@ export function WhiteLabelSettings() {
                             className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* ================================================================= */}
             {/* SECTION 2: Logo & Favicon */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.logoAndFavicon')}
-                    </h3>
-                </div>
-                <div className="p-6">
+            <AgencyPanel title={t('dashboard.agency.whiteLabel.logoAndFavicon')} icon={ImageIcon}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Logo Upload */}
                         <div>
@@ -402,20 +385,12 @@ export function WhiteLabelSettings() {
                             />
                         </div>
                     </div>
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* ================================================================= */}
             {/* SECTION 3: Brand Colors */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Palette className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.brandColors')}
-                    </h3>
-                </div>
-                <div className="p-6">
+            <AgencyPanel title={t('dashboard.agency.whiteLabel.brandColors')} icon={Palette}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <ColorControl
                             label={t('dashboard.agency.whiteLabel.primaryColor')}
@@ -428,35 +403,23 @@ export function WhiteLabelSettings() {
                             onChange={(color) => updateField('secondaryColor', color)}
                         />
                     </div>
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* ================================================================= */}
             {/* SECTION 4: Custom Domain — Full Panel */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.customDomain')}
-                    </h3>
-                </div>
-                <div className="p-6">
+            <AgencyPanel title={t('dashboard.agency.whiteLabel.customDomain')} icon={Globe}>
                     <AgencyDomainPanel />
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* ================================================================= */}
             {/* SECTION 5: Email Configuration */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.emailConfig')}
-                    </h3>
-                </div>
-                <div className="p-6 space-y-5">
+            <AgencyPanel
+                title={t('dashboard.agency.whiteLabel.emailConfig')}
+                icon={Mail}
+                contentClassName="space-y-5"
+            >
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-1.5">
                             {t('dashboard.agency.whiteLabel.emailFromName')}
@@ -481,20 +444,12 @@ export function WhiteLabelSettings() {
                             className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                         />
                     </div>
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* ================================================================= */}
             {/* SECTION 6: Live Preview */}
             {/* ================================================================= */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border bg-muted/30">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-primary" />
-                        {t('dashboard.agency.whiteLabel.preview')}
-                    </h3>
-                </div>
-                <div className="p-6">
+            <AgencyPanel title={t('dashboard.agency.whiteLabel.preview')} icon={Eye}>
                     {/* Simulated portal header */}
                     <div className="rounded-xl border border-q-border overflow-hidden shadow-lg">
                         {/* Portal header bar */}
@@ -557,8 +512,7 @@ export function WhiteLabelSettings() {
                             </span>
                         </div>
                     </div>
-                </div>
-            </div>
+            </AgencyPanel>
 
             {/* Bottom Save Button (mobile-friendly) */}
             {hasChanges && (
@@ -566,7 +520,7 @@ export function WhiteLabelSettings() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-medium shadow-xl hover:shadow-2xl transition-all hover:opacity-90 disabled:opacity-50"
+                        className="quimera-guide-cta px-8 py-3 disabled:opacity-50"
                     >
                         {saving ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

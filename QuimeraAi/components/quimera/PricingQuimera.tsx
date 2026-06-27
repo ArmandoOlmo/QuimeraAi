@@ -60,8 +60,8 @@ const getDefaultPlans = (t: any): PricingPlan[] => [
         isPopular: true,
         buttonText: t('quimera.pricing.plan2.button', 'Empezar Pro'),
         features: [
-            { text: t('quimera.pricing.plan2.feat1', 'Sitios web ilimitados'), included: true },
-            { text: t('quimera.pricing.plan2.feat2', 'Asistente de IA (Ilimitado)'), included: true },
+            { text: t('quimera.pricing.plan2.feat1', 'Hasta 1 sitio web'), included: true },
+            { text: t('quimera.pricing.plan2.feat2', '500 AI Credits/mes'), included: true },
             { text: t('quimera.pricing.plan2.feat3', 'Soporte prioritario'), included: true },
             { text: t('quimera.pricing.plan2.feat4', 'Dominio personalizado'), included: true },
             { text: t('quimera.pricing.plan2.feat5', 'Marca blanca'), included: false },
@@ -75,8 +75,8 @@ const getDefaultPlans = (t: any): PricingPlan[] => [
         period: t('quimera.pricing.plan3.period', 'por mes'),
         buttonText: t('quimera.pricing.plan3.button', 'Contactar Ventas'),
         features: [
-            { text: t('quimera.pricing.plan3.feat1', 'Sitios web ilimitados'), included: true },
-            { text: t('quimera.pricing.plan3.feat2', 'Asistente de IA (Ilimitado)'), included: true },
+            { text: t('quimera.pricing.plan3.feat1', 'Hasta 25 sitios web'), included: true },
+            { text: t('quimera.pricing.plan3.feat2', '2,000 AI Credits/mes'), included: true },
             { text: t('quimera.pricing.plan3.feat3', 'Soporte 24/7'), included: true },
             { text: t('quimera.pricing.plan3.feat4', 'Dominio personalizado'), included: true },
             { text: t('quimera.pricing.plan3.feat5', 'Marca blanca completa'), included: true },

@@ -32,6 +32,7 @@ import {
     SupabaseGlobalAssistantMemoryAdapter,
     SupabaseGlobalAssistantRuntimePersistence,
 } from './globalAssistantSupabaseStore';
+import { checkActionPermission } from './globalAssistantPermissionService';
 
 export interface GlobalAssistantRuntimeRequest {
     request: string;
@@ -112,6 +113,15 @@ const buildDefaultBeforeSnapshot = (action: AssistantAction): Record<string, unk
 });
 
 const readResultRecord = (value: unknown): Record<string, unknown> => asRecord(value);
+
+const formatPermissionErrors = (
+    actionType: string,
+    reasons: string[],
+    missingPermissions: string[],
+): string[] => [
+    ...reasons.map(reason => `${actionType}: ${reason}`),
+    ...missingPermissions.map(permission => `${actionType}: Missing permission: ${permission}.`),
+];
 
 const readProjectDisplayName = (value: unknown): string | null => {
     if (typeof value === 'string' && value.trim()) return value.trim();
@@ -458,6 +468,7 @@ export class GlobalAssistantRuntime {
         const timestamp = nowIso();
         const nextActions: AssistantAction[] = [];
         const errors: string[] = [];
+        const executionContext = input.context;
 
         for (const action of plan.actions) {
             if (!selectedIds.has(action.id)) {
@@ -481,6 +492,28 @@ export class GlobalAssistantRuntime {
                 continue;
             }
 
+            if (!executionContext) {
+                const error = `${action.actionType} requires a current assistant context before apply.`;
+                errors.push(error);
+                nextActions.push(this.failAction(action, task.id, error, timestamp));
+                continue;
+            }
+
+            const permission = checkActionPermission({
+                definition,
+                context: executionContext,
+            });
+            if (!permission.allowed) {
+                const permissionErrors = formatPermissionErrors(
+                    action.actionType,
+                    permission.reasons,
+                    permission.missingPermissions,
+                );
+                errors.push(...permissionErrors);
+                nextActions.push(this.failAction(action, task.id, permissionErrors.join(' '), timestamp));
+                continue;
+            }
+
             const validation = definition.validate?.(action.input);
             if (validation && !validation.valid) {
                 const error = validation.errors.join(' ') || `${action.actionType} input did not validate.`;
@@ -492,7 +525,7 @@ export class GlobalAssistantRuntime {
             try {
                 const result = readResultRecord(await definition.execute(action.input, {
                     action,
-                    context: input.context,
+                    context: executionContext,
                 }));
                 const beforeSnapshot = hasRecordField(result, 'beforeSnapshot')
                     ? asRecord(result.beforeSnapshot)
@@ -580,6 +613,20 @@ export class GlobalAssistantRuntime {
         }
         if (!definition.rollback) {
             throw new Error(`No rollback handler registered for ${action.actionType}.`);
+        }
+        if (!input.context) {
+            throw new Error(`${action.actionType} requires a current assistant context before rollback.`);
+        }
+        const permission = checkActionPermission({
+            definition,
+            context: input.context,
+        });
+        if (!permission.allowed) {
+            throw new Error(formatPermissionErrors(
+                action.actionType,
+                permission.reasons,
+                permission.missingPermissions,
+            ).join(' '));
         }
         const snapshot = await this.resolveRollbackSnapshot(action);
         if (!snapshot) {

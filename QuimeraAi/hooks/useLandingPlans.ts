@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { getActivePlans, StoredPlan } from '../services/plansService';
 import { SUBSCRIPTION_PLANS } from '../types/subscription';
 import { useServiceAvailability } from './useServiceAvailability';
+import { formatPlanLimit, normalizePlanLimits } from '../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -74,23 +75,20 @@ function buildFeaturesList(
 
     // Límites
     if (plan.limits?.maxProjects) {
-        const projects = plan.limits.maxProjects === -1
-            ? 'Proyectos ilimitados'
-            : `${plan.limits.maxProjects} proyecto${plan.limits.maxProjects > 1 ? 's' : ''}`;
+        const limits = normalizePlanLimits(plan.limits, plan.id);
+        const projects = `${formatPlanLimit(limits.maxProjects)} proyecto${limits.maxProjects > 1 ? 's' : ''}`;
         features.push(projects);
     }
 
     if (plan.limits?.maxAiCredits && plan.limits.maxAiCredits > 0) {
-        const credits = plan.limits.maxAiCredits === -1
-            ? 'AI Credits ilimitados'
-            : `${plan.limits.maxAiCredits.toLocaleString()} AI Credits/mes`;
+        const limits = normalizePlanLimits(plan.limits, plan.id);
+        const credits = `${formatPlanLimit(limits.maxAiCredits)} AI Credits/mes`;
         features.push(credits);
     }
 
     if (plan.limits?.maxUsers && plan.limits.maxUsers > 1) {
-        const users = plan.limits.maxUsers === -1
-            ? 'Usuarios ilimitados'
-            : `${plan.limits.maxUsers} usuarios`;
+        const limits = normalizePlanLimits(plan.limits, plan.id);
+        const users = `${formatPlanLimit(limits.maxUsers)} usuarios`;
         features.push(users);
     }
 
@@ -154,10 +152,15 @@ function buildFeaturesList(
 function getPlanOrder(planId: string): number {
     const orderMap: Record<string, number> = {
         'free': 0,
+        'individual': 1,
+        'agency_starter': 2,
+        'agency_pro': 3,
+        'agency_scale': 4,
+        'enterprise': 5,
         'starter': 1,
-        'pro': 2,
-        'agency': 3,
-        'enterprise': 4,
+        'pro': 1,
+        'agency': 2,
+        'agency_plus': 3,
     };
     return orderMap[planId] ?? 99;
 }

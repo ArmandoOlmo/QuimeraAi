@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabase';
 import { resolveI18nField, resolveI18nSectionData } from '../utils/i18nContent';
 import { Project, PageData, ThemeData, PageSection, CMSPost, CMSCategory, Menu, FooterData, FontFamily, SEOConfig, SitePage, AiAssistantConfig } from '../types';
+import type { PlatformServiceId } from '../types/serviceAvailability';
 import { fontStacks, getGoogleFontsUrl, resolveFontFamily } from '../utils/fontLoader';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { componentStyles as defaultComponentStyles } from '../data/componentStyles';
@@ -22,6 +23,7 @@ import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
 import { usePublicRealtyListings } from '../hooks/usePublicRealtyListings';
+import { useServiceAvailability } from '../hooks/useServiceAvailability';
 import type { RealtyListingsSectionData, RealtyProperty } from '../types/realty';
 import {
   REALTY_DEFAULT_ROUTE_SEGMENTS,
@@ -31,6 +33,13 @@ import {
   resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import {
+  buildServiceAwareComponentStatus,
+  buildServiceAwareSectionVisibility,
+  filterServiceAvailablePages,
+  filterServiceAvailableSections,
+  isSectionServiceAvailable,
+} from '../utils/serviceAvailabilitySections';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
@@ -295,6 +304,13 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   // i18n — must be called unconditionally at top level (Rules of Hooks)
   const { i18n } = useTranslation();
   const currentLanguage = i18n.language || 'es';
+  const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const isPublicServiceAvailable = useCallback((serviceId: PlatformServiceId) => (
+    !isLoadingServiceAvailability && isServicePublic(serviceId)
+  ), [isLoadingServiceAvailability, isServicePublic]);
+  const isCmsServiceAvailable = isPublicServiceAvailable('cms');
+  const isEcommerceServiceAvailable = isPublicServiceAvailable('ecommerce');
+  const isRealEstateServiceAvailable = isPublicServiceAvailable('realEstate');
 
   /**
    * Preview base path — preserves /preview/{userId}/{projectId} prefix
@@ -818,6 +834,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       // NOTE: We don't reset views here anymore - each route handler is responsible
       // for resetting only the views it doesn't need. This prevents the issue where
       // posts aren't loaded yet but the reset already clears activePost.
+      const resetUnavailableServiceRoute = () => {
+        setActivePost(null);
+        setStoreView({ type: 'none' });
+        setActivePage(null);
+        setActiveCategorySlug(null);
+      };
 
       // ========================================
       // REAL PATH ROUTING (Shopify/Wix style)
@@ -825,6 +847,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Blog article routing: /blog/slug
       if (path.startsWith('/blog/') && path !== '/blog/') {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         // Blog category routing: /blog/categoria/slug OR /blog/category/slug
         if (path.startsWith('/blog/categoria/') || path.startsWith('/blog/category/')) {
           const slug = path.replace('/blog/categoria/', '').replace('/blog/category/', '').replace(/\/$/, '');
@@ -907,6 +933,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Store catalog routing: /tienda/productos
       if (path === '/tienda/productos' || path === '/tienda/productos/' || path === '/tienda/catalogo' || path === '/tienda/catalogo/') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePost(null);
         setActivePage(null);
         setStoreView({ type: 'products' });
@@ -916,6 +946,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Store routing: /tienda
       if (path === '/tienda' || path === '/tienda/') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePost(null);
         setActivePage(null);
         setStoreView({ type: 'store' });
@@ -925,6 +959,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Store category routing: /tienda/categoria/slug
       if (path.startsWith('/tienda/categoria/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
         setActivePost(null);
         setActivePage(null);
@@ -935,6 +973,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Store product routing: /tienda/producto/slug
       if (path.startsWith('/tienda/producto/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
         setActivePost(null);
         setActivePage(null);
@@ -949,6 +991,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Article routing: #article:slug (legacy)
       if (decodedHash.includes('#article:')) {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.split('#article:')[1].trim();
         const post = cmsPosts.find(p => p.slug === slug);
         if (post) {
@@ -962,6 +1008,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Blog category routing: #blog/categoria/slug OR #blog/category/slug
       if (decodedHash.includes('#blog/categoria/') || decodedHash.includes('#blog/category/')) {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash
           .split('#blog/categoria/').pop()!
           .split('#blog/category/').pop()!
@@ -978,6 +1028,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Blog article routing via hash: #blog/slug
       if (decodedHash.startsWith('#blog/') && !decodedHash.startsWith('#blog/categoria/') && !decodedHash.startsWith('#blog/category/')) {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.replace('#blog/', '').replace(/\/$/, '').trim();
         const post = cmsPosts.find(p => p.slug === slug);
         if (post) {
@@ -991,6 +1045,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
       // Store routing: #store (legacy)
       if (decodedHash === '#store' || decodedHash.endsWith('#store')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePost(null);
         setActivePage(null);
         setStoreView({ type: 'store' });
@@ -999,6 +1057,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
 
       if (decodedHash === '#store/products' || decodedHash.endsWith('#store/products') || decodedHash === '#store/catalog' || decodedHash.endsWith('#store/catalog')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePost(null);
         setActivePage(null);
         setStoreView({ type: 'products' });
@@ -1007,6 +1069,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
 
       if (decodedHash.includes('#store/category/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.split('#store/category/')[1];
         setActivePost(null);
         setActivePage(null);
@@ -1016,6 +1082,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
 
       if (decodedHash.includes('#store/product/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.split('#store/product/')[1];
         setActivePost(null);
         setActivePage(null);
@@ -1027,6 +1097,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       const realtyRouteData = getRealtyListingsRouteData();
       const realtyDetailSlug = matchRealtyDetailRoute(path, realtyRouteData);
       if (realtyDetailSlug) {
+        if (!isRealEstateServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const detailPath = resolveRealtyDetailPath(realtyRouteData, realtyDetailSlug);
         const now = new Date().toISOString();
         setActivePost(null);
@@ -1051,6 +1125,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       }
 
       if (matchRealtyDirectoryRoute(path, realtyRouteData)) {
+        if (!isRealEstateServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
         const now = new Date().toISOString();
         setActivePost(null);
@@ -1077,9 +1155,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       // ========================================
       // MULTI-PAGE ROUTING (pages from project.pages)
       // ========================================
-      if (project?.pages && project.pages.length > 0) {
+      const serviceFilteredPages = filterServiceAvailablePages(project?.pages || [], isPublicServiceAvailable);
+      if (serviceFilteredPages.length > 0) {
         const pathSlug = path.replace(/^\//, '').replace(/\/$/, '');
-        const matchedPage = project.pages.find(p => {
+        const matchedPage = serviceFilteredPages.find(p => {
           const pageSlug = (p.slug || '').replace(/^\//, '').replace(/\/$/, '');
           return pageSlug === pathSlug && !p.isHomePage;
         });
@@ -1123,7 +1202,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, project, getLogicalPath, getRealtyListingsRouteData]);
+  }, [cmsPosts, project, getLogicalPath, getRealtyListingsRouteData, isCmsServiceAvailable, isEcommerceServiceAvailable, isPublicServiceAvailable, isRealEstateServiceAvailable]);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback(async (href: string) => {
@@ -1137,6 +1216,12 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Don't reset views immediately - wait until we know where we're going
     // This prevents flashing the home page while fetching data
+    const resetUnavailableServiceLink = () => {
+      setActivePost(null);
+      setStoreView({ type: 'none' });
+      setActivePage(null);
+      setActiveCategorySlug(null);
+    };
 
     // Home page
     if (href === '/' || href === '') {
@@ -1180,6 +1265,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Blog category: /blog/categoria/slug OR /blog/category/slug
     if (href.startsWith('/blog/categoria/') || href.startsWith('/blog/category/')) {
+      if (!isCmsServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('/blog/categoria/', '').replace('/blog/category/', '').replace(/\/$/, '');
       console.log('[PublicWebsitePreview] Navigating to blog category:', slug, '| Available categories:', categories.length, categories.map(c => c.slug));
       setStoreView({ type: 'none' });
@@ -1194,6 +1283,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Blog article: /blog/slug
     if (href.startsWith('/blog/')) {
+      if (!isCmsServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('/blog/', '').replace(/\/$/, '');
       console.log('[PublicWebsitePreview] Looking for blog post:', slug);
 
@@ -1259,6 +1352,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Store: /tienda
     if (href === '/tienda/productos' || href === '/tienda/productos/' || href === '/tienda/catalogo' || href === '/tienda/catalogo/') {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'products' });
@@ -1269,6 +1366,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (href === '/tienda' || href === '/tienda/') {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'store' });
@@ -1280,6 +1381,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Store category: /tienda/categoria/slug
     if (href.startsWith('/tienda/categoria/')) {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
       setActivePost(null);
       setActivePage(null);
@@ -1292,6 +1397,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Store product: /tienda/producto/slug
     if (href.startsWith('/tienda/producto/')) {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
       setActivePost(null);
       setActivePage(null);
@@ -1304,6 +1413,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Legacy hash support
     if (href.startsWith('#article:')) {
+      if (!isCmsServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('#article:', '').trim();
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
@@ -1316,6 +1429,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (href === '#store') {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'store' });
@@ -1324,6 +1441,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (href === '#store/products' || href === '#store/catalog') {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       setActivePost(null);
       setActivePage(null);
       setStoreView({ type: 'products' });
@@ -1332,6 +1453,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (href.startsWith('#store/category/')) {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('#store/category/', '');
       setActivePost(null);
       setActivePage(null);
@@ -1341,6 +1466,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (href.startsWith('#store/product/')) {
+      if (!isEcommerceServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const slug = href.replace('#store/product/', '');
       setActivePost(null);
       setActivePage(null);
@@ -1352,6 +1481,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     const realtyRouteData = getRealtyListingsRouteData();
     const realtyDetailSlug = matchRealtyDetailRoute(href, realtyRouteData);
     if (realtyDetailSlug) {
+      if (!isRealEstateServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const detailPath = resolveRealtyDetailPath(realtyRouteData, realtyDetailSlug);
       const now = new Date().toISOString();
       const runtimePage: SitePage = {
@@ -1379,6 +1512,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     if (matchRealtyDirectoryRoute(href, realtyRouteData)) {
+      if (!isRealEstateServiceAvailable) {
+        resetUnavailableServiceLink();
+        return;
+      }
       const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
       const now = new Date().toISOString();
       const runtimePage: SitePage = {
@@ -1423,8 +1560,9 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
     // Multi-page navigation: Check if href matches a page slug
     const slug = href.replace(/^\//, '').replace(/\/$/, '');
-    if (project?.pages && project.pages.length > 0) {
-      const matchedPage = project.pages.find(p => {
+    const serviceFilteredPages = filterServiceAvailablePages(project?.pages || [], isPublicServiceAvailable);
+    if (serviceFilteredPages.length > 0) {
+      const matchedPage = serviceFilteredPages.find(p => {
         const pageSlug = (p.slug || '').replace(/^\//, '').replace(/\/$/, '');
         return pageSlug === slug;
       });
@@ -1448,7 +1586,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     } else {
       console.warn('[PublicWebsitePreview] No page or element found for href:', href);
     }
-  }, [cmsPosts, project, activePost, activePage, storeView, getRealtyListingsRouteData, updateBrowserUrl, updatePageSEO]);
+  }, [cmsPosts, project, activePost, activePage, storeView, getRealtyListingsRouteData, updateBrowserUrl, updatePageSEO, isCmsServiceAvailable, isEcommerceServiceAvailable, isPublicServiceAvailable, isRealEstateServiceAvailable]);
 
   const handleEcommerceNavigate = useCallback((href: string) => {
     const storefrontHref = resolveWebsiteStorefrontHref(href) || href;
@@ -1707,22 +1845,22 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   }, [previewBasePath]);
 
   const handleNavigateToStore = useCallback(() => {
+    if (!isEcommerceServiceAvailable) return;
     window.location.hash = 'store';
-  }, []);
+  }, [isEcommerceServiceAvailable]);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
+    if (!isEcommerceServiceAvailable) return;
     window.location.hash = `store/category/${categorySlug}`;
-  }, []);
+  }, [isEcommerceServiceAvailable]);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
+    if (!isEcommerceServiceAvailable) return;
     window.location.hash = `store/product/${productSlug}`;
-  }, []);
-
-  // Check if project uses multi-page architecture
-  const useMultiPageArchitecture = project?.pages && project.pages.length > 0;
+  }, [isEcommerceServiceAvailable]);
 
   // Only fetch real estate properties if the project actually uses real estate sections
-  const hasRealEstateSections = project?.componentOrder?.some((s: string) => 
+  const hasRealEstateSections = isRealEstateServiceAvailable && project?.componentOrder?.some((s: string) =>
     s === 'realEstateListings' || s === 'propertyDetail' || s === 'propertyDirectory'
   ) || false;
   const realEstateProjectId = hasRealEstateSections ? (project?.id || propProjectId || null) : null;
@@ -1827,13 +1965,31 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
   const { data, theme, componentOrder: rawComponentOrder, sectionVisibility, componentStatus, componentStyles } = project;
 
   // Deduplicate componentOrder to prevent duplicate sections (e.g., 'team' appearing multiple times)
-  const componentOrder = rawComponentOrder?.filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i);
+  const dedupedComponentOrder = rawComponentOrder?.filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i) as PageSection[] | undefined;
+  const serviceFilteredPages = filterServiceAvailablePages(project.pages || [], isPublicServiceAvailable);
+  const componentOrder = filterServiceAvailableSections(dedupedComponentOrder || [], isPublicServiceAvailable);
+  const effectiveSectionVisibility = buildServiceAwareSectionVisibility(sectionVisibility, isPublicServiceAvailable);
+  const effectiveComponentStatus = buildServiceAwareComponentStatus(
+    componentStatus,
+    [
+      ...(dedupedComponentOrder || []),
+      ...serviceFilteredPages.flatMap(page => page.sections || []),
+    ],
+    isPublicServiceAvailable,
+  );
+  const serviceFilteredProject = {
+    ...project,
+    pages: serviceFilteredPages,
+    componentOrder,
+    sectionVisibility: effectiveSectionVisibility,
+    componentStatus: effectiveComponentStatus,
+  };
 
   // Debug: Log component order and ecommerce data availability
   console.log('[PublicWebsitePreview] Project loaded:', {
     name: project.name,
     componentOrder,
-    sectionVisibility,
+    sectionVisibility: effectiveSectionVisibility,
     hasEcommerceData: {
       featuredProducts: !!data?.featuredProducts,
       categoryGrid: !!data?.categoryGrid,
@@ -2025,8 +2181,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     }
 
     // 3. Generate from pages if available (multi-page architecture)
-    if (project?.pages && project.pages.length > 0) {
-      const navPages = project.pages
+    if (serviceFilteredPages.length > 0) {
+      const navPages = serviceFilteredPages
         .filter((p: SitePage) => p.showInNavigation)
         .sort((a: SitePage, b: SitePage) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
 
@@ -2471,21 +2627,21 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       `}</style>
 
       {/* Announcement Bar - Above Header position */}
-      {componentOrder?.includes('announcementBar' as PageSection) && mergedData.announcementBar?.position === 'above-header' && componentStatus?.announcementBar !== false && sectionVisibility?.announcementBar !== false && mergedData.announcementBar && (
+      {componentOrder?.includes('announcementBar' as PageSection) && mergedData.announcementBar?.position === 'above-header' && effectiveComponentStatus.announcementBar !== false && effectiveSectionVisibility.announcementBar !== false && mergedData.announcementBar && (
         <div id="announcementBar-above" className="w-full">
           <AnnouncementBar data={mergedData.announcementBar} storeId={storeProjectId || undefined} globalColors={theme?.globalColors} onNavigate={handleEcommerceNavigate} />
         </div>
       )}
 
       {/* TopBar - Above Header position */}
-      {componentOrder?.includes('topBar' as PageSection) && mergedData.topBar?.aboveHeader && componentStatus?.topBar !== false && sectionVisibility?.topBar !== false && mergedData.topBar && (
+      {componentOrder?.includes('topBar' as PageSection) && mergedData.topBar?.aboveHeader && effectiveComponentStatus.topBar !== false && effectiveSectionVisibility.topBar !== false && mergedData.topBar && (
         <Suspense fallback={null}>
           <TopBar {...mergedData.topBar} onNavigate={handleLinkNavigation} />
         </Suspense>
       )}
 
       {/* Header - Visible on landing, hidden on store view (StorefrontLayout handles it) */}
-      {!isStoreViewActive && componentStatus?.header !== false && sectionVisibility?.header !== false && mergedData.header && (
+      {!isStoreViewActive && effectiveComponentStatus.header !== false && effectiveSectionVisibility.header !== false && mergedData.header && (
         <Header {...mergedData.header} links={headerLinks} onNavigate={handleLinkNavigation} forceSolid={isRealEstateRuntimePage} />
       )}
 
@@ -2497,17 +2653,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           </div>
         )}
         {/* Store View */}
-        {isStoreViewActive && storeProjectId ? (
+        {isStoreViewActive && isEcommerceServiceAvailable && storeProjectId ? (
           <StoreViewWrapper
             projectId={storeProjectId}
             storeView={storeView}
             initialData={{
-              ...project, // Pass all project fields including componentOrder, sectionVisibility, etc.
+              ...serviceFilteredProject, // Pass all project fields including filtered componentOrder, sectionVisibility, etc.
               header: mergedData.header, // Context-aware header
               theme: theme, // Context-aware theme
             }}
           />
-        ) : activeCategorySlug ? (
+        ) : isCmsServiceAvailable && activeCategorySlug ? (
           /* Category View */
           (() => {
             // Use categories state, OR fall back to project data directly if state is empty
@@ -2553,7 +2709,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               />
             );
           })()
-        ) : activePost ? (() => {
+        ) : isCmsServiceAvailable && activePost ? (() => {
           /* Article View */
           const postCategory = categories.find(c => c.id === activePost.categoryId)
             || ((project as any)?.categories || []).find((c: any) => c.id === activePost.categoryId);
@@ -2572,10 +2728,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           /* Multi-Page View - Render specific page using PageRenderer */
           <PageRenderer
             page={activePage}
-            project={{ ...project, menus: effectiveMenus }}
+            project={{ ...serviceFilteredProject, menus: effectiveMenus }}
             isPreview={true}
             onNavigate={handleLinkNavigation}
             contentOnly={true}
+            canAccessService={isPublicServiceAvailable}
           />
         ) : (
           /* Home View - Sections */
@@ -2590,8 +2747,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 ];
 
                 const isEcommerce = ecommerceComponents.includes(key as PageSection);
-                const statusVisible = componentStatus?.[key as PageSection] !== false;
-                const sectionVisible = sectionVisibility?.[key as PageSection] !== false;
+                const statusVisible = effectiveComponentStatus[key as PageSection] !== false;
+                const sectionVisible = effectiveSectionVisibility[key as PageSection] !== false;
                 const notExcluded = key !== 'footer' && key !== 'chatbot' && key !== 'header' &&
                   // AnnouncementBar is rendered separately when positioned above header
                   !(key === 'announcementBar' && mergedData.announcementBar?.position === 'above-header') &&
@@ -2621,14 +2778,14 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       </main>
 
       {/* Footer - Always visible */}
-      {componentStatus?.footer !== false && sectionVisibility?.footer !== false && (
+      {effectiveComponentStatus.footer !== false && effectiveSectionVisibility.footer !== false && (
         <div id="footer" className="w-full">
           <Footer {...resolvedFooterData} onNavigate={handleLinkNavigation} />
         </div>
       )}
 
       {/* Chatbot Widget - rendered outside store views; StorefrontApp owns storefront/checkout chat context */}
-      {!isStoreViewActive && (
+      {!isStoreViewActive && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && effectiveComponentStatus.chatbot !== false && effectiveSectionVisibility.chatbot !== false && (
         <ChatbotWidget
           isPreview={false}
           hidePoweredBy={hasWhiteLabelBranding}
@@ -2639,15 +2796,15 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             name: project.name || '',
             data: project.data,
             theme: project.theme,
-            componentOrder: project.componentOrder,
-            sectionVisibility: project.sectionVisibility,
+            componentOrder: serviceFilteredProject.componentOrder,
+            sectionVisibility: serviceFilteredProject.sectionVisibility,
           }}
           chatbotEngineContext={websiteChatbotEngineContext}
         />
       )}
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
-      {mergedData.signupFloat && componentOrder?.includes('signupFloat') && (sectionVisibility?.signupFloat !== false) && (
+      {mergedData.signupFloat && componentOrder?.includes('signupFloat') && effectiveComponentStatus.signupFloat !== false && effectiveSectionVisibility.signupFloat !== false && (
         <Suspense fallback={null}>
           <SignupFloat
             {...mergedData.signupFloat}

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts"
+import { edgeAccessErrorResponse, requireServiceAccess } from "../_shared/access.ts"
 
 /**
  * AI Proxy for OpenRouter
@@ -42,6 +43,12 @@ const AI_CREDIT_COSTS: Record<string, number> = {
 
 const BILLABLE_OPERATIONS = new Set(Object.keys(AI_CREDIT_COSTS));
 const SHARED_POOL_PLAN_IDS = new Set(['agency_starter', 'agency_pro', 'agency_scale']);
+
+function resolveAiFeatureKey(operation: string): 'aiImageGeneration' | 'aiAssistant' {
+    return operation.startsWith('image_generation') || operation.startsWith('video_generation')
+        ? 'aiImageGeneration'
+        : 'aiAssistant';
+}
 
 function openRouterHeaders(): Record<string, string> {
     return {
@@ -129,7 +136,7 @@ async function getAuthenticatedUserId(req: Request): Promise<string | null> {
     return data.user.id;
 }
 
-async function handleCreditsConsume(payload: Record<string, unknown>, authUserId: string | null): Promise<Response> {
+async function handleCreditsConsume(payload: Record<string, unknown>, authUserId: string | null, req: Request): Promise<Response> {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
         return jsonResponse({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, { status: 500 });
     }
@@ -153,27 +160,46 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
         return jsonResponse({ error: 'Invalid credits payload' }, { status: 400 });
     }
 
+    let adminOverride = false;
+    try {
+        const accessContext = await requireServiceAccess(req, {
+            tenantId: authorizedTenantId,
+            projectId,
+            serviceId: 'aiFeatures',
+            moduleId: resolveAiFeatureKey(operation) === 'aiImageGeneration' ? 'media-assets' : undefined,
+            featureKey: resolveAiFeatureKey(operation),
+            action: 'credits_consume',
+            aiOperation: operation as any,
+            customCredits: creditsUsed,
+        });
+        adminOverride = accessContext.decision.adminOverride === true;
+    } catch (error) {
+        return edgeAccessErrorResponse(error);
+    }
+
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
         auth: { persistSession: false },
     });
 
-    const { data: membership, error: membershipError } = await admin
-        .from('tenant_members')
-        .select('tenant_id')
-        .eq('tenant_id', authorizedTenantId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    if (!adminOverride) {
+        const { data: membership, error: membershipError } = await admin
+            .from('tenant_members')
+            .select('tenant_id')
+            .eq('tenant_id', authorizedTenantId)
+            .eq('user_id', userId)
+            .maybeSingle();
 
-    if (membershipError) {
-        console.error('[ai-proxy] credits_consume membership error:', membershipError);
-        return jsonResponse({ error: 'Could not validate tenant membership' }, { status: 500 });
+        if (membershipError) {
+            console.error('[ai-proxy] credits_consume membership error:', membershipError);
+            return jsonResponse({ error: 'Could not validate tenant membership' }, { status: 500 });
+        }
+
+        if (!membership) {
+            return jsonResponse({ error: 'User is not a member of this tenant' }, { status: 403 });
+        }
     }
 
-    if (!membership) {
-        return jsonResponse({ error: 'User is not a member of this tenant' }, { status: 403 });
-    }
-
-    if (tenantId !== authorizedTenantId) {
+    if (!adminOverride && tenantId !== authorizedTenantId) {
         const { data: authorizedTenant, error: tenantError } = await admin
             .from('tenants')
             .select('owner_tenant_id')
@@ -202,7 +228,7 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
     }
 
     const currentUsage = subscription?.ai_credits_usage || null;
-    if (currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
+    if (!adminOverride && currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
         return jsonResponse({
             error: 'No hay suficientes créditos disponibles',
             creditsRequired: creditsUsed,
@@ -216,9 +242,9 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
             tenant_id: tenantId,
             user_id: userId,
             operation,
-            credits_used: creditsUsed,
+            credits_used: adminOverride ? 0 : creditsUsed,
             description,
-            metadata,
+            metadata: { ...metadata, admin_override: adminOverride },
         })
         .select('id')
         .single();
@@ -228,7 +254,7 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
         return jsonResponse({ error: 'Could not create credits transaction' }, { status: 500 });
     }
 
-    if (currentUsage) {
+    if (currentUsage && !adminOverride) {
         const now = Date.now();
         const today = new Date().toISOString().split('T')[0];
         const usageByOperation = { ...(currentUsage.usageByOperation || {}) };
@@ -303,8 +329,9 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
                 success: true,
                 warning: 'Transaction created but usage stats could not be updated',
                 transactionId: transaction.id,
-                creditsUsed,
+                creditsUsed: adminOverride ? 0 : creditsUsed,
                 creditsRemaining: Number(currentUsage.creditsRemaining || 0),
+                adminOverride,
             });
         }
 
@@ -313,14 +340,16 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
             transactionId: transaction.id,
             creditsUsed,
             creditsRemaining: Number(updatedUsage.creditsRemaining || 0),
+            adminOverride,
         });
     }
 
     return jsonResponse({
         success: true,
         transactionId: transaction.id,
-        creditsUsed,
-        creditsRemaining: 0,
+        creditsUsed: adminOverride ? 0 : creditsUsed,
+        creditsRemaining: currentUsage ? Number(currentUsage.creditsRemaining || 0) : 0,
+        adminOverride,
     });
 }
 
@@ -568,7 +597,7 @@ function mapModelToOpenRouter(model: string): string {
         'gemini-2.0-flash-lite': 'google/gemini-2.0-flash-lite-001',
         'gemini-2.0-flash-exp': 'google/gemini-2.0-flash-exp:free',
         // Gemini 3.x
-        'gemini-3-flash-preview': 'google/gemini-2.5-flash',
+        'gemini-3-flash-preview': 'google/gemini-3-flash-preview',
         'gemini-3-pro-preview': 'google/gemini-2.5-pro',
         'gemini-3.1-pro-preview': 'google/gemini-2.5-pro',
         'gemini-3.1-flash-lite-preview': 'google/gemini-2.5-flash',
@@ -974,11 +1003,12 @@ async function resolveProxyBillingContext(
         (isImageGen ? 'Generación de imagen' : 'Generación de contenido IA');
     const metadata = mergeBillingMetadata(payload, operation, creditsUsed, model, projectId);
 
-    return {
-        admin,
-        tenantId,
-        userId: authUserId,
-        operation,
+	    return {
+	        admin,
+	        req,
+	        tenantId,
+	        userId: authUserId,
+	        operation,
         creditsUsed,
         description,
         metadata,
@@ -989,6 +1019,27 @@ async function assertCreditsAvailable(billingContext: Record<string, unknown>): 
     const admin = billingContext.admin as ReturnType<typeof createClient>;
     const tenantId = billingContext.tenantId as string;
     const creditsUsed = Number(billingContext.creditsUsed);
+    const operation = String(billingContext.operation || 'ai_assistant_request');
+    const req = billingContext.req as Request | undefined;
+
+    if (req) {
+        const accessContext = await requireServiceAccess(req, {
+            tenantId,
+            projectId: typeof (billingContext.metadata as Record<string, unknown> | undefined)?.project_id === 'string'
+                ? (billingContext.metadata as Record<string, unknown>).project_id as string
+                : undefined,
+            serviceId: 'aiFeatures',
+            moduleId: resolveAiFeatureKey(operation) === 'aiImageGeneration' ? 'media-assets' : undefined,
+            featureKey: resolveAiFeatureKey(operation),
+            action: 'ai_proxy_request',
+            aiOperation: operation as any,
+            customCredits: creditsUsed,
+        });
+        if (accessContext.decision.adminOverride) {
+            billingContext.adminOverride = true;
+            return;
+        }
+    }
 
     await ensureTenantMembership(admin, tenantId, billingContext.userId as string);
     const pool = await resolveCreditsPoolTenant(admin, tenantId);
@@ -1011,13 +1062,16 @@ async function consumeResolvedCredits(billingContext: Record<string, unknown>): 
     const creditsUsed = Number(billingContext.creditsUsed);
     const description = billingContext.description as string;
     const metadata = isPlainRecord(billingContext.metadata) ? billingContext.metadata : {};
+    const adminOverride = billingContext.adminOverride === true;
 
-    await ensureTenantMembership(admin, requestedTenantId, userId);
+    if (!adminOverride) {
+        await ensureTenantMembership(admin, requestedTenantId, userId);
+    }
     const pool = await resolveCreditsPoolTenant(admin, requestedTenantId);
     const billingTenantId = pool.poolTenantId;
     const currentUsage = await loadCreditsUsage(admin, billingTenantId);
 
-    if (currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
+    if (!adminOverride && currentUsage && typeof currentUsage.creditsRemaining === 'number' && currentUsage.creditsRemaining < creditsUsed) {
         throw httpError('CREDITS_EXHAUSTED', 402, {
             creditsRequired: creditsUsed,
             creditsRemaining: currentUsage.creditsRemaining,
@@ -1041,9 +1095,9 @@ async function consumeResolvedCredits(billingContext: Record<string, unknown>): 
             tenant_id: billingTenantId,
             user_id: userId,
             operation,
-            credits_used: creditsUsed,
+            credits_used: adminOverride ? 0 : creditsUsed,
             description,
-            metadata: txMetadata,
+            metadata: { ...txMetadata, admin_override: adminOverride },
         })
         .select('id')
         .single();
@@ -1051,6 +1105,17 @@ async function consumeResolvedCredits(billingContext: Record<string, unknown>): 
     if (txError) {
         console.error('[ai-proxy] billing transaction error:', txError);
         throw httpError('Could not create credits transaction', 500);
+    }
+
+    if (adminOverride) {
+        return {
+            transactionId: transaction.id,
+            creditsUsed: 0,
+            creditsRemaining: currentUsage?.creditsRemaining ?? null,
+            tenantId: billingTenantId,
+            usedSharedPool: pool.isSharedPool,
+            adminOverride: true,
+        };
     }
 
     if (!currentUsage) {
@@ -1698,7 +1763,7 @@ serve(async (req) => {
         if (payload.action === 'usage') {
             // Future: Implement real token usage reading from Supabase DB
             return new Response(
-                JSON.stringify({ success: true, usage: { creditsRemaining: 'Unlimited (Proxy)' } }),
+                JSON.stringify({ success: true, usage: { creditsRemaining: 0, source: 'not_configured' } }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
@@ -1733,7 +1798,7 @@ serve(async (req) => {
         }
 
         if (payload.action === 'credits_consume') {
-            return await handleCreditsConsume(payload, await getAuthenticatedUserId(req));
+            return await handleCreditsConsume(payload, await getAuthenticatedUserId(req), req);
         }
 
         if (payload.action === 'analyzeWebsite') {

@@ -34,6 +34,7 @@ import { useAuth } from '../../contexts/core/AuthContext';
 import ProgressBar3D from './ProgressBar3D';
 import { getCreditsUsageWithPoolDetection } from '../../services/aiCreditsService';
 import PurchaseCreditsModal from './PurchaseCreditsModal';
+import { isPlatformUnlimitedUser } from '../../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -199,10 +200,10 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     // Use global upgrade context if available
     const upgradeContext = useSafeUpgrade();
-    const { isUserOwner, userDocument, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth } = useAuth();
     // Check role first (most reliable), then email-based owner check as fallback
     const userRole = userDocument?.role;
-    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+    const isOwner = isPlatformUnlimitedUser(userRole);
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -608,7 +609,6 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 export default AiCreditsUsage;
 
 export { PurchaseCreditsModal };
-
 
 
 

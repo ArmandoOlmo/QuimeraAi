@@ -7,6 +7,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback, Rea
 import {
     Tenant,
     TenantMembership,
+    TenantBilling,
     TenantPermissions,
     AgencyRole,
     CreateTenantData,
@@ -19,10 +20,13 @@ import {
     generateSlug,
     DEFAULT_PERMISSIONS,
     hasPermission,
+    resolveTenantEffectiveLimits,
+    resolveTenantEffectivePlan,
 } from '../../types/multiTenant';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { normalizePlanId } from '../../services/billing/planCatalog';
 
 // =============================================================================
 // CONTEXT TYPES
@@ -110,12 +114,14 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                         slug: tData.slug,
                         type: tData.type,
                         ownerUserId: tData.owner_user_id,
+                        ownerTenantId: tData.owner_tenant_id,
                         subscriptionPlan: tData.subscription_plan,
                         status: tData.status,
                         limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
                         usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
                         branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
                         settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
+                        billing: typeof tData.billing === 'string' ? JSON.parse(tData.billing) : tData.billing,
                         createdAt: tData.created_at,
                         updatedAt: tData.updated_at
                     };
@@ -172,12 +178,14 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 slug: tenantDoc.slug,
                 type: tenantDoc.type,
                 ownerUserId: tenantDoc.owner_user_id,
+                ownerTenantId: tenantDoc.owner_tenant_id,
                 subscriptionPlan: tenantDoc.subscription_plan,
                 status: tenantDoc.status,
                 limits: typeof tenantDoc.limits === 'string' ? JSON.parse(tenantDoc.limits) : tenantDoc.limits,
                 usage: typeof tenantDoc.usage === 'string' ? JSON.parse(tenantDoc.usage) : tenantDoc.usage,
                 branding: typeof tenantDoc.branding === 'string' ? JSON.parse(tenantDoc.branding) : tenantDoc.branding,
                 settings: typeof tenantDoc.settings === 'string' ? JSON.parse(tenantDoc.settings) : tenantDoc.settings,
+                billing: typeof tenantDoc.billing === 'string' ? JSON.parse(tenantDoc.billing) : tenantDoc.billing,
                 createdAt: tenantDoc.created_at,
                 updatedAt: tenantDoc.updated_at
             } as any;
@@ -404,17 +412,42 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
 
-        const plan = data.type === 'agency_client' ? 'agency_client' : 'free';
+        const parentTenant = data.type === 'agency_client' ? currentTenant : null;
+        const plan = data.type === 'agency_client'
+            ? resolveTenantEffectivePlan({
+                type: 'agency_client',
+                subscriptionPlan: normalizePlanId(data.plan || parentTenant?.subscriptionPlan || 'individual') as any,
+                billing: {
+                    mode: data.useParentCreditsPool === false ? 'direct' : 'included_in_parent',
+                    effectivePlanId: normalizePlanId(parentTenant?.subscriptionPlan || data.plan || 'individual') as any,
+                },
+            }, parentTenant)
+            : normalizePlanId(data.plan || 'free');
+        const billing: TenantBilling | undefined = data.type === 'agency_client'
+            ? {
+                mode: data.useParentCreditsPool === false ? 'direct' : 'included_in_parent',
+                effectivePlanId: plan,
+            }
+            : undefined;
+        const limits = data.type === 'agency_client'
+            ? resolveTenantEffectiveLimits({
+                type: 'agency_client',
+                subscriptionPlan: plan as any,
+                limits: data.useParentCreditsPool === false ? undefined : parentTenant?.limits,
+                billing,
+            }, parentTenant)
+            : getDefaultLimitsForPlan(plan as any);
 
         const tenantRecord = {
             name: data.name,
             slug: finalSlug,
             type: data.type,
             owner_user_id: user.id,
-            owner_tenant_id: data.parentTenantId,
+            owner_tenant_id: data.parentTenantId || parentTenant?.id,
             subscription_plan: plan,
+            billing,
             status: 'active',
-            limits: getDefaultLimitsForPlan(plan as any),
+            limits,
             usage: {
                 projectCount: 0,
                 userCount: 1,
@@ -476,6 +509,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             status: data.status,
             limits: data.limits,
             usage: data.usage,
+            billing: data.billing,
             branding: data.branding,
             settings: data.settings,
             updated_at: new Date().toISOString()
@@ -699,12 +733,14 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 slug: tData.slug,
                 type: tData.type,
                 ownerUserId: tData.owner_user_id,
+                ownerTenantId: tData.owner_tenant_id,
                 subscriptionPlan: tData.subscription_plan,
                 status: tData.status,
                 limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
                 usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
                 branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
                 settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
+                billing: typeof tData.billing === 'string' ? JSON.parse(tData.billing) : tData.billing,
                 createdAt: tData.created_at,
                 updatedAt: tData.updated_at
             } as any;
@@ -787,8 +823,3 @@ export const useTenant = (): TenantContextType => {
 export const useSafeTenant = (): TenantContextType | null => {
     return useContext(TenantContext) || null;
 };
-
-
-
-
-

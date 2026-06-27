@@ -74,6 +74,7 @@ export * from './componentRegistry';
 export * from './componentAnatomy';
 export * from './colorSystem';
 export * from './businessBlueprint';
+export * from './agencyBlueprint';
 export * from './integrationEvents';
 export type {
     WebsiteEcommerceBlockCTA,

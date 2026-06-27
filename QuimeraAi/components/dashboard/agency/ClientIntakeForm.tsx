@@ -26,7 +26,7 @@ import ColorControl from '../../ui/ColorControl';
 // TYPES
 // ============================================================================
 
-interface ClientIntakeData {
+export interface ClientIntakeData {
   // Basic Information
   businessName: string;
   industry: string;
@@ -50,6 +50,19 @@ interface ClientIntakeData {
   // Plan assignment (optional)
   selectedPlanId: string | null;
   selectedPlanName: string | null;
+
+  // AI provisioning scope
+  aiStudioMode: 'draft' | 'generate';
+  generateWebsite: boolean;
+  generateStorefront: boolean;
+  generateEcommerce: boolean;
+  generateChatbot: boolean;
+  generateEmailFlows: boolean;
+  generateAppointments: boolean;
+  generateRestaurantModule: boolean;
+  generateRealtyModule: boolean;
+  generateBioPage: boolean;
+  generateMediaAssets: boolean;
 }
 
 interface InitialUser {
@@ -118,6 +131,17 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
     setupBilling: false,
     selectedPlanId: null,
     selectedPlanName: null,
+    aiStudioMode: 'draft',
+    generateWebsite: true,
+    generateStorefront: false,
+    generateEcommerce: false,
+    generateChatbot: true,
+    generateEmailFlows: false,
+    generateAppointments: false,
+    generateRestaurantModule: false,
+    generateRealtyModule: false,
+    generateBioPage: false,
+    generateMediaAssets: true,
   });
 
   // Handle plan selection
@@ -241,7 +265,14 @@ export function ClientIntakeForm({ onSubmit, onCancel }: ClientIntakeFormProps) 
       ? formData.enabledFeatures.filter((f) => f !== featureId)
       : [...formData.enabledFeatures, featureId];
 
-    setFormData({ ...formData, enabledFeatures: features });
+    setFormData({
+      ...formData,
+      enabledFeatures: features,
+      generateEcommerce: features.includes('ecommerce'),
+      generateStorefront: features.includes('ecommerce'),
+      generateChatbot: features.includes('chatbot'),
+      generateEmailFlows: features.includes('email'),
+    });
   };
 
   // ============================================================================

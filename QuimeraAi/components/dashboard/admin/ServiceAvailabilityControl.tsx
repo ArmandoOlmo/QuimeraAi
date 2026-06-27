@@ -161,7 +161,7 @@ const StatusSelector: React.FC<{
                                 <p className="text-sm text-q-text-secondary">
                                     {pendingStatus === 'not_public'
                                         ? t('serviceAvailability.warningNotPublic', 'Este servicio será completamente oculto')
-                                        : t('serviceAvailability.warningDevelopment', 'Solo Super Admin podrá acceder')}
+                                        : t('serviceAvailability.warningDevelopment', 'Este servicio estará oculto mientras esté en desarrollo')}
                                 </p>
                             </div>
                         </div>

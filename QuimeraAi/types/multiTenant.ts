@@ -3,6 +3,14 @@
  * Types for agency multi-tenant system with white-label portals
  */
 
+import type { SubscriptionPlanId } from './subscription';
+import {
+    getCanonicalPlanLimits,
+    isAgencyPlan,
+    normalizePlanId,
+    normalizePlanLimits,
+} from '../services/billing/planCatalog';
+
 // =============================================================================
 // TENANT TYPES
 // =============================================================================
@@ -18,8 +26,17 @@ export interface TenantLimits {
     maxStorageGB: number;
     maxAiCredits: number;
     maxSubClients?: number;        // For agency plans
+    maxDomains?: number;
+    maxLeads?: number;
+    maxProducts?: number;
+    maxEmailsPerMonth?: number;
     maxReports?: number;           // Monthly report generation limit
     maxApiCalls?: number;          // Monthly API calls limit
+    includedProjects?: number;
+    maxBillableProjects?: number;
+    projectCost?: number;
+    hardLimit?: boolean;
+    billingModel?: 'free' | 'subscription' | 'pay_per_project' | 'custom_contract';
 }
 
 export interface TenantUsage {
@@ -87,19 +104,31 @@ export interface SubscriptionAddons {
 }
 
 export interface TenantBilling {
-    mode: 'included_in_parent' | 'direct';
+    mode: 'included_in_parent' | 'direct' | 'agency_managed';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
     stripeConnectAccountId?: string;  // For agencies using Stripe Connect
+    stripeCheckoutSessionId?: string;
+    stripeProductId?: string;
     stripePriceId?: string;
-    currentPeriodEnd?: { seconds: number; nanoseconds: number };
+    currentPeriodEnd?: string | { seconds: number; nanoseconds: number };
     cancelAtPeriodEnd?: boolean;
+    cancelledByAgencyTenantId?: string;
     mrr?: number;
     nextBillingDate?: string;
     paymentMethod?: string;
     monthlyPrice?: number;         // For sub-clients billed by agency
+    status?: string;
+    subscriptionStatus?: string;
+    checkoutStartedAt?: string;
+    checkoutCompletedAt?: string;
+    paymentLinkToken?: string;
+    agencyTenantId?: string;
+    agencyPlanId?: string;
+    agencyPlanName?: string;
     addons?: SubscriptionAddons;   // Add-ons purchased
     addonsMonthlyPrice?: number;   // Total cost of add-ons
+    effectivePlanId?: SubscriptionPlanId;
 
     // === Agency Fee + Project billing model (Fase 3) ===
     isAgencyBilling?: boolean;     // If this tenant uses agency billing model
@@ -383,147 +412,14 @@ export function getMembershipId(tenantId: string, userId: string): string {
  * AI Credits: ~$0.01 USD real cost per credit
  */
 export function getDefaultLimitsForPlan(plan: Tenant['subscriptionPlan']): TenantLimits {
-    switch (plan) {
-        case 'free':
-            // Free: Para explorar - 1 proyecto, 30 AI credits
-            return {
-                maxProjects: 1,
-                maxUsers: 1,
-                maxStorageGB: 0.5,
-                maxAiCredits: 30
-            };
-
-        case 'hobby':
-            // Hobby $9/mes: Proyectos personales
-            return {
-                maxProjects: 2,
-                maxUsers: 1,
-                maxStorageGB: 2,
-                maxAiCredits: 100
-            };
-
-        case 'starter':
-            // Starter $19/mes: Emprendedores - 5 proyectos, 300 AI credits
-            return {
-                maxProjects: 5,
-                maxUsers: 2,
-                maxStorageGB: 5,
-                maxAiCredits: 300
-            };
-
-        case 'individual':
-            // Individual $49/mes: Todo incluido, 1 proyecto, 7 días trial
-            return {
-                maxProjects: 1,
-                maxUsers: 1,
-                maxStorageGB: 10,
-                maxAiCredits: 500
-            };
-
-        case 'pro':
-            // Pro $49/mes: Negocios en crecimiento - 20 proyectos, 1500 AI credits
-            return {
-                maxProjects: 20,
-                maxUsers: 10,
-                maxStorageGB: 50,
-                maxAiCredits: 1500
-            };
-
-        // =========================================
-        // NUEVOS PLANES DE AGENCIA (Fee + Proyecto)
-        // =========================================
-
-        case 'agency_starter':
-            // Agency Starter $99/mes + $29/proyecto: Pool 2000 créditos
-            return {
-                maxProjects: -1,           // Sin límite (pago por proyecto)
-                maxUsers: 5,
-                maxStorageGB: 50,
-                maxAiCredits: 2000,        // Pool compartido
-                maxSubClients: -1,         // Sin límite
-                maxReports: 25,
-                maxApiCalls: 5000
-            };
-
-        case 'agency_pro':
-            // Agency Pro $199/mes + $29/proyecto: Pool 5000 créditos
-            return {
-                maxProjects: -1,
-                maxUsers: 15,
-                maxStorageGB: 200,
-                maxAiCredits: 5000,
-                maxSubClients: -1,
-                maxReports: 100,
-                maxApiCalls: 25000
-            };
-
-        case 'agency_scale':
-            // Agency Scale $399/mes + $29/proyecto: Pool 15000 créditos
-            return {
-                maxProjects: -1,
-                maxUsers: 50,
-                maxStorageGB: 1000,
-                maxAiCredits: 15000,
-                maxSubClients: -1,
-                maxReports: -1,
-                maxApiCalls: -1
-            };
-
-        // =========================================
-        // PLANES LEGACY
-        // =========================================
-
-        case 'agency':
-            // Agency $129/mes: Agencias digitales - 50 proyectos, 5000 AI credits
-            return {
-                maxProjects: 50,
-                maxUsers: 25,
-                maxStorageGB: 200,
-                maxAiCredits: 5000,
-                maxSubClients: 10,
-                maxReports: 50,
-                maxApiCalls: 10000
-            };
-
-        case 'agency_plus':
-            // Agency Plus $199/mes: Premium para agencias con alto volumen
-            return {
-                maxProjects: 100,
-                maxUsers: 50,
-                maxStorageGB: 500,
-                maxAiCredits: 10000,
-                maxSubClients: 25,
-                maxReports: 200,
-                maxApiCalls: 50000
-            };
-
-        case 'enterprise':
-            // Enterprise $299+/mes: Grandes organizaciones - Ilimitado
-            return {
-                maxProjects: 1000,
-                maxUsers: 500,
-                maxStorageGB: 2000,
-                maxAiCredits: 25000,
-                maxSubClients: 100,
-                maxReports: -1,
-                maxApiCalls: -1
-            };
-
-        default:
-            return {
-                maxProjects: 1,
-                maxUsers: 1,
-                maxStorageGB: 0.5,
-                maxAiCredits: 30
-            };
-    }
+    return getCanonicalPlanLimits(plan) as TenantLimits;
 }
 
 /**
  * Check if a plan is an agency plan with fee + project billing
  */
 export function isAgencyBillingPlan(plan: Tenant['subscriptionPlan']): boolean {
-    return ['agency_starter', 'agency_pro', 'agency_scale'].includes(plan);
+    return isAgencyPlan(plan);
 }
 
 /**
@@ -554,6 +450,40 @@ export function calculateAgencyMonthlyBill(
     if (!details) return 0;
 
     return details.baseFee + (details.projectCost * activeProjects);
+}
+
+export function resolveTenantEffectivePlan(
+    tenant?: Partial<Tenant> | null,
+    parentTenant?: Partial<Tenant> | null,
+): SubscriptionPlanId {
+    if (!tenant) return 'free';
+
+    if (tenant.type !== 'agency_client') {
+        return normalizePlanId(tenant.subscriptionPlan) as SubscriptionPlanId;
+    }
+
+    if (tenant.billing?.mode === 'direct') {
+        return normalizePlanId(tenant.subscriptionPlan) as SubscriptionPlanId;
+    }
+
+    return normalizePlanId(
+        tenant.billing?.effectivePlanId ||
+        parentTenant?.subscriptionPlan ||
+        tenant.subscriptionPlan ||
+        'individual',
+    ) as SubscriptionPlanId;
+}
+
+export function resolveTenantEffectiveLimits(
+    tenant?: Partial<Tenant> | null,
+    parentTenant?: Partial<Tenant> | null,
+): TenantLimits {
+    const effectivePlan = resolveTenantEffectivePlan(tenant, parentTenant);
+    const inheritedLimits = tenant?.type === 'agency_client' && tenant.billing?.mode !== 'direct'
+        ? tenant.limits || parentTenant?.limits
+        : tenant?.limits;
+
+    return normalizePlanLimits(inheritedLimits, effectivePlan) as TenantLimits;
 }
 
 /**
@@ -698,7 +628,3 @@ export function calculateAddonsCost(addons: SubscriptionAddons): number {
 
     return totalCost;
 }
-
-
-
-

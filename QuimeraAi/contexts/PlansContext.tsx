@@ -14,6 +14,11 @@ import {
     SubscriptionPlan
 } from '../types/subscription';
 import { resolveProjectName } from '../utils/resolveProjectName';
+import {
+    getCanonicalPlanFeatures,
+    normalizePlanId,
+    normalizePlanLimits,
+} from '../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -96,8 +101,8 @@ function convertHardcodedPlans(): Record<string, StoredPlanData> {
             name: plan.name,
             description: plan.description,
             price: plan.price,
-            features: plan.features,
-            limits: plan.limits,
+            features: getCanonicalPlanFeatures(id),
+            limits: normalizePlanLimits(plan.limits, id),
             color: plan.color,
             icon: plan.icon,
             isFeatured: plan.isFeatured,
@@ -135,16 +140,18 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 if (data && data.length > 0) {
                     const plansMap: Record<string, StoredPlanData> = {};
                     data.forEach(item => {
-                        plansMap[item.id] = {
-                            id: item.id as SubscriptionPlanId,
+                        const canonicalId = normalizePlanId(item.id);
+                        const planId = canonicalId as SubscriptionPlanId;
+                        plansMap[planId] = {
+                            id: planId,
                             name: resolveProjectName(item.name || ''),
                             description: resolveProjectName(item.description || ''),
                             price: {
                                 monthly: item.price_monthly,
                                 annually: item.price_annually
                             },
-                            features: item.features,
-                            limits: item.limits,
+                            features: { ...getCanonicalPlanFeatures(canonicalId), ...(item.features || {}) },
+                            limits: normalizePlanLimits(item.limits, canonicalId),
                             color: item.color,
                             icon: item.icon,
                             isFeatured: item.is_featured,
@@ -193,22 +200,23 @@ export const PlansProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Get a specific plan
     const getPlan = useCallback((planId: string): StoredPlanData | null => {
-        return plans[planId] || null;
+        return plans[normalizePlanId(planId)] || null;
     }, [plans]);
 
     // Get features for a plan
     const getPlanFeatures = useCallback((planId: string): PlanFeatures => {
-        return plans[planId]?.features || SUBSCRIPTION_PLANS.free.features;
+        return plans[normalizePlanId(planId)]?.features || getCanonicalPlanFeatures(planId);
     }, [plans]);
 
     // Get limits for a plan
     const getPlanLimits = useCallback((planId: string): PlanLimits => {
-        return plans[planId]?.limits || SUBSCRIPTION_PLANS.free.limits;
+        const canonicalId = normalizePlanId(planId);
+        return normalizePlanLimits(plans[canonicalId]?.limits, canonicalId);
     }, [plans]);
 
     // Check if a plan has a specific feature
     const hasFeatureInPlan = useCallback((planId: string, feature: keyof PlanFeatures): boolean => {
-        const planFeatures = plans[planId]?.features || SUBSCRIPTION_PLANS.free.features;
+        const planFeatures = plans[normalizePlanId(planId)]?.features || getCanonicalPlanFeatures(planId);
         return isFeatureEnabled(planFeatures[feature]);
     }, [plans]);
 
@@ -275,7 +283,6 @@ export function useSafePlans(): PlansContextValue | null {
 // =============================================================================
 
 export default PlansContext;
-
 
 
 

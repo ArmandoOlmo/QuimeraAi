@@ -65,6 +65,7 @@ import {
   resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
+import type { PlatformServiceId } from '../types/serviceAvailability';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { initialData } from '../data/initialData';
 import { useSafeAuth } from '../contexts/core/AuthContext';
@@ -74,6 +75,7 @@ import { useCMS } from '../contexts/cms';
 import { useAdmin } from '../contexts/admin';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { usePublicProducts } from '../hooks/usePublicProducts';
+import { useServiceAvailability } from '../hooks/useServiceAvailability';
 // Importación centralizada de componentes de ecommerce
 // Estos componentes funcionan tanto en Landing Page como en Ecommerce
 import {
@@ -112,6 +114,13 @@ import { sanitizeI18nObject } from '../utils/sanitizeData';
 import { useTranslation } from 'react-i18next';
 import { normalizeStorefrontHrefForWebsiteContext } from '../utils/storefrontRouter';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import {
+  buildServiceAwareComponentStatus,
+  buildServiceAwareSectionVisibility,
+  filterServiceAvailablePages,
+  filterServiceAvailableSections,
+  isSectionServiceAvailable,
+} from '../utils/serviceAvailabilitySections';
 
 // ... (rest of imports)
 
@@ -131,6 +140,13 @@ const LandingPageContent: React.FC = () => {
   
   const { i18n } = useTranslation();
   const preferredLanguage = i18n.language?.startsWith('es') ? 'es' : 'en';
+  const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const isPublicServiceAvailable = useCallback((serviceId: PlatformServiceId) => (
+    !isLoadingServiceAvailability && isServicePublic(serviceId)
+  ), [isLoadingServiceAvailability, isServicePublic]);
+  const isCmsServiceAvailable = isPublicServiceAvailable('cms');
+  const isEcommerceServiceAvailable = isPublicServiceAvailable('ecommerce');
+  const isRealEstateServiceAvailable = isPublicServiceAvailable('realEstate');
 
   const rawData = (isEditorMode ? editorContext!.data : projectContext.data) || projectContext.data;
   const data = useMemo(() => sanitizeI18nObject(rawData, preferredLanguage), [rawData, preferredLanguage]);
@@ -175,7 +191,11 @@ const LandingPageContent: React.FC = () => {
   // IMPORTANT: For the home page, always use the global componentOrder because
   // it reflects the full set of sections the user has configured in the editor.
   // activePage.sections for the home page may be a stale/incomplete snapshot.
-  const effectiveComponentOrder = useMemo(() => {
+  const serviceFilteredPages = useMemo(() => (
+    filterServiceAvailablePages(pages || [], isPublicServiceAvailable)
+  ), [isPublicServiceAvailable, pages]);
+
+  const rawEffectiveComponentOrder = useMemo(() => {
     if (activePage?.sections?.length && !activePage.isHomePage) {
       return activePage.sections;
     }
@@ -183,19 +203,34 @@ const LandingPageContent: React.FC = () => {
     return componentOrder;
   }, [activePage, componentOrder]);
 
+  const effectiveComponentOrder = useMemo(() => (
+    filterServiceAvailableSections(rawEffectiveComponentOrder || [], isPublicServiceAvailable)
+  ), [isPublicServiceAvailable, rawEffectiveComponentOrder]);
+
   const effectiveSectionVisibility = useMemo(() => {
     if (activePage?.sections?.length && !activePage.isHomePage) {
       // Create visibility based on page sections
       const visibility: Record<string, boolean> = {};
       activePage.sections.forEach(s => {
-        visibility[s] = sectionVisibility[s] ?? true;
+        visibility[s] = sectionVisibility?.[s] ?? true;
       });
-      visibility.header = sectionVisibility.header ?? true;
-      visibility.footer = sectionVisibility.footer ?? true;
-      return visibility;
+      visibility.header = sectionVisibility?.header ?? true;
+      visibility.footer = sectionVisibility?.footer ?? true;
+      return buildServiceAwareSectionVisibility(visibility as Record<PageSection, boolean>, isPublicServiceAvailable);
     }
-    return sectionVisibility;
-  }, [activePage, sectionVisibility]);
+    return buildServiceAwareSectionVisibility(sectionVisibility || {}, isPublicServiceAvailable);
+  }, [activePage, isPublicServiceAvailable, sectionVisibility]);
+
+  const effectiveComponentStatus = useMemo(() => (
+    buildServiceAwareComponentStatus(
+      componentStatus,
+      [
+        ...(rawEffectiveComponentOrder || []),
+        ...serviceFilteredPages.flatMap(page => page.sections || []),
+      ],
+      isPublicServiceAvailable,
+    )
+  ), [componentStatus, isPublicServiceAvailable, rawEffectiveComponentOrder, serviceFilteredPages]);
 
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
@@ -249,6 +284,14 @@ const LandingPageContent: React.FC = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
       const decodedHash = decodeURIComponent(hash);
+      const resetUnavailableServiceRoute = () => {
+        setActivePost(null);
+        setStoreView({ type: 'none' });
+        setIsRouting(false);
+        setBlogSlugNotFound(false);
+        setActivePropertySlug(null);
+        setShowRealtyDirectory(false);
+      };
 
       // ========================================
       // ANCHOR SCROLL — handle FIRST, before any state resets.
@@ -257,7 +300,7 @@ const LandingPageContent: React.FC = () => {
       // ========================================
       if (hash.length > 1 && !hash.startsWith('#article:') && !hash.startsWith('#store') && !hash.startsWith('#checkout') && !hash.startsWith('#blog/')) {
         // It's a simple anchor — just scroll, don't touch any state
-        const homePage = pages.find(page => page.isHomePage);
+        const homePage = serviceFilteredPages.find(page => page.isHomePage);
         const currentPage = activePageRef.current;
         // If we're on a non-home page, switch back to home first
         const needsPageReset = currentPage && currentPage.id !== homePage?.id;
@@ -288,6 +331,10 @@ const LandingPageContent: React.FC = () => {
 
       // Blog article routing: /blog/slug
       if (path.startsWith('/blog/') && path !== '/blog/') {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setIsRouting(true);
         const slug = path.replace('/blog/', '');
         const post = cmsPosts.find(p => p.slug === slug);
@@ -309,6 +356,10 @@ const LandingPageContent: React.FC = () => {
 
       // Store catalog routing: /tienda/productos
       if (path === '/tienda/productos' || path === '/tienda/productos/' || path === '/tienda/catalogo' || path === '/tienda/catalogo/') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'products' });
         window.scrollTo(0, 0);
         return;
@@ -316,6 +367,10 @@ const LandingPageContent: React.FC = () => {
 
       // Store routing: /tienda
       if (path === '/tienda' || path === '/tienda/') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'store' });
         window.scrollTo(0, 0);
         return;
@@ -323,6 +378,10 @@ const LandingPageContent: React.FC = () => {
 
       // Store category routing: /tienda/categoria/slug
       if (path.startsWith('/tienda/categoria/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = path.replace('/tienda/categoria/', '').replace(/\/$/, '');
         setStoreView({ type: 'category', slug });
         window.scrollTo(0, 0);
@@ -331,6 +390,10 @@ const LandingPageContent: React.FC = () => {
 
       // Store product routing: /tienda/producto/slug
       if (path.startsWith('/tienda/producto/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = path.replace('/tienda/producto/', '').replace(/\/$/, '');
         setStoreView({ type: 'product', slug });
         window.scrollTo(0, 0);
@@ -339,6 +402,10 @@ const LandingPageContent: React.FC = () => {
 
       // Checkout routing: /checkout
       if (path === '/checkout' || path === '/checkout/') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'checkout' });
         window.scrollTo(0, 0);
         return;
@@ -347,12 +414,20 @@ const LandingPageContent: React.FC = () => {
       const realtyRouteData = data.realEstateListings;
       const realtyDetailSlug = matchRealtyDetailRoute(path, realtyRouteData);
       if (realtyDetailSlug) {
+        if (!isRealEstateServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePropertySlug(realtyDetailSlug);
         window.scrollTo(0, 0);
         return;
       }
 
       if (matchRealtyDirectoryRoute(path, realtyRouteData)) {
+        if (!isRealEstateServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setActivePage(null);
         setShowRealtyDirectory(true);
         window.scrollTo(0, 0);
@@ -362,12 +437,12 @@ const LandingPageContent: React.FC = () => {
       // Multi-page routing: match clean page slugs such as /listados
       // IMPORTANT: Only match non-home pages here. For the root path (/),
       // we fall through to the "root path" handler below.
-      if (pages && pages.length > 0) {
+      if (serviceFilteredPages.length > 0) {
         const pathSlug = path.replace(/^\//, '').replace(/\/$/, '');
 
         // Skip empty slug — root path is handled separately below
         if (pathSlug) {
-          const matchedPage = pages.find(page => {
+          const matchedPage = serviceFilteredPages.find(page => {
             const pageSlug = (page.slug || '').replace(/^\//, '').replace(/\/$/, '');
             return pageSlug === pathSlug && !page.isHomePage;
           });
@@ -381,7 +456,7 @@ const LandingPageContent: React.FC = () => {
 
         // Root path with multi-page: ensure home page is active
         if (path === '/' || path === '') {
-          const homePage = pages.find(p => p.isHomePage);
+          const homePage = serviceFilteredPages.find(p => p.isHomePage);
           setActivePage(homePage ? homePage.id : null);
           return;
         }
@@ -393,6 +468,10 @@ const LandingPageContent: React.FC = () => {
 
       // Article routing: #article:slug (legacy)
       if (decodedHash.startsWith('#article:')) {
+        if (!isCmsServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setIsRouting(true);
         const slug = decodedHash.replace('#article:', '').trim();
         const post = cmsPosts.find(p => p.slug === slug);
@@ -412,18 +491,30 @@ const LandingPageContent: React.FC = () => {
 
       // Store routing: #store (legacy)
       if (decodedHash === '#store') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'store' });
         window.scrollTo(0, 0);
         return;
       }
 
       if (decodedHash === '#store/products' || decodedHash === '#store/catalog') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'products' });
         window.scrollTo(0, 0);
         return;
       }
 
       if (decodedHash.startsWith('#store/category/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.replace('#store/category/', '');
         setStoreView({ type: 'category', slug });
         window.scrollTo(0, 0);
@@ -431,6 +522,10 @@ const LandingPageContent: React.FC = () => {
       }
 
       if (decodedHash.startsWith('#store/product/')) {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         const slug = decodedHash.replace('#store/product/', '');
         setStoreView({ type: 'product', slug });
         window.scrollTo(0, 0);
@@ -438,6 +533,10 @@ const LandingPageContent: React.FC = () => {
       }
 
       if (decodedHash === '#checkout') {
+        if (!isEcommerceServiceAvailable) {
+          resetUnavailableServiceRoute();
+          return;
+        }
         setStoreView({ type: 'checkout' });
         window.scrollTo(0, 0);
         return;
@@ -457,7 +556,16 @@ const LandingPageContent: React.FC = () => {
       window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
-  }, [cmsPosts, data.realEstateListings, isLoadingCMS, pages, setActivePage]);
+  }, [
+    cmsPosts,
+    data.realEstateListings,
+    isCmsServiceAvailable,
+    isEcommerceServiceAvailable,
+    isLoadingCMS,
+    isRealEstateServiceAvailable,
+    serviceFilteredPages,
+    setActivePage,
+  ]);
 
   const scrollPreviewToTop = useCallback(() => {
     if (previewRef?.current) {
@@ -468,6 +576,8 @@ const LandingPageContent: React.FC = () => {
   }, [previewRef]);
 
   const navigateInsideEditorStorefront = useCallback((href: string) => {
+    if (!isEcommerceServiceAvailable) return false;
+
     const normalized = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
     if (!normalized) return false;
 
@@ -476,7 +586,7 @@ const LandingPageContent: React.FC = () => {
     setBlogSlugNotFound(false);
     setActivePropertySlug(null);
     setShowRealtyDirectory(false);
-    const homePage = pages.find(page => page.isHomePage);
+    const homePage = serviceFilteredPages.find(page => page.isHomePage);
     setActivePage(homePage ? homePage.id : null);
 
     if (normalized === '/tienda') {
@@ -512,14 +622,15 @@ const LandingPageContent: React.FC = () => {
     }
 
     return false;
-  }, [activeProjectId, pages, scrollPreviewToTop, setActivePage]);
+  }, [activeProjectId, isEcommerceServiceAvailable, scrollPreviewToTop, serviceFilteredPages, setActivePage]);
 
   const handleViewAllProducts = useCallback(() => {
+    if (!isEcommerceServiceAvailable) return;
     if (!isEditorMode) {
       window.history.pushState({}, '', '/tienda/productos');
     }
     navigateInsideEditorStorefront('/tienda/productos');
-  }, [isEditorMode, navigateInsideEditorStorefront]);
+  }, [isEcommerceServiceAvailable, isEditorMode, navigateInsideEditorStorefront]);
 
   const handlePreviewClickCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (!isEditorMode) return;
@@ -551,39 +662,43 @@ const LandingPageContent: React.FC = () => {
     setShowRealtyDirectory(false);
     setStoreView({ type: 'none' });
     // Reset multi-page active page to home (or null for legacy projects)
-    const homePage = pages.find(page => page.isHomePage);
+    const homePage = serviceFilteredPages.find(page => page.isHomePage);
     setActivePage(homePage ? homePage.id : null);
     scrollPreviewToTop();
   };
 
   // Store navigation handlers - use real paths
   const handleNavigateToStore = useCallback(() => {
+    if (!isEcommerceServiceAvailable) return;
     if (!isEditorMode) {
       window.history.pushState({}, '', '/tienda');
     }
     navigateInsideEditorStorefront('/tienda');
-  }, [isEditorMode, navigateInsideEditorStorefront]);
+  }, [isEcommerceServiceAvailable, isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToCategory = useCallback((categorySlug: string) => {
+    if (!isEcommerceServiceAvailable) return;
     if (!isEditorMode) {
       window.history.pushState({}, '', `/tienda/categoria/${categorySlug}`);
     }
     navigateInsideEditorStorefront(`/tienda/categoria/${categorySlug}`);
-  }, [isEditorMode, navigateInsideEditorStorefront]);
+  }, [isEcommerceServiceAvailable, isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToProduct = useCallback((productSlug: string) => {
+    if (!isEcommerceServiceAvailable) return;
     if (!isEditorMode) {
       window.history.pushState({}, '', `/tienda/producto/${productSlug}`);
     }
     navigateInsideEditorStorefront(`/tienda/producto/${productSlug}`);
-  }, [isEditorMode, navigateInsideEditorStorefront]);
+  }, [isEcommerceServiceAvailable, isEditorMode, navigateInsideEditorStorefront]);
 
   const handleNavigateToCheckout = useCallback(() => {
+    if (!isEcommerceServiceAvailable) return;
     if (!isEditorMode) {
       window.history.pushState({}, '', '/checkout');
     }
     navigateInsideEditorStorefront('/checkout');
-  }, [isEditorMode, navigateInsideEditorStorefront]);
+  }, [isEcommerceServiceAvailable, isEditorMode, navigateInsideEditorStorefront]);
 
   // Universal navigation handler for Header links
   const handleLinkNavigation = useCallback((href: string) => {
@@ -595,6 +710,10 @@ const LandingPageContent: React.FC = () => {
 
     const storefrontHref = normalizeStorefrontHrefForWebsiteContext(href, activeProjectId);
     if (storefrontHref) {
+      if (!isEcommerceServiceAvailable) {
+        setStoreView({ type: 'none' });
+        return;
+      }
       if (isEditorMode) {
         if (navigateInsideEditorStorefront(storefrontHref)) return;
       } else {
@@ -631,7 +750,7 @@ const LandingPageContent: React.FC = () => {
 
     // Home page
     if (href === '/' || href === '') {
-      const homePage = pages.find(page => page.isHomePage);
+      const homePage = serviceFilteredPages.find(page => page.isHomePage);
       if (homePage) {
         setActivePage(homePage.id);
       } else {
@@ -646,7 +765,7 @@ const LandingPageContent: React.FC = () => {
     // Anchor scroll (/#section or #section)
     if (href.startsWith('/#') || (href.startsWith('#') && !href.startsWith('#article:') && !href.startsWith('#store'))) {
       const id = href.replace('/#', '').replace('#', '');
-      const homePage = pages.find(page => page.isHomePage);
+      const homePage = serviceFilteredPages.find(page => page.isHomePage);
       const needsPageReset = Boolean(activePage && activePage.id !== homePage?.id);
 
       if (needsPageReset) {
@@ -664,6 +783,7 @@ const LandingPageContent: React.FC = () => {
 
     // Blog category: /blog/categoria/slug
     if (href.startsWith('/blog/categoria/')) {
+      if (!isCmsServiceAvailable) return;
       const slug = href.replace('/blog/categoria/', '').replace(/\/$/, '');
       console.log('[LandingPage] Navigating to blog category:', slug);
       setActivePropertySlug(null);
@@ -674,6 +794,7 @@ const LandingPageContent: React.FC = () => {
 
     // Blog article: /blog/slug
     if (href.startsWith('/blog/')) {
+      if (!isCmsServiceAvailable) return;
       const slug = href.replace('/blog/', '').replace(/\/$/, '');
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
@@ -691,6 +812,7 @@ const LandingPageContent: React.FC = () => {
 
     // Store catalog: /tienda/productos
     if (href === '/tienda/productos' || href === '/tienda/productos/' || href === '/tienda/catalogo' || href === '/tienda/catalogo/') {
+      if (!isEcommerceServiceAvailable) return;
       setActivePropertySlug(null);
       setStoreView({ type: 'products' });
       scrollPreviewToTop();
@@ -699,6 +821,7 @@ const LandingPageContent: React.FC = () => {
 
     // Store: /tienda
     if (href === '/tienda' || href === '/tienda/') {
+      if (!isEcommerceServiceAvailable) return;
       setActivePropertySlug(null);
       setStoreView({ type: 'store' });
       scrollPreviewToTop();
@@ -707,6 +830,7 @@ const LandingPageContent: React.FC = () => {
 
     // Store category: /tienda/categoria/slug
     if (href.startsWith('/tienda/categoria/')) {
+      if (!isEcommerceServiceAvailable) return;
       const slug = href.replace('/tienda/categoria/', '').replace(/\/$/, '');
       setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
@@ -716,6 +840,7 @@ const LandingPageContent: React.FC = () => {
 
     // Store product: /tienda/producto/slug
     if (href.startsWith('/tienda/producto/')) {
+      if (!isEcommerceServiceAvailable) return;
       const slug = href.replace('/tienda/producto/', '').replace(/\/$/, '');
       setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
@@ -725,6 +850,7 @@ const LandingPageContent: React.FC = () => {
 
     // Checkout
     if (href === '/checkout' || href === '/checkout/') {
+      if (!isEcommerceServiceAvailable) return;
       setActivePropertySlug(null);
       setStoreView({ type: 'checkout' });
       scrollPreviewToTop();
@@ -733,6 +859,7 @@ const LandingPageContent: React.FC = () => {
 
     // Legacy hash support
     if (href.startsWith('#article:')) {
+      if (!isCmsServiceAvailable) return;
       const slug = href.replace('#article:', '').trim();
       const post = cmsPosts.find(p => p.slug === slug);
       if (post) {
@@ -743,6 +870,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (href === '#store') {
+      if (!isEcommerceServiceAvailable) return;
       setActivePropertySlug(null);
       setStoreView({ type: 'store' });
       scrollPreviewToTop();
@@ -750,6 +878,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (href === '#store/products' || href === '#store/catalog') {
+      if (!isEcommerceServiceAvailable) return;
       setActivePropertySlug(null);
       setStoreView({ type: 'products' });
       scrollPreviewToTop();
@@ -757,6 +886,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (href.startsWith('#store/category/')) {
+      if (!isEcommerceServiceAvailable) return;
       const slug = href.replace('#store/category/', '');
       setActivePropertySlug(null);
       setStoreView({ type: 'category', slug });
@@ -765,6 +895,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (href.startsWith('#store/product/')) {
+      if (!isEcommerceServiceAvailable) return;
       const slug = href.replace('#store/product/', '');
       setActivePropertySlug(null);
       setStoreView({ type: 'product', slug });
@@ -775,6 +906,7 @@ const LandingPageContent: React.FC = () => {
     const realtyRouteData = data.realEstateListings;
     const realtyDetailSlug = matchRealtyDetailRoute(href, realtyRouteData);
     if (realtyDetailSlug) {
+      if (!isRealEstateServiceAvailable) return;
       setShowRealtyDirectory(false);
       setActivePropertySlug(realtyDetailSlug);
       window.scrollTo(0, 0);
@@ -782,6 +914,7 @@ const LandingPageContent: React.FC = () => {
     }
 
     if (matchRealtyDirectoryRoute(href, realtyRouteData)) {
+      if (!isRealEstateServiceAvailable) return;
       const directoryRoute = resolveRealtyDirectoryRoute(realtyRouteData);
       setActivePage(null);
       setShowRealtyDirectory(true);
@@ -798,8 +931,8 @@ const LandingPageContent: React.FC = () => {
 
     // Multi-page navigation: match website pages created by the builder
     const pageSlug = href.replace(/^\//, '').replace(/\/$/, '');
-    if (pages && pages.length > 0) {
-      const matchedPage = pages.find(page => {
+    if (serviceFilteredPages.length > 0) {
+      const matchedPage = serviceFilteredPages.find(page => {
         const normalizedSlug = (page.slug || '').replace(/^\//, '').replace(/\/$/, '');
         return normalizedSlug === pageSlug;
       });
@@ -817,15 +950,33 @@ const LandingPageContent: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [activePage, activeProjectId, cmsPosts, data.realEstateListings, handleNavigateToCategory, handleNavigateToCheckout, handleNavigateToProduct, handleNavigateToStore, handleViewAllProducts, isEditorMode, navigateInsideEditorStorefront, pages, scrollPreviewToTop, setActivePage]);
+  }, [
+    activePage,
+    activeProjectId,
+    cmsPosts,
+    data.realEstateListings,
+    handleNavigateToCategory,
+    handleNavigateToCheckout,
+    handleNavigateToProduct,
+    handleNavigateToStore,
+    handleViewAllProducts,
+    isCmsServiceAvailable,
+    isEcommerceServiceAvailable,
+    isEditorMode,
+    isRealEstateServiceAvailable,
+    navigateInsideEditorStorefront,
+    scrollPreviewToTop,
+    serviceFilteredPages,
+    setActivePage,
+  ]);
 
   // Check if we're showing a store view
-  const isStoreViewActive = storeView.type !== 'none';
+  const isStoreViewActive = isEcommerceServiceAvailable && storeView.type !== 'none';
   const landingChatbotEngineContext = useMemo(() => {
     const route = typeof window !== 'undefined' ? window.location.pathname : undefined;
     const isRealtyProperty = Boolean(activePropertySlug);
-    const isStorefrontSurface = storeView.type !== 'none';
-    const isCheckout = storeView.type === 'checkout';
+    const isStorefrontSurface = isStoreViewActive;
+    const isCheckout = isStoreViewActive && storeView.type === 'checkout';
     const entityType = isRealtyProperty
       ? 'realty_property'
       : isCheckout
@@ -873,7 +1024,7 @@ const LandingPageContent: React.FC = () => {
         storeView: storeView.type,
       },
     });
-  }, [activeCategorySlug, activePage, activePost, activeProject?.userId, activeProjectId, activePropertySlug, showRealtyDirectory, storeView]);
+  }, [activeCategorySlug, activePage, activePost, activeProject?.userId, activeProjectId, activePropertySlug, isStoreViewActive, showRealtyDirectory, storeView]);
 
   // Helper function to render custom components
   const renderCustomComponent = (customComponentId: string) => {
@@ -1042,7 +1193,7 @@ const LandingPageContent: React.FC = () => {
   // ─── TopBar height measurement for Header offset ────────────────────────
   const topBarAboveRef = useRef<HTMLDivElement>(null);
   const [topBarHeight, setTopBarHeight] = useState(0);
-  const isTopBarAboveVisible = !!(effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection]);
+  const isTopBarAboveVisible = !!(effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && effectiveComponentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection]);
 
   useEffect(() => {
     if (!isTopBarAboveVisible) {
@@ -1108,12 +1259,13 @@ const LandingPageContent: React.FC = () => {
     ];
 
     return ecommerceComponents.some(component =>
-      componentStatus[component] && effectiveSectionVisibility[component]
+      effectiveComponentStatus[component] && effectiveSectionVisibility[component]
     );
-  }, [componentStatus, effectiveSectionVisibility]);
+  }, [effectiveComponentStatus, effectiveSectionVisibility]);
 
   const shouldShowStorefrontCart = Boolean(
     activeProjectId &&
+    isEcommerceServiceAvailable &&
     isAnyEcommerceComponentEnabled &&
     (storefrontProducts.length > 0 || cart.itemCount > 0 || isStoreViewActive)
   );
@@ -1703,8 +1855,8 @@ const LandingPageContent: React.FC = () => {
     }
 
     // 2. Generate from pages if available (multi-page architecture)
-    if (pages && pages.length > 0) {
-      const navPages = pages
+    if (serviceFilteredPages.length > 0) {
+      const navPages = serviceFilteredPages
         .filter(p => p.showInNavigation)
         .sort((a, b) => (a.navigationOrder || 0) - (b.navigationOrder || 0));
 
@@ -1719,7 +1871,7 @@ const LandingPageContent: React.FC = () => {
 
     // 3. Fall back to manual links
     return mergedHeaderData.links;
-  }, [mergedHeaderData?.menuId, mergedHeaderData?.links, menus, pages]);
+  }, [mergedHeaderData?.menuId, mergedHeaderData?.links, menus, serviceFilteredPages]);
 
   // Resolve Footer Columns dynamically
   const resolvedFooterData: FooterData = {
@@ -1737,11 +1889,11 @@ const LandingPageContent: React.FC = () => {
     })
   };
 
-  const isArticleHash = typeof window !== 'undefined' && window.location.hash.startsWith('#article:');
-  const isBlogPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/blog/');
+  const isArticleHash = isCmsServiceAvailable && typeof window !== 'undefined' && window.location.hash.startsWith('#article:');
+  const isBlogPath = isCmsServiceAvailable && typeof window !== 'undefined' && window.location.pathname.startsWith('/blog/');
 
   // Determine if we should show the loading spinner for an article
-  const showArticleLoading = (isArticleHash || isBlogPath) && (isLoadingCMS || (isRouting && !activePost));
+  const showArticleLoading = isCmsServiceAvailable && (isArticleHash || isBlogPath) && (isLoadingCMS || (isRouting && !activePost));
 
   // Use theme pageBackground with smart fallback based on globalColors or hero background
   // Priority: pageBackground > globalColors.background > hero background > default
@@ -1767,7 +1919,7 @@ const LandingPageContent: React.FC = () => {
         `}</style>
 
       {/* Announcement Bar - Above Header position */}
-      {effectiveComponentOrder?.includes('announcementBar' as PageSection) && mergedAnnouncementBarData?.position === 'above-header' && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && (
+      {effectiveComponentOrder?.includes('announcementBar' as PageSection) && mergedAnnouncementBarData?.position === 'above-header' && effectiveComponentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && (
         <div
           id="announcementBar-above"
           className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -1781,7 +1933,7 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* TopBar - Above Header position */}
-      {effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && componentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection] && (
+      {effectiveComponentOrder?.includes('topBar' as PageSection) && mergedTopBarData?.aboveHeader && effectiveComponentStatus['topBar' as PageSection] && effectiveSectionVisibility['topBar' as PageSection] && (
         <div
           ref={topBarAboveRef}
           id="topBar-above"
@@ -1854,7 +2006,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 2. Article View */}
-        {!showArticleLoading && activePost && (() => {
+        {!showArticleLoading && isCmsServiceAvailable && activePost && (() => {
           const postCategory = categories.find(c => c.id === activePost.categoryId);
           return (
             <BlogPost
@@ -1870,7 +2022,7 @@ const LandingPageContent: React.FC = () => {
         })()}
 
         {/* 2.5. Category View */}
-        {!showArticleLoading && !activePost && activeCategorySlug && (() => {
+        {!showArticleLoading && isCmsServiceAvailable && !activePost && activeCategorySlug && (() => {
           const category = categories.find(c => c.slug === activeCategorySlug);
           if (!category) {
             return (
@@ -1896,7 +2048,7 @@ const LandingPageContent: React.FC = () => {
         })()}
 
         {/* 3. 404 State (Article hash or /blog/ path but no post found after loading) */}
-        {!showArticleLoading && (isArticleHash || blogSlugNotFound) && !activePost && !isLoadingCMS && (
+        {!showArticleLoading && isCmsServiceAvailable && (isArticleHash || blogSlugNotFound) && !activePost && !isLoadingCMS && (
           <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
             <h2 className="text-3xl font-bold text-site-heading mb-4">Article Not Found</h2>
             <p className="text-site-body mb-8">The article you are looking for does not exist or has been removed.</p>
@@ -1910,7 +2062,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 3.5. Real Estate Property Detail View */}
-        {!showArticleLoading && !activePost && !activeCategorySlug && activePropertySlug && activeProjectId && (
+        {!showArticleLoading && isRealEstateServiceAvailable && !activePost && !activeCategorySlug && activePropertySlug && activeProjectId && (
           <PropertyDetailSection
             projectId={activeProjectId}
             ownerId={activeProject?.userId || undefined}
@@ -1929,7 +2081,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 3.6. Real Estate Directory View */}
-        {!showArticleLoading && !activePost && !activeCategorySlug && !activePropertySlug && showRealtyDirectory && activeProjectId && (
+        {!showArticleLoading && isRealEstateServiceAvailable && !activePost && !activeCategorySlug && !activePropertySlug && showRealtyDirectory && activeProjectId && (
           <PropertyDirectoryPage
             projectId={activeProjectId}
             data={mergedRealEstateListingsData || data.realEstateListings}
@@ -1941,7 +2093,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 4. Storefront Landing View */}
-        {storeView.type === 'store' && activeProjectId && (
+        {isStoreViewActive && storeView.type === 'store' && activeProjectId && (
           <>
             {/* Ecommerce landing sections only. Full catalog lives in /tienda/productos. */}
             {effectiveComponentOrder
@@ -1959,7 +2111,7 @@ const LandingPageContent: React.FC = () => {
                   'productBundle',
                 ];
                 return ecommerceSections.includes(key as PageSection) &&
-                  componentStatus[key as PageSection] &&
+                  effectiveComponentStatus[key as PageSection] &&
                   effectiveSectionVisibility[key as PageSection] &&
                   isEcommerceComponentVisibleIn(key as PageSection, 'store');
               })
@@ -1981,7 +2133,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 4.1. Store Catalog View */}
-        {storeView.type === 'products' && activeProjectId && (
+        {isStoreViewActive && storeView.type === 'products' && activeProjectId && (
           <ProductSearchPage
             storeId={activeProjectId}
             onProductClick={handleNavigateToProduct}
@@ -2016,10 +2168,10 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 5. Store View - Category */}
-        {storeView.type === 'category' && activeProjectId && (
+        {isStoreViewActive && storeView.type === 'category' && activeProjectId && (
           <>
             {/* Announcement Bar for category view */}
-            {effectiveComponentOrder?.includes('announcementBar' as PageSection) && componentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
+            {effectiveComponentOrder?.includes('announcementBar' as PageSection) && effectiveComponentStatus['announcementBar' as PageSection] && effectiveSectionVisibility['announcementBar' as PageSection] && isEcommerceComponentVisibleIn('announcementBar', 'store') && (
               <div
                 id="announcementBar"
                 className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'announcementBar' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -2069,7 +2221,7 @@ const LandingPageContent: React.FC = () => {
               .filter(key => {
                 const ecommerceSectionsBelow: PageSection[] = ['trustBadges', 'recentlyViewed'];
                 return ecommerceSectionsBelow.includes(key as PageSection) &&
-                  componentStatus[key as PageSection] &&
+                  effectiveComponentStatus[key as PageSection] &&
                   effectiveSectionVisibility[key as PageSection] &&
                   isEcommerceComponentVisibleIn(key as PageSection, 'store');
               })
@@ -2091,7 +2243,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 6. Store View - Product Detail */}
-        {storeView.type === 'product' && activeProjectId && (
+        {isStoreViewActive && storeView.type === 'product' && activeProjectId && (
           <>
             <ProductDetailPage
               storeId={activeProjectId}
@@ -2108,7 +2260,7 @@ const LandingPageContent: React.FC = () => {
               .filter(key => {
                 const productDetailSections: PageSection[] = ['recentlyViewed', 'productReviews', 'productBundle', 'trustBadges'];
                 return productDetailSections.includes(key as PageSection) &&
-                  componentStatus[key as PageSection] &&
+                  effectiveComponentStatus[key as PageSection] &&
                   effectiveSectionVisibility[key as PageSection] &&
                   isEcommerceComponentVisibleIn(key as PageSection, 'store');
               })
@@ -2130,7 +2282,7 @@ const LandingPageContent: React.FC = () => {
         )}
 
         {/* 6.5. Store View - Checkout */}
-        {storeView.type === 'checkout' && activeProjectId && (
+        {isStoreViewActive && storeView.type === 'checkout' && activeProjectId && (
           <CheckoutPageEnhanced
             storeId={activeProjectId}
             onSuccess={(orderId) => {
@@ -2156,7 +2308,7 @@ const LandingPageContent: React.FC = () => {
                 ];
 
                 const isEcommerce = ecommerceComponents.includes(key as PageSection);
-                const baseVisibility = componentStatus[key as PageSection] &&
+                const baseVisibility = effectiveComponentStatus[key as PageSection] &&
                   effectiveSectionVisibility[key as PageSection] &&
                   key !== 'footer' &&
                   key !== 'chatbot' &&
@@ -2193,7 +2345,7 @@ const LandingPageContent: React.FC = () => {
       </main>
 
       {/* Footer - Always visible on all pages including articles */}
-      {!showArticleLoading && componentStatus.footer && effectiveSectionVisibility.footer && (
+      {!showArticleLoading && effectiveComponentStatus.footer && effectiveSectionVisibility.footer && (
         <div
           id="footer"
           className={`w-full cursor-pointer transition-all duration-200 ${activeSection === 'footer' ? 'ring-2 ring-primary ring-offset-2 ring-offset-transparent z-10 relative' : 'hover:ring-2 hover:ring-primary/30 hover:ring-offset-2 hover:ring-offset-transparent'}`}
@@ -2207,10 +2359,12 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* Chatbot Widget - Renders independently outside component order */}
-      <ChatbotWidget isPreview={isEditorMode} chatbotEngineContext={landingChatbotEngineContext} />
+      {isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && effectiveComponentStatus.chatbot && effectiveSectionVisibility.chatbot && (
+        <ChatbotWidget isPreview={isEditorMode} chatbotEngineContext={landingChatbotEngineContext} />
+      )}
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}
-      {data?.signupFloat && effectiveComponentOrder.includes('signupFloat') && (sectionVisibility.signupFloat !== false) && (
+      {data?.signupFloat && effectiveComponentOrder.includes('signupFloat') && effectiveComponentStatus.signupFloat && effectiveSectionVisibility.signupFloat && (
         <SignupFloat
           {...data.signupFloat}
           projectId={activeProjectId || undefined}

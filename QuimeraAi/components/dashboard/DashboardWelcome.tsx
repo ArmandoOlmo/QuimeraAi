@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../../contexts/core/AuthContext';
@@ -8,6 +8,7 @@ import { useProject } from '../../contexts/project';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { usePlans } from '../../contexts/PlansContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { useAppLogo } from '../../hooks/useAppLogo';
 import { useRouter } from '../../hooks/useRouter';
@@ -20,10 +21,11 @@ import {
     type DashboardAssistantQuickAction,
     routeDashboardAssistantEntry,
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
+import { resolveAssistantServiceIdForModule } from '../../services/globalAssistant/globalAssistantServiceAvailability';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, ShieldAlert, Bot, Calendar, Link2, BarChart3, Workflow, LayoutTemplate, Store, Wallet, Utensils, Building2 } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, Bot, Calendar, Link2, LayoutTemplate, Store, Wallet, Utensils, Building2 } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -47,6 +49,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const { usage } = useCreditsUsage();
     const { logoUrl: appLogoUrl } = useAppLogo();
     const { navigate } = useRouter();
+    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
     const shouldReduceMotion = useReducedMotion();
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
@@ -80,10 +83,17 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         hasProjects: allUserProjectsCount > 0,
         hasActiveProject: Boolean(activeProjectId),
         canUseAdminMode: canUseAdminQuickActions,
-    }), [activeProjectId, allUserProjectsCount, canUseAdminQuickActions]);
+        canAccessService: serviceId => !isLoadingServiceAvailability && isServicePublic(serviceId),
+    }), [activeProjectId, allUserProjectsCount, canUseAdminQuickActions, isLoadingServiceAvailability, isServicePublic]);
     const selectedQuickAction = quickActions.find(action => action.id === selectedQuickActionId) || null;
     const hoveredQuickAction = quickActions.find(action => action.id === hoveredQuickActionId) || null;
     const visibleModeAction = hoveredQuickAction || selectedQuickAction;
+
+    useEffect(() => {
+        if (selectedQuickActionId && !quickActions.some(action => action.id === selectedQuickActionId)) {
+            setSelectedQuickActionId(null);
+        }
+    }, [quickActions, selectedQuickActionId]);
 
     const handleUpgradeClick = () => {
         if (upgradeContext) {
@@ -114,23 +124,36 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
         const request = rawRequest;
         const route = routeDashboardAssistantEntry(request);
+        const routeServiceId = resolveAssistantServiceIdForModule(route.activeModule);
+        const routeServiceAvailable = !routeServiceId || (!isLoadingServiceAvailability && isServicePublic(routeServiceId));
+        const metadataActiveModule = routeServiceAvailable
+            ? selectedQuickAction?.module || route.activeModule
+            : selectedQuickAction?.module || null;
+        const metadataBlockedModule = routeServiceAvailable ? null : route.activeModule;
+        const entryPoint = selectedQuickAction ? 'dashboard_quick_action' : 'dashboard_input';
+        const entrySource = selectedQuickAction ? 'dashboard_quick_action' : 'dashboard_welcome';
+        const routingReason = selectedQuickAction
+            ? 'dashboard_quick_action_routes_to_global_operating_layer'
+            : route.reason;
 
         if (route.destination === 'none') {
             setAiPrompt('');
             return;
         }
 
-        if (route.destination === 'ai_studio') {
+        if (route.destination === 'ai_studio' && routeServiceAvailable) {
             handleOpenAIStudio(route.forwardPromptToAiStudio ? request : undefined);
         } else {
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(request, {
-                source: 'dashboard_welcome',
+                source: entrySource,
                 surface: 'dashboard',
                 metadata: buildDashboardAssistantEntryMetadata({
-                    entryPoint: 'dashboard_input',
+                    entryPoint,
                     projectCount: allUserProjectsCount,
-                    routingReason: route.reason,
-                    activeModule: selectedQuickAction?.module || route.activeModule,
+                    routingReason: routeServiceAvailable ? routingReason : 'dashboard_route_service_unavailable',
+                    activeModule: metadataActiveModule,
+                    blockedModule: metadataBlockedModule,
+                    blockedServiceId: routeServiceAvailable ? null : routeServiceId,
                     activeProjectId,
                     activeProjectName: typeof activeProject?.name === 'string' ? activeProject.name : null,
                     activeTenantId: tenantContext?.currentTenant?.id || activeProject?.tenantId || null,
@@ -146,7 +169,6 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     const quickActionIcon = (action: DashboardAssistantQuickAction) => {
         if (action.id === 'create_website') return <Globe2 size={13} className="text-q-accent" aria-hidden="true" />;
-        if (action.id === 'open_business_blueprint') return <Workflow size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'open_website_builder') return <LayoutTemplate size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'open_storefront_builder') return <Store size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'generate_hero_image') return <Image size={13} className="text-q-accent" aria-hidden="true" />;
@@ -160,8 +182,6 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         if (action.id === 'train_chatcore') return <Bot size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'create_appointment') return <Calendar size={13} className="text-q-accent" aria-hidden="true" />;
         if (action.id === 'improve_bio_page') return <Link2 size={13} className="text-q-accent" aria-hidden="true" />;
-        if (action.id === 'analyze_project') return <BarChart3 size={13} className="text-q-accent" aria-hidden="true" />;
-        if (action.id === 'review_platform_errors') return <ShieldAlert size={13} className="text-q-accent" aria-hidden="true" />;
         return <Sparkles size={13} className="text-q-accent" aria-hidden="true" />;
     };
 

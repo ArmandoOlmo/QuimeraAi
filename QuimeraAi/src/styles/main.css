@@ -1172,6 +1172,28 @@ html.black .quimera-dashboard-panel-card:hover {
   border-color: color-mix(in srgb, var(--q-accent) 28%, var(--q-border));
 }
 
+.quimera-agency-dashboard .quimera-dashboard-panel-card {
+  border-color: color-mix(in srgb, var(--q-border) 68%, transparent);
+  background: var(--q-surface);
+  backdrop-filter: none;
+  box-shadow: var(--q-shadow-card);
+}
+
+html.dark .quimera-agency-dashboard .quimera-dashboard-panel-card,
+html.black .quimera-agency-dashboard .quimera-dashboard-panel-card {
+  background: var(--q-surface);
+  border-color: color-mix(in srgb, var(--q-border) 72%, transparent);
+  box-shadow: var(--q-shadow-card);
+}
+
+.quimera-agency-dashboard table th {
+  background: color-mix(in srgb, var(--q-surface-overlay) 45%, transparent);
+}
+
+.quimera-agency-dashboard table tbody tr {
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
 /* Shared AI media studio surface — matches AI Web Studio while staying theme-aware. */
 .quimera-media-workspace {
   position: relative;

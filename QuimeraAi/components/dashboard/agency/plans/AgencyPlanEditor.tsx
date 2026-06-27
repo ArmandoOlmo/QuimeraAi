@@ -84,42 +84,24 @@ const NumberInput: React.FC<{
     max?: number;
     step?: number;
     suffix?: string;
-    allowUnlimited?: boolean;
     description?: string;
-}> = ({ label, value, onChange, min = 0, max, step = 1, suffix, allowUnlimited, description }) => (
+}> = ({ label, value, onChange, min = 0, max, step = 1, suffix, description }) => (
     <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">{label}</label>
         <div className="flex items-center gap-2">
             <input
                 type="number"
-                value={value === -1 ? '' : value}
+                value={value}
                 onChange={(e) => {
-                    const val = e.target.value === '' ? (allowUnlimited ? -1 : 0) : parseInt(e.target.value);
-                    onChange(val);
+                    const parsed = e.target.value === '' ? min : parseInt(e.target.value);
+                    onChange(Math.max(min, Number.isFinite(parsed) ? parsed : min));
                 }}
                 min={min}
                 max={max}
                 step={step}
-                placeholder={allowUnlimited ? 'Ilimitado' : undefined}
                 className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
             />
             {suffix && <span className="text-sm text-q-text-muted">{suffix}</span>}
-            {allowUnlimited && (
-                <button
-                    type="button"
-                    onClick={() => onChange(value === -1 ? 0 : -1)}
-                    className={`
-                        px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                        ${value === -1
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-q-text-muted hover:bg-muted/80'
-                        }
-                    `}
-                    title="Ilimitado"
-                >
-                    ∞
-                </button>
-            )}
         </div>
         {description && (
             <p className="text-xs text-q-text-muted mt-1">{description}</p>
@@ -451,7 +433,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxProjects ?? DEFAULT_AGENCY_PLAN_LIMITS.maxProjects}
                                 onChange={(v) => updateLimit('maxProjects', v)}
                                 min={1}
-                                allowUnlimited
                                 description="Número máximo de proyectos/sitios web"
                             />
                             <NumberInput
@@ -459,7 +440,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxUsers ?? DEFAULT_AGENCY_PLAN_LIMITS.maxUsers}
                                 onChange={(v) => updateLimit('maxUsers', v)}
                                 min={1}
-                                allowUnlimited
                                 description="Usuarios que pueden acceder al proyecto"
                             />
                             <NumberInput
@@ -467,7 +447,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxAiCredits ?? DEFAULT_AGENCY_PLAN_LIMITS.maxAiCredits}
                                 onChange={(v) => updateLimit('maxAiCredits', v)}
                                 min={0}
-                                allowUnlimited
                                 description="Créditos de IA mensuales (de tu pool)"
                             />
                             <NumberInput
@@ -476,7 +455,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 onChange={(v) => updateLimit('maxStorageGB', v)}
                                 min={1}
                                 suffix="GB"
-                                allowUnlimited
                                 description="Espacio para archivos e imágenes"
                             />
                             <NumberInput
@@ -484,7 +462,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxProducts ?? DEFAULT_AGENCY_PLAN_LIMITS.maxProducts}
                                 onChange={(v) => updateLimit('maxProducts', v)}
                                 min={0}
-                                allowUnlimited
                                 description="Productos en tienda online"
                             />
                             <NumberInput
@@ -492,7 +469,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxLeads ?? DEFAULT_AGENCY_PLAN_LIMITS.maxLeads}
                                 onChange={(v) => updateLimit('maxLeads', v)}
                                 min={0}
-                                allowUnlimited
                                 description="Contactos/leads en CRM"
                             />
                             <NumberInput
@@ -500,7 +476,6 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 value={formData.limits?.maxEmailsPerMonth ?? DEFAULT_AGENCY_PLAN_LIMITS.maxEmailsPerMonth}
                                 onChange={(v) => updateLimit('maxEmailsPerMonth', v)}
                                 min={0}
-                                allowUnlimited
                                 description="Emails de marketing mensuales"
                             />
                         </div>

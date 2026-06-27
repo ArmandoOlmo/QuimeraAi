@@ -5,7 +5,7 @@ import type {
     AssistantModuleTarget,
     AssistantSafetyLevel,
 } from '../../types/globalAssistant';
-import { resolveProjectByNameOrId } from './globalAssistantProjectResolver';
+import { resolveProjectReferenceFromRequest } from './globalAssistantProjectResolver';
 
 const normalize = (value: string): string =>
     value
@@ -551,7 +551,7 @@ export function routeAssistantIntent(request: string, context: AssistantContextS
         : [];
     const shouldResolveProjectFromRequest = module === 'project' || PROJECT_SCOPED_MODULES.has(module);
     const projectResolution = shouldResolveProjectFromRequest
-        ? resolveProjectByNameOrId(availableProjects, request)
+        ? resolveProjectReferenceFromRequest(availableProjects, request)
         : {
             projectId: context.project.projectId,
             ambiguous: false,

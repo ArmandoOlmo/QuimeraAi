@@ -73,7 +73,7 @@ const AGENCY_PLANS_CONFIG: Record<string, Omit<AgencyPlanDisplay, 'baseFee'>> = 
             '50 GB de almacenamiento',
             '2,000 AI credits (pool compartido)',
             'White-label completo',
-            'Dominios personalizados ilimitados',
+            'Hasta 25 dominios personalizados',
             'CRM y automatizaciones',
             'E-commerce incluido',
             'Soporte prioritario',
@@ -113,8 +113,8 @@ const AGENCY_PLANS_CONFIG: Record<string, Omit<AgencyPlanDisplay, 'baseFee'>> = 
             '1 TB de almacenamiento',
             '15,000 AI credits (pool compartido)',
             'Todo lo de Pro',
-            'Leads ilimitados',
-            'Emails ilimitados',
+            'Hasta 150,000 leads',
+            'Hasta 150,000 emails mensuales',
             'Sin fee de transacción',
             'Soporte dedicado',
         ],
@@ -547,7 +547,7 @@ const AgencySignup: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2 text-gray-400">
                                 <Users size={18} />
-                                <span className="text-sm">Clientes ilimitados</span>
+                                <span className="text-sm">Clientes con límites por plan</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-400">
                                 <Globe size={18} />

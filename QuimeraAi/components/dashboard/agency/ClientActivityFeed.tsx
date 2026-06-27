@@ -19,7 +19,7 @@ import {
     Globe,
     Activity,
 } from 'lucide-react';
-import { settingsPanelClass } from '../settings/SettingsStatCard';
+import { AgencyPanel } from './AgencyDesignSystem';
 
 interface ClientActivityFeedProps {
     activities: ActivityEvent[];
@@ -42,19 +42,15 @@ export function ClientActivityFeed({
             payment_received: <DollarSign className="h-5 w-5" />,
             project_created: <FolderPlus className="h-5 w-5" />,
             project_published: <Globe className="h-5 w-5" />,
+            project_transferred: <FolderPlus className="h-5 w-5" />,
+            approval_responded: <UserCheck className="h-5 w-5" />,
         };
         return iconMap[type] || <Activity className="h-5 w-5" />;
     };
 
     if (activities.length === 0) {
         return (
-            <div className={`${settingsPanelClass} p-6`}>
-                <div className="flex items-center gap-3 mb-4">
-                    <Activity size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Actividad Reciente
-                    </h3>
-                </div>
+            <AgencyPanel title="Actividad Reciente" icon={Activity}>
                 <div className="text-center py-8">
                     <Activity className="h-10 w-10 text-q-text-muted/40 mx-auto mb-4" strokeWidth={1.5} />
                     <p className="text-q-text-muted">
@@ -64,29 +60,26 @@ export function ClientActivityFeed({
                         La actividad de tus clientes aparecerá aquí
                     </p>
                 </div>
-            </div>
+            </AgencyPanel>
         );
     }
 
     return (
-        <div className={`${settingsPanelClass} p-6`}>
-            <div className="flex items-center justify-between mb-4 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                    <Activity size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Actividad Reciente
-                    </h3>
-                </div>
+        <AgencyPanel
+            title="Actividad Reciente"
+            icon={Activity}
+            action={
                 <span className="text-sm text-q-text-muted">
                     Últimas {activities.length} actividades
                 </span>
-            </div>
+            }
+        >
 
-            <div className="space-y-4">
+            <div className="space-y-2">
                 {visibleActivities.map((activity) => (
                     <div
                         key={activity.id}
-                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                        className="flex items-start gap-3 rounded-lg border border-transparent p-3 transition-colors hover:border-q-border/70 hover:bg-muted/40"
                     >
                         {/* Icon */}
                         <div
@@ -153,6 +146,6 @@ export function ClientActivityFeed({
                     Mostrar menos
                 </button>
             )}
-        </div>
+        </AgencyPanel>
     );
 }

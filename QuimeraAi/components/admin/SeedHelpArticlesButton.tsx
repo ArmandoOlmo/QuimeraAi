@@ -327,7 +327,7 @@ Quimera genera certificado SSL gratis.`
 - E-commerce básico
 
 ## Business - $149/mes
-- Sitios ilimitados
+- Hasta 100 sitios
 - 10,000 créditos IA/mes
 - White-label`
     },
@@ -697,7 +697,7 @@ Revisa dispositivos conectados en Seguridad > Sesiones
 - Free: 1
 - Starter: 2
 - Pro: 5
-- Business: Ilimitados`
+- Business: 100`
     },
 ];
 
@@ -850,7 +850,6 @@ export function SeedHelpArticlesButton(): React.ReactElement {
 }
 
 export default SeedHelpArticlesButton;
-
 
 
 

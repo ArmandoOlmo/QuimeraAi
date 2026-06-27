@@ -14,6 +14,12 @@ import {
     PlanLimits,
     SubscriptionPlanId
 } from '../types/subscription';
+import {
+    getCanonicalPlanFeatures,
+    getCanonicalPlanLimits,
+    isPlatformUnlimitedUser,
+    normalizePlanId,
+} from '../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -74,7 +80,7 @@ export function usePlanFeatures(): PlanFeaturesData {
     const { usage, isLoading: isLoadingCredits } = useCreditsUsage();
     const plansContext = useSafePlans();
 
-    const planId = (usage?.planId || 'free') as SubscriptionPlanId;
+    const planId = normalizePlanId(usage?.planId || 'free') as SubscriptionPlanId;
 
     // Get plan data from context or fallback to hardcoded
     const planData = useMemo(() => {
@@ -93,8 +99,8 @@ export function usePlanFeatures(): PlanFeaturesData {
         const hardcoded = SUBSCRIPTION_PLANS[planId];
         return {
             name: hardcoded?.name || 'Free',
-            features: hardcoded?.features || SUBSCRIPTION_PLANS.free.features,
-            limits: hardcoded?.limits || SUBSCRIPTION_PLANS.free.limits,
+            features: hardcoded?.features || getCanonicalPlanFeatures(planId),
+            limits: hardcoded?.limits || getCanonicalPlanLimits(planId),
         };
     }, [plansContext, planId]);
 
@@ -113,15 +119,14 @@ export function usePlanFeatures(): PlanFeaturesData {
  * Usa el PlansContext para datos en tiempo real
  */
 export function usePlanAccess(): PlanAccessData {
-    const { user, isUserOwner, userDocument, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth } = useAuth();
     const { usage, isLoading: isLoadingCredits } = useCreditsUsage();
     const plansContext = useSafePlans();
 
-    const planId = (usage?.planId || 'free') as SubscriptionPlanId;
-    // Owner and superadmin always have full access to all features
-    // Check role first (most reliable), then email-based owner check as fallback
+    const planId = normalizePlanId(usage?.planId || 'free') as SubscriptionPlanId;
+    // Owner and superadmin are the only platform-wide bypass roles.
     const userRole = userDocument?.role;
-    const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+    const isOwner = isPlatformUnlimitedUser(userRole);
 
     // Get plan data from context or fallback
     const planData = useMemo(() => {
@@ -139,8 +144,8 @@ export function usePlanAccess(): PlanAccessData {
         const hardcoded = SUBSCRIPTION_PLANS[planId];
         return {
             name: hardcoded?.name || 'Free',
-            features: hardcoded?.features || SUBSCRIPTION_PLANS.free.features,
-            limits: hardcoded?.limits || SUBSCRIPTION_PLANS.free.limits,
+            features: hardcoded?.features || getCanonicalPlanFeatures(planId),
+            limits: hardcoded?.limits || getCanonicalPlanLimits(planId),
         };
     }, [plansContext, planId]);
 
@@ -187,6 +192,4 @@ export function usePlanAccess(): PlanAccessData {
 // =============================================================================
 
 export default usePlanFeatures;
-
-
 

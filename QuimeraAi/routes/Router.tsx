@@ -12,6 +12,8 @@ import { ROUTES, hasRouteAccess } from './config';
 import { View, AdminView } from '../types/ui';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useStorefrontCart } from '../components/ecommerce/context';
+import { useServiceAvailability } from '../hooks/useServiceAvailability';
+import { useServiceAccess } from '../hooks/useServiceAccess';
 
 // LoadingScreen is kept synchronous as it's used as fallback
 import LoadingScreen from './LoadingScreen';
@@ -48,6 +50,7 @@ const AgencyLandingPreview = lazyWithRetry(() => import('../components/AgencyLan
 
 // Agency Signup (Public page for agency plan registration)
 const AgencySignup = lazyWithRetry(() => import('../components/AgencySignup'));
+const PortalRoute = lazyWithRetry(() => import('../components/portal/PortalRoute'));
 
 // Auth error pages
 const MetaOAuthError = lazyWithRetry(() => import('../components/auth/MetaOAuthError'));
@@ -149,6 +152,14 @@ const Router: React.FC<RouterProps> = ({
     isAdminRoute,
     isPreviewRoute,
   } = useRouter();
+  const {
+    isServicePublic,
+    isLoading: isLoadingServiceAvailability,
+  } = useServiceAvailability();
+  const {
+    isLoading: isLoadingScopedRouteAccess,
+    resolveAccess: resolveRouteServiceAccess,
+  } = useServiceAccess();
 
   // Apply per-route SEO meta tags
   useRouteSEO(path);
@@ -173,6 +184,32 @@ const Router: React.FC<RouterProps> = ({
     return hasRouteAccess(route, userRole, isAuthenticated, isEmailVerified);
   }, [route, userRole, isAuthenticated, isEmailVerified]);
 
+  const routeRequiresService = Boolean(route?.requiredService);
+  const isRouteServiceAvailable = useMemo(() => (
+    !route?.requiredService || isServicePublic(route.requiredService)
+  ), [isServicePublic, route?.requiredService]);
+  const routeNeedsScopedServiceAccess = Boolean(
+    route &&
+    isAuthenticated &&
+    (isPrivateRoute || isAdminRoute) &&
+    (
+      route.requiredService ||
+      route.requiredFeature ||
+      route.moduleId ||
+      route.requiredPermission
+    )
+  );
+  const routeAccessDecision = useMemo(() => {
+    if (!route || !routeNeedsScopedServiceAccess) return null;
+    return resolveRouteServiceAccess({
+      serviceId: route.requiredService,
+      featureKey: route.requiredFeature,
+      moduleId: route.moduleId,
+      requiredPermission: route.requiredPermission,
+    });
+  }, [resolveRouteServiceAccess, route, routeNeedsScopedServiceAccess]);
+  const isScopedRouteAccessAllowed = !routeAccessDecision || routeAccessDecision.allowed;
+
   // =========================================================================
   // REDIRECTS
   // =========================================================================
@@ -181,7 +218,21 @@ const Router: React.FC<RouterProps> = ({
     // Skip during loading
     if (loadingAuth) return;
 
-    // Don't redirect preview routes
+    if (routeRequiresService && isLoadingServiceAvailability) return;
+
+    if (routeRequiresService && !isRouteServiceAvailable) {
+      replace(isAuthenticated ? ROUTES.DASHBOARD : ROUTES.LANDING);
+      return;
+    }
+
+    if (routeNeedsScopedServiceAccess && isLoadingScopedRouteAccess) return;
+
+    if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed) {
+      replace(isAuthenticated ? ROUTES.DASHBOARD : ROUTES.LANDING);
+      return;
+    }
+
+    // Don't redirect preview routes after service availability has been checked.
     if (isPreviewRoute) return;
 
     // Authenticated user on public routes (login/register) -> dashboard or superadmin
@@ -226,6 +277,12 @@ const Router: React.FC<RouterProps> = ({
     }
   }, [
     loadingAuth,
+    routeRequiresService,
+    isLoadingServiceAvailability,
+    isRouteServiceAvailable,
+    routeNeedsScopedServiceAccess,
+    isLoadingScopedRouteAccess,
+    isScopedRouteAccessAllowed,
     isAuthenticated,
     isEmailVerified,
     isPublicRoute,
@@ -244,6 +301,22 @@ const Router: React.FC<RouterProps> = ({
   // =========================================================================
 
   if (loadingAuth) {
+    return <LoadingScreen />;
+  }
+
+  if (routeRequiresService && isLoadingServiceAvailability) {
+    return <LoadingScreen />;
+  }
+
+  if (routeRequiresService && !isRouteServiceAvailable) {
+    return <LoadingScreen />;
+  }
+
+  if (routeNeedsScopedServiceAccess && isLoadingScopedRouteAccess) {
+    return <LoadingScreen />;
+  }
+
+  if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed) {
     return <LoadingScreen />;
   }
 
@@ -672,6 +745,19 @@ const Router: React.FC<RouterProps> = ({
     );
   }
 
+  if (path === ROUTES.PORTAL_HOME && isAuthenticated && isEmailVerified) {
+    navigate(ROUTES.PORTAL_DASHBOARD);
+    return <LoadingScreen />;
+  }
+
+  if (path.startsWith('/portal') && isAuthenticated && isEmailVerified) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <PortalRoute />
+      </Suspense>
+    );
+  }
+
   // Verification email sent (not logged in)
   if (!isAuthenticated && verificationEmail) {
     return (
@@ -724,5 +810,3 @@ const Router: React.FC<RouterProps> = ({
 };
 
 export default Router;
-
-

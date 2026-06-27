@@ -63,7 +63,8 @@ describe('GlobalAssistantRuntime', () => {
         const context = resolveCurrentAssistantContext({
             userId: 'user-1',
             tenantId: 'tenant-1',
-            role: 'member',
+            role: 'owner',
+            mode: 'owner',
             activeProject,
             activeRoute: '/dashboard/email',
             activeServices: ['emailMarketing'],
@@ -87,7 +88,7 @@ describe('GlobalAssistantRuntime', () => {
             request: 'Crea una campana de email con el brand voice para reservas',
         });
 
-        expect(result.modelId).toBe('anthropic/claude-opus-4.7');
+        expect(result.modelId).toBe('google/gemini-3-flash-preview');
         expect(result.plan.intent.module).toBe('emailMarketing');
         expect(result.plan.status).toBe('preview');
         expect(result.task.status).toBe('waiting_for_confirmation');
@@ -112,7 +113,7 @@ describe('GlobalAssistantRuntime', () => {
             count: 1,
             scopeCounts: { project: 1 },
             guardrails: {
-                adminMemoryVisible: false,
+                adminMemoryVisible: true,
             },
         });
     });
@@ -234,7 +235,8 @@ describe('GlobalAssistantRuntime', () => {
         const context = resolveCurrentAssistantContext({
             userId: 'user-1',
             tenantId: 'tenant-1',
-            role: 'member',
+            role: 'owner',
+            mode: 'owner',
             activeProject,
             activeRoute: '/dashboard/email',
             activeServices: ['emailMarketing'],
@@ -286,7 +288,8 @@ describe('GlobalAssistantRuntime', () => {
         const context = resolveCurrentAssistantContext({
             userId: 'user-1',
             tenantId: 'tenant-1',
-            role: 'member',
+            role: 'owner',
+            mode: 'owner',
             activeProject,
             activeRoute: '/dashboard/email',
             activeServices: ['emailMarketing'],
@@ -311,7 +314,8 @@ describe('GlobalAssistantRuntime', () => {
         const context = resolveCurrentAssistantContext({
             userId: 'user-1',
             tenantId: 'tenant-1',
-            role: 'member',
+            role: 'owner',
+            mode: 'owner',
             activeProject,
             activeRoute: '/dashboard/email',
             activeServices: ['emailMarketing'],

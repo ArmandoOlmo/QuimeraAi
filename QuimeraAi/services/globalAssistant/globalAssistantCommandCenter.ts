@@ -119,6 +119,7 @@ const ALL_ASSISTANT_MODULES: AssistantModuleTarget[] = [
     'chatbot',
     'analytics',
     'finance',
+    'agency',
     'admin',
     'settings',
     'project',
@@ -265,6 +266,7 @@ export function resolveGlobalAssistantAppContext(input: ResolveGlobalAssistantAp
             toolCatalog: buildGlobalAssistantCapabilityCatalog({
                 enabledServices: input.activeServices,
                 enabledFeatures: input.featureFlags,
+                requireServiceContext: true,
             }),
             assistantSurfaces: buildGlobalAssistantChatSurfaceMap({
                 currentSurface: input.currentSurface,
@@ -823,7 +825,7 @@ export function formatGlobalAssistantPlanMessage(
                 isProjectMissing ? '¿Para qué proyecto?' : 'No pude hacerlo todavía.',
                 `Puedo ${primaryAction}, pero ${primaryBlocker.charAt(0).toLowerCase()}${primaryBlocker.slice(1)}`,
                 projectHint,
-                'No hice cambios.',
+                'Elige el módulo correcto y confirma allí la acción final.',
             ].filter(line => line !== null && line !== undefined).join('\n');
         }
 
@@ -831,7 +833,7 @@ export function formatGlobalAssistantPlanMessage(
             isProjectMissing ? 'Which project should I use?' : 'I could not do that yet.',
             `I can ${primaryAction}, but ${primaryBlocker}`,
             projectHint,
-            'I did not make changes.',
+            'Choose the right module and confirm the final action there.',
         ].filter(line => line !== null && line !== undefined).join('\n');
     }
 
@@ -854,18 +856,16 @@ export function formatGlobalAssistantPlanMessage(
 
     if (spanish) {
         const lines = [
-            'No hice cambios.',
             `Para ${joinedActions || primaryAction}${projectName ? ` en ${projectName}` : ''}, abre el módulo correcto y revísalo allí.`,
-            'Te puedo llevar al módulo correcto si me dices cuál quieres abrir.',
+            'Dime qué área quieres usar y te explico los pasos.',
         ];
 
         return lines.join('\n');
     }
 
     const lines = [
-        'I did not make changes.',
         `To ${joinedActions || primaryAction}${projectName ? ` for ${projectName}` : ''}, open the right module and review it there.`,
-        'I can take you to the right module if you tell me which one to open.',
+        'Tell me which area you want to use and I will explain the steps.',
     ];
 
     return lines.join('\n');

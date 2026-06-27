@@ -16,12 +16,11 @@ import { useSafeTenant } from '../../contexts/tenant';
 import { useSafeUpgrade } from '../../contexts/UpgradeContext';
 import { useCreditsUsage } from '../../hooks/useCreditsUsage';
 import { useAppLogo, QUIMERA_FULL_LOGO, QUIMERA_FULL_LOGO_LIGHT, QUIMERA_DEFAULT_LOGO } from '../../hooks/useAppLogo';
-import { usePlanAccess } from '../../hooks/usePlanFeatures';
-import { useServiceAvailability } from '../../hooks/useServiceAvailability';
-import { useRealtyAccess } from '../../hooks/realty/useRealtyAccess';
+import { useServiceAccess } from '../../hooks/useServiceAccess';
 import { PlatformServiceId } from '../../types/serviceAvailability';
 import { PlanFeatures } from '../../types/subscription';
 import { UpgradeTrigger } from '../ui/UpgradeModal';
+import { isPlatformUnlimitedUser } from '../../services/billing/planCatalog';
 import {
   DndContext,
   closestCenter,
@@ -60,6 +59,8 @@ interface NavItemData {
   requiredFeature?: keyof PlanFeatures; // Feature del plan requerida para acceder
   upgradeTrigger?: UpgradeTrigger; // Trigger para el modal de upgrade
   serviceId?: PlatformServiceId; // ID del servicio global para control de disponibilidad
+  moduleId?: string;
+  requiredPermission?: string;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClose, hiddenOnDesktop = false, defaultCollapsed = false }) => {
@@ -70,7 +71,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
   // Check role first (most reliable), then email-based owner check as fallback
   const userRole = userDocument?.role;
-  const isOwner = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+  const isOwner = isPlatformUnlimitedUser(userRole);
   const hasUnlimitedCredits = creditsUsage?.isUnlimited || isOwner;
 
   const { navigate, path } = useRouter();
@@ -124,12 +125,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     onClose();
   };
 
-  // Get plan access functions from the dynamic hook (reads from Supabase)
-  const { hasAccess: hasFeatureAccess, getMinPlan: getMinPlanForFeature, isLoading: isLoadingPlan } = usePlanAccess();
-
-  // Get global service availability control
-  const { canAccessService: canAccessGlobalService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
-  const realtyAccess = useRealtyAccess();
+  const serviceAccess = useServiceAccess();
 
   // Get global app logo
   const { logoUrl: appLogoUrl } = useAppLogo();
@@ -221,55 +217,66 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   // Websites section items
   const websiteItems: NavItemData[] = [
     { id: 'websites', icon: Globe, label: t('dashboard.myWebsites'), view: 'websites', route: ROUTES.WEBSITES },
-    { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES, serviceId: 'templates' },
+    { id: 'templates', icon: LayoutTemplate, label: t('dashboard.templates'), view: 'templates', route: ROUTES.TEMPLATES, serviceId: 'templates', moduleId: 'templates-library' },
     { id: 'navigation', icon: MenuIcon, label: t('dashboard.navigation'), view: 'navigation', route: ROUTES.NAVIGATION },
-    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic', serviceId: 'cms' },
-    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains', serviceId: 'domains' },
+    { id: 'cms', icon: PenTool, label: t('dashboard.contentManager'), view: 'cms', route: ROUTES.CMS, requiredFeature: 'cmsEnabled', upgradeTrigger: 'generic', serviceId: 'cms', moduleId: 'cms-engine' },
+    { id: 'domains', icon: Link2, label: t('domains.title'), view: 'domains', route: ROUTES.DOMAINS, requiredFeature: 'customDomains', upgradeTrigger: 'domains', serviceId: 'domains', moduleId: 'domains-management' },
     { id: 'seo', icon: Search, label: t('dashboard.seoAndMeta'), view: 'seo', route: ROUTES.SEO },
-    { id: 'biopage', icon: Link2, label: t('bioPage.title', 'Bio Page'), view: 'biopage', route: ROUTES.BIOPAGE },
+    { id: 'biopage', icon: Link2, label: t('bioPage.title', 'Bio Page'), view: 'biopage', route: ROUTES.BIOPAGE, serviceId: 'bioPage', moduleId: 'bio-page-engine' },
   ];
 
   // Ecommerce section items (sección independiente con árbol de componentes)
   const ecommerceItems: NavItemData[] = [
-    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
-    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce' },
+    { id: 'ecommerce-overview', icon: BarChart3, label: t('ecommerce.overview', 'Vista General'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'overview', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-products', icon: Package, label: t('ecommerce.products', 'Productos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'products', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-categories', icon: FolderTree, label: t('ecommerce.categories', 'Categorías'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'categories', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-orders', icon: ShoppingCart, label: t('ecommerce.orders', 'Pedidos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'orders', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-customers', icon: Users, label: t('ecommerce.customers', 'Clientes'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'customers', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-store-users', icon: UserCheck, label: t('storeUsers.title', 'Usuarios Registrados'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'store-users', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-discounts', icon: Tag, label: t('ecommerce.discounts', 'Descuentos'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'discounts', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-analytics', icon: TrendingUp, label: t('ecommerce.analyticsTitle', 'Analytics'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'analytics', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
+    { id: 'ecommerce-settings', icon: Settings, label: t('ecommerce.settings', 'Configuración'), view: 'ecommerce', route: ROUTES.ECOMMERCE, subView: 'settings', requiredFeature: 'ecommerceEnabled', upgradeTrigger: 'ecommerce', serviceId: 'ecommerce', moduleId: 'ecommerce-engine' },
   ];
 
   // Tools section items (settings removed - placed outside section)
   const toolsItems: NavItemData[] = [
-    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot', serviceId: 'chatbot' },
-    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic', serviceId: 'crm' },
-    { id: 'email', icon: Mail, label: t('email.title', 'Email'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing' },
-    { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures' }, // AI Features
-    { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance' },
-    { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments' },
-    { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic', serviceId: 'restaurants' },
-    { id: 'real-estate', icon: Home, label: t('realty.title'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic', serviceId: 'realEstate' },
+    { id: 'ai-assistant', icon: MessageSquare, label: t('dashboard.quimeraChat'), view: 'ai-assistant', route: ROUTES.AI_ASSISTANT, requiredFeature: 'chatbotEnabled', upgradeTrigger: 'chatbot', serviceId: 'chatbot', moduleId: 'chatbot-engine' },
+    { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic', serviceId: 'crm', moduleId: 'crm-leads' },
+    { id: 'email', icon: Mail, label: t('email.title', 'Email'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing', moduleId: 'email-marketing' },
+    { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures', moduleId: 'media-assets' }, // AI Features
+    { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance', moduleId: 'finance' },
+    { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments', moduleId: 'appointments-engine' },
+    { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic', serviceId: 'restaurants', moduleId: 'restaurant-engine' },
+    { id: 'real-estate', icon: Home, label: t('realty.title'), view: 'real-estate', route: ROUTES.REAL_ESTATE, requiredFeature: 'realEstateModule', upgradeTrigger: 'generic', serviceId: 'realEstate', moduleId: 'real-estate-engine' },
   ];
 
   // Blog - standalone outside tools section, above agency
-  const blogItem: NavItemData = { id: 'blog-hub', icon: Newspaper, label: t('dashboard.blogHub', 'Blog'), view: 'blog-hub', route: ROUTES.BLOG_HUB };
+  const blogItem: NavItemData = { id: 'blog-hub', icon: Newspaper, label: t('dashboard.blogHub', 'Blog'), view: 'blog-hub', route: ROUTES.BLOG_HUB, serviceId: 'cms', moduleId: 'cms-engine' };
 
   // Agency button - standalone outside control panel area
-  const agencyItem: NavItemData = { id: 'agency', icon: Building2, label: t('dashboard.agencySection', 'Agencia'), view: 'agency', route: ROUTES.AGENCY };
+  const agencyItem: NavItemData = {
+    id: 'agency',
+    icon: Building2,
+    label: t('dashboard.agencySection', 'Agencia'),
+    view: 'agency',
+    route: ROUTES.AGENCY,
+    serviceId: 'agency',
+    moduleId: 'agency-engine',
+    requiredFeature: 'agencyModule',
+    requiredPermission: 'canManageSettings',
+    upgradeTrigger: 'generic',
+  };
 
   // Workspace Settings - standalone outside tools section, before Super Admin
   const settingsItem: NavItemData = { id: 'settings', icon: Settings, label: t('sidebar.workspace', 'Workspace'), view: 'settings', route: ROUTES.SETTINGS };
 
   // Agency section items (for collapsible drawer - kept for backwards compatibility)
   const agencyItems: NavItemData[] = [
-    { id: 'agency-overview', icon: BarChart3, label: t('agency.overview', 'Vista General'), view: 'agency', route: ROUTES.AGENCY },
-    { id: 'agency-billing', icon: DollarSign, label: t('agency.billing', 'Facturación'), view: 'agency', route: ROUTES.AGENCY_BILLING },
-    { id: 'agency-reports', icon: TrendingUp, label: t('agency.reports', 'Reportes'), view: 'agency', route: ROUTES.AGENCY_REPORTS },
-    { id: 'agency-new-client', icon: UserCheck, label: t('agency.newClient', 'Nuevo Cliente'), view: 'agency', route: ROUTES.AGENCY_NEW_CLIENT },
-    { id: 'agency-addons', icon: Package, label: t('agency.addons', 'Add-ons'), view: 'agency', route: ROUTES.AGENCY_ADDONS },
+    { id: 'agency-overview', icon: BarChart3, label: t('agency.overview', 'Vista General'), view: 'agency', route: ROUTES.AGENCY_OVERVIEW, serviceId: 'agency', moduleId: 'agency-command-center', requiredFeature: 'agencyModule', requiredPermission: 'canViewAnalytics', upgradeTrigger: 'generic' },
+    { id: 'agency-billing', icon: DollarSign, label: t('agency.billing', 'Facturación'), view: 'agency', route: ROUTES.AGENCY_BILLING, serviceId: 'agency', moduleId: 'agency-billing', requiredFeature: 'agencyModule', requiredPermission: 'canManageBilling', upgradeTrigger: 'generic' },
+    { id: 'agency-reports', icon: TrendingUp, label: t('agency.reports', 'Reportes'), view: 'agency', route: ROUTES.AGENCY_REPORTS, serviceId: 'agency', moduleId: 'agency-reports', requiredFeature: 'agencyModule', requiredPermission: 'canViewAnalytics', upgradeTrigger: 'generic' },
+    { id: 'agency-new-client', icon: UserCheck, label: t('agency.newClient', 'Nuevo Cliente'), view: 'agency', route: ROUTES.AGENCY_NEW_CLIENT, serviceId: 'agency', moduleId: 'agency-client-provisioning', requiredFeature: 'agencyModule', requiredPermission: 'canManageSettings', upgradeTrigger: 'generic' },
+    { id: 'agency-addons', icon: Package, label: t('agency.addons', 'Add-ons'), view: 'agency', route: ROUTES.AGENCY_ADDONS, serviceId: 'agency', moduleId: 'agency-service-plans', requiredFeature: 'agencyModule', requiredPermission: 'canManageBilling', upgradeTrigger: 'generic' },
   ];
 
   // All items combined for backwards compatibility with drag-and-drop
@@ -373,20 +380,41 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     }
   };
 
-  // Helper: Check if an item is accessible based on global service availability
-  const isItemAccessible = (item: NavItemData): boolean => {
-    if (!item.serviceId) return true; // No service restriction
-    if (isLoadingServiceAvailability) return true; // Show while loading
-    if (item.id === 'real-estate') {
-      if (realtyAccess.isLoading) return true;
-      return canAccessGlobalService(item.serviceId) && realtyAccess.canView;
+  const getItemAccessDecision = (item: NavItemData) => {
+    if (item.moduleId) {
+      return serviceAccess.canAccessModule(item.moduleId, {
+        serviceId: item.serviceId,
+        featureKey: item.requiredFeature,
+        requiredPermission: item.requiredPermission,
+      });
     }
-    return canAccessGlobalService(item.serviceId);
+    if (item.serviceId || item.requiredFeature || item.requiredPermission) {
+      return serviceAccess.resolveAccess({
+        serviceId: item.serviceId,
+        featureKey: item.requiredFeature,
+        requiredPermission: item.requiredPermission,
+      });
+    }
+    return { allowed: true, reasonCode: 'allowed' as const, message: '' };
+  };
+
+  const hiddenAccessReasonCodes = new Set([
+    'service_not_public',
+    'service_in_development',
+    'module_disabled',
+  ]);
+
+  const isItemVisible = (item: NavItemData): boolean => {
+    const requiresServiceAvailability = Boolean(item.serviceId || item.moduleId);
+    if (serviceAccess.isLoading && requiresServiceAvailability) return false;
+
+    const accessDecision = getItemAccessDecision(item);
+    return !hiddenAccessReasonCodes.has(accessDecision.reasonCode);
   };
 
   // Helper: Check if any items in a section are accessible
   const hasAccessibleItems = (items: NavItemData[]): boolean => {
-    return items.some(isItemAccessible);
+    return items.some(isItemVisible);
   };
 
   // Check if a route is active
@@ -426,10 +454,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     // En móvil siempre mostrar expandido cuando el sidebar está abierto
     const showExpanded = !isCollapsed || isMobileOpen;
 
-    // Check if user has access to this feature (plan-based access)
-    const hasAccess = hasFeatureAccess(item.requiredFeature);
-    const isLocked = !isLoadingPlan && !hasAccess && item.requiredFeature;
-    const minPlanRequired = isLocked ? getMinPlanForFeature(item.requiredFeature) : '';
+    const accessDecision = getItemAccessDecision(item);
+    const isLocked = !serviceAccess.isLoading && !accessDecision.allowed;
+    const minPlanRequired = isLocked ? (accessDecision.minimumPlan || accessDecision.currentPlan || '') : '';
     const navItemButtonClasses = [
       'group relative mb-1 flex !h-auto items-center rounded-[var(--q-radius-md)] border border-transparent !px-3 !py-2 transition-[background-color,border-color,color,box-shadow] duration-150 ease-out touch-manipulation active:scale-100',
       'min-h-[40px] md:min-h-[36px] md:px-3 md:py-2',
@@ -462,8 +489,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
     const handleNavClick = () => {
       // If locked, show upgrade modal instead of navigating
-      if (isLocked && upgradeContext) {
-        upgradeContext.openUpgradeModal(item.upgradeTrigger || 'generic');
+      if (isLocked) {
+        if (upgradeContext && accessDecision.upgradeRequired !== false) {
+          upgradeContext.openUpgradeModal(item.upgradeTrigger || 'generic');
+        }
         onClose(); // Close mobile menu
         return;
       }
@@ -498,9 +527,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
           onClick={handleNavClick}
           disabled={item.disabled}
           className={navItemButtonClasses}
-          aria-label={isLocked ? `${item.label} (${t('common.upgrade')})` : item.label}
+          aria-label={isLocked ? `${item.label} (${accessDecision.message || t('common.upgrade')})` : item.label}
           aria-current={isActive ? 'page' : undefined}
-          title={!showExpanded ? (isLocked ? `${item.label} - ${t('common.upgrade')}` : item.label) : undefined}
+          title={isLocked ? `${item.label} - ${accessDecision.message}` : (!showExpanded ? item.label : undefined)}
         >
           {/* Drag handle - Hidden on mobile for cleaner experience */}
           {showExpanded && !item.isFixed && !isLocked && (
@@ -692,15 +721,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                     <div className="my-2 border-t border-divider mx-2" />
                     {/* Show all items directly with drag and drop - filtered by service availability */}
                     {[...websiteItems, ...ecommerceItems, ...toolsItems]
-                      .filter(isItemAccessible)
+                      .filter(isItemVisible)
                       .map((item, index) => (
                         <SortableNavItem key={item.id} item={item} index={index + 1} />
                       ))}
                     {/* Blog - standalone */}
                     <div className="my-2 border-t border-divider mx-2" />
-                    <SortableNavItem item={blogItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
+                    {isItemVisible(blogItem) && (
+                      <SortableNavItem item={blogItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1} />
+                    )}
                     {/* Agency button - standalone */}
-                    <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
+                    {isItemVisible(agencyItem) && (
+                      <SortableNavItem item={agencyItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2} />
+                    )}
                     {/* Workspace Settings - standalone before Super Admin */}
                     <SortableNavItem item={settingsItem} index={websiteItems.length + ecommerceItems.length + toolsItems.length + 3} />
                   </>
@@ -729,7 +762,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                         className={sidebarNestedListClasses(collapsedSections.websites)}
                       >
                         <div className={sidebarNestedListInnerClasses}>
-                          {websiteItems.filter(isItemAccessible).map((item, index) => (
+                          {websiteItems.filter(isItemVisible).map((item, index) => (
                             <SortableNavItem key={item.id} item={item} index={index + 1} />
                           ))}
                         </div>
@@ -759,7 +792,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={sidebarNestedListClasses(collapsedSections.ecommerce)}
                         >
                           <div className={sidebarNestedListInnerClasses}>
-                            {ecommerceItems.filter(isItemAccessible).map((item, index) => (
+                            {ecommerceItems.filter(isItemVisible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + 1} />
                             ))}
                           </div>
@@ -791,7 +824,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
                           className={sidebarNestedListClasses(collapsedSections.tools)}
                         >
                           <div className={sidebarNestedListInnerClasses}>
-                            {toolsItems.filter(isItemAccessible).map((item, index) => (
+                            {toolsItems.filter(isItemVisible).map((item, index) => (
                               <SortableNavItem key={item.id} item={item} index={index + websiteItems.length + ecommerceItems.length + 1} />
                             ))}
                           </div>
@@ -801,16 +834,20 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
 
                     {/* Blog - Standalone above Agency */}
                     <div className={`my-3 md:my-4 border-t border-divider ${isCollapsed && !isMobileOpen ? 'mx-2' : 'mx-0'}`} />
-                    <SortableNavItem
-                      item={blogItem}
-                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
-                    />
+                    {isItemVisible(blogItem) && (
+                      <SortableNavItem
+                        item={blogItem}
+                        index={websiteItems.length + ecommerceItems.length + toolsItems.length + 1}
+                      />
+                    )}
 
                     {/* Agency Button - Standalone outside control panel area */}
-                    <SortableNavItem
-                      item={agencyItem}
-                      index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
-                    />
+                    {isItemVisible(agencyItem) && (
+                      <SortableNavItem
+                        item={agencyItem}
+                        index={websiteItems.length + ecommerceItems.length + toolsItems.length + 2}
+                      />
+                    )}
 
                     {/* Workspace Settings - Standalone outside tools section */}
                     <SortableNavItem

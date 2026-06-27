@@ -80,6 +80,7 @@ const CARD_DEFS: StatusCardDef[] = [
         titleKey: 'dashboard.statusCards.images',
         subtitleKey: 'dashboard.statusCards.imagesDesc',
         route: ROUTES.ASSETS,
+        serviceId: 'aiFeatures',
     },
     {
         id: 'domains',
@@ -109,7 +110,7 @@ const DashboardStatusCards: React.FC = () => {
     const { leads } = useCRM();
     const { files } = useFiles();
     const { appointments } = useAppointments();
-    const { canAccessService, isLoading: isLoadingService } = useServiceAvailability();
+    const { isServicePublic, isLoading: isLoadingService } = useServiceAvailability();
     const { hasAccess, isLoading: isLoadingPlan } = usePlanAccess();
     const { navigate } = useRouter();
     const shouldReduceMotion = useReducedMotion();
@@ -146,10 +147,10 @@ const DashboardStatusCards: React.FC = () => {
     const visibleCards = CARD_DEFS.filter(card => {
         // Websites always visible
         if (!card.serviceId && !card.requiredFeature) return true;
-        // While loading, optimistically show
-        if (isLoadingService || isLoadingPlan) return true;
+        if (card.serviceId && isLoadingService) return false;
+        if (card.requiredFeature && isLoadingPlan) return true;
         // Service availability
-        if (card.serviceId && !canAccessService(card.serviceId)) return false;
+        if (card.serviceId && !isServicePublic(card.serviceId)) return false;
         // Plan feature
         if (card.requiredFeature && !hasAccess(card.requiredFeature)) return false;
         return true;

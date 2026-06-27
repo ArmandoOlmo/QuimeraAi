@@ -16,6 +16,15 @@ import { componentStyles as defaultComponentStyles } from '../data/componentStyl
 import { resolveProjectName } from '../utils/resolveProjectName';
 import { buildStoreIdentityOrFilter, getStoreIdentityQueryIds } from '../utils/ecommerce/storeIdentity';
 import { resolveProjectAiAssistantConfig } from '../utils/chatbotEngine/projectAiAssistantConfig';
+import type { GlobalServiceAvailability } from '../types/serviceAvailability';
+import type { PageSection } from '../types/ui';
+import {
+    buildServiceAwareComponentStatus,
+    buildServiceAwareSectionVisibility,
+    createServicePublicPredicate,
+    filterServiceAvailablePages,
+    filterServiceAvailableSections,
+} from '../utils/serviceAvailabilitySections';
 
 // =============================================================================
 // TYPES
@@ -216,6 +225,24 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
         // PASO 2: Crear el snapshot COMPLETO para published_data
         // =========================================================================
         const publishedAt = new Date().toISOString();
+        const serviceAvailability = await loadPublishingServiceAvailability();
+        const isServicePublic = createServicePublicPredicate(serviceAvailability);
+        const rawComponentOrder = project.componentOrder || [];
+        const rawPages = project.pages || [];
+        const allConfiguredSections = [
+            ...rawComponentOrder,
+            ...rawPages.flatMap(page => page.sections || []),
+        ] as PageSection[];
+        const publishComponentOrder = filterServiceAvailableSections(rawComponentOrder, isServicePublic);
+        const publishPages = filterServiceAvailablePages(rawPages, isServicePublic);
+        const publishSectionVisibility = buildServiceAwareSectionVisibility(project.sectionVisibility, isServicePublic);
+        const publishComponentStatus = buildServiceAwareComponentStatus(
+            project.componentStatus,
+            allConfiguredSections,
+            isServicePublic,
+        );
+        const canPublishEcommerceData = includeEcommerce && isServicePublic('ecommerce');
+        const canPublishCMSData = includeCMS && isServicePublic('cms');
 
         const publishData = {
             // === IDENTIFICACIÓN ===
@@ -236,12 +263,12 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             brandIdentity: project.brandIdentity,
 
             // === ARQUITECTURA MULTI-PÁGINA (CRÍTICO) ===
-            pages: project.pages || [],
+            pages: publishPages,
 
             // === CONFIGURACIÓN DE COMPONENTES ===
-            componentOrder: project.componentOrder || [],
-            sectionVisibility: project.sectionVisibility || {},
-            componentStatus: project.componentStatus || null,
+            componentOrder: publishComponentOrder,
+            sectionVisibility: publishSectionVisibility,
+            componentStatus: publishComponentStatus,
             // Use project componentStyles, or fallback to default componentStyles
             componentStyles: project.componentStyles || defaultComponentStyles,
 
@@ -279,7 +306,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
 
         // Prepare ecommerce data if needed
         let ecommerceData: { products: any[]; categories: any[] } | undefined;
-        if (includeEcommerce) {
+        if (canPublishEcommerceData) {
             ecommerceData = await collectEcommerceData(userId, projectId);
             stats.productsPublished = ecommerceData.products.length;
             stats.categoriesPublished = ecommerceData.categories.length;
@@ -287,7 +314,7 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
 
         // Prepare CMS data if needed
         let postsData: any[] | undefined;
-        if (includeCMS) {
+        if (canPublishCMSData) {
             postsData = await collectCMSData(userId, projectId, tenantId);
             stats.postsPublished = postsData?.length || 0;
         }
@@ -345,6 +372,26 @@ export async function publishProject(options: PublishOptions): Promise<PublishRe
             error: error instanceof Error ? error.message : 'Unknown error',
             stats,
         };
+    }
+}
+
+async function loadPublishingServiceAvailability(): Promise<GlobalServiceAvailability | null> {
+    try {
+        const { data, error } = await supabase
+            .from('settings')
+            .select('config')
+            .eq('id', 'serviceAvailability')
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[PublishService] Service availability read warning (publishing with default public services):', error);
+            return null;
+        }
+
+        return (data?.config as GlobalServiceAvailability | undefined) || null;
+    } catch (error) {
+        console.warn('[PublishService] Service availability read warning (publishing with default public services):', error);
+        return null;
     }
 }
 

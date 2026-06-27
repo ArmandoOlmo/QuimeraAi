@@ -31,6 +31,7 @@ import { defaultPrompts } from '../../data/defaultPrompts';
 import { initialData } from '../../data/initialData';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
+import { getCanonicalPlanLimits, normalizePlanId } from '../../services/billing/planCatalog';
 
 // Build default component status
 const allComponents = initialData.componentOrder;
@@ -132,7 +133,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Global Assistant Config
     const [globalAssistantConfig, setGlobalAssistantConfig] = useState<GlobalAssistantConfig>({
         isEnabled: true,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         enableLiveVoice: true,
         voiceName: 'Puck',
         greeting: '👋 ¡Hola! Soy tu Asistente Quimera',
@@ -433,17 +434,10 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         companyName?: string
     }): Promise<string> => {
         try {
-            const planLimits = {
-                free: { maxProjects: 1, maxUsers: 1, maxStorageGB: 1, maxAiCredits: 100 },
-                starter: { maxProjects: 5, maxUsers: 1, maxStorageGB: 5, maxAiCredits: 500 },
-                pro: { maxProjects: 20, maxUsers: 5, maxStorageGB: 20, maxAiCredits: 2000 },
-                agency: { maxProjects: 50, maxUsers: 20, maxStorageGB: 50, maxAiCredits: 5000 },
-                enterprise: { maxProjects: -1, maxUsers: -1, maxStorageGB: 100, maxAiCredits: 10000 },
-            };
+            const canonicalPlan = normalizePlanId(data.plan);
+            const limits = { ...getCanonicalPlanLimits(canonicalPlan) };
 
-            const limits = planLimits[data.plan as keyof typeof planLimits] || planLimits.free;
-
-            if (data.type === 'agency' && data.plan !== 'agency' && data.plan !== 'enterprise') {
+            if (data.type === 'agency' && canonicalPlan !== 'agency_starter' && canonicalPlan !== 'agency_pro' && canonicalPlan !== 'agency_scale' && canonicalPlan !== 'enterprise') {
                 limits.maxUsers = Math.max(limits.maxUsers, 5);
                 limits.maxProjects = Math.max(limits.maxProjects, 10);
             }
@@ -454,7 +448,7 @@ export const AdminProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 email: data.email,
                 company_name: data.companyName || '',
                 status: 'active',
-                subscription_plan: data.plan,
+                subscription_plan: canonicalPlan,
                 limits: limits,
                 usage: {
                     projectCount: 0,

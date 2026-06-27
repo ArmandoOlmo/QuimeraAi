@@ -1250,7 +1250,6 @@
     "createNew": "New Appointment",
     "total": "Total",
     "completionRate": "Rate",
-    "filters": "Filters",
     "emptyState": {
       "title": "No platform appointments",
       "adminDesc": "Appointments scheduled from the platform will appear here."
@@ -3367,6 +3366,30 @@
       "dashboardSubtitle": "Manage all your clients from one place",
       "refreshing": "Refreshing...",
       "refresh": "Refresh",
+      "client360": {
+        "eyebrow": "Client 360",
+        "close": "Close Client 360",
+        "alerts": "{{count}} alerts",
+        "lastActive": "Last active",
+        "mrr": "MRR",
+        "projects": "Projects",
+        "usage": "Usage and limits",
+        "users": "Users",
+        "storage": "Storage",
+        "aiCredits": "AI Credits",
+        "billing": "Billing",
+        "mode": "Mode",
+        "status": "Status",
+        "plan": "Service plan",
+        "nextBilling": "Next billing",
+        "actions": "Operating actions",
+        "openBilling": "Open billing",
+        "generateReport": "Generate report",
+        "projectsAction": "Projects",
+        "export": "Export",
+        "activity": "Recent activity",
+        "noActivity": "No recent activity for this client yet."
+      },
       "billingPage": {
         "title": "Billing Settings",
         "subtitle": "Manage client payments and billing",
@@ -6572,6 +6595,7 @@
     "campaigns": "Campaigns",
     "audiences": "Audiences",
     "analytics": "Analytics",
+    "planLimit": "Plan limit",
     "selectProject": "Select project",
     "quickSwitch": "Quick switch",
     "viewAllProjects": "View all projects",
@@ -8387,12 +8411,12 @@
         "opportunityInvestmentChecklist": "Investment checklist"
       }
     },
-  "metrics": {
-    "properties": "Properties",
-    "active": "Active",
-    "leads": "New leads",
-    "featured": "Featured",
-    "qualityScore": "Average quality"
+    "metrics": {
+      "properties": "Properties",
+      "active": "Active",
+      "leads": "New leads",
+      "featured": "Featured",
+      "qualityScore": "Average quality"
     },
     "access": {
       "enabled": "Enabled",
@@ -8729,114 +8753,114 @@
         "delete": "The open house could not be deleted."
       }
     },
-  "ai": {
-    "title": "Realty AI assistant",
-    "defaultPrompt": "Generate premium copy for this property.",
-    "prompt": "Instruction",
-    "tone": "Tone",
-    "language": "Language",
-    "model": "Model",
-    "generate": "Generate copy",
-    "fixWithAi": "Fix with AI",
-    "applyToProperty": "Apply to property",
-    "saveGeneration": "Save generation",
-    "copyOutput": "Copy output",
-    "copied": "AI output copied to clipboard.",
-    "applied": "AI content applied to the property.",
-    "saved": "Generation saved.",
-    "generatedWith": "Generated with {{model}}",
-    "confirmOverwrite": "AI may replace existing content in: {{fields}}. Continue?",
-    "output": "Output",
-    "empty": "The AI output will appear here.",
-    "tones": {
-      "luxury": "Luxury",
-      "family": "Family",
-      "investment": "Investment",
-      "modern": "Modern",
-      "beach": "Beach",
-      "urban": "Urban",
-      "commercial": "Commercial",
-      "rental": "Rental",
-      "new_development": "New development"
+    "ai": {
+      "title": "Realty AI assistant",
+      "defaultPrompt": "Generate premium copy for this property.",
+      "prompt": "Instruction",
+      "tone": "Tone",
+      "language": "Language",
+      "model": "Model",
+      "generate": "Generate copy",
+      "fixWithAi": "Fix with AI",
+      "applyToProperty": "Apply to property",
+      "saveGeneration": "Save generation",
+      "copyOutput": "Copy output",
+      "copied": "AI output copied to clipboard.",
+      "applied": "AI content applied to the property.",
+      "saved": "Generation saved.",
+      "generatedWith": "Generated with {{model}}",
+      "confirmOverwrite": "AI may replace existing content in: {{fields}}. Continue?",
+      "output": "Output",
+      "empty": "The AI output will appear here.",
+      "tones": {
+        "luxury": "Luxury",
+        "family": "Family",
+        "investment": "Investment",
+        "modern": "Modern",
+        "beach": "Beach",
+        "urban": "Urban",
+        "commercial": "Commercial",
+        "rental": "Rental",
+        "new_development": "New development"
+      },
+      "languages": {
+        "es": "Spanish",
+        "en": "English"
+      },
+      "fields": {
+        "title": "Title",
+        "descriptionShort": "Short description",
+        "descriptionLong": "Long description",
+        "highlights": "Highlights",
+        "features": "Features",
+        "amenitiesCopy": "Amenities copy",
+        "cta": "CTA",
+        "faq": "FAQ",
+        "seoTitle": "SEO title",
+        "seoDescription": "SEO description",
+        "socialPost": "Social post",
+        "emailCopy": "Email",
+        "smsCopy": "WhatsApp/SMS",
+        "adCopy": "Ad copy"
+      },
+      "errors": {
+        "generate": "AI content could not be generated.",
+        "save": "The AI generation could not be saved.",
+        "apply": "The AI content could not be applied."
+      },
+      "generatedListing": "{{title}} in {{city}}\n\n{{price}} · {{beds}} beds · {{baths}} baths · {{area}} sqft\n\n{{description}}\n\nRequested angle: {{prompt}}\n\nNext step: schedule a showing or request more information from the listing form."
     },
-    "languages": {
-      "es": "Spanish",
-      "en": "English"
+    "score": {
+      "title": "Listing Quality Score",
+      "badge": "{{score}}% score",
+      "required": "Required",
+      "recommended": "Recommended",
+      "recommendationsTitle": "Recommendations",
+      "grade": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "needs_work": "Needs work",
+        "poor": "Poor"
+      },
+      "fields": {
+        "title": "Title",
+        "slug": "Slug",
+        "price": "Price",
+        "propertyType": "Property type",
+        "transactionType": "Transaction type",
+        "location": "Address and city",
+        "basicStats": "Bedrooms, bathrooms, and area",
+        "description": "Long description",
+        "images": "Images or main image",
+        "amenities": "Amenities",
+        "highlights": "Highlights",
+        "features": "Features",
+        "seoTitle": "SEO title",
+        "seoDescription": "SEO description",
+        "cta": "CTA",
+        "publicEnabled": "Public listing",
+        "statusActive": "Active status"
+      },
+      "recommendations": {
+        "add_title": "Add a descriptive, marketable title.",
+        "add_slug": "Define a clean slug for the public URL.",
+        "add_price": "Add a valid price.",
+        "add_property_type": "Select the property type.",
+        "add_transaction_type": "Define whether this is sale, rent, or lease.",
+        "add_location": "Complete the address and city.",
+        "add_basic_stats": "Complete bedrooms, bathrooms, and area.",
+        "expand_description": "Expand the description with commercial details.",
+        "add_images": "Add a main image from the image library.",
+        "add_amenities": "Add at least three amenities.",
+        "add_highlights": "Add clear highlights for quick scanning.",
+        "add_features": "Add specific property features.",
+        "add_seo_title": "Create a search-ready SEO title.",
+        "add_seo_description": "Create an SEO description between 80 and 155 characters.",
+        "add_cta": "Add a clear CTA to capture leads.",
+        "enable_public_listing": "Enable the public listing when it is ready.",
+        "publish_listing": "Publish the property when the key fields are complete."
+      }
     },
-    "fields": {
-      "title": "Title",
-      "descriptionShort": "Short description",
-      "descriptionLong": "Long description",
-      "highlights": "Highlights",
-      "features": "Features",
-      "amenitiesCopy": "Amenities copy",
-      "cta": "CTA",
-      "faq": "FAQ",
-      "seoTitle": "SEO title",
-      "seoDescription": "SEO description",
-      "socialPost": "Social post",
-      "emailCopy": "Email",
-      "smsCopy": "WhatsApp/SMS",
-      "adCopy": "Ad copy"
-    },
-    "errors": {
-      "generate": "AI content could not be generated.",
-      "save": "The AI generation could not be saved.",
-      "apply": "The AI content could not be applied."
-    },
-    "generatedListing": "{{title}} in {{city}}\n\n{{price}} · {{beds}} beds · {{baths}} baths · {{area}} sqft\n\n{{description}}\n\nRequested angle: {{prompt}}\n\nNext step: schedule a showing or request more information from the listing form."
-  },
-  "score": {
-    "title": "Listing Quality Score",
-    "badge": "{{score}}% score",
-    "required": "Required",
-    "recommended": "Recommended",
-    "recommendationsTitle": "Recommendations",
-    "grade": {
-      "excellent": "Excellent",
-      "good": "Good",
-      "needs_work": "Needs work",
-      "poor": "Poor"
-    },
-    "fields": {
-      "title": "Title",
-      "slug": "Slug",
-      "price": "Price",
-      "propertyType": "Property type",
-      "transactionType": "Transaction type",
-      "location": "Address and city",
-      "basicStats": "Bedrooms, bathrooms, and area",
-      "description": "Long description",
-      "images": "Images or main image",
-      "amenities": "Amenities",
-      "highlights": "Highlights",
-      "features": "Features",
-      "seoTitle": "SEO title",
-      "seoDescription": "SEO description",
-      "cta": "CTA",
-      "publicEnabled": "Public listing",
-      "statusActive": "Active status"
-    },
-    "recommendations": {
-      "add_title": "Add a descriptive, marketable title.",
-      "add_slug": "Define a clean slug for the public URL.",
-      "add_price": "Add a valid price.",
-      "add_property_type": "Select the property type.",
-      "add_transaction_type": "Define whether this is sale, rent, or lease.",
-      "add_location": "Complete the address and city.",
-      "add_basic_stats": "Complete bedrooms, bathrooms, and area.",
-      "expand_description": "Expand the description with commercial details.",
-      "add_images": "Add a main image from the image library.",
-      "add_amenities": "Add at least three amenities.",
-      "add_highlights": "Add clear highlights for quick scanning.",
-      "add_features": "Add specific property features.",
-      "add_seo_title": "Create a search-ready SEO title.",
-      "add_seo_description": "Create an SEO description between 80 and 155 characters.",
-      "add_cta": "Add a clear CTA to capture leads.",
-      "enable_public_listing": "Enable the public listing when it is ready.",
-      "publish_listing": "Publish the property when the key fields are complete."
-    }
-  },
     "settings": {
       "title": "Module activation",
       "description": "Admin controls for project-level Realty activation, AI availability, and public directory access.",
@@ -9203,91 +9227,91 @@
           "description": "Commercial space in a high-traffic area, with a flexible floor plan and strong visibility. Ready for a boutique, showroom, creative office or light food concept.",
           "address": "151 Loíza Street",
           "city": "Santurce"
-    }
-  },
-  "appointmentBooking": {
-    "title": "Book an appointment",
-    "description": "Choose an available time and we will send your request to the team.",
-    "serviceLabel": "Service",
-    "defaultService": "General appointment",
-    "dateLabel": "Date",
-    "slotLabel": "Available time",
-    "loadingSlots": "Loading times...",
-    "noSlots": "No times are available for this date.",
-    "nameLabel": "Name",
-    "emailLabel": "Email",
-    "phoneLabel": "Phone",
-    "messageLabel": "Message",
-    "namePlaceholder": "Full name",
-    "emailPlaceholder": "email@example.com",
-    "phonePlaceholder": "Phone",
-    "messagePlaceholder": "Tell us what we should prepare for the appointment",
-    "buttonText": "Request appointment",
-    "successMessage": "Request received. We will contact you to confirm the appointment.",
-    "confirmation": "Request linked to CRM",
-    "reviewNotice": "Confirmation depends on final availability",
-    "paymentNotice": "Payment due at booking: {{amount}}",
-    "paymentRedirecting": "Opening secure checkout...",
-    "emailSubjects": {
-      "appointment_request_received": "Appointment request received: {{title}}",
-      "appointment_confirmation": "Appointment confirmed: {{title}}",
-      "appointment_cancellation": "Appointment cancelled: {{title}}",
-      "appointment_follow_up": "Follow up for your appointment: {{title}}",
-      "appointment_reminder": "Appointment reminder: {{title}}"
-    },
-    "emailBodies": {
-      "labels": {
-        "greeting": "Hi {{name}},",
-        "fallbackName": "there",
-        "appointment": "Appointment",
-        "starts": "Starts",
-        "ends": "Ends",
-        "timezone": "Timezone",
-        "details": "Details",
-        "payment": "Payment",
-        "noEndTime": "End time to be confirmed",
-        "replyHelp": "Reply to this email if you need to update the appointment details."
+        }
       },
-      "appointment_request_received": {
-        "preheader": "We received your appointment request.",
-        "intro": "We received your appointment request.",
-        "nextStep": "The team will review availability and confirm the final time.",
-        "footer": "You will receive another message once the appointment is confirmed."
+      "appointmentBooking": {
+        "title": "Book an appointment",
+        "description": "Choose an available time and we will send your request to the team.",
+        "serviceLabel": "Service",
+        "defaultService": "General appointment",
+        "dateLabel": "Date",
+        "slotLabel": "Available time",
+        "loadingSlots": "Loading times...",
+        "noSlots": "No times are available for this date.",
+        "nameLabel": "Name",
+        "emailLabel": "Email",
+        "phoneLabel": "Phone",
+        "messageLabel": "Message",
+        "namePlaceholder": "Full name",
+        "emailPlaceholder": "email@example.com",
+        "phonePlaceholder": "Phone",
+        "messagePlaceholder": "Tell us what we should prepare for the appointment",
+        "buttonText": "Request appointment",
+        "successMessage": "Request received. We will contact you to confirm the appointment.",
+        "confirmation": "Request linked to CRM",
+        "reviewNotice": "Confirmation depends on final availability",
+        "paymentNotice": "Payment due at booking: {{amount}}",
+        "paymentRedirecting": "Opening secure checkout...",
+        "emailSubjects": {
+          "appointment_request_received": "Appointment request received: {{title}}",
+          "appointment_confirmation": "Appointment confirmed: {{title}}",
+          "appointment_cancellation": "Appointment cancelled: {{title}}",
+          "appointment_follow_up": "Follow up for your appointment: {{title}}",
+          "appointment_reminder": "Appointment reminder: {{title}}"
+        },
+        "emailBodies": {
+          "labels": {
+            "greeting": "Hi {{name}},",
+            "fallbackName": "there",
+            "appointment": "Appointment",
+            "starts": "Starts",
+            "ends": "Ends",
+            "timezone": "Timezone",
+            "details": "Details",
+            "payment": "Payment",
+            "noEndTime": "End time to be confirmed",
+            "replyHelp": "Reply to this email if you need to update the appointment details."
+          },
+          "appointment_request_received": {
+            "preheader": "We received your appointment request.",
+            "intro": "We received your appointment request.",
+            "nextStep": "The team will review availability and confirm the final time.",
+            "footer": "You will receive another message once the appointment is confirmed."
+          },
+          "appointment_confirmation": {
+            "preheader": "Your appointment is confirmed.",
+            "intro": "Your appointment is confirmed.",
+            "nextStep": "The team will be ready with the appointment context and linked CRM notes.",
+            "footer": "Please arrive on time or reply if you need to reschedule."
+          },
+          "appointment_cancellation": {
+            "preheader": "Your appointment has been cancelled.",
+            "intro": "Your appointment has been cancelled.",
+            "nextStep": "Reply to this email if you want to request a new time.",
+            "footer": "No further action is required unless you want to reschedule."
+          },
+          "appointment_follow_up": {
+            "preheader": "Follow up for your appointment.",
+            "intro": "Thanks for attending your appointment.",
+            "nextStep": "The team can continue the conversation from the linked CRM record.",
+            "footer": "Reply with any questions or next steps you want us to track."
+          },
+          "appointment_reminder": {
+            "preheader": "Reminder for your upcoming appointment.",
+            "intro": "This is a reminder for your upcoming appointment.",
+            "nextStep": "The team has the appointment context prepared.",
+            "footer": "Reply to this email if you need to update the time."
+          }
+        },
+        "errors": {
+          "availability": "Availability could not be loaded.",
+          "submit": "The appointment request could not be sent.",
+          "payment": "The appointment was created, but secure checkout could not be opened.",
+          "projectRequired": "Public booking requires a configured project.",
+          "slotRequired": "Select an available time."
+        }
       },
-      "appointment_confirmation": {
-        "preheader": "Your appointment is confirmed.",
-        "intro": "Your appointment is confirmed.",
-        "nextStep": "The team will be ready with the appointment context and linked CRM notes.",
-        "footer": "Please arrive on time or reply if you need to reschedule."
-      },
-      "appointment_cancellation": {
-        "preheader": "Your appointment has been cancelled.",
-        "intro": "Your appointment has been cancelled.",
-        "nextStep": "Reply to this email if you want to request a new time.",
-        "footer": "No further action is required unless you want to reschedule."
-      },
-      "appointment_follow_up": {
-        "preheader": "Follow up for your appointment.",
-        "intro": "Thanks for attending your appointment.",
-        "nextStep": "The team can continue the conversation from the linked CRM record.",
-        "footer": "Reply with any questions or next steps you want us to track."
-      },
-      "appointment_reminder": {
-        "preheader": "Reminder for your upcoming appointment.",
-        "intro": "This is a reminder for your upcoming appointment.",
-        "nextStep": "The team has the appointment context prepared.",
-        "footer": "Reply to this email if you need to update the time."
-      }
-    },
-    "errors": {
-      "availability": "Availability could not be loaded.",
-      "submit": "The appointment request could not be sent.",
-      "payment": "The appointment was created, but secure checkout could not be opened.",
-      "projectRequired": "Public booking requires a configured project.",
-      "slotRequired": "Select an available time."
-    }
-  },
-  "leads": {
+      "leads": {
         "sofia": {
           "name": "Sofia Rivera",
           "message": "Interested in seeing the unit this week and confirming maintenance costs."
@@ -9774,7 +9798,7 @@
       },
       "pricing": {
         "question": "What are the plans and pricing?",
-        "answer": "We offer a free plan to get started and paid plans with advanced features like custom domains, unlimited chatbots, e-commerce, and more. Visit our pricing page to see all the details."
+        "answer": "We offer a free plan to get started and paid plans with advanced features like custom domains, higher chatbot quotas, e-commerce, and more. Visit our pricing page to see all the details."
       },
       "customDomain": {
         "question": "Can I use my own domain?",
@@ -9794,7 +9818,7 @@
       },
       "multipleWebsites": {
         "question": "Can I create multiple websites?",
-        "answer": "Absolutely! Depending on your plan, you can create several websites. The free plan allows 1 site, while paid plans offer unlimited websites."
+        "answer": "Absolutely! Depending on your plan, you can create several websites. The free plan allows 1 site, while paid plans include higher finite website limits."
       }
     },
     "contact": {
@@ -10187,7 +10211,7 @@
     "featureAIContent": "AI Content Generation",
     "featureBasicTemplates": "Basic Templates",
     "featureEmailSupport": "Email Support",
-    "featureUnlimitedProjects": "Unlimited Projects",
+    "featureUnlimitedProjects": "High Project Limits",
     "featureAIImages": "AI Image Generation",
     "featurePremiumTemplates": "Premium Templates",
     "featurePrioritySupport": "Priority Support",
@@ -11030,6 +11054,12 @@
     },
     "dashboard": {
       "title": "Leads CRM",
+      "selectProject": "Select a Project",
+      "selectProjectDesc": "Choose the project whose leads you want to review and manage.",
+      "searchProjectPlaceholder": "Search project...",
+      "noProjectsFound": "No projects found",
+      "published": "Published",
+      "draft": "Draft",
       "pipeline": "Pipeline",
       "library": "Library",
       "pipelineValue": "Pipeline Value",
@@ -11172,7 +11202,7 @@
       "createError": "Error creating lead. Please try again."
     },
     "noProjectSelected": "No project selected",
-    "selectProjectMessage": "Select a project from the side menu to view and manage its leads.",
+    "selectProjectMessage": "Select a project from this panel to view and manage its leads.",
     "deleteLead": "Delete Lead",
     "confirmDelete": "Are you sure you want to delete this lead?"
   },
@@ -12655,7 +12685,7 @@
     "statusDevelopment": "Development",
     "confirmChange": "Confirm Change",
     "warningNotPublic": "This service will be completely hidden from the platform",
-    "warningDevelopment": "Only Super Admin will be able to access this service",
+    "warningDevelopment": "This service will stay hidden while it is in development",
     "reasonOptional": "Reason (optional)",
     "reasonPlaceholder": "E.g., Scheduled maintenance...",
     "auditLogTitle": "Change History",
@@ -12682,6 +12712,8 @@
     "analyticsDesc": "Advanced analytics",
     "appointments": "Appointments",
     "appointmentsDesc": "Appointment management system",
+    "bioPage": "Bio Page",
+    "bioPageDesc": "Public links, blocks, and lead capture page",
     "domains": "Domains",
     "domainsDesc": "Custom domains",
     "templates": "Templates",
@@ -12698,7 +12730,7 @@
     "subscription": {
       "tab": "Plan",
       "tabDesc": "Manage plan and subscription",
-      "title": "Plan & Subscription",
+      "title": "Plan & Billing",
       "description": "Manage your current plan, credits usage, and upgrade options.",
       "currentPlan": "Current Plan",
       "upgrade": "Upgrade Plan",
@@ -12742,7 +12774,32 @@
       "checkoutErrorTitle": "Error processing",
       "cancelTitle": "Cancel Subscription",
       "confirmCancelImmediately": "Are you sure you want to cancel immediately? You will lose access to your current plan's features.",
-      "confirmCancel": "Are you sure you want to cancel? Your subscription will remain active until the end of the current period."
+      "confirmCancel": "Are you sure you want to cancel? Your subscription will remain active until the end of the current period.",
+      "overviewEyebrow": "Workspace plan",
+      "overviewDesc": "Review the active plan, credit usage, and available limits for this workspace.",
+      "refresh": "Refresh",
+      "currentBilling": "Current plan",
+      "internalOverride": "Internal override",
+      "platformOverride": "Internal override",
+      "overrideUsageHint": "Your internal role does not consume the plan balance.",
+      "usageHint": "Monthly workspace usage.",
+      "comparePlansDesc": "Compare real limits before changing the workspace plan.",
+      "apiRequests": "Monthly API",
+      "year": "year",
+      "prioritySupport": "Priority support",
+      "standardSupport": "Standard support",
+      "payInvoice": "Pay invoice",
+      "managePayment": "Payment method",
+      "billingPortal": "Billing portal",
+      "payPendingInvoice": "Pay pending invoice",
+      "viewInvoice": "View latest invoice",
+      "paymentRequiredTitle": "Your payment needs attention",
+      "paymentRequiredDesc": "Update your payment method or pay the pending invoice to keep your plan active.",
+      "statusPastDue": "Past due",
+      "statusActive": "Active",
+      "statusTrial": "Trial",
+      "statusCancelled": "Canceled",
+      "portalError": "Could not open the billing portal"
     },
     "team": "Team",
     "teamDesc": "Manage members and invitations",
@@ -15393,7 +15450,7 @@
       "folders": {
         "all": "All",
         "brand": "Brand",
-        "template": "Templates", 
+        "template": "Templates",
         "article": "Articles",
         "hero": "Hero / Banner",
         "background": "Backgrounds",
@@ -15463,7 +15520,7 @@
       "useAsRef": "Use as reference",
       "copyUrl": "Copy URL",
       "viewDetails": "View details",
-      "previous": "Previous", 
+      "previous": "Previous",
       "next": "Next",
       "close": "Close",
       "allCategories": "All",
@@ -16767,7 +16824,8 @@
       "projects": "Active Projects",
       "leads": "Total Leads",
       "posts": "Posts Published",
-      "views": "Visits"
+      "views": "Visits",
+      "fromLatestReport": "From latest report"
     },
     "welcome": "Welcome to",
     "welcomeSubtitle": "Here's an overview of your workspace",
@@ -16778,6 +16836,10 @@
     "noLeads": "No leads yet",
     "recentActivity": "Recent Activity",
     "noActivity": "No recent activity",
+    "activity": {
+      "loading": "Loading recent activity...",
+      "error": "Could not load recent activity."
+    },
     "error": "Error",
     "notFound": "Portal not found",
     "dashboard": "Dashboard",
@@ -16788,7 +16850,54 @@
     "chat": "Chat",
     "files": "Files",
     "analytics": "Analytics",
-    "workspace": "Workspace"
+    "workspace": "Workspace",
+    "noActiveWorkspace": "No client workspace is active for this account.",
+    "approvals": {
+      "title": "Approvals",
+      "subtitle": "Review transferred projects and agency requests before they go live.",
+      "loading": "Loading approvals...",
+      "empty": "No pending approvals right now.",
+      "pendingCount": "{{count}} pending",
+      "requestedAt": "Requested {{date}}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "requestChanges": "Request changes",
+      "sendChanges": "Send changes",
+      "responseNote": "Response note",
+      "responsePlaceholder": "Tell the agency what should change or why this was rejected.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "change_requested": "Changes requested",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Performance reports shared by your agency.",
+      "loading": "Loading reports...",
+      "empty": "Your agency has not shared a report with this workspace yet.",
+      "latest": "Latest {{date}}",
+      "reportTitle": "{{type}} report",
+      "noPeriod": "No period",
+      "viewDetails": "View details",
+      "hideDetails": "Hide details",
+      "executiveSummary": "Executive summary",
+      "noSummary": "No summary was included in this report.",
+      "recommendations": "Recommendations",
+      "metrics": {
+        "revenue": "Revenue",
+        "leads": "Leads",
+        "orders": "Orders",
+        "visits": "Visits"
+      },
+      "status": {
+        "sent": "Sent",
+        "published": "Published"
+      }
+    }
   },
   "quimera": {
     "agency": {
@@ -16801,7 +16910,7 @@
         "desc": "We charge a flat fee. You set prices for your clients and keep 100% of the revenue."
       },
       "item3": {
-        "title": "Unlimited Sub-accounts",
+        "title": "High-Volume Sub-accounts",
         "desc": "Create separate workspaces for each client with specific access permissions."
       },
       "item4": {
@@ -17233,8 +17342,8 @@
         "desc": "For professionals and small businesses",
         "period": "per month",
         "button": "Start Pro",
-        "feat1": "Unlimited Websites",
-        "feat2": "AI Assistant (Unlimited)",
+        "feat1": "1 Website",
+        "feat2": "AI Assistant (500 credits)",
         "feat3": "Priority Support",
         "feat4": "Custom Domain",
         "feat5": "White Label"
@@ -17244,8 +17353,8 @@
         "desc": "For agencies and large teams",
         "period": "per month",
         "button": "Contact Sales",
-        "feat1": "Unlimited Websites",
-        "feat2": "AI Assistant (Unlimited)",
+        "feat1": "Up to 100 websites",
+        "feat2": "AI Assistant (10,000 credits)",
         "feat3": "24/7 Support",
         "feat4": "Custom Domain",
         "feat5": "Full White Label"
@@ -17469,84 +17578,181 @@
         "create-website": {
           "label": "AI Studio",
           "description": "Use AI Studio for website, business, content, and project guidance.",
-          "prompt": "Use AI Studio with me. Ask what I want to do before creating or changing anything."
+          "prompt": "AI Studio"
         },
         "edit-website": {
           "label": "Website Builder",
           "description": "Use Website Builder for page sections, copy, images, and layout guidance.",
-          "prompt": "Use Website Builder with me. Ask what I want to edit before changing anything."
+          "prompt": "Website Builder"
         },
         "generate-image": {
           "label": "Images",
           "description": "Use Images for image questions, prompts, sizes, styles, and drafts.",
-          "prompt": "Use Images with me. Ask what is missing before preparing anything."
+          "prompt": "Images"
         },
         "create-video": {
           "label": "Videos",
           "description": "Use Videos for video questions, prompts, scenes, formats, and drafts.",
-          "prompt": "Use Videos with me. Ask what is missing before preparing anything."
+          "prompt": "Videos"
         },
         "create-email": {
           "label": "Email",
           "description": "Use Email for campaigns, copy, audiences, and review.",
-          "prompt": "Use Email with me. Ask what I need before preparing anything."
+          "prompt": "Email"
         },
         "create-product": {
           "label": "Ecommerce",
           "description": "Use Ecommerce for products, orders, inventory, discounts, and store settings.",
-          "prompt": "Use Ecommerce with me. Ask what I need before changing anything."
+          "prompt": "Ecommerce"
         },
         "create-appointment": {
           "label": "Appointments",
           "description": "Use Appointments for calendar, services, availability, and bookings.",
-          "prompt": "Use Appointments with me. Ask what I need before preparing anything."
+          "prompt": "Appointments"
         },
         "review-leads": {
           "label": "Leads",
           "description": "Use Leads for contacts, status, follow-up, and lead management.",
-          "prompt": "Use Leads with me. Ask what lead or group I want to review."
+          "prompt": "Leads"
         },
         "create-bio-page": {
           "label": "Bio Page",
           "description": "Use Bio Page for links, blocks, lead capture, bookings, and public actions.",
-          "prompt": "Use Bio Page with me. Ask what I want to adjust before changing anything."
+          "prompt": "Bio Page"
         },
         "train-chatcore": {
           "label": "ChatCore",
           "description": "Use ChatCore for assistant knowledge, training, tests, and visitor chat setup.",
-          "prompt": "Use ChatCore with me. Ask what I want to review before changing anything."
+          "prompt": "ChatCore"
         },
         "analyze-project": {
           "label": "Analytics",
           "description": "Use Analytics for project status, readiness, reports, blockers, and next steps.",
-          "prompt": "Use Analytics with me. Ask what I want to review before taking action."
+          "prompt": "Analytics"
+        },
+        "use-cms": {
+          "label": "CMS",
+          "description": "Use CMS for project content, pages, posts, and drafts.",
+          "prompt": "CMS"
+        },
+        "use-blog-hub": {
+          "label": "Blog Hub",
+          "description": "Use Blog Hub for articles, ideas, categories, and publishing review.",
+          "prompt": "Blog Hub"
+        },
+        "use-navigation": {
+          "label": "Navigation",
+          "description": "Use Navigation for menus, links, and site structure.",
+          "prompt": "Navigation"
+        },
+        "use-domains": {
+          "label": "Domains",
+          "description": "Use Domains for connection, publishing, and domain review.",
+          "prompt": "Domains"
+        },
+        "use-seo": {
+          "label": "SEO",
+          "description": "Use SEO for search titles, descriptions, and indexing review.",
+          "prompt": "SEO"
+        },
+        "use-templates": {
+          "label": "Templates",
+          "description": "Use Templates for template selection and library review.",
+          "prompt": "Templates"
+        },
+        "use-finance": {
+          "label": "Finance",
+          "description": "Use Finance for invoices, revenue, expenses, and financial status.",
+          "prompt": "Finance"
+        },
+        "use-restaurants": {
+          "label": "Restaurants",
+          "description": "Use Restaurants for menus, reservations, services, and settings.",
+          "prompt": "Restaurants"
+        },
+        "use-realty": {
+          "label": "Realty",
+          "description": "Use Realty for listings, showings, properties, and real estate follow-up.",
+          "prompt": "Realty"
+        },
+        "use-owner-mode": {
+          "label": "Owner Mode",
+          "description": "Use Owner Mode for platform status, service controls, and admin review.",
+          "prompt": "Owner Mode"
         }
       },
       "nav": {
-        "dashboard": { "label": "Dashboard" },
-        "websites": { "label": "Websites" },
-        "editor": { "label": "Website Builder" },
-        "assets": { "label": "Media AI" },
-        "cms": { "label": "CMS" },
-        "navigation": { "label": "Navigation" },
-        "chatcore": { "label": "ChatCore" },
-        "leads": { "label": "CRM / Leads" },
-        "appointments": { "label": "Appointments" },
-        "domains": { "label": "Domains" },
-        "seo": { "label": "SEO" },
-        "finance": { "label": "Finance" },
-        "ecommerce": { "label": "Ecommerce" },
-        "restaurants": { "label": "Restaurants" },
-        "email": { "label": "Email Marketing" },
-        "biopage": { "label": "Bio Page" },
-        "real-estate": { "label": "Realty" },
-        "templates": { "label": "Templates" },
-        "settings": { "label": "Settings" }
+        "dashboard": {
+          "label": "Dashboard"
+        },
+        "websites": {
+          "label": "Websites"
+        },
+        "editor": {
+          "label": "Website Builder"
+        },
+        "assets": {
+          "label": "Media AI"
+        },
+        "cms": {
+          "label": "CMS"
+        },
+        "navigation": {
+          "label": "Navigation"
+        },
+        "chatcore": {
+          "label": "ChatCore"
+        },
+        "leads": {
+          "label": "CRM / Leads"
+        },
+        "appointments": {
+          "label": "Appointments"
+        },
+        "domains": {
+          "label": "Domains"
+        },
+        "seo": {
+          "label": "SEO"
+        },
+        "finance": {
+          "label": "Finance"
+        },
+        "ecommerce": {
+          "label": "Ecommerce"
+        },
+        "restaurants": {
+          "label": "Restaurants"
+        },
+        "email": {
+          "label": "Email Marketing"
+        },
+        "biopage": {
+          "label": "Bio Page"
+        },
+        "real-estate": {
+          "label": "Realty"
+        },
+        "templates": {
+          "label": "Templates"
+        },
+        "agency": {
+          "label": "Agency"
+        },
+        "settings": {
+          "label": "Settings"
+        }
       },
       "admin": {
-        "superadmin": { "label": "Super Admin" },
-        "global-assistant": { "label": "Global Assistant settings" },
-        "service-availability": { "label": "Service availability" }
+        "superadmin": {
+          "label": "Super Admin"
+        },
+        "global-assistant": {
+          "label": "Global Assistant settings"
+        },
+        "service-availability": {
+          "label": "Service availability"
+        }
       }
     }
   },

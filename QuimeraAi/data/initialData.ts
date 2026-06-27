@@ -612,7 +612,7 @@ const pageData = {
                     en: "$99"
                 },
             frequency: '/mes',
-            features: ['Soporte 24/7', 'Proyectos ilimitados', 'Analíticas avanzadas'],
+            features: ['Soporte 24/7', 'Hasta 100 proyectos', 'Analíticas avanzadas'],
             buttonText: {
                     es: "Elegir Pro",
                     en: "Choose Pro"
@@ -798,7 +798,7 @@ const pageData = {
                     es: "Ideal for growing companies with more demands.",
                     en: "Ideal for growing companies with more demands."
                 },
-            features: ['Unlimited Projects', 'Advanced Analytics', 'Priority Support', 'Custom Domain', 'Team Collaboration'],
+            features: ['Up to 100 projects', 'Advanced Analytics', 'Priority Support', 'Custom Domain', 'Team Collaboration'],
             buttonText: {
                     es: "Get Started",
                     en: "Get Started"
@@ -1130,7 +1130,7 @@ const pageData = {
                 es: "Para negocios en crecimiento que buscan escalar.",
                 en: "For growing businesses looking to scale."
             },
-        features: ['Páginas ilimitadas', 'Ecommerce completo', 'IA Avanzada', 'Soporte prioritario'],
+        features: ['Hasta 100 páginas', 'Ecommerce completo', 'IA Avanzada', 'Soporte prioritario'],
         buttonText: {
                 es: "Elegir Pro",
                 en: "Choose Pro"

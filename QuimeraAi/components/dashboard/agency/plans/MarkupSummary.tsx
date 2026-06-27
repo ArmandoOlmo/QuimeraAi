@@ -6,14 +6,15 @@
 import React, { useState, useEffect } from 'react';
 import {
     TrendingUp,
-    DollarSign,
     Users,
     RefreshCw,
     ChevronDown,
     ChevronUp,
 } from 'lucide-react';
 import { getAgencyPlanSummaries } from '../../../../services/agencyPlansService';
-import { AgencyPlanSummary, QUIMERA_PROJECT_COST } from '../../../../types/agencyPlans';
+import { AgencyPlanSummary } from '../../../../types/agencyPlans';
+import { StatusBadge } from '../../../ui/system';
+import { AgencyPanel } from '../AgencyDesignSystem';
 
 interface MarkupSummaryProps {
     tenantId: string;
@@ -70,7 +71,7 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
     }
 
     return (
-        <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+        <AgencyPanel contentClassName="!p-0">
             {/* Header */}
             <div
                 className={`px-6 py-4 border-b border-q-border flex items-center justify-between ${compact ? 'cursor-pointer hover:bg-muted/30' : ''}`}
@@ -152,15 +153,12 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                    summary.markupPercentage >= 200
-                                                        ? 'bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success'
-                                                        : summary.markupPercentage >= 100
-                                                        ? 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent'
-                                                        : 'bg-q-accent/10 dark:bg-q-accent/12 text-q-accent dark:text-q-accent'
-                                                }`}>
+                                                <StatusBadge
+                                                    size="sm"
+                                                    variant={summary.markupPercentage >= 200 ? 'success' : 'info'}
+                                                >
                                                     {Math.round(summary.markupPercentage)}%
-                                                </span>
+                                                </StatusBadge>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
@@ -198,9 +196,9 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                                         -
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-q-success/10 dark:bg-q-success/12 text-q-success dark:text-q-success">
+                                        <StatusBadge size="sm" variant="success">
                                             {Math.round(avgMarkup)}% avg
-                                        </span>
+                                        </StatusBadge>
                                     </td>
                                     <td className="px-6 py-4 text-right text-foreground">
                                         {totals.clients}
@@ -237,6 +235,6 @@ export function MarkupSummary({ tenantId, compact = false }: MarkupSummaryProps)
                     </div>
                 </div>
             )}
-        </div>
+        </AgencyPanel>
     );
 }

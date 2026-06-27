@@ -1,0 +1,300 @@
+import { describe, expect, it } from 'vitest';
+import {
+    canConsumeCredits,
+    resolveServiceAccess,
+} from '../../services/access/serviceAccessEngine';
+import {
+    CANONICAL_PLAN_IDS,
+    formatPlanLimit,
+    getCanonicalPlanLimits,
+    isFinitePlanLimit,
+    isPlatformUnlimitedUser,
+    normalizePlanLimits,
+} from '../../services/billing/planCatalog';
+import {
+    resolveTenantEffectiveLimits,
+    resolveTenantEffectivePlan,
+    type Tenant,
+} from '../../types/multiTenant';
+
+const baseInput = {
+    userId: 'user_1',
+    userRole: 'agency_owner',
+    tenantId: 'tenant_1',
+    tenantStatus: 'active',
+    subscriptionStatus: 'active',
+    planId: 'individual',
+};
+
+describe('Service Access Engine', () => {
+    it('keeps every canonical plan finite', () => {
+        for (const planId of CANONICAL_PLAN_IDS) {
+            const limits = getCanonicalPlanLimits(planId);
+            for (const [key, value] of Object.entries(limits)) {
+                if (typeof value === 'number') {
+                    expect(value, `${planId}.${key}`).not.toBe(-1);
+                    expect(Number.isFinite(value), `${planId}.${key}`).toBe(true);
+                    expect(value, `${planId}.${key}`).toBeGreaterThanOrEqual(0);
+                }
+            }
+        }
+    });
+
+    it('only treats owner and superadmin as platform-unlimited users', () => {
+        expect(isPlatformUnlimitedUser('owner')).toBe(true);
+        expect(isPlatformUnlimitedUser('superadmin')).toBe(true);
+        for (const role of ['admin', 'manager', 'agency_owner', 'agency_admin', 'agency_member', 'client', 'enterprise']) {
+            expect(isPlatformUnlimitedUser(role), role).toBe(false);
+        }
+    });
+
+    it('does not format invalid commercial limits as unlimited for normal users', () => {
+        expect(formatPlanLimit(-1)).toBe('No disponible');
+        expect(formatPlanLimit(Number.POSITIVE_INFINITY)).toBe('No disponible');
+        expect(formatPlanLimit(null)).toBe('No disponible');
+        expect(formatPlanLimit(-1, { role: 'owner', showUnlimitedForPlatformUser: true })).toBe('Ilimitado');
+    });
+
+    it('sanitizes invalid DB limits to finite canonical fallbacks', () => {
+        const limits = normalizePlanLimits({
+            maxProjects: -1,
+            maxUsers: Number.POSITIVE_INFINITY,
+            maxAiCredits: 200,
+        }, 'agency_starter');
+
+        expect(limits.maxProjects).toBe(25);
+        expect(limits.maxUsers).toBe(5);
+        expect(limits.maxAiCredits).toBe(200);
+        expect(isFinitePlanLimit(limits.maxProjects)).toBe(true);
+    });
+
+    it('blocks commercial feature access when the plan lacks the required feature', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'free',
+            serviceId: 'ecommerce',
+            featureKey: 'ecommerceEnabled',
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'plan_feature_missing',
+            upgradeRequired: true,
+        });
+    });
+
+    it('allows included individual features without requiring admin override', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'individual',
+            serviceId: 'ecommerce',
+            featureKey: 'ecommerceEnabled',
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+        });
+    });
+
+    it('blocks not_public and development services for normal users', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            serviceId: 'emailMarketing',
+            serviceAvailability: { emailMarketing: { status: 'not_public' } },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'service_not_public',
+        });
+
+        expect(resolveServiceAccess({
+            ...baseInput,
+            serviceId: 'ecommerce',
+            serviceAvailability: { ecommerce: { status: 'development' } },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'service_in_development',
+        });
+    });
+
+    it('blocks not_public and development services for owner and superadmin too', () => {
+        for (const role of ['owner', 'superadmin']) {
+            expect(resolveServiceAccess({
+                ...baseInput,
+                userRole: role,
+                planId: 'free',
+                serviceId: 'ecommerce',
+                featureKey: 'ecommerceEnabled',
+                serviceAvailability: { ecommerce: { status: 'development' } },
+                requestedUsage: { resource: 'projects', amount: 100, used: 100 },
+                aiOperation: 'image_generation',
+                aiCreditsUsage: { creditsIncluded: 0, creditsUsed: 0, creditsRemaining: 0 },
+            })).toMatchObject({
+                allowed: false,
+                reasonCode: 'service_in_development',
+            });
+
+            expect(resolveServiceAccess({
+                ...baseInput,
+                userRole: role,
+                planId: 'free',
+                serviceId: 'emailMarketing',
+                serviceAvailability: { emailMarketing: { status: 'not_public' } },
+            })).toMatchObject({
+                allowed: false,
+                reasonCode: 'service_not_public',
+            });
+        }
+    });
+
+    it('allows owner and superadmin to bypass plan, limit, and credit gates when the service is public', () => {
+        for (const role of ['owner', 'superadmin']) {
+            expect(resolveServiceAccess({
+                ...baseInput,
+                userRole: role,
+                planId: 'free',
+                serviceId: 'ecommerce',
+                featureKey: 'ecommerceEnabled',
+                serviceAvailability: { ecommerce: { status: 'public' } },
+                requestedUsage: { resource: 'projects', amount: 100, used: 100 },
+                aiOperation: 'image_generation',
+                aiCreditsUsage: { creditsIncluded: 0, creditsUsed: 0, creditsRemaining: 0 },
+            })).toMatchObject({
+                allowed: true,
+                adminOverride: true,
+                reasonCode: role === 'owner' ? 'owner_override' : 'superadmin_override',
+            });
+        }
+    });
+
+    it('does not give admin, manager, or agency owner unlimited access', () => {
+        for (const role of ['admin', 'manager', 'agency_owner']) {
+            expect(resolveServiceAccess({
+                ...baseInput,
+                userRole: role,
+                planId: 'individual',
+                requestedUsage: { resource: 'projects', amount: 1, used: 1 },
+            })).toMatchObject({
+                allowed: false,
+                reasonCode: 'limit_exceeded',
+            });
+        }
+    });
+
+    it('rejects agency_client as a subscription plan id', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_client',
+            serviceId: 'ecommerce',
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'invalid_plan',
+        });
+    });
+
+    it('allows the canonical Agency Engine only for agency plans with agency permissions', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-engine',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageSettings',
+            permissions: { canManageSettings: true },
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+        });
+    });
+
+    it('does not treat enterprise as an agency plan', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'enterprise',
+            moduleId: 'agency-engine',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageSettings',
+            permissions: { canManageSettings: true },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'plan_feature_missing',
+            currentPlan: 'enterprise',
+            requiredFeature: 'agencyModule',
+        });
+    });
+
+    it('requires tenant permissions for agency billing submodules', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-billing',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageBilling',
+            permissions: { canManageSettings: true },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'permission_missing',
+            requiredService: 'agency',
+        });
+    });
+
+    it('gates agency project transfer by project management permission', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-project-transfer',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageProjects',
+            permissions: { canManageProjects: true },
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+        });
+
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'agency_pro',
+            moduleId: 'agency-project-transfer',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            requiredPermission: 'canManageProjects',
+            permissions: { canManageBilling: true },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'permission_missing',
+            requiredService: 'agency',
+        });
+    });
+
+    it('resolves agency_client tenants to a valid finite effective plan', () => {
+        const parent = {
+            subscriptionPlan: 'agency_pro',
+            limits: getCanonicalPlanLimits('agency_pro'),
+        } as Tenant;
+        const tenant = {
+            type: 'agency_client',
+            subscriptionPlan: 'free',
+            billing: { mode: 'included_in_parent' },
+            limits: { maxProjects: -1 },
+        } as Tenant;
+
+        expect(resolveTenantEffectivePlan(tenant, parent)).toBe('agency_pro');
+        expect(resolveTenantEffectiveLimits(tenant, parent).maxProjects).toBe(100);
+    });
+
+    it('blocks AI credit consumption when credits are insufficient', () => {
+        expect(canConsumeCredits({
+            ...baseInput,
+            aiOperation: 'image_generation',
+            customCredits: 4,
+            aiCreditsUsage: { creditsIncluded: 60, creditsUsed: 59, creditsRemaining: 1 },
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'credits_exceeded',
+            remaining: 1,
+        });
+    });
+});

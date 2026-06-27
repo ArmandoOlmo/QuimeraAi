@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePortal } from './PortalContext';
 import { useRouter } from '../../hooks/useRouter';
+import { ROUTES } from '../../routes/config';
 import {
     LayoutDashboard,
     Globe,
@@ -46,7 +47,7 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
             id: 'dashboard',
             icon: LayoutDashboard,
             label: t('portal.dashboard', 'Dashboard'),
-            path: '/portal',
+            path: ROUTES.PORTAL_DASHBOARD,
         },
         {
             id: 'projects',
@@ -115,8 +116,8 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
     };
 
     const isActive = (itemPath: string) => {
-        if (itemPath === '/portal') {
-            return path === '/portal' || path === '/portal/';
+        if (itemPath === ROUTES.PORTAL_DASHBOARD) {
+            return path === ROUTES.PORTAL_HOME || path === ROUTES.PORTAL_DASHBOARD;
         }
         return path.startsWith(itemPath);
     };
@@ -227,7 +228,6 @@ const PortalSidebar: React.FC<PortalSidebarProps> = ({ isOpen, onClose }) => {
 };
 
 export default PortalSidebar;
-
 
 
 

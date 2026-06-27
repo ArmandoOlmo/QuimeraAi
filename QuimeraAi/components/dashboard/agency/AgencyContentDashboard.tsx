@@ -11,6 +11,8 @@ import AgencyArticleEditor from './AgencyArticleEditor';
 import AgencyLegalPageEditor from './AgencyLegalPageEditor';
 import AgencyContentCreatorAssistant from './AgencyContentCreatorAssistant';
 import HeaderBackButton from '../../ui/HeaderBackButton';
+import { StatusBadge } from '../../ui/system';
+import { AgencyPanel, AgencySectionHeader, AgencyStatCard } from './AgencyDesignSystem';
 import {
     Plus,
     Search,
@@ -21,10 +23,6 @@ import {
     Calendar,
     Globe,
     PenTool,
-    ArrowDown,
-    ArrowUp,
-    Grid,
-    List,
     Eye,
     X as XIcon,
     Copy,
@@ -36,7 +34,6 @@ import {
     Lock,
     Tag,
     Clock,
-    Menu
 } from 'lucide-react';
 import { AgencyArticle, AgencyArticleCategory, AgencyLegalPageType, AGENCY_LEGAL_PAGE_LABELS } from '../../../types/agencyContent';
 import { sanitizeHtml } from '../../../utils/sanitize';
@@ -62,7 +59,6 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
     const { t } = useTranslation();
     const { articles, isLoadingArticles, loadArticles, deleteArticle, saveArticle, legalPages } = useAgencyContent();
 
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingArticle, setEditingArticle] = useState<AgencyArticle | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -81,7 +77,6 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
-    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
     // Quick preview
     const [previewArticle, setPreviewArticle] = useState<AgencyArticle | null>(null);
@@ -310,7 +305,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
     }
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="space-y-6">
             {/* AI Assistant Modal */}
             {isAiAssistantOpen && (
                 <AgencyContentCreatorAssistant
@@ -319,149 +314,96 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                 />
             )}
 
-
-            <div className="flex-1 flex flex-col overflow-hidden relative">
-                {/* Standardized Header - Same as user CMS */}
- <header className="quimera-dashboard-header-bar h-14 flex items-center z-20 sticky top-0">
-                    {/* Left Section */}
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 active:bg-secondary rounded-xl transition-colors touch-manipulation">
-                            <Menu className="w-5 h-5" />
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <PenTool className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
-                            <h1 className="text-lg font-semibold text-foreground hidden sm:block">{t('contentManagement.title', 'Gestor de Contenido')}</h1>
-                        </div>
-
-                        {/* Badge */}
-                        <span className="hidden sm:inline-flex px-2 py-0.5 text-xs font-medium bg-q-accent/10 text-q-accent rounded-full">
-                            Landing Pública
-                        </span>
-                    </div>
-
-                    {/* Center Section - Search */}
-                    <div className="hidden md:flex flex-1 justify-center mx-4">
-                        <div className="flex items-center gap-2 w-full max-w-md bg-muted/50 rounded-lg px-3 py-2">
-                            <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder={t('common.search', 'Buscar...')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground placeholder:text-q-text-muted"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="text-q-text-muted hover:text-foreground flex-shrink-0">
-                                    <XIcon size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right Section */}
-                    <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-                        {/* Mobile Search - Expandable */}
-                        <div className="md:hidden">
-                            {isMobileSearchOpen ? (
-                                <div className="absolute left-0 right-0 top-full bg-q-bg border-b border-q-border p-3 flex items-center gap-2 animate-slide-down z-30">
-                                    <div className="flex items-center gap-2 flex-1 bg-muted/50 rounded-lg px-3 py-2">
-                                        <Search className="w-4 h-4 text-q-text-muted flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            placeholder={t('contentManagement.searchArticles', 'Buscar artículos...')}
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="flex-1 bg-transparent outline-none text-sm min-w-0 text-foreground"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setIsMobileSearchOpen(false);
-                                            setSearchQuery('');
-                                        }}
-                                        className="p-2 text-q-text-muted hover:text-foreground rounded-lg"
-                                    >
-                                        <XIcon size={18} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => setIsMobileSearchOpen(true)}
-                                    className="h-8 w-8 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                                >
-                                    <Search className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Export Button - Desktop only */}
+            <AgencySectionHeader
+                icon={PenTool}
+                title={t('contentManagement.title', 'Gestor de Contenido')}
+                subtitle={t('contentManagement.subtitle', 'Administra artículos y páginas legales de la landing pública de la agencia.')}
+                eyebrow="Landing Pública"
+                actions={(
+                    <>
                         {articles.length > 0 && (
                             <button
                                 onClick={handleExport}
-                                className="hidden sm:flex items-center justify-center h-9 w-9 rounded-md transition-colors text-q-text-muted hover:text-foreground hover:bg-muted"
+                                className="h-10 w-10 rounded-lg text-q-text-muted hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center"
                                 title="Exportar artículos"
+                                aria-label="Exportar artículos"
                             >
                                 <Download className="w-4 h-4" />
                             </button>
                         )}
-
-                        {/* AI Create Button - Mobile compact */}
                         <button
                             onClick={handleAiCreate}
-                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-bold transition-all text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                            className="flex h-10 items-center gap-2 rounded-lg border border-q-border bg-muted px-3 text-sm font-medium text-foreground hover:bg-secondary/70 transition-colors"
                         >
-                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">{t('contentManagement.createWithAI', 'Crear con IA')}</span>
-                            <span className="sm:hidden">IA</span>
+                            <Sparkles className="w-4 h-4 quimera-dashboard-header-icon" strokeWidth={2} />
+                            <span>{t('contentManagement.createWithAI', 'Crear con IA')}</span>
                         </button>
-
                         <button
                             onClick={handleCreateNew}
-                            className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-9 px-2 sm:px-3 rounded-md text-xs sm:text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90"
+                            className="quimera-guide-cta h-10"
                         >
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">{t('contentManagement.newArticle', 'Nuevo Artículo')}</span>
+                            <Plus className="w-4 h-4" />
+                            <span>{t('contentManagement.newArticle', 'Nuevo Artículo')}</span>
                         </button>
-
                         <HeaderBackButton onClick={onBack} />
+                    </>
+                )}
+            />
+
+            <AgencyPanel contentClassName="space-y-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="relative w-full lg:max-w-md">
+                        <Search className="w-4 h-4 text-q-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            placeholder={t('common.search', 'Buscar...')}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full rounded-lg border border-q-border bg-muted/40 py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md text-q-text-muted hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center"
+                                aria-label={t('common.clearSearch', 'Limpiar búsqueda')}
+                            >
+                                <XIcon size={16} />
+                            </button>
+                        )}
                     </div>
-                </header>
 
-                <main className="flex-1 overflow-y-auto scroll-smooth">
-                    <div className="h-full space-y-4 sm:space-y-6">
-
-                        {/* Tabs */}
-                        <div className="flex gap-2 border-b border-q-border">
-                            <button
-                                onClick={() => setActiveTab('articles')}
-                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'articles'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-q-text-muted hover:text-foreground'
-                                    }`}
-                            >
-                                <FileText size={14} className="inline mr-2" />
-                                Artículos ({articles.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('legal')}
-                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'legal'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-q-text-muted hover:text-foreground'
-                                    }`}
-                            >
-                                <Shield size={14} className="inline mr-2" />
-                                Páginas Legales
-                            </button>
-                        </div>
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setActiveTab('articles')}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'articles'
+                                ? 'bg-q-accent/10 quimera-status-card-accent-text'
+                                : 'text-q-text-muted hover:text-foreground hover:bg-muted/60'
+                                }`}
+                        >
+                            <FileText size={14} />
+                            Artículos ({articles.length})
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('legal')}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${activeTab === 'legal'
+                                ? 'bg-q-accent/10 quimera-status-card-accent-text'
+                                : 'text-q-text-muted hover:text-foreground hover:bg-muted/60'
+                                }`}
+                        >
+                            <Shield size={14} />
+                            Páginas Legales
+                        </button>
+                    </div>
+                </div>
+            </AgencyPanel>
 
                         {/* Legal Pages Tab Content */}
                         {activeTab === 'legal' && (
                             <div className="space-y-6">
                                 {/* Legal Pages Info */}
-                                <div className="p-4 bg-q-accent/10 border border-q-accent/20 rounded-lg">
+                                <AgencyPanel contentClassName="p-4">
                                     <div className="flex items-start gap-3">
-                                        <Shield className="text-q-accent flex-shrink-0 mt-0.5" size={20} />
+                                        <Shield className="quimera-dashboard-header-icon flex-shrink-0 mt-0.5" size={20} strokeWidth={2} />
                                         <div>
                                             <h4 className="text-sm font-semibold text-foreground mb-1">
                                                 Páginas Legales para Meta OAuth
@@ -472,7 +414,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                             </p>
                                         </div>
                                     </div>
-                                </div>
+                                </AgencyPanel>
 
                                 {/* Legal Pages Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,9 +423,9 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                         const isPublished = page?.status === 'published';
 
                                         return (
-                                            <div
+                                            <AgencyPanel
                                                 key={pageType}
-                                                className="bg-q-surface border border-q-border rounded-xl p-5 hover:border-primary/30 transition-colors"
+                                                contentClassName="p-5"
                                             >
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-3">
@@ -497,12 +439,9 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                             <p className="text-xs text-q-text-muted">/{pageType}</p>
                                                         </div>
                                                     </div>
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${isPublished
-                                                        ? 'bg-q-success/10 text-q-success'
-                                                        : 'bg-q-warning/10 text-q-warning'
-                                                        }`}>
+                                                    <StatusBadge size="sm" variant={isPublished ? 'success' : 'warning'}>
                                                         {isPublished ? 'Publicado' : 'Borrador'}
-                                                    </span>
+                                                    </StatusBadge>
                                                 </div>
 
                                                 {page && (
@@ -514,7 +453,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => setEditingLegalPageType(pageType)}
-                                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                                                        className="quimera-guide-cta flex-1 justify-center"
                                                     >
                                                         <Edit3 size={14} />
                                                         Editar
@@ -528,17 +467,13 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                                         <Eye size={14} />
                                                     </a>
                                                 </div>
-                                            </div>
+                                            </AgencyPanel>
                                         );
                                     })}
                                 </div>
 
                                 {/* Meta URLs Info */}
-                                <div className="bg-q-surface border border-q-border rounded-xl p-6">
-                                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                                        <Globe size={18} className="text-primary" />
-                                        URLs para Meta Developer Console
-                                    </h3>
+                                <AgencyPanel title="URLs para Meta Developer Console" icon={Globe}>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg">
                                             <div>
@@ -559,51 +494,33 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                             </code>
                                         </div>
                                     </div>
-                                </div>
+                                </AgencyPanel>
                             </div>
                         )}
 
                         {/* Articles Tab Content */}
                         {activeTab === 'articles' && (
                             <>
-                                {/* Metrics - Unified responsive design (same as user CMS) */}
+                                {/* Metrics */}
                                 {articles.length > 0 && (
-                                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                                        {/* Total Articles */}
-                                        <div className="group relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border border-primary/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
-                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-                                            <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <FileText className="w-4 h-4 sm:w-5 sm:h-5 quimera-dashboard-header-icon mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
-                                                <div className="text-center sm:text-left">
-                                                    <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{metrics.total}</p>
-                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.totalArticles', 'Total Artículos')}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Published */}
-                                        <div className="group relative overflow-hidden bg-gradient-to-br from-q-success/5 via-q-success/10 to-q-success/5 border border-q-success/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-q-success/40 hover:shadow-lg hover:shadow-q-success/5">
-                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-q-success/10 rounded-full blur-2xl group-hover:bg-q-success/20 transition-colors" />
-                                            <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-q-success mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
-                                                <div className="text-center sm:text-left">
-                                                    <p className="text-xl sm:text-2xl font-bold text-q-success tracking-tight">{metrics.published}</p>
-                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.published', 'Publicados')}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Drafts */}
-                                        <div className="group relative overflow-hidden bg-gradient-to-br from-q-accent/5 via-q-accent/10 to-q-accent/5 border border-q-accent/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-q-accent/40 hover:shadow-lg hover:shadow-q-accent/5">
-                                            <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-q-accent/10 rounded-full blur-2xl group-hover:bg-q-accent/20 transition-colors" />
-                                            <div className="relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                                <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-q-accent mx-auto sm:mx-0 flex-shrink-0" size={16} strokeWidth={2} />
-                                                <div className="text-center sm:text-left">
-                                                    <p className="text-xl sm:text-2xl font-bold text-q-accent tracking-tight">{metrics.drafts}</p>
-                                                    <p className="text-[10px] sm:text-xs text-q-text-muted font-medium uppercase tracking-wider">{t('contentManagement.drafts', 'Borradores')}</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                        <AgencyStatCard
+                                            icon={FileText}
+                                            label={t('contentManagement.totalArticles', 'Total Artículos')}
+                                            value={metrics.total}
+                                        />
+                                        <AgencyStatCard
+                                            icon={Globe}
+                                            label={t('contentManagement.published', 'Publicados')}
+                                            value={metrics.published}
+                                            tone="success"
+                                        />
+                                        <AgencyStatCard
+                                            icon={Edit3}
+                                            label={t('contentManagement.drafts', 'Borradores')}
+                                            value={metrics.drafts}
+                                            tone="accent"
+                                        />
                                     </div>
                                 )}
 
@@ -714,7 +631,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                     /* List View - Mobile optimized */
                                     <>
                                         {/* Desktop Table View */}
-                                        <div className="hidden sm:block bg-q-surface border border-q-border rounded-xl overflow-hidden">
+                                        <div className="hidden sm:block quimera-dashboard-panel-card !p-0 overflow-hidden">
                                             <table className="w-full">
                                                 <thead className="bg-secondary/20 border-b border-q-border">
                                                     <tr>
@@ -832,7 +749,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                             {filteredAndSortedArticles.map(article => (
                                                 <div
                                                     key={article.id}
-                                                    className="bg-q-surface border border-q-border rounded-xl p-3 active:bg-secondary/30 transition-colors"
+                                                    className="quimera-dashboard-panel-card p-3 active:bg-secondary/30 transition-colors"
                                                     onClick={() => handleEdit(article)}
                                                 >
                                                     <div className="flex gap-3">
@@ -899,7 +816,7 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                         {filteredAndSortedArticles.map(article => (
                                             <div
                                                 key={article.id}
-                                                className="group relative rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl sm:hover:scale-[1.02] h-[280px] sm:h-[400px]"
+                                                className="quimera-dashboard-panel-card !p-0 group relative overflow-hidden transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] h-[280px] sm:h-[400px]"
                                                 onClick={() => handleEdit(article)}
                                             >
                                                 {/* Full Background Image */}
@@ -1104,9 +1021,6 @@ const AgencyContentDashboard: React.FC<AgencyContentDashboardProps> = ({ onBack 
                                 )}
                             </>
                         )}
-                    </div>
-                </main>
-            </div>
 
             {/* Delete Confirmation Modal */}
             {deleteConfirmId && (

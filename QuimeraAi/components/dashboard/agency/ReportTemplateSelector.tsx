@@ -94,7 +94,7 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
     };
 
     return (
-        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+        <div className="quimera-dashboard-panel-card !p-0 overflow-hidden">
             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
@@ -142,7 +142,7 @@ export function ReportTemplateSelector({ selected, onChange }: ReportTemplateSel
                                 {/* Recommended badge */}
                                 {template.recommended && (
                                     <div className="absolute -top-2.5 left-4">
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent shadow-lg">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-q-accent text-q-text-on-accent">
                                             <Sparkles className="h-3 w-3" />
                                             {t('dashboard.agency.reports.templates.recommended', 'Recomendado')}
                                         </span>

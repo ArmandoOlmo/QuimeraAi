@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { AssignPlanModal } from './plans';
 import { GeneratePaymentLink } from './GeneratePaymentLink';
+import { AgencyPanel } from './AgencyDesignSystem';
 
 
 
@@ -74,19 +75,34 @@ export function ClientBillingManager() {
         loadClientsBilling();
     }, [subClients]);
 
+    const parseBillingDate = (value: any): Date | undefined => {
+        if (!value) return undefined;
+        if (value instanceof Date) return value;
+        if (typeof value === 'string') {
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+        }
+        if (typeof value.seconds === 'number') {
+            return new Date(value.seconds * 1000);
+        }
+        return undefined;
+    };
+
     const loadClientsBilling = () => {
         const billingInfo: ClientBillingInfo[] = subClients.map((client) => ({
             clientId: client.id,
             clientName: client.name,
             monthlyPrice: client.billing?.monthlyPrice,
             status: (client.billing as any)?.status,
-            paymentMethod: client.billing?.stripeCustomerId ? 'configured' : undefined,
-            nextBillingDate: client.billing?.nextBillingDate
-                ? new Date((client.billing.nextBillingDate as any).seconds * 1000)
-                : undefined,
-            subscriptionId: client.billing?.stripeSubscriptionId,
-            agencyPlanId: (client as any).agencyPlanId,
-            agencyPlanName: (client as any).agencyPlanName,
+            paymentMethod: client.billing?.stripeSubscriptionId
+                ? 'configured'
+                : client.billing?.stripeCheckoutSessionId
+                    ? 'checkout_pending'
+                    : undefined,
+            nextBillingDate: parseBillingDate(client.billing?.nextBillingDate || client.billing?.currentPeriodEnd),
+            subscriptionId: client.billing?.stripeSubscriptionId || client.billing?.stripeCheckoutSessionId,
+            agencyPlanId: (client as any).agencyPlanId || client.billing?.agencyPlanId,
+            agencyPlanName: (client as any).agencyPlanName || client.billing?.agencyPlanName,
             limits: client.limits,
         }));
 
@@ -141,24 +157,29 @@ export function ClientBillingManager() {
         setError(null);
 
         try {
-            // In production, you would collect payment method here using Stripe Elements
-            // For now, we'll use a test payment method
+            const origin = window.location.origin;
             const result = await supabase.functions.invoke('stripe-api', {
                 body: {
                     action: 'setupClientBilling',
                     clientTenantId: clientId,
                     monthlyPrice: parseFloat(setupPrice),
-                    paymentMethodId: 'pm_card_visa' // Test payment method
+                    successUrl: `${origin}/dashboard/agency/billing?billing=success&client=${clientId}`,
+                    cancelUrl: `${origin}/dashboard/agency/billing?billing=cancelled&client=${clientId}`,
                 }
             });
             if (result.error) throw result.error;
 
+            const checkoutUrl = (result.data as any)?.data?.url || (result.data as any)?.url;
             setSetupModalClient(null);
             setSetupPrice('');
             loadClientsBilling();
 
-            // Success notification
-            alert('Facturación configurada exitosamente');
+            if (checkoutUrl) {
+                window.location.assign(checkoutUrl);
+                return;
+            }
+
+            alert('Sesión de pago creada. Revisa Stripe para completar la configuración.');
         } catch (err: any) {
             console.error('Error setting up billing:', err);
             setError(err.message || 'Error al configurar facturación');
@@ -250,6 +271,24 @@ export function ClientBillingManager() {
                 label: 'Cancelando',
                 icon: AlertCircle,
             },
+            checkout_pending: {
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
+                label: 'Checkout pendiente',
+                icon: AlertCircle,
+            },
+            payment_link_pending: {
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
+                label: 'Link pendiente',
+                icon: AlertCircle,
+            },
+            trial: {
+                bg: 'bg-primary/10 dark:bg-primary/12',
+                text: 'text-primary dark:text-primary',
+                label: 'Trial',
+                icon: CheckCircle,
+            },
             cancelled: {
                 bg: 'bg-q-surface-overlay dark:bg-gray-900/20',
                 text: 'text-q-text dark:text-gray-400',
@@ -304,13 +343,7 @@ export function ClientBillingManager() {
             )}
 
             {/* Clients Table */}
-            <div className="bg-q-surface rounded-lg border border-q-border overflow-hidden">
-                <div className="px-6 py-4 border-b border-q-border">
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Configuración de Precios por Cliente
-                    </h3>
-                </div>
-
+            <AgencyPanel title="Configuración de Precios por Cliente" contentClassName="!p-0 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-muted">
@@ -433,7 +466,7 @@ export function ClientBillingManager() {
                                         {client.paymentMethod ? (
                                             <div className="flex items-center gap-2 text-sm text-foreground">
                                                 <CreditCard className="h-4 w-4" />
-                                                <span>Configurado</span>
+                                                <span>{client.paymentMethod === 'checkout_pending' ? 'Checkout pendiente' : 'Configurado'}</span>
                                             </div>
                                         ) : (
                                             <span className="text-sm text-q-text-muted">Sin configurar</span>
@@ -536,7 +569,7 @@ export function ClientBillingManager() {
                         </p>
                     </div>
                 )}
-            </div>
+            </AgencyPanel>
 
             {/* Edit Limits Modal */}
             {editLimitsClient && (

@@ -47,6 +47,7 @@ import {
     Youtube,
     Github,
 } from 'lucide-react';
+import { AgencyPanel, AgencySectionHeader } from './AgencyDesignSystem';
 
 interface AgencyNavigationManagementProps {
     onBack?: () => void;
@@ -286,49 +287,45 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
     }
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-6">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <MenuIcon className="h-6 w-6 text-primary" />
-                        {t('agency.navigation', 'Enlaces del Menú')}
-                    </h2>
-                    <p className="text-q-text-muted mt-1">
-                        {t('agency.navigationDesc', 'Configura los enlaces de navegación del header, columnas del footer y redes sociales.')}
-                    </p>
-                </div>
+            <AgencySectionHeader
+                icon={MenuIcon}
+                title={t('agency.navigation', 'Enlaces del Menú')}
+                subtitle={t('agency.navigationDesc', 'Configura los enlaces de navegación del header, columnas del footer y redes sociales.')}
+                actions={(
                 <button
                     onClick={handleSave}
                     disabled={isSaving || !hasChanges}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                    className="quimera-guide-cta disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     {isSaving ? t('common.saving', 'Guardando...') : t('common.save', 'Guardar')}
                 </button>
-            </div>
+                )}
+            />
 
             {/* Info Banner */}
-            <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
-                <MenuIcon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="quimera-dashboard-panel-card flex items-start gap-3 p-4">
+                <MenuIcon className="h-5 w-5 quimera-dashboard-header-icon flex-shrink-0 mt-0.5" strokeWidth={2} />
                 <p className="text-sm text-foreground">
                     Aquí configuras los <strong>enlaces de navegación</strong> del header, las <strong>columnas del footer</strong> con sus enlaces, y tus <strong>redes sociales</strong>. Los aspectos visuales se configuran desde el editor del Landing Page.
                 </p>
             </div>
 
             {/* Tabs Card */}
-            <div className="bg-q-surface border border-q-border rounded-xl overflow-hidden">
+            <AgencyPanel contentClassName="!p-0">
                 <div className="px-6 py-0 border-b border-q-border bg-muted/30 flex gap-1">
                     <button
                         onClick={() => setActiveTab('header')}
-                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'header' ? 'border-primary text-primary' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'header' ? 'border-q-accent quimera-status-card-accent-text' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
                     >
                         <MenuIcon size={14} />
                         Enlaces Header ({headerLinks.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('footer')}
-                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'footer' ? 'border-primary text-primary' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
+                        className={`px-4 py-3.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'footer' ? 'border-q-accent quimera-status-card-accent-text' : 'border-transparent text-q-text-muted hover:text-foreground'}`}
                     >
                         <Layout size={14} />
                         Columnas Footer ({footerColumns.length})
@@ -348,7 +345,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                             >
                                 <span className="text-sm font-medium text-q-text-muted flex items-center gap-2">
-                                    📋 Guía rápida de configuración
+                                    Guía rápida de configuración
                                 </span>
                                 {showInstructions ? <ChevronUp size={16} className="text-q-text-muted" /> : <ChevronDown size={16} className="text-q-text-muted" />}
                             </button>
@@ -358,14 +355,14 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                     <p><strong className="text-foreground">Secciones (#):</strong> Llevan a partes de tu página (ej. <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">#services</code>)</p>
                                     <p><strong className="text-foreground">Artículos (CMS):</strong> Contenido de tu blog. Se configuran automáticamente al seleccionarlos.</p>
                                     <p><strong className="text-foreground">Externos (https://):</strong> Enlaces a otras webs (ej. calendario, portafolio).</p>
-                                    <p className="text-xs text-q-text-muted/70">💡 Mantén tu menú limpio (máximo 5-6 elementos) para que se vea bien en todos los dispositivos.</p>
+                                    <p className="text-xs text-q-text-muted/70">Mantén tu menú limpio (máximo 5-6 elementos) para que se vea bien en todos los dispositivos.</p>
                                 </div>
                             )}
 
                             {/* Current links */}
                             <div className="space-y-4">
                                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                                    <LinkIcon size={16} className="text-primary" />
+                                    <LinkIcon size={16} className="quimera-dashboard-header-icon" strokeWidth={2} />
                                     Enlaces en navegación
                                 </h3>
 
@@ -471,7 +468,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                 className="w-full flex items-center justify-between text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                             >
                                 <span className="text-sm font-medium text-q-text-muted flex items-center gap-2">
-                                    📋 Guía rápida del footer
+                                    Guía rápida del footer
                                 </span>
                                 {showInstructions ? <ChevronUp size={16} className="text-q-text-muted" /> : <ChevronDown size={16} className="text-q-text-muted" />}
                             </button>
@@ -481,13 +478,13 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                                     <p><strong className="text-foreground">Columnas:</strong> Organiza enlaces por categoría (ej. "Compañía", "Legal", "Recursos").</p>
                                     <p><strong className="text-foreground">Contenido:</strong> Añade enlaces manuales o artículos del CMS a cada columna.</p>
                                     <p><strong className="text-foreground">Redes Sociales:</strong> Aparecen al final del footer. Usa URLs completas.</p>
-                                    <p className="text-xs text-q-text-muted/70">💡 Un footer bien organizado genera confianza. Incluye contacto y enlaces legales.</p>
+                                    <p className="text-xs text-q-text-muted/70">Un footer bien organizado genera confianza. Incluye contacto y enlaces legales.</p>
                                 </div>
                             )}
 
                             {/* Footer columns */}
                             {footerColumns.map((column, colIndex) => (
-                                <div key={colIndex} className="bg-q-surface border border-q-border rounded-xl p-4 space-y-4">
+                                <div key={colIndex} className="rounded-lg border border-q-border bg-muted/20 p-4 space-y-4">
                                     <div className="flex items-center gap-2">
                                         <Layout size={16} className="text-primary" />
                                         <input
@@ -640,7 +637,7 @@ const AgencyNavigationManagement: React.FC<AgencyNavigationManagementProps> = ({
                         </>
                     )}
                 </div>
-            </div>
+            </AgencyPanel>
         </div>
     );
 };

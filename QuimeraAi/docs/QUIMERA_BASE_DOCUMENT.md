@@ -290,7 +290,7 @@ Los créditos se asignan mensualmente según el plan y pueden comprarse paquetes
 
 | Recurso | Free | Starter | Pro | Agency |
 |---------|------|---------|-----|--------|
-| Proyectos | 1 | 3 | 10 | Ilimitados |
+| Proyectos | 1 | 3 | 10 | Hasta 250 |
 | Usuarios | 1 | 3 | 10 | 25 |
 | Storage (GB) | 1 | 5 | 20 | 100 |
 | AI Credits/mes | 100 | 500 | 2000 | 10000 |
@@ -333,7 +333,7 @@ Los créditos se asignan mensualmente según el plan y pueden comprarse paquetes
 Editor visual para crear sitios web profesionales sin conocimientos de código.
 
 **Capacidades:**
-- **Creación de páginas:** Páginas ilimitadas por proyecto con URLs customizables
+- **Creación de páginas:** Límites altos y finitos de páginas por proyecto con URLs customizables
 - **Templates por industria:** Restaurantes, servicios profesionales, e-commerce, portfolio, fitness, salud
 - **Edición visual:** Modificación en tiempo real de textos, colores, imágenes, espaciados
 - **Sistema de componentes:** Hero, Features, Pricing, Testimonials, FAQ, Team, Gallery, Contact

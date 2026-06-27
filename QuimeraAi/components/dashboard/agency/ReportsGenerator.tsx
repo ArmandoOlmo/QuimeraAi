@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
+import { useAuth } from '../../../contexts/core/AuthContext';
 import { reportingService } from '../../../services/reportingService';
 import { pdfReportGenerator } from '../../../services/pdfGenerator';
 import type {
@@ -41,6 +42,7 @@ import {
     Building2,
 } from 'lucide-react';
 import { ReportTemplateSelector } from './ReportTemplateSelector';
+import { AgencySectionHeader, AgencyStatCard } from './AgencyDesignSystem';
 
 type Step = 'configure' | 'preview' | 'generating' | 'completed';
 
@@ -115,8 +117,9 @@ const metricIcons: Record<ReportMetric, React.ElementType> = {
 
 export function ReportsGenerator() {
     const { t } = useTranslation();
-    const { subClients: clients, loadingClients: clientsLoading } = useAgency();
+    const { subClients: clients } = useAgency();
     const { currentTenant } = useTenant();
+    const { user } = useAuth();
 
     // Form state
     const [step, setStep] = useState<Step>('configure');
@@ -140,6 +143,12 @@ export function ReportsGenerator() {
     const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const effectiveSelectedClientIds = React.useMemo(
+        () => selectAll ? clients.map((client) => client.id) : selectedClients,
+        [clients, selectAll, selectedClients]
+    );
+    const selectedClientCount = effectiveSelectedClientIds.length;
+
     const allMetrics: { id: ReportMetric; label: string; description: string }[] = React.useMemo(() => [
         { id: 'leads', label: t('dashboard.agency.reports.metrics.leads', 'Leads'), description: t('dashboard.agency.reports.metrics.leadsDesc', 'Total de leads capturados') },
         { id: 'visits', label: t('dashboard.agency.reports.metrics.visits', 'Visitas'), description: t('dashboard.agency.reports.metrics.visitsDesc', 'Tráfico web total') },
@@ -162,13 +171,13 @@ export function ReportsGenerator() {
 
     const handleClientToggle = (clientId: string) => {
         setSelectedClients((prev) => {
-            if (prev.includes(clientId)) {
-                return prev.filter((id) => id !== clientId);
-            } else {
-                return [...prev, clientId];
-            }
+            const baseSelection = selectAll ? clients.map((client) => client.id) : prev;
+            const nextSelection = baseSelection.includes(clientId)
+                ? baseSelection.filter((id) => id !== clientId)
+                : [...baseSelection, clientId];
+            setSelectAll(nextSelection.length === clients.length);
+            return nextSelection;
         });
-        setSelectAll(false);
     };
 
     const handleMetricToggle = (metric: ReportMetric) => {
@@ -182,7 +191,7 @@ export function ReportsGenerator() {
     };
 
     const handleGenerateReport = async () => {
-        if (selectedClients.length === 0) {
+        if (effectiveSelectedClientIds.length === 0) {
             setError(t('dashboard.agency.reports.errors.selectClient', 'Selecciona al menos un cliente'));
             return;
         }
@@ -197,12 +206,17 @@ export function ReportsGenerator() {
 
         try {
             // Generate report data
-            const data = await reportingService.aggregateClientData(
-                currentTenant!.id,
-                selectAll ? clients.map((c) => c.id) : selectedClients,
+            const data = await reportingService.generateAgencyReport({
+                agencyTenantId: currentTenant!.id,
+                clientIds: effectiveSelectedClientIds,
                 dateRange,
-                selectedMetrics
-            );
+                metrics: selectedMetrics,
+                template: selectedTemplate,
+                generatedBy: user?.id || null,
+                includeTrends,
+                includeRecommendations,
+                persist: true,
+            });
 
             setReportData(data);
             setStep('preview');
@@ -258,6 +272,9 @@ export function ReportsGenerator() {
             t('dashboard.agency.reports.table.leads', 'Leads'),
             t('dashboard.agency.reports.table.visits', 'Visitas'),
             t('dashboard.agency.reports.table.revenue', 'Ingresos'),
+            t('dashboard.agency.reports.table.orders', 'Ordenes'),
+            t('dashboard.agency.reports.table.aov', 'AOV'),
+            t('dashboard.agency.reports.table.mrr', 'MRR'),
             t('dashboard.agency.reports.table.conversion', 'Conversión')
         ];
         const rows = reportData.byClient.map((client) => [
@@ -265,6 +282,9 @@ export function ReportsGenerator() {
             client.totalLeads.toString(),
             client.totalVisits.toString(),
             client.totalRevenue.toFixed(2),
+            client.totalOrders.toString(),
+            client.averageOrderValue.toFixed(2),
+            client.monthlyRecurringRevenue.toFixed(2),
             client.conversionRate.toFixed(2),
         ]);
 
@@ -301,35 +321,20 @@ export function ReportsGenerator() {
 
     return (
         <div className="space-y-4 sm:space-y-6">
-            {/* Premium Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-q-border/50 p-6 sm:p-8">
-                <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,black)]" />
-                <div className="relative">
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                            <FileText className="w-7 h-7 quimera-dashboard-header-icon flex-shrink-0" strokeWidth={2} />
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-                                    {t('dashboard.agency.reports.generatorTitle', 'Generador de Reportes')}
-                                    <Sparkles className="h-6 w-6 text-q-accent" />
-                                </h1>
-                                <p className="text-q-text-muted mt-1 text-sm sm:text-base">
-                                    {t('dashboard.agency.reports.generatorSubtitle', 'Crea reportes consolidados para tus clientes')}
-                                </p>
-                            </div>
-                        </div>
-                        {step !== 'configure' && (
-                            <button
-                                onClick={handleReset}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-q-text-muted hover:text-foreground bg-q-bg/50 backdrop-blur-sm border border-q-border/50 rounded-xl hover:bg-q-bg transition-all duration-200"
-                            >
-                                <RotateCcw className="h-4 w-4" />
-                                <span className="hidden sm:inline">{t('dashboard.agency.reports.createAnother', 'Nuevo Reporte')}</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            <AgencySectionHeader
+                icon={FileText}
+                title={t('dashboard.agency.reports.generatorTitle', 'Generador de Reportes')}
+                subtitle={t('dashboard.agency.reports.generatorSubtitle', 'Crea reportes consolidados para tus clientes')}
+                actions={step !== 'configure' && (
+                    <button
+                        onClick={handleReset}
+                        className="flex h-9 items-center gap-2 rounded-lg border border-q-border bg-q-surface px-3 text-sm font-medium text-q-text-muted transition-colors hover:bg-q-surface-overlay hover:text-foreground"
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('dashboard.agency.reports.createAnother', 'Nuevo Reporte')}</span>
+                    </button>
+                )}
+            />
 
             {/* Step Indicator */}
             <StepIndicator currentStep={step} />
@@ -352,7 +357,7 @@ export function ReportsGenerator() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Client Selection - Left Column */}
                     <div className="lg:col-span-4">
-                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                        <div className="quimera-dashboard-panel-card !p-0 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
@@ -363,7 +368,7 @@ export function ReportsGenerator() {
                                             {t('dashboard.agency.reports.clients', 'Clientes')}
                                         </h4>
                                         <p className="text-xs text-q-text-muted">
-                                            {selectedClients.length} de {clients.length} seleccionados
+                                            {selectedClientCount} de {clients.length} seleccionados
                                         </p>
                                     </div>
                                 </div>
@@ -375,12 +380,12 @@ export function ReportsGenerator() {
                                     <div className="relative">
                                         <input
                                             type="checkbox"
-                                            checked={selectedClients.length === clients.length}
+                                            checked={selectAll || (clients.length > 0 && selectedClients.length === clients.length)}
                                             onChange={(e) => handleSelectAllClients(e.target.checked)}
                                             className="sr-only peer"
                                         />
                                         <div className="h-5 w-5 rounded-md border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
-                                            {selectedClients.length === clients.length && (
+                                            {(selectAll || selectedClients.length === clients.length) && (
                                                 <CheckCircle className="h-3.5 w-3.5 text-primary-foreground" />
                                             )}
                                         </div>
@@ -402,12 +407,12 @@ export function ReportsGenerator() {
                                             <div className="relative">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedClients.includes(client.id)}
+                                                    checked={selectAll || selectedClients.includes(client.id)}
                                                     onChange={() => handleClientToggle(client.id)}
                                                     className="sr-only peer"
                                                 />
                                                 <div className="h-4 w-4 rounded border-2 border-q-border peer-checked:border-primary peer-checked:bg-primary transition-all duration-200 flex items-center justify-center">
-                                                    {selectedClients.includes(client.id) && (
+                                                    {(selectAll || selectedClients.includes(client.id)) && (
                                                         <CheckCircle className="h-3 w-3 text-primary-foreground" />
                                                     )}
                                                 </div>
@@ -425,7 +430,7 @@ export function ReportsGenerator() {
                     {/* Configuration Options - Right Column */}
                     <div className="lg:col-span-8 space-y-6">
                         {/* Date Range */}
-                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                        <div className="quimera-dashboard-panel-card !p-0 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-q-accent/10 flex items-center justify-center">
@@ -500,7 +505,7 @@ export function ReportsGenerator() {
                         </div>
 
                         {/* Metrics Selection */}
-                        <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                        <div className="quimera-dashboard-panel-card !p-0 overflow-hidden">
                             <div className="p-5 border-b border-q-border/50 bg-muted/30">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-q-success/10 flex items-center justify-center">
@@ -566,7 +571,7 @@ export function ReportsGenerator() {
                         />
 
                         {/* Additional Options */}
-                        <div className="bg-q-surface rounded-2xl border border-q-border/50 p-5">
+                        <div className="quimera-dashboard-panel-card p-5">
                             <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                                 <Settings className="h-5 w-5 text-q-text-muted" />
                                 {t('dashboard.agency.reports.additionalOptions', 'Opciones adicionales')}
@@ -613,8 +618,8 @@ export function ReportsGenerator() {
                         {/* Generate Button */}
                         <button
                             onClick={handleGenerateReport}
-                            disabled={selectedClients.length === 0 || selectedMetrics.length === 0}
-                            className="w-full px-6 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"
+                            disabled={effectiveSelectedClientIds.length === 0 || selectedMetrics.length === 0}
+                            className="quimera-guide-cta w-full px-6 py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg flex items-center justify-center gap-3"
                         >
                             <FileText className="h-5 w-5" />
                             {t('dashboard.agency.reports.generateReport', 'Generar Reporte')}
@@ -626,7 +631,7 @@ export function ReportsGenerator() {
 
             {/* Generating Step */}
             {step === 'generating' && (
-                <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16">
+                <div className="quimera-dashboard-panel-card p-12 sm:p-16">
                     <div className="text-center">
                         <div className="relative inline-flex">
                             <Loader2 className="h-10 w-10 animate-spin quimera-dashboard-header-icon" strokeWidth={2} />
@@ -645,32 +650,50 @@ export function ReportsGenerator() {
             {/* Preview Step */}
             {step === 'preview' && reportData && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Summary Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[
-                            { label: t('dashboard.agency.reports.clients', 'Clientes'), value: reportData.summary.totalClients, icon: Users, color: 'blue' },
-                            { label: t('dashboard.agency.reports.totalLeads', 'Total Leads'), value: reportData.summary.totalLeads.toLocaleString(), icon: TrendingUp, color: 'green' },
-                            { label: t('dashboard.agency.reports.revenue', 'Ingresos'), value: `$${reportData.summary.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'amber' },
-                            { label: t('dashboard.agency.reports.avgConversion', 'Conversión'), value: `${reportData.summary.avgConversionRate.toFixed(1)}%`, icon: Eye, color: 'purple' },
-                        ].map((stat, index) => {
-                            const Icon = stat.icon;
-                            return (
-                                <div key={index} className="bg-q-surface rounded-2xl border border-q-border/50 p-5 hover:shadow-lg transition-shadow">
-                                    <div className={`h-10 w-10 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center mb-3`}>
-                                        <Icon className={`h-5 w-5 text-${stat.color}-500`} />
-                                    </div>
-                                    <div className="text-sm text-q-text-muted mb-1">{stat.label}</div>
-                                    <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                    {reportData.aiSummary && (
+                        <div className="quimera-dashboard-panel-card p-5">
+                            <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <Sparkles className="h-5 w-5 text-primary" />
                                 </div>
-                            );
-                        })}
+                                <div>
+                                    <h3 className="font-semibold text-foreground">
+                                        {t('dashboard.agency.reports.aiSummary', 'Resumen AI')}
+                                    </h3>
+                                    <p className="text-sm text-q-text-muted mt-1">
+                                        {reportData.aiSummary}
+                                    </p>
+                                    {reportData.persistenceStatus === 'saved' && reportData.savedReportId && (
+                                        <p className="text-xs text-q-success mt-2">
+                                            {t('dashboard.agency.reports.savedSnapshot', 'Snapshot guardado en Agency Reports')}
+                                        </p>
+                                    )}
+                                    {reportData.persistenceStatus === 'failed' && (
+                                        <p className="text-xs text-q-warning mt-2">
+                                            {t('dashboard.agency.reports.snapshotWarning', 'El reporte se generó, pero no se pudo guardar el snapshot canónico.')}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-7">
+                        <AgencyStatCard label={t('dashboard.agency.reports.clients', 'Clientes')} value={reportData.summary.totalClients} icon={Users} tone="accent" />
+                        <AgencyStatCard label={t('dashboard.agency.reports.totalLeads', 'Total Leads')} value={reportData.summary.totalLeads.toLocaleString()} icon={TrendingUp} />
+                        <AgencyStatCard label={t('dashboard.agency.reports.revenue', 'Ingresos')} value={`$${reportData.summary.totalRevenue.toLocaleString()}`} icon={DollarSign} tone="success" />
+                        <AgencyStatCard label={t('dashboard.agency.reports.orders', 'Ordenes')} value={reportData.summary.totalOrders.toLocaleString()} icon={FileSpreadsheet} />
+                        <AgencyStatCard label={t('dashboard.agency.reports.aov', 'AOV')} value={`$${reportData.summary.averageOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} icon={DollarSign} />
+                        <AgencyStatCard label={t('dashboard.agency.reports.managedMrr', 'MRR')} value={`$${reportData.summary.totalMrr.toLocaleString()}`} icon={TrendingUp} tone="success" />
+                        <AgencyStatCard label={t('dashboard.agency.reports.avgConversion', 'Conversión')} value={`${reportData.summary.avgConversionRate.toFixed(1)}%`} icon={Eye} tone="accent" />
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={handleDownloadPDF}
-                            className="flex-1 px-6 py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl hover:opacity-90 transition-all font-semibold flex items-center justify-center gap-3 shadow-lg shadow-primary/20"
+                            className="quimera-guide-cta flex-1 px-6 py-4 rounded-xl transition-all font-semibold flex items-center justify-center gap-3"
                         >
                             <Download className="h-5 w-5" />
                             {t('dashboard.agency.reports.downloadPDF', 'Descargar PDF')}
@@ -685,7 +708,7 @@ export function ReportsGenerator() {
                     </div>
 
                     {/* Preview Table */}
-                    <div className="bg-q-surface rounded-2xl border border-q-border/50 overflow-hidden">
+                    <div className="quimera-dashboard-panel-card !p-0 overflow-hidden">
                         <div className="px-6 py-5 border-b border-q-border/50 bg-muted/30">
                             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                                 <Eye className="h-5 w-5 text-q-text-muted" />
@@ -707,6 +730,15 @@ export function ReportsGenerator() {
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.revenue', 'Ingresos')}
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                            {t('dashboard.agency.reports.table.orders', 'Ordenes')}
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                            {t('dashboard.agency.reports.table.aov', 'AOV')}
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                            {t('dashboard.agency.reports.table.mrr', 'MRR')}
                                         </th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
                                             {t('dashboard.agency.reports.table.conversion', 'Conversión')}
@@ -733,6 +765,15 @@ export function ReportsGenerator() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-q-success dark:text-q-success">
                                                 ${client.totalRevenue.toLocaleString()}
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                {client.totalOrders.toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                ${client.averageOrderValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-q-text-muted">
+                                                ${client.monthlyRecurringRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`
                                                     inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
@@ -757,7 +798,7 @@ export function ReportsGenerator() {
 
             {/* Completed Step */}
             {step === 'completed' && (
-                <div className="bg-q-surface rounded-2xl border border-q-border/50 p-16 animate-in fade-in zoom-in-95 duration-500">
+                <div className="quimera-dashboard-panel-card p-12 sm:p-16 animate-in fade-in zoom-in-95 duration-500">
                     <div className="text-center">
                         <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-q-success/10 mb-6">
                             <CheckCircle className="h-10 w-10 text-q-success" />

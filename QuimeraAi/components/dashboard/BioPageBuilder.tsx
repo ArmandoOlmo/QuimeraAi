@@ -132,6 +132,7 @@ import {
     type BioPageIntegrationReadiness,
 } from '../../services/bioPage';
 import { loadPublicStorefrontCatalog, type PublicStorefrontCategory } from '../../utils/ecommerce/publicStorefrontCatalog';
+import type { PlatformServiceId } from '../../types/serviceAvailability';
 
 // =============================================================================
 // TYPES
@@ -139,6 +140,54 @@ import { loadPublicStorefrontCatalog, type PublicStorefrontCategory } from '../.
 
 type LinkType = 'link' | 'external' | 'internal' | 'collection' | 'product' | 'form' | 'lead_form' | 'email_subscribe' | 'social' | 'embed' | 'video' | 'file' | 'booking' | 'chatbot';
 type LinkCategory = 'suggested' | 'commerce' | 'social' | 'media' | 'contact' | 'events' | 'text' | 'all';
+
+const BIO_SOURCE_MODULE_SERVICE_MAP: Partial<Record<string, PlatformServiceId>> = {
+    ecommerce: 'ecommerce',
+    appointments: 'appointments',
+    crm: 'crm',
+    'email-marketing': 'emailMarketing',
+    chatcore: 'chatbot',
+    'media-ai': 'aiFeatures',
+};
+
+const BIO_BLOCK_TYPE_SERVICE_MAP: Partial<Record<BioPageBlockType, PlatformServiceId>> = {
+    product_grid: 'ecommerce',
+    product_collection: 'ecommerce',
+    booking: 'appointments',
+    lead_form: 'crm',
+    email_subscribe: 'emailMarketing',
+    testimonials: 'crm',
+    contact: 'crm',
+    chatbot_cta: 'chatbot',
+    featured_media: 'aiFeatures',
+    media_grid: 'aiFeatures',
+    portfolio_grid: 'aiFeatures',
+};
+
+const BIO_LINK_TYPE_SERVICE_MAP: Partial<Record<LinkType, PlatformServiceId>> = {
+    collection: 'ecommerce',
+    product: 'ecommerce',
+    booking: 'appointments',
+    lead_form: 'crm',
+    email_subscribe: 'emailMarketing',
+    chatbot: 'chatbot',
+};
+
+const BIO_LINK_PLATFORM_SERVICE_MAP: Partial<Record<string, PlatformServiceId>> = {
+    chatbot: 'chatbot',
+    calendar: 'appointments',
+    'email-signup': 'emailMarketing',
+};
+
+const BIO_INTEGRATION_SERVICE_MAP: Partial<Record<string, PlatformServiceId>> = {
+    chatbot: 'chatbot',
+    calendar: 'appointments',
+    'email-signup': 'emailMarketing',
+};
+
+const resolveBioSourceServiceId = (sourceModule?: string | null): PlatformServiceId | null => (
+    sourceModule ? BIO_SOURCE_MODULE_SERVICE_MAP[sourceModule] || null : null
+);
 
 interface BioLink {
     id: string;
@@ -1746,9 +1795,35 @@ const BioPageBuilder: React.FC = () => {
     const { user } = useAuth();
     const filesContext = useSafeFiles();
 
-    // Service availability: hide commerce features when ecommerce service is off
-    const { canAccessService } = useServiceAvailability();
+    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+    const canAccessService = useCallback((serviceId?: PlatformServiceId | null): boolean => (
+        !serviceId || (!isLoadingServiceAvailability && isServicePublic(serviceId))
+    ), [isLoadingServiceAvailability, isServicePublic]);
     const canAccessEcommerce = canAccessService('ecommerce');
+    const canAccessCrm = canAccessService('crm');
+    const canAccessAppointments = canAccessService('appointments');
+    const canAccessChatbot = canAccessService('chatbot');
+    const canAccessEmailMarketing = canAccessService('emailMarketing');
+    const canAccessMediaAi = canAccessService('aiFeatures');
+    const canAccessAnalytics = canAccessService('analytics');
+    const canAccessBioBlockDefinition = useCallback((definition: (typeof BIO_BLOCK_LIBRARY)[number]): boolean => (
+        canAccessService(resolveBioSourceServiceId(definition.sourceModule) || BIO_BLOCK_TYPE_SERVICE_MAP[definition.type])
+    ), [canAccessService]);
+    const canAccessBioBlock = useCallback((block: BioPageBlock): boolean => (
+        canAccessService(resolveBioSourceServiceId(block.sourceModule) || BIO_BLOCK_TYPE_SERVICE_MAP[block.type])
+    ), [canAccessService]);
+    const canAccessBioLink = useCallback((link: ContextBioLink | BioLink): boolean => {
+        const linkType = link.linkType as LinkType | undefined;
+        const serviceId = (linkType ? BIO_LINK_TYPE_SERVICE_MAP[linkType] : null)
+            || (typeof link.platform === 'string' ? BIO_LINK_PLATFORM_SERVICE_MAP[link.platform] : null);
+        return canAccessService(serviceId);
+    }, [canAccessService]);
+    const canAccessBioIntegration = useCallback((integration: Integration): boolean => {
+        const serviceId = integration.category === 'commerce'
+            ? 'ecommerce'
+            : BIO_INTEGRATION_SERVICE_MAP[integration.id] || BIO_INTEGRATION_SERVICE_MAP[integration.platform];
+        return canAccessService(serviceId);
+    }, [canAccessService]);
     const projectMediaAssets = useMemo<BioMediaAssetOption[]>(() => (
         (filesContext?.files || [])
             .filter(file => file.downloadURL && (file.type?.startsWith('image/') || file.type?.startsWith('video/')))
@@ -1769,6 +1844,18 @@ const BioPageBuilder: React.FC = () => {
     const [activeTab, setActiveTab] = useState<ActiveTab>('links');
     const [designSubTab, setDesignSubTab] = useState<DesignSubTab>('header');
     const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
+
+    useEffect(() => {
+        if (activeTab === 'shop' && !canAccessEcommerce) {
+            setActiveTab('blocks');
+        }
+        if (activeTab === 'audience' && !canAccessEmailMarketing) {
+            setActiveTab('blocks');
+        }
+        if (activeTab === 'analytics' && !canAccessAnalytics) {
+            setActiveTab('blocks');
+        }
+    }, [activeTab, canAccessAnalytics, canAccessEcommerce, canAccessEmailMarketing]);
 
     // ===== CONTEXT DATA (replaces mock data) =====
     const {
@@ -1953,12 +2040,14 @@ const BioPageBuilder: React.FC = () => {
                         }))
                     : Promise.resolve({ products: [] as BioProductOption[], categories: [] as BioCategoryOption[] });
 
-                const audiencesPromise = supabase
-                    .from('email_audiences')
-                    .select('id,name,description,estimated_count,is_default')
-                    .eq('project_id', activeProjectId)
-                    .order('created_at', { ascending: false })
-                    .limit(50);
+                const audiencesPromise = canAccessEmailMarketing
+                    ? supabase
+                        .from('email_audiences')
+                        .select('id,name,description,estimated_count,is_default')
+                        .eq('project_id', activeProjectId)
+                        .order('created_at', { ascending: false })
+                        .limit(50)
+                    : Promise.resolve({ data: [], error: null });
 
                 const [nextCatalog, audiencesResult] = await Promise.all([catalogPromise, audiencesPromise]);
                 if (cancelled) return;
@@ -1995,11 +2084,11 @@ const BioPageBuilder: React.FC = () => {
         return () => {
             cancelled = true;
         };
-    }, [activeProjectId, activeTab, canAccessEcommerce]);
+    }, [activeProjectId, activeTab, canAccessEcommerce, canAccessEmailMarketing]);
 
     // Load subscribers when Audience tab is active
     useEffect(() => {
-        if (activeTab !== 'audience' || !bioPage?.id) return;
+        if (activeTab !== 'audience' || !bioPage?.id || !canAccessEmailMarketing) return;
 
         const loadSubscribers = async () => {
             setIsLoadingSubscribers(true);
@@ -2026,10 +2115,10 @@ const BioPageBuilder: React.FC = () => {
         };
 
         loadSubscribers();
-    }, [activeTab, bioPage?.id]);
+    }, [activeTab, bioPage?.id, canAccessEmailMarketing]);
 
     useEffect(() => {
-        if (activeTab !== 'analytics' || !bioPage?.id) return;
+        if (activeTab !== 'analytics' || !bioPage?.id || !canAccessAnalytics) return;
 
         let cancelled = false;
         setIsLoadingAnalytics(true);
@@ -2053,7 +2142,7 @@ const BioPageBuilder: React.FC = () => {
         return () => {
             cancelled = true;
         };
-    }, [activeTab, bioPage, analyticsRange]);
+    }, [activeTab, bioPage, analyticsRange, canAccessAnalytics]);
 
     useEffect(() => {
         if (!bioPage?.id || !['settings', 'share', 'analytics'].includes(activeTab)) return;
@@ -2111,7 +2200,7 @@ const BioPageBuilder: React.FC = () => {
 
     // Delete a subscriber
     const handleDeleteSubscriber = async (subscriberId: string) => {
-        if (!bioPage?.id) return;
+        if (!bioPage?.id || !canAccessEmailMarketing) return;
         setIsDeletingSubscriber(subscriberId);
         try {
             const { error } = await supabase
@@ -2263,6 +2352,8 @@ const BioPageBuilder: React.FC = () => {
     const FORM_INTEGRATION_IDS = ['form', 'contact-form', 'email-signup', 'sms-signup', 'typeform', 'laylo'];
 
     const addIntegrationLink = (integration: Integration) => {
+        if (!canAccessBioIntegration(integration)) return;
+
         // Check if this is a form-type integration
         if (FORM_INTEGRATION_IDS.includes(integration.id)) {
             openFormConfig(integration);
@@ -2275,9 +2366,11 @@ const BioPageBuilder: React.FC = () => {
 
     // Form Configuration Modal handlers
     const openFormConfig = (integration: Integration) => {
+        if (!canAccessBioIntegration(integration)) return;
+
         setSelectedFormIntegration(integration);
         setFormConfigTab('settings');
-        setSelectedFormTemplate('email-signup');
+        setSelectedFormTemplate(canAccessEmailMarketing ? 'email-signup' : 'contact-form');
         setSelectedFormLayout('classic');
         setIsFormConfigOpen(true);
     };
@@ -2288,7 +2381,11 @@ const BioPageBuilder: React.FC = () => {
     };
 
     const handleAddForm = () => {
-        if (selectedFormIntegration) {
+        if (
+            selectedFormIntegration
+            && canAccessBioIntegration(selectedFormIntegration)
+            && canAccessService(BIO_LINK_PLATFORM_SERVICE_MAP[selectedFormTemplate])
+        ) {
             contextAddLink({
                 title: FORM_TEMPLATES.find(t => t.id === selectedFormTemplate)?.name || 'Form',
                 url: '',
@@ -2313,12 +2410,7 @@ const BioPageBuilder: React.FC = () => {
 
     // Get filtered integrations based on category, search, and service availability
     const filteredIntegrations = useMemo(() => {
-        let filtered = INTEGRATIONS;
-
-        // Service availability: hide commerce integrations when ecommerce is off
-        if (!canAccessEcommerce) {
-            filtered = filtered.filter(i => i.category !== 'commerce');
-        }
+        let filtered = INTEGRATIONS.filter(canAccessBioIntegration);
 
         if (addLinkCategory !== 'all' && addLinkCategory !== 'suggested') {
             filtered = filtered.filter(i => i.category === addLinkCategory);
@@ -2333,7 +2425,7 @@ const BioPageBuilder: React.FC = () => {
         }
 
         return filtered;
-    }, [addLinkCategory, addLinkSearch, canAccessEcommerce]);
+    }, [addLinkCategory, addLinkSearch, canAccessBioIntegration]);
 
     const updateLink = (id: string, updates: Partial<BioLink>) => {
         contextUpdateLink(id, updates);
@@ -2352,6 +2444,8 @@ const BioPageBuilder: React.FC = () => {
     };
 
     const addBioBlock = (definition: (typeof BIO_BLOCK_LIBRARY)[number]) => {
+        if (!canAccessBioBlockDefinition(definition)) return;
+
         const copy = getBioBlockDefinitionCopy(definition, t);
         contextAddBlock({
             type: definition.type,
@@ -2482,8 +2576,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         { id: 'design', icon: Palette, label: t('bioPage.design', 'Design') },
         // Service availability: hide Shop tab when ecommerce service is off
         ...(canAccessEcommerce ? [{ id: 'shop', icon: ShoppingBag, label: t('bioPage.shop', 'Shop') }] : []),
-        { id: 'analytics', icon: BarChart3, label: t('bioPage.analytics', 'Analytics') },
-        { id: 'audience', icon: Users, label: t('bioPage.audience', 'Audience') },
+        ...(canAccessAnalytics ? [{ id: 'analytics', icon: BarChart3, label: t('bioPage.analytics', 'Analytics') }] : []),
+        ...(canAccessEmailMarketing ? [{ id: 'audience', icon: Users, label: t('bioPage.audience', 'Audience') }] : []),
         { id: 'settings', icon: Settings, label: t('bioPage.settings', 'Settings') },
         { id: 'share', icon: QrCode, label: t('bioPage.share', 'Share') },
     ];
@@ -2499,7 +2593,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     // ==========================================================================
 
     const renderLinksEditor = () => {
-        const sortedLinks = [...links].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const sortedLinks = links
+            .filter(canAccessBioLink)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
         return (
         <div className="space-y-4">
@@ -2544,8 +2640,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     };
 
     const renderBlocksEditor = () => {
-        const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
-        const socialIconLinks = links.filter(link => link.enabled !== false && link.visible !== false && isSocialIconLink(link));
+        const sortedBlocks = blocks
+            .filter(canAccessBioBlock)
+            .sort((a, b) => a.order - b.order);
+        const socialIconLinks = links.filter(link => canAccessBioLink(link) && link.enabled !== false && link.visible !== false && isSocialIconLink(link));
+        const blockDefinitions = BIO_BLOCK_LIBRARY.filter(canAccessBioBlockDefinition);
 
         return (
             <div className="space-y-5">
@@ -2563,30 +2662,36 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             <Loader2 size={16} className="shrink-0 animate-spin text-q-text-muted" />
                         )}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
-                            <p className="text-[11px] font-semibold uppercase text-q-text-muted">
-                                {t('bioPage.ecommerceProducts', 'Products')}
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">{availableBioProducts.length}</p>
+                    {(canAccessEcommerce || canAccessEmailMarketing || canAccessMediaAi) && (
+                        <div className="grid grid-cols-3 gap-2">
+                            {canAccessEcommerce && (
+                                <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
+                                    <p className="text-[11px] font-semibold uppercase text-q-text-muted">
+                                        {t('bioPage.ecommerceProducts', 'Products')}
+                                    </p>
+                                    <p className="text-sm font-semibold text-foreground">{availableBioProducts.length}</p>
+                                </div>
+                            )}
+                            {canAccessEmailMarketing && (
+                                <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
+                                    <p className="text-[11px] font-semibold uppercase text-q-text-muted">
+                                        {t('bioPage.emailAudiences', 'Audiences')}
+                                    </p>
+                                    <p className="text-sm font-semibold text-foreground">{emailAudiences.length}</p>
+                                </div>
+                            )}
+                            {canAccessMediaAi && (
+                                <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
+                                    <p className="text-[11px] font-semibold uppercase text-q-text-muted">
+                                        {t('bioPage.mediaAssets', 'Media')}
+                                    </p>
+                                    <p className="text-sm font-semibold text-foreground">{projectMediaAssets.length}</p>
+                                </div>
+                            )}
                         </div>
-                        <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
-                            <p className="text-[11px] font-semibold uppercase text-q-text-muted">
-                                {t('bioPage.emailAudiences', 'Audiences')}
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">{emailAudiences.length}</p>
-                        </div>
-                        <div className="rounded-lg border border-q-border/60 bg-q-surface/40 px-3 py-2">
-                            <p className="text-[11px] font-semibold uppercase text-q-text-muted">
-                                {t('bioPage.mediaAssets', 'Media')}
-                            </p>
-                            <p className="text-sm font-semibold text-foreground">{projectMediaAssets.length}</p>
-                        </div>
-                    </div>
+                    )}
                     <div className="grid grid-cols-1 gap-2">
-                        {BIO_BLOCK_LIBRARY
-                            .filter(block => canAccessEcommerce || block.type !== 'product_grid')
-                            .map(definition => {
+                        {blockDefinitions.map(definition => {
                                 const Icon = definition.icon;
                                 const copy = getBioBlockDefinitionCopy(definition, t);
                                 return (
@@ -3644,14 +3749,16 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
 
     const renderShopEditor = () => {
-        const productBlocks = blocks.filter(block => ['product_grid', 'product_collection'].includes(block.type));
+        if (!canAccessEcommerce) return null;
+
+        const productBlocks = blocks.filter(block => ['product_grid', 'product_collection'].includes(block.type) && canAccessBioBlock(block));
         const selectedCollectionIds = new Set(
             productBlocks
                 .flatMap(block => Array.isArray(block.data?.collectionIds) ? block.data.collectionIds : [])
                 .filter((id): id is string => typeof id === 'string' && Boolean(id.trim())),
         );
-        const productBlockDefinition = BIO_BLOCK_LIBRARY.find(block => block.type === 'product_grid');
-        const collectionBlockDefinition = BIO_BLOCK_LIBRARY.find(block => block.type === 'product_collection');
+        const productBlockDefinition = BIO_BLOCK_LIBRARY.filter(canAccessBioBlockDefinition).find(block => block.type === 'product_grid');
+        const collectionBlockDefinition = BIO_BLOCK_LIBRARY.filter(canAccessBioBlockDefinition).find(block => block.type === 'product_collection');
 
         return (
             <div className="space-y-4">
@@ -3757,6 +3864,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     };
 
     const renderAnalytics = () => {
+        if (!canAccessAnalytics) return null;
+
         const fallbackTopLinks = links
             .map(link => ({ id: link.id, title: link.title, clicks: link.clicks }))
             .sort((a, b) => b.clicks - a.clicks);
@@ -3891,10 +4000,12 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         <p className="text-2xl font-bold text-foreground">{analyticsSummary?.ctr ?? 0}%</p>
                         <p className="text-sm text-q-text-muted">{t('bioPage.ctr', 'CTR')}</p>
                     </div>
-                    <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
-                        <p className="text-2xl font-bold text-foreground">{(analyticsSummary?.subscribers ?? subscribers.length).toLocaleString()}</p>
-                        <p className="text-sm text-q-text-muted">{t('bioPage.subscribers', 'Subscribers')}</p>
-                    </div>
+                    {canAccessEmailMarketing && (
+                        <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
+                            <p className="text-2xl font-bold text-foreground">{(analyticsSummary?.subscribers ?? subscribers.length).toLocaleString()}</p>
+                            <p className="text-sm text-q-text-muted">{t('bioPage.subscribers', 'Subscribers')}</p>
+                        </div>
+                    )}
                     <div className="bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl p-4">
                         <p className="text-2xl font-bold text-foreground">{analyticsSummary?.conversionRate ?? 0}%</p>
                         <p className="text-sm text-q-text-muted">{t('bioPage.conversionRate', 'Conversion rate')}</p>
@@ -3906,18 +4017,24 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
-                        <p className="text-lg font-bold text-foreground">{(analyticsSummary?.leads ?? 0).toLocaleString()}</p>
-                        <p className="text-xs text-q-text-muted">{t('bioPage.leads', 'Leads')}</p>
-                    </div>
-                    <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
-                        <p className="text-lg font-bold text-foreground">{(analyticsSummary?.bookings ?? 0).toLocaleString()}</p>
-                        <p className="text-xs text-q-text-muted">{t('bioPage.bookings', 'Bookings')}</p>
-                    </div>
-                    <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
-                        <p className="text-lg font-bold text-foreground">{(analyticsSummary?.productClicks ?? 0).toLocaleString()}</p>
-                        <p className="text-xs text-q-text-muted">{t('bioPage.productClicks', 'Product clicks')}</p>
-                    </div>
+                    {canAccessCrm && (
+                        <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
+                            <p className="text-lg font-bold text-foreground">{(analyticsSummary?.leads ?? 0).toLocaleString()}</p>
+                            <p className="text-xs text-q-text-muted">{t('bioPage.leads', 'Leads')}</p>
+                        </div>
+                    )}
+                    {canAccessAppointments && (
+                        <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
+                            <p className="text-lg font-bold text-foreground">{(analyticsSummary?.bookings ?? 0).toLocaleString()}</p>
+                            <p className="text-xs text-q-text-muted">{t('bioPage.bookings', 'Bookings')}</p>
+                        </div>
+                    )}
+                    {canAccessEcommerce && (
+                        <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
+                            <p className="text-lg font-bold text-foreground">{(analyticsSummary?.productClicks ?? 0).toLocaleString()}</p>
+                            <p className="text-xs text-q-text-muted">{t('bioPage.productClicks', 'Product clicks')}</p>
+                        </div>
+                    )}
                     <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
                         <p className="text-lg font-bold text-foreground">{(analyticsSummary?.qrScans ?? 0).toLocaleString()}</p>
                         <p className="text-xs text-q-text-muted">{t('bioPage.qrScans', 'QR scans')}</p>
@@ -3926,10 +4043,12 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         <p className="text-lg font-bold text-foreground">{(analyticsSummary?.shares ?? 0).toLocaleString()}</p>
                         <p className="text-xs text-q-text-muted">{t('bioPage.shares', 'Shares')}</p>
                     </div>
-                    <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
-                        <p className="text-lg font-bold text-foreground">{(analyticsSummary?.chatOpens ?? 0).toLocaleString()}</p>
-                        <p className="text-xs text-q-text-muted">{t('bioPage.chatOpens', 'Chat opens')}</p>
-                    </div>
+                    {canAccessChatbot && (
+                        <div className="rounded-lg border border-q-border/50 bg-q-surface/40 p-3">
+                            <p className="text-lg font-bold text-foreground">{(analyticsSummary?.chatOpens ?? 0).toLocaleString()}</p>
+                            <p className="text-xs text-q-text-muted">{t('bioPage.chatOpens', 'Chat opens')}</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-2">
@@ -4117,7 +4236,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         );
     };
 
-    const renderAudience = () => (
+    const renderAudience = () => {
+        if (!canAccessEmailMarketing) return null;
+
+        return (
         <div className="space-y-4">
             {/* Email Signup Toggle */}
             <div className="flex items-center justify-between p-4 bg-q-surface/50 backdrop-blur-sm border border-q-border/50 rounded-xl">
@@ -4212,7 +4334,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 </div>
             </div>
         </div>
-    );
+        );
+    };
 
     const getReadinessStatusLabel = (status: BioPageIntegrationReadiness['publication']['status']) => {
         const labels = {
@@ -4232,9 +4355,17 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     };
 
     const renderIntegrationReadinessPanel = () => {
-        const items = integrationReadiness ? [
+        const items: Array<{
+            id: string;
+            icon: LucideIcon;
+            label: string;
+            status: BioPageIntegrationReadiness['publication']['status'];
+            detail: string;
+            serviceId?: PlatformServiceId;
+        }> = integrationReadiness ? [
             {
                 id: 'ecommerce',
+                serviceId: 'ecommerce',
                 icon: ShoppingBag,
                 label: t('bioPage.integrationEcommerce', 'Ecommerce'),
                 status: integrationReadiness.ecommerce.status,
@@ -4242,6 +4373,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'appointments',
+                serviceId: 'appointments',
                 icon: Calendar,
                 label: t('bioPage.integrationAppointments', 'Appointments'),
                 status: integrationReadiness.appointments.status,
@@ -4249,6 +4381,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'crm',
+                serviceId: 'crm',
                 icon: Users,
                 label: t('bioPage.integrationCrm', 'CRM / Leads'),
                 status: integrationReadiness.crm.status,
@@ -4259,6 +4392,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'email',
+                serviceId: 'emailMarketing',
                 icon: Mail,
                 label: t('bioPage.integrationEmailMarketing', 'Email Marketing'),
                 status: integrationReadiness.emailMarketing.status,
@@ -4266,6 +4400,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'chatcore',
+                serviceId: 'chatbot',
                 icon: MessageCircle,
                 label: t('bioPage.integrationChatCore', 'ChatCore'),
                 status: integrationReadiness.chatbot.status,
@@ -4275,6 +4410,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'media',
+                serviceId: 'aiFeatures',
                 icon: Image,
                 label: t('bioPage.integrationMediaAi', 'Media AI'),
                 status: integrationReadiness.media.status,
@@ -4285,6 +4421,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
             },
             {
                 id: 'analytics',
+                serviceId: 'analytics',
                 icon: BarChart3,
                 label: t('bioPage.integrationAnalytics', 'Analytics'),
                 status: integrationReadiness.analytics.status,
@@ -4340,6 +4477,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                 detail: t('bioPage.integrationPublishIssuesCount', '{{count}} issues', { count: integrationReadiness.publication.issueCount }),
             },
         ] : [];
+        const visibleItems = items.filter(item => canAccessService(item.serviceId));
 
         return (
             <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
@@ -4361,7 +4499,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     </p>
                 ) : (
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-                        {items.map(item => {
+                        {visibleItems.map(item => {
                             const Icon = item.icon;
                             return (
                                 <div key={item.id} className="min-w-0 rounded-lg border border-q-border/50 bg-background/60 p-3">
@@ -4957,8 +5095,10 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         // Text colors
         const titleColor = theme.titleColor || theme.textColor || '#ffffff';
         const bodyColor = theme.bodyColor || theme.textColor || '#ffffff';
-        const previewEmailSubscribeBlock = blocks.find(block => block.type === 'email_subscribe' && block.visible !== false);
-        const shouldShowEmailBlock = emailSignupEnabled || Boolean(previewEmailSubscribeBlock);
+        const previewEmailSubscribeBlock = canAccessEmailMarketing
+            ? blocks.find(block => block.type === 'email_subscribe' && block.visible !== false && canAccessBioBlock(block))
+            : undefined;
+        const shouldShowEmailBlock = canAccessEmailMarketing && (emailSignupEnabled || Boolean(previewEmailSubscribeBlock));
         const previewEmailPlaceholder = typeof previewEmailSubscribeBlock?.data?.placeholder === 'string' && previewEmailSubscribeBlock.data.placeholder.trim()
             ? previewEmailSubscribeBlock.data.placeholder
             : DEFAULT_BIO_EMAIL_PLACEHOLDER;
@@ -4969,14 +5109,15 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         const previewEmailConsentText = typeof previewEmailSubscribeBlock?.data?.consentText === 'string' && previewEmailSubscribeBlock.data.consentText.trim()
             ? previewEmailSubscribeBlock.data.consentText
             : DEFAULT_BIO_EMAIL_CONSENT_TEXT;
-        const socialLinksBlock = blocks.find(block => block.visible !== false && block.type === 'social_links');
-        const previewSocialLinks = selectLinksForSocialBlock(socialLinksBlock, links);
+        const socialLinksBlock = blocks.find(block => block.visible !== false && block.type === 'social_links' && canAccessBioBlock(block));
+        const visiblePreviewLinks = links.filter(link => canAccessBioLink(link) && link.enabled !== false && link.visible !== false);
+        const previewSocialLinks = selectLinksForSocialBlock(socialLinksBlock, visiblePreviewLinks);
         const previewSocialLinkIds = new Set(previewSocialLinks.map(link => link.id));
         const previewMainLinks = socialLinksBlock
-            ? links.filter(link => link.enabled !== false && link.visible !== false && !previewSocialLinkIds.has(link.id))
-            : links.filter(link => link.enabled !== false && link.visible !== false);
+            ? visiblePreviewLinks.filter(link => !previewSocialLinkIds.has(link.id))
+            : visiblePreviewLinks;
         const previewExtraBlocks = [...blocks]
-            .filter(block => block.visible !== false)
+            .filter(block => block.visible !== false && canAccessBioBlock(block))
             .filter(block => !['profile', 'link', 'social_links', 'email_subscribe'].includes(block.type))
             .sort((a, b) => a.order - b.order);
         const previewBlockCardStyle: React.CSSProperties = {
@@ -6066,7 +6207,9 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                     </div>
 
                                     <div className="space-y-2">
-                                        {FORM_TEMPLATES.map((template) => (
+                                        {FORM_TEMPLATES
+                                            .filter(template => canAccessService(BIO_LINK_PLATFORM_SERVICE_MAP[template.id]))
+                                            .map((template) => (
                                             <button
                                                 key={template.id}
                                                 onClick={() => setSelectedFormTemplate(template.id)}

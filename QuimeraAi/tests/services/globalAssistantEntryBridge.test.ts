@@ -83,6 +83,8 @@ describe('globalAssistantEntryBridge', () => {
         expect(inferDashboardAssistantModule('Abre Website Builder')).toBe('website');
         expect(inferDashboardAssistantModule('Open WebsiteBuilder')).toBe('website');
         expect(inferDashboardAssistantModule('Abre Finance')).toBe('finance');
+        expect(inferDashboardAssistantModule('¿Dónde configuro la agencia?')).toBe('agency');
+        expect(inferDashboardAssistantModule('Open agency white label')).toBe('agency');
         expect(inferDashboardAssistantModule('Abre Restaurants')).toBe('restaurants');
         expect(inferDashboardAssistantModule('Revisa bienes raíces')).toBe('realEstate');
         expect(inferDashboardAssistantModule('Abre Bio Pages')).toBe('bioPage');
@@ -172,6 +174,21 @@ describe('globalAssistantEntryBridge', () => {
             requestedMode: 'admin',
             activeModule: 'admin',
         });
+
+        expect(buildDashboardAssistantEntryMetadata({
+            entryPoint: 'dashboard_input',
+            projectCount: 4,
+            routingReason: 'dashboard_route_service_unavailable',
+            activeModule: null,
+            blockedModule: 'emailMarketing',
+            blockedServiceId: 'emailMarketing',
+        })).toMatchObject({
+            route: 'dashboard',
+            entryPoint: 'dashboard_input',
+            routingReason: 'dashboard_route_service_unavailable',
+            blockedModule: 'emailMarketing',
+            blockedServiceId: 'emailMarketing',
+        });
     });
 
     it('exposes dashboard quick actions as Global Assistant command-center entries', () => {
@@ -194,7 +211,6 @@ describe('globalAssistantEntryBridge', () => {
         });
         expect(ownerWithoutProjects.map(action => action.id)).toEqual([
             'create_website',
-            'review_platform_errors',
         ]);
 
         const ownerWithoutActiveProject = getDashboardAssistantQuickActions({
@@ -204,7 +220,6 @@ describe('globalAssistantEntryBridge', () => {
         });
         expect(ownerWithoutActiveProject.map(action => action.id)).toEqual([
             'create_website',
-            'open_business_blueprint',
             'open_website_builder',
             'open_storefront_builder',
             'generate_hero_image',
@@ -218,8 +233,6 @@ describe('globalAssistantEntryBridge', () => {
             'train_chatcore',
             'create_appointment',
             'improve_bio_page',
-            'analyze_project',
-            'review_platform_errors',
         ]);
 
         const ownerActions = getDashboardAssistantQuickActions({
@@ -230,7 +243,6 @@ describe('globalAssistantEntryBridge', () => {
 
         expect(ownerActions.map(action => action.id)).toEqual([
             'create_website',
-            'open_business_blueprint',
             'open_website_builder',
             'open_storefront_builder',
             'generate_hero_image',
@@ -244,12 +256,14 @@ describe('globalAssistantEntryBridge', () => {
             'train_chatcore',
             'create_appointment',
             'improve_bio_page',
+        ]);
+        expect(ownerActions.map(action => action.id)).not.toEqual(expect.arrayContaining([
+            'open_business_blueprint',
             'analyze_project',
             'review_platform_errors',
-        ]);
+        ]));
         expect(ownerActions.map(action => action.module)).toEqual(expect.arrayContaining([
             'aiStudio',
-            'businessBlueprint',
             'website',
             'storefront',
             'media',
@@ -262,16 +276,10 @@ describe('globalAssistantEntryBridge', () => {
             'chatbot',
             'appointments',
             'bioPage',
-            'analytics',
-            'admin',
         ]));
         expect(ownerActions.every(action => action.promptKey.startsWith('dashboard.assistantQuickActions.'))).toBe(true);
         expect(ownerActions.find(action => action.id === 'create_video')).toMatchObject({
             module: 'media',
-            requiresProject: true,
-        });
-        expect(ownerActions.find(action => action.id === 'open_business_blueprint')).toMatchObject({
-            module: 'businessBlueprint',
             requiresProject: true,
         });
         expect(ownerActions.find(action => action.id === 'open_website_builder')).toMatchObject({
@@ -305,18 +313,30 @@ describe('globalAssistantEntryBridge', () => {
         expect(ownerActions.find(action => action.id === 'improve_bio_page')).toMatchObject({
             module: 'bioPage',
             requiresProject: true,
+            serviceId: 'bioPage',
         });
-        expect(ownerActions.find(action => action.id === 'analyze_project')).toMatchObject({
-            module: 'analytics',
-            requiresProject: true,
+
+        const filteredByService = getDashboardAssistantQuickActions({
+            hasProjects: true,
+            hasActiveProject: true,
+            canUseAdminMode: true,
+            canAccessService: serviceId => serviceId !== 'aiFeatures' && serviceId !== 'ecommerce' && serviceId !== 'bioPage',
         });
-        expect(ownerActions.find(action => action.id === 'review_platform_errors')).toMatchObject({
-            module: 'admin',
-            adminOnly: true,
-        });
+        expect(filteredByService.map(action => action.id)).not.toEqual(expect.arrayContaining([
+            'create_website',
+            'open_storefront_builder',
+            'generate_hero_image',
+            'create_video',
+            'open_ecommerce',
+            'improve_bio_page',
+        ]));
+        expect(filteredByService.map(action => action.id)).toEqual(expect.arrayContaining([
+            'open_website_builder',
+            'review_leads',
+        ]));
+
         expect(ownerActions.map(action => action.labelFallback)).toEqual([
             'AI Studio',
-            'BusinessBlueprint',
             'Website Builder',
             'Storefront',
             'Images',
@@ -330,8 +350,6 @@ describe('globalAssistantEntryBridge', () => {
             'ChatCore',
             'Appointments',
             'Bio Page',
-            'Analytics',
-            'Owner Mode',
         ]);
     });
 
@@ -391,8 +409,17 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('onMouseEnter={() => setHoveredQuickActionId(action.id)}');
         expect(source).toContain('setSelectedQuickActionId(current => current === action.id ? null : action.id)');
         expect(source).toContain('const request = rawRequest;');
+        expect(source).toContain("const entryPoint = selectedQuickAction ? 'dashboard_quick_action' : 'dashboard_input';");
+        expect(source).toContain("const entrySource = selectedQuickAction ? 'dashboard_quick_action' : 'dashboard_welcome';");
+        expect(source).toContain("const routingReason = selectedQuickAction");
         expect(source).toContain('quickAction: selectedQuickAction');
-        expect(source).toContain('activeModule: selectedQuickAction?.module || route.activeModule');
+        expect(source).toContain('const metadataActiveModule = routeServiceAvailable');
+        expect(source).toContain('const metadataBlockedModule = routeServiceAvailable ? null : route.activeModule;');
+        expect(source).toContain('activeModule: metadataActiveModule');
+        expect(source).toContain('blockedModule: metadataBlockedModule');
+        expect(source).toContain('blockedServiceId: routeServiceAvailable ? null : routeServiceId');
+        expect(source).toContain('source: entrySource');
+        expect(source).toContain('entryPoint,');
         expect(source).toContain("title={t('dashboard.sendAssistantRequest', 'Enviar')}");
         expect(source).toContain("t('dashboard.assistantInputLabel', 'Escribe tu solicitud')");
         expect(source).not.toContain('<span className="truncate">{t(action.labelKey, action.labelFallback)}</span>');
@@ -421,29 +448,59 @@ describe('globalAssistantEntryBridge', () => {
         expect(assistantSource).toContain('loadProjectRef.current(resolution.projectId, false, false)');
         expect(assistantSource).toContain("target: 'project_resolution'");
         expect(assistantSource).toContain('appendProjectGuideContext(decision.message, navigationProject.projectName)');
+        expect(assistantSource).toContain('blocked?: boolean');
+        expect(assistantSource).toContain("route.view === 'superadmin'");
+        expect(assistantSource).toContain("access.mode !== 'owner' && access.mode !== 'super_admin'");
+        expect(assistantSource).toContain('${targetName} necesita permiso admin. Usa una cuenta Owner o Super Admin para revisar esa área.');
+        expect(assistantSource).toContain('${targetName} needs admin permission. Use an Owner or Super Admin account to review that area.');
+        expect(assistantSource).toContain('if (!directModuleNavigation.blocked)');
+        expect(assistantSource).toContain("source: directModuleNavigation.blocked");
+        expect(assistantSource).toContain("'direct_module_navigation_blocked'");
         expect(assistantSource).toContain('syncAssistantConversationNavigation(directModuleNavigation, operatingLayerEntry)');
         expect(assistantSource).toContain('lastNavigationTarget: navigation.target');
+        expect(assistantSource).toContain('lastNavigationModule: activeModule');
         expect(assistantSource).toContain('lastNavigationProjectId: nextProjectId || null');
+        expect(assistantSource).toContain('lastHandoff: {');
+        expect(assistantSource).toContain('memoryScope,');
+        expect(assistantSource).toContain('sessionId: conversation.id');
+        expect(assistantSource).toContain('resolveGuideTargetAssistantModule(directModuleNavigation.target)');
+        expect(assistantSource).toContain('resolveGuideTargetAssistantModule(navigation.target)');
+        expect(assistantSource).toContain('getEntryBlockedServiceId(entry)');
+        expect(assistantSource).toContain('getEntryBlockedModule(entry)');
+        expect(assistantSource).toContain("target: target || 'service_unavailable'");
         expect(assistantSource).toContain('activeTaskId: null');
         expect(assistantSource).toContain("media: { view: 'assets', route: ROUTES.ASSETS }");
-        expect(assistantSource).toContain('resolveComponentHelpGuideResponse');
+        expect(assistantSource).toContain("cms: { view: 'cms', route: ROUTES.CMS }");
+        expect(assistantSource).toContain("navigation: { view: 'navigation', route: ROUTES.NAVIGATION }");
+        expect(assistantSource).toContain("domains: { view: 'domains', route: ROUTES.DOMAINS }");
+        expect(assistantSource).toContain("seo: { view: 'seo', route: ROUTES.SEO }");
+        expect(assistantSource).toContain("templates: { view: 'templates', route: ROUTES.TEMPLATES }");
+        expect(assistantSource).toContain("blogHub: { view: 'blog-hub', route: ROUTES.BLOG_HUB }");
         expect(assistantSource).toContain('openAIStudioFromAssistant');
         expect(assistantSource).toContain('setIsOnboardingOpen(true)');
         expect(assistantSource).toContain("designSystem: { view: 'superadmin', route: ROUTES.ADMIN_DESIGN_TOKENS, adminView: 'design-tokens' }");
         expect(assistantSource).toContain("storefront: { view: 'ecommerce', route: ROUTES.ECOMMERCE }");
+        expect(assistantSource).toContain("agency: { view: 'agency', route: ROUTES.AGENCY }");
         expect(assistantSource).toContain("projects: { view: 'websites', route: ROUTES.WEBSITES }");
         expect(assistantSource).toContain("settings: { view: 'settings', route: ROUTES.SETTINGS }");
-        expect(assistantSource).toContain("source: 'direct_module_navigation'");
-        expect(guideSource).toContain('Abrí AI Studio. Dejé tu idea en el campo.');
+        expect(assistantSource).toContain("'direct_module_navigation'");
+        expect(guideSource).toContain('AI Studio sirve para convertir una idea en un website o contenido inicial.');
+        expect(guideSource).toContain('Cuando esté claro, presiona Enviar dentro de AI Studio.');
         expect(aiStudioSource).toContain('studio.setInput(initialPrompt)');
         expect(aiStudioSource).not.toContain('studio.sendMessage(initialPrompt)');
-        expect(guideSource).toContain('Abrí Imágenes y dejé el prompt escrito.');
-        expect(guideSource).toContain('Abrí Videos y dejé el prompt escrito.');
+        expect(guideSource).toContain('Imágenes sirve para preparar una imagen antes de generarla.');
+        expect(guideSource).toContain('Elige aspect ratio: 1:1 para posts');
+        expect(guideSource).toContain('Videos sirve para preparar un video antes de generarlo.');
+        expect(guideSource).toContain('CMS sirve para crear y organizar contenido del proyecto.');
+        expect(guideSource).toContain('Domains sirve para conectar y revisar dominios.');
+        expect(guideSource).toContain('Blog sirve para revisar artículos, categorías e ideas de contenido.');
         expect(guideSource).toContain('isComponentHelpQuestion');
-        expect(assistantSource).toContain('formatComponentHelpResponse');
-        expect(assistantSource).toContain("source: 'component_help'");
-        expect(guideSource).toContain('Imágenes sirve para preparar prompts');
-        expect(guideSource).toContain('Yo dejo todo listo; tú presionas Generar.');
+        expect(guideSource).toContain('resolveNamedModuleOpenTarget');
+        expect(assistantSource).toContain('buildCurrentQuestionPromptContext');
+        expect(assistantSource).toContain('CURRENT QUESTION CONTEXT:');
+        expect(assistantSource).not.toContain('formatComponentHelpResponse');
+        expect(assistantSource).not.toContain("source: 'component_help'");
+        expect(guideSource).toContain('Revisa el preview de opciones y toca Generar cuando todo esté listo.');
         expect(assistantSource).toContain('autoStart: false');
         expect(assistantSource).not.toContain('guided_handoff_offer');
         expect(assistantSource).not.toContain('¿Quieres que te lleve');
@@ -460,13 +517,16 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('Always use the current route, view, visible screen, active project, and recent conversation as context.');
         expect(source).toContain('Answer in the same language the user is using.');
         expect(source).toContain('Never reveal internal reasoning');
-        expect(source).toContain('Act as a guide first');
-        expect(source).toContain('If the user clearly names a module or task destination, open that module first');
-        expect(source).toContain('For image or video requests from the global input, open Media AI');
-        expect(source).toContain('Route: ${path}.');
+        expect(source).toContain('You are guide-only from the Global Assistant chat');
+        expect(source).toContain('When a user asks how something works, answer with practical step-by-step instructions');
+        expect(source).toContain('After routing to a module, do not say "I opened" or "I took you"');
+        expect(source).toContain('For image or video requests from the global input, use Media AI context');
+        expect(source).toContain('Never say you created, changed, generated, sent, published, or applied something from the Global Assistant chat.');
+        expect(source).toContain('Route is internal context only; do not mention it unless the user asks for technical details.');
         expect(source).toContain("t('superadmin.globalAssistant.drawer.preparing', 'Preparando...')");
         expect(source).not.toContain('Ejecutando acciones...');
-        expect(source).toContain('activeRouteModule: getEntryRouteModule(entry)');
+        expect(source).toContain('buildCurrentQuestionPromptContext');
+        expect(source).toContain('Current screen area');
     });
 
     it('keeps website creation out of empty-argument dashboard fast paths', () => {
@@ -481,8 +541,8 @@ describe('globalAssistantEntryBridge', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
         expect(source).toContain('globalAssistantConversationService.createConversation');
-        expect(source).toContain('assistantConversationIdRef.current = conversation.id');
-        expect(source).toContain("source: 'guide_only_operating_layer_fallback'");
+        expect(source).toContain('assistantConversationIdRef.current = conversationWithContext.id');
+        expect(source).toContain('buildCurrentQuestionPromptContext');
         expect(source).not.toContain("source: 'operating_layer_plan'");
         expect(source).not.toContain("source: 'operating_layer_navigation'");
         expect(source).not.toContain("source: 'operating_layer_apply'");
@@ -491,10 +551,14 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('guideOnly: true');
     });
 
-    it('routes manual Global Assistant drawer messages through guide-only command center behavior by default', () => {
+    it('routes manual Global Assistant drawer messages to the LLM with screen context by default', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
         expect(source).toContain('buildManualOperatingLayerEntry');
+        expect(source).toContain('buildLiveConversationMetadata');
+        expect(source).toContain('const existingConversation = assistantConversationRef.current');
+        expect(source).toContain('Failed to sync live assistant context');
+        expect(source).toContain('conversationWithContext');
         expect(source).toContain("source: 'global_assistant'");
         expect(source).toContain("entryPoint: 'global_assistant_input'");
         expect(source).toContain('inferGlobalAssistantEntryModule(request)');
@@ -502,44 +566,64 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain("routeModule && routeModule !== 'project' ? routeModule : null");
         expect(source).toContain('routeModule,');
         expect(source).toContain('const operatingLayerEntry = entry || buildManualOperatingLayerEntry(userMsg)');
-        expect(source).toContain("entry.source === 'global_assistant'");
-        expect(source).toContain('resolveGuideOnlyFallbackResponse');
-        expect(source).toContain("source: 'guide_only_operating_layer_fallback'");
+        expect(source).toContain("source: 'global_assistant'");
+        expect(source).toContain('buildCurrentQuestionPromptContext');
+        expect(source).toContain('CURRENT QUESTION CONTEXT:');
+        expect(source).not.toContain('shouldRouteEntryToOperatingLayer(operatingLayerEntry)');
+        expect(source).not.toContain("source: 'guide_only_operating_layer_fallback'");
         expect(source).not.toContain('globalAssistantRuntime.planRequest');
         expect(source).not.toContain('globalAssistantRuntime.applyTask');
     });
 
-    it('exposes only navigation tools to the global assistant and blocks mutable legacy tools', () => {
+    it('does not expose executable tools to the global assistant chat fallback', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
-        expect(source).toContain('GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS');
         expect(source).toContain('const isGuideOnlyToolName');
         expect(source).toContain("GUIDE_ONLY_TOOL_NAMES.has(toolName) || toolName.startsWith('open_')");
         expect(source).toContain('if (!isGuideOnlyToolName(name))');
         expect(source).toContain('Guide-only block: ${name}');
-        expect(source).toContain('? GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS');
-        expect(source).toContain(': GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS.filter(tool =>');
-        expect(source).toContain('No hice cambios. Te llevé o te puedo llevar al módulo correcto');
-        expect(source).toContain('I did not make changes. I took you, or can take you, to the right module');
+        expect(source).toContain('const restTools: any[] = []');
+        expect(source).toContain("source: 'guide_only_tool_call_blocked'");
+        expect(source).toContain("source: 'guide_only_text_tool_call_blocked'");
+        expect(source).toContain('containsGuideOnlyExecutionClaim');
+        expect(source).toContain("source: 'guide_only_execution_claim_blocked'");
+        expect(source).toContain('Blocked execution claim in guide-only response');
+        expect(source).toContain('Tool calls blocked in guide-only mode');
+        expect(source).toContain('Usa el módulo correcto para hacer esa acción.');
+        expect(source).toContain('Use the matching module for that action.');
+        expect(source).not.toContain('const restTools = [{ functionDeclarations: availableTools }]');
         expect(source).not.toContain('? TOOLS\n                    : TOOLS.filter(tool =>');
     });
 
-    it('stops ambiguous global edit requests before planning or executing actions', () => {
+    it('keeps the conversational fallback guide-only instead of injecting edit instructions', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
-        expect(source).toContain('resolveGuideOnlyActionResponse');
-        expect(source).toContain("source: 'guide_only_action_request'");
-        expect(source.indexOf('const guideOnlyActionResponse = resolveGuideOnlyActionResponse')).toBeGreaterThan(-1);
-        expect(source.indexOf('const guideOnlyFallback = resolveGuideOnlyFallbackResponse')).toBeGreaterThan(-1);
-        expect(source.indexOf('const guideOnlyActionResponse = resolveGuideOnlyActionResponse'))
-            .toBeLessThan(source.indexOf('const guideOnlyFallback = resolveGuideOnlyFallbackResponse'));
+        expect(source).toContain('ACTIVE PROJECT CONTEXT (FOR GUIDANCE ONLY)');
+        expect(source).toContain('Use this context only to answer what the user is viewing and where they can make changes.');
+        expect(source).toContain('Do not execute, generate, create, edit, update, delete, publish, send, or apply changes from the chat.');
+        expect(source).toContain('Do not mention internal paths, schemas, tool names, or field keys unless the user explicitly asks for technical details.');
+        expect(source).toContain('You are guide-only from the Global Assistant chat: do not create, edit, generate, update, delete, publish, send, apply, or execute work from the chat.');
+        expect(source).toContain('Never say you created, changed, generated, sent, published, or applied something from the Global Assistant chat.');
+        expect(source).toContain('Keep explanations conversational, friendly, and immediately usable.');
+        expect(source).not.toContain("EDITING RULES:\\n1. Use 'update_site_content'");
+    });
+
+    it('sends ambiguous global edit requests to the LLM without executable tools', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('const restTools: any[] = []');
+        expect(source).toContain('buildCurrentQuestionPromptContext');
+        expect(source).not.toContain('resolveGuideOnlyActionResponse');
+        expect(source).not.toContain("source: 'guide_only_action_request'");
+        expect(source).not.toContain('globalAssistantRuntime.planRequest');
+        expect(source).not.toContain('globalAssistantRuntime.applyTask');
     });
 
     it('keeps Global Assistant confirmations guide-only instead of applying pending plans', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
         expect(source).toContain("source: 'guide_only_confirmation_blocked'");
-        expect(source).toContain('No hice cambios. Te puedo llevar al módulo correcto');
+        expect(source).toContain('Para aplicar cambios, usa el módulo correspondiente y confirma allí la acción final.');
         expect(source).not.toContain('globalAssistantRuntime.confirmPlan({');
         expect(source).toContain('setPendingOperatingLayerTask(null);');
         expect(source).not.toContain('globalAssistantRuntime.planRequest');
@@ -549,17 +633,14 @@ describe('globalAssistantEntryBridge', () => {
         );
     });
 
-    it('does not fall through to legacy fast-path execution for operating-layer entries', () => {
+    it('removes legacy fast-path execution from the global assistant chat flow', () => {
         const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
 
-        const planBranchIndex = source.indexOf('if (shouldRouteEntryToOperatingLayer(operatingLayerEntry))');
-        const legacyFastPathIndex = source.indexOf('// STEP 1: Fast-path tool inference from user text');
-        const stopBeforeFastPathIndex = source.indexOf('setIsThinking(false);\n                    return;', planBranchIndex);
-
-        expect(planBranchIndex).toBeGreaterThan(-1);
-        expect(legacyFastPathIndex).toBeGreaterThan(planBranchIndex);
-        expect(stopBeforeFastPathIndex).toBeGreaterThan(planBranchIndex);
-        expect(stopBeforeFastPathIndex).toBeLessThan(legacyFastPathIndex);
+        expect(source).toContain('const directModuleNavigation = await maybeHandleDirectModuleNavigation(userMsg, operatingLayerEntry)');
+        expect(source).toContain('const restTools: any[] = []');
+        expect(source).not.toContain('// STEP 1: Fast-path tool inference from user text');
+        expect(source).not.toContain('const inferredTool = inferToolCallFromUserText(userMsg)');
+        expect(source).not.toContain("await executeTool(inferredTool.name, inferredTool.args, 'chat')");
     });
 
     it('preserves guide-only line breaks in the assistant drawer renderer', () => {
@@ -576,11 +657,57 @@ describe('globalAssistantEntryBridge', () => {
         expect(source).toContain('tenantContextRef');
         expect(source).toContain('resolveOperatingLayerAccessContext');
         expect(source).toContain('resolveOperatingLayerTenantContext');
+        expect(source).toContain('resolveCurrentAssistantContext');
+        expect(source).toContain('buildLiveAssistantContextSnapshot');
+        expect(source).toContain('activeModule = typeof message.metadata?.activeModule');
         expect(source).toContain('activeTenantId: tenant.tenantId');
         expect(source).toContain('activeTenantName: tenant.tenantName');
+        expect(source).toContain('activeTenantId: tenantContext?.currentTenant?.id || project?.tenantId || null');
+        expect(source).toContain('activeProjectName: typeof project?.name ===');
         expect(source).toContain('tenantPlan: tenant.tenantPlan');
+        expect(source).toContain('memoryScopeHint:');
+        expect(source).toContain('memoryScope,');
+        expect(source).toContain('sessionId: conversationId');
+        expect(source).toContain('taskId: pendingOperatingLayerTaskRef.current?.taskId || null');
+        expect(source).toContain('liveContextAt: new Date().toISOString()');
+        expect(source).toContain('guideOnly: true');
         expect(source).toContain('activeTaskId');
         expect(source).toContain('mode: access.mode');
         expect(source).toContain('assistantPermissions: access.userPermissions');
+    });
+
+    it('keeps conversational fallback context useful without exposing internal ids', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('CURRENT APP CONTEXT: Active Project:');
+        expect(source).toContain('Route is internal context only; do not mention it unless the user asks for technical details.');
+        expect(source).toContain('Available Projects:');
+        expect(source).toContain('Recent Posts:');
+        expect(source).toContain('Recent Leads:');
+        expect(source).toContain('Domains:');
+        expect(source).not.toContain('(ID:${p.id})');
+        expect(source).not.toContain('ID:${l.id}');
+        expect(source).not.toContain('(ID:${d.id})');
+        expect(source).not.toContain('(ID: ${p.id}');
+    });
+
+    it('loads segmented guide-only memory into the conversational fallback', () => {
+        const source = readFileSync(resolve(process.cwd(), 'components/ui/GlobalAiAssistant.tsx'), 'utf8');
+
+        expect(source).toContain('GlobalAssistantMemoryService');
+        expect(source).toContain('SupabaseGlobalAssistantMemoryAdapter');
+        expect(source).toContain('buildGuideOnlyMemoryPromptContext');
+        expect(source).toContain('assistantMemoryServiceRef');
+        expect(source).toContain('recordContextSnapshot(liveContextSnapshot)');
+        expect(source).toContain("source: 'guide_only_error'");
+        expect(source).toContain('resolveMemoryContext({');
+        expect(source).toContain('context: memoryContext');
+        expect(source).toContain('text: userMsg');
+        expect(source).toContain('memoryContextLoaded: true');
+        expect(source).toContain('memoryScopeCounts: memoryContextResult.manifest.scopeCounts');
+        expect(source).toContain('memoryModuleCounts: memoryContextResult.manifest.moduleCounts');
+        expect(source).toContain('contextSnapshotId: liveContextSnapshot.id');
+        expect(source).toContain('memoryIds: loadedMemoryIds');
+        expect(source).toContain("source: 'guide_only_conversation_response'");
     });
 });

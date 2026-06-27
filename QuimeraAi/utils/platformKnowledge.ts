@@ -293,7 +293,7 @@ PLAN TIERS (managed at /admin/subscriptions):
 - **Free Plan**: Limited credits per month for trying the platform
 - **Starter Plan**: More credits, single project, basic features
 - **Pro Plan**: Generous credits, multiple projects, all features including E-commerce, CRM, Email Marketing
-- **Agency Plan**: Highest credits, unlimited projects, white-label, client management, priority support
+- **Agency Plan**: Highest credits, high finite project limits, white-label, client management, priority support
 
 KEY FEATURES BY PLAN:
 - Website Builder: Available on all plans (project limits vary)

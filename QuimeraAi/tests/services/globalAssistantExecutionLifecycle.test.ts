@@ -27,6 +27,17 @@ const context = resolveCurrentAssistantContext({
     featureFlags: ['emailMarketing'],
 });
 
+const userContext = resolveCurrentAssistantContext({
+    userId: 'user-1',
+    tenantId: 'tenant-1',
+    role: 'member',
+    mode: 'user',
+    activeProject,
+    activeRoute: '/dashboard/email',
+    activeServices: ['emailMarketing'],
+    featureFlags: ['emailMarketing'],
+});
+
 const buildRuntime = (registry: GlobalAssistantActionRegistry) => {
     const memoryService = new GlobalAssistantMemoryService();
     const taskService = new GlobalAssistantTaskService();
@@ -191,5 +202,45 @@ describe('GlobalAssistantRuntime execution lifecycle', () => {
         );
         expect(auditService.listEvents().map(event => event.type)).not.toContain('assistant_action_failed');
         expect(auditService.listActionLogs({ status: 'failed' })).toHaveLength(0);
+    });
+
+    it('revalidates execution context before applying confirmed mutating actions', async () => {
+        let executeCalls = 0;
+        const guardedDefinition: AssistantActionDefinition = {
+            ...emailCampaignDefinition,
+            execute: async input => {
+                executeCalls += 1;
+                return emailCampaignDefinition.execute!(input, {
+                    action: {} as never,
+                    context,
+                });
+            },
+        };
+        const registry = new GlobalAssistantActionRegistry([guardedDefinition]);
+        const { runtime, auditService } = buildRuntime(registry);
+
+        const planned = await runtime.planRequest({
+            context,
+            request: 'Crea una campana de email para reservas',
+            userPermissions: ['assistant:emailMarketing:use'],
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+        });
+        runtime.confirmPlan({
+            taskId: planned.task.id,
+            confirmedBy: 'user-1',
+        });
+
+        const applied = await runtime.applyTask({
+            taskId: planned.task.id,
+            context: userContext,
+        });
+
+        expect(executeCalls).toBe(0);
+        expect(applied.task.status).toBe('failed');
+        expect(applied.plan.status).toBe('blocked');
+        expect(applied.plan.blockers.join(' ')).toContain('Mutating assistant actions require Owner or Super Admin mode.');
+        expect(applied.actions[0].status).toBe('failed');
+        expect(auditService.listEvents().map(event => event.type)).toContain('assistant_action_failed');
     });
 });

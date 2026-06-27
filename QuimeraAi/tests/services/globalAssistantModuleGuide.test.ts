@@ -2,15 +2,27 @@ import { describe, expect, it } from 'vitest';
 import {
     formatMissingProjectGuideMessage,
     isProjectScopedGuideTarget,
+    parseImageLaunchOptions,
+    parseVideoLaunchOptions,
     resolveComponentHelpGuideResponse,
     resolveDirectModuleGuideDecision,
+    resolveGuideTargetAssistantModule,
     resolveGuideOnlyActionResponse,
     resolveGuideOnlyFallbackResponse,
     resolveProjectMentionFromRequest,
 } from '../../services/globalAssistant/globalAssistantModuleGuide.ts';
 
+const expectPracticalGuide = (message: string, terms: string[]) => {
+    expect(message).toContain('1.');
+    expect(message).toContain('2.');
+    for (const term of terms) {
+        expect(message).toContain(term);
+    }
+    expect(message).not.toMatch(/\b(Abrí|I opened|No hice cambios|I did not make changes|Yo no generaré|I will not generate)\b/);
+};
+
 describe('globalAssistantModuleGuide', () => {
-    it('opens AI Studio for clear new website requests and keeps the prompt ready', () => {
+    it('routes website creation to AI Studio with a useful step-by-step guide', () => {
         const decision = resolveDirectModuleGuideDecision({
             request: 'Necesito crear un website por una firma de arquitecto',
             locale: 'es',
@@ -20,11 +32,11 @@ describe('globalAssistantModuleGuide', () => {
             target: 'aiStudio',
             preparedPrompt: true,
             prompt: 'Necesito crear un website por una firma de arquitecto',
-            message: 'Abrí AI Studio. Dejé tu idea en el campo. Presiona Enviar cuando quieras empezar.',
         });
+        expectPracticalGuide(decision!.message, ['AI Studio', 'campo principal', 'Enviar']);
     });
 
-    it('opens AI Studio cleanly for open-only requests', () => {
+    it('routes open-only AI Studio requests without injecting a prompt', () => {
         const decision = resolveDirectModuleGuideDecision({
             request: 'Abre AI Studio',
             locale: 'es',
@@ -34,11 +46,11 @@ describe('globalAssistantModuleGuide', () => {
             target: 'aiStudio',
             preparedPrompt: false,
             prompt: '',
-            message: 'Abrí AI Studio. Escribe la idea y sigue los pasos del Studio.',
         });
+        expectPracticalGuide(decision!.message, ['AI Studio', 'Escribe qué quieres crear', 'Enviar']);
     });
 
-    it('routes image requests to Images with the extracted prompt and no auto-generation', () => {
+    it('routes image requests to Images with prompt, options, and clear controls', () => {
         const decision = resolveDirectModuleGuideDecision({
             request: 'Quiero crear una imagen de una casa en Puerto Rico',
             locale: 'es',
@@ -48,11 +60,11 @@ describe('globalAssistantModuleGuide', () => {
             target: 'image',
             preparedPrompt: true,
             prompt: 'una casa en Puerto Rico',
-            message: 'Abrí Imágenes y dejé el prompt escrito. Revisa las opciones y toca Generar.',
         });
+        expectPracticalGuide(decision!.message, ['Imágenes', 'aspect ratio', 'resolución', 'estilo', 'Generar']);
     });
 
-    it('routes video requests to Videos with launch options', () => {
+    it('routes video requests to Videos with launch options and generation controls', () => {
         const decision = resolveDirectModuleGuideDecision({
             request: 'Crea un video vertical 9:16 de una tienda nueva',
             locale: 'es',
@@ -65,340 +77,183 @@ describe('globalAssistantModuleGuide', () => {
                 aspectRatio: '9:16',
             },
         });
+        expectPracticalGuide(decision!.message, ['Videos', 'aspect ratio', 'resolución', 'Generar']);
     });
 
-    it('opens Media AI, Images, and Videos by component name without auto-generation', () => {
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Media AI',
-            activeModule: 'media',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'media',
-            preparedPrompt: false,
-            prompt: '',
-            message: 'Abrí Media AI. Elige Imágenes o Videos según lo que quieras preparar.',
+    it('extracts richer Media AI handoff options without auto-generating', () => {
+        expect(parseImageLaunchOptions('Imagen portrait 3:4 1080p estilo óleo')).toMatchObject({
+            aspectRatio: '3:4',
+            resolution: '2K',
+            style: 'Oil Painting',
         });
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Imágenes',
-            activeModule: 'media',
+        expect(parseImageLaunchOptions('Crear imagen panorámica 21:9 cyberpunk 4K')).toMatchObject({
+            aspectRatio: '21:9',
+            resolution: '4K',
+            style: 'Cyberpunk',
+        });
+
+        expect(parseVideoLaunchOptions('Video retrato 3:4 full HD para redes')).toMatchObject({
+            aspectRatio: '3:4',
+            resolution: '1080p',
+        });
+
+        const decision = resolveDirectModuleGuideDecision({
+            request: 'Crear imagen portrait 3:4 1080p estilo óleo de una casa en Puerto Rico',
             locale: 'es',
-        })).toMatchObject({
+        });
+
+        expect(decision).toMatchObject({
             target: 'image',
-            preparedPrompt: false,
-            prompt: '',
-            message: 'Abrí Imágenes. Escribe el prompt, revisa las opciones y toca Generar.',
+            preparedPrompt: true,
+            options: {
+                aspectRatio: '3:4',
+                resolution: '2K',
+                style: 'Oil Painting',
+            },
         });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open Videos',
-            activeModule: 'media',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'video',
-            preparedPrompt: false,
-            prompt: '',
-            message: 'I opened Videos. Write the prompt, review the options, and press Generate.',
-        });
+        expectPracticalGuide(decision!.message, ['aspect ratio', 'resolución', 'estilo']);
     });
 
     it('treats selected dashboard icons as component context, not forced create commands', () => {
-        expect(resolveComponentHelpGuideResponse({
+        const help = resolveComponentHelpGuideResponse({
             request: '¿Cómo funciona?',
             quickActionId: 'generate_hero_image',
             locale: 'es',
-        })).toMatchObject({
-            targetId: 'generate_hero_image',
-            message: 'Imágenes sirve para preparar prompts, formato y estilo. Yo dejo todo listo; tú presionas Generar.',
         });
+
+        expect(help).toMatchObject({ targetId: 'generate_hero_image' });
+        expectPracticalGuide(help!.message, ['Imágenes', 'aspect ratio', 'resolución', 'estilo']);
 
         expect(resolveDirectModuleGuideDecision({
             request: '¿Cómo funciona?',
             quickActionId: 'generate_hero_image',
             locale: 'es',
-        })).toMatchObject({
-            target: 'image',
-            preparedPrompt: false,
-            prompt: '',
-        });
+        })).toBeNull();
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Quiero revisarlo',
-            quickActionId: 'open_business_blueprint',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'businessBlueprint',
-            message: 'Abrí el área de proyectos. Revisa el plan del negocio y sus módulos desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
+        const builder = resolveDirectModuleGuideDecision({
             request: 'I want to review this',
             quickActionId: 'open_website_builder',
             locale: 'en',
-        })).toMatchObject({
-            target: 'websiteBuilder',
-            message: 'I opened Website Builder. Choose the section you want to edit and make the change from there.',
         });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Quiero revisarlo',
-            quickActionId: 'open_finance',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'finance',
-            message: 'Abrí Finance. Revisa facturas, ingresos o gastos desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open it',
-            quickActionId: 'open_storefront_builder',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'storefront',
-            message: 'I opened Ecommerce. Review Storefront, products, and store settings from there.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Ábrelo',
-            quickActionId: 'open_restaurants',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'restaurants',
-            message: 'Abrí Restaurants. Revisa menú, reservas o configuración desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open it',
-            quickActionId: 'open_realty',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'realEstate',
-            message: 'I opened Realty. Review properties, listings, or showings from there.',
-        });
+        expect(builder).toMatchObject({ target: 'websiteBuilder' });
+        expectPracticalGuide(builder!.message, ['Website Builder', 'controls panel', 'preview']);
     });
 
-    it('opens module destinations without claiming chat-side work', () => {
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Quiero revisar el componente de Leads',
-            activeModule: 'crm',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'leads',
-            message: 'Abrí Leads. Busca o filtra el lead que quieres revisar y abre su ficha.',
-        });
+    it('routes module destinations with practical component guides', () => {
+        const cases = [
+            { request: 'Quiero revisar el componente de Leads', activeModule: 'crm', locale: 'es', target: 'leads', terms: ['Leads', 'búsqueda', 'filtros'] },
+            { request: 'Open ecommerce', activeModule: 'ecommerce', locale: 'en', target: 'ecommerce', terms: ['Ecommerce', 'products', 'orders'] },
+            { request: 'Revisa BusinessBlueprint', activeModule: 'businessBlueprint', locale: 'es', target: 'businessBlueprint', terms: ['BusinessBlueprint', 'módulos'] },
+            { request: 'Abre Website Builder', activeModule: 'website', locale: 'es', target: 'websiteBuilder', terms: ['Website Builder', 'panel de controles'] },
+            { request: 'Open storefront builder', activeModule: 'storefront', locale: 'en', target: 'storefront', terms: ['Storefront', 'products'] },
+            { request: 'Abre Settings', activeModule: 'settings', locale: 'es', target: 'settings', terms: ['Settings', 'workspace'] },
+            { request: 'Open design tokens', activeModule: 'designSystem', locale: 'en', target: 'designSystem', terms: ['Design', 'colors'] },
+            { request: 'Abre Finance', activeModule: 'finance', locale: 'es', target: 'finance', terms: ['Finance', 'facturas'] },
+            { request: '¿Dónde configuro la agencia?', activeModule: 'agency', locale: 'es', target: 'agency', terms: ['Agencia', 'White Label'] },
+            { request: 'Open Restaurants', activeModule: 'restaurants', locale: 'en', target: 'restaurants', terms: ['Restaurants', 'menu'] },
+            { request: 'Abre Realty', activeModule: 'realEstate', locale: 'es', target: 'realEstate', terms: ['Realty', 'propiedades'] },
+            { request: 'Abre Websites', activeModule: 'project', locale: 'es', target: 'projects', terms: ['Websites', 'proyecto'] },
+            { request: 'Open Owner Mode', activeModule: 'admin', locale: 'en', target: 'ownerMode', terms: ['Owner Mode', 'admin'] },
+        ];
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open ecommerce',
-            activeModule: 'ecommerce',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'ecommerce',
-            message: 'I opened Ecommerce. Go to products, orders, inventory, or settings based on what you need.',
-        });
+        for (const item of cases) {
+            const decision = resolveDirectModuleGuideDecision(item);
+            expect(decision).toMatchObject({ target: item.target });
+            expectPracticalGuide(decision!.message, item.terms);
+        }
     });
 
-    it('covers the remaining operating-layer module destinations with guide-only copy', () => {
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Revisa BusinessBlueprint',
-            activeModule: 'businessBlueprint',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'businessBlueprint',
-            message: 'Abrí el área de proyectos. Revisa el plan del negocio y sus módulos desde ahí.',
-        });
+    it('routes supporting content, publishing, and configuration modules by name', () => {
+        const cases = [
+            { request: 'Abre CMS', locale: 'es', target: 'cms', terms: ['CMS', 'artículos'] },
+            { request: 'Quiero crear un artículo para el blog', locale: 'es', target: 'blogHub', terms: ['Blog', 'artículo'] },
+            { request: 'Open Navigation', locale: 'en', target: 'navigation', terms: ['Navigation', 'links'] },
+            { request: 'Conectar dominio', locale: 'es', target: 'domains', terms: ['Domains', 'DNS'] },
+            { request: 'Review SEO', locale: 'en', target: 'seo', terms: ['SEO', 'title'] },
+            { request: 'Abre plantillas', locale: 'es', target: 'templates', terms: ['Templates', 'plantilla'] },
+        ];
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Website Builder',
-            activeModule: 'website',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'websiteBuilder',
-            message: 'Abrí Website Builder. Elige la sección que quieres editar y haz el cambio desde ahí.',
-        });
+        for (const item of cases) {
+            const decision = resolveDirectModuleGuideDecision(item);
+            expect(decision).toMatchObject({ target: item.target });
+            expectPracticalGuide(decision!.message, item.terms);
+        }
+    });
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open storefront builder',
-            activeModule: 'storefront',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'storefront',
-            message: 'I opened Ecommerce. Review Storefront, products, and store settings from there.',
-        });
+    it('routes command palette module selectors through quick action guide targets', () => {
+        const cases = [
+            { quickActionId: 'open_cms', target: 'cms', terms: ['CMS', 'articles'] },
+            { quickActionId: 'open_blog', target: 'blogHub', terms: ['Blog', 'article'] },
+            { quickActionId: 'open_domains', target: 'domains', terms: ['Domains', 'DNS'] },
+            { quickActionId: 'open_seo', target: 'seo', terms: ['SEO', 'title'] },
+            { quickActionId: 'open_templates', target: 'templates', terms: ['Templates', 'template'] },
+            { quickActionId: 'open_finance', target: 'finance', terms: ['Finance', 'invoices'] },
+            { quickActionId: 'open_restaurants', target: 'restaurants', terms: ['Restaurants', 'menu'] },
+            { quickActionId: 'open_realty', target: 'realEstate', terms: ['Realty', 'properties'] },
+        ];
 
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Settings',
-            activeModule: 'settings',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'settings',
-            message: 'Abrí Settings. Revisa workspace, equipo o cuenta desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open design tokens',
-            activeModule: 'designSystem',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'designSystem',
-            message: 'I opened the design area. Review colors, typography, and tokens based on your permissions.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Finance',
-            activeModule: 'finance',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'finance',
-            message: 'Abrí Finance. Revisa facturas, ingresos o gastos desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open Restaurants',
-            activeModule: 'restaurants',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'restaurants',
-            message: 'I opened Restaurants. Review menu, reservations, or settings from there.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Realty',
-            activeModule: 'realEstate',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'realEstate',
-            message: 'Abrí Realty. Revisa propiedades, listados o visitas desde ahí.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Abre Websites',
-            activeModule: 'project',
-            locale: 'es',
-        })).toMatchObject({
-            target: 'projects',
-            message: 'Abrí Websites. Elige o cambia el proyecto que quieres usar.',
-        });
-
-        expect(resolveDirectModuleGuideDecision({
-            request: 'Open Owner Mode',
-            activeModule: 'admin',
-            locale: 'en',
-        })).toMatchObject({
-            target: 'ownerMode',
-            message: 'I opened Owner Mode. Review status, errors, or admin controls from there.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
-            request: '¿Para qué sirve?',
-            activeModule: 'storefront',
-            locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_storefront',
-            message: 'Storefront sirve para revisar la tienda pública, productos, secciones y ajustes de venta.',
-        });
+        for (const item of cases) {
+            const decision = resolveDirectModuleGuideDecision({
+                request: item.quickActionId,
+                quickActionId: item.quickActionId,
+                locale: 'en',
+            });
+            expect(decision).toMatchObject({ target: item.target });
+            expectPracticalGuide(decision!.message, item.terms);
+        }
     });
 
     it('answers page-aware help questions from the current route or module', () => {
-        expect(resolveComponentHelpGuideResponse({
+        const dashboard = resolveComponentHelpGuideResponse({
             request: '¿Qué hago aquí?',
             activeRoute: '/dashboard',
             locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_dashboard',
-            message: 'Dashboard sirve para entrar a tus proyectos y abrir el módulo correcto. Dime qué quieres revisar y te llevo.',
         });
+        expect(dashboard).toMatchObject({ targetId: 'open_dashboard' });
+        expectPracticalGuide(dashboard!.message, ['Dashboard', 'input central', 'iconos']);
 
-        expect(resolveComponentHelpGuideResponse({
+        const website = resolveComponentHelpGuideResponse({
             request: 'What can I do here?',
             activeRouteModule: 'website',
             locale: 'en',
-        })).toMatchObject({
-            targetId: 'open_website_builder',
-            message: 'Website Builder helps edit site sections, copy, images, and styles. Choose a section and make the change there.',
         });
+        expect(website).toMatchObject({ targetId: 'open_website_builder' });
+        expectPracticalGuide(website!.message, ['Website Builder', 'controls panel']);
 
-        expect(resolveComponentHelpGuideResponse({
+        const finance = resolveComponentHelpGuideResponse({
             request: 'Ayúdame con esta pantalla',
             activeModule: 'finance',
             locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_finance',
-            message: 'Finance sirve para revisar facturas, ingresos, gastos y estado financiero del proyecto.',
         });
+        expect(finance).toMatchObject({ targetId: 'open_finance' });
+        expectPracticalGuide(finance!.message, ['Finance', 'facturas']);
 
-        expect(resolveComponentHelpGuideResponse({
-            request: '¿Qué hago aquí?',
-            activeRoute: '/cms',
-            locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_cms',
-            message: 'CMS sirve para crear, revisar y organizar contenido del proyecto.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
-            request: 'What can I do here?',
-            activeRoute: '/domains',
-            locale: 'en',
-        })).toMatchObject({
-            targetId: 'open_domains',
-            message: 'Domains helps connect and review project domains.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
-            request: '¿Cómo funciona?',
-            activeRoute: '/navigation',
-            locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_navigation',
-            message: 'Navigation sirve para organizar páginas, enlaces y menús del sitio.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
-            request: 'How does this work?',
-            activeRoute: '/templates',
-            locale: 'en',
-        })).toMatchObject({
-            targetId: 'open_templates',
-            message: 'Templates helps choose or review website templates.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
-            request: '¿Qué puedo hacer aquí?',
-            activeRoute: '/blog-hub',
-            locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_blog',
-            message: 'Blog sirve para revisar artículos, categorías y contenido publicado.',
-        });
-
-        expect(resolveComponentHelpGuideResponse({
+        const agency = resolveComponentHelpGuideResponse({
             request: 'What can I do here?',
             activeRoute: '/agency/reports',
             locale: 'en',
-        })).toMatchObject({
-            targetId: 'open_agency',
-            message: 'Agency helps review clients, reports, billing, and agency services.',
         });
+        expect(agency).toMatchObject({ targetId: 'open_agency' });
+        expectPracticalGuide(agency!.message, ['Agency', 'Reports', 'billing']);
     });
 
     it('covers Restaurants and Realty contextual help', () => {
-        expect(resolveComponentHelpGuideResponse({
+        const restaurants = resolveComponentHelpGuideResponse({
             request: 'How does this screen work?',
             activeModule: 'restaurants',
             locale: 'en',
-        })).toMatchObject({
-            targetId: 'open_restaurants',
-            message: 'Restaurants helps with menu, reservations, services, and restaurant settings.',
         });
+        expect(restaurants).toMatchObject({ targetId: 'open_restaurants' });
+        expectPracticalGuide(restaurants!.message, ['Restaurants', 'menu', 'reservations']);
 
-        expect(resolveComponentHelpGuideResponse({
+        const realty = resolveComponentHelpGuideResponse({
             request: '¿Qué puedo hacer aquí?',
             activeModule: 'realEstate',
             locale: 'es',
-        })).toMatchObject({
-            targetId: 'open_realty',
-            message: 'Realty sirve para propiedades, listados, visitas y seguimiento inmobiliario.',
         });
+        expect(realty).toMatchObject({ targetId: 'open_realty' });
+        expectPracticalGuide(realty!.message, ['Realty', 'propiedades', 'listados']);
     });
 
     it('does not execute ambiguous edit/create requests from the global assistant', () => {
@@ -406,14 +261,14 @@ describe('globalAssistantModuleGuide', () => {
             request: 'Necesito hacer una edición',
             locale: 'es',
         })).toEqual({
-            message: 'No hice cambios. Dime en qué área quieres hacerlo y la abro: Website Builder, Ecommerce, Email, Leads, Citas, Bio Page, ChatCore o Media AI.',
+            message: 'Dime en qué área quieres trabajar y te doy los pasos: Website Builder, Ecommerce, Email, Leads, Citas, Bio Page, ChatCore o Media AI.',
         });
 
         expect(resolveGuideOnlyActionResponse({
             request: 'I need to edit something',
             locale: 'en',
         })).toEqual({
-            message: 'I did not make changes. Tell me where you want to do it and I will open it: Website Builder, Ecommerce, Email, Leads, Appointments, Bio Page, ChatCore, or Media AI.',
+            message: 'Tell me which area you want to use and I will give you the steps: Website Builder, Ecommerce, Email, Leads, Appointments, Bio Page, ChatCore, or Media AI.',
         });
 
         expect(resolveGuideOnlyActionResponse({
@@ -422,47 +277,71 @@ describe('globalAssistantModuleGuide', () => {
         })).toBeNull();
     });
 
-    it('opens Website Builder for website edit requests without editing from chat', () => {
-        expect(resolveDirectModuleGuideDecision({
+    it('opens Website Builder for website edit requests with editing instructions, not chat execution', () => {
+        const decision = resolveDirectModuleGuideDecision({
             request: 'Necesito editar el hero',
             activeModule: 'website',
             locale: 'es',
-        })).toMatchObject({
+        });
+
+        expect(decision).toMatchObject({
             target: 'websiteBuilder',
             preparedPrompt: false,
             prompt: '',
-            message: 'Abrí Website Builder. Elige la sección que quieres editar y haz el cambio desde ahí.',
         });
+        expectPracticalGuide(decision!.message, ['Website Builder', 'panel de controles', 'preview']);
     });
 
-    it('falls back to short guide-only copy when the global request has no safe destination', () => {
+    it('falls back to conversational guide-only copy when the global request has no safe destination', () => {
         expect(resolveGuideOnlyFallbackResponse({
             request: 'Quiero revisar esto',
             locale: 'es',
         })).toEqual({
-            message: 'No hice cambios. Puedo abrir el área correcta y explicarte qué hacer allí. Dime qué área quieres usar.',
+            message: 'Dime qué área quieres usar y te explico los pasos para hacerlo desde esa pantalla.',
         });
 
         expect(resolveGuideOnlyFallbackResponse({
             request: 'I need help with this',
             locale: 'en',
         })).toEqual({
-            message: 'I did not make changes. I can open the right area and explain what to do there. Tell me which area you want to use.',
+            message: 'Tell me which area you want to use and I will explain the steps from that screen.',
         });
     });
 
     it('asks for a project before project-scoped module handoffs', () => {
         expect(isProjectScopedGuideTarget('ecommerce')).toBe(true);
         expect(isProjectScopedGuideTarget('image')).toBe(true);
+        expect(isProjectScopedGuideTarget('cms')).toBe(true);
+        expect(isProjectScopedGuideTarget('domains')).toBe(true);
+        expect(isProjectScopedGuideTarget('seo')).toBe(true);
+        expect(isProjectScopedGuideTarget('blogHub')).toBe(true);
+        expect(isProjectScopedGuideTarget('templates')).toBe(false);
         expect(isProjectScopedGuideTarget('aiStudio')).toBe(false);
         expect(isProjectScopedGuideTarget('settings')).toBe(false);
 
         expect(formatMissingProjectGuideMessage('ecommerce', 'Abre Ecommerce', 'es')).toBe(
-            'Primero elige un proyecto. Abrí Websites para que selecciones uno; después puedo llevarte a Ecommerce.',
+            'Primero elige un proyecto en Websites. Después usa Ecommerce para continuar con esa área.',
         );
         expect(formatMissingProjectGuideMessage('image', 'Open Images', 'en')).toBe(
-            'Choose a project first. I opened Websites so you can select one; then I can take you to Images.',
+            'Choose a project in Websites first. Then use Images to continue in that area.',
         );
+    });
+
+    it('maps guide targets to the operating-layer module memory segment', () => {
+        expect(resolveGuideTargetAssistantModule('image')).toBe('media');
+        expect(resolveGuideTargetAssistantModule('video')).toBe('media');
+        expect(resolveGuideTargetAssistantModule('leads')).toBe('crm');
+        expect(resolveGuideTargetAssistantModule('email')).toBe('emailMarketing');
+        expect(resolveGuideTargetAssistantModule('chatcore')).toBe('chatbot');
+        expect(resolveGuideTargetAssistantModule('websiteBuilder')).toBe('website');
+        expect(resolveGuideTargetAssistantModule('cms')).toBe('website');
+        expect(resolveGuideTargetAssistantModule('navigation')).toBe('website');
+        expect(resolveGuideTargetAssistantModule('domains')).toBe('settings');
+        expect(resolveGuideTargetAssistantModule('seo')).toBe('website');
+        expect(resolveGuideTargetAssistantModule('templates')).toBe('project');
+        expect(resolveGuideTargetAssistantModule('blogHub')).toBe('website');
+        expect(resolveGuideTargetAssistantModule('project_required')).toBe('project');
+        expect(resolveGuideTargetAssistantModule('unknown')).toBeNull();
     });
 
     it('matches a named project before direct module navigation', () => {

@@ -550,8 +550,9 @@ describe('Global Assistant default action handlers', () => {
                 surfaceCount: expect.any(Number),
             },
         });
-        expect(snapshot.summary.actionCount).toBeGreaterThan(40);
+        expect(snapshot.summary.actionCount).toBeGreaterThan(30);
         expect(snapshot.summary.executableActionCount).toBeGreaterThan(10);
+        expect(snapshot.modules.map((module: any) => module.module)).not.toContain('bioPage');
         expect(snapshot.summary.rollbackActionCount).toBeGreaterThan(0);
         expect(snapshot.summary.rollbackExecutableActionCount).toBeGreaterThan(0);
         expect(snapshot.summary.rollbackExecutableActionCount).toBeLessThanOrEqual(snapshot.summary.rollbackActionCount);
@@ -583,7 +584,8 @@ describe('Global Assistant default action handlers', () => {
             'chatbot',
             'emailMarketing',
         ]));
-        expect(snapshot.blockedBy.features).toContain('ecommerceEnabled');
+        expect(snapshot.blockedBy.features).not.toContain('ecommerceEnabled');
+        expect(snapshot.modules.map((module: any) => module.module)).not.toContain('ecommerce');
         expect(fakeSupabase.rowsByTable.projects || []).toHaveLength(0);
         expect(auditService.listEvents().map(event => event.type)).toEqual(expect.arrayContaining([
             'assistant_action_applied',
@@ -2450,11 +2452,11 @@ describe('Global Assistant default action handlers', () => {
     });
 
     it('creates a Bio Page draft with assistant review metadata', async () => {
-        const { fakeSupabase, runtime, context } = buildRuntime([], []);
+        const { fakeSupabase, runtime, context } = buildRuntime(['bioPage'], []);
         const planned = await runtime.planRequest({
             context,
             request: 'Crea una Bio Page para Casa Luna',
-            enabledServices: [],
+            enabledServices: ['bioPage'],
             enabledFeatures: [],
         });
 
@@ -2481,7 +2483,7 @@ describe('Global Assistant default action handlers', () => {
     });
 
     it('edits and rolls back a selected Bio Page link with review metadata', async () => {
-        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['bioPage'], []);
         fakeSupabase.rowsByTable.bio_pages = [{
             id: 'bio-page-1',
             tenant_id: 'tenant-1',
@@ -2519,7 +2521,7 @@ describe('Global Assistant default action handlers', () => {
         const planned = await runtime.planRequest({
             context: bioPageContext,
             request: 'Actualiza este link de Bio Page a casaluna.test/reservas',
-            enabledServices: [],
+            enabledServices: ['bioPage'],
             enabledFeatures: [],
         });
 
@@ -2575,7 +2577,7 @@ describe('Global Assistant default action handlers', () => {
     });
 
     it('publishes and rolls back a reviewed Bio Page without bypassing readiness checks', async () => {
-        const { fakeSupabase, runtime, context, auditService } = buildRuntime([], []);
+        const { fakeSupabase, runtime, context, auditService } = buildRuntime(['bioPage'], []);
         fakeSupabase.rowsByTable.bio_pages = [{
             id: 'bio-page-1',
             tenant_id: 'tenant-1',
@@ -2625,7 +2627,7 @@ describe('Global Assistant default action handlers', () => {
         const planned = await runtime.planRequest({
             context: bioPageContext,
             request: 'Publica la Bio Page',
-            enabledServices: [],
+            enabledServices: ['bioPage'],
             enabledFeatures: [],
         });
 

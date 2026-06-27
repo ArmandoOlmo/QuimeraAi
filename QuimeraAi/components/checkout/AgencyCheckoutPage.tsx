@@ -1,19 +1,12 @@
 /**
  * AgencyCheckoutPage
  * Public-facing branded checkout page for agency client payment links.
- * Renders with the agency's branding (logo, colors, name) and uses Stripe Elements
- * for card collection. No authentication required.
+ * Renders with the agency's branding and redirects to Stripe Checkout.
+ * No authentication required.
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import './AgencyCheckoutPage.css';
-import { loadStripe } from '@stripe/stripe-js';
-import {
-    Elements,
-    CardElement,
-    useStripe,
-    useElements,
-} from '@stripe/react-stripe-js';
 import { supabase } from '../../supabase';
 import {
     CheckCircle,
@@ -29,14 +22,6 @@ import {
 } from 'lucide-react';
 
 
-
-// ============================================================================
-// STRIPE INIT
-// ============================================================================
-
-const stripePromise = loadStripe(
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
-);
 
 // ============================================================================
 // TYPES
@@ -87,60 +72,34 @@ interface CardFormProps {
 }
 
 function CardForm({ token, info, onSuccess }: CardFormProps) {
-    const stripe = useStripe();
-    const elements = useElements();
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [cardComplete, setCardComplete] = useState(false);
 
     const primaryColor = info.agencyPrimaryColor || '#4f46e5';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!stripe || !elements) return;
-
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) return;
 
         setProcessing(true);
         setError(null);
 
         try {
-            // Create payment method from card element
-            const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
-                type: 'card',
-                card: cardElement,
-                billing_details: {
-                    name: info.clientName,
-                },
-            });
-
-            if (pmError) {
-                setError(pmError.message || 'Error al procesar tu tarjeta');
-                setProcessing(false);
-                return;
-            }
-
-            // Call Supabase Edge Function to confirm payment
+            const origin = window.location.origin;
             const result = await supabase.functions.invoke('stripe-api', {
                 body: {
                     action: 'agencyBilling-confirmClientPayment',
                     token,
-                    paymentMethodId: paymentMethod.id,
+                    successUrl: `${origin}/pay/${token}?checkout=success`,
+                    cancelUrl: `${origin}/pay/${token}?checkout=cancelled`,
                 }
             });
 
             if (result.error) throw result.error;
             const data = result.data?.data || result.data;
 
-            if (data.requiresAction && data.clientSecret) {
-                // Handle 3D Secure / SCA
-                const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
-                if (confirmError) {
-                    setError(confirmError.message || 'Error de autenticación');
-                    setProcessing(false);
-                    return;
-                }
+            if (data?.url) {
+                window.location.assign(data.url);
+                return;
             }
 
             onSuccess();
@@ -161,29 +120,12 @@ function CardForm({ token, info, onSuccess }: CardFormProps) {
             <div className="aco-card-element-wrapper">
                 <div className="aco-card-element-label">
                     <CreditCard size={16} />
-                    <span>Datos de tarjeta</span>
+                    <span>Checkout seguro</span>
                 </div>
                 <div className="aco-card-element">
-                    <CardElement
-                        options={{
-                            style: {
-                                base: {
-                                    fontSize: '16px',
-                                    color: '#1a1a2e',
-                                    fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
-                                    fontSmoothing: 'antialiased',
-                                    '::placeholder': { color: '#9ca3af' },
-                                    iconColor: primaryColor,
-                                },
-                                invalid: {
-                                    color: '#ef4444',
-                                    iconColor: '#ef4444',
-                                },
-                            },
-                            hidePostalCode: true,
-                        }}
-                        onChange={(e) => setCardComplete(e.complete)}
-                    />
+                    <p className="text-sm text-q-text-secondary">
+                        Completa el pago en Stripe Checkout. Tu metodo de pago no se guarda en Quimera.
+                    </p>
                 </div>
             </div>
 
@@ -196,7 +138,7 @@ function CardForm({ token, info, onSuccess }: CardFormProps) {
 
             <button
                 type="submit"
-                disabled={!stripe || processing || !cardComplete}
+                disabled={processing}
                 className="aco-pay-button"
                 style={{
                     background: `linear-gradient(135deg, ${primaryColor}, ${info.agencySecondaryColor || primaryColor})`,
@@ -210,7 +152,7 @@ function CardForm({ token, info, onSuccess }: CardFormProps) {
                 ) : (
                     <>
                         <Lock size={16} />
-                        Suscribirse por ${info.monthlyPrice.toFixed(2)}/mes
+                        Continuar a Stripe por ${info.monthlyPrice.toFixed(2)}/mes
                     </>
                 )}
             </button>
@@ -281,6 +223,10 @@ export default function AgencyCheckoutPage({ token }: AgencyCheckoutPageProps) {
     const [isComplete, setIsComplete] = useState(false);
 
     useEffect(() => {
+        const checkoutStatus = new URLSearchParams(window.location.search).get('checkout');
+        if (checkoutStatus === 'success') {
+            setIsComplete(true);
+        }
         loadPaymentLink();
     }, [token]);
 
@@ -440,15 +386,13 @@ export default function AgencyCheckoutPage({ token }: AgencyCheckoutPageProps) {
                                 Información de Pago
                             </h3>
                             <p className="aco-payment-subtitle">
-                                Hola <strong>{info.clientName}</strong>, completa tu suscripción ingresando los datos de tu tarjeta.
+                                Hola <strong>{info.clientName}</strong>, completa tu suscripción en Stripe Checkout.
                             </p>
-                            <Elements stripe={stripePromise}>
-                                <CardForm
-                                    token={token}
-                                    info={info}
-                                    onSuccess={() => setIsComplete(true)}
-                                />
-                            </Elements>
+                            <CardForm
+                                token={token}
+                                info={info}
+                                onSuccess={() => setIsComplete(true)}
+                            />
                         </div>
                     </div>
                 )}

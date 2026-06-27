@@ -308,7 +308,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userId, projectId }) => {
                             value={rateLimitPolicy.maxPerRun ?? ''}
                             onChange={e => updateRateLimit('maxPerRun', parsePositiveIntInput(e.target.value))}
                             className="w-full rounded-xl border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-q-accent/40"
-                            placeholder={t('email.settings.unlimited', 'Unlimited')}
+                            placeholder={t('email.planLimit', 'Plan limit')}
                         />
                     </Field>
                     <Field label={t('email.settings.maxPerMinute', 'Max sends per minute')}>
@@ -318,7 +318,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userId, projectId }) => {
                             value={rateLimitPolicy.maxPerMinute ?? ''}
                             onChange={e => updateRateLimit('maxPerMinute', parsePositiveIntInput(e.target.value))}
                             className="w-full rounded-xl border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-q-accent/40"
-                            placeholder={t('email.settings.unlimited', 'Unlimited')}
+                            placeholder={t('email.planLimit', 'Plan limit')}
                         />
                     </Field>
                     <Field label={t('email.settings.retryAfterSeconds', 'Deferral seconds')}>

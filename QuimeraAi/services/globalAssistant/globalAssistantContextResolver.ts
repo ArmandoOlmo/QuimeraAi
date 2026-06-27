@@ -71,7 +71,7 @@ export function resolveModuleFromRoute(route?: string | null): AssistantModuleTa
     if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/assets')) return 'media';
     if (path.includes('/blog-hub')) return 'website';
-    if (path.includes('/agency')) return 'tenant';
+    if (path.includes('/agency')) return 'agency';
     if (path.includes('/seo')) return 'website';
     if (path.includes('/settings')) return 'settings';
     return 'project';

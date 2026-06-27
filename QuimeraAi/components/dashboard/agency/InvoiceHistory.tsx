@@ -21,6 +21,7 @@ import {
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
 import { CatalogFilterBar, FilterChipRow } from '../filters';
 import AppSelect from '../../ui/AppSelect';
+import { AgencyPanel, AgencyStatCard } from './AgencyDesignSystem';
 
 interface Payment {
     id: string;
@@ -279,50 +280,28 @@ export function InvoiceHistory() {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <DollarSign className="h-5 w-5 text-q-success" />
-                        <span className="text-sm font-medium text-q-text-muted">
-                            Ingresos Totales
-                        </span>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">
-                        {formatCurrency(calculateTotalRevenue())}
-                    </p>
-                    <p className="text-sm text-q-text-muted mt-1">
-                        {dateRange === 'all'
-                            ? 'Todo el tiempo'
-                            : `Últimos ${dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90'} días`}
-                    </p>
-                </div>
-
-                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <TrendingUp className="h-5 w-5 text-q-accent" />
-                        <span className="text-sm font-medium text-q-text-muted">
-                            Pago Promedio
-                        </span>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">
-                        {formatCurrency(calculateAveragePayment())}
-                    </p>
-                    <p className="text-sm text-q-text-muted mt-1">Por transacción</p>
-                </div>
-
-                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <CheckCircle className="h-5 w-5 text-q-accent" />
-                        <span className="text-sm font-medium text-q-text-muted">
-                            Transacciones
-                        </span>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">
-                        {payments.filter((p) => p.status === 'succeeded').length}
-                    </p>
-                    <p className="text-sm text-q-text-muted mt-1">
-                        Exitosas de {payments.length} totales
-                    </p>
-                </div>
+                <AgencyStatCard
+                    icon={DollarSign}
+                    label="Ingresos Totales"
+                    value={formatCurrency(calculateTotalRevenue())}
+                    tone="success"
+                    hint={dateRange === 'all'
+                        ? 'Todo el tiempo'
+                        : `Últimos ${dateRange === '7d' ? '7' : dateRange === '30d' ? '30' : '90'} días`}
+                />
+                <AgencyStatCard
+                    icon={TrendingUp}
+                    label="Pago Promedio"
+                    value={formatCurrency(calculateAveragePayment())}
+                    tone="accent"
+                    hint="Por transacción"
+                />
+                <AgencyStatCard
+                    icon={CheckCircle}
+                    label="Transacciones"
+                    value={payments.filter((p) => p.status === 'succeeded').length}
+                    hint={`Exitosas de ${payments.length} totales`}
+                />
             </div>
 
             <CatalogFilterBar
@@ -365,7 +344,7 @@ export function InvoiceHistory() {
 
             {/* Content */}
             {activeView === 'payments' ? (
-                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 overflow-hidden">
+                <AgencyPanel contentClassName="!p-0 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
@@ -422,9 +401,9 @@ export function InvoiceHistory() {
                             </p>
                         </div>
                     )}
-                </div>
+                </AgencyPanel>
             ) : (
-                <div className="bg-q-surface rounded-lg border border-q-border dark:border-gray-700 overflow-hidden">
+                <AgencyPanel contentClassName="!p-0 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-muted">
@@ -502,7 +481,7 @@ export function InvoiceHistory() {
                             </p>
                         </div>
                     )}
-                </div>
+                </AgencyPanel>
             )}
         </div>
     );

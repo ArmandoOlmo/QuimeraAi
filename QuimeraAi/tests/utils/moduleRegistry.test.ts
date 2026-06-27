@@ -65,6 +65,52 @@ describe('moduleRegistry', () => {
         expect(ecommerceRelated).toContain('finance');
     });
 
+    it('defines Agency Engine as a canonical gated operating system', () => {
+        const agency = getModuleRegistryItem('agency-engine');
+        const clientPortal = getModuleRegistryItem('agency-client-portal');
+        const agencyModules = getModulesByCanonicalSystem('agency').map(item => item.id);
+
+        expect(agency).toMatchObject({
+            canonicalSystem: 'agency',
+            ownerSystem: 'agency-engine',
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+            requiredPermission: 'canManageSettings',
+        });
+        expect(agency?.readsFrom).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'websiteBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'finance',
+            'analytics',
+            'bioPage',
+            'media',
+        ]));
+        expect(agencyModules).toEqual(expect.arrayContaining([
+            'agency-engine',
+            'agency-client-360',
+            'agency-client-provisioning',
+            'agency-project-transfer',
+            'agency-service-plans',
+            'agency-billing',
+            'agency-reports',
+            'agency-white-label',
+            'agency-client-portal',
+            'agency-command-center',
+        ]));
+        expect(clientPortal).toMatchObject({
+            route: '/portal/dashboard',
+            requiredService: 'agency',
+            requiredFeature: 'agencyModule',
+        });
+    });
+
     it('declares Bio Page Engine ecosystem ownership and AI generation dependencies', () => {
         const blueprint = getModuleRegistryItem('ai-business-blueprint');
         const websiteBuilder = getModuleRegistryItem('website-builder');
@@ -92,6 +138,7 @@ describe('moduleRegistry', () => {
         expect(bioPage).toMatchObject({
             canonicalSystem: 'bioPage',
             ownerSystem: 'bio-page-engine',
+            requiredService: 'bioPage',
         });
         expect(bioPage?.editableBy).toEqual(expect.arrayContaining(['bio-page-engine', 'ai-studio', 'website-builder']));
         expect(bioPage?.readsFrom).toEqual(expect.arrayContaining([

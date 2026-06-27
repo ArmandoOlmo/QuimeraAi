@@ -49,7 +49,10 @@ export interface ComponentAccessContext {
 }
 
 const HERO_COMPONENTS: PageSection[] = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead'];
+const CRM_SERVICE = { requiredService: 'crm' as const, requiredFeature: 'crmEnabled' as const };
 const ECOMMERCE_SERVICE = { requiredService: 'ecommerce' as const, requiredFeature: 'ecommerceEnabled' as const };
+const CMS_SERVICE = { requiredService: 'cms' as const, requiredFeature: 'cmsEnabled' as const };
+const REAL_ESTATE_SERVICE = { requiredService: 'realEstate' as const, requiredFeature: 'realEstateModule' as const };
 
 export const QUIMERA_ADMIN_COMPONENTS: PageSection[] = [
     'heroQuimera', 'featuresQuimera', 'pricingQuimera', 'testimonialsQuimera', 'faqQuimera', 'ctaQuimera',
@@ -127,8 +130,9 @@ export const componentRegistry: ComponentRegistryItem[] = [
         goals: ['leads', 'bookings', 'real-estate'],
         incompatibleWith: HERO_COMPONENTS.filter(id => id !== 'heroLead'),
         requiredWith: ['leads'],
+        ...CRM_SERVICE,
         imageSlots: [{ path: 'heroLead.imageUrl', aspectRatio: '16:9', purpose: 'conversion hero background' }],
-        promptHints: 'Split hero with integrated form. Best for lead-generation businesses, consultations, estimates, and appointments.',
+        promptHints: 'Split hero with integrated form. Best for lead-generation businesses, consultations, estimates, and appointments. Requires CRM service and plan access.',
     },
     { id: 'topBar', label: 'Top Bar', role: 'structure', industries: ['all'], goals: ['sales', 'leads'], promptHints: 'Announcement strip for promotions, urgent notices, shipping, booking, or trust messages.' },
     {
@@ -214,10 +218,10 @@ export const componentRegistry: ComponentRegistryItem[] = [
     },
     { id: 'video', label: 'Video', role: 'media', industries: ['all'], goals: ['authority', 'sales'], promptHints: 'Embedded video or promo section when video content exists or should be highlighted.' },
     { id: 'howItWorks', label: 'How It Works', role: 'offer', industries: ['all'], goals: ['leads', 'authority'], promptHints: 'Process steps. Use to clarify service flow, bookings, onboarding, or delivery.' },
-    { id: 'leads', label: 'Leads', role: 'conversion', industries: ['all'], goals: ['leads', 'bookings', 'real-estate'], promptHints: 'Contact/lead form. Use for service, local, real estate, and consultation businesses.' },
+    { id: 'leads', label: 'Leads', role: 'conversion', industries: ['all'], goals: ['leads', 'bookings', 'real-estate'], ...CRM_SERVICE, promptHints: 'Contact/lead form. Use for service, local, real estate, and consultation businesses. Requires CRM service and plan access.' },
     { id: 'newsletter', label: 'Newsletter', role: 'conversion', industries: ['education', 'media', 'retail', 'fashion', 'technology'], goals: ['authority', 'sales'], requiredService: 'emailMarketing', requiredFeature: 'emailMarketing', promptHints: 'Email signup. Only suggest when email marketing service and plan access are available.' },
     { id: 'map', label: 'Map', role: 'conversion', industries: ['restaurant', 'healthcare', 'beauty-spa', 'fitness-gym', 'legal', 'real-estate', 'retail'], goals: ['leads', 'bookings', 'restaurant', 'real-estate'], promptHints: 'Location map and contact details. Use only when the business has a physical/service location.' },
-    { id: 'signupFloat', label: 'Signup Float', role: 'conversion', industries: ['technology', 'education', 'retail'], goals: ['leads', 'sales'], promptHints: 'Floating signup widget. Use sparingly for campaigns or launches.' },
+    { id: 'signupFloat', label: 'Signup Float', role: 'conversion', industries: ['technology', 'education', 'retail'], goals: ['leads', 'sales'], ...CRM_SERVICE, promptHints: 'Floating signup widget. Use sparingly for campaigns or launches. Requires CRM service and plan access.' },
     {
         id: 'menu',
         label: 'Menu',
@@ -237,12 +241,15 @@ export const componentRegistry: ComponentRegistryItem[] = [
     },
     { id: 'restaurantReservation', label: 'Restaurant Reservation', role: 'industry', industries: ['restaurant', 'cafe'], goals: ['restaurant', 'bookings'], requiredService: 'restaurants', requiredWith: ['menu'], imageSlots: [{ path: 'restaurantReservation.backgroundImageUrl', aspectRatio: '16:9', purpose: 'restaurant reservation background' }], promptHints: 'Reservation form for restaurants/cafes. Requires Restaurants service availability.' },
     { id: 'realEstateListings', label: 'Real Estate Listings', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], requiredService: 'realEstate', requiredFeature: 'realEstateModule', requiredWith: ['leads'], promptHints: 'Property listing section connected to Real Estate OS. Requires service and plan access.' },
+    { id: 'appointmentBooking', label: 'Appointment Booking', role: 'conversion', industries: ['all'], goals: ['bookings', 'leads'], requiredService: 'appointments', promptHints: 'Appointment booking section. Requires Appointments service availability.' },
     { id: 'separator1', label: 'Separator 1', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },
     { id: 'separator2', label: 'Separator 2', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },
     { id: 'separator3', label: 'Separator 3', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },
     { id: 'separator4', label: 'Separator 4', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },
     { id: 'separator5', label: 'Separator 5', role: 'structure', industries: ['all'], goals: ['authority'], promptHints: 'Decorative separator for visual rhythm.' },
     { id: 'announcementBar', label: 'Announcement Bar', role: 'ecommerce', industries: ['ecommerce', 'retail', 'fashion', 'jewelry', 'electronics'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Ecommerce announcement strip for promotions, shipping, and sales.' },
+    { id: 'storeSettings', label: 'Store Settings', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Storefront settings and ecommerce shell controls. Requires ecommerce service and plan access.' },
+    { id: 'products', label: 'Products', role: 'ecommerce', industries: ['ecommerce', 'retail', 'fashion', 'jewelry', 'electronics'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Products section connected to the ecommerce catalog. Requires ecommerce service and plan access.' },
     { id: 'productHero', label: 'Product Hero', role: 'ecommerce', industries: ['ecommerce', 'retail', 'fashion', 'jewelry', 'electronics'], goals: ['sales'], ...ECOMMERCE_SERVICE, imageSlots: [{ path: 'productHero.backgroundImageUrl', aspectRatio: '16:9', purpose: 'featured product hero image' }], promptHints: 'Featured product or collection hero. Requires ecommerce service and plan access.' },
     { id: 'featuredProducts', label: 'Featured Products', role: 'ecommerce', industries: ['ecommerce', 'retail', 'fashion', 'jewelry', 'electronics'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Featured products grid/carousel. Requires ecommerce service and plan access.' },
     { id: 'categoryGrid', label: 'Category Grid', role: 'ecommerce', industries: ['ecommerce', 'retail', 'fashion', 'jewelry', 'electronics'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Product category navigation. Requires ecommerce service and plan access.' },
@@ -252,8 +259,16 @@ export const componentRegistry: ComponentRegistryItem[] = [
     { id: 'recentlyViewed', label: 'Recently Viewed', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Recently viewed products. Best for stores with product browsing.' },
     { id: 'productReviews', label: 'Product Reviews', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales', 'authority'], ...ECOMMERCE_SERVICE, promptHints: 'Product review/social proof section. Requires ecommerce service and plan access.' },
     { id: 'productBundle', label: 'Product Bundle', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Product bundle/upsell section. Requires ecommerce service and plan access.' },
+    { id: 'productDetail', label: 'Product Detail', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Product detail page section. Requires ecommerce service and plan access.' },
+    { id: 'categoryProducts', label: 'Category Products', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Category products page section. Requires ecommerce service and plan access.' },
+    { id: 'productGrid', label: 'Product Grid', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Catalog product grid section. Requires ecommerce service and plan access.' },
+    { id: 'cart', label: 'Cart', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Cart page section. Requires ecommerce service and plan access.' },
+    { id: 'checkout', label: 'Checkout', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Checkout page section. Requires ecommerce service and plan access.' },
+    { id: 'propertyDirectory', label: 'Property Directory', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], ...REAL_ESTATE_SERVICE, promptHints: 'Real estate public directory page. Requires Realty service and plan access.' },
+    { id: 'propertyDetail', label: 'Property Detail', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], ...REAL_ESTATE_SERVICE, promptHints: 'Real estate property detail page. Requires Realty service and plan access.' },
+    { id: 'articleContent', label: 'Article Content', role: 'media', industries: ['education', 'media', 'technology', 'consulting'], goals: ['authority'], ...CMS_SERVICE, promptHints: 'Article content page section. Requires CMS service and plan access.' },
     { id: 'chatbot', label: 'Chatbot', role: 'conversion', industries: ['all'], goals: ['leads', 'bookings', 'sales'], requiredService: 'chatbot', requiredFeature: 'chatbotEnabled', promptHints: 'AI assistant widget configuration. Only use when chatbot service and plan access are available.' },
-    { id: 'cmsFeed', label: 'CMS Feed', role: 'media', industries: ['education', 'media', 'technology', 'consulting'], goals: ['authority'], requiredService: 'cms', requiredFeature: 'cmsEnabled', promptHints: 'Dynamic CMS/blog feed. Only use when CMS service and plan access are available.' },
+    { id: 'cmsFeed', label: 'CMS Feed', role: 'media', industries: ['education', 'media', 'technology', 'consulting'], goals: ['authority'], ...CMS_SERVICE, promptHints: 'Dynamic CMS/blog feed. Only use when CMS service and plan access are available.' },
 ];
 
 export function canAccessRegistryItem(item: ComponentRegistryItem, access: ComponentAccessContext = {}): boolean {

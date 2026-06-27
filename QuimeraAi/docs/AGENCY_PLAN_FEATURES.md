@@ -24,7 +24,7 @@ El **Plan Agency** de Quimera.ai está diseñado para agencias que gestionan mú
 | Característica | Agency | Agency Plus | Enterprise |
 |---|---|---|---|
 | **Precio** | $99/mes | $199/mes | Personalizado |
-| **Sub-clientes** | 10 | 25 | Ilimitado |
+| **Sub-clientes** | 10 | 25 | Hasta 500 |
 | **AI Credits** | 5,000 | 10,000 | Custom |
 | **Almacenamiento** | 100 GB | 250 GB | Custom |
 | **Reportes Consolidados** | ✅ | ✅ | ✅ |
@@ -1151,7 +1151,7 @@ R: 10% del monto total (precio base + overages). Por ejemplo:
 
 **P: ¿Con qué frecuencia puedo generar reportes?**
 
-R: Ilimitados para Agency Plus y Enterprise. Agency tiene límite de 50/mes.
+R: Agency Plus y Enterprise tienen límites altos configurables. Agency tiene límite de 50/mes.
 
 **P: ¿Puedo personalizar el diseño del PDF?**
 

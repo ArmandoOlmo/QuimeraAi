@@ -15,17 +15,23 @@ import {
     Download,
     Users,
 } from 'lucide-react';
-import { settingsPanelClass } from '../settings/SettingsStatCard';
 import { ROUTES } from '../../../routes/config';
+import { AgencyPanel } from './AgencyDesignSystem';
+import { StatusBadge } from '../../ui/system';
+import { Client360Panel } from './Client360Panel';
 
 interface ClientListTableProps {
     clients: Tenant[];
+    onSelectClient?: (clientId: string) => void;
+    renderClient360?: boolean;
 }
 
-export function ClientListTable({ clients }: ClientListTableProps) {
+export function ClientListTable({ clients, onSelectClient, renderClient360 = true }: ClientListTableProps) {
     const { navigate } = useRouter();
-    const { getClientMetrics, exportClientData } = useAgency();
+    const { getClientMetrics, exportClientData, recentActivity } = useAgency();
     const [exportingClientId, setExportingClientId] = useState<string | null>(null);
+    const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+    const selectedClient = clients.find(client => client.id === selectedClientId) || null;
 
     const getStatusBadge = (status: Tenant['status']) => {
         const styles: Record<Tenant['status'], { bg: string; text: string; label: string; icon: React.ReactNode }> = {
@@ -59,12 +65,14 @@ export function ClientListTable({ clients }: ClientListTableProps) {
         const style = styles[status];
 
         return (
-            <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`}
+            <StatusBadge
+                size="sm"
+                variant={status === 'active' ? 'success' : status === 'expired' ? 'muted' : 'warning'}
+                className={`inline-flex items-center gap-1.5 ${style.bg} ${style.text}`}
             >
                 {style.icon}
                 {style.label}
-            </span>
+            </StatusBadge>
         );
     };
 
@@ -89,9 +97,24 @@ export function ClientListTable({ clients }: ClientListTableProps) {
         }
     };
 
+    const handleOpenClient = (clientId: string) => {
+        if (onSelectClient) {
+            onSelectClient(clientId);
+            return;
+        }
+
+        setSelectedClientId(clientId);
+    };
+
+    const getClientMrr = (client: Tenant) => {
+        const value = client.billing?.mrr ?? client.billing?.monthlyPrice ?? client.billingInfo?.mrr ?? 0;
+        const amount = Number(value);
+        return Number.isFinite(amount) && amount > 0 ? amount : 0;
+    };
+
     if (clients.length === 0) {
         return (
-            <div className={`${settingsPanelClass} p-12`}>
+            <AgencyPanel>
                 <div className="text-center">
                     <Users className="h-10 w-10 text-q-text-muted/40 mx-auto mb-4" strokeWidth={1.5} />
                     <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -107,159 +130,165 @@ export function ClientListTable({ clients }: ClientListTableProps) {
                         Agregar Primer Cliente
                     </button>
                 </div>
-            </div>
+            </AgencyPanel>
         );
     }
 
     return (
-        <div className={settingsPanelClass}>
-            <div className="px-5 py-4 border-b border-q-border flex items-center gap-3">
-                <Users size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                <h2 className="text-lg font-semibold text-foreground">
-                    Clientes ({clients.length})
-                </h2>
-            </div>
+        <>
+            <AgencyPanel title={`Clientes (${clients.length})`} icon={Users} contentClassName="!p-0">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-secondary/30">
+                            <tr>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Cliente
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Estado
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Plan
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Proyectos
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Storage
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    AI Credits
+                                </th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    MRR
+                                </th>
+                                <th className="px-5 py-3 text-right text-xs font-semibold text-q-text-muted uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-q-border">
+                            {clients.map((client) => {
+                                const metrics = getClientMetrics(client.id);
+                                const hasAlerts = metrics && metrics.alerts.length > 0;
 
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-secondary/30">
-                        <tr>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Cliente
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Estado
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Plan
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Proyectos
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Storage
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                AI Credits
-                            </th>
-                            <th className="px-5 py-3 text-left text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                MRR
-                            </th>
-                            <th className="px-5 py-3 text-right text-xs font-semibold text-q-text-muted uppercase tracking-wider">
-                                Acciones
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-q-border">
-                        {clients.map((client) => {
-                            const metrics = getClientMetrics(client.id);
-                            const hasAlerts = metrics && metrics.alerts.length > 0;
-
-                            return (
-                                <tr
-                                    key={client.id}
-                                    className="hover:bg-secondary/20 transition-colors cursor-pointer"
-                                    onClick={() => navigate(`/dashboard/agency/clients/${client.id}`)}
-                                >
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        <div className="flex items-center gap-2">
-                                            <div>
-                                                <div className="font-medium text-foreground">
-                                                    {client.name}
+                                return (
+                                    <tr
+                                        key={client.id}
+                                        className="hover:bg-secondary/20 transition-colors cursor-pointer"
+                                        onClick={() => handleOpenClient(client.id)}
+                                    >
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <div>
+                                                    <div className="font-medium text-foreground">
+                                                        {client.name}
+                                                    </div>
+                                                    <div className="text-sm text-q-text-muted">
+                                                        {client.slug}
+                                                    </div>
                                                 </div>
-                                                <div className="text-sm text-q-text-muted">
-                                                    {client.slug}
-                                                </div>
+                                                {hasAlerts && (
+                                                    <AlertTriangle className="h-4 w-4 text-q-accent flex-shrink-0" />
+                                                )}
                                             </div>
-                                            {hasAlerts && (
-                                                <AlertTriangle className="h-4 w-4 text-q-accent flex-shrink-0" />
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            {getStatusBadge(client.status)}
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            <span className="text-sm text-foreground capitalize">
+                                                {(client.subscriptionPlan || 'individual').replace('_', ' ')}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            {metrics ? (
+                                                <span className={`text-sm ${getUsageColor(metrics.usagePercentages.projects)}`}>
+                                                    {metrics.usage.projectCount} / {metrics.limits.maxProjects}
+                                                    <span className="text-xs ml-1">
+                                                        ({formatPercentage(metrics.usagePercentages.projects)})
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm text-q-text-muted">-</span>
                                             )}
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        {getStatusBadge(client.status)}
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        <span className="text-sm text-foreground capitalize">
-                                            {client.subscriptionPlan.replace('_', ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        {metrics ? (
-                                            <span className={`text-sm ${getUsageColor(metrics.usagePercentages.projects)}`}>
-                                                {metrics.usage.projectCount} / {metrics.limits.maxProjects}
-                                                <span className="text-xs ml-1">
-                                                    ({formatPercentage(metrics.usagePercentages.projects)})
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            {metrics ? (
+                                                <span className={`text-sm ${getUsageColor(metrics.usagePercentages.storage)}`}>
+                                                    {metrics.usage.storageUsedGB.toFixed(1)} GB
+                                                    <span className="text-xs ml-1">
+                                                        ({formatPercentage(metrics.usagePercentages.storage)})
+                                                    </span>
                                                 </span>
-                                            </span>
-                                        ) : (
-                                            <span className="text-sm text-q-text-muted">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        {metrics ? (
-                                            <span className={`text-sm ${getUsageColor(metrics.usagePercentages.storage)}`}>
-                                                {metrics.usage.storageUsedGB.toFixed(1)} GB
-                                                <span className="text-xs ml-1">
-                                                    ({formatPercentage(metrics.usagePercentages.storage)})
+                                            ) : (
+                                                <span className="text-sm text-q-text-muted">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            {metrics ? (
+                                                <span className={`text-sm ${getUsageColor(metrics.usagePercentages.aiCredits)}`}>
+                                                    {metrics.usage.aiCreditsUsed.toLocaleString()}
+                                                    <span className="text-xs ml-1">
+                                                        ({formatPercentage(metrics.usagePercentages.aiCredits)})
+                                                    </span>
                                                 </span>
-                                            </span>
-                                        ) : (
-                                            <span className="text-sm text-q-text-muted">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        {metrics ? (
-                                            <span className={`text-sm ${getUsageColor(metrics.usagePercentages.aiCredits)}`}>
-                                                {metrics.usage.aiCreditsUsed.toLocaleString()}
-                                                <span className="text-xs ml-1">
-                                                    ({formatPercentage(metrics.usagePercentages.aiCredits)})
+                                            ) : (
+                                                <span className="text-sm text-q-text-muted">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap">
+                                            {getClientMrr(client) > 0 ? (
+                                                <span className="text-sm font-medium text-foreground">
+                                                    ${getClientMrr(client).toFixed(0)}
                                                 </span>
-                                            </span>
-                                        ) : (
-                                            <span className="text-sm text-q-text-muted">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-3.5 whitespace-nowrap">
-                                        {client.billing?.mrr ? (
-                                            <span className="text-sm font-medium text-foreground">
-                                                ${client.billing.mrr.toFixed(0)}
-                                            </span>
-                                        ) : (
-                                            <span className="text-sm text-q-text-muted">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleExportClient(client.id);
-                                                }}
-                                                disabled={exportingClientId === client.id}
-                                                className="p-2 text-q-text-muted hover:text-foreground transition-colors disabled:opacity-50"
-                                                title="Exportar datos"
-                                            >
-                                                <Download className="h-4 w-4" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate(`/dashboard/agency/clients/${client.id}`);
-                                                }}
-                                                className="p-2 text-q-text-muted hover:text-foreground transition-colors"
-                                                title="Ver detalles"
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                                            ) : (
+                                                <span className="text-sm text-q-text-muted">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleExportClient(client.id);
+                                                    }}
+                                                    disabled={exportingClientId === client.id}
+                                                    className="p-2 text-q-text-muted hover:text-foreground transition-colors disabled:opacity-50"
+                                                    title="Exportar datos"
+                                                >
+                                                    <Download className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleOpenClient(client.id);
+                                                    }}
+                                                    className="p-2 text-q-text-muted hover:text-foreground transition-colors"
+                                                    title="Client 360"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </AgencyPanel>
+            {renderClient360 && (
+                <Client360Panel
+                    client={selectedClient}
+                    metrics={selectedClient ? getClientMetrics(selectedClient.id) : null}
+                    activities={recentActivity}
+                    isOpen={Boolean(selectedClient)}
+                    isExporting={Boolean(selectedClient && exportingClientId === selectedClient.id)}
+                    onClose={() => setSelectedClientId(null)}
+                    onExport={handleExportClient}
+                />
+            )}
+        </>
     );
 }

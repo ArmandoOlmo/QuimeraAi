@@ -14,6 +14,93 @@ import {
     SubscriptionPlanId,
     calculateCreditsUsagePercentage,
 } from '../types/subscription';
+import {
+    canConsumeCredits,
+    type ServiceAccessDecision,
+} from './access/serviceAccessEngine';
+import {
+    normalizePlanId,
+    normalizePlanLimits,
+} from './billing/planCatalog';
+
+export function getCreditCost(operation: AiCreditOperation): number {
+    return AI_CREDIT_COSTS[operation];
+}
+
+export function normalizeAiCreditsUsage(
+    usage: Partial<AiCreditsUsage> | null | undefined,
+    fallbackLimit: number,
+): AiCreditsUsage {
+    const now = Date.now();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    const creditsIncluded = Number(usage?.creditsIncluded ?? fallbackLimit);
+    const creditsUsed = Number(usage?.creditsUsed ?? 0);
+    return {
+        tenantId: String(usage?.tenantId || ''),
+        periodStart: usage?.periodStart || { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+        periodEnd: usage?.periodEnd || { seconds: Math.floor(periodEnd.getTime() / 1000), nanoseconds: 0 },
+        creditsIncluded: Number.isFinite(creditsIncluded) ? creditsIncluded : fallbackLimit,
+        creditsUsed: Number.isFinite(creditsUsed) ? creditsUsed : 0,
+        creditsRemaining: Math.max(0, (Number.isFinite(creditsIncluded) ? creditsIncluded : fallbackLimit) - (Number.isFinite(creditsUsed) ? creditsUsed : 0)),
+        creditsOverage: Math.max(0, (Number.isFinite(creditsUsed) ? creditsUsed : 0) - (Number.isFinite(creditsIncluded) ? creditsIncluded : fallbackLimit)),
+        usageByOperation: usage?.usageByOperation || {} as Record<AiCreditOperation, number>,
+        dailyUsage: usage?.dailyUsage || [],
+        lastUpdated: usage?.lastUpdated || { seconds: Math.floor(now / 1000), nanoseconds: 0 },
+        parentTenantId: usage?.parentTenantId,
+        isAgencyPool: usage?.isAgencyPool,
+        subClientsUsage: usage?.subClientsUsage,
+    };
+}
+
+async function getTenantCreditContext(tenantId: string): Promise<{
+    planId: SubscriptionPlanId;
+    limits: ReturnType<typeof normalizePlanLimits>;
+    usage: AiCreditsUsage;
+    subscriptionStatus?: string;
+}> {
+    const [{ data: tenant }, { data: subscription }] = await Promise.all([
+        supabase.from('tenants').select('subscription_plan, limits, status').eq('id', tenantId).maybeSingle(),
+        supabase.from('subscriptions').select('plan_id, status, ai_credits_usage').eq('tenant_id', tenantId).maybeSingle(),
+    ]);
+
+    const planId = normalizePlanId(subscription?.plan_id || tenant?.subscription_plan || 'free') as SubscriptionPlanId;
+    const limits = normalizePlanLimits(tenant?.limits, planId);
+    const usage = normalizeAiCreditsUsage(subscription?.ai_credits_usage as Partial<AiCreditsUsage> | null, limits.maxAiCredits);
+    usage.tenantId = tenantId;
+
+    return {
+        planId,
+        limits,
+        usage,
+        subscriptionStatus: subscription?.status || tenant?.status || 'active',
+    };
+}
+
+export async function assertCreditsAvailable(params: {
+    tenantId: string;
+    userId?: string;
+    userRole?: string;
+    operation: AiCreditOperation;
+    customCredits?: number;
+}): Promise<ServiceAccessDecision> {
+    const context = await getTenantCreditContext(params.tenantId);
+    return canConsumeCredits({
+        tenantId: params.tenantId,
+        userId: params.userId,
+        userRole: params.userRole,
+        planId: context.planId,
+        subscriptionStatus: context.subscriptionStatus,
+        planLimits: context.limits,
+        aiOperation: params.operation,
+        customCredits: params.customCredits,
+        aiCreditsUsage: {
+            creditsIncluded: context.usage.creditsIncluded,
+            creditsUsed: context.usage.creditsUsed,
+            creditsRemaining: context.usage.creditsRemaining,
+        },
+    });
+}
 
 async function consumeCreditsServerSide(params: {
     tenantId: string;
@@ -98,6 +185,7 @@ export async function consumeCredits(
         tokensInput?: number;
         tokensOutput?: number;
         customCredits?: number;
+        userRole?: string;
         metadata?: Record<string, any>;
     }
 ): Promise<{
@@ -109,14 +197,20 @@ export async function consumeCredits(
 }> {
     try {
         const creditsToUse = options?.customCredits ?? AI_CREDIT_COSTS[operation];
-        const checkResult = await checkCreditsAvailable(tenantId, creditsToUse);
+        const accessDecision = await assertCreditsAvailable({
+            tenantId,
+            userId,
+            userRole: options?.userRole,
+            operation,
+            customCredits: creditsToUse,
+        });
 
-        if (!checkResult.hasCredits) {
+        if (!accessDecision.allowed) {
             return {
                 success: false,
                 creditsUsed: 0,
-                creditsRemaining: checkResult.creditsAvailable,
-                error: checkResult.message || 'No hay suficientes AI credits disponibles',
+                creditsRemaining: accessDecision.remaining ?? 0,
+                error: accessDecision.message || 'No hay suficientes AI credits disponibles',
             };
         }
 
@@ -151,14 +245,16 @@ export async function checkCreditsAvailable(
     creditsRequired: number
 ): Promise<CreditCheckResult> {
     try {
-        const usage = await getCreditsUsage(tenantId);
+        const context = await getTenantCreditContext(tenantId);
+        const usage = context.usage;
 
         if (!usage) {
             return {
-                hasCredits: true,
+                hasCredits: false,
                 creditsRequired,
                 creditsAvailable: 0,
-                wouldExceedLimit: false,
+                wouldExceedLimit: true,
+                message: 'No hay uso de AI Credits configurado para este workspace',
             };
         }
 
@@ -202,10 +298,11 @@ export async function checkCreditsAvailable(
     } catch (error) {
         console.error('[aiCreditsService] Error checking credits:', error);
         return {
-            hasCredits: true,
+            hasCredits: false,
             creditsRequired,
             creditsAvailable: 0,
-            wouldExceedLimit: false,
+            wouldExceedLimit: true,
+            message: 'No se pudo validar el balance de AI Credits',
         };
     }
 }
@@ -692,6 +789,7 @@ export async function consumeCreditsFromSharedPool(
         tokensInput?: number;
         tokensOutput?: number;
         customCredits?: number;
+        userRole?: string;
         metadata?: Record<string, any>;
     }
 ): Promise<{
@@ -703,14 +801,20 @@ export async function consumeCreditsFromSharedPool(
 }> {
     try {
         const creditsToUse = options?.customCredits ?? AI_CREDIT_COSTS[operation];
-        const checkResult = await checkCreditsAvailable(agencyTenantId, creditsToUse);
+        const accessDecision = await assertCreditsAvailable({
+            tenantId: agencyTenantId,
+            userId,
+            userRole: options?.userRole,
+            operation,
+            customCredits: creditsToUse,
+        });
 
-        if (!checkResult.hasCredits) {
+        if (!accessDecision.allowed) {
             return {
                 success: false,
                 creditsUsed: 0,
-                creditsRemaining: checkResult.creditsAvailable,
-                error: checkResult.message || 'El pool compartido de la agencia no tiene suficientes créditos',
+                creditsRemaining: accessDecision.remaining ?? 0,
+                error: accessDecision.message || 'El pool compartido de la agencia no tiene suficientes créditos',
             };
         }
 

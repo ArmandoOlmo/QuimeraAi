@@ -3,23 +3,25 @@
  * Display upcoming renewals and trial expirations
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { UpcomingRenewal } from '../../../hooks/useAgencyMetrics';
 import { Calendar, Clock, DollarSign, AlertCircle } from 'lucide-react';
-import { useRouter } from '../../../hooks/useRouter';
-import { settingsPanelClass } from '../settings/SettingsStatCard';
+import { AgencyEmptyState, AgencyPanel } from './AgencyDesignSystem';
+import { StatusBadge } from '../../ui/system';
 
 interface UpcomingRenewalsPanelProps {
     renewals: UpcomingRenewal[];
     maxVisible?: number;
+    onSelectClient?: (clientId: string) => void;
 }
 
 export function UpcomingRenewalsPanel({
     renewals,
     maxVisible = 5,
+    onSelectClient,
 }: UpcomingRenewalsPanelProps) {
-    const { navigate } = useRouter();
-    const visibleRenewals = renewals.slice(0, maxVisible);
+    const [showAll, setShowAll] = useState(false);
+    const visibleRenewals = showAll ? renewals : renewals.slice(0, maxVisible);
     const hasMore = renewals.length > maxVisible;
 
     const formatDate = (date: Date): string => {
@@ -28,12 +30,6 @@ export function UpcomingRenewalsPanel({
             month: 'short',
             year: 'numeric',
         }).format(date);
-    };
-
-    const getDaysColor = (days: number): string => {
-        if (days <= 7) return 'text-q-error dark:text-q-error';
-        if (days <= 14) return 'text-q-accent dark:text-q-accent';
-        return 'text-q-accent dark:text-q-accent';
     };
 
     const getDaysBadgeColor = (days: number): string => {
@@ -45,51 +41,33 @@ export function UpcomingRenewalsPanel({
     };
 
     const handleRenewalClick = (renewal: UpcomingRenewal) => {
-        navigate(`/dashboard/agency/clients/${renewal.clientId}`);
+        onSelectClient?.(renewal.clientId);
     };
 
     if (renewals.length === 0) {
         return (
-            <div className={`${settingsPanelClass} p-6`}>
-                <div className="flex items-center gap-3 mb-4">
-                    <Calendar size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Renovaciones Próximas
-                    </h3>
-                </div>
-                <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-q-text-muted mx-auto mb-4" />
-                    <p className="text-q-text-muted">
-                        No hay renovaciones próximas
-                    </p>
-                    <p className="text-sm text-q-text-muted mt-1">
-                        Las renovaciones de los próximos 30 días aparecerán aquí
-                    </p>
-                </div>
-            </div>
+            <AgencyPanel title="Renovaciones Próximas" icon={Calendar}>
+                <AgencyEmptyState
+                    icon={Calendar}
+                    title="Sin renovaciones próximas"
+                    description="Las renovaciones de los próximos 30 días aparecerán aquí."
+                />
+            </AgencyPanel>
         );
     }
 
     return (
-        <div className={`${settingsPanelClass} p-6`}>
-            <div className="flex items-center justify-between mb-4 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                    <Calendar size={20} className="quimera-dashboard-header-icon" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Renovaciones Próximas
-                    </h3>
-                </div>
-                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text">
-                    {renewals.length}
-                </span>
-            </div>
-
+        <AgencyPanel
+            title="Renovaciones Próximas"
+            icon={Calendar}
+            action={<StatusBadge size="sm" variant="warning">{renewals.length}</StatusBadge>}
+        >
             <div className="space-y-3">
                 {visibleRenewals.map((renewal) => (
                     <button
                         key={renewal.clientId}
                         onClick={() => handleRenewalClick(renewal)}
-                        className="w-full text-left p-4 rounded-lg border border-q-border hover:border-q-accent/25 dark:hover:border-q-accent/35 transition-all hover:shadow-md"
+                        className="w-full text-left p-4 rounded-lg border border-q-border transition-colors hover:border-q-border hover:bg-muted/35"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
@@ -146,12 +124,12 @@ export function UpcomingRenewalsPanel({
 
             {hasMore && (
                 <button
-                    onClick={() => navigate('/dashboard/agency/renewals')}
+                    onClick={() => setShowAll((value) => !value)}
                     className="w-full mt-4 text-sm text-q-accent dark:text-q-accent hover:text-q-accent dark:hover:text-q-accent font-medium"
                 >
-                    Ver todas las renovaciones ({renewals.length})
+                    {showAll ? 'Mostrar menos' : `Ver todas las renovaciones (${renewals.length})`}
                 </button>
             )}
-        </div>
+        </AgencyPanel>
     );
 }

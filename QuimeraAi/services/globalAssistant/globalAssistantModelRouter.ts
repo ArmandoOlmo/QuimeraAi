@@ -4,15 +4,15 @@ import type {
 } from '../../types/globalAssistant';
 
 export const GLOBAL_ASSISTANT_MODELS = {
-    orchestrator: 'anthropic/claude-opus-4.7',
-    fallback: 'google/gemini-2.5-pro',
-    fast: 'google/gemini-2.5-flash',
+    orchestrator: 'google/gemini-3-flash-preview',
+    fallback: 'google/gemini-3-flash-preview',
+    fast: 'google/gemini-3-flash-preview',
     imagePro: 'google/gemini-3-pro-image',
     imageFast: 'google/gemini-3.1-flash-image',
 } as const;
 
 /**
- * Verified against https://openrouter.ai/api/v1/models on 2026-06-26.
+ * Verified against https://openrouter.ai/google/gemini-3-flash-preview on 2026-06-27.
  * Keep this as metadata, not as a permanent guarantee. The runtime should refresh
  * provider capabilities before hard failures or production rollout.
  */

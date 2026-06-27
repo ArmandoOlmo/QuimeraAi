@@ -136,40 +136,23 @@ const NumberInput: React.FC<{
     max?: number;
     step?: number;
     suffix?: string;
-    allowUnlimited?: boolean;
-}> = ({ label, value, onChange, min = 0, max, step = 1, suffix, allowUnlimited }) => (
+}> = ({ label, value, onChange, min = 0, max, step = 1, suffix }) => (
     <div>
         <label className="block text-sm text-q-text-secondary mb-1.5">{label}</label>
         <div className="flex items-center gap-2">
             <input
                 type="number"
-                value={value === -1 ? '' : value}
+                value={value}
                 onChange={(e) => {
-                    const val = e.target.value === '' ? (allowUnlimited ? -1 : 0) : parseInt(e.target.value);
-                    onChange(val);
+                    const parsed = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    onChange(Math.max(min, Number.isFinite(parsed) ? parsed : 0));
                 }}
                 min={min}
                 max={max}
                 step={step}
-                placeholder={allowUnlimited ? 'Ilimitado' : undefined}
                 className="flex-1 px-3 py-2 bg-q-bg border border-q-border rounded-lg text-q-text focus:outline-none focus:border-q-accent"
             />
             {suffix && <span className="text-sm text-q-text-secondary">{suffix}</span>}
-            {allowUnlimited && (
-                <button
-                    type="button"
-                    onClick={() => onChange(value === -1 ? 0 : -1)}
-                    className={`
-                        px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                        ${value === -1
-                            ? 'bg-q-accent text-q-text-on-accent'
-                            : 'bg-q-surface-overlay text-q-text-secondary hover:bg-q-surface-overlay/80'
-                        }
-                    `}
-                >
-                    ∞
-                </button>
-            )}
         </div>
     </div>
 );
@@ -559,56 +542,47 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
                                 label="Máx. Proyectos"
                                 value={formData.limits?.maxProjects || 0}
                                 onChange={(v) => updateLimit('maxProjects', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Máx. Usuarios"
                                 value={formData.limits?.maxUsers || 0}
                                 onChange={(v) => updateLimit('maxUsers', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Almacenamiento"
                                 value={formData.limits?.maxStorageGB || 0}
                                 onChange={(v) => updateLimit('maxStorageGB', v)}
                                 suffix="GB"
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="AI Credits / mes"
                                 value={formData.limits?.maxAiCredits || 0}
                                 onChange={(v) => updateLimit('maxAiCredits', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Dominios Personalizados"
                                 value={formData.limits?.maxDomains || 0}
                                 onChange={(v) => updateLimit('maxDomains', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Máx. Leads"
                                 value={formData.limits?.maxLeads || 0}
                                 onChange={(v) => updateLimit('maxLeads', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Máx. Productos (E-commerce)"
                                 value={formData.limits?.maxProducts || 0}
                                 onChange={(v) => updateLimit('maxProducts', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Emails / mes"
                                 value={formData.limits?.maxEmailsPerMonth || 0}
                                 onChange={(v) => updateLimit('maxEmailsPerMonth', v)}
-                                allowUnlimited
                             />
                             <NumberInput
                                 label="Sub-clientes (Agencias)"
                                 value={formData.limits?.maxSubClients || 0}
                                 onChange={(v) => updateLimit('maxSubClients', v)}
-                                allowUnlimited
                             />
                         </div>
                     )}
@@ -943,4 +917,3 @@ const UnifiedPlanEditor: React.FC<UnifiedPlanEditorProps> = ({
 };
 
 export default UnifiedPlanEditor;
-

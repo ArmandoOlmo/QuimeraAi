@@ -4,6 +4,7 @@ import Stripe from "npm:stripe@^14.0.0";
 import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 import { encode as encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
 import { encode as encodeBase64Url } from "https://deno.land/std@0.177.0/encoding/base64url.ts";
+import { resolveServiceAccess } from "../../../services/access/serviceAccessEngine.ts";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,60 @@ async function hashAccessToken(token: string) {
     const data = new TextEncoder().encode(token);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     return new TextDecoder().decode(encodeHex(new Uint8Array(hashBuffer)));
+}
+
+async function assertMerchantEcommerceAccess(supabaseClient: ReturnType<typeof createClient>, projectId: string, ownerId?: string | null) {
+    const { data: project } = await supabaseClient
+        .from("projects")
+        .select("tenant_id, user_id")
+        .eq("id", projectId)
+        .maybeSingle();
+
+    const tenantId = project?.tenant_id;
+    if (!tenantId) return;
+
+    const [{ data: tenant }, { data: subscription }, { data: serviceSettings }] = await Promise.all([
+        supabaseClient.from("tenants").select("status, subscription_plan, limits, usage").eq("id", tenantId).maybeSingle(),
+        supabaseClient.from("subscriptions").select("plan_id, status").eq("tenant_id", tenantId).maybeSingle(),
+        supabaseClient.from("settings").select("config").eq("id", "serviceAvailability").maybeSingle(),
+    ]);
+
+    const decision = resolveServiceAccess({
+        userId: String(ownerId || project?.user_id || "storefront-public-checkout"),
+        userRole: "storefront_customer",
+        tenantId,
+        tenantStatus: tenant?.status,
+        projectId,
+        planId: subscription?.plan_id || tenant?.subscription_plan || "free",
+        subscriptionStatus: subscription?.status || tenant?.status || "active",
+        serviceId: "ecommerce",
+        featureKey: "ecommerceEnabled",
+        serviceAvailability: serviceSettings?.config?.services,
+        planLimits: tenant?.limits || undefined,
+        currentUsage: tenant?.usage || undefined,
+        action: "create_store_checkout_intent",
+    });
+
+    if (!decision.allowed) {
+        try {
+            await supabaseClient.from("service_access_audit_logs").insert({
+                tenant_id: tenantId,
+                user_id: ownerId || project?.user_id || null,
+                user_role: "storefront_customer",
+                module_id: "ecommerce-engine",
+                service_id: "ecommerce",
+                feature_key: "ecommerceEnabled",
+                action: "create_store_checkout_intent",
+                reason_code: decision.reasonCode,
+                allowed: false,
+                admin_override: false,
+                decision,
+            });
+        } catch (_error) {
+            // Audit logging must not mask the access decision.
+        }
+        throw new Error(decision.message);
+    }
 }
 
 serve(async (req) => {
@@ -74,6 +129,7 @@ serve(async (req) => {
         if (!storeSettingsRecord) throw new Error('Store settings not found');
 
         const settingsData = (storeSettingsRecord?.data as any) || {};
+        await assertMerchantEcommerceAccess(supabaseClient, projectId, ownerId);
         const storeSettings = {
             ...settingsData,
             stripeEnabled: storeSettingsRecord.stripe_enabled ?? settingsData.stripeEnabled,

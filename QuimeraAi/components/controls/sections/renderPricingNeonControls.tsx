@@ -18,7 +18,7 @@ export const renderPricingNeonControls = (deps: ControlsDeps) => {
         tiers = [
             { name: 'Basic', price: '$19', billingPeriod: '/month', description: 'Perfect for getting started.', features: ['1 User', 'Basic Support', '10GB Storage'], buttonText: 'Start Basic', isPopular: false },
             { name: 'Pro', price: '$49', billingPeriod: '/month', description: 'Best for growing teams.', features: ['5 Users', 'Priority Support', '100GB Storage', 'Advanced Analytics'], buttonText: 'Start Pro', isPopular: true },
-            { name: 'Enterprise', price: '$99', billingPeriod: '/month', description: 'For large scale operations.', features: ['Unlimited Users', '24/7 Support', 'Unlimited Storage', 'Custom Integrations'], buttonText: 'Contact Sales', isPopular: false }
+            { name: 'Enterprise', price: '$99', billingPeriod: '/month', description: 'For large scale operations.', features: ['Up to 250 Users', '24/7 Support', '2TB Storage', 'Custom Integrations'], buttonText: 'Contact Sales', isPopular: false }
         ];
     }
 

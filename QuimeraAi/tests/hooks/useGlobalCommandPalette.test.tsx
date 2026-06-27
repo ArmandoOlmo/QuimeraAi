@@ -28,7 +28,7 @@ vi.mock('../../contexts/core/AuthContext', () => ({
 }));
 
 vi.mock('../../contexts/project', () => ({
-    useProject: () => ({
+    useSafeProject: () => ({
         projects: [],
         activeProjectId: 'project_1',
         activeProject: {
@@ -53,7 +53,7 @@ vi.mock('../../contexts/core/UIContext', () => ({
 
 vi.mock('../../hooks/useServiceAvailability', () => ({
     useServiceAvailability: () => ({
-        canAccessService: () => true,
+        isServicePublic: () => true,
         isLoading: false,
     }),
 }));
@@ -149,7 +149,28 @@ describe('useGlobalCommandPalette', () => {
         expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Create an ecommerce product draft.', expect.objectContaining({
             metadata: expect.objectContaining({
                 commandId: 'action:create-product',
+                quickActionId: 'open_ecommerce',
                 activeModule: 'ecommerce',
+            }),
+        }));
+
+        await act(async () => {
+            await result.current.executeCommand({
+                id: 'action:generate-image',
+                type: 'action',
+                label: 'Images',
+                description: 'Use Images.',
+                prompt: 'Images',
+                assistantModule: 'media',
+                keywords: ['image'],
+            });
+        });
+
+        expect(createGlobalAssistantEntryPayloadMock).toHaveBeenLastCalledWith('Images', expect.objectContaining({
+            metadata: expect.objectContaining({
+                commandId: 'action:generate-image',
+                quickActionId: 'generate_hero_image',
+                activeModule: 'media',
             }),
         }));
 

@@ -85,11 +85,11 @@ describe('globalAssistantCommandCenter', () => {
                 module: 'finance',
                 executableActionTypes: expect.arrayContaining(['create_finance_record']),
             }),
-            expect.objectContaining({
-                module: 'ecommerce',
-                unavailableActionTypes: expect.arrayContaining(['create_product']),
-            }),
         ]));
+        expect((context.snapshot.toolCatalog as any).modules).not.toEqual(expect.arrayContaining([
+            expect.objectContaining({ module: 'ecommerce' }),
+        ]));
+        expect((context.snapshot.toolCatalog as any).actions.some((action: any) => action.blockedBy?.length > 0)).toBe(false);
         expect(context.snapshot.assistantSurfaces).toMatchObject({
             currentSurfaceId: 'global-operating-layer',
             globalActionSurfaceId: 'global-operating-layer',
@@ -109,6 +109,41 @@ describe('globalAssistantCommandCenter', () => {
                 canExecuteGlobalActions: false,
                 memoryScope: 'project_chat_config',
             }),
+        ]));
+    });
+
+    it('does not expose service-gated tools when active service context is missing', () => {
+        const context = resolveGlobalAssistantAppContext({
+            conversationId: 'asst_conversation_missing_services',
+            userId: 'user-1',
+            role: 'owner',
+            tenantId: 'tenant-1',
+            tenantRole: 'owner',
+            tenantPlan: 'enterprise',
+            featureFlags: defaultGlobalAssistantFeatureFlags(),
+            activeProject: {
+                id: 'project-1',
+                name: 'Demo Store',
+                status: 'Draft',
+                tenantId: 'tenant-1',
+                userId: 'user-1',
+            } as any,
+            activeRoute: '/dashboard',
+            currentSurface: 'dashboard',
+        });
+        const catalog = context.snapshot.toolCatalog as any;
+
+        expect(catalog.actions.some((action: any) => action.actionType === 'generate_image')).toBe(false);
+        expect(catalog.actions.some((action: any) => action.actionType === 'create_product')).toBe(false);
+        expect(catalog.actions.some((action: any) => action.actionType === 'search_leads')).toBe(false);
+        expect(catalog.modules).not.toEqual(expect.arrayContaining([
+            expect.objectContaining({ module: 'media' }),
+            expect.objectContaining({ module: 'ecommerce' }),
+            expect.objectContaining({ module: 'crm' }),
+        ]));
+        expect(catalog.actions).toEqual(expect.arrayContaining([
+            expect.objectContaining({ actionType: 'open_project' }),
+            expect.objectContaining({ actionType: 'search_projects' }),
         ]));
     });
 
@@ -305,10 +340,9 @@ describe('globalAssistantCommandCenter', () => {
         } as unknown as GlobalAssistantRuntimeResult;
 
         const spanish = formatGlobalAssistantPlanMessage(result, 'es');
-        expect(spanish).toContain('No hice cambios.');
         expect(spanish).toContain('Para entrenar ChatCore en Tienda Demo, abre el módulo correcto y revísalo allí.');
-        expect(spanish).toContain('Te puedo llevar al módulo correcto si me dices cuál quieres abrir.');
-        expect(spanish.split('\n')).toHaveLength(3);
+        expect(spanish).toContain('Dime qué área quieres usar y te explico los pasos.');
+        expect(spanish.split('\n')).toHaveLength(2);
         expect(spanish).not.toContain('Plan del Operating Layer');
         expect(spanish).not.toContain('Modulo:');
         expect(spanish).not.toContain('Intencion:');
@@ -321,10 +355,9 @@ describe('globalAssistantCommandCenter', () => {
         expect(spanish).not.toContain('aplicar');
 
         const english = formatGlobalAssistantPlanMessage(result, 'en');
-        expect(english).toContain('I did not make changes.');
         expect(english).toContain('To train ChatCore for Tienda Demo, open the right module and review it there.');
-        expect(english).toContain('I can take you to the right module if you tell me which one to open.');
-        expect(english.split('\n')).toHaveLength(3);
+        expect(english).toContain('Tell me which area you want to use and I will explain the steps.');
+        expect(english.split('\n')).toHaveLength(2);
         expect(english).not.toContain('Operating Layer plan');
         expect(english).not.toContain('Module:');
         expect(english).not.toContain('Intent:');
@@ -396,18 +429,18 @@ describe('globalAssistantCommandCenter', () => {
         } as unknown as GlobalAssistantRuntimeResult;
 
         const spanish = formatGlobalAssistantPlanMessage(result, 'es');
-        expect(spanish).toContain('No hice cambios.');
         expect(spanish).toContain('Para cambiar al proyecto correcto y abrir la tienda en Ocean Clinic, abre el módulo correcto y revísalo allí.');
-        expect(spanish.split('\n')).toHaveLength(3);
+        expect(spanish).toContain('Dime qué área quieres usar y te explico los pasos.');
+        expect(spanish.split('\n')).toHaveLength(2);
         expect(spanish).not.toContain('Contexto usado:');
         expect(spanish).not.toContain('Guardrails:');
         expect(spanish).not.toContain('confirmar');
         expect(spanish).not.toContain('aplicar');
 
         const english = formatGlobalAssistantPlanMessage(result, 'en');
-        expect(english).toContain('I did not make changes.');
         expect(english).toContain('To switch to the right project and open the store for Ocean Clinic, open the right module and review it there.');
-        expect(english.split('\n')).toHaveLength(3);
+        expect(english).toContain('Tell me which area you want to use and I will explain the steps.');
+        expect(english.split('\n')).toHaveLength(2);
         expect(english).not.toContain('Context used:');
         expect(english).not.toContain('confirm');
         expect(english).not.toContain('apply');
@@ -448,7 +481,7 @@ describe('globalAssistantCommandCenter', () => {
         expect(spanish).toContain('¿Para qué proyecto?');
         expect(spanish).toContain('Puedo crear un video, pero elige un proyecto.');
         expect(spanish).toContain('Opciones: Casa Luna, Ocean Clinic');
-        expect(spanish).toContain('No hice cambios.');
+        expect(spanish).toContain('Elige el módulo correcto y confirma allí la acción final.');
         expect(spanish.split('\n')).toHaveLength(4);
         expect(spanish).not.toContain('Estado: blocked');
         expect(spanish).not.toContain('generate_video:');
@@ -565,12 +598,10 @@ describe('globalAssistantCommandCenter', () => {
         const spanish = formatGlobalAssistantPlanMessage(result, 'es');
         const english = formatGlobalAssistantPlanMessage(result, 'en');
 
-        expect(spanish).toContain('No hice cambios.');
         expect(spanish).toContain('Para generar una imagen en Tienda Demo, abre el módulo correcto y revísalo allí.');
         expect(spanish).not.toContain('Preview:');
         expect(spanish).not.toContain('confirmar');
         expect(spanish).not.toContain('aplicar');
-        expect(english).toContain('I did not make changes.');
         expect(english).toContain('To generate an image for Tienda Demo, open the right module and review it there.');
         expect(english).not.toContain('Preview:');
         expect(english).not.toContain('confirm');

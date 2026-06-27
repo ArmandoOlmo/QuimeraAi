@@ -40,7 +40,7 @@ const AgencyWhiteLabelQuimera: React.FC<AgencyWhiteLabelQuimeraProps> = ({
     const getDefaultFeatures = (t: any) => [
         { title: t('quimera.agency.item1.title', 'Sin Rastros de Quimera'), description: t('quimera.agency.item1.desc', 'Tu logo en el login, editor y dashboard. Tus clientes nunca sabrán qué tecnología usas.') },
         { title: t('quimera.agency.item2.title', 'Cobra lo que Quieras'), description: t('quimera.agency.item2.desc', 'Nosotros te cobramos una tarifa plana. Tú estableces los precios para tus clientes y te quedas con el 100%.') },
-        { title: t('quimera.agency.item3.title', 'Subcuentas Ilimitadas'), description: t('quimera.agency.item3.desc', 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos.') },
+        { title: t('quimera.agency.item3.title', 'Subcuentas con límite configurable'), description: t('quimera.agency.item3.desc', 'Crea espacios de trabajo separados para cada cliente con permisos de acceso específicos y límites finitos por plan.') },
         { title: t('quimera.agency.item4.title', 'Soporte Prioritario'), description: t('quimera.agency.item4.desc', 'Línea directa con nuestro equipo de ingenieros para resolver cualquier duda al instante.') }
     ];
 

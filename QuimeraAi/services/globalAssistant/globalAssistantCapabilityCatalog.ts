@@ -61,6 +61,8 @@ export interface BuildGlobalAssistantCapabilityCatalogInput {
     registry?: GlobalAssistantActionRegistry;
     enabledServices?: PlatformServiceId[];
     enabledFeatures?: string[];
+    includeUnavailable?: boolean;
+    requireServiceContext?: boolean;
 }
 
 const HIGH_RISK_LEVELS = new Set<AssistantSafetyLevel>(['high', 'critical']);
@@ -69,8 +71,12 @@ const unique = <T,>(values: T[]): T[] => Array.from(new Set(values));
 
 const isServiceAvailable = (
     definition: AssistantActionDefinition,
-    enabledServices?: PlatformServiceId[],
-): boolean => !definition.requiredService || !enabledServices || enabledServices.includes(definition.requiredService);
+    input: BuildGlobalAssistantCapabilityCatalogInput,
+): boolean => {
+    if (!definition.requiredService) return true;
+    if (!input.enabledServices) return input.requireServiceContext !== true;
+    return input.enabledServices.includes(definition.requiredService);
+};
 
 const isFeatureAvailable = (
     definition: AssistantActionDefinition,
@@ -82,7 +88,7 @@ const toCapabilityAction = (
     input: BuildGlobalAssistantCapabilityCatalogInput,
 ): GlobalAssistantCapabilityAction => {
     const blockedBy = [
-        ...(!isServiceAvailable(definition, input.enabledServices) && definition.requiredService
+        ...(!isServiceAvailable(definition, input) && definition.requiredService
             ? [`service:${definition.requiredService}`]
             : []),
         ...(!isFeatureAvailable(definition, input.enabledFeatures) && definition.requiredFeature
@@ -143,6 +149,7 @@ export function buildGlobalAssistantCapabilityCatalog(
     const actions = registry
         .list()
         .map(definition => toCapabilityAction(definition, input))
+        .filter(action => input.includeUnavailable === true || action.availableInContext)
         .sort((left, right) => left.module.localeCompare(right.module) || left.actionType.localeCompare(right.actionType));
     const moduleNames = unique(actions.map(action => action.module)).sort();
     const modules = moduleNames.map(module =>

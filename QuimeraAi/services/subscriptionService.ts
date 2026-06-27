@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '../supabase';
-import { isOwner } from '../constants/roles';
 import {
     SubscriptionPlanId,
     BillingCycle,
@@ -24,6 +23,7 @@ import {
     calculateAgencyTotalCost,
 } from '../types/subscription';
 import { initializeCreditsUsage, handlePlanChange } from './aiCreditsService';
+import { isFinitePlanLimit, isPlatformUnlimitedUser } from './billing/planCatalog';
 
 // =============================================================================
 // CONSTANTS
@@ -245,9 +245,11 @@ export async function hasFeature(
     tenantId: string,
     feature: keyof PlanFeatures
 ): Promise<boolean> {
-    // SECURITY: Bypass for OWNER (Armando)
     const { data: { session } } = await supabase.auth.getSession();
-    if (isOwner(session?.user?.email || '')) return true;
+    const { data: userRow } = session?.user?.id
+        ? await supabase.from('users').select('role').eq('id', session.user.id).maybeSingle()
+        : { data: null };
+    if (isPlatformUnlimitedUser(userRow?.role)) return true;
 
     try {
         const subscription = await getTenantSubscription(tenantId);
@@ -296,14 +298,14 @@ export async function hasReachedLimit(
     limit: keyof PlanLimits,
     currentUsage: number
 ): Promise<boolean> {
-    // SECURITY: Bypass for OWNER (Armando)
     const { data: { session } } = await supabase.auth.getSession();
-    if (isOwner(session?.user?.email || '')) return false;
+    const { data: userRow } = session?.user?.id
+        ? await supabase.from('users').select('role').eq('id', session.user.id).maybeSingle()
+        : { data: null };
+    if (isPlatformUnlimitedUser(userRow?.role)) return false;
 
     const maxLimit = await getLimit(tenantId, limit);
-
-    // -1 significa ilimitado
-    if (maxLimit === -1) return false;
+    if (!isFinitePlanLimit(maxLimit)) return true;
 
     return currentUsage >= maxLimit;
 }
@@ -522,7 +524,7 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
         agency: [
             'Modelo fee + proyecto',
             'Pool de créditos compartido',
-            'Sin límite de proyectos',
+            'Límites finitos por plan',
             'Soporte prioritario',
         ],
         agency_starter: [
@@ -537,7 +539,7 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
         ],
         agency_pro: [
             'Pool de 15,000 créditos',
-            'Recursos ilimitados',
+            'Recursos de alto volumen',
             'Soporte dedicado',
         ],
         agency_scale: [
@@ -550,8 +552,6 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
 
     return highlights[currentPlanId] || [];
 }
-
-
 
 
 

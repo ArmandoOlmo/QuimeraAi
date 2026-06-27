@@ -42,6 +42,10 @@ export function checkActionPermission(input: ActionPermissionInput): AssistantPe
         reasons.push('User mode cannot execute admin actions.');
     }
 
+    if (definition.mutatesData && !isAdminMode(context.actor.mode)) {
+        reasons.push('Mutating assistant actions require Owner or Super Admin mode.');
+    }
+
     if (definition.requiredService && !enabledServices.has(definition.requiredService)) {
         reasons.push(`Required service is not available: ${definition.requiredService}.`);
     }

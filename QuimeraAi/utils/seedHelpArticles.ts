@@ -716,9 +716,9 @@ Usa herramientas como:
 
 ### 🏢 Business
 **$149/mes**
-- Sitios ilimitados
+- Hasta 100 sitios
 - 10,000 créditos IA/mes
-- Dominios ilimitados
+- 100 dominios personalizados
 - E-commerce avanzado
 - White-label
 - Equipo de trabajo
@@ -1812,7 +1812,7 @@ El colaborador recibirá un email para unirse.
 | Free | 1 |
 | Starter | 2 |
 | Pro | 5 |
-| Business | Ilimitados |`
+| Business | 100 |`
     },
     {
         title: 'Roles y permisos explicados',
@@ -1990,7 +1990,6 @@ if (typeof window !== 'undefined') {
 }
 
 export default seedHelpArticles;
-
 
 
 

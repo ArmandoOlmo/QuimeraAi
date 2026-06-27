@@ -2,8 +2,13 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts";
+import { EdgeAccessError, requireServiceAccess } from "../_shared/access.ts";
+import { getCanonicalPlanLimits, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 
 type OnboardingAction =
+  | "autoProvision"
+  | "transferProject"
+  | "respondClientApproval"
   | "analyzeWebsite"
   | "domains-add"
   | "domains-remove"
@@ -60,19 +65,31 @@ serve(async (req) => {
     switch (action) {
       case "analyzeWebsite":
         return jsonResponse(await analyzeWebsiteUrl(String(payload.url || ""), user.id));
+      case "autoProvision":
+        return jsonResponse(await autoProvisionAgencyClient(req, user.id, payload));
+      case "transferProject":
+        return jsonResponse(await transferAgencyProject(req, user.id, payload));
+      case "respondClientApproval":
+        return jsonResponse(await respondClientApproval(req, user.id, payload));
       case "domains-add":
-        return jsonResponse(await addDomain(user.id, payload));
+        return jsonResponse(await addDomain(req, user.id, payload));
       case "domains-remove":
-        return jsonResponse(await removeDomain(user.id, payload));
+        return jsonResponse(await removeDomain(req, user.id, payload));
       case "domains-verifyDNS":
       case "domains-checkSSL":
       case "sync-domain-mapping":
       case "syncDomainMapping":
-        return jsonResponse(await syncDomainMapping(user.id, payload));
+        return jsonResponse(await syncDomainMapping(req, user.id, payload));
       default:
         throw new Error(`Unknown onboarding action: ${action || "missing"}`);
     }
   } catch (error) {
+    if (error instanceof EdgeAccessError) {
+      return new Response(
+        JSON.stringify({ error: error.message, decision: error.decision }),
+        { status: error.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -80,7 +97,1599 @@ serve(async (req) => {
   }
 });
 
-async function addDomain(userId: string, payload: Record<string, unknown>) {
+type InitialClientUser = {
+  email?: string;
+  name?: string;
+  role?: string;
+};
+
+const CLIENT_ADMIN_PERMISSIONS = {
+  canManageProjects: true,
+  canManageLeads: true,
+  canManageCMS: true,
+  canManageEcommerce: true,
+  canManageRealEstate: true,
+  canManageFiles: true,
+  canManageDomains: false,
+  canInviteMembers: false,
+  canRemoveMembers: false,
+  canViewAnalytics: true,
+  canManageBilling: false,
+  canManageSettings: false,
+  canExportData: false,
+};
+
+const AGENCY_OWNER_PERMISSIONS = {
+  canManageProjects: true,
+  canManageLeads: true,
+  canManageCMS: true,
+  canManageEcommerce: true,
+  canManageRealEstate: true,
+  canManageFiles: true,
+  canManageDomains: true,
+  canInviteMembers: true,
+  canRemoveMembers: true,
+  canViewAnalytics: true,
+  canManageBilling: true,
+  canManageSettings: true,
+  canExportData: true,
+};
+
+function generateSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50) || `client-${Date.now()}`;
+}
+
+function randomToken(prefix = "invite_") {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return prefix + Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function sanitizeFiniteLimits(raw: unknown, fallbackPlanId = "individual") {
+  const fallback = getCanonicalPlanLimits(normalizePlanId(fallbackPlanId));
+  const source = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const next: Record<string, unknown> = { ...fallback };
+
+  for (const key of Object.keys(fallback)) {
+    const value = source[key];
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+      next[key] = value;
+    }
+  }
+
+  next.maxProjects = Math.max(1, Number(next.maxProjects || 1));
+  next.maxUsers = Math.max(1, Number(next.maxUsers || 1));
+  next.hardLimit = true;
+  return next;
+}
+
+function isMissingTableError(error: unknown): boolean {
+  const code = (error as { code?: string } | null)?.code;
+  return code === "42P01" || code === "PGRST205";
+}
+
+function cloneJson<T>(value: T, fallback: T): T {
+  if (value === undefined || value === null) return fallback;
+  try {
+    return JSON.parse(JSON.stringify(value)) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function cleanForInsert<T extends Record<string, unknown>>(value: T): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+}
+
+function selectedModules(payload: Record<string, unknown>) {
+  const enabledFeatures = Array.isArray(payload.enabledFeatures)
+    ? payload.enabledFeatures.map((feature) => String(feature).trim()).filter(Boolean)
+    : [];
+  const modules = new Set<string>(["website-builder", "analytics-engine"]);
+
+  if (enabledFeatures.includes("cms") || payload.generateWebsite !== false) modules.add("cms-engine");
+  if (enabledFeatures.includes("leads")) modules.add("crm-leads");
+  if (enabledFeatures.includes("ecommerce") || payload.generateEcommerce) {
+    modules.add("ecommerce-engine");
+    modules.add("storefront-builder");
+  }
+  if (enabledFeatures.includes("chatbot") || payload.generateChatbot) modules.add("chatbot-engine");
+  if (enabledFeatures.includes("email") || payload.generateEmailFlows) modules.add("email-marketing");
+  if (enabledFeatures.includes("analytics")) modules.add("analytics-engine");
+  if (payload.generateAppointments) modules.add("appointments-engine");
+  if (payload.generateRestaurantModule) modules.add("restaurant-engine");
+  if (payload.generateRealtyModule) modules.add("real-estate-engine");
+  if (payload.generateBioPage) modules.add("bio-page-engine");
+  if (payload.generateMediaAssets) modules.add("media-assets");
+  if (
+    enabledFeatures.includes("finance") ||
+    Boolean(payload.generateFinance) ||
+    Boolean(payload.setupBilling) ||
+    Boolean(payload.generateEcommerce) ||
+    Number(payload.monthlyPrice || 0) > 0
+  ) {
+    modules.add("finance");
+  }
+
+  return Array.from(modules);
+}
+
+function readiness(isReady: boolean, warnings: string[] = [], blockers: string[] = []) {
+  return { isReady, blockers, warnings };
+}
+
+function uniqueStrings(values: unknown[], fallback: string[] = []) {
+  const normalized = values
+    .map((value) => typeof value === "string" ? value.trim() : String(value || "").trim())
+    .filter(Boolean);
+
+  const source = normalized.length > 0 ? normalized : fallback;
+  return Array.from(new Set(source));
+}
+
+function cleanText(value: unknown, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function buildDraftState(
+  now: string,
+  enabled: boolean,
+  sourceMap: Record<string, string | string[]> = {},
+  status = "draft",
+) {
+  return {
+    enabled,
+    status: enabled ? status : "disabled",
+    needsReview: enabled,
+    readiness: readiness(
+      false,
+      enabled ? ["Draft generated by Agency Engine; review is required before activation."] : [],
+      enabled ? ["Review required before runtime activation or public publishing."] : [],
+    ),
+    metadata: {
+      generatedBy: "ai",
+      generatedByAI: true,
+      userModified: false,
+      lockedFromRegeneration: false,
+      generatedAt: now,
+      generationSource: "agency-engine",
+    },
+    sourceMap,
+  };
+}
+
+function syncModuleState(enabled: boolean) {
+  return {
+    status: enabled ? "previewed" : "skipped",
+    refs: [],
+    drafts: [],
+  };
+}
+
+function toPublicSlug(value: string) {
+  return generateSlug(value).slice(0, 48) || "client";
+}
+
+function normalizeServiceDrafts(payload: Record<string, unknown>, businessName: string) {
+  const rawServices = Array.isArray(payload.services) ? payload.services : [];
+  const services = rawServices
+    .map((item, index) => {
+      if (typeof item === "string" && item.trim()) {
+        return { name: item.trim(), description: "" };
+      }
+
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const name = cleanText(record.name || record.title, `Service ${index + 1}`);
+        const description = cleanText(record.description || record.summary, "");
+        return { name, description };
+      }
+
+      return null;
+    })
+    .filter(Boolean) as Array<{ name: string; description: string }>;
+
+  return services.length > 0
+    ? services
+    : [{ name: `${businessName} core service`, description: "Initial service draft generated for agency/client review." }];
+}
+
+function buildInitialBusinessBlueprint(input: {
+  projectId: string;
+  tenantId: string;
+  businessName: string;
+  industry: string;
+  contactEmail: string;
+  contactPhone?: string;
+  modules: string[];
+  payload: Record<string, unknown>;
+}) {
+  const now = new Date().toISOString();
+  const hasModule = (moduleId: string) => input.modules.includes(moduleId);
+  const enabledFeatures = Array.isArray(input.payload.enabledFeatures)
+    ? input.payload.enabledFeatures.map((feature) => String(feature).trim()).filter(Boolean)
+    : [];
+  const serviceDrafts = normalizeServiceDrafts(input.payload, input.businessName);
+  const publicSlug = toPublicSlug(input.businessName);
+  const primaryColor = cleanText(input.payload.primaryColor, "#3B82F6");
+  const secondaryColor = cleanText(input.payload.secondaryColor, "#10B981");
+  const websiteEnabled = hasModule("website-builder");
+  const storefrontEnabled = hasModule("storefront-builder");
+  const ecommerceEnabled = hasModule("ecommerce-engine");
+  const leadsEnabled = hasModule("crm-leads");
+  const emailEnabled = hasModule("email-marketing");
+  const chatbotEnabled = hasModule("chatbot-engine");
+  const appointmentsEnabled = hasModule("appointments-engine");
+  const restaurantEnabled = hasModule("restaurant-engine");
+  const realtyEnabled = hasModule("real-estate-engine");
+  const bioPageEnabled = hasModule("bio-page-engine");
+  const mediaEnabled = hasModule("media-assets");
+  const financeEnabled = hasModule("finance");
+  const analyticsEnabled = hasModule("analytics-engine");
+  const baseSections = uniqueStrings([
+    "header",
+    "hero",
+    "services",
+    leadsEnabled ? "leads" : "",
+    ecommerceEnabled ? "featuredProducts" : "",
+    chatbotEnabled ? "chatbot" : "",
+    "footer",
+  ], ["header", "hero", "services", "leads", "footer"]);
+  const moduleWarnings = [
+    "Generated content is draft-only.",
+    "No runtime, public publishing, billing provider, email sending, appointment slot, menu item, listing, or checkout session was activated.",
+  ];
+
+  return {
+    blueprintVersion: "1.0.0",
+    schemaVersion: 1,
+    projectId: input.projectId,
+    tenantId: input.tenantId,
+    workspaceId: input.tenantId,
+    status: "needs_review",
+    source: "ai-studio",
+    generatedBy: "agency-engine",
+    generatedAt: now,
+    updatedAt: now,
+    readiness: readiness(false, moduleWarnings, ["Agency/client review is required before publishing or activating modules."]),
+    sourceMap: {
+      businessName: "payload.businessName",
+      industry: "payload.industry",
+      contactEmail: "payload.contactEmail",
+      selectedPlanId: "payload.selectedPlanId",
+      selectedPlanName: "payload.selectedPlanName",
+      enabledFeatures: "payload.enabledFeatures",
+      modules: "agencyProvisioning.modules",
+    },
+    metadata: {
+      generatedBy: "ai",
+      generatedByAI: true,
+      userModified: false,
+      lockedFromRegeneration: false,
+      generatedAt: now,
+      generationSource: "agency-engine",
+    },
+    businessProfile: {
+      ...buildDraftState(now, true, { source: "payload.businessProfile" }, "needs_review"),
+      businessName: input.businessName,
+      industry: input.industry,
+      description: cleanText(input.payload.businessDescription || input.payload.description, `${input.businessName} digital business workspace.`),
+      tagline: cleanText(input.payload.tagline, ""),
+      services: serviceDrafts,
+      contactInfo: {
+        email: input.contactEmail,
+        phone: input.contactPhone || "",
+      },
+      goals: uniqueStrings(Array.isArray(input.payload.goals) ? input.payload.goals : [], [
+        "Launch a reviewed digital presence",
+        "Capture and qualify leads",
+        "Measure performance across modules",
+      ]),
+      targetAudience: cleanText(input.payload.targetAudience, "Agency client customers"),
+    },
+    brandProfile: {
+      ...buildDraftState(now, true, { colors: "payload.primaryColor,payload.secondaryColor" }, "needs_review"),
+      colors: {
+        primary: primaryColor,
+        secondary: secondaryColor,
+        accent: "#F59E0B",
+        background: "#F8FAFC",
+        surface: "#FFFFFF",
+        text: "#0F172A",
+      },
+      fonts: ["Inter"],
+      visualStyle: cleanText(input.payload.visualStyle, "Quimera clean operating-system UI"),
+      logoUrl: cleanText(input.payload.logoUrl, ""),
+      isDarkTheme: false,
+    },
+    agencyProvisioning: {
+      aiStudioMode: input.payload.aiStudioMode || "draft",
+      selectedPlanId: input.payload.selectedPlanId || null,
+      selectedPlanName: input.payload.selectedPlanName || null,
+      enabledFeatures,
+      modules: input.modules,
+      needsReview: true,
+      generatedByAI: true,
+      noRuntimeActivated: true,
+      noAutoPublish: true,
+    },
+    websiteBlueprint: {
+      ...buildDraftState(now, websiteEnabled, { sections: "agencyProvisioning.modules" }),
+      pages: [{ id: "home", title: "Home", slug: "/", sections: baseSections }],
+      sections: baseSections,
+      componentOrder: baseSections,
+      sectionVisibility: Object.fromEntries(baseSections.map((section) => [section, true])),
+      sectionBlueprints: baseSections.map((section, index) => ({
+        ...buildDraftState(now, websiteEnabled, { type: `websiteBlueprint.sections.${index}` }),
+        id: `section-${section}`,
+        type: section,
+        order: index,
+        visible: true,
+        pageIds: ["home"],
+        settings: { generatedByAgencyEngine: true },
+      })),
+      ecommerceBlocks: ecommerceEnabled ? [{
+        ...buildDraftState(now, true, { source: "ecommerceBlueprint.starterProducts" }),
+        id: "website-featured-products-draft",
+        type: "featured_products",
+        source: "ecommerce",
+        targetRoute: "/store",
+        settings: { status: "draft", requiresProductReview: true },
+      }] : [],
+      leadForms: leadsEnabled ? ["agency-intake-lead-form"] : [],
+      chatbotPlacement: chatbotEnabled ? "floating" : "none",
+      needsReview: true,
+    },
+    storefrontBlueprint: {
+      ...buildDraftState(now, storefrontEnabled, { source: "payload.generateStorefront,payload.generateEcommerce" }),
+      routeStrategy: "project-store",
+      catalogSize: ecommerceEnabled ? "small" : "none",
+      templateCompatibility: {
+        supportsProducts: ecommerceEnabled,
+        supportsCollections: ecommerceEnabled,
+        supportsCart: ecommerceEnabled,
+        supportsCheckoutVisual: ecommerceEnabled,
+      },
+      themeFallbackChain: ["quimera-modern", "quimera-default"],
+      templatePreset: "agency-client-draft",
+      themePreset: "modern",
+      sections: storefrontEnabled ? [
+        {
+          ...buildDraftState(now, true, { source: "storefrontBlueprint.sections" }),
+          id: "storefront-hero-draft",
+          type: "storefrontHero",
+          order: 0,
+          settings: { title: input.businessName, publishStatus: "not_published" },
+          dataSource: "businessBlueprint",
+        },
+      ] : [],
+      productCardVariant: "modern",
+      collectionStrategy: "reviewed_collections",
+      cartStyle: "drawer",
+      checkoutStyle: "hosted",
+      colorSystem: { primary: primaryColor, secondary: secondaryColor },
+      templates: {
+        home: "draft",
+        collection: "draft",
+        product: "draft",
+        cart: "draft",
+        checkoutVisual: "draft",
+      },
+      needsReview: true,
+    },
+    ecommerceBlueprint: {
+      ...buildDraftState(now, ecommerceEnabled, { source: "payload.generateEcommerce" }),
+      storeType: ecommerceEnabled ? "service_catalog" : "not_configured",
+      catalogStrategy: "agency_reviewed_drafts",
+      categories: ecommerceEnabled ? uniqueStrings([input.industry, "Services"], ["Services"]) : [],
+      productCategories: ecommerceEnabled ? uniqueStrings([input.industry, "Services"], ["Services"]) : [],
+      collections: ecommerceEnabled ? ["Featured services"] : [],
+      starterProducts: ecommerceEnabled ? serviceDrafts.slice(0, 3).map((service) => ({
+        name: service.name,
+        category: "Services",
+        description: service.description || "Draft service product for review.",
+        priceSource: "unset",
+        stockSource: "unset",
+        status: "draft",
+        needsReview: true,
+        isPublished: false,
+        publishStatus: "not_published",
+        discountStatus: "none",
+      })) : [],
+      inventoryMode: "not_configured",
+      fulfillmentMode: "not_configured",
+      paymentMode: "not_configured",
+      taxMode: "not_configured",
+      shippingMode: "not_configured",
+      discounts: [],
+      giftCards: { enabled: false, status: "draft" },
+      giftCardsEnabled: false,
+      digitalProductsEnabled: false,
+      recommendations: ecommerceEnabled ? ["Review products, prices, taxes, fulfillment, and payment settings before launch."] : [],
+      starterContentStatus: "previewed",
+      createdContentRefs: { categoryIds: [], productIds: [], giftCardIds: [] },
+      starterContentReadiness: {
+        productsDrafted: ecommerceEnabled,
+        needsMerchantReview: true,
+        paymentsConfigured: false,
+        inventoryConfigured: false,
+        storefrontPublished: false,
+      },
+      starterContentSummary: {
+        categoriesSuggested: ecommerceEnabled ? 1 : 0,
+        productsSuggested: ecommerceEnabled ? Math.min(serviceDrafts.length, 3) : 0,
+        giftCardsSuggested: 0,
+        productsCreated: 0,
+        categoriesCreated: 0,
+        giftCardsCreated: 0,
+        lastPreviewedAt: now,
+      },
+      needsReview: true,
+    },
+    leadBlueprint: {
+      ...buildDraftState(now, leadsEnabled, { source: "payload.enabledFeatures,payload.generateWebsite" }),
+      leadSources: leadsEnabled ? ["website", "bio_page", "chatbot", "appointments", "restaurant", "realty"] : [],
+      leadTags: leadsEnabled ? uniqueStrings([input.industry, "agency-client", "needs-review"], ["agency-client"]) : [],
+      activityTimelineEvents: leadsEnabled ? ["lead_submitted", "appointment_requested", "chat_started", "bio_link_clicked"] : [],
+      needsReview: true,
+    },
+    emailMarketingBlueprint: {
+      ...buildDraftState(now, emailEnabled, { source: "payload.generateEmailFlows,payload.enabledFeatures" }),
+      sender: {
+        provider: "unset",
+        providerStatus: "not_configured",
+        domainStatus: "not_configured",
+        readiness: readiness(false, [], ["Sender domain and provider are not configured."]),
+        needsReview: true,
+      },
+      consent: {
+        requireMarketingConsent: true,
+        consentSources: emailEnabled ? ["website", "bio_page", "checkout", "appointments"] : [],
+        unsubscribeEnabled: true,
+        suppressionEnabled: true,
+        doubleOptInEnabled: false,
+        complianceRegion: "unknown",
+        needsReview: true,
+      },
+      audiences: emailEnabled ? [{
+        id: "agency-client-prospects",
+        name: "Prospects",
+        description: "Draft audience from generated lead sources.",
+        type: "cross_module",
+        sourceModules: ["crm", "website", "bio_page", "chatbot"],
+        filters: [],
+        tags: ["agency-client"],
+        status: "draft",
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+        sourceMap: { source: "leadBlueprint.leadTags" },
+      }] : [],
+      campaigns: [],
+      automations: emailEnabled ? [{
+        id: "lead-welcome-draft",
+        name: "Lead welcome draft",
+        type: "welcome",
+        category: "lead_nurture",
+        triggerEvent: "lead_submitted",
+        sourceModule: "crm",
+        steps: [],
+        status: "draft",
+        readiness: readiness(false, [], ["Flow content and sender require review."]),
+        generatedByAI: true,
+        needsReview: true,
+        userModified: false,
+        sourceMap: { source: "leadBlueprint" },
+      }] : [],
+      transactionalFlows: [],
+      providerReadiness: {
+        providerConfigured: false,
+        senderConfigured: false,
+        domainVerified: false,
+        unsubscribeConfigured: true,
+        suppressionConfigured: true,
+        trackingConfigured: false,
+        webhookConfigured: false,
+        testEmailSent: false,
+        readinessBlockers: emailEnabled ? ["Email provider is not configured."] : [],
+        warnings: [],
+      },
+      analytics: {
+        trackedEvents: emailEnabled ? ["email_opened", "email_clicked", "lead_submitted"] : [],
+        webhookEvents: [],
+        dashboardMetrics: emailEnabled ? ["subscribers", "opens", "clicks", "conversions"] : [],
+        needsReview: true,
+      },
+      crossModule: {
+        eventSources: emailEnabled ? ["crm", "appointments", "ecommerce", "bio_page", "chatbot"] : [],
+        acceptedEvents: emailEnabled ? ["lead_submitted", "appointment_requested", "order_created"] : [],
+        flowMappings: {},
+        draftFlowMappings: {},
+        runtimeEnabled: false,
+        needsReview: true,
+      },
+      flows: emailEnabled ? [{ type: "welcome", status: "draft", triggerEvent: "lead_submitted" }] : [],
+      logEvents: emailEnabled ? ["lead_submitted"] : [],
+      needsReview: true,
+    },
+    chatbotBlueprint: {
+      ...buildDraftState(now, chatbotEnabled, { source: "payload.generateChatbot,businessProfile" }),
+      engineVersion: "v2",
+      agentProfile: {
+        agentName: `${input.businessName} AI Assistant`,
+        brandName: input.businessName,
+        tone: "helpful",
+        defaultLanguage: "es",
+        supportedLanguages: ["es", "en"],
+        escalationMessage: "A team member will follow up.",
+        sourceMap: { agentName: "businessProfile.businessName" },
+      },
+      knowledgeSources: chatbotEnabled ? [
+        { id: "business-blueprint", type: "business_blueprint", title: "BusinessBlueprint", visibility: "public", status: "draft", freshness: "unknown", needsReview: true, sourceMap: { source: "businessBlueprint" } },
+        ...(ecommerceEnabled ? [{ id: "ecommerce-products", type: "ecommerce_products", title: "Draft products", visibility: "public", status: "draft", freshness: "unknown", needsReview: true, sourceMap: { source: "ecommerceBlueprint.starterProducts" } }] : []),
+        ...(appointmentsEnabled ? [{ id: "appointments-services", type: "appointments_services", title: "Appointment services", visibility: "public", status: "draft", freshness: "unknown", needsReview: true, sourceMap: { source: "appointmentsBlueprint.services" } }] : []),
+        ...(restaurantEnabled ? [{ id: "restaurant-menu", type: "restaurant_menu", title: "Restaurant menu", visibility: "public", status: "draft", freshness: "unknown", needsReview: true, sourceMap: { source: "restaurantBlueprint.menuDraft" } }] : []),
+        ...(realtyEnabled ? [{ id: "realty-listings", type: "realty_listings", title: "Real estate listings", visibility: "public", status: "draft", freshness: "unknown", needsReview: true, sourceMap: { source: "realEstateBlueprint.listingDrafts" } }] : []),
+      ] : [],
+      actions: chatbotEnabled ? [
+        { id: "create-lead", type: "create_lead", status: "draft", enabled: false, needsReview: true },
+        { id: "appointment-request", type: "create_appointment", status: "draft", enabled: false, needsReview: true },
+        { id: "handoff", type: "handoff_to_human", status: "draft", enabled: false, needsReview: true },
+      ] : [],
+      leadCapture: { enabled: chatbotEnabled && leadsEnabled, fields: ["name", "email", "phone"], consentRequired: true, needsReview: true },
+      handoff: { enabled: true, mode: "manual", target: "agency", needsReview: true },
+      appointments: { enabled: chatbotEnabled && appointmentsEnabled, source: "appointmentsBlueprint", needsReview: true },
+      ecommerce: { enabled: chatbotEnabled && ecommerceEnabled, source: "ecommerceBlueprint", checkoutEnabled: false, needsReview: true },
+      restaurants: { enabled: chatbotEnabled && restaurantEnabled, source: "restaurantBlueprint", reservationEnabled: false, needsReview: true },
+      realEstate: { enabled: chatbotEnabled && realtyEnabled, source: "realEstateBlueprint", showingRequestEnabled: false, needsReview: true },
+      bioPage: { enabled: chatbotEnabled && bioPageEnabled, source: "bioPageBlueprint", needsReview: true },
+      channels: { websiteWidget: false, clientPortal: false, bioPage: false, needsReview: true },
+      testing: { testMode: true, lastTestedAt: null, scenarios: [], needsReview: true },
+      analytics: { events: chatbotEnabled ? ["chat_started", "lead_submitted"] : [], dashboards: ["chatbot_performance"], needsReview: true },
+      deployment: {
+        runtimeEnabled: false,
+        publicWidgetEnabled: false,
+        status: "draft",
+        voiceSettings: { enabled: false, provider: "none", agentId: null },
+        needsReview: true,
+      },
+      businessKnowledge: chatbotEnabled ? [`${input.businessName} operates in ${input.industry}.`] : [],
+      productKnowledge: [],
+      policyKnowledge: [],
+      eventIntents: chatbotEnabled ? ["lead_submitted", "appointment_requested"] : [],
+      needsReview: true,
+    },
+    mediaBlueprint: {
+      ...buildDraftState(now, mediaEnabled, { source: "payload.generateMediaAssets,brandProfile" }),
+      imageNeeds: mediaEnabled ? ["hero image", "service thumbnails", "social proof assets", "bio page profile media"] : [],
+      videoNeeds: mediaEnabled ? ["short intro clip", "service explainer"] : [],
+      brandAssetNeeds: mediaEnabled ? ["logo variations", "social templates", "storefront banners"] : [],
+      needsReview: true,
+    },
+    bioPageBlueprint: {
+      ...buildDraftState(now, bioPageEnabled, { source: "payload.generateBioPage,businessProfile" }),
+      routeStrategy: "bio_slug",
+      defaultRoute: "/bio/:slug",
+      publicSlug,
+      title: input.businessName,
+      description: cleanText(input.payload.bioDescription, `Digital profile for ${input.businessName}.`),
+      profile: {
+        displayName: input.businessName,
+        handle: publicSlug,
+        bio: cleanText(input.payload.bioDescription, `${input.businessName} digital profile.`),
+        category: input.industry,
+        verifiedBadgeEnabled: false,
+        socialProofEnabled: false,
+        followerCountSource: "none",
+        needsReview: true,
+        generatedByAI: true,
+        userModified: false,
+      },
+      blocks: bioPageEnabled ? [
+        { id: "bio-profile", type: "profile", title: input.businessName, order: 0, visible: true, status: "draft", data: {}, needsReview: true, generatedByAI: true, userModified: false, sourceMap: { source: "businessProfile" } },
+        { id: "bio-contact", type: "contact", title: "Contact", order: 1, visible: true, status: "draft", data: { email: input.contactEmail, phone: input.contactPhone || "" }, needsReview: true, generatedByAI: true, userModified: false, sourceMap: { source: "businessProfile.contactInfo" } },
+      ] : [],
+      links: [],
+      theme: {
+        layoutVariant: "business",
+        backgroundType: "solid",
+        colors: { primary: primaryColor, secondary: secondaryColor, background: "#F8FAFC", text: "#0F172A" },
+        typography: { heading: "Inter", body: "Inter" },
+        buttonStyle: "solid",
+        buttonRadius: 8,
+        cardRadius: 8,
+        spacing: "balanced",
+        profileAlignment: "center",
+        showQuimeraFooter: true,
+        customCssDisabled: true,
+        needsReview: true,
+      },
+      socialLinks: [],
+      shop: { enabled: bioPageEnabled && ecommerceEnabled, source: "ecommerce", featuredProducts: [], collections: [], showPrices: false, showProductImages: true, productCardVariant: "compact", shopTabEnabled: false, needsReview: true },
+      booking: { enabled: bioPageEnabled && appointmentsEnabled, source: "appointments", services: [], bookingCTA: "Book", bookingBlockEnabled: false, confirmationMode: "manual", needsReview: true },
+      leadCapture: { enabled: bioPageEnabled && leadsEnabled, source: "crm", formTitle: "Contact", fields: [{ id: "email", label: "Email", type: "email", required: true }], consentRequired: true, consentText: "I agree to be contacted.", leadTags: ["bio-page"], leadSource: "bio_page", successMessage: "Thanks. We will follow up.", needsReview: true },
+      emailSubscribe: { enabled: bioPageEnabled && emailEnabled, source: "emailMarketing", consentText: "I agree to receive updates.", placeholder: "Email", buttonText: "Subscribe", successMessage: "Subscribed.", doubleOptIn: false, needsReview: true },
+      chatbot: { enabled: bioPageEnabled && chatbotEnabled, source: "chatbot", floatingChatEnabled: false, inlineCTAEnabled: false, welcomePrompt: "How can we help?", leadCaptureEnabled: leadsEnabled, needsReview: true },
+      analytics: { trackViews: true, trackClicks: true, trackCTR: true, trackSubscribers: emailEnabled, trackLeads: leadsEnabled, trackBookings: appointmentsEnabled, trackProductClicks: ecommerceEnabled, trackSourceUTM: true, events: ["bio_page_viewed", "bio_link_clicked"], needsReview: true },
+      seo: { title: input.businessName, description: `${input.businessName} digital profile.`, noIndex: true, schemaType: "Organization", needsReview: true },
+      qrCode: { enabled: false, status: "not_generated", color: primaryColor, backgroundColor: "#FFFFFF", needsReview: true },
+      integrations: { businessBlueprint: true, designSystem: true, ecommerce: ecommerceEnabled, appointments: appointmentsEnabled, crm: leadsEnabled, emailMarketing: emailEnabled, chatbot: chatbotEnabled, media: mediaEnabled, analytics: analyticsEnabled, websiteBuilder: websiteEnabled },
+      needsReview: true,
+    },
+    appointmentsBlueprint: {
+      ...buildDraftState(now, appointmentsEnabled, { source: "payload.generateAppointments" }),
+      engineVersion: "v2",
+      sourceOfTruth: "project_appointments",
+      legacyReadOnlySources: [],
+      serviceTypes: appointmentsEnabled ? serviceDrafts.map((service) => service.name) : [],
+      paidBookingTypes: [],
+      services: appointmentsEnabled ? serviceDrafts.slice(0, 3).map((service, index) => ({
+        id: `appointment-service-${index + 1}`,
+        name: service.name,
+        description: service.description,
+        durationMinutes: 60,
+        bufferBeforeMinutes: 0,
+        bufferAfterMinutes: 15,
+        paymentMode: "none",
+        needsReview: true,
+        sourceMap: { source: "businessProfile.services" },
+      })) : [],
+      availabilityStatus: "not_configured",
+      availability: { timezone: "America/Puerto_Rico", weeklyHours: [], blockedTimeSource: "project_appointment_blocks", minimumNoticeMinutes: 1440, maxAdvanceDays: 30, intervalMinutes: 30, capacityPerSlot: 1 },
+      bookingRules: { confirmationMode: "manual", cancellationPolicy: "Needs review", reschedulePolicy: "Needs review", reminders: [], leadRequiredFields: ["name", "email"], },
+      publicBooking: { enabled: false, status: "draft", needsReview: true, routeStrategy: "disabled", componentIds: [] },
+      chatcore: { enabled: chatbotEnabled, status: "draft", needsReview: true, intentNames: ["appointment_request"], source: "ChatCore" },
+      crm: { enabled: leadsEnabled, status: "draft", needsReview: true, leadLinking: "create_or_link", taskStrategy: "follow_up_after_completed" },
+      emailMarketing: { enabled: emailEnabled, status: "draft", needsReview: true, flowTypes: ["booking_request", "booking_reminder"] },
+      analytics: { enabled: analyticsEnabled, status: "draft", needsReview: true, eventNames: ["appointment_requested", "appointment_confirmed"] },
+      googleCalendar: { enabled: false, status: "not_configured", needsReview: true, syncDirection: "export_only" },
+      ecommerce: { enabled: ecommerceEnabled, status: "draft", needsReview: true, paymentMode: "none", depositProductStrategy: "none" },
+      aiPreparation: { enabled: chatbotEnabled, status: "draft", needsReview: true, enabledByDefault: false, usesLinkedLeads: leadsEnabled, promptContext: ["businessProfile", "leadBlueprint"] },
+      websiteBuilderBlocks: appointmentsEnabled ? [{ componentId: "appointment-cta-draft", purpose: "appointment_cta", status: "draft" }] : [],
+      needsReview: true,
+    },
+    restaurantBlueprint: {
+      ...buildDraftState(now, restaurantEnabled, { source: "payload.generateRestaurantModule" }),
+      profile: { name: input.businessName, cuisineType: input.industry, address: "", phone: input.contactPhone || "", email: input.contactEmail, hours: "", publicSlug, languagesEnabled: ["es", "en"], currency: "USD", sourceMap: { source: "businessProfile" }, readiness: readiness(false, [], ["Restaurant profile needs review."]) },
+      menuDraft: { categories: [], items: [], dietaryTags: [], allergens: [], modifiers: [], upsells: [], priceSource: "unset", generatedByAI: true, userModified: false, needsReview: true, status: "draft", publishStatus: "not_published" },
+      reservations: { enabled: restaurantEnabled && appointmentsEnabled, status: "draft", maxPartySize: 8, minPartySize: 1, reservationInterval: 30, averageTableDuration: 90, tablePreferences: [], capacityRules: [], depositRequired: false, cancellationPolicy: "Needs review", confirmationMode: "manual", source: "ai-studio", needsReview: true, readiness: readiness(false, [], ["Reservation capacity and hours are not configured."]) },
+      publicMenu: { enabled: false, qrMenuEnabled: false, routeStrategy: "/menu/:restaurantId", qrCodeStatus: "not_generated", categoryNavigationEnabled: true, stickyCtaEnabled: true, showCallButton: true, showMapButton: true, showReserveButton: appointmentsEnabled, themePreset: "quimera", menuVariant: "clean", mobileBehavior: "sticky_actions" },
+      ecommerceOffers: {
+        giftCards: { enabled: false, status: "draft", needsReview: true },
+        cateringPackages: { enabled: false, status: "draft", needsReview: true },
+        eventTickets: { enabled: false, status: "draft", needsReview: true },
+        reservationDeposits: { enabled: false, status: "draft", needsReview: true },
+        mealKits: { enabled: false, status: "draft", needsReview: true },
+        merch: { enabled: false, status: "draft", needsReview: true },
+      },
+      integrations: { chatbotKnowledgeSources: [], crmLeadSources: [], crmTags: [], emailFlows: [], analyticsEvents: [], financeRevenueSources: [], automationFlows: [] },
+      menuSignals: restaurantEnabled ? [input.industry] : [],
+      reservationRules: [],
+      legacyEcommerceOffers: [],
+      needsReview: true,
+    },
+    realEstateBlueprint: {
+      ...buildDraftState(now, realtyEnabled, { source: "payload.generateRealtyModule" }),
+      profileType: "agent",
+      agentProfile: { name: input.businessName, email: input.contactEmail, phone: input.contactPhone || "", bio: "", specialties: [], serviceAreas: [], languages: ["es", "en"], socialLinks: {}, complianceNotes: ["Review licensing and fair-housing/compliance copy before publishing."], sourceMap: { source: "businessProfile" }, readiness: readiness(false, [], ["Agent profile needs compliance review."]) },
+      brokerageProfile: { name: input.businessName, address: "", phone: input.contactPhone || "", email: input.contactEmail, officeLocations: [], teamMembers: [], sourceMap: { source: "businessProfile" }, readiness: readiness(false, [], ["Brokerage profile needs review."]) },
+      listingDrafts: [],
+      websiteRoutes: { profile: "/realty", directory: "/listados", propertyDetail: "/listados/:slug", openHouses: "/open-houses" },
+      listingTypes: realtyEnabled ? ["sale", "rent"] : [],
+      leadTypes: realtyEnabled ? ["buyer", "seller", "renter", "investor"] : [],
+      pageTypes: realtyEnabled ? ["profile", "directory", "propertyDetail", "openHouses"] : [],
+      leadFunnels: { buyerLeadEnabled: realtyEnabled, sellerLeadEnabled: realtyEnabled, renterLeadEnabled: realtyEnabled, investorLeadEnabled: realtyEnabled, valuationCtaEnabled: false, buyerGuideEnabled: false, sellerGuideEnabled: false, contactFormEnabled: leadsEnabled, propertyInquiryEnabled: false, openHouseRegistrationEnabled: false, showingRequestEnabled: false, leadTags: ["realty"], leadSources: ["website"], crmPipelineStages: ["new", "qualified", "showing_requested"], needsReview: true, readiness: readiness(false, [], ["Realty funnels need review."]) },
+      showingRequests: { enabled: false, status: "draft", availabilitySource: "unset", preferredDateEnabled: true, preferredTimeEnabled: true, buyerQualificationFields: [], financingStatusField: false, budgetField: false, assignedAgentStrategy: "manual", confirmationMode: "manual", remindersEnabled: false, appointmentIntegrationEnabled: appointmentsEnabled, needsReview: true, readiness: readiness(false, [], ["Showing workflow is not activated."]) },
+      openHouses: { enabled: false, defaultDurationMinutes: 120, registrationEnabled: false, capacityEnabled: false, reminderFlowEnabled: false, followUpFlowEnabled: false, status: "draft", needsReview: true, readiness: readiness(false, [], ["Open houses are not configured."]) },
+      campaigns: { campaigns: [] },
+      publicDirectory: { enabled: false, route: "/listados", filtersEnabled: true, searchEnabled: true, mapViewEnabled: true, gridViewEnabled: true, listViewEnabled: true, savedSearchEnabled: false, compareListingsEnabled: false, featuredListingsEnabled: false, mortgageCalculatorEnabled: false, stickyCtaEnabled: true, seoEnabled: true, schemaEnabled: true, status: "draft", needsReview: true, readiness: readiness(false, [], ["Listings must be reviewed before enabling directory."]) },
+      propertyPages: { enabled: false, routePattern: "/listados/:slug", galleryEnabled: true, virtualTourEnabled: false, mapEnabled: true, contactFormEnabled: leadsEnabled, showingRequestEnabled: false, openHouseRegistrationEnabled: false, relatedListingsEnabled: true, documentsGateEnabled: false, mortgageCalculatorEnabled: false, schemaEnabled: true, stickyMobileCtaEnabled: true, status: "draft", needsReview: true },
+      neighborhoods: { enabled: false, neighborhoods: [] },
+      chatbot: { knowledgeSources: [], supportedQuestions: [], intents: ["property_inquiry", "agent_handoff"] },
+      emailMarketing: { flows: [] },
+      analytics: { events: ["property_view", "lead_submitted"] },
+      ecommerceOffers: {
+        buyerGuides: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        sellerGuides: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        marketReports: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        consultationPackages: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        valuationPackages: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        premiumListingPackages: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        courses: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+        digitalDownloads: { enabled: false, status: "draft", priceSource: "unset", needsReview: true },
+      },
+      integrations: { crmTags: ["realty"], crmLeadSources: ["website"], crmPipelineStages: ["new", "qualified", "showing_requested"], emailFlows: [], chatbotKnowledgeSources: [], analyticsEvents: ["property_view", "lead_submitted"], financeRevenueSources: [], automationFlows: [] },
+      campaignTypes: ["just_listed", "open_house", "seller_lead_magnet"],
+      chatbotKnowledge: [],
+      emailAutomations: [],
+      crmPipelineStages: ["new", "qualified", "showing_requested"],
+      analyticsEvents: ["property_view", "lead_submitted"],
+      digitalProducts: [],
+      monetizationOffers: [],
+      financeRevenueSources: [],
+      engineArtifacts: [],
+      importArchitecture: { sources: ["manual", "csv", "imported-url"], duplicateMatchKeys: ["address", "slug"], defaultStatus: "draft", needsReview: true },
+      needsReview: true,
+    },
+    financeBlueprint: {
+      ...buildDraftState(now, financeEnabled, { source: "payload.setupBilling,payload.monthlyPrice,ecommerceBlueprint" }),
+      trackedMetrics: financeEnabled ? ["mrr", "client_ltv", "paid_orders", "refunds", "gross_margin"] : [],
+      revenueSources: financeEnabled ? ["agency_service_plan", "store_orders", "appointments", "ecommerce"] : [],
+      refundSources: financeEnabled ? ["store_refunds", "manual_adjustments"] : [],
+      needsReview: true,
+    },
+    analyticsBlueprint: {
+      ...buildDraftState(now, analyticsEnabled, { source: "payload.enabledFeatures" }),
+      events: analyticsEnabled ? ["page_view", "lead_submitted", "chat_started", "bio_page_viewed", "order_created", "appointment_requested"] : [],
+      dashboards: analyticsEnabled ? ["agency_client_360", "website_performance", "revenue", "leads", "module_readiness"] : [],
+      needsReview: true,
+    },
+    automationBlueprint: {
+      ...buildDraftState(now, true, { source: "crossModuleSync" }),
+      flows: [
+        { id: "new-lead-follow-up-draft", name: "New lead follow-up draft", sourceModule: "crm", triggerEvent: "lead_submitted", status: "draft" },
+        { id: "appointment-request-draft", name: "Appointment request draft", sourceModule: "appointments", triggerEvent: "appointment_requested", status: "draft" },
+      ],
+      needsReview: true,
+    },
+    crossModuleSync: {
+      status: "previewed",
+      previewedAt: now,
+      chatbot: syncModuleState(chatbotEnabled),
+      leads: syncModuleState(leadsEnabled),
+      emailMarketing: syncModuleState(emailEnabled),
+      analytics: syncModuleState(analyticsEnabled),
+      appointments: syncModuleState(appointmentsEnabled),
+      ecommerce: syncModuleState(ecommerceEnabled),
+      finance: syncModuleState(financeEnabled),
+      warnings: moduleWarnings,
+      readiness: {
+        chatbotReady: false,
+        leadTagsReady: false,
+        emailFlowsReady: false,
+        analyticsReady: false,
+        appointmentsReady: false,
+        ecommerceOffersReady: false,
+        financeReady: false,
+        needsMerchantReview: true,
+      },
+      source: "agency-engine",
+      noRuntimeActivated: true,
+      noAutoPublish: true,
+      noPublicRoutesEnabled: true,
+      noCheckoutSessionCreated: true,
+      noStripeObjectCreated: true,
+      noEmailSent: true,
+      noAppointmentSlotsCreated: true,
+      noRestaurantMenuPublished: true,
+      noRealtyListingsPublished: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  };
+}
+
+async function ensureUniqueSlug(baseName: string) {
+  const baseSlug = generateSlug(baseName);
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("slug", slug)
+      .limit(1);
+
+    if (error) throw error;
+    if (!data?.length) return slug;
+
+    slug = `${baseSlug}-${counter}`;
+    counter += 1;
+  }
+}
+
+async function fetchAgencyServicePlan(agencyTenantId: string, selectedPlanId?: string | null) {
+  if (selectedPlanId) {
+    const { data, error } = await supabase
+      .from("agency_service_plans")
+      .select("*")
+      .eq("tenant_id", agencyTenantId)
+      .eq("id", selectedPlanId)
+      .eq("is_archived", false)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error("Agency service plan not found");
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from("agency_service_plans")
+    .select("*")
+    .eq("tenant_id", agencyTenantId)
+    .eq("is_default", true)
+    .eq("is_archived", false)
+    .maybeSingle();
+
+  if (error && error.code !== "42P01" && error.code !== "PGRST205") throw error;
+  return data || null;
+}
+
+async function insertModuleActivations(input: {
+  tenantId: string;
+  projectId: string;
+  modules: string[];
+  createdBy: string;
+}) {
+  const now = new Date().toISOString();
+  const tenantRows = input.modules.map((moduleId) => ({
+    tenant_id: input.tenantId,
+    module_id: moduleId,
+    enabled: true,
+    status: "enabled",
+    metadata: { source: "agency-engine", createdBy: input.createdBy },
+    created_at: now,
+    updated_at: now,
+  }));
+  const projectRows = input.modules.map((moduleId) => ({
+    project_id: input.projectId,
+    tenant_id: input.tenantId,
+    module_id: moduleId,
+    enabled: true,
+    status: "enabled",
+    metadata: { source: "agency-engine", createdBy: input.createdBy },
+    created_at: now,
+    updated_at: now,
+  }));
+
+  for (const [table, rows] of [["tenant_modules", tenantRows], ["project_modules", projectRows]] as const) {
+    const { error } = await supabase.from(table).upsert(rows, {
+      onConflict: table === "tenant_modules" ? "tenant_id,module_id" : "project_id,module_id",
+    });
+
+    if (error && error.code !== "42P01" && error.code !== "PGRST205") {
+      console.warn(`[onboarding-api] could not write ${table}`, error);
+    }
+  }
+}
+
+async function copyProjectModuleActivations(input: {
+  sourceProjectId: string;
+  targetProjectId: string;
+  targetTenantId: string;
+  createdBy: string;
+}) {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("project_modules")
+    .select("module_id, enabled, status, metadata")
+    .eq("project_id", input.sourceProjectId);
+
+  if (error) {
+    if (isMissingTableError(error)) return 0;
+    throw error;
+  }
+
+  const modules = (data || [])
+    .map((item: Record<string, unknown>) => String(item.module_id || ""))
+    .filter(Boolean);
+
+  if (!modules.length) return 0;
+
+  const tenantRows = modules.map((moduleId) => ({
+    tenant_id: input.targetTenantId,
+    module_id: moduleId,
+    enabled: true,
+    status: "enabled",
+    metadata: { source: "agency-project-transfer", createdBy: input.createdBy },
+    created_at: now,
+    updated_at: now,
+  }));
+  const projectRows = (data || []).map((item: Record<string, unknown>) => ({
+    project_id: input.targetProjectId,
+    tenant_id: input.targetTenantId,
+    module_id: String(item.module_id),
+    enabled: item.enabled !== false,
+    status: String(item.status || "enabled"),
+    metadata: {
+      ...(item.metadata && typeof item.metadata === "object" ? item.metadata as Record<string, unknown> : {}),
+      source: "agency-project-transfer",
+      sourceProjectId: input.sourceProjectId,
+      createdBy: input.createdBy,
+    },
+    created_at: now,
+    updated_at: now,
+  }));
+
+  for (const [table, rows] of [["tenant_modules", tenantRows], ["project_modules", projectRows]] as const) {
+    const { error: upsertError } = await supabase.from(table).upsert(rows, {
+      onConflict: table === "tenant_modules" ? "tenant_id,module_id" : "project_id,module_id",
+    });
+
+    if (upsertError && !isMissingTableError(upsertError)) {
+      throw upsertError;
+    }
+  }
+
+  return modules.length;
+}
+
+async function createProjectTransferApproval(input: {
+  agencyTenantId: string;
+  clientTenantId: string;
+  projectId: string;
+  sourceProjectId: string;
+  projectName: string;
+  clientName?: string | null;
+  requestedBy: string;
+  modulesCopied: number;
+  metadata: Record<string, unknown>;
+}) {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("agency_client_approvals")
+    .insert({
+      agency_tenant_id: input.agencyTenantId,
+      client_tenant_id: input.clientTenantId,
+      project_id: input.projectId,
+      related_entity_type: "project",
+      related_entity_id: input.projectId,
+      approval_type: "project_review",
+      status: "pending",
+      title: `Revisión de proyecto: ${input.projectName}`,
+      description: `Revisa el proyecto transferido a ${input.clientName || "tu portal"} antes de publicarlo o solicitar cambios.`,
+      requested_by: input.requestedBy,
+      requested_at: now,
+      metadata: {
+        ...input.metadata,
+        source: "agency-project-transfer",
+        sourceProjectId: input.sourceProjectId,
+        modulesCopied: input.modulesCopied,
+        noAutoPublish: true,
+      },
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    if (isMissingTableError(error)) return null;
+    throw error;
+  }
+
+  return data?.id || null;
+}
+
+function normalizeApprovalDecision(value: unknown): "approved" | "rejected" | "change_requested" {
+  const decision = String(value || "").trim().toLowerCase();
+  if (decision === "approved" || decision === "approve") return "approved";
+  if (decision === "rejected" || decision === "reject") return "rejected";
+  if (decision === "change_requested" || decision === "changes" || decision === "request_changes") {
+    return "change_requested";
+  }
+  throw new Error("Invalid approval decision");
+}
+
+async function autoProvisionAgencyClient(req: Request, userId: string, payload: Record<string, unknown>) {
+  const agencyTenantId = String(payload.agencyTenantId || "");
+  const businessName = String(payload.businessName || "").trim();
+  const industry = String(payload.industry || "other");
+  const contactEmail = String(payload.contactEmail || "").trim().toLowerCase();
+  const contactPhone = String(payload.contactPhone || "");
+  const selectedPlanId = payload.selectedPlanId ? String(payload.selectedPlanId) : null;
+
+  if (!agencyTenantId) throw new Error("agencyTenantId is required");
+  if (!businessName) throw new Error("businessName is required");
+  if (!contactEmail) throw new Error("contactEmail is required");
+
+  const { count: subClientCount } = await supabase
+    .from("tenants")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_tenant_id", agencyTenantId);
+
+  const access = await requireServiceAccess(req, {
+    tenantId: agencyTenantId,
+    moduleId: "agency-client-provisioning",
+    serviceId: "agency",
+    featureKey: "agencyModule",
+    requiredPermission: "canManageSettings",
+    requestedUsage: { resource: "subClients", amount: 1, used: subClientCount || 0 },
+    action: "agency-client-auto-provision",
+  });
+
+  const agencyTenant = access.tenant || {};
+  const agencyPlan = await fetchAgencyServicePlan(agencyTenantId, selectedPlanId);
+  const effectivePlanId = normalizePlanId(String((agencyTenant as any).subscription_plan || "individual"));
+  const clientLimits = sanitizeFiniteLimits(agencyPlan?.limits, effectivePlanId);
+  const monthlyPrice = Number(payload.monthlyPrice ?? agencyPlan?.price ?? 0);
+  const modules = selectedModules(payload);
+  const slug = await ensureUniqueSlug(businessName);
+  const now = new Date().toISOString();
+
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .insert({
+      name: businessName,
+      slug,
+      email: contactEmail,
+      company_name: businessName,
+      type: "agency_client",
+      owner_user_id: userId,
+      owner_tenant_id: agencyTenantId,
+      subscription_plan: effectivePlanId,
+      status: "active",
+      limits: clientLimits,
+      usage: {
+        projectCount: 0,
+        userCount: 1,
+        storageUsedGB: 0,
+        aiCreditsUsed: 0,
+        subClientCount: 0,
+      },
+      branding: {
+        companyName: businessName,
+        primaryColor: payload.primaryColor || "#3B82F6",
+        secondaryColor: payload.secondaryColor || "#10B981",
+      },
+      settings: {
+        allowMemberInvites: true,
+        defaultMemberRole: "client",
+        enabledFeatures: Array.isArray(payload.enabledFeatures) ? payload.enabledFeatures : ["cms", "leads"],
+        requireTwoFactor: false,
+        defaultLanguage: "es",
+        timezone: "America/Puerto_Rico",
+      },
+      billing: {
+        mode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+        effectivePlanId,
+        agencyPlanId: agencyPlan?.id || selectedPlanId,
+        agencyPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+        monthlyPrice,
+        status: payload.setupBilling ? "pending_setup" : "included",
+      },
+      parent_credits_pool_id: agencyTenantId,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (tenantError) throw tenantError;
+
+  await supabase.from("tenant_members").upsert({
+    id: `${tenant.id}_${userId}`,
+    tenant_id: tenant.id,
+    user_id: userId,
+    role: "agency_owner",
+    permissions: AGENCY_OWNER_PERMISSIONS,
+    invited_by: userId,
+    joined_at: now,
+  }, { onConflict: "id" });
+
+  const projectId = crypto.randomUUID();
+  const businessBlueprint = buildInitialBusinessBlueprint({
+    projectId,
+    tenantId: tenant.id,
+    businessName,
+    industry,
+    contactEmail,
+    contactPhone,
+    modules,
+    payload,
+  });
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .insert({
+      id: projectId,
+      tenant_id: tenant.id,
+      user_id: userId,
+      name: businessName,
+      status: "Draft",
+      pages: [],
+      data: {
+        businessBlueprint,
+        agencyProvisioning: {
+          agencyTenantId,
+          clientTenantId: tenant.id,
+          selectedPlanId: agencyPlan?.id || selectedPlanId,
+          selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+          modules,
+          createdAt: now,
+        },
+      },
+      theme: {},
+      brand_identity: {
+        primaryColor: payload.primaryColor || "#3B82F6",
+        secondaryColor: payload.secondaryColor || "#10B981",
+      },
+      component_order: ["header", "hero", "services", "leads", "footer"],
+      section_visibility: {},
+      menus: [],
+      ai_assistant_config: {
+        enabled: modules.includes("chatbot-engine"),
+        source: "agency-engine",
+        needsReview: true,
+      },
+      seo_config: {},
+      crm_config: {},
+      is_archived: false,
+      created_at: now,
+      last_updated: now,
+    })
+    .select("*")
+    .single();
+
+  if (projectError) throw projectError;
+
+  await supabase.from("agency_clients").upsert({
+    agency_tenant_id: agencyTenantId,
+    client_tenant_id: tenant.id,
+    status: "active",
+    lifecycle_stage: "onboarding",
+    health_score: 70,
+    agency_plan_id: agencyPlan?.id || selectedPlanId,
+    billing_mode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+    onboarding_status: "provisioned",
+    project_count: 1,
+    primary_project_id: project.id,
+    client_owner_email: contactEmail,
+    metadata: {
+      source: "onboarding-api",
+      modules,
+      selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+    },
+    updated_at: now,
+  }, { onConflict: "agency_tenant_id,client_tenant_id" });
+
+  await insertModuleActivations({ tenantId: tenant.id, projectId: project.id, modules, createdBy: userId });
+
+  const initialUsers = Array.isArray(payload.initialUsers) ? payload.initialUsers as InitialClientUser[] : [];
+  const invites = initialUsers
+    .filter((item) => item.email)
+    .map((item) => ({
+      tenant_id: tenant.id,
+      email: String(item.email).toLowerCase(),
+      role: "client",
+      custom_permissions: CLIENT_ADMIN_PERMISSIONS,
+      invited_by: userId,
+      token: randomToken(),
+      message: `Bienvenido a ${businessName}`,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "pending",
+      tenant_name: businessName,
+    }));
+
+  if (invites.length > 0) {
+    const { error: invitesError } = await supabase.from("tenant_invites").insert(invites);
+    if (invitesError) throw invitesError;
+  }
+
+  await supabase.from("agency_activity").insert({
+    agency_tenant_id: agencyTenantId,
+    client_tenant_id: tenant.id,
+    project_id: project.id,
+    type: "client_created",
+    title: `Cliente creado: ${businessName}`,
+    description: `Agency Engine provisionó ${businessName} con ${modules.length} módulos en draft.`,
+    metadata: {
+      selectedPlanId: agencyPlan?.id || selectedPlanId,
+      selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+      modules,
+      invitesSent: invites.length,
+      source: "onboarding-api",
+    },
+    created_by: userId,
+    created_at: now,
+  });
+
+  await supabase
+    .from("tenants")
+    .update({
+      usage: {
+        ...((agencyTenant as any).usage || {}),
+        subClientCount: (subClientCount || 0) + 1,
+      },
+      updated_at: now,
+    })
+    .eq("id", agencyTenantId);
+
+  return {
+    success: true,
+    agencyTenantId,
+    clientTenantId: tenant.id,
+    projectId: project.id,
+    selectedPlanId: agencyPlan?.id || selectedPlanId,
+    selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+    limits: clientLimits,
+    modules,
+    invitesSent: invites.length,
+    provisioningSummary: {
+      tenantCreated: true,
+      projectCreated: true,
+      businessBlueprintCreated: true,
+      moduleActivationsPrepared: true,
+      billingMode: payload.setupBilling ? "agency_managed" : "included_in_parent",
+      activityLogged: true,
+    },
+  };
+}
+
+async function transferAgencyProject(req: Request, userId: string, payload: Record<string, unknown>) {
+  const projectId = String(payload.projectId || "");
+  const agencyTenantId = String(payload.sourceTenantId || payload.agencyTenantId || "");
+  const targetClientTenantId = String(payload.targetClientTenantId || "");
+
+  if (!projectId) throw new Error("projectId is required");
+  if (!agencyTenantId) throw new Error("sourceTenantId is required");
+  if (!targetClientTenantId) throw new Error("targetClientTenantId is required");
+
+  const access = await requireServiceAccess(req, {
+    tenantId: agencyTenantId,
+    moduleId: "agency-project-transfer",
+    serviceId: "agency",
+    featureKey: "agencyModule",
+    requiredPermission: "canManageProjects",
+    action: "agency-project-transfer",
+  });
+
+  const [
+    { data: sourceProject, error: projectError },
+    { data: clientTenant, error: clientError },
+    { data: agencyClient, error: agencyClientError },
+  ] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .eq("tenant_id", agencyTenantId)
+      .maybeSingle(),
+    supabase
+      .from("tenants")
+      .select("id, name, slug, email, owner_tenant_id, owner_user_id, type, status, subscription_plan, limits, usage, billing, branding, settings")
+      .eq("id", targetClientTenantId)
+      .maybeSingle(),
+    supabase
+      .from("agency_clients")
+      .select("agency_tenant_id, client_tenant_id, project_count, primary_project_id")
+      .eq("agency_tenant_id", agencyTenantId)
+      .eq("client_tenant_id", targetClientTenantId)
+      .maybeSingle(),
+  ]);
+
+  if (projectError) throw projectError;
+  if (!sourceProject) throw new Error("Source project not found for this agency workspace");
+  if (clientError) throw clientError;
+  if (!clientTenant) throw new Error("Target agency client not found");
+  if (agencyClientError && !isMissingTableError(agencyClientError)) throw agencyClientError;
+
+  const linkedByTenant = clientTenant.owner_tenant_id === agencyTenantId;
+  const linkedByRegistry = agencyClient?.agency_tenant_id === agencyTenantId;
+  if (!linkedByTenant && !linkedByRegistry) {
+    throw new Error("Target tenant is not linked to this agency");
+  }
+
+  const { count: currentProjects, error: countError } = await supabase
+    .from("projects")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", targetClientTenantId)
+    .eq("is_archived", false);
+  if (countError) throw countError;
+
+  const status = String(sourceProject.status || "").toLowerCase();
+  if (sourceProject.is_archived === true || status === "template") {
+    throw new Error("This project cannot be transferred");
+  }
+
+  const effectiveClientPlanId = normalizePlanId(String(
+    clientTenant.billing?.effectivePlanId ||
+      clientTenant.subscription_plan ||
+      "individual",
+  ));
+  const clientLimits = sanitizeFiniteLimits(clientTenant.limits, effectiveClientPlanId);
+  const maxProjects = Number((clientLimits as Record<string, unknown>).maxProjects || 1);
+  if ((currentProjects || 0) + 1 > maxProjects) {
+    throw new Error(`El cliente alcanzó el límite de proyectos de su plan (${maxProjects}).`);
+  }
+
+  const now = new Date().toISOString();
+  const newProjectId = crypto.randomUUID();
+  const transferMetadata = {
+    agencyTenantId,
+    clientTenantId: targetClientTenantId,
+    originalProjectId: sourceProject.id,
+    transferredProjectId: newProjectId,
+    transferredAt: now,
+    transferredBy: userId,
+    transferMode: "copy",
+    source: "agency-engine",
+  };
+  const sourceData = cloneJson<Record<string, unknown>>(sourceProject.data || {}, {});
+  const sourceBlueprint = sourceData.businessBlueprint && typeof sourceData.businessBlueprint === "object"
+    ? sourceData.businessBlueprint as Record<string, unknown>
+    : null;
+  const nextBusinessBlueprint = sourceBlueprint
+    ? {
+      ...sourceBlueprint,
+      projectId: newProjectId,
+      tenantId: targetClientTenantId,
+      status: "needs_review",
+      generatedBy: "agency-project-transfer",
+      agencyTransfer: transferMetadata,
+      crossModuleSync: {
+        ...(sourceBlueprint.crossModuleSync && typeof sourceBlueprint.crossModuleSync === "object"
+          ? sourceBlueprint.crossModuleSync as Record<string, unknown>
+          : {}),
+        source: "agency-project-transfer",
+        noRuntimeActivated: true,
+        noAutoPublish: true,
+        transferredAt: now,
+      },
+    }
+    : undefined;
+  const nextData = cleanForInsert({
+    ...sourceData,
+    ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+    transferredFrom: {
+      agencyTenantId,
+      originalProjectId: sourceProject.id,
+      transferredAt: now,
+      transferredBy: userId,
+    },
+    agencyTransfer: transferMetadata,
+  });
+
+  const projectName = String(payload.name || sourceProject.name || "Transferred Project").trim();
+  const { data: createdProject, error: insertError } = await supabase
+    .from("projects")
+    .insert(cleanForInsert({
+      id: newProjectId,
+      tenant_id: targetClientTenantId,
+      user_id: clientTenant.owner_user_id || sourceProject.user_id || userId,
+      name: projectName,
+      thumbnail_url: sourceProject.thumbnail_url || null,
+      favicon_url: sourceProject.favicon_url || null,
+      status: "Draft",
+      pages: cloneJson(sourceProject.pages || [], []),
+      data: nextData,
+      theme: cloneJson(sourceProject.theme || {}, {}),
+      brand_identity: cloneJson(sourceProject.brand_identity || {}, {}),
+      component_order: cloneJson(sourceProject.component_order || [], []),
+      section_visibility: cloneJson(sourceProject.section_visibility || {}, {}),
+      source_template_id: sourceProject.source_template_id || null,
+      menus: cloneJson(sourceProject.menus || [], []),
+      ai_assistant_config: cloneJson(sourceProject.ai_assistant_config || {}, {}),
+      seo_config: cloneJson(sourceProject.seo_config || {}, {}),
+      crm_config: cloneJson(sourceProject.crm_config || {}, {}),
+      categories: sourceProject.categories ? cloneJson(sourceProject.categories, []) : undefined,
+      description: sourceProject.description ?? undefined,
+      category: sourceProject.category ?? undefined,
+      tags: sourceProject.tags ?? undefined,
+      industries: sourceProject.industries ?? undefined,
+      is_archived: false,
+      published_data: null,
+      published_at: null,
+      created_at: now,
+      last_updated: now,
+    }))
+    .select("id")
+    .single();
+
+  if (insertError) throw insertError;
+
+  const modulesCopied = await copyProjectModuleActivations({
+    sourceProjectId: sourceProject.id,
+    targetProjectId: createdProject.id,
+    targetTenantId: targetClientTenantId,
+    createdBy: userId,
+  });
+  const approvalId = await createProjectTransferApproval({
+    agencyTenantId,
+    clientTenantId: targetClientTenantId,
+    projectId: createdProject.id,
+    sourceProjectId: sourceProject.id,
+    projectName,
+    clientName: clientTenant.name,
+    requestedBy: userId,
+    modulesCopied,
+    metadata: transferMetadata,
+  });
+
+  const transferRow = {
+    agency_tenant_id: agencyTenantId,
+    client_tenant_id: targetClientTenantId,
+    source_project_id: sourceProject.id,
+    target_project_id: createdProject.id,
+    transfer_mode: "copy",
+    status: "completed",
+    transferred_by: userId,
+    metadata: {
+      ...transferMetadata,
+      sourceProjectName: sourceProject.name,
+      targetProjectName: projectName,
+      modulesCopied,
+      copiedAsDraft: true,
+      approvalId,
+    },
+    created_at: now,
+    updated_at: now,
+  };
+  const { error: transferError } = await supabase
+    .from("agency_project_transfers")
+    .upsert(transferRow, { onConflict: "agency_tenant_id,source_project_id,target_project_id" });
+  if (transferError && !isMissingTableError(transferError)) throw transferError;
+
+  const nextProjectCount = (currentProjects || 0) + 1;
+  const { error: clientUpdateError } = await supabase
+    .from("agency_clients")
+    .update({
+      project_count: nextProjectCount,
+      primary_project_id: agencyClient?.primary_project_id || createdProject.id,
+      updated_at: now,
+    })
+    .eq("agency_tenant_id", agencyTenantId)
+    .eq("client_tenant_id", targetClientTenantId);
+  if (clientUpdateError && !isMissingTableError(clientUpdateError)) throw clientUpdateError;
+
+  await supabase
+    .from("tenants")
+    .update({
+      usage: {
+        ...(clientTenant.usage || {}),
+        projectCount: nextProjectCount,
+      },
+      updated_at: now,
+    })
+    .eq("id", targetClientTenantId);
+
+  const { error: activityError } = await supabase.from("agency_activity").insert({
+    agency_tenant_id: agencyTenantId,
+    client_tenant_id: targetClientTenantId,
+    project_id: createdProject.id,
+    type: "project_transferred",
+    title: `Proyecto transferido: ${projectName}`,
+    description: `Agency Engine transfirió ${projectName} a ${clientTenant.name || "cliente"} como borrador.`,
+    metadata: {
+      ...transferMetadata,
+      modulesCopied,
+      approvalId,
+      accessDecision: access.decision.reasonCode,
+      sourceProjectName: sourceProject.name,
+      targetProjectName: projectName,
+    },
+    created_by: userId,
+    created_at: now,
+  });
+  if (activityError && !isMissingTableError(activityError)) throw activityError;
+
+  return {
+    success: true,
+    agencyTenantId,
+    sourceProjectId: sourceProject.id,
+    targetClientTenantId,
+    newProjectId: createdProject.id,
+    modulesCopied,
+    message: `Proyecto "${projectName}" transferido a ${clientTenant.name || "cliente"} como borrador.`,
+    transferSummary: {
+      copiedAsDraft: true,
+      published: false,
+      businessBlueprintUpdated: Boolean(nextBusinessBlueprint),
+      moduleActivationsCopied: modulesCopied > 0,
+      approvalRequested: Boolean(approvalId),
+      currentProjects: nextProjectCount,
+      maxProjects,
+    },
+  };
+}
+
+async function respondClientApproval(req: Request, userId: string, payload: Record<string, unknown>) {
+  const approvalId = String(payload.approvalId || "");
+  const decision = normalizeApprovalDecision(payload.decision);
+  const responseNote = String(payload.responseNote || payload.note || "").trim();
+
+  if (!approvalId) throw new Error("approvalId is required");
+
+  const { data: approval, error: approvalError } = await supabase
+    .from("agency_client_approvals")
+    .select("*")
+    .eq("id", approvalId)
+    .maybeSingle();
+
+  if (approvalError) throw approvalError;
+  if (!approval) throw new Error("Approval request not found");
+  if (approval.status !== "pending") throw new Error("This approval request is no longer pending");
+
+  await requireServiceAccess(req, {
+    tenantId: approval.client_tenant_id,
+    moduleId: "agency-client-portal",
+    serviceId: "agency",
+    featureKey: "agencyModule",
+    action: "agency-client-approval-response",
+  });
+
+  const [{ data: membership, error: membershipError }, { data: clientTenant, error: tenantError }] = await Promise.all([
+    supabase
+      .from("tenant_members")
+      .select("tenant_id, user_id, role")
+      .eq("tenant_id", approval.client_tenant_id)
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("tenants")
+      .select("id, name, owner_user_id")
+      .eq("id", approval.client_tenant_id)
+      .maybeSingle(),
+  ]);
+
+  if (membershipError) throw membershipError;
+  if (tenantError) throw tenantError;
+  if (!membership && clientTenant?.owner_user_id !== userId) {
+    throw new Error("You do not have access to this client portal");
+  }
+
+  const now = new Date().toISOString();
+  const { data: updated, error: updateError } = await supabase
+    .from("agency_client_approvals")
+    .update({
+      status: decision,
+      response_note: responseNote || null,
+      responded_by: userId,
+      responded_at: now,
+      updated_at: now,
+      metadata: {
+        ...(approval.metadata && typeof approval.metadata === "object" ? approval.metadata as Record<string, unknown> : {}),
+        responseSource: "client-portal",
+        respondedAt: now,
+      },
+    })
+    .eq("id", approvalId)
+    .eq("status", "pending")
+    .select("*")
+    .single();
+
+  if (updateError) throw updateError;
+
+  const decisionLabel = decision === "approved"
+    ? "aprobó"
+    : decision === "rejected"
+      ? "rechazó"
+      : "pidió cambios en";
+
+  const { error: activityError } = await supabase.from("agency_activity").insert({
+    agency_tenant_id: updated.agency_tenant_id,
+    client_tenant_id: updated.client_tenant_id,
+    project_id: updated.project_id,
+    type: "approval_responded",
+    title: `Respuesta de aprobación: ${updated.title}`,
+    description: `${clientTenant?.name || "El cliente"} ${decisionLabel} ${updated.title}.`,
+    metadata: {
+      approvalId,
+      decision,
+      responseNote,
+      source: "client-portal",
+    },
+    created_by: userId,
+    created_at: now,
+  });
+  if (activityError && !isMissingTableError(activityError)) throw activityError;
+
+  return {
+    success: true,
+    approvalId,
+    status: updated.status,
+    respondedAt: updated.responded_at,
+  };
+}
+
+async function addDomain(req: Request, userId: string, payload: Record<string, unknown>) {
   const domain = normalizeDomain(String(payload.domain || ""));
   const projectId = String(payload.projectId || "");
 
@@ -91,6 +1700,20 @@ async function addDomain(userId: string, payload: Record<string, unknown>) {
   }
 
   const project = await getAuthorizedProject(userId, projectId);
+  const { count: currentDomains } = await supabase
+    .from("custom_domains")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId);
+  await requireServiceAccess(req, {
+    tenantId: project.tenant_id || undefined,
+    projectId,
+    moduleId: "domains-management",
+    serviceId: "domains",
+    featureKey: "customDomains",
+    requiredPermission: "canManageDomains",
+    requestedUsage: { resource: "domains", amount: 1, used: currentDomains || 0 },
+    action: "domains-add",
+  });
   const vercelProjectId = resolveVercelProjectId(project);
   const domainsToBind = getDomainsToBind(domain);
   const vercelResults: VercelProjectDomain[] = [];
@@ -166,13 +1789,22 @@ async function addDomain(userId: string, payload: Record<string, unknown>) {
   };
 }
 
-async function removeDomain(userId: string, payload: Record<string, unknown>) {
+async function removeDomain(req: Request, userId: string, payload: Record<string, unknown>) {
   const domain = normalizeDomain(String(payload.domain || ""));
   assertValidDomain(domain);
 
   const domainRow = await getAuthorizedDomain(userId, domain);
   const projectId = domainRow.project_id || domainRow.data?.projectId || domainRow.data?.project_id;
   const project = projectId ? await getAuthorizedProject(userId, projectId) : null;
+  await requireServiceAccess(req, {
+    tenantId: project?.tenant_id || domainRow.project_tenant_id || domainRow.data?.projectTenantId || undefined,
+    projectId: projectId || undefined,
+    moduleId: "domains-management",
+    serviceId: "domains",
+    featureKey: "customDomains",
+    requiredPermission: "canManageDomains",
+    action: "domains-remove",
+  });
   const vercelProjectId = resolveVercelProjectId(project, domainRow.data);
 
   for (const domainToRemove of getDomainsToBind(domain)) {
@@ -253,7 +1885,7 @@ async function verifyDomain(userId: string, payload: Record<string, unknown>) {
   };
 }
 
-async function syncDomainMapping(userId: string, payload: Record<string, unknown>) {
+async function syncDomainMapping(req: Request, userId: string, payload: Record<string, unknown>) {
   const domain = normalizeDomain(String(payload.domain || ""));
   assertValidDomain(domain);
 
@@ -263,6 +1895,15 @@ async function syncDomainMapping(userId: string, payload: Record<string, unknown
   if (!projectId) throw new Error("Project ID not found for this domain");
 
   const project = await getAuthorizedProject(userId, projectId);
+  await requireServiceAccess(req, {
+    tenantId: project.tenant_id || undefined,
+    projectId,
+    moduleId: "domains-management",
+    serviceId: "domains",
+    featureKey: "customDomains",
+    requiredPermission: "canManageDomains",
+    action: "sync-domain-mapping",
+  });
   const vercelProjectId = resolveVercelProjectId(project, domainRow.data);
 
   // 1. Get status from Vercel Project Domain

@@ -23,6 +23,12 @@ import {
     resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import {
+    buildServiceAwareComponentStatus,
+    buildServiceAwareSectionVisibility,
+    isSectionServiceAvailable,
+    type ServicePublicPredicate,
+} from '../utils/serviceAvailabilitySections';
 
 // Import section components
 import Header from './Header';
@@ -133,6 +139,8 @@ interface PageRendererProps {
     onNavigate?: (href: string) => void;
     /** Render only page content when an outer shell already owns header/footer. */
     contentOnly?: boolean;
+    /** Optional global service availability gate. Defaults to visible for legacy renderers. */
+    canAccessService?: ServicePublicPredicate;
 }
 
 /**
@@ -148,6 +156,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     categories = [],
     onNavigate,
     contentOnly = false,
+    canAccessService = () => true,
 }) => {
     const { i18n } = useTranslation();
     
@@ -284,6 +293,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     // Provide default theme values to prevent undefined errors
     const theme: ThemeData = { ...initialData.theme, ...(project.theme ?? {}) };
     const globalColors = theme.globalColors;
+    const effectiveComponentStatus = buildServiceAwareComponentStatus(project.componentStatus, page.sections, canAccessService);
+    const effectiveSectionVisibility = buildServiceAwareSectionVisibility(project.sectionVisibility, canAccessService);
 
     // Path-based navigation handlers for SSR (real URLs, not hash)
     const handleNavigateToProduct = (slug: string) => {
@@ -1250,6 +1261,12 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         if (isRetiredDesignSuiteSection(section)) {
             return false;
         }
+        if (!isSectionServiceAvailable(section, canAccessService)) {
+            return false;
+        }
+        if (effectiveComponentStatus[section] === false || effectiveSectionVisibility[section] === false) {
+            return false;
+        }
         if (contentOnly && shellSections.includes(section)) {
             return false;
         }
@@ -1287,7 +1304,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             {orderedSections.map((section, index) => renderSection(section, index))}
 
             {/* Floating Sign-Up Overlay (rendered outside normal section flow) */}
-            {!contentOnly && mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && (
+            {!contentOnly && mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && effectiveComponentStatus.signupFloat && effectiveSectionVisibility.signupFloat && (
                 <SignupFloat
                     {...mergedData.signupFloat}
                     projectId={project.id}

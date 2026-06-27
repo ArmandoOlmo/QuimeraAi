@@ -314,7 +314,12 @@ describe('GlobalAssistantMemoryService', () => {
         });
 
         const result = await service.resolveMemoryContext({
-            context: context({ activeModule: 'emailMarketing' }),
+            context: context({
+                activeModule: 'emailMarketing',
+                activeRoute: '/email',
+                currentSurface: 'dashboard',
+                activeServices: ['emailMarketing', 'crm'],
+            }),
             text: 'copy email services billing',
         });
 
@@ -331,6 +336,9 @@ describe('GlobalAssistantMemoryService', () => {
             module: 1,
         });
         expect(result.manifest.moduleCounts).toMatchObject({ emailMarketing: 1 });
+        expect(result.manifest.activeRoute).toBe('/email');
+        expect(result.manifest.currentSurface).toBe('dashboard');
+        expect(result.manifest.activeServices).toEqual(['emailMarketing', 'crm']);
         expect(result.manifest.guardrails.adminMemoryVisible).toBe(false);
         expect(result.manifest.explanation.join(' ')).toContain('Admin memory is hidden in user mode');
     });

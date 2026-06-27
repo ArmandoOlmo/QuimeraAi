@@ -4,7 +4,7 @@ import { buildGlobalAssistantCapabilityCatalog } from '../../services/globalAssi
 describe('globalAssistantCapabilityCatalog', () => {
     it('summarizes executable tools separately from preview-only declarations', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
-            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate'],
+            enabledServices: ['emailMarketing', 'ecommerce', 'aiFeatures', 'analytics', 'appointments', 'finance', 'chatbot', 'restaurants', 'realEstate', 'crm', 'bioPage'],
             enabledFeatures: ['emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule', 'websiteBuilder'],
         });
 
@@ -295,10 +295,39 @@ describe('globalAssistantCapabilityCatalog', () => {
         });
     });
 
-    it('marks actions unavailable when required service or feature is absent', () => {
+    it('hides actions whose required service or feature is absent by default', () => {
         const catalog = buildGlobalAssistantCapabilityCatalog({
             enabledServices: ['emailMarketing'],
             enabledFeatures: ['emailMarketing'],
+        });
+
+        expect(catalog.actions.some(action => action.actionType === 'create_product')).toBe(false);
+        expect(catalog.modules.some(module => module.module === 'ecommerce')).toBe(false);
+        expect(catalog.actions.some(action => action.blockedBy.length > 0)).toBe(false);
+    });
+
+    it('can require explicit service context before exposing service-gated actions', () => {
+        const catalog = buildGlobalAssistantCapabilityCatalog({
+            requireServiceContext: true,
+            enabledFeatures: ['websiteBuilder', 'emailMarketing', 'ecommerceEnabled', 'chatbotEnabled', 'realEstateModule'],
+        });
+
+        expect(catalog.actions.some(action => action.actionType === 'create_product')).toBe(false);
+        expect(catalog.actions.some(action => action.actionType === 'generate_image')).toBe(false);
+        expect(catalog.actions.some(action => action.actionType === 'search_leads')).toBe(false);
+        expect(catalog.modules.some(module => module.module === 'ecommerce')).toBe(false);
+        expect(catalog.modules.some(module => module.module === 'media')).toBe(false);
+        expect(catalog.actions.find(action => action.actionType === 'open_project')).toMatchObject({
+            availableInContext: true,
+            requiredService: undefined,
+        });
+    });
+
+    it('marks actions unavailable when required service or feature is absent in diagnostic mode', () => {
+        const catalog = buildGlobalAssistantCapabilityCatalog({
+            enabledServices: ['emailMarketing'],
+            enabledFeatures: ['emailMarketing'],
+            includeUnavailable: true,
         });
         const ecommerce = catalog.modules.find(module => module.module === 'ecommerce');
         const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
@@ -308,5 +337,19 @@ describe('globalAssistantCapabilityCatalog', () => {
             blockedBy: ['service:ecommerce', 'feature:ecommerceEnabled'],
         });
         expect(ecommerce?.unavailableActionTypes).toContain('create_product');
+    });
+
+    it('marks service-gated actions unavailable in strict diagnostic mode when service context is missing', () => {
+        const catalog = buildGlobalAssistantCapabilityCatalog({
+            requireServiceContext: true,
+            includeUnavailable: true,
+            enabledFeatures: ['ecommerceEnabled'],
+        });
+        const createProduct = catalog.actions.find(action => action.actionType === 'create_product');
+
+        expect(createProduct).toMatchObject({
+            availableInContext: false,
+            blockedBy: ['service:ecommerce'],
+        });
     });
 });

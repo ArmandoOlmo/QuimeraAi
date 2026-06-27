@@ -21,6 +21,7 @@ export interface ResourceAlert {
     limit: number;
     percentage: number;
     severity: 'warning' | 'critical';  // warning: >80%, critical: >95%
+    invalidLimit?: boolean;
 }
 
 export interface UpcomingRenewal {
@@ -45,7 +46,7 @@ export interface AggregatedMetrics {
 
 export interface ActivityEvent {
     id: string;
-    type: 'client_created' | 'client_updated' | 'report_generated' | 'payment_received' | 'project_created' | 'project_published';
+    type: 'client_created' | 'client_updated' | 'report_generated' | 'payment_received' | 'project_created' | 'project_published' | 'project_transferred' | 'approval_responded';
     clientId?: string;
     clientName?: string;
     description: string;
@@ -76,6 +77,94 @@ export interface ClientMetricsSummary {
 // =============================================================================
 // HOOK
 // =============================================================================
+
+function parseJsonField<T>(value: T | string | null | undefined, fallback: T): T {
+    if (!value) return fallback;
+    if (typeof value !== 'string') return value as T;
+    try {
+        return JSON.parse(value) as T;
+    } catch {
+        return fallback;
+    }
+}
+
+function mapTenantRow(row: any): Tenant {
+    return {
+        id: row.id,
+        name: resolveProjectName(row.name),
+        slug: row.slug,
+        email: row.email,
+        companyName: row.company_name,
+        type: row.type,
+        ownerUserId: row.owner_user_id,
+        ownerTenantId: row.owner_tenant_id,
+        memberUserIds: row.member_user_ids || [],
+        projectIds: row.project_ids || [],
+        subscriptionPlan: row.subscription_plan,
+        status: row.status,
+        limits: parseJsonField(row.limits, {} as Tenant['limits']),
+        usage: parseJsonField(row.usage, {
+            projectCount: 0,
+            userCount: 0,
+            storageUsedGB: 0,
+            aiCreditsUsed: 0,
+        }),
+        branding: parseJsonField(row.branding, {} as Tenant['branding']),
+        settings: parseJsonField(row.settings, {} as Tenant['settings']),
+        billing: parseJsonField(row.billing, {} as Tenant['billing']),
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        lastActiveAt: row.last_active_at,
+    } as Tenant;
+}
+
+function isValidPositiveLimit(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value) && value > 0;
+}
+
+function readOrderTotal(order: any): number {
+    const data = typeof order.data === 'string' ? parseJsonField(order.data, {}) : (order.data || {});
+    const pricing = typeof order.pricing === 'string'
+        ? parseJsonField(order.pricing, {})
+        : (order.pricing || (typeof data.pricing === 'object' ? data.pricing : {}));
+    const values = [
+        order.total_amount,
+        order.total,
+        order.amount_total,
+        data.total_amount,
+        data.totalAmount,
+        data.total,
+        pricing.total_amount,
+        pricing.totalAmount,
+        pricing.total,
+    ];
+    let fallback = 0;
+
+    for (const value of values) {
+        if (value === null || value === undefined || value === '') continue;
+        const total = Number(value);
+        if (!Number.isFinite(total)) continue;
+        if (total > 0) return total;
+        fallback = total;
+    }
+
+    return fallback;
+}
+
+function readClientMrr(client: Tenant): number {
+    const values = [
+        client.billing?.mrr,
+        client.billing?.monthlyPrice,
+        client.billingInfo?.mrr,
+    ];
+
+    for (const value of values) {
+        const amount = Number(value);
+        if (Number.isFinite(amount) && amount > 0) return amount;
+    }
+
+    return 0;
+}
 
 export function useAgencyMetrics(agencyTenantId: string) {
     const [subClients, setSubClients] = useState<Tenant[]>([]);
@@ -116,9 +205,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
                 metrics.aiCreditsUsed += client.usage.aiCreditsUsed || 0;
             }
 
-            if (client.billing?.mrr) {
-                metrics.mrr += client.billing.mrr;
-            }
+            metrics.mrr += readClientMrr(client);
         });
 
         return metrics;
@@ -159,7 +246,20 @@ export function useAgencyMetrics(agencyTenantId: string) {
                 ];
 
             checks.forEach(check => {
-                if (check.limit <= 0) return;  // Skip unlimited resources
+                if (!isValidPositiveLimit(check.limit)) {
+                    alerts.push({
+                        id: `${client.id}-${check.resource}-invalid-limit`,
+                        clientId: client.id,
+                        clientName: client.name,
+                        resource: check.resource,
+                        usage: check.usage,
+                        limit: Number.isFinite(check.limit) ? check.limit : 0,
+                        percentage: 100,
+                        severity: 'critical',
+                        invalidLimit: true,
+                    });
+                    return;
+                }
 
                 const percentage = (check.usage / check.limit) * 100;
 
@@ -253,11 +353,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
                 const clients: Tenant[] = [];
                 if (data) {
                     data.forEach((doc: any) => {
-                        clients.push({
-                            ...doc,
-                            id: doc.id,
-                            name: resolveProjectName(doc.name)
-                        } as Tenant);
+                        clients.push(mapTenantRow(doc));
                     });
                 }
 
@@ -314,11 +410,26 @@ export function useAgencyMetrics(agencyTenantId: string) {
         const aggregateAsyncMetrics = async () => {
             try {
                 const clientIds = subClients.map(c => c.id);
+                const { data: projectsData, error: projectsError } = await supabase
+                    .from('projects')
+                    .select('id,tenant_id')
+                    .in('tenant_id', clientIds)
+                    .eq('is_archived', false);
+
+                if (projectsError) {
+                    throw projectsError;
+                }
+
+                const projectIds = (projectsData || []).map(project => project.id).filter(Boolean);
                 // Supabase 'in' filter limit might apply, but generally it supports many items.
                 // We'll chunk to be safe, e.g., max 50 items per query
-                const chunks = [];
+                const chunks: string[][] = [];
                 for (let i = 0; i < clientIds.length; i += 50) {
                     chunks.push(clientIds.slice(i, i + 50));
+                }
+                const projectChunks: string[][] = [];
+                for (let i = 0; i < projectIds.length; i += 50) {
+                    projectChunks.push(projectIds.slice(i, i + 50));
                 }
 
                 let totalLeads = 0;
@@ -339,18 +450,22 @@ export function useAgencyMetrics(agencyTenantId: string) {
                         totalLeads += leadsCount;
                     }
 
-                    // Fetch Revenue (Orders)
+                }
+
+                for (const chunk of projectChunks) {
                     const { data: ordersData, error: ordersError } = await supabase
-                        .from('orders')
-                        .select('total')
-                        .in('tenant_id', chunk)
-                        .in('status', ['paid', 'completed'])
+                        .from('store_orders')
+                        .select('*')
+                        .in('project_id', chunk)
+                        .or('payment_status.eq.paid,status.eq.paid,status.eq.completed')
                         .gte('created_at', startOfMonth);
 
                     if (!ordersError && ordersData) {
-                        ordersData.forEach(doc => {
-                            totalRevenue += (doc.total || 0);
+                        ordersData.forEach(order => {
+                            totalRevenue += readOrderTotal(order);
                         });
+                    } else if (ordersError) {
+                        console.warn('Error aggregating agency revenue from store_orders:', ordersError);
                     }
                 }
 
@@ -448,10 +563,10 @@ export function useAgencyMetrics(agencyTenantId: string) {
         const limits = client.limits;
 
         const usagePercentages = {
-            projects: limits?.maxProjects > 0 ? (usage.projectCount / limits.maxProjects) * 100 : 0,
-            storage: limits?.maxStorageGB > 0 ? (usage.storageUsedGB / limits.maxStorageGB) * 100 : 0,
-            aiCredits: limits?.maxAiCredits > 0 ? (usage.aiCreditsUsed / limits.maxAiCredits) * 100 : 0,
-            users: limits?.maxUsers > 0 ? (usage.userCount / limits.maxUsers) * 100 : 0,
+            projects: isValidPositiveLimit(limits?.maxProjects) ? (usage.projectCount / limits.maxProjects) * 100 : 100,
+            storage: isValidPositiveLimit(limits?.maxStorageGB) ? (usage.storageUsedGB / limits.maxStorageGB) * 100 : 100,
+            aiCredits: isValidPositiveLimit(limits?.maxAiCredits) ? (usage.aiCreditsUsed / limits.maxAiCredits) * 100 : 100,
+            users: isValidPositiveLimit(limits?.maxUsers) ? (usage.userCount / limits.maxUsers) * 100 : 100,
         };
 
         const clientAlerts = resourceAlerts.filter(alert => alert.clientId === clientId);
@@ -473,7 +588,7 @@ export function useAgencyMetrics(agencyTenantId: string) {
             usagePercentages,
             alerts: clientAlerts,
             lastActiveAt,
-            mrr: client.billing?.mrr,
+            mrr: readClientMrr(client),
         };
     }, [subClients, resourceAlerts]);
 
@@ -520,6 +635,10 @@ function getActivityDescription(data: any): string {
             return `Nuevo proyecto creado en ${data.client_name || data.clientName}`;
         case 'project_published':
             return `Proyecto publicado en ${data.client_name || data.clientName}`;
+        case 'project_transferred':
+            return `Proyecto transferido a ${data.client_name || data.clientName || 'cliente'}`;
+        case 'approval_responded':
+            return `Aprobación respondida por ${data.client_name || data.clientName || 'cliente'}`;
         default:
             return 'Actividad registrada';
     }

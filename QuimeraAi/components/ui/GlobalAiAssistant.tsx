@@ -10,6 +10,7 @@ import { useCMS } from '../../contexts/cms';
 import { useAI } from '../../contexts/ai';
 import { useDomains } from '../../contexts/domains';
 import { useRouter } from '../../hooks/useRouter';
+import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import { ROUTES } from '../../routes/config';
 import { FunctionDeclaration, Type, LiveServerMessage, Modality } from '@google/genai';
 import { Send, Loader2, ChevronDown, Maximize2, Minimize2, Trash2, Mic, PhoneOff, Bot, X, User as UserIcon, Shield, Minus } from 'lucide-react';
@@ -24,12 +25,10 @@ import { logApiCall } from '../../services/apiLoggingService';
 import { supabase } from '../../supabase';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
 import { useTranslation } from 'react-i18next';
-import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import {
     buildCanonicalEmailDraftMetadata,
     createCanonicalEmailIdempotencyKey,
 } from '../../services/email/emailModuleIntentService.ts';
-import type { PlatformServiceId } from '../../types/serviceAvailability';
 import {
     clearStoredGlobalAssistantEntryRequest,
     createGlobalAssistantEntryPayload,
@@ -42,25 +41,37 @@ import {
     resolveOperatingLayerAccessContext,
     resolveOperatingLayerTenantContext,
 } from '../../services/globalAssistant/globalAssistantCommandCenter';
-import { resolveModuleFromRoute } from '../../services/globalAssistant/globalAssistantContextResolver';
+import {
+    resolveCurrentAssistantContext,
+    resolveModuleFromRoute,
+} from '../../services/globalAssistant/globalAssistantContextResolver';
 import {
     isAssistantPlanCancellation,
     isAssistantPlanConfirmation,
 } from '../../services/globalAssistant/globalAssistantConfirmation';
 import { globalAssistantConversationService } from '../../services/globalAssistant/globalAssistantConversationService';
+import { recordGuideHandoffAudit } from '../../services/globalAssistant/globalAssistantGuideHandoffAudit';
+import { GlobalAssistantMemoryService } from '../../services/globalAssistant/globalAssistantMemoryService';
+import { buildGuideOnlyMemoryPromptContext } from '../../services/globalAssistant/globalAssistantMemoryPrompt';
+import {
+    formatUnavailableAssistantServiceMessage,
+    resolveAssistantServiceIdForEditorSection,
+    resolveAssistantServiceIdForGuideTarget,
+    resolveAssistantServiceIdForView,
+} from '../../services/globalAssistant/globalAssistantServiceAvailability';
+import { SupabaseGlobalAssistantMemoryAdapter } from '../../services/globalAssistant/globalAssistantSupabaseStore';
 import {
     dispatchMediaGeneratorLaunchRequest,
     storeMediaGeneratorLaunchRequest,
 } from '../../utils/mediaGeneratorLaunch';
 import {
     isSpanishLocale,
-    resolveComponentHelpGuideResponse,
     resolveDirectModuleGuideDecision,
     formatMissingProjectGuideMessage,
-    resolveGuideOnlyActionResponse,
     resolveGuideOnlyFallbackResponse,
     resolveProjectMentionFromRequest,
     isProjectScopedGuideTarget,
+    resolveGuideTargetAssistantModule,
 } from '../../services/globalAssistant/globalAssistantModuleGuide';
 import { globalAssistantRuntime } from '../../services/globalAssistant/globalAssistantRuntime';
 import type {
@@ -69,6 +80,7 @@ import type {
     AssistantMessageRole,
     GlobalAssistantMode,
 } from '../../types/globalAssistant';
+import { PLATFORM_SERVICES, type PlatformServiceId } from '../../types/serviceAvailability';
 import type { AdminView, View } from '../../types/ui';
 // ... existing imports ...
 
@@ -686,40 +698,71 @@ const GUIDE_ONLY_TOOL_NAMES = new Set([
 const isGuideOnlyToolName = (toolName: string): boolean =>
     GUIDE_ONLY_TOOL_NAMES.has(toolName) || toolName.startsWith('open_');
 
-const GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS = TOOLS.filter(tool => isGuideOnlyToolName(tool.name));
+const normalizeGuideOnlyResponseText = (value: string): string =>
+    value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+const containsGuideOnlyExecutionClaim = (value: string): boolean => {
+    const text = normalizeGuideOnlyResponseText(value);
+    if (!text) return false;
+
+    const negatedClaims = [
+        'no hice',
+        'no he',
+        'no cree',
+        'no genere',
+        'no cambie',
+        'no edite',
+        'no actualice',
+        'no abri',
+        'yo no',
+        'i did not',
+        'i didn t',
+        'i have not',
+        'i will not',
+        'i cannot',
+    ];
+
+    if (negatedClaims.some(claim => text.includes(claim))) return false;
+
+    return [
+        'done',
+        'finished',
+        'i finished',
+        'i created',
+        'i generated',
+        'i changed',
+        'i updated',
+        'i edited',
+        'i opened',
+        'i sent',
+        'i published',
+        'i applied',
+        'listo',
+        'terminado',
+        'termine',
+        'ya esta',
+        'he creado',
+        'cree',
+        'genere',
+        'he generado',
+        'hice cambios',
+        'edite',
+        'actualice',
+        'cambie',
+        'abri',
+        'he abierto',
+        'envie',
+        'publique',
+        'aplique',
+    ].some(claim => text.includes(claim));
+};
+
 const TOOL_NAMES = TOOLS.map(tool => tool.name);
-
-/**
- * Maps tool names to their required PlatformServiceId.
- * Tools not listed here have no service requirement (always available).
- * Also maps change_view viewName values to services.
- */
-const TOOL_SERVICE_MAP: Record<string, PlatformServiceId> = {
-    // Tool-level gate
-    ecommerce_project: 'ecommerce',
-    ecommerce_product: 'ecommerce',
-    ecommerce_order: 'ecommerce',
-    manage_cms_post: 'cms',
-    manage_lead: 'crm',
-    update_chat_config: 'chatbot',
-    email_settings: 'emailMarketing',
-    email_campaign: 'emailMarketing',
-    manage_appointment: 'appointments',
-    manage_domain: 'domains',
-    finance_expense: 'finance',
-};
-
-/** Maps change_view enum values to their required service */
-const VIEW_SERVICE_MAP: Record<string, PlatformServiceId> = {
-    ecommerce: 'ecommerce',
-    cms: 'cms',
-    leads: 'crm',
-    'ai-assistant': 'chatbot',
-    email: 'emailMarketing',
-    appointments: 'appointments',
-    domains: 'domains',
-    finance: 'finance',
-};
 
 const DATA_SCHEMA_HINT = `
 *** COMPLETE PATHS GUIDE (update_site_content) ***
@@ -1128,7 +1171,12 @@ const GlobalAiAssistant: React.FC = () => {
     const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
     const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
     const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
-    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
+    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+    const activeServiceIds = isLoadingServiceAvailability
+        ? []
+        : PLATFORM_SERVICES
+            .filter(service => isServicePublic(service.id))
+            .map(service => service.id);
 
     // Global kill switch (Super Admin)
     if (globalAssistantConfig?.isEnabled === false) return null;
@@ -1161,7 +1209,13 @@ const GlobalAiAssistant: React.FC = () => {
     const pendingOperatingLayerTaskRef = useRef<PendingOperatingLayerTask | null>(null);
     const assistantConversationRef = useRef<AssistantConversation | null>(null);
     const assistantConversationIdRef = useRef<string | null>(null);
+    const assistantMemoryServiceRef = useRef<GlobalAssistantMemoryService | null>(null);
     const persistedMessageCountRef = useRef(1);
+    if (!assistantMemoryServiceRef.current) {
+        assistantMemoryServiceRef.current = new GlobalAssistantMemoryService(
+            new SupabaseGlobalAssistantMemoryAdapter(supabase, { failOpen: true }),
+        );
+    }
 
     // Audio Refs
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -1223,6 +1277,9 @@ const GlobalAiAssistant: React.FC = () => {
     const duplicateTemplateRef = useRef(duplicateTemplate);
     const globalAssistantConfigRef = useRef(globalAssistantConfig);
     const tenantContextRef = useRef(tenantContext);
+    const isServicePublicRef = useRef(isServicePublic);
+    const isLoadingServiceAvailabilityRef = useRef(isLoadingServiceAvailability);
+    const activeServiceIdsRef = useRef(activeServiceIds);
 
     // Sync Refs
     useEffect(() => { dataRef.current = data; }, [data]);
@@ -1273,6 +1330,9 @@ const GlobalAiAssistant: React.FC = () => {
     useEffect(() => { duplicateTemplateRef.current = duplicateTemplate; }, [duplicateTemplate]);
     useEffect(() => { globalAssistantConfigRef.current = globalAssistantConfig; }, [globalAssistantConfig]);
     useEffect(() => { tenantContextRef.current = tenantContext; }, [tenantContext]);
+    useEffect(() => { isServicePublicRef.current = isServicePublic; }, [isServicePublic]);
+    useEffect(() => { isLoadingServiceAvailabilityRef.current = isLoadingServiceAvailability; }, [isLoadingServiceAvailability]);
+    useEffect(() => { activeServiceIdsRef.current = activeServiceIds; }, [activeServiceIds]);
     useEffect(() => { pendingOperatingLayerTaskRef.current = pendingOperatingLayerTask; }, [pendingOperatingLayerTask]);
 
     useEffect(() => {
@@ -1294,6 +1354,14 @@ const GlobalAiAssistant: React.FC = () => {
         nextMessages
             .filter(message => message.text.trim())
             .forEach(message => {
+                const project = activeProjectRef.current;
+                const tenantContext = tenantContextRef.current;
+                const routeModule = resolveModuleFromRoute(path);
+                const activeModule = typeof message.metadata?.activeModule === 'string'
+                    ? message.metadata.activeModule
+                    : routeModule && routeModule !== 'project'
+                        ? routeModule
+                        : null;
                 void globalAssistantConversationService.recordMessage({
                     conversationId,
                     role: toStoredAssistantMessageRole(message.role),
@@ -1307,7 +1375,14 @@ const GlobalAiAssistant: React.FC = () => {
                         isToolOutput: message.isToolOutput === true,
                         activeRoute: path,
                         activeView: viewRef.current || null,
-                        activeProjectId: activeProjectRef.current?.id || null,
+                        activeModule,
+                        routeModule,
+                        activeProjectId: project?.id || null,
+                        activeProjectName: typeof project?.name === 'string' ? project.name : null,
+                        activeTenantId: tenantContext?.currentTenant?.id || project?.tenantId || null,
+                        activeTenantName: tenantContext?.currentTenant?.name || null,
+                        activeServices: activeServiceIdsRef.current,
+                        memoryScopeHint: 'user_tenant_project_module_session_task',
                         ...(message.metadata || {}),
                     },
                 }).catch(error => {
@@ -1316,12 +1391,71 @@ const GlobalAiAssistant: React.FC = () => {
             });
     }, [messages, path]);
 
+    const buildLiveAssistantContextSnapshot = (
+        entry?: GlobalAssistantEntryPayload,
+        conversationId?: string | null,
+    ): AssistantContextSnapshot => {
+        const project = activeProjectRef.current;
+        const userDoc = userDocumentRef.current as any;
+        const tenantContext = tenantContextRef.current;
+        const tenant = resolveOperatingLayerTenantContext({
+            activeProject: project,
+            currentTenant: tenantContext?.currentTenant,
+            currentMembership: tenantContext?.currentMembership,
+            userDocument: userDoc,
+        });
+        const access = resolveOperatingLayerAccessContext({
+            userRole: userDoc?.role || null,
+            tenantRole: tenant.tenantRole,
+            tenantPermissions: tenantContext?.currentMembership?.permissions,
+        });
+        const entryMetadata = entry?.metadata || {};
+        const entryActiveModule = typeof entryMetadata.activeModule === 'string' ? entryMetadata.activeModule : null;
+        const routeModule = typeof entryMetadata.routeModule === 'string'
+            ? entryMetadata.routeModule
+            : resolveModuleFromRoute(path);
+        const activeModule = (entryActiveModule || (routeModule && routeModule !== 'project' ? routeModule : null)) as AssistantContextSnapshot['activeModule'];
+        const userId = user?.id || userDoc?.id || null;
+
+        return resolveCurrentAssistantContext({
+            conversationId: conversationId || assistantConversationIdRef.current || null,
+            userId,
+            email: (user as any)?.email || userDoc?.email || null,
+            role: userDoc?.role || null,
+            mode: access.mode,
+            tenantId: tenant.tenantId,
+            tenantName: tenant.tenantName,
+            tenantRole: tenant.tenantRole,
+            tenantPlan: tenant.tenantPlan,
+            activeServices: activeServiceIdsRef.current,
+            activeProject: project ? {
+                id: project.id,
+                name: project.name,
+                status: project.status,
+                tenantId: project.tenantId,
+                userId: project.userId,
+            } : null,
+            activeRoute: path,
+            activeModule,
+            currentSurface: entry?.surface || 'authenticated_app',
+            locale: i18n.language,
+            snapshot: {
+                entryMetadata,
+                routeModule,
+                activeView: viewRef.current || null,
+                activeServices: activeServiceIdsRef.current,
+                sessionId: conversationId || assistantConversationIdRef.current || null,
+                taskId: pendingOperatingLayerTaskRef.current?.taskId || null,
+                guideOnly: true,
+                memoryScopeHint: 'user_tenant_project_module_session_task',
+            },
+        });
+    };
+
     const ensureAssistantConversation = async (
         request: string,
         entry?: GlobalAssistantEntryPayload,
     ): Promise<AssistantConversation | null> => {
-        if (assistantConversationRef.current) return assistantConversationRef.current;
-
         const project = activeProjectRef.current;
         const userDoc = userDocumentRef.current as any;
         const role = userDoc?.role || null;
@@ -1337,34 +1471,101 @@ const GlobalAiAssistant: React.FC = () => {
             tenantRole: tenant.tenantRole,
             tenantPermissions: tenantContext?.currentMembership?.permissions,
         });
+        const entryMetadata = entry?.metadata || {};
+        const entryActiveModule = typeof entryMetadata.activeModule === 'string' ? entryMetadata.activeModule : null;
+        const routeModule = typeof entryMetadata.routeModule === 'string'
+            ? entryMetadata.routeModule
+            : resolveModuleFromRoute(path);
+        const activeModule = entryActiveModule || (routeModule && routeModule !== 'project' ? routeModule : null);
+        const userId = user?.id || userDoc?.id || null;
+        const projectId = project?.id || null;
+        const memoryScope = {
+            userId,
+            tenantId: tenant.tenantId,
+            projectId,
+            module: activeModule,
+            sessionId: null,
+            taskId: null,
+            mode: access.mode,
+            guideOnly: true,
+        };
+        const buildLiveConversationMetadata = (conversationId: string, currentMetadata: Record<string, unknown> = {}) => ({
+            ...currentMetadata,
+            source: entry?.source || currentMetadata.source || 'global_assistant',
+            surface: entry?.surface || currentMetadata.surface || 'authenticated_app',
+            entryMetadata,
+            activeRoute: path,
+            activeView: viewRef.current || null,
+            activeModule,
+            routeModule,
+            activeProjectId: projectId,
+            activeProjectName: typeof project?.name === 'string' ? project.name : null,
+            activeTenantId: tenant.tenantId,
+            activeTenantName: tenant.tenantName,
+            tenantRole: tenant.tenantRole,
+            tenantPlan: tenant.tenantPlan,
+            activeServices: activeServiceIdsRef.current,
+            assistantMode: access.mode,
+            assistantPermissions: access.userPermissions,
+            chatKind: 'global_assistant_operating_layer',
+            separatedFrom: ['chatcore_visitor_chat', 'module_specific_chats'],
+            memoryScopeHint: 'user_tenant_project_module_session_task',
+            memoryScope: {
+                ...memoryScope,
+                sessionId: conversationId,
+                taskId: pendingOperatingLayerTaskRef.current?.taskId || null,
+            },
+            sessionId: conversationId,
+            taskId: pendingOperatingLayerTaskRef.current?.taskId || null,
+            liveContextAt: new Date().toISOString(),
+            guideOnly: true,
+        });
+
+        const existingConversation = assistantConversationRef.current;
+        if (existingConversation) {
+            const nextConversation: AssistantConversation = {
+                ...existingConversation,
+                userId: userId || existingConversation.userId,
+                tenantId: tenant.tenantId || existingConversation.tenantId,
+                projectId,
+                mode: access.mode,
+                metadata: buildLiveConversationMetadata(existingConversation.id, existingConversation.metadata || {}),
+            };
+            assistantConversationRef.current = nextConversation;
+            void globalAssistantConversationService.upsertConversation(nextConversation)
+                .then(saved => {
+                    assistantConversationRef.current = saved;
+                    assistantConversationIdRef.current = saved.id;
+                })
+                .catch(error => {
+                    console.warn('[Global Assistant] Failed to sync live assistant context:', error);
+                });
+            return nextConversation;
+        }
 
         try {
             const conversation = await globalAssistantConversationService.createConversation({
-                userId: user?.id || userDoc?.id || null,
+                userId,
                 tenantId: tenant.tenantId,
-                projectId: project?.id || null,
+                projectId,
                 mode: access.mode,
                 title: buildConversationTitle(request),
                 metadata: {
                     source: entry?.source || 'global_assistant',
                     surface: entry?.surface || 'authenticated_app',
-                    entryMetadata: entry?.metadata || {},
-                    activeRoute: path,
-                    activeView: viewRef.current || null,
-                    activeProjectId: project?.id || null,
-                    activeTenantId: tenant.tenantId,
-                    activeTenantName: tenant.tenantName,
-                    tenantRole: tenant.tenantRole,
-                    tenantPlan: tenant.tenantPlan,
-                    assistantMode: access.mode,
-                    assistantPermissions: access.userPermissions,
-                    chatKind: 'global_assistant_operating_layer',
-                    separatedFrom: ['chatcore_visitor_chat', 'module_specific_chats'],
                 },
             });
-            assistantConversationRef.current = conversation;
-            assistantConversationIdRef.current = conversation.id;
-            return conversation;
+            const conversationWithContext: AssistantConversation = {
+                ...conversation,
+                metadata: buildLiveConversationMetadata(conversation.id, conversation.metadata || {}),
+            };
+            assistantConversationRef.current = conversationWithContext;
+            assistantConversationIdRef.current = conversationWithContext.id;
+            void globalAssistantConversationService.upsertConversation(conversationWithContext)
+                .catch(error => {
+                    console.warn('[Global Assistant] Failed to persist initial live assistant context:', error);
+                });
+            return conversationWithContext;
         } catch (error) {
             console.warn('[Global Assistant] Failed to create assistant conversation:', error);
             return null;
@@ -1695,7 +1896,28 @@ const GlobalAiAssistant: React.FC = () => {
         return true;
     };
 
+    const getUnavailableGuideServiceResult = (
+        serviceId: ReturnType<typeof resolveAssistantServiceIdForView> | ReturnType<typeof resolveAssistantServiceIdForEditorSection>,
+        target?: string | null,
+    ): { result: string } | null => {
+        if (!serviceId) return null;
+        if (!isLoadingServiceAvailabilityRef.current && isServicePublicRef.current(serviceId)) return null;
+
+        return {
+            result: formatUnavailableAssistantServiceMessage({
+                target,
+                locale: i18n.language,
+            }),
+        };
+    };
+
     const openEditorSection = (sectionName: EditorSectionId) => {
+        const unavailableServiceResult = getUnavailableGuideServiceResult(
+            resolveAssistantServiceIdForEditorSection(sectionName),
+            sectionName,
+        );
+        if (unavailableServiceResult) return unavailableServiceResult;
+
         // Ensure a project is loaded; if not, load the most recent one as a sensible default.
         if (!activeProjectRef.current || !dataRef.current) {
             const candidate = projectsRef.current.find(p => (p as any).status !== 'Template') || projectsRef.current[0];
@@ -1713,6 +1935,11 @@ const GlobalAiAssistant: React.FC = () => {
 
     const openEditorSectionItem = (sectionName: EditorSectionId, index0: number) => {
         if (!Number.isFinite(index0) || index0 < 0) return { error: "index must be >= 1." };
+        const unavailableServiceResult = getUnavailableGuideServiceResult(
+            resolveAssistantServiceIdForEditorSection(sectionName),
+            sectionName,
+        );
+        if (unavailableServiceResult) return unavailableServiceResult;
 
         // Ensure a project is loaded; if not, load the most recent one as a sensible default.
         if (!activeProjectRef.current || !dataRef.current) {
@@ -1749,8 +1976,8 @@ const GlobalAiAssistant: React.FC = () => {
             if (!isGuideOnlyToolName(name)) {
                 const result = {
                     result: isSpanishLocale(i18n.language)
-                        ? 'No hice cambios. Te llevé o te puedo llevar al módulo correcto para que lo hagas desde ahí.'
-                        : 'I did not make changes. I took you, or can take you, to the right module so you can do it there.',
+                        ? 'Usa el módulo correcto para hacer esa acción. Aquí puedo explicarte los pasos y controles que debes revisar.'
+                        : 'Use the matching module for that action. Here I can explain the steps and controls to review.',
                 };
                 console.warn(`[Tool Execution] Guide-only block: ${name}`, { args, mode });
                 return result;
@@ -1767,6 +1994,15 @@ const GlobalAiAssistant: React.FC = () => {
 
             if (name === 'change_view') {
                 const newView = args['viewName'] as any;
+                const unavailableServiceResult = getUnavailableGuideServiceResult(
+                    resolveAssistantServiceIdForView(newView),
+                    newView,
+                );
+                if (unavailableServiceResult) {
+                    console.log(`[Tool Result] ${name}`, unavailableServiceResult);
+                    return unavailableServiceResult;
+                }
+
                 if (viewRef.current === newView) {
                     const result = { result: `Already in ${newView}.` };
                     console.log(`[Tool Result] ${name}`, result);
@@ -2668,14 +2904,23 @@ const GlobalAiAssistant: React.FC = () => {
                     if (status === 'shipped') updateData.shipped_at = now;
                     if (status === 'delivered') updateData.delivered_at = now;
 
-                    const { error } = await supabase.from('orders').update(updateData).eq('id', orderId);
+                    const { error } = await supabase
+                        .from('store_orders')
+                        .update(updateData)
+                        .eq('id', orderId)
+                        .eq('project_id', projectId);
                     if (error) return { error: `Failed to update order: ${error.message}` };
                     return { result: "Order status updated." };
                 }
 
                 if (action === 'get') {
                     if (!orderId) return { error: "orderId required." };
-                    const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
+                    const { data, error } = await supabase
+                        .from('store_orders')
+                        .select('*')
+                        .eq('id', orderId)
+                        .eq('project_id', projectId)
+                        .maybeSingle();
                     if (error || !data) return { error: "Order not found." };
                     return { result: JSON.stringify(data, null, 2) };
                 }
@@ -2770,43 +3015,46 @@ const GlobalAiAssistant: React.FC = () => {
         const activeProject = activeProjectRef.current;
 
         const cmsContext = cmsPostsRef.current.length > 0
-            ? `Recent Posts: ${cmsPostsRef.current.slice(0, LIMIT).map(p => `"${p.title}" (ID:${p.id})`).join(', ')}.`
+            ? `Recent Posts: ${cmsPostsRef.current.slice(0, LIMIT).map(p => `"${p.title}"`).join(', ')}.`
             : "CMS: Empty.";
 
         const leadsContext = leadsRef.current.length > 0
-            ? `Recent Leads: ${leadsRef.current.slice(0, LIMIT).map(l => `"${l.name}" (${l.status}, ID:${l.id})`).join(', ')}.`
+            ? `Recent Leads: ${leadsRef.current.slice(0, LIMIT).map(l => `"${l.name}" (${l.status})`).join(', ')}.`
             : "CRM: Empty.";
 
         const crmInstructions = `CRM HELP: To "move" a lead means to update its status. Statuses: new, contacted, qualified, negotiation, won, lost.`;
 
         const domainsContext = domainsRef.current.length > 0
-            ? `Domains: ${domainsRef.current.map(d => `"${d.name}" (ID:${d.id})`).join(', ')}.`
+            ? `Domains: ${domainsRef.current.map(d => `"${d.name}"`).join(', ')}.`
             : "Domains: Empty.";
 
-        // Enhanced Project Context: Include ID and limited description/URL if available, increase limit
+        // Keep names available for guidance without exposing internal IDs to the conversational fallback.
         const projectList = projectsRef.current
             .slice(0, 50) // Increased limit to ensure we catch user's recent projects
-            .map(p => `"${p.name}" (ID: ${p.id}${(p as any).url ? `, URL: ${(p as any).url}` : ''})`)
+            .map(p => `"${p.name}"${p.status ? ` (${p.status})` : ''}`)
             .join(', ');
         const projectContext = `Available Projects: [${projectList}].`;
 
         let dataStructureContext = "Active Project Data Structure: None (No project loaded).";
         if (dataRef.current) {
             const schema = generateDataSchema(dataRef.current);
-            dataStructureContext = `ACTIVE PROJECT DATA STRUCTURE (AVAILABLE PATHS):\n${schema}\n\nEDITING RULES:\n1. Use 'update_site_content' with 'path' matching the schema (e.g. 'hero.headline', 'hero.colors.primary').\n2. Use 'manage_section_items' for paths ending in [] (e.g. 'features.items[]') to add/remove list items.\n3. Do NOT invent keys not shown in the schema.`;
+            dataStructureContext = `ACTIVE PROJECT CONTEXT (FOR GUIDANCE ONLY):\n${schema}\n\nGUIDE RULES:\n1. Use this context only to answer what the user is viewing and where they can make changes.\n2. Do not execute, generate, create, edit, update, delete, publish, send, or apply changes from the chat.\n3. Do not mention internal paths, schemas, tool names, or field keys unless the user explicitly asks for technical details.`;
         }
 
-        const activeContext = `STATE: Active Project: ${activeProject ? `${activeProject.name} (ID: ${activeProject.id})` : "None"}. View: ${viewRef.current}. Route: ${path}.`;
+        const activeContext = `CURRENT APP CONTEXT: Active Project: ${activeProject ? activeProject.name : "None"}. View: ${viewRef.current}. Route is internal context only; do not mention it unless the user asks for technical details.`;
         const guideBehavior = [
             'GLOBAL ASSISTANT BEHAVIOR:',
             '- Always use the current route, view, visible screen, active project, and recent conversation as context.',
             '- Answer in the same language the user is using.',
             '- Keep answers short and clear for non-technical users.',
             '- Never reveal internal reasoning, chain of thought, tool plans, JSON, schemas, or technical system details unless the user explicitly asks.',
-            '- Act as a guide first: open the right module, explain the next simple step, and let the user press final action buttons inside that module.',
-            '- If the user clearly names a module or task destination, open that module first and explain only the next real step there.',
-            '- For image or video requests from the global input, open Media AI and prepare the prompt/options when provided. Do not generate inside the chat.',
-            '- Only say an action is done after the app actually navigated or the real action completed.',
+            '- You are guide-only from the Global Assistant chat: do not create, edit, generate, update, delete, publish, send, apply, or execute work from the chat.',
+            '- When a user asks how something works, answer with practical step-by-step instructions and name the visible controls in that area.',
+            '- After routing to a module, do not say "I opened" or "I took you". Explain what the module is for, what controls to use, and what final button the user presses there.',
+            '- If the user clearly names a module or task destination, use that module as context and explain the useful steps there.',
+            '- For image or video requests from the global input, use Media AI context: prompt, aspect ratio, resolution, style, references, preview, and Generate. Do not generate inside the chat.',
+            '- Never say you created, changed, generated, sent, published, or applied something from the Global Assistant chat.',
+            '- Keep explanations conversational, friendly, and immediately usable.',
         ].join('\n');
 
         // Components context
@@ -3024,48 +3272,21 @@ const GlobalAiAssistant: React.FC = () => {
                         }
 
                         if (message.toolCall) {
-                            console.log('[Voice Mode] Function calls detected:', message.toolCall.functionCalls.map(fc => ({
+                            console.warn('[Voice Mode] Tool calls blocked in guide-only mode:', message.toolCall.functionCalls.map(fc => ({
                                 name: fc.name,
                                 args: fc.args
                             })));
-                            const functionResponses = [];
-                            for (const fc of message.toolCall.functionCalls) {
-                                try {
-                                    const { result, error } = await executeTool(fc.name, fc.args, 'voice');
-                                    functionResponses.push({ id: fc.id, name: fc.name, response: { result: result || error || "Done" } });
-                                } catch (toolErr: any) {
-                                    console.error('[Voice Mode] Tool execution error:', fc.name, toolErr);
-                                    functionResponses.push({ id: fc.id, name: fc.name, response: { result: `Error: ${toolErr?.message || 'Unknown'}` } });
-                                }
-                            }
-                            console.log('[Voice Mode] Sending tool responses back to model');
+                            const functionResponses = message.toolCall.functionCalls.map(fc => ({
+                                id: fc.id,
+                                name: fc.name,
+                                response: {
+                                    result: isSpanishLocale(i18n.language)
+                                        ? 'Usa el módulo correcto para hacer esa acción. Aquí puedo explicarte los pasos y controles que debes revisar.'
+                                        : 'Use the matching module for that action. Here I can explain the steps and controls to review.',
+                                },
+                            }));
+                            console.log('[Voice Mode] Sending blocked tool responses back to model');
                             sessionPromise.then(session => { if (isConnectedRef.current) session.sendToolResponse({ functionResponses }); });
-
-                            // 🆕 Periodic screen capture: After tool execution (e.g., navigation),
-                            // send fresh visual context so the AI sees the updated view
-                            const hasViewChange = message.toolCall.functionCalls.some(
-                                (fc: any) => fc.name === 'change_view' || fc.name === 'navigate_admin' ||
-                                fc.name.startsWith('open_') || fc.name === 'select_section'
-                            );
-                            if (hasViewChange) {
-                                // Wait for the view transition to render, then capture
-                                setTimeout(async () => {
-                                    if (!isConnectedRef.current) return;
-                                    try {
-                                        const freshCapture = await captureCurrentView();
-                                        if (freshCapture && isConnectedRef.current) {
-                                            console.log('[Voice Mode] 📸 Sending updated screen context after view change');
-                                            const session = await sessionPromise;
-                                            session.sendRealtimeInput({
-                                                video: { mimeType: 'image/jpeg', data: freshCapture }
-                                            });
-                                        }
-                                    } catch (e) {
-                                        console.warn('[Voice Mode] Could not capture updated screen:', e);
-                                    }
-                                }, 1500); // Wait 1.5s for view to render
-                            }
-
                             return; // Don't fall through to audio handling for tool call messages
                         }
 
@@ -3121,6 +3342,17 @@ const GlobalAiAssistant: React.FC = () => {
         const text = String(raw || '').trim();
         if (!text) return null;
 
+        const parseFunctionStyle = (candidate: string): { name: string; args: any } | null => {
+            const match = candidate.trim().match(/^([a-zA-Z_][\w]*)\s*\(([\s\S]*)\)$/);
+            if (!match) return null;
+            const [, name, argsText] = match;
+            const args: Record<string, unknown> = {};
+            for (const argMatch of argsText.matchAll(/([a-zA-Z_][\w]*)\s*=\s*["']([^"']+)["']/g)) {
+                args[argMatch[1]] = argMatch[2];
+            }
+            return { name, args };
+        };
+
         const tryParse = (candidate: string) => {
             try {
                 const parsed = JSON.parse(candidate);
@@ -3145,11 +3377,15 @@ const GlobalAiAssistant: React.FC = () => {
         if (direct) return direct;
 
         // 2) JSON fenced block
-        const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        const fenced = text.match(/```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)\s*```/i);
         if (fenced?.[1]) {
-            const fencedParsed = tryParse(fenced[1].trim());
+            const fencedText = fenced[1].trim();
+            const fencedParsed = tryParse(fencedText) || parseFunctionStyle(fencedText);
             if (fencedParsed) return fencedParsed;
         }
+
+        const functionStyle = parseFunctionStyle(text);
+        if (functionStyle) return functionStyle;
 
         // 3) First balanced JSON object in the text
         const start = text.indexOf('{');
@@ -3601,18 +3837,19 @@ const GlobalAiAssistant: React.FC = () => {
         });
     };
 
-    const shouldRouteEntryToOperatingLayer = (entry?: GlobalAssistantEntryPayload): entry is GlobalAssistantEntryPayload =>
-        Boolean(entry && (
-            entry.source === 'dashboard_welcome' ||
-            entry.source === 'command_palette' ||
-            entry.source === 'global_assistant' ||
-            entry.surface === 'dashboard' ||
-            entry.surface === 'admin'
-        ));
-
     const getEntryActiveModule = (entry?: GlobalAssistantEntryPayload): unknown =>
         entry?.metadata && typeof entry.metadata.activeModule === 'string'
             ? entry.metadata.activeModule
+            : null;
+
+    const getEntryBlockedModule = (entry?: GlobalAssistantEntryPayload): string | null =>
+        entry?.metadata && typeof entry.metadata.blockedModule === 'string'
+            ? entry.metadata.blockedModule
+            : null;
+
+    const getEntryBlockedServiceId = (entry?: GlobalAssistantEntryPayload): PlatformServiceId | null =>
+        entry?.metadata && typeof entry.metadata.blockedServiceId === 'string'
+            ? entry.metadata.blockedServiceId as PlatformServiceId
             : null;
 
     const getEntryRouteModule = (entry?: GlobalAssistantEntryPayload): unknown =>
@@ -3624,6 +3861,137 @@ const GlobalAiAssistant: React.FC = () => {
         entry?.metadata && typeof entry.metadata.quickActionId === 'string'
             ? entry.metadata.quickActionId
             : null;
+
+    const formatAssistantModuleForPrompt = (module: unknown): string | null => {
+        if (typeof module !== 'string' || !module.trim()) return null;
+        const labels: Record<string, string> = {
+            aiStudio: 'AI Studio',
+            businessBlueprint: 'BusinessBlueprint',
+            website: 'Website Builder',
+            storefront: 'Storefront',
+            ecommerce: 'Ecommerce',
+            media: 'Media AI',
+            appointments: 'Appointments',
+            restaurants: 'Restaurants',
+            realEstate: 'Realty',
+            bioPage: 'Bio Page',
+            crm: 'Leads / CRM',
+            emailMarketing: 'Email Marketing',
+            chatbot: 'ChatCore',
+            analytics: 'Analytics',
+            finance: 'Finance',
+            agency: 'Agency',
+            admin: 'Owner Mode',
+            settings: 'Settings',
+            project: 'Websites / Projects',
+            tenant: 'Workspace',
+            user: 'Account',
+            designSystem: 'Design',
+        };
+        return labels[module] || module;
+    };
+
+    const buildCurrentQuestionPromptContext = (
+        entry: GlobalAssistantEntryPayload,
+        snapshot: AssistantContextSnapshot,
+    ): string => {
+        const metadata = entry.metadata || {};
+        const activeModuleLabel = formatAssistantModuleForPrompt(getEntryActiveModule(entry) || snapshot.activeModule);
+        const routeModuleLabel = formatAssistantModuleForPrompt(getEntryRouteModule(entry));
+        const quickActionId = getEntryQuickActionId(entry);
+        const lines = [
+            `Visible app view: ${viewRef.current || 'unknown'}.`,
+            activeModuleLabel ? `Relevant area for this request: ${activeModuleLabel}.` : null,
+            routeModuleLabel && routeModuleLabel !== activeModuleLabel ? `Current screen area: ${routeModuleLabel}.` : null,
+            snapshot.project.projectName ? `Active project: ${snapshot.project.projectName}.` : null,
+            snapshot.tenant.name ? `Active workspace: ${snapshot.tenant.name}.` : null,
+            typeof metadata.entryPoint === 'string' ? `Entry point: ${metadata.entryPoint}.` : null,
+            quickActionId ? `Selected dashboard mode: ${quickActionId}.` : null,
+            'Use this context to answer from the screen the user is seeing.',
+            'If the user asks where to configure or open something, name the user-facing area and keep the answer short.',
+            'Do not claim that you created, changed, generated, sent, published, or applied anything.',
+        ].filter(Boolean);
+
+        return lines.join('\n');
+    };
+
+    const navigationRequestForView = (viewName: string): string | null => {
+        const view = normalizeGuideOnlyResponseText(viewName);
+        const requests: Record<string, string> = {
+            dashboard: 'Abre Dashboard',
+            websites: 'Abre Websites',
+            editor: 'Abre Website Builder',
+            cms: 'Abre CMS',
+            assets: 'Abre Media AI',
+            navigation: 'Abre Navigation',
+            superadmin: 'Abre Owner Mode',
+            aiassistant: 'Abre ChatCore',
+            leads: 'Abre Leads',
+            domains: 'Abre Domains',
+            seo: 'Abre SEO',
+            finance: 'Abre Finance',
+            templates: 'Abre Templates',
+            appointments: 'Abre Appointments',
+            ecommerce: 'Abre Ecommerce',
+            email: 'Abre Email',
+            biopage: 'Abre Bio Page',
+            agency: 'Abre Agencia',
+            settings: 'Abre Settings',
+            restaurants: 'Abre Restaurants',
+            realestate: 'Abre Realty',
+        };
+        return requests[view] || null;
+    };
+
+    const includesNavigationOffer = (text: string): boolean =>
+        [
+            'te gustaria que te lleve',
+            'quieres que te lleve',
+            'puedo llevarte',
+            'llevarte alli',
+            'llevarte ahi',
+            'take you there',
+            'open it for you',
+            'go there',
+        ].some(term => text.includes(term));
+
+    const navigationRequestFromRecentOffer = (request: string): string | null => {
+        const text = normalizeGuideOnlyResponseText(request);
+        if (!['si', 'sí', 'yes', 'ok', 'okay', 'dale', 'claro', 'vamos', 'llevame', 'llévame'].includes(text)) {
+            return null;
+        }
+
+        const recentAssistantText = messages
+            .slice(-4)
+            .reverse()
+            .find(message => message.role === 'model' && !message.isToolOutput)
+            ?.text || '';
+        const recent = normalizeGuideOnlyResponseText(recentAssistantText);
+        if (!recent || !includesNavigationOffer(recent)) return null;
+
+        if (recent.includes('agencia') || recent.includes('agency')) return 'Abre Agencia';
+        if (recent.includes('media ai') || recent.includes('imagen') || recent.includes('image')) return 'Abre Media AI';
+        if (recent.includes('chatcore') || recent.includes('chat core')) return 'Abre ChatCore';
+        if (recent.includes('lead') || recent.includes('crm')) return 'Abre Leads';
+        if (recent.includes('email') || recent.includes('correo')) return 'Abre Email';
+        if (recent.includes('cita') || recent.includes('appointment')) return 'Abre Appointments';
+        if (recent.includes('ecommerce') || recent.includes('tienda')) return 'Abre Ecommerce';
+        if (recent.includes('bio page') || recent.includes('biopage')) return 'Abre Bio Page';
+        if (recent.includes('website builder') || recent.includes('editor')) return 'Abre Website Builder';
+        if (recent.includes('settings') || recent.includes('workspace')) return 'Abre Settings';
+        return null;
+    };
+
+    const maybeHandleGuideOnlyTextToolNavigation = async (
+        toolCall: { name: string; args: any },
+        entry: GlobalAssistantEntryPayload,
+    ): Promise<DirectModuleNavigationResult | null> => {
+        if (toolCall.name !== 'change_view') return null;
+        const viewName = String(toolCall.args?.viewName || toolCall.args?.view || '').trim();
+        const navigationRequest = navigationRequestForView(viewName);
+        if (!navigationRequest) return null;
+        return maybeHandleDirectModuleNavigation(navigationRequest, entry);
+    };
 
     const openAIStudioFromAssistant = (request: string): void => {
         const prompt = request.trim();
@@ -3702,6 +4070,8 @@ const GlobalAiAssistant: React.FC = () => {
     interface DirectModuleNavigationResult {
         message: string;
         target: string;
+        blocked?: boolean;
+        route?: string | null;
         projectId?: string | null;
         projectName?: string | null;
     }
@@ -3710,6 +4080,24 @@ const GlobalAiAssistant: React.FC = () => {
         request: string,
         entry?: GlobalAssistantEntryPayload,
     ): Promise<DirectModuleNavigationResult | null> => {
+        const blockedServiceId = getEntryBlockedServiceId(entry);
+        const blockedModule = getEntryBlockedModule(entry);
+        if (blockedServiceId || blockedModule) {
+            const target = blockedModule || blockedServiceId || null;
+            return {
+                blocked: true,
+                target: target || 'service_unavailable',
+                message: formatUnavailableAssistantServiceMessage({
+                    target,
+                    request,
+                    locale: i18n.language,
+                }),
+                route: null,
+                projectId: activeProjectRef.current?.id || null,
+                projectName: activeProjectRef.current?.name || null,
+            };
+        }
+
         const quickActionId = getEntryQuickActionId(entry);
         const activeModule = getEntryActiveModule(entry);
         const decision = resolveDirectModuleGuideDecision({
@@ -3721,11 +4109,29 @@ const GlobalAiAssistant: React.FC = () => {
 
         if (!decision) return null;
 
+        const requiredService = resolveAssistantServiceIdForGuideTarget(decision.target);
+        if (requiredService && (isLoadingServiceAvailabilityRef.current || !isServicePublicRef.current(requiredService))) {
+            return {
+                blocked: true,
+                target: decision.target,
+                message: formatUnavailableAssistantServiceMessage({
+                    target: decision.target,
+                    request,
+                    locale: i18n.language,
+                }),
+                route: null,
+                projectId: activeProjectRef.current?.id || null,
+                projectName: activeProjectRef.current?.name || null,
+            };
+        }
+
         const navigationProject = await resolveDirectNavigationProject(request);
         if (navigationProject.blocked) {
             return {
+                blocked: true,
                 target: 'project_resolution',
                 message: navigationProject.message || resolveGuideOnlyFallbackResponse({ request, locale: i18n.language }).message,
+                route: null,
                 projectId: null,
                 projectName: null,
             };
@@ -3736,8 +4142,10 @@ const GlobalAiAssistant: React.FC = () => {
             setViewRef.current('websites');
             navigateRef.current(ROUTES.WEBSITES);
             return {
+                blocked: false,
                 target: 'project_required',
                 message: formatMissingProjectGuideMessage(decision.target, request, i18n.language),
+                route: ROUTES.WEBSITES,
                 projectId: null,
                 projectName: null,
             };
@@ -3746,8 +4154,10 @@ const GlobalAiAssistant: React.FC = () => {
         if (decision.target === 'aiStudio') {
             openAIStudioFromAssistant(decision.prompt || '');
             return {
+                blocked: false,
                 target: decision.target,
                 message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                route: path,
                 projectId: navigationProject.projectId || null,
                 projectName: navigationProject.projectName || null,
             };
@@ -3768,8 +4178,10 @@ const GlobalAiAssistant: React.FC = () => {
                 window.setTimeout(() => dispatchMediaGeneratorLaunchRequest(launch), 350);
             }
             return {
+                blocked: false,
                 target: decision.target,
                 message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                route: ROUTES.ASSETS,
                 projectId: resolvedProjectId,
                 projectName: navigationProject.projectName || null,
             };
@@ -3785,8 +4197,10 @@ const GlobalAiAssistant: React.FC = () => {
                 navigateRef.current(ROUTES.WEBSITES);
             }
             return {
+                blocked: false,
                 target: decision.target,
                 message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+                route: projectId ? ROUTES.EDITOR.replace(':projectId', projectId) : ROUTES.WEBSITES,
                 projectId: projectId || null,
                 projectName: navigationProject.projectName || null,
             };
@@ -3798,11 +4212,18 @@ const GlobalAiAssistant: React.FC = () => {
             leads: { view: 'leads', route: ROUTES.LEADS },
             email: { view: 'email', route: ROUTES.EMAIL },
             ecommerce: { view: 'ecommerce', route: ROUTES.ECOMMERCE },
+            cms: { view: 'cms', route: ROUTES.CMS },
+            navigation: { view: 'navigation', route: ROUTES.NAVIGATION },
+            domains: { view: 'domains', route: ROUTES.DOMAINS },
+            seo: { view: 'seo', route: ROUTES.SEO },
+            templates: { view: 'templates', route: ROUTES.TEMPLATES },
+            blogHub: { view: 'blog-hub', route: ROUTES.BLOG_HUB },
             chatcore: { view: 'ai-assistant', route: ROUTES.AI_ASSISTANT },
             appointments: { view: 'appointments', route: ROUTES.APPOINTMENTS },
             bioPage: { view: 'biopage', route: ROUTES.BIOPAGE },
             analytics: { view: 'dashboard', route: ROUTES.DASHBOARD },
             finance: { view: 'finance', route: ROUTES.FINANCE },
+            agency: { view: 'agency', route: ROUTES.AGENCY },
             restaurants: { view: 'restaurants', route: ROUTES.RESTAURANTS },
             realEstate: { view: 'real-estate', route: ROUTES.REAL_ESTATE },
             projects: { view: 'websites', route: ROUTES.WEBSITES },
@@ -3813,6 +4234,29 @@ const GlobalAiAssistant: React.FC = () => {
         const route = targetViews[decision.target];
         if (!route) return null;
 
+        if (route.view === 'superadmin') {
+            const userDoc = userDocumentRef.current as any;
+            const tenantContext = tenantContextRef.current;
+            const access = resolveOperatingLayerAccessContext({
+                userRole: userDoc?.role || null,
+                tenantRole: tenantContext?.currentMembership?.role || userDoc?.tenantRole || null,
+                tenantPermissions: tenantContext?.currentMembership?.permissions,
+            });
+            if (access.mode !== 'owner' && access.mode !== 'super_admin') {
+                const targetName = decision.target === 'designSystem' ? 'Design' : 'Owner Mode';
+                return {
+                    blocked: true,
+                    target: decision.target,
+                    message: isSpanishLocale(i18n.language)
+                        ? `${targetName} necesita permiso admin. Usa una cuenta Owner o Super Admin para revisar esa área.`
+                        : `${targetName} needs admin permission. Use an Owner or Super Admin account to review that area.`,
+                    route: null,
+                    projectId: null,
+                    projectName: null,
+                };
+            }
+        }
+
         if (route.adminView) {
             setAdminView(route.adminView);
         }
@@ -3820,8 +4264,10 @@ const GlobalAiAssistant: React.FC = () => {
         navigateRef.current(route.route);
 
         return {
+            blocked: false,
             target: decision.target,
             message: appendProjectGuideContext(decision.message, navigationProject.projectName),
+            route: route.route,
             projectId: resolvedProjectId,
             projectName: navigationProject.projectName || null,
         };
@@ -3840,6 +4286,19 @@ const GlobalAiAssistant: React.FC = () => {
         const tenantContext = tenantContextRef.current;
         const nextTenantId = project?.tenantId || tenantContext?.currentTenant?.id || conversation.tenantId;
         const nextProjectId = navigation.projectId || conversation.projectId;
+        const activeModule = resolveGuideTargetAssistantModule(navigation.target);
+        const navigationProjectName = navigation.projectName || project?.name || null;
+        const navigationAt = new Date().toISOString();
+        const memoryScope = {
+            userId: conversation.userId,
+            tenantId: nextTenantId || null,
+            projectId: nextProjectId || null,
+            module: activeModule,
+            sessionId: conversation.id,
+            taskId: null,
+            mode: conversation.mode,
+            guideOnly: true,
+        };
 
         const nextConversation: AssistantConversation = {
             ...conversation,
@@ -3848,13 +4307,35 @@ const GlobalAiAssistant: React.FC = () => {
             activeTaskId: null,
             metadata: {
                 ...(conversation.metadata || {}),
+                activeRoute: path,
+                activeView: viewRef.current || null,
+                activeModule,
+                activeProjectId: nextProjectId || null,
+                activeProjectName: navigationProjectName,
+                activeTenantId: nextTenantId || null,
+                activeTenantName: tenantContext?.currentTenant?.name || null,
+                sessionId: conversation.id,
+                taskId: null,
                 lastNavigationTarget: navigation.target,
+                lastNavigationModule: activeModule,
                 lastNavigationProjectId: nextProjectId || null,
-                lastNavigationProjectName: navigation.projectName || project?.name || null,
+                lastNavigationProjectName: navigationProjectName,
                 lastNavigationRoute: path,
-                lastNavigationAt: new Date().toISOString(),
+                lastNavigationAt: navigationAt,
                 lastEntrySource: entry?.source || null,
                 lastEntryMetadata: entry?.metadata || {},
+                lastHandoff: {
+                    target: navigation.target,
+                    module: activeModule,
+                    projectId: nextProjectId || null,
+                    projectName: navigationProjectName,
+                    tenantId: nextTenantId || null,
+                    route: path,
+                    at: navigationAt,
+                    source: entry?.source || null,
+                    guideOnly: true,
+                },
+                memoryScope,
                 guideOnly: true,
             },
         };
@@ -3870,35 +4351,33 @@ const GlobalAiAssistant: React.FC = () => {
             });
     };
 
-    const formatComponentHelpResponse = (
-        request: string,
-        entry?: GlobalAssistantEntryPayload,
-    ): { targetId: string; message: string } | null => {
-        return resolveComponentHelpGuideResponse({
-            request,
-            activeModule: getEntryActiveModule(entry) as string | null,
-            activeRoute: typeof entry?.metadata?.route === 'string' ? entry.metadata.route : path,
-            activeRouteModule: getEntryRouteModule(entry) as string | null,
-            quickActionId: getEntryQuickActionId(entry),
-            locale: i18n.language,
-        });
-    };
-
     const processTextRequest = async (request: string, entry?: GlobalAssistantEntryPayload) => {
         const userMsg = request.trim();
         if (!userMsg) return;
         const operatingLayerEntry = entry || buildManualOperatingLayerEntry(userMsg);
 
-        await ensureAssistantConversation(userMsg, operatingLayerEntry);
+        const assistantConversation = await ensureAssistantConversation(userMsg, operatingLayerEntry);
+        const liveContextSnapshot = buildLiveAssistantContextSnapshot(
+            operatingLayerEntry,
+            assistantConversation?.id || assistantConversationIdRef.current,
+        );
+        try {
+            await globalAssistantConversationService.recordContextSnapshot(liveContextSnapshot);
+        } catch (error) {
+            console.warn('[Global Assistant] Failed to persist guide-only context snapshot:', error);
+        }
         setInput('');
         setMessages(prev => [...prev, {
             role: 'user',
             text: userMsg,
+            contextSnapshotId: liveContextSnapshot.id,
             metadata: {
                 source: operatingLayerEntry.source,
                 surface: operatingLayerEntry.surface,
                 entryMetadata: operatingLayerEntry.metadata || {},
                 pendingTaskId: pendingOperatingLayerTaskRef.current?.taskId || null,
+                contextSnapshotId: liveContextSnapshot.id,
+                guideOnly: true,
             },
         }]);
 
@@ -3911,33 +4390,46 @@ const GlobalAiAssistant: React.FC = () => {
                     metadata: operatingLayerEntry.metadata,
                 } : undefined);
 
-                const componentHelpResponse = formatComponentHelpResponse(userMsg, operatingLayerEntry);
-                if (componentHelpResponse) {
-                    setMessages(prev => [...prev, {
-                        role: 'model',
-                        text: componentHelpResponse.message,
-                        metadata: {
-                            source: 'component_help',
-                            targetId: componentHelpResponse.targetId,
-                        },
-                    }]);
-                    setIsThinking(false);
-                    return;
-                }
-
-                const directModuleNavigation = await maybeHandleDirectModuleNavigation(userMsg, operatingLayerEntry);
-                if (directModuleNavigation) {
+                const appendDirectModuleNavigation = (directModuleNavigation: DirectModuleNavigationResult) => {
+                    const activeModule = resolveGuideTargetAssistantModule(directModuleNavigation.target);
                     setPendingOperatingLayerTask(null);
-                    syncAssistantConversationNavigation(directModuleNavigation, operatingLayerEntry);
+                    if (!directModuleNavigation.blocked) {
+                        syncAssistantConversationNavigation(directModuleNavigation, operatingLayerEntry);
+                    }
+                    recordGuideHandoffAudit({
+                        context: liveContextSnapshot,
+                        target: directModuleNavigation.target,
+                        targetModule: activeModule,
+                        message: directModuleNavigation.message,
+                        blocked: directModuleNavigation.blocked === true,
+                        route: directModuleNavigation.route || null,
+                        projectId: directModuleNavigation.projectId || null,
+                        projectName: directModuleNavigation.projectName || null,
+                        entrySource: operatingLayerEntry?.source || null,
+                        entryMetadata: operatingLayerEntry?.metadata || {},
+                        reason: directModuleNavigation.blocked ? 'direct_navigation_blocked' : 'direct_navigation_opened',
+                    });
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: directModuleNavigation.message,
+                        contextSnapshotId: liveContextSnapshot.id,
                         metadata: {
-                            source: 'direct_module_navigation',
+                            source: directModuleNavigation.blocked
+                                ? 'direct_module_navigation_blocked'
+                                : 'direct_module_navigation',
                             target: directModuleNavigation.target,
+                            activeModule,
                             projectId: directModuleNavigation.projectId || null,
+                            projectName: directModuleNavigation.projectName || null,
+                            contextSnapshotId: liveContextSnapshot.id,
+                            guideOnly: true,
                         },
                     }]);
+                };
+
+                const directModuleNavigation = await maybeHandleDirectModuleNavigation(userMsg, operatingLayerEntry);
+                if (directModuleNavigation) {
+                    appendDirectModuleNavigation(directModuleNavigation);
                     setIsThinking(false);
                     return;
                 }
@@ -3979,8 +4471,8 @@ const GlobalAiAssistant: React.FC = () => {
                     setMessages(prev => [...prev, {
                         role: 'model',
                         text: isSpanishLocale(i18n.language)
-                            ? 'No hice cambios. Te puedo llevar al módulo correcto para que lo revises y lo apliques desde ahí.'
-                            : 'I did not make changes. I can take you to the right module so you can review and apply it there.',
+                            ? 'Para aplicar cambios, usa el módulo correspondiente y confirma allí la acción final.'
+                            : 'To apply changes, use the matching module and confirm the final action there.',
                         contextSnapshotId: pendingOperatingLayer.context.id,
                         actionIds: cancelled.actions.map(action => action.id),
                         metadata: {
@@ -3995,67 +4487,18 @@ const GlobalAiAssistant: React.FC = () => {
                     return;
                 }
 
-                const guideOnlyActionResponse = resolveGuideOnlyActionResponse({
-                    request: userMsg,
-                    activeModule: getEntryActiveModule(operatingLayerEntry) as string | null,
-                    quickActionId: getEntryQuickActionId(operatingLayerEntry),
-                    locale: i18n.language,
-                });
-                if (guideOnlyActionResponse) {
-                    setPendingOperatingLayerTask(null);
-                    setMessages(prev => [...prev, {
-                        role: 'model',
-                        text: guideOnlyActionResponse.message,
-                        metadata: {
-                            source: 'guide_only_action_request',
-                        },
-                    }]);
-                    setIsThinking(false);
-                    return;
-                }
-
-                if (shouldRouteEntryToOperatingLayer(operatingLayerEntry)) {
-                    const guideOnlyFallback = resolveGuideOnlyFallbackResponse({
-                        request: userMsg,
-                        locale: i18n.language,
-                    });
-                    setPendingOperatingLayerTask(null);
-                    setMessages(prev => [...prev, {
-                        role: 'model',
-                        text: guideOnlyFallback.message,
-                        metadata: {
-                            source: 'guide_only_operating_layer_fallback',
-                            guideOnly: true,
-                        },
-                    }]);
-                    setIsThinking(false);
-                    return;
-                }
-
-                // ============================================================
-                // STEP 1: Fast-path tool inference from user text
-                // ============================================================
-                const inferredTool = inferToolCallFromUserText(userMsg);
-                if (inferredTool) {
-                    console.log('[Global Assistant] Fast-path tool inferred:', inferredTool);
-                    try {
-                        const { result, error } = await executeTool(inferredTool.name, inferredTool.args, 'chat');
-                        if (error) {
-                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
-                        } else {
-                            const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
-                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
-                        }
-                    } catch (toolErr: any) {
-                        console.error('[Global Assistant] Tool execution error:', toolErr);
-                        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error al ejecutar la acción: ${toolErr?.message || 'Unknown error'}` }]);
+                const offeredNavigationRequest = navigationRequestFromRecentOffer(userMsg);
+                if (offeredNavigationRequest) {
+                    const offeredNavigation = await maybeHandleDirectModuleNavigation(offeredNavigationRequest, operatingLayerEntry);
+                    if (offeredNavigation) {
+                        appendDirectModuleNavigation(offeredNavigation);
+                        setIsThinking(false);
+                        return;
                     }
-                    setIsThinking(false);
-                    return;
                 }
 
                 // ============================================================
-                // STEP 2: Send to LLM with vision for conversational responses
+                // STEP 1: Send to LLM with vision for conversational responses
                 // ============================================================
 
                 // Build conversation history for context
@@ -4065,12 +4508,36 @@ const GlobalAiAssistant: React.FC = () => {
                     .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
                     .join('\n');
 
-                // Build current context information
-                const currentView = viewRef.current || 'dashboard';
-                const currentProject = activeProjectRef.current;
-                const projectInfo = currentProject
-                    ? `Project: "${currentProject.name}"`
-                    : 'No project loaded';
+                const memoryContext = liveContextSnapshot;
+                let memoryPromptContext = '';
+                let loadedMemoryIds: string[] = [];
+                let memoryPromptMetadata: Record<string, unknown> = {
+                    memoryContextLoaded: false,
+                };
+                try {
+                    const memoryContextResult = await assistantMemoryServiceRef.current?.resolveMemoryContext({
+                        context: memoryContext,
+                        text: userMsg,
+                        limit: 8,
+                    });
+                    if (memoryContextResult) {
+                        loadedMemoryIds = memoryContextResult.manifest.memoryIds;
+                        memoryPromptContext = buildGuideOnlyMemoryPromptContext(
+                            memoryContextResult.memories,
+                            memoryContextResult.manifest,
+                            i18n.language,
+                        );
+                        memoryPromptMetadata = {
+                            memoryContextLoaded: true,
+                            memoryTotalCount: memoryContextResult.manifest.totalCount,
+                            memoryScopeCounts: memoryContextResult.manifest.scopeCounts,
+                            memoryModuleCounts: memoryContextResult.manifest.moduleCounts,
+                            memoryGuardrails: memoryContextResult.manifest.guardrails,
+                        };
+                    }
+                } catch (error) {
+                    console.warn('[Global Assistant] Failed to load guide-only memory context:', error);
+                }
 
                 // Use admin-configured system instruction (templates + base + context)
                 const effectiveInstruction = getEffectiveSystemInstruction('chat');
@@ -4080,9 +4547,18 @@ const GlobalAiAssistant: React.FC = () => {
                 const screenCapture = await captureCurrentView();
                 console.timeEnd('[Global Assistant] Screen Capture');
 
+                const currentQuestionContext = buildCurrentQuestionPromptContext(
+                    operatingLayerEntry,
+                    liveContextSnapshot,
+                );
+
                 const fullPrompt = `${effectiveInstruction}
 
 ${historyText ? `CONVERSACIÓN RECIENTE:\n${historyText}\n` : ''}
+CURRENT QUESTION CONTEXT:
+${currentQuestionContext}
+
+${memoryPromptContext ? `${memoryPromptContext}\n` : ''}
 Usuario: ${userMsg}`;
 
                 // Use model, temperature, and maxTokens from admin config
@@ -4094,36 +4570,10 @@ Usuario: ${userMsg}`;
                 };
                 console.log(`[Global Assistant] Using model: ${chatModel}, temp: ${proxyConfig.temperature}, maxTokens: ${proxyConfig.maxOutputTokens}`);
 
-                // Prepare TOOLS for the REST API — filter by service availability
-                const availableTools = isLoadingServices
-                    ? GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS
-                    : GLOBAL_ASSISTANT_GUIDE_ONLY_TOOLS.filter(tool => {
-                        const requiredService = TOOL_SERVICE_MAP[tool.name];
-                        return !requiredService || canAccessService(requiredService);
-                    }).map(tool => {
-                        // Dynamically filter the change_view enum to exclude disabled views
-                        if (tool.name === 'change_view') {
-                            const viewNameProp = tool.parameters?.properties?.viewName;
-                            if (viewNameProp && 'enum' in viewNameProp && Array.isArray(viewNameProp.enum)) {
-                                const filteredEnum = viewNameProp.enum.filter((v: string) => {
-                                    const svc = VIEW_SERVICE_MAP[v];
-                                    return !svc || canAccessService(svc);
-                                });
-                                return {
-                                    ...tool,
-                                    parameters: {
-                                        ...tool.parameters,
-                                        properties: {
-                                            ...tool.parameters?.properties,
-                                            viewName: { ...viewNameProp, enum: filteredEnum },
-                                        },
-                                    },
-                                };
-                            }
-                        }
-                        return tool;
-                    });
-                const restTools = [{ functionDeclarations: availableTools }];
+                // The Global Assistant is guide-only. Do not expose executable
+                // tools to the model; deterministic module handoffs above handle
+                // navigation before this conversational fallback.
+                const restTools: any[] = [];
 
                 console.time('[Global Assistant] LLM Response');
                 let response;
@@ -4151,7 +4601,7 @@ Usuario: ${userMsg}`;
                 console.timeEnd('[Global Assistant] LLM Response');
 
                 // ============================================================
-                // STEP 3: Check for native function call in Gemini response
+                // STEP 2: Block any model-suggested tool calls
                 // ============================================================
                 const candidates = response?.response?.candidates || response?.candidates;
                 const parts = candidates?.[0]?.content?.parts || [];
@@ -4159,18 +4609,31 @@ Usuario: ${userMsg}`;
 
                 if (functionCallPart?.functionCall) {
                     const { name: toolName, args: toolArgs } = functionCallPart.functionCall;
-                    console.log('[Global Assistant] Native function call:', toolName, toolArgs);
-                    try {
-                        const { result, error } = await executeTool(toolName, toolArgs || {}, 'chat');
-                        if (error) {
-                            setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
-                        } else {
-                            const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
-                            setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
-                        }
-                    } catch (toolErr: any) {
-                        console.error('[Global Assistant] Function call execution error:', toolErr);
-                        setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
+                    console.warn('[Global Assistant] Blocked model tool call in guide-only mode:', toolName, toolArgs);
+                    const toolNavigation = await maybeHandleGuideOnlyTextToolNavigation(
+                        { name: toolName, args: toolArgs || {} },
+                        operatingLayerEntry,
+                    );
+                    if (toolNavigation) {
+                        appendDirectModuleNavigation(toolNavigation);
+                    } else {
+                        const guideOnlyFallback = resolveGuideOnlyFallbackResponse({
+                            request: userMsg,
+                            locale: i18n.language,
+                        });
+                        setMessages(prev => [...prev, {
+                            role: 'model',
+                            text: guideOnlyFallback.message,
+                            contextSnapshotId: liveContextSnapshot.id,
+                            memoryIds: loadedMemoryIds,
+                            metadata: {
+                                ...memoryPromptMetadata,
+                                source: 'guide_only_tool_call_blocked',
+                                toolName,
+                                contextSnapshotId: liveContextSnapshot.id,
+                                guideOnly: true,
+                            },
+                        }]);
                     }
                 } else {
                     // No native function call — extract text and check for embedded JSON tool calls
@@ -4180,25 +4643,75 @@ Usuario: ${userMsg}`;
                     if (responseText) {
                         const extractedTool = tryExtractToolCall(responseText);
                         if (extractedTool) {
-                            console.log('[Global Assistant] Extracted tool_call from LLM text:', extractedTool);
-                            try {
-                                const { result, error } = await executeTool(extractedTool.name, extractedTool.args, 'chat');
-                                if (error) {
-                                    setMessages(prev => [...prev, { role: 'model', text: `⚠️ ${error}` }]);
-                                } else {
-                                    const resultText = typeof result === 'string' ? result : ((result as any)?.result || JSON.stringify(result));
-                                    setMessages(prev => [...prev, { role: 'model', text: `✅ ${resultText}` }]);
-                                }
-                            } catch (toolErr: any) {
-                                console.error('[Global Assistant] Text tool execution error:', toolErr);
-                                setMessages(prev => [...prev, { role: 'model', text: `⚠️ Error: ${toolErr?.message || 'Unknown error'}` }]);
+                            console.warn('[Global Assistant] Blocked text tool call in guide-only mode:', extractedTool);
+                            const toolNavigation = await maybeHandleGuideOnlyTextToolNavigation(extractedTool, operatingLayerEntry);
+                            if (toolNavigation) {
+                                appendDirectModuleNavigation(toolNavigation);
+                            } else {
+                                const guideOnlyFallback = resolveGuideOnlyFallbackResponse({
+                                    request: userMsg,
+                                    locale: i18n.language,
+                                });
+                                setMessages(prev => [...prev, {
+                                    role: 'model',
+                                    text: guideOnlyFallback.message,
+                                    contextSnapshotId: liveContextSnapshot.id,
+                                    memoryIds: loadedMemoryIds,
+                                    metadata: {
+                                        ...memoryPromptMetadata,
+                                        source: 'guide_only_text_tool_call_blocked',
+                                        toolName: extractedTool.name,
+                                        contextSnapshotId: liveContextSnapshot.id,
+                                        guideOnly: true,
+                                    },
+                                }]);
                             }
+                        } else if (containsGuideOnlyExecutionClaim(responseText)) {
+                            console.warn('[Global Assistant] Blocked execution claim in guide-only response:', responseText.substring(0, 240));
+                            const guideOnlyFallback = resolveGuideOnlyFallbackResponse({
+                                request: userMsg,
+                                locale: i18n.language,
+                            });
+                            setMessages(prev => [...prev, {
+                                role: 'model',
+                                text: guideOnlyFallback.message,
+                                contextSnapshotId: liveContextSnapshot.id,
+                                memoryIds: loadedMemoryIds,
+                                metadata: {
+                                    ...memoryPromptMetadata,
+                                    source: 'guide_only_execution_claim_blocked',
+                                    contextSnapshotId: liveContextSnapshot.id,
+                                    guideOnly: true,
+                                },
+                            }]);
                         } else {
                             // Normal text response — display as-is
-                            setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+                            setMessages(prev => [...prev, {
+                                role: 'model',
+                                text: responseText,
+                                contextSnapshotId: liveContextSnapshot.id,
+                                memoryIds: loadedMemoryIds,
+                                metadata: {
+                                    ...memoryPromptMetadata,
+                                    source: 'guide_only_conversation_response',
+                                    contextSnapshotId: liveContextSnapshot.id,
+                                    guideOnly: true,
+                                },
+                            }]);
                         }
                     } else {
-                        setMessages(prev => [...prev, { role: 'model', text: "¿En qué puedo ayudarte?" }]);
+                        setMessages(prev => [...prev, {
+                            role: 'model',
+                            text: isSpanishLocale(i18n.language) ? '¿Qué quieres hacer?' : 'What do you want to do?',
+                            contextSnapshotId: liveContextSnapshot.id,
+                            memoryIds: loadedMemoryIds,
+                            metadata: {
+                                ...memoryPromptMetadata,
+                                source: 'guide_only_empty_response',
+                                contextSnapshotId: liveContextSnapshot.id,
+                                guideOnly: true,
+                            },
+                        }]);
                     }
                 }
 
@@ -4206,7 +4719,16 @@ Usuario: ${userMsg}`;
                 console.error('[Global Assistant] Error:', e);
                 handleApiError(e);
                 const errorMessage = typeof e?.message === 'string' ? e.message : "Error processing request.";
-                setMessages(prev => [...prev, { role: 'model', text: `Error: ${errorMessage}` }]);
+                setMessages(prev => [...prev, {
+                    role: 'model',
+                    text: `Error: ${errorMessage}`,
+                    contextSnapshotId: liveContextSnapshot.id,
+                    metadata: {
+                        source: 'guide_only_error',
+                        contextSnapshotId: liveContextSnapshot.id,
+                        guideOnly: true,
+                    },
+                }]);
             } finally {
                 setIsThinking(false);
             }

@@ -1,6 +1,18 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import {
+    DndContext,
+    DragEndEvent,
+    PointerSensor,
+    TouchSensor,
+    pointerWithin,
+    useDraggable,
+    useDroppable,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useUI } from '../../../contexts/core/UIContext';
@@ -8,6 +20,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
+import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
     Menu, Plus, Search,
@@ -42,6 +55,8 @@ import { logApiCall } from '../../../services/apiLoggingService';
 import { INDUSTRY_STAGES, INDUSTRY_FIELDS, INDUSTRY_META } from '../../../utils/crmIndustryPresets';
 import { db, doc, updateDoc } from '@/utils/compatData';
 import { MotionCard } from '../../ui/primitives/Card';
+import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
+import { resolveProjectName } from '../../../utils/resolveProjectName';
 
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../hooks/useRouter';
@@ -75,8 +90,10 @@ const cleanJsonResponse = (text: string): string => {
     return cleaned;
 };
 
+type LeadStageConfig = { id: LeadStatus; label: string; color: string };
+
 // Default stages fallback (used when no crmConfig exists on the project)
-const getLeadStages = (t: any): { id: LeadStatus; label: string; color: string }[] => [
+const getLeadStages = (t: any): LeadStageConfig[] => [
     { id: 'new', label: t('leads.stages.new'), color: 'bg-q-accent' },
     { id: 'contacted', label: t('leads.stages.contacted'), color: 'bg-q-accent' },
     { id: 'qualified', label: t('leads.stages.qualified'), color: 'bg-q-accent' },
@@ -136,16 +153,23 @@ const EMOJI_MARKERS = [
 // --- Lead Card Component ---
 interface LeadCardProps {
     lead: Lead;
-    onDragStart: (e: React.DragEvent, id: string) => void;
     onClick: (lead: Lead) => void;
     onDelete: (leadId: string) => void;
 }
 
-const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelete }) => {
+const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick, onDelete }) => {
     const { t } = useTranslation();
     const { updateLead } = useCRM();
     const [showPalette, setShowPalette] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: lead.id,
+        data: {
+            type: 'lead',
+            leadId: lead.id,
+            status: lead.status,
+        },
+    });
 
     const handleColorUpdate = (e: React.MouseEvent, colorId: string) => {
         e.stopPropagation();
@@ -176,13 +200,20 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
         .trim();
     const previewText = lead.aiAnalysis || latestConversationLine || lead.notes || '';
     const statusAccent = STAGE_ACCENT_CLASS[lead.status] || currentTheme.indicator;
+    const dragStyle: React.CSSProperties = {
+        transform: CSS.Translate.toString(transform),
+        zIndex: isDragging ? 40 : undefined,
+        opacity: isDragging ? 0.6 : 1,
+    };
 
     return (
         <div
-            draggable
-            onDragStart={(e) => onDragStart(e, lead.id)}
+            ref={setNodeRef}
+            style={dragStyle}
+            {...attributes}
+            {...listeners}
             onClick={() => onClick(lead)}
-            className={`group relative mb-2.5 w-full min-w-0 overflow-visible rounded-lg border border-q-border/60 bg-q-surface/80 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-q-surface hover:shadow-md ${currentTheme.accent} cursor-grab active:cursor-grabbing`}
+            className={`group relative mb-2.5 w-full min-w-0 touch-none overflow-visible rounded-lg border border-q-border/60 bg-q-surface/80 p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-q-surface hover:shadow-md ${currentTheme.accent} cursor-grab active:cursor-grabbing ${isDragging ? 'border-primary/60 shadow-lg ring-1 ring-primary/40' : ''}`}
         >
             <div className={`absolute inset-y-3 left-0 w-1 rounded-r-full ${statusAccent}`} aria-hidden="true" />
 
@@ -339,16 +370,119 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onDragStart, onClick, onDelet
     );
 };
 
+interface LeadKanbanColumnProps {
+    stage: LeadStageConfig;
+    stageLeads: Lead[];
+    editingStageId: string | null;
+    editingStageLabel: string;
+    stageInputRef: React.RefObject<HTMLInputElement>;
+    setEditingStageId: React.Dispatch<React.SetStateAction<string | null>>;
+    setEditingStageLabel: React.Dispatch<React.SetStateAction<string>>;
+    handleStageRename: (stageId: string, newLabel: string) => void;
+    onLeadClick: (lead: Lead) => void;
+    onDelete: (leadId: string) => void;
+    t: (key: string, fallback?: string) => string;
+}
+
+const LeadKanbanColumn: React.FC<LeadKanbanColumnProps> = ({
+    stage,
+    stageLeads,
+    editingStageId,
+    editingStageLabel,
+    stageInputRef,
+    setEditingStageId,
+    setEditingStageLabel,
+    handleStageRename,
+    onLeadClick,
+    onDelete,
+    t,
+}) => {
+    const { setNodeRef, isOver } = useDroppable({
+        id: `lead-stage-${stage.id}`,
+        data: {
+            type: 'lead-stage',
+            status: stage.id,
+        },
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`flex h-full min-h-0 w-[86vw] min-w-[86vw] max-w-[86vw] snap-center flex-col overflow-hidden rounded-xl border bg-q-surface/70 transition-colors sm:w-[288px] sm:min-w-[288px] sm:max-w-[288px] lg:w-[304px] lg:min-w-[304px] lg:max-w-[304px] ${
+                isOver ? 'border-primary/70 bg-primary/10 ring-1 ring-primary/40' : 'border-q-border/60'
+            }`}
+        >
+            <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-q-border/30 bg-q-surface/95 p-3 backdrop-blur">
+                <div className="flex min-w-0 items-center gap-2">
+                    <div className={`h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5 ${stage.color}`} />
+                    {editingStageId === stage.id ? (
+                        <input
+                            ref={stageInputRef}
+                            value={editingStageLabel}
+                            onChange={e => setEditingStageLabel(e.target.value)}
+                            onBlur={() => handleStageRename(stage.id, editingStageLabel)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') handleStageRename(stage.id, editingStageLabel);
+                                if (e.key === 'Escape') setEditingStageId(null);
+                            }}
+                            className="w-24 border-b border-primary bg-transparent text-xs font-bold text-foreground outline-none sm:w-32 sm:text-sm"
+                        />
+                    ) : (
+                        <h3
+                            className="group/stage cursor-pointer truncate text-xs font-bold text-foreground transition-colors hover:text-primary sm:text-sm"
+                            onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
+                            title={t('leads.crmSettings.editStageLabel')}
+                        >
+                            {stage.label}
+                            <Pencil size={10} className="ml-1 inline opacity-0 transition-opacity group-hover/stage:opacity-60" />
+                        </h3>
+                    )}
+                    <span className="shrink-0 rounded-full border border-q-border bg-q-bg px-1.5 py-0.5 font-mono text-[10px] text-q-text-muted sm:px-2 sm:text-xs">
+                        {stageLeads.length}
+                    </span>
+                </div>
+                <button
+                    onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
+                    className="hidden rounded p-1 text-q-text-muted transition-colors hover:bg-q-bg hover:text-foreground sm:inline-flex"
+                    title={t('leads.crmSettings.editStageLabel')}
+                >
+                    <Pencil size={14} />
+                </button>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto p-2.5 custom-scrollbar">
+                {stageLeads.map(lead => (
+                    <LeadCard
+                        key={lead.id}
+                        lead={lead}
+                        onClick={onLeadClick}
+                        onDelete={onDelete}
+                    />
+                ))}
+                {stageLeads.length === 0 && (
+                    <div className={`flex items-center justify-center rounded-xl border-2 border-dashed text-xs font-medium transition-colors ${
+                        isOver
+                            ? 'h-24 border-primary/60 bg-primary/10 text-primary'
+                            : 'h-20 border-q-border bg-q-bg/30 text-q-text-muted sm:h-24'
+                    }`}>
+                        {t('leads.dashboard.dropItemsHere', 'Drop items here')}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 
 const LeadsDashboard: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const DEFAULT_STAGES = React.useMemo(() => getLeadStages(t), [t]);
     const { user } = useAuth();
     const { setView } = useUI();
     const { navigate, query, setQueryParam } = useRouter();
     const { leads, updateLeadStatus, deleteLead, addLead, updateLead, addLeadActivity, getLeadActivities, addLeadTask, updateLeadTask, deleteLeadTask, getLeadTasks, hasActiveProject, isLoadingLeads } = useCRM();
     const { hasApiKey, promptForKeySelection, handleApiError } = useAI();
-    const { activeProject } = useProject();
+    const { activeProject, projects, loadProject } = useProject();
 
     // =========================================================================
     // CRM INDUSTRY CONFIG
@@ -430,12 +564,12 @@ const LeadsDashboard: React.FC = () => {
         setEditingStageId(null);
     }, [crmConfig, currentIndustry, saveCrmConfig]);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [projectSearchQuery, setProjectSearchQuery] = useState('');
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'pipeline' | 'library'>('pipeline');
 
@@ -456,6 +590,14 @@ const LeadsDashboard: React.FC = () => {
         tags: [],
         dateRange: { start: '', end: '' }
     });
+    const dragSensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 6 },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: { delay: 140, tolerance: 8 },
+        }),
+    );
 
     useEffect(() => {
         setFilters(prev => {
@@ -483,6 +625,28 @@ const LeadsDashboard: React.FC = () => {
     const [emailDraft, setEmailDraft] = useState('');
     const [isAnalyzingConversation, setIsAnalyzingConversation] = useState(false);
     const [conversationAnalysis, setConversationAnalysis] = useState<string>('');
+
+    const userProjects = useMemo(() => projects.filter(project => project.status !== 'Template'), [projects]);
+
+    const filteredProjectOptions = useMemo(() => {
+        const normalizedQuery = projectSearchQuery.trim().toLowerCase();
+        if (!normalizedQuery) return userProjects;
+        return userProjects.filter(project => resolveProjectName(project.name, i18n.language).toLowerCase().includes(normalizedQuery));
+    }, [i18n.language, projectSearchQuery, userProjects]);
+
+    const sortedProjectOptions = useMemo(() => (
+        [...filteredProjectOptions].sort((a, b) =>
+            resolveProjectName(a.name, i18n.language).localeCompare(resolveProjectName(b.name, i18n.language))
+        )
+    ), [filteredProjectOptions, i18n.language]);
+
+    const handleSelectProject = useCallback((projectId: string) => {
+        loadProject(projectId, false, false);
+    }, [loadProject]);
+
+    const activeProjectName = useMemo(() => (
+        activeProject ? resolveProjectName(activeProject.name, i18n.language) : ''
+    ), [activeProject, i18n.language]);
 
     // Persistence Effect: Load saved data when opening a lead
     useEffect(() => {
@@ -529,25 +693,20 @@ const LeadsDashboard: React.FC = () => {
     }, [leads]);
 
     // --- Drag & Drop Handlers ---
-    const handleDragStart = (e: React.DragEvent, leadId: string) => {
-        setDraggedLeadId(leadId);
-        e.dataTransfer.setData('text/plain', leadId);
-        e.dataTransfer.effectAllowed = 'move';
-    };
+    const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+        const leadId = String(event.active.id || '');
+        const targetStatus = event.over?.data.current?.status as LeadStatus | undefined;
+        const sourceStatus = event.active.data.current?.status as LeadStatus | undefined;
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault(); // Necessary for drop to work
-        e.dataTransfer.dropEffect = 'move';
-    };
+        if (!leadId || !targetStatus || targetStatus === sourceStatus) return;
 
-    const handleDrop = async (e: React.DragEvent, stageId: LeadStatus) => {
-        e.preventDefault();
-        const leadId = e.dataTransfer.getData('text/plain');
-        if (leadId) {
-            await updateLeadStatus(leadId, stageId);
+        try {
+            await updateLeadStatus(leadId, targetStatus);
+            setSelectedLead(current => current?.id === leadId ? { ...current, status: targetStatus } : current);
+        } catch (error) {
+            console.error('[LeadsDashboard] Error moving lead between stages:', error);
         }
-        setDraggedLeadId(null);
-    };
+    }, [updateLeadStatus]);
 
     // --- Get all available tags ---
     const availableTags = useMemo(() => {
@@ -1166,16 +1325,115 @@ const LeadsDashboard: React.FC = () => {
         return (
             <div className="flex h-screen bg-q-bg text-foreground">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                <div className="flex-1 flex flex-col items-center justify-center p-8">
-                    <div className="text-center max-w-md">
-                        <LayoutGrid className="w-16 h-16 text-q-text-muted mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold text-foreground mb-2">
-                            {t('leads.noProjectSelected', 'No hay proyecto seleccionado')}
-                        </h2>
-                        <p className="text-q-text-muted mb-6">
-                            {t('leads.selectProjectMessage', 'Selecciona un proyecto desde el menú lateral para ver y gestionar los leads de ese proyecto.')}
-                        </p>
-                    </div>
+                <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                    <header className="quimera-dashboard-header-bar flex h-14 shrink-0 items-center justify-between px-3 sm:px-6">
+                        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="no-min-touch lg:hidden flex h-9 w-9 min-h-9 min-w-9 max-h-9 max-w-9 shrink-0 items-center justify-center rounded-lg p-0 text-q-text-muted transition-colors touch-manipulation hover:text-foreground hover:bg-secondary/80 active:bg-secondary">
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <div className="flex min-w-0 items-center gap-2">
+                                <LayoutGrid className="w-5 h-5 shrink-0 quimera-dashboard-header-icon" strokeWidth={2} />
+                                <h1 className="truncate text-sm font-semibold text-foreground sm:text-lg">{t('leads.dashboard.title')}</h1>
+                            </div>
+                        </div>
+                        <HeaderBackButton onClick={() => setView('dashboard')} className="no-min-touch !h-9 !w-9 !min-h-9 !min-w-9 !max-h-9 !max-w-9 !p-0" />
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto p-6 sm:p-8">
+                        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        {t('leads.dashboard.selectProject')}
+                                    </h2>
+                                    <p className="mt-1 max-w-2xl text-sm leading-6 text-q-text-muted">
+                                        {t('leads.dashboard.selectProjectDesc')}
+                                    </p>
+                                </div>
+                                <div className="relative w-full sm:max-w-sm">
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-q-text-muted" />
+                                    <input
+                                        type="text"
+                                        value={projectSearchQuery}
+                                        onChange={(event) => setProjectSearchQuery(event.target.value)}
+                                        placeholder={t('leads.dashboard.searchProjectPlaceholder')}
+                                        className="h-11 w-full rounded-xl border border-q-border/70 bg-q-surface/80 pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-q-text-muted focus:border-primary/60"
+                                    />
+                                </div>
+                            </div>
+
+                            {sortedProjectOptions.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                    {sortedProjectOptions.map(project => {
+                                        const projectName = resolveProjectName(project.name, i18n.language);
+                                        const thumbnailUrl = getDynamicThumbnailUrl(project);
+                                        const isPublished = String(project.status).toLowerCase() === 'published';
+                                        const statusLabel = isPublished
+                                            ? t('leads.dashboard.published')
+                                            : t('leads.dashboard.draft');
+
+                                        return (
+                                            <button
+                                                key={project.id}
+                                                onClick={() => handleSelectProject(project.id)}
+                                                className="group relative flex flex-col overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-q-border"
+                                            >
+                                                <div
+                                                    className="quimera-status-card-accent-bg quimera-status-card-blob pointer-events-none absolute -right-8 -top-8 z-0 h-32 w-32 rounded-full blur-2xl transition-all duration-500 group-hover:scale-110"
+                                                    aria-hidden="true"
+                                                />
+                                                <div className="relative h-40 overflow-hidden">
+                                                    {thumbnailUrl ? (
+                                                        <img
+                                                            src={thumbnailUrl}
+                                                            alt={projectName}
+                                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        />
+                                                    ) : (
+                                                        <ProjectThumbnailFallback />
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                                                </div>
+                                                <div className="relative z-10 space-y-4 p-5">
+                                                    <div className="flex min-w-0 items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <h3 className="truncate text-lg font-bold text-foreground transition-colors group-hover:text-[var(--quimera-status-accent-from)]">
+                                                                {projectName}
+                                                            </h3>
+                                                            <p className="mt-1 text-sm text-q-text-muted">
+                                                                {t('leads.selectProjectMessage')}
+                                                            </p>
+                                                        </div>
+                                                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                                            isPublished
+                                                                ? 'bg-q-success/15 text-q-success'
+                                                                : 'bg-q-surface-overlay text-q-text-muted'
+                                                        }`}>
+                                                            {statusLabel}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-t border-q-border/50 pt-3 text-xs font-medium text-q-text-muted">
+                                                        <span>{t('leads.dashboard.title')}</span>
+                                                        <MoveRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="rounded-2xl border border-dashed border-q-border/70 bg-q-surface/50 p-8 text-center">
+                                    <LayoutGrid className="mx-auto mb-3 h-10 w-10 text-q-text-muted" />
+                                    <h3 className="text-lg font-semibold text-foreground">
+                                        {t('leads.dashboard.noProjectsFound')}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-q-text-muted">
+                                        {t('leads.selectProjectMessage')}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </main>
                 </div>
             </div>
         );
@@ -1197,6 +1455,12 @@ const LeadsDashboard: React.FC = () => {
                                     <LayoutGrid className="w-5 h-5 shrink-0 quimera-dashboard-header-icon" strokeWidth={2} />
                                     <h1 className="hidden truncate text-sm font-semibold text-foreground min-[430px]:block sm:block sm:text-lg">{t('leads.dashboard.title')}</h1>
                                 </div>
+                                {activeProjectName && (
+                                    <span className="hidden min-w-0 items-center text-xs text-q-text-muted md:flex">
+                                        <span className="mr-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-q-success" />
+                                        <span className="truncate max-w-[140px] xl:max-w-[220px]">{activeProjectName}</span>
+                                    </span>
+                                )}
                             </div>
                         </div>
 
@@ -1253,7 +1517,6 @@ const LeadsDashboard: React.FC = () => {
                             <HeaderBackButton onClick={() => setView('dashboard')} className="no-min-touch !h-9 !w-9 !min-h-9 !min-w-9 !max-h-9 !max-w-9 !p-0 sm:!h-9 sm:!w-9 sm:!min-h-9 sm:!min-w-9 sm:!max-h-9 sm:!max-w-9" />
                         </div>
                     </div>
-
                 </header>
 
                 {activeTab === 'pipeline' && (
@@ -1429,138 +1692,32 @@ const LeadsDashboard: React.FC = () => {
 
                         <main className="flex-1 min-h-0 min-w-0 overflow-hidden p-3 sm:p-5 relative z-[2]">
                             {viewMode === 'kanban' && (
-                                <div className="h-full min-h-0 min-w-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
-                                    {/* Mobile Kanban - Horizontal scroll with snap */}
-                                    <div className="sm:hidden flex h-full min-h-0 w-max gap-3 snap-x snap-mandatory pb-3">
-                                        {LEAD_STAGES.map(stage => {
-                                            const stageLeads = filteredLeads.filter(l => l.status === stage.id);
-                                            return (
-                                                <div
+                                <DndContext
+                                    sensors={dragSensors}
+                                    collisionDetection={pointerWithin}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <div className="h-full min-h-0 min-w-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
+                                        <div className="flex h-full min-h-0 w-max snap-x snap-mandatory gap-3 pb-3 sm:snap-none sm:gap-4 sm:pb-2">
+                                            {LEAD_STAGES.map(stage => (
+                                                <LeadKanbanColumn
                                                     key={stage.id}
-                                                    className="w-[86vw] min-w-[86vw] max-w-[86vw] flex flex-col h-full min-h-0 overflow-hidden rounded-xl bg-q-surface/70 border border-q-border/60 snap-center"
-                                                    onDragOver={handleDragOver}
-                                                    onDrop={(e) => handleDrop(e, stage.id)}
-                                                >
-                                                    {/* Column Header - Editable */}
-                                                    <div className="sticky top-0 z-10 p-3 flex items-center justify-between shrink-0 border-b border-q-border/30 bg-q-surface/95 backdrop-blur">
-                                                        <div className="flex min-w-0 items-center gap-2">
-                                                            <div className={`w-2 h-2 shrink-0 rounded-full ${stage.color}`} />
-                                                            {editingStageId === stage.id ? (
-                                                                <input
-                                                                    ref={stageInputRef}
-                                                                    value={editingStageLabel}
-                                                                    onChange={e => setEditingStageLabel(e.target.value)}
-                                                                    onBlur={() => handleStageRename(stage.id, editingStageLabel)}
-                                                                    onKeyDown={e => { if (e.key === 'Enter') handleStageRename(stage.id, editingStageLabel); if (e.key === 'Escape') setEditingStageId(null); }}
-                                                                    className="font-bold text-xs text-foreground bg-transparent border-b border-primary outline-none w-24"
-                                                                />
-                                                            ) : (
-                                                                <h3
-                                                                    className="truncate font-bold text-xs text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
-                                                                    onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
-                                                                    title={t('leads.crmSettings.editStageLabel')}
-                                                                >
-                                                                    {stage.label}
-                                                                    <Pencil size={8} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
-                                                                </h3>
-                                                            )}
-                                                            <span className="shrink-0 bg-q-bg px-1.5 py-0.5 rounded-full text-[10px] text-q-text-muted border border-q-border font-mono">
-                                                                {stageLeads.length}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Cards Container */}
-                                                    <div className="flex-1 min-h-0 overflow-y-auto p-2.5 custom-scrollbar">
-                                                        {stageLeads.map(lead => (
-                                                            <LeadCard
-                                                                key={lead.id}
-                                                                lead={lead}
-                                                                onDragStart={handleDragStart}
-                                                                onClick={() => { setSelectedLead(lead); }}
-                                                                onDelete={deleteLead}
-                                                            />
-                                                        ))}
-                                                        {stageLeads.length === 0 && (
-                                                            <div className="h-20 border-2 border-dashed border-q-border rounded-lg flex items-center justify-center text-q-text-muted text-[11px] font-medium bg-q-bg/30">
-                                                                Drop items here
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                                    stage={stage}
+                                                    stageLeads={filteredLeads.filter(l => l.status === stage.id)}
+                                                    editingStageId={editingStageId}
+                                                    editingStageLabel={editingStageLabel}
+                                                    stageInputRef={stageInputRef}
+                                                    setEditingStageId={setEditingStageId}
+                                                    setEditingStageLabel={setEditingStageLabel}
+                                                    handleStageRename={handleStageRename}
+                                                    onLeadClick={(lead) => { setSelectedLead(lead); }}
+                                                    onDelete={deleteLead}
+                                                    t={t}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-
-                                    {/* Desktop Kanban */}
-                                    <div className="hidden sm:flex h-full min-h-0 w-max gap-4 pb-2">
-                                        {LEAD_STAGES.map(stage => {
-                                            const stageLeads = filteredLeads.filter(l => l.status === stage.id);
-                                            return (
-                                                <div
-                                                    key={stage.id}
-                                                    className="w-[288px] lg:w-[304px] shrink-0 flex flex-col h-full min-h-0 overflow-hidden rounded-xl bg-q-surface/70 border border-q-border/60"
-                                                    onDragOver={handleDragOver}
-                                                    onDrop={(e) => handleDrop(e, stage.id)}
-                                                >
-                                                    {/* Column Header - Editable */}
-                                                    <div className="sticky top-0 z-10 p-3 flex items-center justify-between gap-2 shrink-0 border-b border-q-border/30 bg-q-surface/95 backdrop-blur">
-                                                        <div className="flex min-w-0 items-center gap-2">
-                                                            <div className={`w-2.5 h-2.5 shrink-0 rounded-full ${stage.color}`} />
-                                                            {editingStageId === stage.id ? (
-                                                                <input
-                                                                    ref={stageInputRef}
-                                                                    value={editingStageLabel}
-                                                                    onChange={e => setEditingStageLabel(e.target.value)}
-                                                                    onBlur={() => handleStageRename(stage.id, editingStageLabel)}
-                                                                    onKeyDown={e => { if (e.key === 'Enter') handleStageRename(stage.id, editingStageLabel); if (e.key === 'Escape') setEditingStageId(null); }}
-                                                                    className="font-bold text-sm text-foreground bg-transparent border-b border-primary outline-none w-32"
-                                                                />
-                                                            ) : (
-                                                                <h3
-                                                                    className="truncate font-bold text-sm text-foreground cursor-pointer hover:text-primary transition-colors group/stage"
-                                                                    onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
-                                                                    title={t('leads.crmSettings.editStageLabel')}
-                                                                >
-                                                                    {stage.label}
-                                                                    <Pencil size={10} className="inline ml-1 opacity-0 group-hover/stage:opacity-60 transition-opacity" />
-                                                                </h3>
-                                                            )}
-                                                            <span className="shrink-0 bg-q-bg px-2 py-0.5 rounded-full text-xs text-q-text-muted border border-q-border font-mono">
-                                                                {stageLeads.length}
-                                                            </span>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => { setEditingStageId(stage.id); setEditingStageLabel(stage.label); }}
-                                                            className="text-q-text-muted hover:text-foreground p-1 rounded hover:bg-q-bg transition-colors"
-                                                            title={t('leads.crmSettings.editStageLabel')}
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Cards Container */}
-                                                    <div className="flex-1 min-h-0 overflow-y-auto p-2.5 custom-scrollbar">
-                                                        {stageLeads.map(lead => (
-                                                            <LeadCard
-                                                                key={lead.id}
-                                                                lead={lead}
-                                                                onDragStart={handleDragStart}
-                                                                onClick={() => { setSelectedLead(lead); }}
-                                                                onDelete={deleteLead}
-                                                            />
-                                                        ))}
-                                                        {stageLeads.length === 0 && (
-                                                            <div className="h-24 border-2 border-dashed border-q-border rounded-xl flex items-center justify-center text-q-text-muted text-xs font-medium bg-q-bg/30">
-                                                                Drop items here
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                </DndContext>
                             )}
 
                             {viewMode === 'table' && (

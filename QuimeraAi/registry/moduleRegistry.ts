@@ -1,6 +1,6 @@
-import type { PageSection } from '../types/ui';
-import type { PlanFeatures, SubscriptionPlanId } from '../types/subscription';
-import type { PlatformServiceId } from '../types/serviceAvailability';
+import type { PageSection } from '../types/ui.ts';
+import type { PlanFeatures, SubscriptionPlanId } from '../types/subscription.ts';
+import type { PlatformServiceId } from '../types/serviceAvailability.ts';
 
 export type ModuleKind =
     | 'website-section'
@@ -27,6 +27,8 @@ export type ModuleOwnerSystem =
     | 'design-system'
     | 'finance'
     | 'analytics'
+    | 'agency-engine'
+    | 'global-assistant'
     | 'automation-engine';
 
 export type CanonicalSystemId =
@@ -42,6 +44,7 @@ export type CanonicalSystemId =
     | 'realEstate'
     | 'finance'
     | 'analytics'
+    | 'agency'
     | 'bioPage'
     | 'media';
 
@@ -52,10 +55,20 @@ export interface ModuleRegistryItem {
     ownerSystem: ModuleOwnerSystem;
     canonicalSystem?: CanonicalSystemId;
     description: string;
+    view?: string;
+    route?: string;
     requiredPlan?: SubscriptionPlanId;
     requiredFeature?: keyof PlanFeatures;
     requiredService?: PlatformServiceId;
+    requiredPermission?: string;
     gatingReason?: string;
+    implementationStatus?: 'production' | 'beta' | 'development' | 'planned';
+    planGate?: {
+        minimumPlan?: SubscriptionPlanId;
+        reason?: string;
+    };
+    upgradeTrigger?: string;
+    usageResource?: string;
     compatibleIndustries: string[];
     requiredModules?: string[];
     optionalModules?: string[];
@@ -93,6 +106,184 @@ const ecommerceGate = {
 };
 
 export const quimeraModuleRegistry: ModuleRegistryItem[] = [
+    {
+        id: 'agency-engine',
+        label: 'Agency Engine',
+        moduleKind: 'engine',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'AI-powered operating system for agencies to create, sell, provision, manage, bill, report, and scale client businesses.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageSettings',
+        gatingReason: 'Requires Agency Engine service availability, an agency-enabled plan, and agency management permission.',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'ai-studio'],
+        readsFrom: [
+            'businessBlueprint',
+            'websiteBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'media',
+            'analytics',
+            'finance',
+        ],
+        writesTo: [
+            'crm',
+            'emailMarketing',
+            'analytics',
+            'finance',
+            'businessBlueprint',
+            'websiteBuilder',
+            'ecommerce',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'media',
+        ],
+    },
+    {
+        id: 'agency-client-360',
+        label: 'Agency Client 360',
+        moduleKind: 'integration',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Client profile, modules, readiness, billing, notes, activity, and reports surface for agency-managed clients.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageSettings',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'global-assistant'],
+        readsFrom: ['businessBlueprint', 'analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'chatbot', 'bioPage'],
+        writesTo: ['analytics', 'finance', 'crm', 'emailMarketing'],
+    },
+    {
+        id: 'agency-client-provisioning',
+        label: 'Agency Client Provisioning',
+        moduleKind: 'automation',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Creates agency client tenants, projects, BusinessBlueprint drafts, module activations, invites, billing setup, and audit events.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageSettings',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'ai-studio'],
+        readsFrom: ['businessBlueprint'],
+        writesTo: ['businessBlueprint', 'websiteBuilder', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics', 'finance'],
+    },
+    {
+        id: 'agency-project-transfer',
+        label: 'Agency Project Transfer',
+        moduleKind: 'automation',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Copies agency-owned websites and module drafts into client workspaces as reviewable draft projects with audit history and access gating.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageProjects',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'website-builder'],
+        readsFrom: ['websiteBuilder', 'businessBlueprint', 'ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage', 'media', 'analytics'],
+        writesTo: ['websiteBuilder', 'businessBlueprint', 'analytics'],
+    },
+    {
+        id: 'agency-service-plans',
+        label: 'Agency Service Plans',
+        moduleKind: 'integration',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Finite client service plans owned by an agency and applied to sub-client tenants.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageBilling',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine'],
+        writesTo: ['finance', 'analytics'],
+    },
+    {
+        id: 'agency-billing',
+        label: 'Agency Billing',
+        moduleKind: 'integration',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Stripe Connect, Checkout, payment links, invoices, payment status, and billing audit workflows for agency clients.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageBilling',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine'],
+        readsFrom: ['finance', 'analytics'],
+        writesTo: ['finance', 'analytics'],
+    },
+    {
+        id: 'agency-reports',
+        label: 'Agency Reports',
+        moduleKind: 'automation',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Client and portfolio reports with filters, exports, scheduled delivery, AI summaries, and activity events.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canViewAnalytics',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'global-assistant'],
+        readsFrom: ['analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+        writesTo: ['analytics'],
+    },
+    {
+        id: 'agency-white-label',
+        label: 'Agency White Label Studio',
+        moduleKind: 'integration',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'White-label portal branding, client-visible navigation, support identity, email identity, custom domains, and previews.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canManageSettings',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'website-builder'],
+        readsFrom: ['websiteBuilder', 'designSystem'],
+        writesTo: ['websiteBuilder'],
+    },
+    {
+        id: 'agency-client-portal',
+        label: 'Agency Client Portal',
+        moduleKind: 'integration',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Client-facing portal configuration for projects, reports, billing, approvals, activity, and support.',
+        route: '/portal/dashboard',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine'],
+        readsFrom: ['analytics', 'finance', 'websiteBuilder', 'businessBlueprint'],
+        writesTo: ['analytics'],
+    },
+    {
+        id: 'agency-command-center',
+        label: 'Agency Command Center',
+        moduleKind: 'engine',
+        ownerSystem: 'agency-engine',
+        canonicalSystem: 'agency',
+        description: 'Operational home for agency priorities, client health, revenue, readiness, alerts, activity, and Global Assistant actions.',
+        requiredService: 'agency',
+        requiredFeature: 'agencyModule',
+        requiredPermission: 'canViewAnalytics',
+        compatibleIndustries: ['all'],
+        editableBy: ['agency-engine', 'global-assistant'],
+        readsFrom: ['analytics', 'finance', 'crm', 'emailMarketing', 'ecommerce', 'appointments', 'restaurants', 'realEstate', 'chatbot', 'bioPage'],
+        writesTo: ['analytics', 'finance'],
+    },
     {
         id: 'ai-business-blueprint',
         label: 'AI Business Blueprint',
@@ -135,9 +326,95 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         canonicalSystem: 'bioPage',
         description: 'Mobile-first link-in-bio funnel engine for creator profiles, links, shop blocks, booking, leads, email subscribe, ChatCore, analytics, QR, SEO, and AI-generated drafts.',
         compatibleIndustries: ['all', 'creator', 'portfolio', 'ecommerce', 'restaurant', 'real-estate', 'services', 'fitness', 'beauty', 'local_business'],
+        requiredService: 'bioPage',
+        requiredPermission: 'canManageProjects',
+        gatingReason: 'Requires Bio Page service availability.',
         editableBy: ['bio-page-engine', 'ai-studio', 'website-builder'],
         readsFrom: ['businessBlueprint', 'websiteBuilder', 'designSystem', 'ecommerce', 'appointments', 'crm', 'emailMarketing', 'chatbot', 'media', 'analytics'],
         writesTo: ['crm', 'emailMarketing', 'analytics', 'appointments'],
+    },
+    {
+        id: 'cms-engine',
+        label: 'CMS',
+        moduleKind: 'engine',
+        ownerSystem: 'website-builder',
+        canonicalSystem: 'websiteBuilder',
+        view: 'cms',
+        description: 'Canonical content management surface for pages, blog content, navigation content, categories, and SEO-ready editorial workflows.',
+        requiredService: 'cms',
+        requiredFeature: 'cmsEnabled',
+        gatingReason: 'Requires CMS service availability and a CMS-enabled plan.',
+        compatibleIndustries: ['all'],
+        editableBy: ['website-builder', 'ai-studio'],
+        readsFrom: ['businessBlueprint', 'designSystem'],
+        writesTo: ['websiteBuilder', 'analytics'],
+        upgradeTrigger: 'generic',
+    },
+    {
+        id: 'templates-library',
+        label: 'Templates',
+        moduleKind: 'engine',
+        ownerSystem: 'website-builder',
+        canonicalSystem: 'websiteBuilder',
+        view: 'templates',
+        description: 'Template library for starting website projects from approved layouts and sections.',
+        requiredService: 'templates',
+        requiredFeature: 'templates',
+        gatingReason: 'Requires templates service availability and plan access.',
+        compatibleIndustries: ['all'],
+        editableBy: ['website-builder', 'ai-studio'],
+        readsFrom: ['designSystem'],
+        writesTo: ['websiteBuilder'],
+    },
+    {
+        id: 'domains-management',
+        label: 'Domains',
+        moduleKind: 'integration',
+        ownerSystem: 'website-builder',
+        canonicalSystem: 'websiteBuilder',
+        view: 'domains',
+        description: 'Custom domain mapping, DNS verification, SSL status, and production domain binding.',
+        requiredService: 'domains',
+        requiredFeature: 'customDomains',
+        requiredPermission: 'canManageDomains',
+        gatingReason: 'Requires domains service availability, plan access, and domain management permission.',
+        compatibleIndustries: ['all'],
+        editableBy: ['website-builder'],
+        readsFrom: ['websiteBuilder'],
+        upgradeTrigger: 'domains',
+        usageResource: 'domains',
+    },
+    {
+        id: 'media-assets',
+        label: 'Media and AI Assets',
+        moduleKind: 'integration',
+        ownerSystem: 'media-ai',
+        canonicalSystem: 'media',
+        view: 'assets',
+        description: 'Asset library, image generation, and media workflows used across projects.',
+        requiredService: 'aiFeatures',
+        requiredFeature: 'aiImageGeneration',
+        requiredPermission: 'canManageFiles',
+        gatingReason: 'Requires AI features availability, image generation plan access, and file management permission.',
+        compatibleIndustries: ['all'],
+        editableBy: ['media-ai', 'ai-studio', 'website-builder'],
+        writesTo: ['media', 'websiteBuilder', 'bioPage'],
+        upgradeTrigger: 'generic',
+    },
+    {
+        id: 'analytics-engine',
+        label: 'Analytics',
+        moduleKind: 'integration',
+        ownerSystem: 'analytics',
+        canonicalSystem: 'analytics',
+        description: 'Analytics dashboards, usage summaries, conversion reporting, and module performance rollups.',
+        requiredService: 'analytics',
+        requiredFeature: 'analyticsBasic',
+        requiredPermission: 'canViewAnalytics',
+        gatingReason: 'Requires analytics service availability, plan access, and analytics permission.',
+        compatibleIndustries: ['all'],
+        editableBy: ['analytics'],
+        readsFrom: ['ecommerce', 'crm', 'emailMarketing', 'chatbot', 'appointments', 'restaurants', 'realEstate', 'bioPage'],
     },
     {
         id: 'storefront-builder',
@@ -145,6 +422,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         moduleKind: 'engine',
         ownerSystem: 'storefront-builder',
         description: 'Edits storefront presentation, templates, product-card style, cart visuals, and checkout visuals.',
+        requiredPermission: 'canManageEcommerce',
         compatibleIndustries: ['ecommerce', 'retail', 'fashion', 'fitness', 'food', 'beauty', 'digital'],
         editableBy: ['storefront-builder', 'ai-studio'],
         readsFrom: ['ecommerce'],
@@ -157,6 +435,8 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         ownerSystem: 'ecommerce-engine',
         canonicalSystem: 'ecommerce',
         description: 'Canonical system for products, variants, prices, inventory, carts, checkout, orders, discounts, shipping, taxes, and customers.',
+        requiredPermission: 'canManageEcommerce',
+        usageResource: 'products',
         compatibleIndustries: ['ecommerce', 'retail', 'fashion', 'fitness', 'food', 'restaurant', 'real-estate', 'services', 'digital'],
         editableBy: ['ecommerce-admin', 'ai-studio'],
         writesTo: ['crm', 'emailMarketing', 'finance', 'analytics', 'chatbot'],
@@ -196,6 +476,8 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         description: 'Canonical system for leads, lead tags, and lead activity timelines.',
         requiredService: 'crm',
         requiredFeature: 'crmEnabled',
+        requiredPermission: 'canManageLeads',
+        usageResource: 'leads',
         gatingReason: 'Requires CRM service availability and a CRM-enabled plan.',
         compatibleIndustries: ['all'],
         editableBy: ['crm', 'ai-studio'],
@@ -211,6 +493,8 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         description: 'Canonical system for campaigns, audiences, automations, transactional flow drafts, and email logs.',
         requiredService: 'emailMarketing',
         requiredFeature: 'emailMarketing',
+        requiredPermission: 'canManageLeads',
+        usageResource: 'emails',
         gatingReason: 'Requires email marketing service availability and plan access.',
         compatibleIndustries: ['all'],
         editableBy: ['email-marketing', 'ai-studio'],
@@ -229,6 +513,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         ].join('\n'),
         requiredService: 'chatbot',
         requiredFeature: 'chatbotEnabled',
+        requiredPermission: 'canManageProjects',
         gatingReason: 'Requires chatbot service availability and plan access.',
         compatibleIndustries: ['all'],
         editableBy: ['chatbot-engine', 'ai-studio'],
@@ -243,6 +528,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         canonicalSystem: 'appointments',
         description: 'Canonical system for appointments, paid consultations, deposits, classes, and service bookings.',
         requiredService: 'appointments',
+        requiredPermission: 'canManageProjects',
         gatingReason: 'Requires appointments service availability.',
         compatibleIndustries: ['services', 'fitness', 'wellness', 'healthcare', 'beauty', 'consulting', 'education'],
         editableBy: ['appointments-engine', 'ai-studio'],
@@ -257,6 +543,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         canonicalSystem: 'restaurants',
         description: 'Canonical system for menus, hours, locations, reservations, restaurant analytics, and restaurant ecommerce offers.',
         requiredService: 'restaurants',
+        requiredPermission: 'canManageProjects',
         gatingReason: 'Requires restaurants service availability.',
         compatibleIndustries: ['restaurant', 'cafe', 'food', 'bar', 'bakery', 'catering', 'steakhouse', 'sushi', 'pizza', 'brunch', 'food-truck'],
         editableBy: ['restaurant-engine', 'ai-studio'],
@@ -272,6 +559,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         description: 'Canonical system for listings, property leads, campaigns, open houses, and real estate digital products.',
         requiredService: 'realEstate',
         requiredFeature: 'realEstateModule',
+        requiredPermission: 'canManageRealEstate',
         gatingReason: 'Requires real estate service availability and plan access.',
         compatibleIndustries: ['real-estate'],
         editableBy: ['real-estate-engine', 'ai-studio'],
@@ -286,6 +574,7 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         canonicalSystem: 'finance',
         description: 'Canonical system for revenue, refunds, fees, taxes, payouts, and financial reporting.',
         requiredService: 'finance',
+        requiredPermission: 'canViewAnalytics',
         gatingReason: 'Requires finance service availability.',
         compatibleIndustries: ['all'],
         editableBy: ['finance'],

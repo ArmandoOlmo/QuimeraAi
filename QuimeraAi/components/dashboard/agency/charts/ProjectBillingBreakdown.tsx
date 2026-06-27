@@ -56,7 +56,7 @@ export function ProjectBillingBreakdown({
 
     if (isLoading) {
         return (
-            <div className="bg-q-surface border border-q-border rounded-xl p-6">
+            <div className="quimera-dashboard-panel-card p-5">
                 <div className="animate-pulse">
                     <div className="h-6 w-48 bg-q-surface-overlay rounded mb-4" />
                     <div className="space-y-3">
@@ -70,7 +70,7 @@ export function ProjectBillingBreakdown({
     }
 
     return (
-        <MotionCard motionDelay={0.3} hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
+        <MotionCard motionDelay={0.3} hoverMotion className="quimera-dashboard-panel-card p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -177,7 +177,7 @@ export function ProjectBillingBreakdown({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-q-success/10 to-q-accent/10 rounded-lg border border-q-success/30"
+                    className="flex items-center justify-between p-4 bg-q-success/10 rounded-lg border border-q-success/30"
                 >
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-q-success/20 flex items-center justify-center">

@@ -104,6 +104,7 @@ const KNOWN_COLUMNS: Record<string, string[]> = {
     assistant_module_summaries: ['id', 'tenant_id', 'project_id', 'module', 'summary', 'readiness', 'updated_by', 'created_at', 'updated_at'],
     assistant_user_preferences: ['user_id', 'preferences', 'pinned_memory_ids', 'created_at', 'updated_at'],
     assistant_admin_events: ['id', 'tenant_id', 'user_id', 'event_type', 'target_type', 'target_id', 'metadata', 'created_at'],
+    agency_landings: ['id', 'tenant_id', 'data', 'subdomain', 'custom_domain', 'is_published', 'published_at', 'last_updated', 'created_at', 'updated_at', 'updated_by'],
 };
 
 const EMAIL_TABLES = new Set(['email_campaigns', 'email_audiences', 'email_automations', 'email_logs']);
@@ -157,6 +158,8 @@ const COLLECTION_TABLES: Record<string, string> = {
     assistant_user_preferences: 'assistant_user_preferences',
     assistantAdminEvents: 'assistant_admin_events',
     assistant_admin_events: 'assistant_admin_events',
+    agencyLandings: 'agency_landings',
+    agency_landings: 'agency_landings',
     publicStores: 'public_stores',
     public_stores: 'public_stores',
     storeUsers: 'store_users',
@@ -245,6 +248,7 @@ const JSON_FALLBACK_COLUMN: Record<string, string> = {
     assistant_module_summaries: 'summary',
     assistant_user_preferences: 'preferences',
     assistant_admin_events: 'metadata',
+    agency_landings: 'data',
 };
 
 const FIELD_ALIASES: Record<string, string> = {
@@ -262,6 +266,9 @@ const FIELD_ALIASES: Record<string, string> = {
     updatedAt: 'updated_at',
     publishedAt: 'published_at',
     lastUpdated: 'last_updated',
+    updatedBy: 'updated_by',
+    customDomain: 'custom_domain',
+    isPublished: 'is_published',
     photoURL: 'photo_url',
     photoUrl: 'photo_url',
     avatarURL: 'avatar_url',

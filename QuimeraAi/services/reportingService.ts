@@ -10,9 +10,200 @@ import type {
     ReportDateRange,
     AggregatedReportData,
     ClientMetrics,
+    ReportTemplate,
 } from '../types/reports';
 
+type JsonRecord = Record<string, any>;
+
+interface AgencyClientRelationship {
+    servicePlanId?: string;
+    servicePlanName?: string;
+    lifecycleStage?: string;
+    billingMode?: string;
+    billingStatus?: string;
+    healthScore?: number;
+    onboardingStatus?: string;
+    projectCount?: number;
+    primaryProjectId?: string;
+}
+
+interface GenerateAgencyReportInput {
+    agencyTenantId: string;
+    clientIds: string[];
+    dateRange: ReportDateRange;
+    metrics: ReportMetric[];
+    template: ReportTemplate;
+    generatedBy?: string | null;
+    includeTrends?: boolean;
+    includeRecommendations?: boolean;
+    persist?: boolean;
+}
+
+interface PersistAgencyReportInput {
+    agencyTenantId: string;
+    data: AggregatedReportData;
+    template: ReportTemplate;
+    generatedBy?: string | null;
+    status?: 'draft' | 'sent' | 'published';
+    includeTrends?: boolean;
+    includeRecommendations?: boolean;
+}
+
+interface PersistAgencyReportResult {
+    reportId?: string;
+    status: 'saved' | 'failed';
+    error?: string;
+}
+
+function isRecord(value: unknown): value is JsonRecord {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseJsonObject(value: unknown): JsonRecord {
+    if (isRecord(value)) return value;
+    if (typeof value !== 'string' || value.trim().length === 0) return {};
+    try {
+        const parsed = JSON.parse(value);
+        return isRecord(parsed) ? parsed : {};
+    } catch {
+        return {};
+    }
+}
+
+function readFiniteNumber(value: unknown): number {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function readMoneyAmount(...values: unknown[]): number {
+    let finiteFallback: number | null = null;
+
+    for (const value of values) {
+        if (value === null || value === undefined || value === '') continue;
+        const number = Number(value);
+        if (!Number.isFinite(number)) continue;
+        if (number > 0) return number;
+        if (finiteFallback === null) finiteFallback = number;
+    }
+
+    return finiteFallback ?? 0;
+}
+
+function readPositiveNumber(...values: unknown[]): number {
+    for (const value of values) {
+        const number = readFiniteNumber(value);
+        if (number > 0) return number;
+    }
+    return 0;
+}
+
+function formatDateOnly(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+
+export function readCanonicalOrderTotal(order: unknown): number {
+    const row = isRecord(order) ? order : {};
+    const data = parseJsonObject(row.data);
+    const pricing = parseJsonObject(row.pricing ?? data.pricing);
+    return readMoneyAmount(
+        row.total_amount,
+        row.total,
+        row.amount_total,
+        data.total_amount,
+        data.totalAmount,
+        data.amount_total,
+        data.total,
+        pricing.total_amount,
+        pricing.totalAmount,
+        pricing.amount_total,
+        pricing.total,
+        pricing.grandTotal,
+    );
+}
+
+export function readClientMonthlyRecurringRevenue(client: Pick<Tenant, 'billing' | 'billingInfo'>): number {
+    return readPositiveNumber(
+        client.billing?.mrr,
+        client.billing?.monthlyPrice,
+        client.billingInfo?.mrr,
+    );
+}
+
+export function calculateAgencyReportSummary(clientMetrics: ClientMetrics[]): AggregatedReportData['summary'] {
+    const totalOrders = clientMetrics.reduce((sum, client) => sum + client.totalOrders, 0);
+    const totalRevenue = clientMetrics.reduce((sum, client) => sum + client.totalRevenue, 0);
+
+    return {
+        totalClients: clientMetrics.length,
+        totalLeads: clientMetrics.reduce((sum, c) => sum + c.totalLeads, 0),
+        totalRevenue,
+        totalOrders,
+        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+        totalMrr: clientMetrics.reduce((sum, c) => sum + c.monthlyRecurringRevenue, 0),
+        totalVisits: clientMetrics.reduce((sum, c) => sum + c.totalVisits, 0),
+        totalEmailsSent: clientMetrics.reduce((sum, c) => sum + c.emailsSent, 0),
+        avgConversionRate:
+            clientMetrics.length > 0
+                ? clientMetrics.reduce((sum, c) => sum + c.conversionRate, 0) /
+                clientMetrics.length
+                : 0,
+        totalAiCreditsUsed: clientMetrics.reduce((sum, c) => sum + c.aiCreditsUsed, 0),
+        totalStorageUsedGB: clientMetrics.reduce((sum, c) => sum + c.storageUsedGB, 0),
+    };
+}
+
+export function buildAgencyReportAISummary(data: AggregatedReportData): string {
+    const topClient = data.trends.topPerformingClients[0];
+    const period = `${formatDateOnly(data.dateRange.start)} - ${formatDateOnly(data.dateRange.end)}`;
+    const base = `Reporte Agency Engine (${period}): ${data.summary.totalClients} clientes, ${data.summary.totalLeads} leads, ${data.summary.totalOrders} ordenes pagadas, $${Math.round(data.summary.totalRevenue).toLocaleString()} en revenue y $${Math.round(data.summary.totalMrr).toLocaleString()} en MRR administrado.`;
+
+    if (!topClient) {
+        return `${base} No hay suficientes datos de revenue o leads para destacar un cliente principal.`;
+    }
+
+    return `${base} Cliente con mejor performance: ${topClient.clientName} con $${Math.round(topClient.value).toLocaleString()} en revenue atribuido.`;
+}
+
 export class ReportingService {
+    async generateAgencyReport(input: GenerateAgencyReportInput): Promise<AggregatedReportData> {
+        const data = await this.aggregateClientData(
+            input.agencyTenantId,
+            input.clientIds,
+            input.dateRange,
+            input.metrics,
+            {
+                includeTrends: input.includeTrends,
+                includeRecommendations: input.includeRecommendations,
+            }
+        );
+
+        const aiSummary = buildAgencyReportAISummary(data);
+        const reportData: AggregatedReportData = {
+            ...data,
+            aiSummary,
+            persistenceStatus: input.persist === false ? 'not_requested' : 'failed',
+        };
+
+        if (input.persist === false) {
+            return reportData;
+        }
+
+        const persistence = await this.persistAgencyReport({
+            agencyTenantId: input.agencyTenantId,
+            data: reportData,
+            template: input.template,
+            generatedBy: input.generatedBy,
+            includeTrends: input.includeTrends,
+            includeRecommendations: input.includeRecommendations,
+        });
+
+        return {
+            ...reportData,
+            savedReportId: persistence.reportId,
+            persistenceStatus: persistence.status,
+        };
+    }
+
     /**
      * Aggregate data from multiple clients
      */
@@ -20,7 +211,11 @@ export class ReportingService {
         agencyTenantId: string,
         clientIds: string[],
         dateRange: ReportDateRange,
-        metrics: ReportMetric[]
+        metrics: ReportMetric[],
+        options: {
+            includeTrends?: boolean;
+            includeRecommendations?: boolean;
+        } = {}
     ): Promise<AggregatedReportData> {
         // Fetch all client data
         let query = supabase
@@ -41,20 +236,45 @@ export class ReportingService {
         const clients: Tenant[] = (clientsData || []).map(doc => ({
             id: doc.id,
             name: doc.name,
+            slug: doc.slug,
+            email: doc.email,
+            companyName: doc.company_name,
+            type: doc.type,
+            ownerUserId: doc.owner_user_id,
             ownerTenantId: doc.owner_tenant_id,
             domain: doc.domain,
-            plan: doc.plan,
+            memberUserIds: doc.member_user_ids || [],
+            projectIds: doc.project_ids || [],
+            subscriptionPlan: doc.subscription_plan,
             status: doc.status,
             createdAt: doc.created_at ? new Date(doc.created_at) : new Date(),
             updatedAt: doc.updated_at ? new Date(doc.updated_at) : new Date(),
-            settings: doc.settings,
-            usage: doc.usage
-        }));
+            settings: parseJsonObject(doc.settings),
+            usage: {
+                ...this.getDefaultUsage(),
+                ...parseJsonObject(doc.usage),
+            },
+            limits: parseJsonObject(doc.limits),
+            branding: parseJsonObject(doc.branding),
+            billing: parseJsonObject(doc.billing),
+            billingInfo: parseJsonObject(doc.billing_info),
+            lastActiveAt: doc.last_active_at,
+        } as Tenant));
+
+        const relationships = await this.getAgencyClientRelationships(
+            agencyTenantId,
+            clients.map(client => client.id)
+        );
 
         // Calculate metrics for each client
         const clientMetrics: ClientMetrics[] = [];
         for (const client of clients) {
-            const metrics = await this.getClientMetrics(client, dateRange);
+            const metrics = await this.getClientMetrics(
+                client,
+                dateRange,
+                options.includeTrends !== false,
+                relationships.get(client.id)
+            );
             clientMetrics.push(metrics);
         }
 
@@ -62,16 +282,31 @@ export class ReportingService {
         const summary = this.calculateSummary(clientMetrics);
 
         // Calculate trends
-        const trends = await this.calculateTrends(clientMetrics, dateRange);
+        const trends = options.includeTrends === false
+            ? this.getEmptyTrends()
+            : await this.calculateTrends(clientMetrics, dateRange);
 
         // Generate recommendations
-        const recommendations = this.generateRecommendations(clientMetrics, trends);
+        const recommendations = options.includeRecommendations === false
+            ? []
+            : this.generateRecommendations(clientMetrics, trends);
 
         return {
             summary,
             byClient: clientMetrics,
             trends,
             recommendations,
+            aiSummary: buildAgencyReportAISummary({
+                summary,
+                byClient: clientMetrics,
+                trends,
+                recommendations,
+                generatedAt: new Date(),
+                dateRange,
+                includedClients: clientIds,
+                metrics,
+            }),
+            persistenceStatus: 'not_requested',
             generatedAt: new Date(),
             dateRange,
             includedClients: clientIds,
@@ -83,17 +318,191 @@ export class ReportingService {
         return {
             summary: this.calculateSummary([]),
             byClient: [],
-            trends: {
-                topPerformingClients: [],
-                underperformingClients: [],
-                periodOverPeriodComparison: { leadsGrowth: 0, revenueGrowth: 0, trafficGrowth: 0 }
-            },
+            trends: this.getEmptyTrends(),
             recommendations: ['No data available'],
+            aiSummary: '',
+            persistenceStatus: 'not_requested',
             generatedAt: new Date(),
             dateRange,
             includedClients: clientIds,
             metrics
         };
+    }
+
+    private getEmptyTrends(): AggregatedReportData['trends'] {
+        return {
+            topPerformingClients: [],
+            underperformingClients: [],
+            periodOverPeriodComparison: { leadsGrowth: 0, revenueGrowth: 0, trafficGrowth: 0 },
+        };
+    }
+
+    private async getAgencyClientRelationships(
+        agencyTenantId: string,
+        clientIds: string[]
+    ): Promise<Map<string, AgencyClientRelationship>> {
+        const relationships = new Map<string, AgencyClientRelationship>();
+        if (!agencyTenantId || clientIds.length === 0) return relationships;
+
+        const { data, error } = await supabase
+            .from('agency_clients')
+            .select('client_tenant_id,agency_plan_id,billing_mode,lifecycle_stage,health_score,onboarding_status,project_count,primary_project_id,metadata')
+            .eq('agency_tenant_id', agencyTenantId)
+            .in('client_tenant_id', clientIds);
+
+        if (error || !data?.length) {
+            if (error) console.warn('[ReportingService] Error fetching agency relationships:', error);
+            return relationships;
+        }
+
+        const planIds = Array.from(new Set(
+            data.map(row => row.agency_plan_id).filter(Boolean)
+        ));
+        const planNames = new Map<string, string>();
+
+        if (planIds.length > 0) {
+            const { data: plans, error: plansError } = await supabase
+                .from('agency_service_plans')
+                .select('id,name')
+                .in('id', planIds);
+
+            if (plansError) {
+                console.warn('[ReportingService] Error fetching agency service plans:', plansError);
+            } else {
+                (plans || []).forEach(plan => {
+                    if (plan.id) planNames.set(plan.id, plan.name || plan.id);
+                });
+            }
+        }
+
+        data.forEach(row => {
+            const metadata = parseJsonObject(row.metadata);
+            relationships.set(row.client_tenant_id, {
+                servicePlanId: row.agency_plan_id || metadata.agencyPlanId || metadata.effectivePlanId,
+                servicePlanName: row.agency_plan_id ? planNames.get(row.agency_plan_id) : undefined,
+                billingMode: row.billing_mode,
+                lifecycleStage: row.lifecycle_stage,
+                billingStatus: metadata.billingStatus || metadata.paymentStatus,
+                healthScore: readFiniteNumber(row.health_score),
+                onboardingStatus: row.onboarding_status,
+                projectCount: readFiniteNumber(row.project_count),
+                primaryProjectId: row.primary_project_id,
+            });
+        });
+
+        return relationships;
+    }
+
+    async persistAgencyReport(input: PersistAgencyReportInput): Promise<PersistAgencyReportResult> {
+        const reportPayload = this.serializeReportData(input.data, {
+            template: input.template,
+            includeTrends: input.includeTrends,
+            includeRecommendations: input.includeRecommendations,
+        });
+        const singleClientId = input.data.includedClients.length === 1 ? input.data.includedClients[0] : null;
+        const generatedBy = input.generatedBy ?? (await this.getCurrentUserId());
+
+        const { data, error } = await supabase
+            .from('agency_reports')
+            .insert({
+                agency_tenant_id: input.agencyTenantId,
+                client_tenant_id: singleClientId,
+                report_type: input.template,
+                period_start: formatDateOnly(input.data.dateRange.start),
+                period_end: formatDateOnly(input.data.dateRange.end),
+                data: reportPayload,
+                ai_summary: input.data.aiSummary || buildAgencyReportAISummary(input.data),
+                status: input.status || 'draft',
+                generated_by: generatedBy,
+            })
+            .select('id')
+            .single();
+
+        if (error) {
+            console.warn('[ReportingService] Error persisting agency report:', error);
+            return { status: 'failed', error: error.message || 'Unable to persist report' };
+        }
+
+        await this.logReportActivity({
+            agencyTenantId: input.agencyTenantId,
+            clientTenantId: singleClientId,
+            reportId: data?.id,
+            template: input.template,
+            generatedBy,
+            summary: input.data.summary,
+            aiSummary: input.data.aiSummary || buildAgencyReportAISummary(input.data),
+        });
+
+        return { status: 'saved', reportId: data?.id };
+    }
+
+    private async getCurrentUserId(): Promise<string | null> {
+        const { data } = await supabase.auth.getUser();
+        return data.user?.id || null;
+    }
+
+    private serializeReportData(
+        data: AggregatedReportData,
+        options: {
+            template: ReportTemplate;
+            includeTrends?: boolean;
+            includeRecommendations?: boolean;
+        }
+    ) {
+        return {
+            schemaVersion: 1,
+            source: 'agency_reporting_service',
+            template: options.template,
+            generatedAt: data.generatedAt.toISOString(),
+            dateRange: {
+                start: data.dateRange.start.toISOString(),
+                end: data.dateRange.end.toISOString(),
+            },
+            includedClients: data.includedClients,
+            metrics: data.metrics,
+            options: {
+                includeTrends: options.includeTrends !== false,
+                includeRecommendations: options.includeRecommendations !== false,
+            },
+            summary: data.summary,
+            byClient: data.byClient,
+            trends: data.trends,
+            recommendations: data.recommendations,
+            aiSummary: data.aiSummary,
+        };
+    }
+
+    private async logReportActivity(input: {
+        agencyTenantId: string;
+        clientTenantId: string | null;
+        reportId?: string;
+        template: ReportTemplate;
+        generatedBy: string | null;
+        summary: AggregatedReportData['summary'];
+        aiSummary: string;
+    }) {
+        const { error } = await supabase
+            .from('agency_activity')
+            .insert({
+                agency_tenant_id: input.agencyTenantId,
+                client_tenant_id: input.clientTenantId,
+                type: 'report_generated',
+                title: 'Reporte Agency Engine generado',
+                description: input.aiSummary,
+                metadata: {
+                    reportId: input.reportId,
+                    template: input.template,
+                    totalClients: input.summary.totalClients,
+                    totalRevenue: input.summary.totalRevenue,
+                    totalOrders: input.summary.totalOrders,
+                    totalMrr: input.summary.totalMrr,
+                },
+                created_by: input.generatedBy,
+            });
+
+        if (error) {
+            console.warn('[ReportingService] Error logging report activity:', error);
+        }
     }
 
     /**
@@ -102,7 +511,8 @@ export class ReportingService {
     async getClientMetrics(
         client: Tenant,
         dateRange: ReportDateRange,
-        includeTrends: boolean = true
+        includeTrends: boolean = true,
+        relationship?: AgencyClientRelationship
     ): Promise<ClientMetrics> {
         // Get leads data
         const leadsData = await this.getLeadsMetrics(client.id, dateRange.start, dateRange.end);
@@ -142,6 +552,14 @@ export class ReportingService {
         return {
             clientId: client.id,
             clientName: client.name,
+            subscriptionPlan: client.subscriptionPlan,
+            servicePlanId: relationship?.servicePlanId,
+            servicePlanName: relationship?.servicePlanName,
+            lifecycleStage: relationship?.lifecycleStage,
+            billingMode: relationship?.billingMode || client.billing?.mode,
+            billingStatus: relationship?.billingStatus || (client.billing?.cancelAtPeriodEnd ? 'cancelling' : 'active'),
+            monthlyRecurringRevenue: readClientMonthlyRecurringRevenue(client),
+            healthScore: relationship?.healthScore,
             ...leadsData,
             ...trafficData,
             ...salesData,
@@ -149,7 +567,7 @@ export class ReportingService {
             aiCreditsUsed: usage.aiCreditsUsed || 0,
             storageUsedGB: usage.storageUsedGB || 0,
             activeUsers: usage.userCount || 0,
-            activeProjects: usage.projectCount || 0,
+            activeProjects: salesData.activeProjectCount || relationship?.projectCount || usage.projectCount || 0,
             trends,
         };
     }
@@ -239,26 +657,55 @@ export class ReportingService {
     /**
      * Get sales metrics for a client
      */
+    private readOrderTotal(order: any): number {
+        return readCanonicalOrderTotal(order);
+    }
+
     private async getSalesMetrics(
         tenantId: string,
         startDate: Date,
         endDate: Date
     ) {
-        // Assume an 'orders' table will exist in Supabase
-        const { data: orders, error } = await supabase
-            .from('orders')
-            .select('total')
+        const { data: projects, error: projectsError } = await supabase
+            .from('projects')
+            .select('id')
             .eq('tenant_id', tenantId)
-            .eq('status', 'paid')
+            .eq('is_archived', false);
+
+        if (projectsError || !projects?.length) {
+            return {
+                totalRevenue: 0,
+                totalOrders: 0,
+                averageOrderValue: 0,
+                conversionToSale: 0,
+                projectIds: [],
+                activeProjectCount: 0,
+            };
+        }
+
+        const projectIds = projects.map(project => project.id).filter(Boolean);
+        const { data: orders, error } = await supabase
+            .from('store_orders')
+            .select('*')
+            .in('project_id', projectIds)
+            .or('payment_status.eq.paid,status.eq.paid,status.eq.completed')
             .gte('created_at', startDate.toISOString())
             .lte('created_at', endDate.toISOString());
 
         if (error || !orders) {
-            return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0, conversionToSale: 0 };
+            if (error) console.warn('[ReportingService] Error fetching store_orders metrics:', error);
+            return {
+                totalRevenue: 0,
+                totalOrders: 0,
+                averageOrderValue: 0,
+                conversionToSale: 0,
+                projectIds,
+                activeProjectCount: projectIds.length,
+            };
         }
 
         const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const totalRevenue = orders.reduce((sum, order) => sum + this.readOrderTotal(order), 0);
         const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
         const conversionToSale = 0; // Placeholder
@@ -268,6 +715,8 @@ export class ReportingService {
             totalOrders,
             averageOrderValue,
             conversionToSale,
+            projectIds,
+            activeProjectCount: projectIds.length,
         };
     }
 
@@ -311,20 +760,7 @@ export class ReportingService {
      * Calculate summary totals
      */
     private calculateSummary(clientMetrics: ClientMetrics[]) {
-        return {
-            totalClients: clientMetrics.length,
-            totalLeads: clientMetrics.reduce((sum, c) => sum + c.totalLeads, 0),
-            totalRevenue: clientMetrics.reduce((sum, c) => sum + c.totalRevenue, 0),
-            totalVisits: clientMetrics.reduce((sum, c) => sum + c.totalVisits, 0),
-            totalEmailsSent: clientMetrics.reduce((sum, c) => sum + c.emailsSent, 0),
-            avgConversionRate:
-                clientMetrics.length > 0
-                    ? clientMetrics.reduce((sum, c) => sum + c.conversionRate, 0) /
-                    clientMetrics.length
-                    : 0,
-            totalAiCreditsUsed: clientMetrics.reduce((sum, c) => sum + c.aiCreditsUsed, 0),
-            totalStorageUsedGB: clientMetrics.reduce((sum, c) => sum + c.storageUsedGB, 0),
-        };
+        return calculateAgencyReportSummary(clientMetrics);
     }
 
     /**

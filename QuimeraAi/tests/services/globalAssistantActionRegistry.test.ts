@@ -210,7 +210,7 @@ describe('GlobalAssistantActionRegistry', () => {
         expect(definition).toBeDefined();
 
         const plan = buildExecutionPlan({
-            context: makeContext(),
+            context: makeContext('owner', 'owner'),
             intent,
             actionDefinitions: [definition!],
             request: 'Crea una campana de email para reservas',
@@ -290,6 +290,7 @@ describe('GlobalAssistantActionRegistry', () => {
         });
 
         expect(permission.allowed).toBe(false);
+        expect(permission.reasons).toContain('Mutating assistant actions require Owner or Super Admin mode.');
         expect(permission.reasons).toContain('Required service is not available: ecommerce.');
         expect(permission.reasons).toContain('Required feature is not enabled: ecommerceEnabled.');
     });

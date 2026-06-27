@@ -43,6 +43,7 @@ export type AssistantModuleTarget =
     | 'chatbot'
     | 'analytics'
     | 'finance'
+    | 'agency'
     | 'admin'
     | 'settings'
     | 'project'
@@ -221,6 +222,9 @@ export interface AssistantMemoryContextManifest {
     projectId: string | null;
     mode: GlobalAssistantMode;
     activeModule: AssistantModuleTarget | null;
+    activeRoute?: string | null;
+    currentSurface?: string | null;
+    activeServices?: PlatformServiceId[];
     sessionId: string | null;
     taskId: string | null;
     totalCount: number;
@@ -425,7 +429,9 @@ export interface AssistantRuntimeEvent {
         | 'assistant_admin_action_requested'
         | 'assistant_model_call'
         | 'assistant_tool_call'
-        | 'assistant_memory_updated';
+        | 'assistant_memory_updated'
+        | 'assistant_guide_handoff_opened'
+        | 'assistant_guide_handoff_blocked';
     userId: string | null;
     tenantId: string | null;
     projectId: string | null;

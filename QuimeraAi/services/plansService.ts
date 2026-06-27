@@ -11,6 +11,13 @@ import {
     PlanFeatures,
     SUBSCRIPTION_PLANS,
 } from '../types/subscription';
+import {
+    getCanonicalPlanFeatures,
+    getCanonicalPlanLimits,
+    isFinitePlanLimit,
+    normalizePlanId,
+    normalizePlanLimits,
+} from './billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -91,8 +98,8 @@ function rowToPlan(row: any): StoredPlan {
         isPopular: row.is_popular || false,
         showInLanding: row.show_in_landing || false,
         landingOrder: row.landing_order ?? 99,
-        limits: row.limits || {},
-        features: row.features || {},
+        limits: normalizePlanLimits(row.limits, row.canonical_plan_id || row.id),
+        features: { ...getCanonicalPlanFeatures(row.canonical_plan_id || row.id), ...(row.features || {}) },
         isArchived: row.is_archived || false,
         archivedAt: row.archived_at || undefined,
         createdBy: row.created_by || undefined,
@@ -120,7 +127,7 @@ function planToRow(plan: Partial<StoredPlan> & { id: string }): Record<string, a
     if (plan.isPopular !== undefined) row.is_popular = plan.isPopular;
     if (plan.showInLanding !== undefined) row.show_in_landing = plan.showInLanding;
     if (plan.landingOrder !== undefined) row.landing_order = plan.landingOrder;
-    if (plan.limits !== undefined) row.limits = plan.limits;
+    if (plan.limits !== undefined) row.limits = normalizePlanLimits(plan.limits, plan.id);
     if (plan.features !== undefined) row.features = plan.features;
     if (plan.isArchived !== undefined) row.is_archived = plan.isArchived;
     if (plan.createdBy !== undefined) row.created_by = plan.createdBy;
@@ -539,14 +546,14 @@ export async function getPlanDistribution(): Promise<Array<{ planId: string; pla
  * Get default limits for a plan ID
  */
 export function getDefaultLimitsForPlan(planId: SubscriptionPlanId): PlanLimits {
-    return SUBSCRIPTION_PLANS[planId]?.limits || SUBSCRIPTION_PLANS.free.limits;
+    return getCanonicalPlanLimits(normalizePlanId(planId));
 }
 
 /**
  * Get default features for a plan ID
  */
 export function getDefaultFeaturesForPlan(planId: SubscriptionPlanId): PlanFeatures {
-    return SUBSCRIPTION_PLANS[planId]?.features || SUBSCRIPTION_PLANS.free.features;
+    return getCanonicalPlanFeatures(normalizePlanId(planId));
 }
 
 /**
@@ -557,8 +564,8 @@ export function createEmptyPlan(): Partial<StoredPlan> {
         name: '',
         description: '',
         price: { monthly: 0, annually: 0 },
-        limits: { ...SUBSCRIPTION_PLANS.free.limits },
-        features: { ...SUBSCRIPTION_PLANS.free.features },
+        limits: { ...getCanonicalPlanLimits('free') },
+        features: { ...getCanonicalPlanFeatures('free') },
         isFeatured: false,
         isPopular: false,
         color: '#6b7280',
@@ -583,8 +590,14 @@ export function validatePlan(plan: Partial<StoredPlan>): { valid: boolean; error
     if (plan.price?.annually === undefined || plan.price.annually < 0) {
         errors.push('El precio anual debe ser >= 0');
     }
-    if (plan.limits?.maxAiCredits === undefined || plan.limits.maxAiCredits < 0) {
-        errors.push('Los AI credits deben ser >= 0');
+    if (!plan.limits) {
+        errors.push('Los límites del plan son requeridos');
+    } else {
+        for (const [key, value] of Object.entries(plan.limits)) {
+            if (!isFinitePlanLimit(value)) {
+                errors.push(`El límite ${key} debe ser un número finito >= 0`);
+            }
+        }
     }
 
     return { valid: errors.length === 0, errors };

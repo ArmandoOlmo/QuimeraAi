@@ -3,7 +3,7 @@ import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useSafeProject, ProjectContext } from '../../../../contexts/project/ProjectContext';
 import { EditorContext, useSafeEditor } from '../../../../contexts/EditorContext';
 import { useTenant } from '../../../../contexts/tenant/TenantContext';
-import { getAgencyLanding, saveAgencyLanding } from '../../../../services/agencyLandingService';
+import { getAgencyLanding, publishAgencyLanding, saveAgencyLanding } from '../../../../services/agencyLandingService';
 import { Project, PageData, ThemeData, PageSection, BrandIdentity, FileRecord } from '../../../../types';
 import { initialData } from '../../../../data/initialData';
 import { initialAgencyData } from './initialAgencyData';
@@ -128,7 +128,7 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
     }, [tenantId]);
 
     // Handle generic save
-    const saveProjectMock = async () => {
+    const saveProjectMock = async (showToast = true) => {
         if (!tenantId || !data) return;
         try {
             // Re-map Web Editor data (PageData + componentOrder) back to AgencyLandingConfig sections array
@@ -151,11 +151,27 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
                 theme: theme as any
             });
 
-            toast.success("Landing de Agencia guardado exitosamente");
+            if (showToast) {
+                toast.success("Landing de Agencia guardado exitosamente");
+            }
         } catch (err) {
             console.error("Error saving agency landing from editor:", err);
             toast.error("Error al guardar la página");
             throw err;
+        }
+    };
+
+    const publishProjectMock = async (): Promise<boolean> => {
+        if (!tenantId || !data) return false;
+        try {
+            await saveProjectMock(false);
+            await publishAgencyLanding(tenantId);
+            toast.success("Landing de Agencia publicado exitosamente");
+            return true;
+        } catch (err) {
+            console.error("Error publishing agency landing from editor:", err);
+            toast.error("Error al publicar la página");
+            return false;
         }
     };
 
@@ -182,6 +198,7 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         sectionVisibility,
         setSectionVisibility,
         saveProject: saveProjectMock,
+        publishProject: publishProjectMock,
         // Dummy project active
         activeProjectId: 'agency-landing-mode',
         activeProject: {
@@ -212,7 +229,8 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         setSectionVisibility,
         activeProjectId: 'agency-landing-mode',
         activeProject: customProjectCtx.activeProject,
-        saveProject: saveProjectMock
+        saveProject: saveProjectMock,
+        publishProject: publishProjectMock
     };
 
     // Construct the customized Files Context for intercepting image uploads

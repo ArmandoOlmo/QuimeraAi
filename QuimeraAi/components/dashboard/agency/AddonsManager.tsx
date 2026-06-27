@@ -10,6 +10,8 @@ import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, Minus, HardDrive, Zap, Users, Package, ChevronDown, ChevronUp, Info, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
 import QuimeraLoader from '@/components/ui/QuimeraLoader';
+import { StatusBadge } from '../../ui/system';
+import { AgencyCommandCenter, AgencyNextAction, AgencyPanel, AgencyReadinessPanel } from './AgencyDesignSystem';
 
 interface AddonPricing {
   extraSubClients: number;
@@ -211,9 +213,68 @@ export function AddonsManager() {
       currentQuantity: pendingAddons.extraAiCredits,
     },
   ];
+  const currentMonthlyTotal =
+    addons.extraSubClients * pricing.extraSubClients +
+    addons.extraStorageGB * pricing.extraStorageGB +
+    addons.extraAiCredits * pricing.extraAiCredits;
+  const pendingMonthlyTotal = calculateTotalPrice();
+  const totalAddonUnits =
+    pendingAddons.extraSubClients +
+    pendingAddons.extraStorageGB +
+    pendingAddons.extraAiCredits;
+  const pendingDelta = pendingMonthlyTotal - currentMonthlyTotal;
+  const hasPendingChanges = hasChanges();
+  const addonsReadinessItems = [
+    {
+      label: t('dashboard.agency.addonsPage.readinessPricing', 'Precios cargados'),
+      description: t('dashboard.agency.addonsPage.readinessPricingDesc', 'Tarifas disponibles para capacidad adicional.'),
+      complete: Boolean(pricing),
+      icon: DollarSign,
+    },
+    {
+      label: t('dashboard.agency.addonsPage.readinessBilling', 'Facturación lista'),
+      description: t('dashboard.agency.addonsPage.readinessBillingDesc', 'Los cambios se aplican a la suscripción activa.'),
+      complete: Boolean(currentTenant?.billing?.stripeSubscriptionId || currentTenant?.billing?.stripeCustomerId),
+      icon: CreditCard,
+    },
+    {
+      label: t('dashboard.agency.addonsPage.readinessCapacity', 'Capacidad definida'),
+      description: t('dashboard.agency.addonsPage.readinessCapacityDesc', '{{count}} unidades seleccionadas', { count: totalAddonUnits }),
+      complete: totalAddonUnits > 0,
+      icon: Package,
+    },
+    {
+      label: t('dashboard.agency.addonsPage.readinessChanges', 'Cambios controlados'),
+      description: hasPendingChanges
+        ? t('dashboard.agency.addonsPage.readinessChangesPending', 'Hay cambios pendientes')
+        : t('dashboard.agency.addonsPage.readinessChangesClean', 'No hay cambios pendientes'),
+      complete: !hasPendingChanges,
+      icon: TrendingUp,
+    },
+  ];
+  const addonsReadinessScore = Math.round(
+    (addonsReadinessItems.filter((item) => item.complete).length / addonsReadinessItems.length) * 100,
+  );
+  const addonsNextAction = hasPendingChanges
+    ? {
+      label: t('dashboard.agency.addonsPage.nextApplyChanges', 'Aplicar cambios'),
+      description: pendingDelta >= 0
+        ? t('dashboard.agency.addonsPage.nextApplyChangesIncrease', '+{{amount}}/mes', { amount: pendingDelta })
+        : t('dashboard.agency.addonsPage.nextApplyChangesDecrease', '-{{amount}}/mes', { amount: Math.abs(pendingDelta) }),
+      icon: CreditCard,
+      tone: 'warning' as const,
+      onClick: handleUpdateSubscription,
+    }
+    : {
+      label: t('dashboard.agency.addonsPage.nextReviewCapacity', 'Revisar capacidad'),
+      description: t('dashboard.agency.addonsPage.nextReviewCapacityDesc', 'Ajusta clientes, storage o AI Credits según demanda.'),
+      icon: Package,
+      tone: 'accent' as const,
+      onClick: () => setShowInstructions((value) => !value),
+    };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Error Alert */}
       {error && (
         <div className="bg-q-error/10 border border-q-error/30 rounded-lg p-4">
@@ -228,27 +289,78 @@ export function AddonsManager() {
         </div>
       )}
 
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <AgencyCommandCenter
+          icon={Package}
+          eyebrow={t('dashboard.agency.addonsPage.commandCenter', 'Capacity center')}
+          title={t('dashboard.agency.addonsPage.commandTitle', 'Add-ons de agencia')}
+          subtitle={t('dashboard.agency.addonsPage.commandSubtitle', 'Capacidad adicional para clientes, storage y generaciones AI.')}
+          metrics={[
+            {
+              label: t('dashboard.agency.addonsPage.totalUnits', 'Unidades'),
+              value: totalAddonUnits,
+              icon: Package,
+            },
+            {
+              label: t('dashboard.agency.addonsPage.extraSubClients'),
+              value: pendingAddons.extraSubClients,
+              icon: Users,
+            },
+            {
+              label: t('dashboard.agency.addonsPage.extraStorage'),
+              value: pendingAddons.extraStorageGB,
+              icon: HardDrive,
+            },
+            {
+              label: t('dashboard.agency.addonsPage.extraAiCredits'),
+              value: pendingAddons.extraAiCredits,
+              icon: Zap,
+            },
+          ]}
+          action={
+            <AgencyNextAction
+              label={addonsNextAction.label}
+              description={addonsNextAction.description}
+              icon={addonsNextAction.icon}
+              tone={addonsNextAction.tone}
+              onClick={addonsNextAction.onClick}
+            />
+          }
+        />
+
+        <AgencyReadinessPanel
+          title={t('dashboard.agency.addonsPage.readinessTitle', 'Readiness de capacidad')}
+          subtitle={t('dashboard.agency.addonsPage.readinessSubtitle', '{{ready}}/{{total}} señales listas', {
+            ready: addonsReadinessItems.filter((item) => item.complete).length,
+            total: addonsReadinessItems.length,
+          })}
+          score={addonsReadinessScore}
+          items={addonsReadinessItems}
+          tone={addonsReadinessScore >= 80 ? 'success' : addonsReadinessScore >= 50 ? 'warning' : 'danger'}
+        />
+      </div>
+
       {/* Instructions - Collapsible */}
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl overflow-hidden">
+      <AgencyPanel contentClassName="!p-0">
         <button
           onClick={() => setShowInstructions(!showInstructions)}
-          className="w-full p-4 flex items-center justify-between hover:bg-primary/5 transition-colors"
+          className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
         >
-          <h4 className="font-semibold text-primary flex items-center gap-2 text-base">
-            <Info className="w-5 h-5" />
-            📋 Guía: ¿Cómo funcionan los Add-ons?
+          <h4 className="font-semibold text-foreground flex items-center gap-2 text-base">
+            <Info className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
+            Guía de Add-ons
           </h4>
-          {showInstructions ? <ChevronUp className="text-primary" size={20} /> : <ChevronDown className="text-primary" size={20} />}
+          {showInstructions ? <ChevronUp className="text-q-text-muted" size={20} /> : <ChevronDown className="text-q-text-muted" size={20} />}
         </button>
 
         {showInstructions && (
           <div className="px-5 pb-5 text-sm space-y-4">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0">1</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-q-accent/10 quimera-status-card-accent-text text-xs font-bold shrink-0">1</span>
                 <div>
                   <strong className="text-foreground flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" />
+                    <Users className="w-4 h-4 quimera-dashboard-header-icon" strokeWidth={2} />
                     Sub-clientes Adicionales
                   </strong>
                   <p className="text-q-text-muted">Cada unidad te permite agregar un cliente adicional a tu cuenta de agencia. Ideal cuando tu negocio crece y necesitas gestionar más clientes.</p>
@@ -256,10 +368,10 @@ export function AddonsManager() {
               </div>
 
               <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-q-accent/10 quimera-status-card-accent-text text-xs font-bold shrink-0">2</span>
                 <div>
                   <strong className="text-foreground flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-primary" />
+                    <HardDrive className="w-4 h-4 quimera-dashboard-header-icon" strokeWidth={2} />
                     Almacenamiento Extra
                   </strong>
                   <p className="text-q-text-muted">Cada bloque añade 100GB de almacenamiento para imágenes, videos y archivos de tus clientes. Perfecto para proyectos con mucho contenido multimedia.</p>
@@ -267,10 +379,10 @@ export function AddonsManager() {
               </div>
 
               <div className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0">3</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-q-accent/10 quimera-status-card-accent-text text-xs font-bold shrink-0">3</span>
                 <div>
                   <strong className="text-foreground flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-primary" />
+                    <Zap className="w-4 h-4 quimera-dashboard-header-icon" strokeWidth={2} />
                     Créditos de IA Adicionales
                   </strong>
                   <p className="text-q-text-muted">Cada bloque incluye 1000 créditos de IA para generar contenido, imágenes, textos de marketing y más con inteligencia artificial.</p>
@@ -278,28 +390,28 @@ export function AddonsManager() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-primary/20 space-y-2">
+            <div className="pt-3 border-t border-q-border space-y-2">
               <div className="flex items-start gap-2">
-                <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <CreditCard className="w-4 h-4 quimera-dashboard-header-icon shrink-0 mt-0.5" strokeWidth={2} />
                 <p className="text-q-text-muted"><strong className="text-foreground">Facturación:</strong> Los add-ons se cobran mensualmente junto con tu suscripción base.</p>
               </div>
               <div className="flex items-start gap-2">
-                <TrendingUp className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <TrendingUp className="w-4 h-4 quimera-dashboard-header-icon shrink-0 mt-0.5" strokeWidth={2} />
                 <p className="text-q-text-muted"><strong className="text-foreground">Prorrateado:</strong> Si agregas add-ons a mitad de mes, solo pagas la parte proporcional.</p>
               </div>
               <div className="flex items-start gap-2">
-                <DollarSign className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <DollarSign className="w-4 h-4 quimera-dashboard-header-icon shrink-0 mt-0.5" strokeWidth={2} />
                 <p className="text-q-text-muted"><strong className="text-foreground">Flexibilidad:</strong> Puedes aumentar o reducir add-ons en cualquier momento según tus necesidades.</p>
               </div>
             </div>
           </div>
         )}
-      </div>
+      </AgencyPanel>
 
       {/* Add-ons List */}
       <div className="space-y-4">
         {addonsList.map((addon) => (
-          <div key={addon.id} className="bg-q-surface border border-q-border rounded-xl p-6">
+          <AgencyPanel key={addon.id}>
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
                 <div className="flex-shrink-0">
@@ -310,9 +422,9 @@ export function AddonsManager() {
                     <h3 className="text-lg font-semibold text-foreground">
                       {addon.name}
                     </h3>
-                    <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-medium">
+                    <StatusBadge size="sm" variant="info">
                       ${addon.pricePerUnit}/{addon.unit}
-                    </span>
+                    </StatusBadge>
                   </div>
                   <p className="text-sm text-q-text-muted">
                     {addon.description}
@@ -360,16 +472,16 @@ export function AddonsManager() {
                 </div>
               </div>
             </div>
-          </div>
+          </AgencyPanel>
         ))}
       </div>
 
       {/* Summary */}
-      <div className="bg-q-surface border border-q-border rounded-xl p-6">
+      <AgencyPanel>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Package className="w-5 h-5 text-primary" />
+              <Package className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
               {t('dashboard.agency.addonsPage.summary')}
             </h3>
             <p className="text-sm text-q-text-muted mt-1">
@@ -380,7 +492,7 @@ export function AddonsManager() {
             <div className="text-sm text-q-text-muted mb-1">
               {t('dashboard.agency.addonsPage.totalMonthly')}
             </div>
-            <div className="text-3xl font-bold text-primary">
+            <div className="text-3xl font-bold quimera-status-card-accent-text">
               ${calculateTotalPrice()}
               <span className="text-lg font-normal text-q-text-muted">
                 {t('dashboard.agency.addonsPage.perMonth')}
@@ -423,7 +535,7 @@ export function AddonsManager() {
             <button
               onClick={handleUpdateSubscription}
               disabled={loading}
-              className="flex-1 h-10 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="quimera-guide-cta flex-1 h-10 justify-center disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -443,10 +555,10 @@ export function AddonsManager() {
             </button>
           </div>
         )}
-      </div>
+      </AgencyPanel>
 
       {/* Info Card */}
-      <div className="bg-q-surface border border-q-border rounded-xl p-6">
+      <AgencyPanel>
         <h4 className="text-sm font-semibold text-foreground mb-3">
           {t('dashboard.agency.addonsPage.importantInfo')}
         </h4>
@@ -470,7 +582,7 @@ export function AddonsManager() {
             </span>
           </li>
         </ul>
-      </div>
+      </AgencyPanel>
 
       {/* Proration Notice */}
       {hasChanges() && (

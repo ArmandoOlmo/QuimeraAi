@@ -3,6 +3,15 @@
  * Tipos para el sistema de suscripciones, planes y AI credits de Quimera AI
  */
 
+import {
+    formatPlanLimit as formatCanonicalPlanLimit,
+    getCanonicalPlan,
+    getCanonicalPlanFeatures,
+    getCanonicalPlanLimits,
+    isAgencyPlan as isCanonicalAgencyPlan,
+    normalizePlanId,
+} from '../services/billing/planCatalog.ts';
+
 // =============================================================================
 // PLAN TYPES
 // =============================================================================
@@ -37,6 +46,11 @@ export interface PlanLimits {
     maxEmailsPerMonth: number;
     maxReports?: number;              // Límite de reportes mensuales (Agency+)
     maxApiCalls?: number;             // Límite de llamadas API por mes
+    includedProjects?: number;        // Proyectos incluidos antes de facturación variable
+    maxBillableProjects?: number;     // Tope finito para planes pay-per-project
+    projectCost?: number;             // Costo por proyecto activo
+    hardLimit?: boolean;              // Si el runtime debe bloquear al alcanzar el límite
+    billingModel?: 'free' | 'subscription' | 'pay_per_project' | 'custom_contract';
 }
 
 /**
@@ -87,6 +101,10 @@ export interface PlanFeatures {
     // API
     apiAccess: boolean;
     webhooks: boolean;
+
+    // Agency Engine
+    agencyEnabled?: boolean;
+    agencyModule?: boolean;
 }
 
 /**
@@ -444,17 +462,22 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         description: 'Para agencias que comienzan - Fee base + costo por proyecto',
         price: { monthly: 99, annually: 79 },
         limits: {
-            maxProjects: -1,                   // Sin límite de proyectos (pago por proyecto)
+            maxProjects: 25,
             maxUsers: 5,
             maxStorageGB: 50,
             maxAiCredits: 2000,                // Pool compartido
-            maxSubClients: -1,                 // Sin límite de clientes
-            maxDomains: -1,                    // Sin límite de dominios
+            maxSubClients: 25,
+            maxDomains: 25,
             maxLeads: 10000,
             maxProducts: 500,
             maxEmailsPerMonth: 10000,
             maxReports: 25,
             maxApiCalls: 5000,
+            includedProjects: 0,
+            maxBillableProjects: 25,
+            projectCost: 29,
+            hardLimit: true,
+            billingModel: 'pay_per_project',
         },
         features: {
             aiWebBuilder: true,
@@ -499,17 +522,22 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         description: 'Para agencias en crecimiento - Más créditos y soporte',
         price: { monthly: 199, annually: 159 },
         limits: {
-            maxProjects: -1,
+            maxProjects: 100,
             maxUsers: 15,
             maxStorageGB: 200,
             maxAiCredits: 5000,                // Pool compartido más grande
-            maxSubClients: -1,
-            maxDomains: -1,
+            maxSubClients: 100,
+            maxDomains: 100,
             maxLeads: 50000,
             maxProducts: 2000,
             maxEmailsPerMonth: 50000,
             maxReports: 100,
             maxApiCalls: 25000,
+            includedProjects: 0,
+            maxBillableProjects: 100,
+            projectCost: 29,
+            hardLimit: true,
+            billingModel: 'pay_per_project',
         },
         features: {
             aiWebBuilder: true,
@@ -553,17 +581,22 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         description: 'Para agencias de alto volumen - Máximos recursos',
         price: { monthly: 399, annually: 319 },
         limits: {
-            maxProjects: -1,
+            maxProjects: 250,
             maxUsers: 50,
             maxStorageGB: 1000,
             maxAiCredits: 15000,               // Pool compartido máximo
-            maxSubClients: -1,
-            maxDomains: -1,
-            maxLeads: -1,                      // Ilimitado
-            maxProducts: -1,                   // Ilimitado
-            maxEmailsPerMonth: -1,             // Ilimitado
-            maxReports: -1,                    // Ilimitado
-            maxApiCalls: -1,                   // Ilimitado
+            maxSubClients: 250,
+            maxDomains: 250,
+            maxLeads: 150000,
+            maxProducts: 10000,
+            maxEmailsPerMonth: 150000,
+            maxReports: 500,
+            maxApiCalls: 100000,
+            includedProjects: 0,
+            maxBillableProjects: 250,
+            projectCost: 29,
+            hardLimit: true,
+            billingModel: 'pay_per_project',
         },
         features: {
             aiWebBuilder: true,
@@ -607,17 +640,22 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         description: 'Soluciones personalizadas para grandes organizaciones',
         price: { monthly: 299, annually: 249 },
         limits: {
-            maxProjects: 1000,
-            maxUsers: 500,
+            maxProjects: 500,
+            maxUsers: 250,
             maxStorageGB: 2000,
             maxAiCredits: 25000,
-            maxSubClients: 100,
+            maxSubClients: 500,
             maxDomains: 500,
-            maxLeads: -1,             // Ilimitado (-1)
-            maxProducts: -1,          // Ilimitado
-            maxEmailsPerMonth: -1,    // Ilimitado
-            maxReports: -1,           // Ilimitado
-            maxApiCalls: -1,          // Ilimitado
+            maxLeads: 500000,
+            maxProducts: 50000,
+            maxEmailsPerMonth: 500000,
+            maxReports: 1000,
+            maxApiCalls: 250000,
+            includedProjects: 500,
+            maxBillableProjects: 500,
+            projectCost: 0,
+            hardLimit: true,
+            billingModel: 'custom_contract',
         },
         features: {
             aiWebBuilder: true,
@@ -815,11 +853,16 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
             maxAiCredits: 2000,
             maxSubClients: 10,
             maxDomains: 10,
-            maxLeads: -1,
-            maxProducts: -1,
+            maxLeads: 10000,
+            maxProducts: 500,
             maxEmailsPerMonth: 10000,
-            maxReports: -1,
+            maxReports: 25,
             maxApiCalls: 10000,
+            includedProjects: 0,
+            maxBillableProjects: 25,
+            projectCost: 29,
+            hardLimit: true,
+            billingModel: 'pay_per_project',
         },
         features: {
             aiWebBuilder: true,
@@ -862,17 +905,22 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlan> = 
         description: 'Plan legacy — equivalente a Agency Pro',
         price: { monthly: 199, annually: 159 },
         limits: {
-            maxProjects: -1,
+            maxProjects: 100,
             maxUsers: 15,
             maxStorageGB: 200,
             maxAiCredits: 5000,
-            maxSubClients: -1,
-            maxDomains: -1,
-            maxLeads: -1,
-            maxProducts: -1,
-            maxEmailsPerMonth: -1,
-            maxReports: -1,
-            maxApiCalls: -1,
+            maxSubClients: 100,
+            maxDomains: 100,
+            maxLeads: 50000,
+            maxProducts: 2000,
+            maxEmailsPerMonth: 50000,
+            maxReports: 100,
+            maxApiCalls: 25000,
+            includedProjects: 0,
+            maxBillableProjects: 100,
+            projectCost: 29,
+            hardLimit: true,
+            billingModel: 'pay_per_project',
         },
         features: {
             aiWebBuilder: true,
@@ -970,21 +1018,21 @@ export const AI_CREDIT_PACKAGES: AiCreditPackage[] = [
  * Obtiene el plan por ID
  */
 export function getPlanById(planId: SubscriptionPlanId): SubscriptionPlan {
-    return SUBSCRIPTION_PLANS[planId];
+    return SUBSCRIPTION_PLANS[planId] || getCanonicalPlan(planId);
 }
 
 /**
  * Obtiene los límites de un plan
  */
 export function getPlanLimits(planId: SubscriptionPlanId): PlanLimits {
-    return SUBSCRIPTION_PLANS[planId].limits;
+    return getCanonicalPlanLimits(planId);
 }
 
 /**
  * Obtiene las features de un plan
  */
 export function getPlanFeatures(planId: SubscriptionPlanId): PlanFeatures {
-    return SUBSCRIPTION_PLANS[planId].features;
+    return getCanonicalPlanFeatures(planId);
 }
 
 /**
@@ -1001,7 +1049,7 @@ export function getAnnualSavings(planId: SubscriptionPlanId): number {
  * Verifica si un plan tiene una feature específica
  */
 export function planHasFeature(planId: SubscriptionPlanId, feature: keyof PlanFeatures): boolean {
-    const features = SUBSCRIPTION_PLANS[planId].features;
+    const features = getCanonicalPlanFeatures(planId);
     return Boolean(features[feature]);
 }
 
@@ -1013,10 +1061,10 @@ export function getCreditCost(operation: AiCreditOperation): number {
 }
 
 /**
- * Convierte límite -1 (ilimitado) a texto
+ * Formatea límites finitos; valores inválidos no se tratan como ilimitados.
  */
 export function formatLimit(limit: number): string {
-    return limit === -1 ? 'Ilimitado' : limit.toLocaleString();
+    return formatCanonicalPlanLimit(limit);
 }
 
 /**
@@ -1045,16 +1093,15 @@ export function getUsageColor(percentage: number): string {
  * Verifica si un plan es de tipo agencia con modelo fee + proyecto
  */
 export function isAgencyPlan(planId: SubscriptionPlanId): boolean {
-    const plan = SUBSCRIPTION_PLANS[planId];
-    return plan?.isAgencyPlan === true;
+    return isCanonicalAgencyPlan(planId);
 }
 
 /**
  * Obtiene el costo por proyecto de un plan de agencia
  */
 export function getProjectCost(planId: SubscriptionPlanId): number {
-    const plan = SUBSCRIPTION_PLANS[planId];
-    return plan?.projectCost ?? 0;
+    const limits = getCanonicalPlanLimits(planId);
+    return limits.projectCost ?? 0;
 }
 
 /**
@@ -1069,12 +1116,12 @@ export function calculateAgencyTotalCost(
     isAnnual: boolean = false
 ): number {
     const plan = SUBSCRIPTION_PLANS[planId];
-    if (!plan?.isAgencyPlan) {
+    if (!isCanonicalAgencyPlan(planId)) {
         return isAnnual ? plan.price.annually : plan.price.monthly;
     }
     
     const baseFee = isAnnual ? plan.price.annually : plan.price.monthly;
-    const projectsCost = (plan.projectCost ?? 0) * activeProjects;
+    const projectsCost = getProjectCost(planId) * activeProjects;
     
     return baseFee + projectsCost;
 }
@@ -1083,8 +1130,7 @@ export function calculateAgencyTotalCost(
  * Verifica si un plan tiene pool de créditos compartidos
  */
 export function hasSharedCreditsPool(planId: SubscriptionPlanId): boolean {
-    const plan = SUBSCRIPTION_PLANS[planId];
-    return plan?.hasSharedCreditsPool === true;
+    return isCanonicalAgencyPlan(planId);
 }
 
 /**
@@ -1099,15 +1145,12 @@ export function getPlanTrialDays(planId: SubscriptionPlanId): number {
  * Obtiene todos los planes de tipo agencia
  */
 export function getAgencyPlans(): SubscriptionPlan[] {
-    return Object.values(SUBSCRIPTION_PLANS).filter(plan => plan.isAgencyPlan);
+    return Object.values(SUBSCRIPTION_PLANS).filter(plan => isCanonicalAgencyPlan(normalizePlanId(plan.id)));
 }
 
 /**
  * Obtiene los planes individuales (no agencia)
  */
 export function getIndividualPlans(): SubscriptionPlan[] {
-    return Object.values(SUBSCRIPTION_PLANS).filter(plan => !plan.isAgencyPlan);
+    return Object.values(SUBSCRIPTION_PLANS).filter(plan => !isCanonicalAgencyPlan(normalizePlanId(plan.id)));
 }
-
-
-

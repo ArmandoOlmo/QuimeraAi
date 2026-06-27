@@ -33,6 +33,14 @@ export interface ReportDateRange {
 export interface ClientMetrics {
     clientId: string;
     clientName: string;
+    subscriptionPlan?: string;
+    servicePlanId?: string;
+    servicePlanName?: string;
+    lifecycleStage?: string;
+    billingMode?: string;
+    billingStatus?: string;
+    monthlyRecurringRevenue: number;
+    healthScore?: number;
 
     // Lead metrics
     totalLeads: number;
@@ -53,6 +61,7 @@ export interface ClientMetrics {
     totalOrders: number;
     averageOrderValue: number;
     conversionToSale: number;
+    projectIds: string[];
 
     // Email metrics
     emailsSent: number;
@@ -82,6 +91,9 @@ export interface AggregatedReportData {
         totalClients: number;
         totalLeads: number;
         totalRevenue: number;
+        totalOrders: number;
+        averageOrderValue: number;
+        totalMrr: number;
         totalVisits: number;
         totalEmailsSent: number;
         avgConversionRate: number;
@@ -116,6 +128,9 @@ export interface AggregatedReportData {
 
     // Recommendations
     recommendations: string[];
+    aiSummary?: string;
+    savedReportId?: string;
+    persistenceStatus?: 'not_requested' | 'saved' | 'failed';
 
     // Metadata
     generatedAt: Date;

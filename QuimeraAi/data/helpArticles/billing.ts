@@ -59,7 +59,7 @@ Quimera AI ofrece planes diseñados para diferentes necesidades, desde emprended
 - ✅ **Sin marca de agua**
 - ✅ Chatbot avanzado
 - ✅ CRM básico (hasta 500 contactos)
-- ✅ Formularios ilimitados
+- ✅ Hasta 1,000 envíos de formularios al mes
 - ✅ Soporte prioritario por email
 - ✅ Analíticas básicas
 - ✅ Integraciones básicas (Google Analytics, Facebook Pixel)
@@ -78,7 +78,7 @@ Quimera AI ofrece planes diseñados para diferentes necesidades, desde emprended
 - ✅ 5 dominios personalizados
 - ✅ **E-commerce incluido** (hasta 100 productos)
 - ✅ **Sistema de citas**
-- ✅ CRM completo (contactos ilimitados)
+- ✅ CRM completo (hasta 10,000 contactos)
 - ✅ Soporte por chat en vivo
 - ✅ Analíticas avanzadas
 - ✅ Integraciones avanzadas (Zapier, WhatsApp)
@@ -96,9 +96,9 @@ Quimera AI ofrece planes diseñados para diferentes necesidades, desde emprended
 **Todo lo del plan Pro, más:**
 - ✅ 50 sitios web
 - ✅ 5,000 créditos de IA por mes
-- ✅ Dominios ilimitados
+- ✅ 25 dominios personalizados
 - ✅ **White-label completo** (tu marca, no la nuestra)
-- ✅ E-commerce avanzado (productos ilimitados)
+- ✅ E-commerce avanzado (hasta 2,500 productos)
 - ✅ Acceso API
 - ✅ 25 usuarios del equipo
 - ✅ Soporte prioritario
@@ -114,7 +114,7 @@ Quimera AI ofrece planes diseñados para diferentes necesidades, desde emprended
 **Ideal para:** Grandes empresas, necesidades especiales.
 
 **Todo lo del plan Agency, más:**
-- ✅ Sitios ilimitados
+- ✅ Hasta 500 sitios
 - ✅ Créditos de IA personalizados
 - ✅ SLA garantizado
 - ✅ Account manager dedicado
@@ -132,7 +132,7 @@ Quimera AI ofrece planes diseñados para diferentes necesidades, desde emprended
 |----------------|------|---------|-----|--------|
 | Sitios web | 1 | 3 | 10 | 50 |
 | Créditos IA/mes | 50 | 500 | 2,000 | 5,000 |
-| Dominios propios | ❌ | 1 | 5 | ∞ |
+| Dominios propios | ❌ | 1 | 5 | 25 |
 | E-commerce | ❌ | ❌ | ✅ | ✅ |
 | White-label | ❌ | ❌ | ❌ | ✅ |
 | Usuarios equipo | 1 | 1 | 5 | 25 |
@@ -453,7 +453,6 @@ Si ves dos cargos por el mismo monto:
 - 📞 Teléfono (usuarios Agency y Enterprise)`
     }
 ];
-
 
 
 

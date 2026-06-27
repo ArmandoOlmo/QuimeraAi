@@ -11,7 +11,7 @@
  * Estados posibles de un servicio:
  * - public: Visible para todos según su plan de suscripción
  * - not_public: Oculto completamente de la plataforma
- * - development: Solo Super Admin puede acceder (para desarrollo/testing)
+ * - development: Oculto para usuarios finales y navegación general
  */
 export type ServiceStatus = 'public' | 'not_public' | 'development';
 
@@ -24,6 +24,7 @@ export type ServiceStatus = 'public' | 'not_public' | 'development';
  * EXTENSIBLE: Agregar nuevos IDs aquí cuando se creen nuevos servicios.
  */
 export type PlatformServiceId =
+    | 'agency'           // Agency Operating System
     | 'cms'              // Content Management System
     | 'crm'              // Customer Relationship Management
     | 'ecommerce'        // Tienda online
@@ -32,6 +33,7 @@ export type PlatformServiceId =
     | 'aiFeatures'       // Funciones de IA (generación de contenido, imágenes)
     | 'analytics'        // Analytics avanzados
     | 'appointments'     // Sistema de citas
+    | 'bioPage'          // Bio Page pública y editor
     | 'domains'          // Dominios personalizados
     | 'templates'        // Plantillas de sitio
     | 'finance'          // Herramientas financieras
@@ -54,6 +56,7 @@ export interface ServiceMetadata {
  * EXTENSIBLE: Agregar nuevos servicios aquí
  */
 export const PLATFORM_SERVICES: ServiceMetadata[] = [
+    { id: 'agency', nameKey: 'services.agency', descriptionKey: 'services.agencyDesc', icon: 'Building2', category: 'advanced' },
     { id: 'cms', nameKey: 'services.cms', descriptionKey: 'services.cmsDesc', icon: 'FileText', category: 'core' },
     { id: 'crm', nameKey: 'services.crm', descriptionKey: 'services.crmDesc', icon: 'Users', category: 'core' },
     { id: 'ecommerce', nameKey: 'services.ecommerce', descriptionKey: 'services.ecommerceDesc', icon: 'ShoppingCart', category: 'core' },
@@ -62,6 +65,7 @@ export const PLATFORM_SERVICES: ServiceMetadata[] = [
     { id: 'aiFeatures', nameKey: 'services.aiFeatures', descriptionKey: 'services.aiFeaturesDesc', icon: 'Sparkles', category: 'advanced' },
     { id: 'analytics', nameKey: 'services.analytics', descriptionKey: 'services.analyticsDesc', icon: 'BarChart3', category: 'advanced' },
     { id: 'appointments', nameKey: 'services.appointments', descriptionKey: 'services.appointmentsDesc', icon: 'Calendar', category: 'tools' },
+    { id: 'bioPage', nameKey: 'services.bioPage', descriptionKey: 'services.bioPageDesc', icon: 'Link2', category: 'marketing' },
     { id: 'domains', nameKey: 'services.domains', descriptionKey: 'services.domainsDesc', icon: 'Globe', category: 'tools' },
     { id: 'templates', nameKey: 'services.templates', descriptionKey: 'services.templatesDesc', icon: 'LayoutTemplate', category: 'core' },
     { id: 'finance', nameKey: 'services.finance', descriptionKey: 'services.financeDesc', icon: 'Wallet', category: 'tools' },
@@ -149,17 +153,9 @@ export function getStatusLabel(status: ServiceStatus): string {
  */
 export function canRoleAccessService(
     status: ServiceStatus,
-    userRole: string
+    _userRole: string
 ): boolean {
-    const role = userRole?.toLowerCase() || '';
-    switch (status) {
-        case 'public':
-            return true; // Visible según plan
-        case 'not_public':
-            return false; // Nadie puede acceder
-        case 'development':
-            return role === 'superadmin' || role === 'owner';
-    }
+    return status === 'public';
 }
 
 /**

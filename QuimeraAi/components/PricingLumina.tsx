@@ -59,7 +59,7 @@ const PricingLumina: React.FC<PricingLuminaProps> = ({
     billingToggle = billingToggle !== undefined ? billingToggle : true;
     tiers = tiers && tiers.length > 0 ? tiers : [
         { name: 'Starter', price: '$29', period: '/mo', description: 'Perfect for small businesses.', features: ['Up to 5 Projects', 'Basic Analytics', '24/7 Support'], buttonText: 'Start Free Trial', buttonLink: '#', highlighted: false },
-        { name: 'Professional', price: '$99', period: '/mo', description: 'Ideal for growing companies.', features: ['Unlimited Projects', 'Advanced Analytics', 'Priority Support'], buttonText: 'Get Started', buttonLink: '#', highlighted: true },
+        { name: 'Professional', price: '$99', period: '/mo', description: 'Ideal for growing companies.', features: ['Up to 100 Projects', 'Advanced Analytics', 'Priority Support'], buttonText: 'Get Started', buttonLink: '#', highlighted: true },
         { name: 'Enterprise', price: '$299', period: '/mo', description: 'For large-scale organizations.', features: ['Dedicated Manager', 'Custom Integration', 'SLA Guarantee'], buttonText: 'Contact Sales', buttonLink: '#', highlighted: false }
     ];
     const { t } = useTranslation();

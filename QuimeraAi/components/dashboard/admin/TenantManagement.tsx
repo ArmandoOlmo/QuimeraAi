@@ -19,6 +19,7 @@ import { db, collection, getDocs, query, where, orderBy, limit } from '@/utils/c
 import { doc, getDoc } from '@/utils/compatData';
 import { AiCreditsUsage, AiCreditTransaction, getUsageColor } from '../../../types/subscription';
 import { addCredits } from '../../../services/aiCreditsService';
+import { formatPlanLimit } from '../../../services/billing/planCatalog';
 import AppSelect from '../../ui/AppSelect';
 
 interface TenantManagementProps {
@@ -968,7 +969,7 @@ const TenantDetailsModal: React.FC<{
                                             <span className="text-xs font-medium">Proyectos</span>
                                         </div>
                                         <div className="font-bold text-q-text text-lg">
-                                            {tenant.usage?.projectCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
+                                            {tenant.usage?.projectCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {formatPlanLimit(tenant.limits?.maxProjects, { unavailableLabel: '?' })}</span>
                                         </div>
                                     </div>
                                     <div className="bg-q-bg p-3 rounded-lg border border-q-border">
@@ -977,7 +978,7 @@ const TenantDetailsModal: React.FC<{
                                             <span className="text-xs font-medium">Usuarios</span>
                                         </div>
                                         <div className="font-bold text-q-text text-lg">
-                                            {tenant.usage?.userCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
+                                            {tenant.usage?.userCount ?? 0} <span className="text-q-text-secondary font-normal text-sm">/ {formatPlanLimit(tenant.limits?.maxUsers, { unavailableLabel: '?' })}</span>
                                         </div>
                                     </div>
                                     <div className="bg-q-bg p-3 rounded-lg border border-q-border">
@@ -1013,18 +1014,19 @@ const TenantDetailsModal: React.FC<{
                                             <label className={labelClass}>Máx. Proyectos</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 value={editLimits.maxProjects}
-                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxProjects: parseInt(e.target.value) || 0 }))}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxProjects: Math.max(0, parseInt(e.target.value) || 0) }))}
                                                 className={inputClass}
                                             />
-                                            <p className="text-xs text-q-text-secondary mt-1">-1 = ilimitado</p>
                                         </div>
                                         <div>
                                             <label className={labelClass}>Máx. Usuarios</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 value={editLimits.maxUsers}
-                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxUsers: parseInt(e.target.value) || 0 }))}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxUsers: Math.max(0, parseInt(e.target.value) || 0) }))}
                                                 className={inputClass}
                                             />
                                         </div>
@@ -1032,8 +1034,9 @@ const TenantDetailsModal: React.FC<{
                                             <label className={labelClass}>Máx. Almacenamiento (GB)</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 value={editLimits.maxStorageGB}
-                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxStorageGB: parseInt(e.target.value) || 0 }))}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxStorageGB: Math.max(0, parseInt(e.target.value) || 0) }))}
                                                 className={inputClass}
                                             />
                                         </div>
@@ -1041,8 +1044,9 @@ const TenantDetailsModal: React.FC<{
                                             <label className={labelClass}>Máx. Créditos IA</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 value={editLimits.maxAiCredits}
-                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxAiCredits: parseInt(e.target.value) || 0 }))}
+                                                onChange={(e) => setEditLimits(prev => ({ ...prev, maxAiCredits: Math.max(0, parseInt(e.target.value) || 0) }))}
                                                 className={inputClass}
                                             />
                                         </div>
@@ -1121,11 +1125,11 @@ const TenantDetailsModal: React.FC<{
                                         <ul className="text-sm text-q-text space-y-1">
                                             <li className="flex justify-between border-b border-q-border/50 pb-1">
                                                 <span className="text-q-text-secondary">Proyectos:</span>
-                                                <span className="font-medium">{tenant.limits?.maxProjects === -1 ? '∞' : tenant.limits?.maxProjects ?? '?'}</span>
+                                                <span className="font-medium">{formatPlanLimit(tenant.limits?.maxProjects, { unavailableLabel: '?' })}</span>
                                             </li>
                                             <li className="flex justify-between border-b border-q-border/50 pb-1 pt-1">
                                                 <span className="text-q-text-secondary">Usuarios:</span>
-                                                <span className="font-medium">{tenant.limits?.maxUsers === -1 ? '∞' : tenant.limits?.maxUsers ?? '?'}</span>
+                                                <span className="font-medium">{formatPlanLimit(tenant.limits?.maxUsers, { unavailableLabel: '?' })}</span>
                                             </li>
                                             <li className="flex justify-between border-b border-q-border/50 pb-1 pt-1">
                                                 <span className="text-q-text-secondary">Almacenamiento:</span>

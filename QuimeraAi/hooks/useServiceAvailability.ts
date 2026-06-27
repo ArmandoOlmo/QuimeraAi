@@ -276,24 +276,23 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
  * Uso: const canAccessCMS = useCanAccessService('cms');
  */
 export function useCanAccessService(serviceId: PlatformServiceId): boolean {
-    const { canAccessService, isLoading } = useServiceAvailability();
+    const { isServicePublic, isLoading } = useServiceAvailability();
 
-    // While loading, assume public access
-    if (isLoading) return true;
+    if (isLoading) return false;
 
-    return canAccessService(serviceId);
+    return isServicePublic(serviceId);
 }
 
 /**
  * Hook para obtener todos los servicios que el usuario puede acceder
  */
 export function useAccessibleServices(): PlatformServiceId[] {
-    const { canAccessService, isLoading } = useServiceAvailability();
+    const { isServicePublic, isLoading } = useServiceAvailability();
 
     return useMemo(() => {
         if (isLoading) {
-            return PLATFORM_SERVICES.map(s => s.id);
+            return [];
         }
-        return PLATFORM_SERVICES.filter(s => canAccessService(s.id)).map(s => s.id);
-    }, [canAccessService, isLoading]);
+        return PLATFORM_SERVICES.filter(s => isServicePublic(s.id)).map(s => s.id);
+    }, [isLoading, isServicePublic]);
 }

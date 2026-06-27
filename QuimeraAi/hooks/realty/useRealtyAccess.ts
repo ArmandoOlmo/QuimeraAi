@@ -18,7 +18,7 @@ export const useRealtyAccess = () => {
     const { activeProjectId } = useProject();
     const tenantContext = useSafeTenant();
     const { hasAccess: hasPlanFeature, isLoading: isLoadingPlan } = usePlanAccess();
-    const { canAccessService, isLoading: isLoadingService } = useServiceAvailability();
+    const { isServicePublic, isLoading: isLoadingService } = useServiceAvailability();
     const [projectModule, setProjectModule] = useState<ModuleAccessRow | null>(null);
     const [isLoadingModule, setIsLoadingModule] = useState(false);
 
@@ -80,7 +80,7 @@ export const useRealtyAccess = () => {
     }, [isAdmin, permissions]);
 
     const planAllows = hasPlanFeature('realEstateModule');
-    const serviceAllows = isLoadingService || canAccessService('realEstate');
+    const serviceAllows = !isLoadingService && isServicePublic('realEstate');
     const moduleAllows = flags.real_estate_enabled;
     const canView = planAllows && serviceAllows && tenantSettingsAllows && moduleAllows && hasPermission('real_estate.view');
 

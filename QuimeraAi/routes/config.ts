@@ -4,6 +4,8 @@
  */
 
 import { View, AdminView } from '../types/ui';
+import type { PlanFeatures } from '../types/subscription';
+import type { PlatformServiceId } from '../types/serviceAvailability';
 
 // =============================================================================
 // ROUTE TYPES
@@ -20,6 +22,10 @@ export interface RouteConfig {
   requiresAuth: boolean;
   requiresEmailVerified?: boolean;
   roles?: string[]; // Roles permitidos (vacío = todos los autenticados)
+  requiredService?: PlatformServiceId;
+  requiredFeature?: keyof PlanFeatures;
+  moduleId?: string;
+  requiredPermission?: string;
   icon?: string;
   showInNav?: boolean;
   parent?: string; // Para rutas anidadas
@@ -29,6 +35,140 @@ export interface RouteParams {
   projectId?: string;
   [key: string]: string | undefined;
 }
+
+const AGENCY_ROUTE_GATE = {
+  requiredService: 'agency' as const,
+  requiredFeature: 'agencyModule' as const,
+  moduleId: 'agency-engine',
+  requiredPermission: 'canManageSettings',
+};
+
+const AGENCY_COMMAND_CENTER_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-command-center',
+  requiredPermission: 'canViewAnalytics',
+};
+
+const AGENCY_BILLING_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-billing',
+  requiredPermission: 'canManageBilling',
+};
+
+const AGENCY_REPORTS_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-reports',
+  requiredPermission: 'canViewAnalytics',
+};
+
+const AGENCY_PROVISIONING_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-client-provisioning',
+  requiredPermission: 'canManageSettings',
+};
+
+const AGENCY_SERVICE_PLANS_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-service-plans',
+  requiredPermission: 'canManageBilling',
+};
+
+const AGENCY_WHITE_LABEL_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-white-label',
+  requiredPermission: 'canManageSettings',
+};
+
+const AGENCY_PROJECT_TRANSFER_ROUTE_GATE = {
+  ...AGENCY_ROUTE_GATE,
+  moduleId: 'agency-project-transfer',
+  requiredPermission: 'canManageProjects',
+};
+
+const AGENCY_CLIENT_PORTAL_ROUTE_GATE = {
+  requiredService: 'agency' as const,
+  requiredFeature: 'agencyModule' as const,
+  moduleId: 'agency-client-portal',
+};
+
+const AGENCY_PUBLIC_ROUTE_GATE = {
+  requiredService: 'agency' as const,
+  moduleId: 'agency-engine',
+};
+
+const AI_FEATURES_ROUTE_GATE = {
+  requiredService: 'aiFeatures' as const,
+  requiredFeature: 'aiImageGeneration' as const,
+  moduleId: 'media-assets',
+};
+
+const TEMPLATES_ROUTE_GATE = {
+  requiredService: 'templates' as const,
+  requiredFeature: 'templates' as const,
+  moduleId: 'templates-library',
+};
+
+const CMS_ROUTE_GATE = {
+  requiredService: 'cms' as const,
+  requiredFeature: 'cmsEnabled' as const,
+  moduleId: 'cms-engine',
+};
+
+const CHATBOT_ROUTE_GATE = {
+  requiredService: 'chatbot' as const,
+  requiredFeature: 'chatbotEnabled' as const,
+  moduleId: 'chatbot-engine',
+};
+
+const CRM_ROUTE_GATE = {
+  requiredService: 'crm' as const,
+  requiredFeature: 'crmEnabled' as const,
+  moduleId: 'crm-leads',
+};
+
+const APPOINTMENTS_ROUTE_GATE = {
+  requiredService: 'appointments' as const,
+  moduleId: 'appointments-engine',
+};
+
+const DOMAINS_ROUTE_GATE = {
+  requiredService: 'domains' as const,
+  requiredFeature: 'customDomains' as const,
+  moduleId: 'domains-management',
+};
+
+const FINANCE_ROUTE_GATE = {
+  requiredService: 'finance' as const,
+  moduleId: 'finance',
+};
+
+const ECOMMERCE_ROUTE_GATE = {
+  requiredService: 'ecommerce' as const,
+  requiredFeature: 'ecommerceEnabled' as const,
+  moduleId: 'ecommerce-engine',
+};
+
+const RESTAURANTS_ROUTE_GATE = {
+  requiredService: 'restaurants' as const,
+  moduleId: 'restaurant-engine',
+};
+
+const EMAIL_MARKETING_ROUTE_GATE = {
+  requiredService: 'emailMarketing' as const,
+  requiredFeature: 'emailMarketing' as const,
+  moduleId: 'email-marketing',
+};
+
+const BIO_PAGE_ROUTE_GATE = {
+  requiredService: 'bioPage' as const,
+  moduleId: 'bio-page-engine',
+};
+
+const REAL_ESTATE_ROUTE_GATE = {
+  requiredService: 'realEstate' as const,
+  requiredFeature: 'realEstateModule' as const,
+  moduleId: 'real-estate-engine',
+};
 
 // =============================================================================
 // ROUTE PATHS (Constants)
@@ -168,6 +308,7 @@ export const ROUTES = {
   ADMIN_EMAIL: '/admin/email',
 
   // Portal (white-label client)
+  PORTAL_HOME: '/portal',
   PORTAL_LOGIN: '/portal/login',
   PORTAL_DASHBOARD: '/portal/dashboard',
 } as const;
@@ -305,30 +446,35 @@ export const routeConfigs: RouteConfig[] = [
     type: 'preview',
     title: 'Store',
     requiresAuth: false,
+    ...ECOMMERCE_ROUTE_GATE,
   },
   {
     path: ROUTES.STORE_PRODUCT,
     type: 'preview',
     title: 'Product',
     requiresAuth: false,
+    ...ECOMMERCE_ROUTE_GATE,
   },
   {
     path: ROUTES.STORE_CATEGORY,
     type: 'preview',
     title: 'Category',
     requiresAuth: false,
+    ...ECOMMERCE_ROUTE_GATE,
   },
   {
     path: ROUTES.STORE_CHECKOUT,
     type: 'preview',
     title: 'Checkout',
     requiresAuth: false,
+    ...ECOMMERCE_ROUTE_GATE,
   },
   {
     path: ROUTES.STORE_ORDER_CONFIRMATION,
     type: 'preview',
     title: 'Order Confirmation',
     requiresAuth: false,
+    ...ECOMMERCE_ROUTE_GATE,
   },
 
   // =========================================================================
@@ -339,12 +485,14 @@ export const routeConfigs: RouteConfig[] = [
     type: 'public',
     title: 'Bio Page',
     requiresAuth: false,
+    ...BIO_PAGE_ROUTE_GATE,
   },
   {
     path: ROUTES.PUBLIC_RESTAURANT_MENU,
     type: 'public',
     title: 'Restaurant Menu',
     requiresAuth: false,
+    ...RESTAURANTS_ROUTE_GATE,
   },
 
   // =========================================================================
@@ -377,6 +525,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Assets',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...AI_FEATURES_ROUTE_GATE,
     showInNav: true,
     icon: 'Image',
   },
@@ -387,6 +536,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Templates',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...TEMPLATES_ROUTE_GATE,
     showInNav: true,
     icon: 'FileCode',
   },
@@ -413,6 +563,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'CMS',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...CMS_ROUTE_GATE,
     showInNav: true,
     icon: 'FileText',
   },
@@ -433,6 +584,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'AI Assistant',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...CHATBOT_ROUTE_GATE,
     showInNav: true,
     icon: 'Bot',
   },
@@ -443,6 +595,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Leads',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...CRM_ROUTE_GATE,
     showInNav: true,
     icon: 'Users',
   },
@@ -453,6 +606,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Appointments',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...APPOINTMENTS_ROUTE_GATE,
     showInNav: true,
     icon: 'Calendar',
   },
@@ -463,6 +617,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Domains',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...DOMAINS_ROUTE_GATE,
     showInNav: true,
     icon: 'Link',
   },
@@ -483,6 +638,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Finance',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...FINANCE_ROUTE_GATE,
     showInNav: true,
     icon: 'DollarSign',
   },
@@ -493,6 +649,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Ecommerce',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...ECOMMERCE_ROUTE_GATE,
     showInNav: true,
     icon: 'ShoppingBag',
   },
@@ -503,6 +660,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Restaurants',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...RESTAURANTS_ROUTE_GATE,
     showInNav: true,
     icon: 'Utensils',
   },
@@ -513,6 +671,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Email Marketing',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...EMAIL_MARKETING_ROUTE_GATE,
     showInNav: true,
     icon: 'Mail',
   },
@@ -523,6 +682,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Bio Page',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...BIO_PAGE_ROUTE_GATE,
     showInNav: true,
     icon: 'Link2',
   },
@@ -533,6 +693,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Blog',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...CMS_ROUTE_GATE,
     showInNav: true,
     icon: 'Newspaper',
   },
@@ -543,6 +704,7 @@ export const routeConfigs: RouteConfig[] = [
     title: 'Quimera Realty Suite',
     requiresAuth: true,
     requiresEmailVerified: true,
+    ...REAL_ESTATE_ROUTE_GATE,
     showInNav: true,
     icon: 'Home',
   },
@@ -605,12 +767,34 @@ export const routeConfigs: RouteConfig[] = [
     type: 'public',
     title: 'Agency Plans',
     requiresAuth: false,
+    ...AGENCY_PUBLIC_ROUTE_GATE,
   },
   {
     path: ROUTES.CHECKOUT_PAY,
     type: 'public',
     title: 'Checkout',
     requiresAuth: false,
+  },
+
+  // =========================================================================
+  // CLIENT PORTAL ROUTES (Private - White-label client workspace)
+  // =========================================================================
+  {
+    path: ROUTES.PORTAL_HOME,
+    type: 'private',
+    title: 'Client Portal',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    ...AGENCY_CLIENT_PORTAL_ROUTE_GATE,
+  },
+  {
+    path: ROUTES.PORTAL_DASHBOARD,
+    type: 'private',
+    title: 'Client Portal Dashboard',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    parent: ROUTES.PORTAL_HOME,
+    ...AGENCY_CLIENT_PORTAL_ROUTE_GATE,
   },
 
   // =========================================================================
@@ -624,6 +808,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_ROUTE_GATE,
     showInNav: true,
     icon: 'Building2',
   },
@@ -635,6 +820,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_COMMAND_CENTER_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -645,6 +831,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_COMMAND_CENTER_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -655,6 +842,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_BILLING_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -665,6 +853,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_REPORTS_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -675,6 +864,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_PROVISIONING_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -685,6 +875,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_SERVICE_PLANS_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -695,6 +886,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_WHITE_LABEL_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -705,6 +897,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_SERVICE_PLANS_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -715,6 +908,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_WHITE_LABEL_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -725,6 +919,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_WHITE_LABEL_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -735,6 +930,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_PROJECT_TRANSFER_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   {
@@ -745,6 +941,7 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'agency_owner', 'agency_admin'],
+    ...AGENCY_WHITE_LABEL_ROUTE_GATE,
     parent: ROUTES.AGENCY,
   },
   // =========================================================================

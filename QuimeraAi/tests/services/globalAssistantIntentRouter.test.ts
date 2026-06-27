@@ -298,6 +298,37 @@ describe('globalAssistantIntentRouter', () => {
         });
     });
 
+    it('does not switch projects when image prompts contain normal words that overlap project names', () => {
+        const oceanContext = {
+            ...context,
+            project: {
+                ...context.project,
+                projectId: 'project-2',
+                projectName: 'Ocean Clinic',
+                sourceProject: {
+                    id: 'project-2',
+                    name: 'Ocean Clinic',
+                    status: 'Draft',
+                    tenantId: 'tenant-1',
+                    userId: 'user-1',
+                },
+            },
+        } as typeof context;
+
+        const intent = routeAssistantIntent('Quiero crear una imagen de una casa en Puerto Rico', oceanContext);
+
+        expect(intent).toMatchObject({
+            module: 'media',
+            intent: 'generate_image',
+            actionCandidates: ['generate_image'],
+            projectResolution: {
+                projectId: 'project-2',
+                requiresProjectSwitch: false,
+                ambiguous: false,
+            },
+        });
+    });
+
     it('routes generic Media AI asset creation to the draft asset action', () => {
         expect(routeAssistantIntent('Crea un asset visual para la campana de Casa Luna', context)).toMatchObject({
             module: 'media',

@@ -16,7 +16,8 @@ import {
   CreditCard,
   Rocket,
 } from 'lucide-react';
-import { ClientIntakeForm } from './ClientIntakeForm';
+import { ClientIntakeForm, type ClientIntakeData } from './ClientIntakeForm';
+import { useTenant } from '../../../contexts/tenant/TenantContext';
 
 // ============================================================================
 // TYPES
@@ -39,25 +40,6 @@ interface OnboardingWorkflowProps {
   onCancel?: () => void;
 }
 
-interface ClientIntakeData {
-  businessName: string;
-  industry: string;
-  contactEmail: string;
-  contactPhone: string;
-  projectTemplate: string;
-  enabledFeatures: string[];
-  initialUsers: Array<{
-    email: string;
-    name: string;
-    role: string;
-  }>;
-  logo: File | null;
-  primaryColor: string;
-  secondaryColor: string;
-  monthlyPrice: number;
-  setupBilling: boolean;
-}
-
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -67,6 +49,7 @@ export function OnboardingWorkflow({
   onCancel,
 }: OnboardingWorkflowProps) {
   const { t } = useTranslation();
+  const { currentTenant } = useTenant();
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('form');
   const [progress, setProgress] = useState<ProvisioningProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -135,9 +118,14 @@ export function OnboardingWorkflow({
       );
 
       const { supabase } = await import('@/supabase');
+      if (!currentTenant?.id) {
+        throw new Error('No hay agencia activa para crear el cliente.');
+      }
+
       const result = await supabase.functions.invoke('onboarding-api', {
         body: {
             action: 'autoProvision',
+            agencyTenantId: currentTenant.id,
             businessName: data.businessName,
             industry: data.industry,
             contactEmail: data.contactEmail,
@@ -149,7 +137,20 @@ export function OnboardingWorkflow({
             primaryColor: data.primaryColor,
             secondaryColor: data.secondaryColor,
             monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
-            paymentMethod: undefined, // Will be set up later
+            selectedPlanId: data.selectedPlanId,
+            selectedPlanName: data.selectedPlanName,
+            setupBilling: data.setupBilling,
+            aiStudioMode: data.aiStudioMode,
+            generateWebsite: data.generateWebsite,
+            generateStorefront: data.generateStorefront,
+            generateEcommerce: data.generateEcommerce,
+            generateChatbot: data.generateChatbot,
+            generateEmailFlows: data.generateEmailFlows,
+            generateAppointments: data.generateAppointments,
+            generateRestaurantModule: data.generateRestaurantModule,
+            generateRealtyModule: data.generateRealtyModule,
+            generateBioPage: data.generateBioPage,
+            generateMediaAssets: data.generateMediaAssets,
         }
       });
 

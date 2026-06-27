@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveServiceAccess } from "../../../services/access/serviceAccessEngine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -137,6 +138,60 @@ async function getStoreContext(storeId: string) {
   };
 }
 
+async function assertMerchantEcommerceAccess(projectId: string, ownerId?: string | null) {
+  const { data: project } = await supabase
+    .from("projects")
+    .select("tenant_id, user_id")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  const tenantId = project?.tenant_id;
+  if (!tenantId) return;
+
+  const [{ data: tenant }, { data: subscription }, { data: serviceSettings }] = await Promise.all([
+    supabase.from("tenants").select("status, subscription_plan, limits, usage").eq("id", tenantId).maybeSingle(),
+    supabase.from("subscriptions").select("plan_id, status").eq("tenant_id", tenantId).maybeSingle(),
+    supabase.from("settings").select("config").eq("id", "serviceAvailability").maybeSingle(),
+  ]);
+
+  const decision = resolveServiceAccess({
+    userId: String(ownerId || project?.user_id || "storefront-public-order"),
+    userRole: "storefront_customer",
+    tenantId,
+    tenantStatus: tenant?.status,
+    projectId,
+    planId: subscription?.plan_id || tenant?.subscription_plan || "free",
+    subscriptionStatus: subscription?.status || tenant?.status || "active",
+    serviceId: "ecommerce",
+    featureKey: "ecommerceEnabled",
+    serviceAvailability: serviceSettings?.config?.services,
+    planLimits: tenant?.limits || undefined,
+    currentUsage: tenant?.usage || undefined,
+    action: "create_store_cash_order",
+  });
+
+  if (!decision.allowed) {
+    try {
+      await supabase.from("service_access_audit_logs").insert({
+        tenant_id: tenantId,
+        user_id: ownerId || project?.user_id || null,
+        user_role: "storefront_customer",
+        module_id: "ecommerce-engine",
+        service_id: "ecommerce",
+        feature_key: "ecommerceEnabled",
+        action: "create_store_cash_order",
+        reason_code: decision.reasonCode,
+        allowed: false,
+        admin_override: false,
+        decision,
+      });
+    } catch (_error) {
+      // Best-effort audit only.
+    }
+    throw new Error(decision.message);
+  }
+}
+
 function normalizeProduct(row: any) {
   const data = row?.data || {};
   return {
@@ -167,6 +222,7 @@ async function getStoreProduct(projectId: string, productId: string) {
 
 async function buildCashOrder(data: any) {
   const context = await getStoreContext(String(data.storeId || ""));
+  await assertMerchantEcommerceAccess(context.projectId, context.ownerId);
   if (!context.settings.cashOnDeliveryEnabled) throw new Error("Cash on delivery is not enabled for this store");
 
   const email = normalizeEmail(data.customerEmail);

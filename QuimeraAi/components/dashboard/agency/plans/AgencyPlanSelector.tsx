@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getAgencyPlans, assignPlanToClient } from '../../../../services/agencyPlansService';
 import { AgencyPlan, calculateMarkup } from '../../../../types/agencyPlans';
+import { formatPlanLimit } from '../../../../services/billing/planCatalog';
 
 // =============================================================================
 // DROPDOWN SELECTOR
@@ -179,7 +180,7 @@ export function AgencyPlanDropdown({
                                     <div className="flex items-center gap-3 text-sm text-q-text-muted">
                                         <span>{formatCurrency(plan.price)}/mes</span>
                                         <span>•</span>
-                                        <span>{plan.limits.maxProjects === -1 ? '∞' : plan.limits.maxProjects} proyectos</span>
+                                        <span>{formatPlanLimit(plan.limits.maxProjects)} proyectos</span>
                                     </div>
                                 )}
                             </div>
@@ -319,19 +320,19 @@ export function AgencyPlanCardSelector({
                                 <div className="flex items-center gap-2 text-q-text-muted">
                                     <Database className="w-4 h-4" />
                                     <span>
-                                        {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects} proyectos
+                                        {formatPlanLimit(plan.limits.maxProjects)} proyectos
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-q-text-muted">
                                     <Users className="w-4 h-4" />
                                     <span>
-                                        {plan.limits.maxUsers === -1 ? 'Ilimitados' : plan.limits.maxUsers} usuarios
+                                        {formatPlanLimit(plan.limits.maxUsers)} usuarios
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 text-q-text-muted">
                                     <Zap className="w-4 h-4" />
                                     <span>
-                                        {plan.limits.maxAiCredits === -1 ? 'Ilimitados' : plan.limits.maxAiCredits.toLocaleString()} AI credits
+                                        {formatPlanLimit(plan.limits.maxAiCredits)} AI credits
                                     </span>
                                 </div>
                             </div>

@@ -5,6 +5,7 @@ import {
   sendPaidOrderTransactionalEmails,
   sendPaymentFailedTransactionalEmail,
 } from "../_shared/ecommerce-transactional-emails.ts";
+import { CANONICAL_PLAN_IDS, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
@@ -14,6 +15,10 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const DEFAULT_FROM_EMAIL = Deno.env.get("EMAIL_FROM") || "Quimera Ai <no-reply@quimera.ai>";
+const AGENCY_CLIENT_BILLING_FLOWS = new Set([
+  "agency_client_payment_link",
+  "agency_client_managed_billing",
+]);
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -21,19 +26,11 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
-const FALLBACK_PLAN_CREDIT_LIMITS: Record<string, number> = {
-  free: 60,
-  hobby: 500,
-  starter: 500,
-  pro: 500,
-  individual: 500,
-  agency: 2000,
-  agency_plus: 5000,
-  agency_starter: 2000,
-  agency_pro: 5000,
-  agency_scale: 15000,
-  enterprise: 25000,
-};
+function getFallbackPlanCreditLimit(planId?: string | null): number | null {
+  if (!planId) return null;
+  if (!CANONICAL_PLAN_IDS.includes(planId as any) && !isLegacyPlan(planId)) return null;
+  return getCanonicalPlanLimits(normalizePlanId(planId)).maxAiCredits;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -223,6 +220,11 @@ async function updatePaymentEventStatus(
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  if (isAgencyClientBillingMetadata(session.metadata)) {
+    await handleAgencyClientCheckoutSessionCompleted(session);
+    return;
+  }
+
   if (session.mode === "subscription" && session.subscription) {
     const subscription = await stripe.subscriptions.retrieve(String(session.subscription));
     await syncSubscription(subscription, {
@@ -236,6 +238,48 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   if (session.metadata?.type === "credit_package" || session.metadata?.type === "ai_credits") {
     await addPurchasedCredits(session);
   }
+}
+
+function isAgencyClientBillingMetadata(metadata?: Stripe.Metadata | null) {
+  if (metadata?.source !== "agency-engine") return false;
+  if (metadata.billingFlow && AGENCY_CLIENT_BILLING_FLOWS.has(metadata.billingFlow)) return true;
+  return Boolean(metadata.agencyTenantId && (metadata.clientTenantId || metadata.tenantId));
+}
+
+function resolveAgencyClientBillingMode(billingFlow?: string | null, paymentLinkToken?: string | null) {
+  if (billingFlow === "agency_client_managed_billing") return "agency_managed";
+  if (billingFlow === "agency_client_payment_link" || paymentLinkToken) return "direct";
+  return "agency_managed";
+}
+
+async function handleAgencyClientCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  const subscription = session.subscription
+    ? await stripe.subscriptions.retrieve(String(session.subscription))
+    : null;
+
+  if (subscription) {
+    await syncAgencyClientSubscription(subscription, {
+      checkoutSessionId: session.id,
+      paymentLinkToken: session.metadata?.paymentLinkToken,
+      billingFlow: session.metadata?.billingFlow,
+    });
+    return;
+  }
+
+  await markAgencyPaymentLinkCompleted({
+    tenantId: session.metadata?.clientTenantId || session.metadata?.tenantId,
+    agencyTenantId: session.metadata?.agencyTenantId,
+    agencyPlanId: session.metadata?.agencyPlanId,
+    agencyPlanName: session.metadata?.agencyPlanName,
+    effectivePlanId: session.metadata?.effectivePlanId,
+    paymentLinkToken: session.metadata?.paymentLinkToken,
+    billingMode: resolveAgencyClientBillingMode(session.metadata?.billingFlow, session.metadata?.paymentLinkToken),
+    stripeCustomerId: typeof session.customer === "string" ? session.customer : session.customer?.id,
+    stripeCheckoutSessionId: session.id,
+    stripeSubscriptionId: null,
+    status: "active",
+    currentPeriodEnd: null,
+  });
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
@@ -253,6 +297,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  if (isAgencyClientBillingMetadata(subscription.metadata)) {
+    await syncAgencyClientSubscription(subscription, { deleted: true });
+    return;
+  }
+
   const tenantId = await resolveTenantId(subscription);
   if (!tenantId) {
     console.warn("[stripe-webhook] subscription deleted without resolvable tenant:", subscription.id);
@@ -280,6 +329,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function syncSubscription(subscription: Stripe.Subscription, fallback?: { tenantId?: string; planId?: string; userId?: string }) {
+  if (isAgencyClientBillingMetadata(subscription.metadata)) {
+    await syncAgencyClientSubscription(subscription);
+    return;
+  }
+
   const tenantId = await resolveTenantId(subscription, fallback?.tenantId, fallback?.userId);
   if (!tenantId) {
     console.warn("[stripe-webhook] subscription without resolvable tenant:", subscription.id, subscription.metadata);
@@ -342,6 +396,174 @@ async function syncSubscription(subscription: Stripe.Subscription, fallback?: { 
       },
     });
   }
+}
+
+async function syncAgencyClientSubscription(
+  subscription: Stripe.Subscription,
+  options: {
+    checkoutSessionId?: string | null;
+    paymentLinkToken?: string | null;
+    billingFlow?: string | null;
+    deleted?: boolean;
+  } = {},
+) {
+  const metadata = subscription.metadata || {};
+  const tenantId = metadata.clientTenantId || metadata.tenantId;
+  if (!tenantId) {
+    console.warn("[stripe-webhook] agency client subscription without tenant id:", subscription.id, metadata);
+    return;
+  }
+
+  await markAgencyPaymentLinkCompleted({
+    tenantId,
+    agencyTenantId: metadata.agencyTenantId,
+    agencyPlanId: metadata.agencyPlanId,
+    agencyPlanName: metadata.agencyPlanName,
+    effectivePlanId: metadata.effectivePlanId || metadata.planId,
+    paymentLinkToken: options.paymentLinkToken || metadata.paymentLinkToken,
+    billingMode: resolveAgencyClientBillingMode(
+      options.billingFlow || metadata.billingFlow,
+      options.paymentLinkToken || metadata.paymentLinkToken,
+    ),
+    stripeCustomerId: String(subscription.customer),
+    stripeCheckoutSessionId: options.checkoutSessionId || null,
+    stripeSubscriptionId: subscription.id,
+    status: options.deleted
+      ? "cancelled"
+      : subscription.status === "trialing"
+        ? "trial"
+        : subscription.status,
+    currentPeriodEnd: iso(subscription.current_period_end),
+  });
+}
+
+async function markAgencyPaymentLinkCompleted(params: {
+  tenantId?: string | null;
+  agencyTenantId?: string | null;
+  agencyPlanId?: string | null;
+  agencyPlanName?: string | null;
+  effectivePlanId?: string | null;
+  paymentLinkToken?: string | null;
+  billingMode?: string | null;
+  stripeCustomerId?: string | null;
+  stripeCheckoutSessionId?: string | null;
+  stripeSubscriptionId?: string | null;
+  status?: string | null;
+  currentPeriodEnd?: string | null;
+}) {
+  if (!params.tenantId) return;
+
+  const { data: tenant, error: tenantError } = await supabase
+    .from("tenants")
+    .select("id,billing,subscription_plan")
+    .eq("id", params.tenantId)
+    .maybeSingle();
+  if (tenantError) throw tenantError;
+  if (!tenant) return;
+
+  const effectivePlanId = normalizePlanId(params.effectivePlanId || tenant.billing?.effectivePlanId || tenant.subscription_plan || "individual");
+  const status = params.status || "active";
+  const billingMode = params.billingMode || "direct";
+  const billing = {
+    ...(tenant.billing || {}),
+    mode: billingMode,
+    effectivePlanId,
+    agencyTenantId: params.agencyTenantId || tenant.billing?.agencyTenantId || null,
+    agencyPlanId: params.agencyPlanId || tenant.billing?.agencyPlanId || null,
+    agencyPlanName: params.agencyPlanName || tenant.billing?.agencyPlanName || null,
+    status,
+    subscriptionStatus: status,
+    stripeCustomerId: params.stripeCustomerId || tenant.billing?.stripeCustomerId || null,
+    stripeCheckoutSessionId: params.stripeCheckoutSessionId || tenant.billing?.stripeCheckoutSessionId || null,
+    stripeSubscriptionId: params.stripeSubscriptionId || tenant.billing?.stripeSubscriptionId || null,
+    currentPeriodEnd: params.currentPeriodEnd || tenant.billing?.currentPeriodEnd || null,
+    nextBillingDate: params.currentPeriodEnd || tenant.billing?.nextBillingDate || null,
+    checkoutCompletedAt: status === "cancelled" ? tenant.billing?.checkoutCompletedAt || null : new Date().toISOString(),
+    cancelAtPeriodEnd: status === "cancelled" ? false : tenant.billing?.cancelAtPeriodEnd || false,
+  };
+
+  await supabase
+    .from("tenants")
+    .update({
+      subscription_plan: effectivePlanId,
+      status: ["active", "trial", "trialing", "past_due", "incomplete"].includes(status) ? "active" : "expired",
+      billing,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", params.tenantId);
+
+  let shouldRecordPaymentActivity = false;
+  if (params.paymentLinkToken) {
+    const { data: existingLink, error: existingLinkError } = await supabase
+      .from("agency_client_payment_links")
+      .select("status")
+      .eq("token", params.paymentLinkToken)
+      .maybeSingle();
+    if (existingLinkError && !isMissingTableError(existingLinkError)) throw existingLinkError;
+
+    const linkStatus = status === "cancelled" ? "cancelled" : "completed";
+    shouldRecordPaymentActivity = linkStatus === "completed" && existingLink?.status !== "completed";
+    const linkUpdate: Record<string, unknown> = {
+      status: linkStatus,
+      completed_at: linkStatus === "completed" ? new Date().toISOString() : null,
+      stripe_customer_id: params.stripeCustomerId || null,
+      stripe_subscription_id: params.stripeSubscriptionId || null,
+      updated_at: new Date().toISOString(),
+    };
+    if (params.stripeCheckoutSessionId) {
+      linkUpdate.stripe_checkout_session_id = params.stripeCheckoutSessionId;
+    }
+
+    const { error: linkError } = await supabase
+      .from("agency_client_payment_links")
+      .update(linkUpdate)
+      .eq("token", params.paymentLinkToken);
+    if (linkError && !isMissingTableError(linkError)) throw linkError;
+  }
+
+  if (params.agencyTenantId) {
+    const { error: relationshipError } = await supabase
+      .from("agency_clients")
+      .upsert({
+        agency_tenant_id: params.agencyTenantId,
+        client_tenant_id: params.tenantId,
+        agency_plan_id: params.agencyPlanId || null,
+        billing_mode: billingMode,
+        onboarding_status: "active",
+        metadata: {
+          source: "stripe-webhook",
+          paymentLinkToken: params.paymentLinkToken || null,
+          stripeSubscriptionId: params.stripeSubscriptionId || null,
+          lastBillingStatus: status,
+        },
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "agency_tenant_id,client_tenant_id" });
+    if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
+
+    if (shouldRecordPaymentActivity) {
+      const { error: activityError } = await supabase.from("agency_activity").insert({
+        agency_tenant_id: params.agencyTenantId,
+        client_tenant_id: params.tenantId,
+        type: "payment_received",
+        title: "Client subscription activated",
+        description: "Client completed agency service checkout.",
+        metadata: {
+          agencyPlanId: params.agencyPlanId || null,
+          stripeCheckoutSessionId: params.stripeCheckoutSessionId || null,
+          stripeSubscriptionId: params.stripeSubscriptionId || null,
+          source: "stripe-webhook",
+        },
+        created_at: new Date().toISOString(),
+      });
+      if (activityError && !isMissingTableError(activityError)) throw activityError;
+    }
+  }
+}
+
+function isMissingTableError(error: any) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  return code === "42P01" || code === "PGRST205" || message.includes("does not exist");
 }
 
 async function resolveTenantId(subscription: Stripe.Subscription, fallbackTenantId?: string, fallbackUserId?: string): Promise<string | null> {
@@ -467,7 +689,7 @@ async function planExists(planId?: string | null): Promise<boolean> {
     console.warn(`[stripe-webhook] could not verify plan ${planId}:`, error.message);
   }
 
-  return Boolean(data?.id || FALLBACK_PLAN_CREDIT_LIMITS[planId] !== undefined);
+  return Boolean(data?.id || getFallbackPlanCreditLimit(planId) !== null);
 }
 
 async function getLocalSubscription(tenantId: string) {
@@ -515,7 +737,7 @@ async function getPlanCreditLimit(planId?: string | null): Promise<number | null
   const fromDb = Number(data?.limits?.maxAiCredits);
   if (Number.isFinite(fromDb) && fromDb >= 0) return fromDb;
 
-  return FALLBACK_PLAN_CREDIT_LIMITS[planId] ?? null;
+  return getFallbackPlanCreditLimit(planId);
 }
 
 async function getTenantPlanId(tenantId: string): Promise<string | null> {

@@ -5,14 +5,18 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import {
-    Calendar,
     Download,
     RefreshCw,
     BarChart3,
-    TrendingUp,
     ShoppingCart,
+    DollarSign,
+    Users,
+    FolderKanban,
+    Sparkles,
+    ShieldCheck,
+    TrendingUp,
+    CreditCard,
 } from 'lucide-react';
 import { useAgency } from '../../../contexts/agency/AgencyContext';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
@@ -26,7 +30,7 @@ import {
 import { supabase } from '../../../supabase';
 import { getAgencyPoolBreakdown } from '../../../services/aiCreditsService';
 import PurchaseCreditsModal from '../../ui/PurchaseCreditsModal';
-import { MotionCard } from '../../ui/primitives/Card';
+import { AgencyCommandCenter, AgencyNextAction, AgencyReadinessPanel, AgencySectionHeader } from './AgencyDesignSystem';
 
 type DateRange = '7d' | '30d' | '90d' | '12m';
 
@@ -43,7 +47,7 @@ interface BillingSummary {
 
 export function AgencyAnalytics() {
     const { t } = useTranslation();
-    const { subClients, aggregatedMetrics, loadingClients, resourceAlerts } = useAgency();
+    const { subClients, aggregatedMetrics, loadingClients } = useAgency();
     const { currentTenant } = useTenant();
 
     const [dateRange, setDateRange] = useState<DateRange>('30d');
@@ -238,32 +242,79 @@ export function AgencyAnalytics() {
         URL.revokeObjectURL(url);
     };
 
+    const creditsTotal = creditsBreakdown?.totalCredits || billingSummary?.poolCredits || 0;
+    const creditsUsed = creditsBreakdown?.usedCredits || aggregatedMetrics.aiCreditsUsed;
+    const creditsRemaining = creditsBreakdown?.remainingCredits ?? Math.max(creditsTotal - creditsUsed, 0);
+    const creditsUsagePercent = creditsTotal > 0 ? Math.round((creditsUsed / creditsTotal) * 100) : 0;
+    const clientsWithWarnings = clientHealth.filter((client) => client.status !== 'healthy').length;
+    const analyticsReadinessItems = [
+        {
+            label: t('dashboard.agency.analyticsPage.readinessClients', 'Clientes conectados'),
+            description: t('dashboard.agency.analyticsPage.readinessClientsDesc', '{{count}} clientes en analítica', { count: subClients.length }),
+            complete: subClients.length > 0,
+            icon: Users,
+        },
+        {
+            label: t('dashboard.agency.analyticsPage.readinessBilling', 'Billing sincronizado'),
+            description: billingSummary
+                ? t('dashboard.agency.analyticsPage.readinessBillingReady', 'Modelo y proyectos cargados')
+                : t('dashboard.agency.analyticsPage.readinessBillingPending', 'Pendiente de sincronizar'),
+            complete: Boolean(billingSummary),
+            icon: CreditCard,
+            onClick: handleRefresh,
+        },
+        {
+            label: t('dashboard.agency.analyticsPage.readinessCredits', 'Pool de AI Credits'),
+            description: creditsTotal > 0
+                ? t('dashboard.agency.analyticsPage.readinessCreditsDesc', '{{percent}}% utilizado', { percent: creditsUsagePercent })
+                : t('dashboard.agency.analyticsPage.readinessCreditsMissing', 'Pool no configurado'),
+            complete: creditsTotal > 0 && creditsUsagePercent < 90,
+            icon: Sparkles,
+            onClick: () => setShowPurchaseModal(true),
+        },
+        {
+            label: t('dashboard.agency.analyticsPage.readinessHealth', 'Salud de clientes'),
+            description: t('dashboard.agency.analyticsPage.readinessHealthDesc', '{{count}} clientes requieren revisión', { count: clientsWithWarnings }),
+            complete: clientsWithWarnings === 0,
+            icon: ShieldCheck,
+        },
+    ];
+    const analyticsReadinessScore = Math.round(
+        (analyticsReadinessItems.filter((item) => item.complete).length / analyticsReadinessItems.length) * 100,
+    );
+    const analyticsNextAction = creditsTotal === 0 || creditsUsagePercent >= 90
+        ? {
+            label: t('dashboard.agency.analyticsPage.nextBuyCredits', 'Comprar AI Credits'),
+            description: creditsTotal === 0
+                ? t('dashboard.agency.analyticsPage.nextBuyCreditsSetup', 'Configura el pool para operar generaciones de clientes.')
+                : t('dashboard.agency.analyticsPage.nextBuyCreditsLow', '{{remaining}} créditos disponibles', { remaining: creditsRemaining.toLocaleString() }),
+            icon: ShoppingCart,
+            tone: 'warning' as const,
+            onClick: () => setShowPurchaseModal(true),
+        }
+        : {
+            label: t('dashboard.agency.analyticsPage.nextExport', 'Exportar performance'),
+            description: t('dashboard.agency.analyticsPage.nextExportDesc', 'Descarga MRR, uso, proyectos y salud de clientes.'),
+            icon: Download,
+            tone: 'success' as const,
+            onClick: handleExport,
+        };
+
     return (
         <div className="space-y-4 sm:space-y-6">
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-            >
-                <div>
-                    <h2 className="text-2xl font-bold text-q-text flex items-center gap-2">
-                        <BarChart3 className="w-7 h-7 text-q-accent" />
-                        {t('dashboard.agency.analyticsPage.title')}
-                    </h2>
-                    <p className="text-q-text-secondary mt-1">
-                        {t('dashboard.agency.analyticsPage.subtitle')}
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
+            <AgencySectionHeader
+                icon={BarChart3}
+                title={t('dashboard.agency.analyticsPage.title')}
+                subtitle={t('dashboard.agency.analyticsPage.subtitle')}
+                actions={
+                    <>
                     {/* Date range selector */}
-                    <div className="flex items-center gap-1 h-10 bg-q-surface border border-q-border rounded-lg p-1">
+                    <div className="flex h-9 items-center gap-1 rounded-lg border border-q-border bg-q-surface p-1">
                         {(['7d', '30d', '90d', '12m'] as DateRange[]).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setDateRange(range)}
-                                className={`px-3 h-full flex items-center justify-center text-sm rounded-md transition-colors ${dateRange === range
+                                className={`h-full px-3 flex items-center justify-center text-sm rounded-md transition-colors ${dateRange === range
                                     ? 'bg-q-accent text-q-text-on-accent shadow-sm'
                                     : 'text-q-text-secondary hover:text-q-text'
                                     }`}
@@ -277,7 +328,7 @@ export function AgencyAnalytics() {
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="h-10 w-10 flex items-center justify-center rounded-lg bg-q-surface border border-q-border text-q-text-secondary hover:text-q-text transition-colors"
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-q-surface border border-q-border text-q-text-secondary hover:text-q-text transition-colors"
                         title={t('dashboard.agency.analyticsPage.refreshData')}
                     >
                         <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -285,48 +336,65 @@ export function AgencyAnalytics() {
 
                     <button
                         onClick={handleExport}
-                        className="h-10 px-4 flex items-center justify-center gap-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors"
+                        className="h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors text-sm font-semibold"
                     >
                         <Download className="w-4 h-4" />
                         {t('dashboard.agency.analyticsPage.export')}
                     </button>
-                </div>
-            </motion.div>
+                    </>
+                }
+            />
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <MotionCard staggerIndex={0} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-q-success leading-none tracking-tight mb-1">
-                        ${aggregatedMetrics.mrr.toLocaleString()}
-                    </p>
-                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
-                        {t('dashboard.agency.analyticsPage.mrrTotal')}
-                    </p>
-                </MotionCard>
-                <MotionCard staggerIndex={1} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-q-accent leading-none tracking-tight mb-1">
-                        {aggregatedMetrics.activeSubClients}
-                    </p>
-                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
-                        {t('dashboard.agency.analyticsPage.activeClients')}
-                    </p>
-                </MotionCard>
-                <MotionCard staggerIndex={2} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-q-accent leading-none tracking-tight mb-1">
-                        {aggregatedMetrics.totalProjects}
-                    </p>
-                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
-                        {t('dashboard.agency.analyticsPage.projects')}
-                    </p>
-                </MotionCard>
-                <MotionCard staggerIndex={3} hoverMotion className="bg-q-surface border border-q-border rounded-[16px] p-3.5 sm:p-4 flex flex-col justify-end h-[85px] sm:h-auto hover:shadow-lg transition-shadow">
-                    <p className="text-xl sm:text-2xl font-bold text-q-warning leading-none tracking-tight mb-1">
-                        {aggregatedMetrics.aiCreditsUsed.toLocaleString()}
-                    </p>
-                    <p className="text-[11px] sm:text-sm font-semibold text-q-text-muted truncate leading-none">
-                        {t('dashboard.agency.analyticsPage.aiCreditsUsed')}
-                    </p>
-                </MotionCard>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+                <AgencyCommandCenter
+                    icon={TrendingUp}
+                    eyebrow={t('dashboard.agency.analyticsPage.commandCenter', 'Performance center')}
+                    title={t('dashboard.agency.analyticsPage.commandTitle', 'Agency Analytics')}
+                    subtitle={t('dashboard.agency.analyticsPage.commandSubtitle', 'MRR, salud, uso de AI y rentabilidad de proyectos para toda la cartera.')}
+                    metrics={[
+                        {
+                            label: t('dashboard.agency.analyticsPage.mrrTotal'),
+                            value: `$${aggregatedMetrics.mrr.toLocaleString()}`,
+                            icon: DollarSign,
+                        },
+                        {
+                            label: t('dashboard.agency.analyticsPage.activeClients'),
+                            value: aggregatedMetrics.activeSubClients,
+                            icon: Users,
+                        },
+                        {
+                            label: t('dashboard.agency.analyticsPage.projects'),
+                            value: aggregatedMetrics.totalProjects,
+                            icon: FolderKanban,
+                        },
+                        {
+                            label: t('dashboard.agency.analyticsPage.aiCreditsUsed'),
+                            value: aggregatedMetrics.aiCreditsUsed.toLocaleString(),
+                            icon: Sparkles,
+                            onClick: () => setShowPurchaseModal(true),
+                        },
+                    ]}
+                    action={
+                        <AgencyNextAction
+                            label={analyticsNextAction.label}
+                            description={analyticsNextAction.description}
+                            icon={analyticsNextAction.icon}
+                            tone={analyticsNextAction.tone}
+                            onClick={analyticsNextAction.onClick}
+                        />
+                    }
+                />
+
+                <AgencyReadinessPanel
+                    title={t('dashboard.agency.analyticsPage.readinessTitle', 'Readiness de datos')}
+                    subtitle={t('dashboard.agency.analyticsPage.readinessSubtitle', '{{ready}}/{{total}} señales listas', {
+                        ready: analyticsReadinessItems.filter((item) => item.complete).length,
+                        total: analyticsReadinessItems.length,
+                    })}
+                    score={analyticsReadinessScore}
+                    items={analyticsReadinessItems}
+                    tone={analyticsReadinessScore >= 80 ? 'success' : analyticsReadinessScore >= 50 ? 'warning' : 'danger'}
+                />
             </div>
 
             {/* Charts Grid */}
@@ -362,7 +430,7 @@ export function AgencyAnalytics() {
                     <div className="mt-3 flex justify-center">
                         <button
                             onClick={() => setShowPurchaseModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-q-accent to-q-warning text-q-text-on-accent text-sm font-bold hover:shadow-lg hover:shadow-q-accent/20 transition-all"
+                            className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all"
                         >
                             <ShoppingCart className="w-4 h-4" />
                             {t('dashboard.agency.analyticsPage.buyCredits', 'Comprar Créditos para Pool')}

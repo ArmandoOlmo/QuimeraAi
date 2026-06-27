@@ -1,5 +1,6 @@
 import type {
     AssistantConversation,
+    AssistantContextSnapshot,
     AssistantMessage,
     AssistantMessageRole,
     GlobalAssistantMode,
@@ -10,6 +11,7 @@ export interface GlobalAssistantConversationAdapter {
     upsertConversation(conversation: AssistantConversation): Promise<AssistantConversation>;
     recordMessage(message: AssistantMessage): Promise<AssistantMessage>;
     listMessages(conversationId: string): Promise<AssistantMessage[]>;
+    recordContextSnapshot?(context: AssistantContextSnapshot): Promise<void> | void;
 }
 
 export interface CreateAssistantConversationInput {
@@ -44,6 +46,7 @@ const createId = (prefix: string) => {
 export class InMemoryGlobalAssistantConversationAdapter implements GlobalAssistantConversationAdapter {
     private readonly conversations = new Map<string, AssistantConversation>();
     private readonly messages = new Map<string, AssistantMessage[]>();
+    private readonly contextSnapshots = new Map<string, AssistantContextSnapshot>();
 
     async upsertConversation(conversation: AssistantConversation): Promise<AssistantConversation> {
         const nextConversation = { ...conversation };
@@ -65,6 +68,19 @@ export class InMemoryGlobalAssistantConversationAdapter implements GlobalAssista
 
     async listMessages(conversationId: string): Promise<AssistantMessage[]> {
         return [...(this.messages.get(conversationId) || [])].sort((left, right) =>
+            left.createdAt.localeCompare(right.createdAt),
+        );
+    }
+
+    async recordContextSnapshot(context: AssistantContextSnapshot): Promise<void> {
+        this.contextSnapshots.set(context.id, {
+            ...context,
+            snapshot: { ...(context.snapshot || {}) },
+        });
+    }
+
+    listContextSnapshots(): AssistantContextSnapshot[] {
+        return Array.from(this.contextSnapshots.values()).sort((left, right) =>
             left.createdAt.localeCompare(right.createdAt),
         );
     }
@@ -108,6 +124,13 @@ export class GlobalAssistantConversationService {
             ...conversation,
             metadata: { ...(conversation.metadata || {}) },
             updatedAt: nowIso(),
+        });
+    }
+
+    async recordContextSnapshot(context: AssistantContextSnapshot): Promise<void> {
+        await this.adapter.recordContextSnapshot?.({
+            ...context,
+            snapshot: { ...(context.snapshot || {}) },
         });
     }
 

@@ -11,6 +11,7 @@ import {
 } from "../../../services/email/emailProviderService.ts";
 import { createEmailMarketingEngine } from "../../../services/email/emailMarketingEngineService.ts";
 import { verifySendGridWebhookSignature } from "../../../services/email/emailWebhookSignature.ts";
+import { EdgeAccessError, requireServiceAccess } from "../_shared/access.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
@@ -96,7 +97,16 @@ serve(async (req) => {
     const requestPayload = readObject(payload);
     const projectId = String(requestPayload.projectId || requestPayload.storeId || "");
     if (!projectId) throw new Error("projectId/storeId is required");
-    await requireProjectAccess(user.id, projectId);
+    const project = await requireProjectAccess(user.id, projectId);
+    await requireServiceAccess(req, {
+      tenantId: project.tenant_id,
+      projectId,
+      moduleId: "email-marketing",
+      serviceId: "emailMarketing",
+      featureKey: "emailMarketing",
+      requiredPermission: "canManageLeads",
+      action,
+    });
 
     switch (action) {
       case "getReadiness":
@@ -321,7 +331,7 @@ serve(async (req) => {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return json({ success: false, error: message }, 400);
+    return json({ success: false, error: message, ...(error instanceof EdgeAccessError ? { decision: error.decision } : {}) }, error instanceof EdgeAccessError ? error.status : 400);
   }
 });
 

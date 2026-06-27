@@ -10,7 +10,7 @@ describe('globalAssistantContextResolver', () => {
         expect(resolveModuleFromRoute('/domains')).toBe('settings');
         expect(resolveModuleFromRoute('/templates')).toBe('project');
         expect(resolveModuleFromRoute('/blog-hub')).toBe('website');
-        expect(resolveModuleFromRoute('/agency/reports')).toBe('tenant');
+        expect(resolveModuleFromRoute('/agency/reports')).toBe('agency');
         expect(resolveModuleFromRoute('/ai-assistant')).toBe('chatbot');
         expect(resolveModuleFromRoute('/real-estate')).toBe('realEstate');
         expect(resolveModuleFromRoute('/admin/global-assistant')).toBe('admin');

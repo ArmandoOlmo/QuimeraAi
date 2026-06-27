@@ -500,7 +500,7 @@ R: Contacta a sales@quimera.ai para casos especiales. Generalmente ofrecemos 14 
 
 R: Puedes:
 1. Agregar add-ons (+$15/cliente adicional)
-2. Upgrade a Enterprise (ilimitado)
+2. Upgrade a Enterprise (hasta 500 sub-clientes por defecto, configurable por Super Admin)
 3. Contactar sales para plan custom
 
 ---

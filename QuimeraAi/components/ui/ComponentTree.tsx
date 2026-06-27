@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { PageSection } from '../../types';
 import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
+import { getRegistryItem } from '../../data/componentRegistry';
 import { useTranslation } from 'react-i18next';
 import MobileSearchModal from './MobileSearchModal';
 import {
@@ -141,18 +142,15 @@ const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     productGrid: Grid,
     cart: ShoppingCart,
     checkout: CreditCard,
+    appointmentBooking: CalendarCheck,
     restaurantReservation: CalendarCheck,
 };
 
 // Fixed sections that cannot be reordered
 const FIXED_SECTIONS = ['header', 'footer', 'typography', 'colors', 'storeSettings'];
 
-// Ecommerce section identifiers - defined outside component to maintain referential stability
-const ECOMMERCE_SECTION_IDS: PageSection[] = [
-    'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero',
-    'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews',
-    'collectionBanner', 'productBundle', 'announcementBar'
-];
+const isEcommerceSection = (section: PageSection): boolean =>
+    getRegistryItem(section)?.role === 'ecommerce';
 
 // Sortable Item Component
 interface SortableSectionItemProps {
@@ -453,6 +451,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         productGrid: t('editor.productGridSection', 'Cuadrícula de Productos'),
         cart: t('editor.cartSection', 'Carrito'),
         checkout: t('editor.checkoutSection', 'Checkout'),
+        appointmentBooking: t('appointmentBooking.title', 'Appointment Booking'),
         restaurantReservation: t('editor.restaurantReservationSection', 'Reservaciones'),
     };
 
@@ -475,7 +474,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return visibleComponentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
-            return !['header', 'footer', 'typography', 'colors', 'storeSettings', ...ECOMMERCE_SECTION_IDS].includes(s) &&
+            return !['header', 'footer', 'typography', 'colors'].includes(s) &&
+                !isEcommerceSection(s) &&
                 isComponentEnabled(s);
         });
     }, [visibleComponentOrder, isComponentEnabled]);
@@ -485,7 +485,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         return visibleComponentOrder.filter(s => {
             if (seen.has(s)) return false;
             seen.add(s);
-            return ECOMMERCE_SECTION_IDS.includes(s) &&
+            return isEcommerceSection(s) &&
                 isComponentEnabled(s);
         });
     }, [visibleComponentOrder, isComponentEnabled]);
@@ -502,7 +502,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const legacyAddComponents = useMemo(
         () => availableComponents.filter(section =>
-            !ECOMMERCE_SECTION_IDS.includes(section) &&
+            !isEcommerceSection(section) &&
             !isRetiredDesignSuiteSection(section) &&
             !section.toLowerCase().includes('quimera')
         ),
@@ -510,7 +510,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
     );
 
     const ecommerceAddComponents = useMemo(
-        () => availableComponents.filter(section => ECOMMERCE_SECTION_IDS.includes(section)),
+        () => availableComponents.filter(isEcommerceSection),
         [availableComponents]
     );
 

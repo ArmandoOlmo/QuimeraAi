@@ -3,25 +3,25 @@
  * Display resource usage alerts for sub-clients
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ResourceAlert } from '../../../hooks/useAgencyMetrics';
 import {
     getAlertColor,
-    getAlertIcon,
     formatResourceName,
 } from '../../../contexts/agency/AgencyContext';
-import { AlertTriangle, AlertCircle, ExternalLink } from 'lucide-react';
-import { useRouter } from '../../../hooks/useRouter';
-import { settingsPanelClass } from '../settings/SettingsStatCard';
+import { AlertTriangle, AlertCircle, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { AgencyEmptyState, AgencyPanel } from './AgencyDesignSystem';
+import { StatusBadge } from '../../ui/system';
 
 interface ResourceAlertsPanelProps {
     alerts: ResourceAlert[];
     maxVisible?: number;
+    onSelectClient?: (clientId: string) => void;
 }
 
-export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPanelProps) {
-    const { navigate } = useRouter();
-    const visibleAlerts = alerts.slice(0, maxVisible);
+export function ResourceAlertsPanel({ alerts, maxVisible = 5, onSelectClient }: ResourceAlertsPanelProps) {
+    const [showAll, setShowAll] = useState(false);
+    const visibleAlerts = showAll ? alerts : alerts.slice(0, maxVisible);
     const hasMore = alerts.length > maxVisible;
 
     const getIcon = (severity: ResourceAlert['severity']) => {
@@ -33,66 +33,33 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
     };
 
     const handleAlertClick = (alert: ResourceAlert) => {
-        // Navigate to client detail page
-        navigate(`/dashboard/agency/clients/${alert.clientId}`);
+        onSelectClient?.(alert.clientId);
     };
 
     if (alerts.length === 0) {
         return (
-            <div className={`${settingsPanelClass} p-6`}>
-                <div className="flex items-center gap-3 mb-4">
-                    <AlertCircle size={20} className="text-q-success flex-shrink-0" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Alertas de Recursos
-                    </h3>
-                </div>
-                <div className="text-center py-8">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-q-success/10 dark:bg-q-success/12 mb-4">
-                        <svg
-                            className="h-8 w-8 text-q-success dark:text-q-success"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    </div>
-                    <p className="text-q-text-muted">
-                        No hay alertas de recursos
-                    </p>
-                    <p className="text-sm text-q-text-muted mt-1">
-                        Todos los clientes están dentro de sus límites
-                    </p>
-                </div>
-            </div>
+            <AgencyPanel title="Alertas de Recursos" icon={AlertCircle}>
+                <AgencyEmptyState
+                    icon={CheckCircle2}
+                    title="Sin alertas activas"
+                    description="Todos los clientes están dentro de sus límites."
+                />
+            </AgencyPanel>
         );
     }
 
     return (
-        <div className={`${settingsPanelClass} p-6`}>
-            <div className="flex items-center justify-between mb-4 gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                    <AlertTriangle size={20} className="text-q-error flex-shrink-0" strokeWidth={2} />
-                    <h3 className="text-lg font-semibold text-foreground">
-                        Alertas de Recursos
-                    </h3>
-                </div>
-                <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-q-error/10 dark:bg-q-error/12 text-q-error dark:text-q-error">
-                    {alerts.length}
-                </span>
-            </div>
-
+        <AgencyPanel
+            title="Alertas de Recursos"
+            icon={AlertTriangle}
+            action={<StatusBadge size="sm" variant="danger">{alerts.length}</StatusBadge>}
+        >
             <div className="space-y-3">
                 {visibleAlerts.map((alert) => (
                     <button
                         key={alert.id}
                         onClick={() => handleAlertClick(alert)}
-                        className={`w-full text-left p-4 rounded-lg border transition-all hover:border-q-border ${getAlertColor(
+                        className={`w-full text-left p-4 rounded-lg border transition-colors hover:border-q-border ${getAlertColor(
                             alert.severity
                         )}`}
                     >
@@ -115,7 +82,7 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
                                 </p>
                                 {alert.severity === 'critical' && (
                                     <p className="text-xs mt-1 font-medium">
-                                        ⚠ Límite casi alcanzado - Contactar cliente
+                                        Límite casi alcanzado - Contactar cliente
                                     </p>
                                 )}
                             </div>
@@ -127,12 +94,12 @@ export function ResourceAlertsPanel({ alerts, maxVisible = 5 }: ResourceAlertsPa
 
             {hasMore && (
                 <button
-                    onClick={() => navigate('/dashboard/agency/alerts')}
+                    onClick={() => setShowAll((value) => !value)}
                     className="w-full mt-4 text-sm quimera-status-card-link font-medium"
                 >
-                    Ver todas las alertas ({alerts.length})
+                    {showAll ? 'Mostrar menos' : `Ver todas las alertas (${alerts.length})`}
                 </button>
             )}
-        </div>
+        </AgencyPanel>
     );
 }

@@ -17,6 +17,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
+import { canAccessRegistryItem, getRegistryItem } from '../../data/componentRegistry';
 import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
@@ -149,19 +150,52 @@ const Controls: React.FC = () => {
   const { menus, categories } = useCMS();
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus: rawComponentStatus, componentStyles } = useAdmin();
-  const { canAccessService, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
   const { hasAccess: hasPlanAccess, isLoading: isLoadingPlanAccess } = usePlanAccess();
 
-  const ECOMMERCE_SECTIONS: Set<string> = useMemo(() => new Set([
-    'products', 'storeSettings', 'featuredProducts', 'categoryGrid',
-    'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed',
-    'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',
-  ]), []);
-
-  const componentStatus = rawComponentStatus;
-  const isComponentEnabled = (section: PageSection) => componentStatus?.[section] !== false;
-  const canAddEcommerceComponents = (isLoadingServiceAvailability || canAccessService('ecommerce')) &&
-    (isLoadingPlanAccess || hasPlanAccess('ecommerceEnabled'));
+  const isComponentServiceAvailable = (section: PageSection): boolean => {
+    const registryItem = getRegistryItem(section);
+    if (!registryItem?.requiredService) return true;
+    return canAccessRegistryItem(registryItem, {
+      canAccessService: serviceId => !isLoadingServiceAvailability && isServicePublic(serviceId),
+      hasPlanFeature: feature => !isLoadingPlanAccess && hasPlanAccess(feature),
+    });
+  };
+  const isComponentPlanAvailable = (section: PageSection): boolean => {
+    const requiredFeature = getRegistryItem(section)?.requiredFeature;
+    if (!requiredFeature) return true;
+    return !isLoadingPlanAccess && hasPlanAccess(requiredFeature);
+  };
+  const isComponentAccessAvailable = (section: PageSection): boolean =>
+    isComponentServiceAvailable(section) && isComponentPlanAvailable(section);
+  const componentStatus = useMemo(() => {
+    const knownSections = new Set<PageSection>([
+      ...(initialData.componentOrder as PageSection[]),
+      ...(componentOrder || []),
+      ...((activePage?.sections || []) as PageSection[]),
+      ...(Object.keys(rawComponentStatus || {}) as PageSection[]),
+    ]);
+    const nextStatus = { ...(rawComponentStatus || {}) } as Record<PageSection, boolean>;
+    knownSections.forEach(section => {
+      nextStatus[section] = rawComponentStatus?.[section] !== false && isComponentAccessAvailable(section);
+    });
+    return nextStatus;
+  }, [
+    activePage?.sections,
+    componentOrder,
+    rawComponentStatus,
+    isLoadingServiceAvailability,
+    isServicePublic,
+    isLoadingPlanAccess,
+    hasPlanAccess,
+  ]);
+  const isComponentEnabled = (section: PageSection) =>
+    componentStatus?.[section] !== false;
+  useEffect(() => {
+    if (activeSection && !isComponentEnabled(activeSection)) {
+      onSectionSelect(null as any);
+    }
+  }, [activeSection, componentStatus, onSectionSelect]);
 
   const { navigate } = useRouter();
   const [aiAssistField, setAiAssistField] = useState<{ path: string, value: string, context: string } | null>(null);
@@ -442,14 +476,12 @@ const Controls: React.FC = () => {
 
   if (!data) return null;
 
-  const sortableSections = effectiveComponentOrder.filter(k => k !== 'footer' && isComponentEnabled(k as PageSection));
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
     section => isComponentEnabled(section) &&
       section !== 'typography' &&
       section !== 'footer' &&
       section !== 'colors' &&
-      !isRetiredDesignSuiteSection(section) &&
-      (!ECOMMERCE_SECTIONS.has(section) || canAddEcommerceComponents)
+      !isRetiredDesignSuiteSection(section)
   );
 
   const handleAddComponent = (section: PageSection) => {
@@ -540,6 +572,7 @@ const Controls: React.FC = () => {
     if (!activeSection) return null;
     const config = sectionConfig[activeSection];
     if (!config) return null;
+    if (!isComponentEnabled(activeSection)) return null;
 
     switch (activeSection) {
       case 'hero': return renderHeroControlsWithTabs(deps);

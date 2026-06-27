@@ -13,8 +13,6 @@ import {
     Rocket,
     Building2,
     AlertTriangle,
-    Gift,
-    TrendingUp,
     RefreshCw,
     Loader2,
     Calendar,
@@ -25,6 +23,11 @@ import {
     ArrowRight,
     CreditCard,
     ExternalLink,
+    Users,
+    Globe2,
+    Database,
+    Gauge,
+    ShieldCheck,
 } from 'lucide-react';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { usePlans } from '../../../contexts/PlansContext';
@@ -35,9 +38,11 @@ import { useTenant } from '../../../contexts/tenant';
 import { supabase } from '../../../supabase';
 import {
     SUBSCRIPTION_PLANS,
+    PlanLimits,
     SubscriptionPlanId,
 } from '../../../types/subscription';
-import { SettingsStatCard, settingsPanelClass } from './SettingsStatCard';
+import { formatPlanLimit } from '../../../services/billing/planCatalog';
+import { settingsPanelClass } from './SettingsStatCard';
 
 // Plan icons mapping
 const PLAN_ICONS: Record<SubscriptionPlanId, React.ElementType> = {
@@ -58,6 +63,30 @@ const PLAN_GRADIENTS: Record<string, string> = {
     agency_scale: 'from-q-accent to-q-accent',
     enterprise: 'from-q-accent to-q-accent',
 };
+
+const formatPrice = (value?: number | null) => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return '$0';
+    return `$${value.toLocaleString()}`;
+};
+
+const formatNumber = (value?: number | null) => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return '0';
+    return value.toLocaleString();
+};
+
+const formatQuota = (value?: number | null, suffix = '') => {
+    const formatted = formatPlanLimit(value);
+    return suffix ? `${formatted} ${suffix}` : formatted;
+};
+
+const getPlanSpecs = (limits: PlanLimits) => [
+    { icon: Sparkles, labelKey: 'settings.subscription.aiCredits', fallback: 'Créditos IA', value: formatQuota(limits.maxAiCredits) },
+    { icon: Rocket, labelKey: 'settings.subscription.projects', fallback: 'Proyectos', value: formatQuota(limits.maxProjects) },
+    { icon: Database, labelKey: 'settings.subscription.storage', fallback: 'Almacenamiento', value: `${formatNumber(limits.maxStorageGB)} GB` },
+    { icon: Users, labelKey: 'settings.subscription.users', fallback: 'Usuarios', value: formatQuota(limits.maxUsers) },
+    { icon: Globe2, labelKey: 'settings.subscription.domains', fallback: 'Dominios', value: formatQuota(limits.maxDomains) },
+    { icon: Gauge, labelKey: 'settings.subscription.apiRequests', fallback: 'API mensual', value: formatQuota(limits.maxApiRequests) },
+];
 
 interface SubscriptionDetails {
     stripe?: {
@@ -87,7 +116,7 @@ interface SubscriptionDetails {
 
 const SubscriptionSettings: React.FC = () => {
     const { t } = useTranslation();
-    const { isUserOwner } = useAuth();
+    const { isUserOwner, userDocument } = useAuth();
     const { plansArray, getPlan } = usePlans();
     const upgradeContext = useSafeUpgrade();
     const tenantContext = useTenant();
@@ -352,176 +381,228 @@ const SubscriptionSettings: React.FC = () => {
         }
     };
 
-    const allPlans = plansArray;
+    const allPlans = plansArray.length > 0
+        ? plansArray
+        : Object.values(SUBSCRIPTION_PLANS);
     const currentPlanIndex = allPlans.findIndex(p => p.id === currentPlanId);
+    const safeCurrentPlanIndex = currentPlanIndex >= 0 ? currentPlanIndex : 0;
 
     // Determine "recommended" plan: next tier above current
-    const recommendedPlanId = currentPlanIndex < allPlans.length - 1
-        ? allPlans[currentPlanIndex + 1]?.id
+    const recommendedPlanId = safeCurrentPlanIndex < allPlans.length - 1
+        ? allPlans[safeCurrentPlanIndex + 1]?.id
         : null;
 
     const isUnlimitedUsage = Boolean(usage?.isUnlimited);
-    const usagePercentage = isUnlimitedUsage ? 100 : usage?.percentage || 0;
-    const creditsLimitDisplay = isUnlimitedUsage ? '∞' : usage?.limit || 0;
-    const creditsRemainingDisplay = isUnlimitedUsage ? '∞' : usage?.remaining || 0;
+    const usagePercentage = isUnlimitedUsage ? 0 : usage?.percentage || 0;
+    const planCreditLimitDisplay = formatQuota(currentPlan.limits.maxAiCredits);
+    const creditsUsedDisplay = formatNumber(usage?.used || 0);
+    const creditsRemainingDisplay = isUnlimitedUsage
+        ? t('settings.subscription.internalOverride', 'Override interno')
+        : formatNumber(usage?.remaining || 0);
+    const currentPlanSpecs = getPlanSpecs(currentPlan.limits);
 
     return (
-        <div className="space-y-6">
-            {/* ═══════════════════════════════════════════════ */}
-            {/* HERO: Current Plan + Usage                     */}
-            {/* ═══════════════════════════════════════════════ */}
-            <div className={`relative ${settingsPanelClass}`}>
-                {/* Gradient accent strip */}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${currentGradient}`} />
+        <div className="space-y-8">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-q-accent">
+                        {t('settings.subscription.overviewEyebrow', 'Plan del workspace')}
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                        {t('settings.subscription.title', 'Plan y facturación')}
+                    </h2>
+                    <p className="mt-1 max-w-3xl text-sm leading-6 text-q-text-muted">
+                        {t('settings.subscription.overviewDesc', 'Revisa el plan activo, consumo de créditos y límites disponibles para este workspace.')}
+                    </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={handleRefresh}
+                        disabled={isLoadingUsage}
+                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 text-sm font-semibold text-foreground transition-colors hover:bg-q-surface-overlay disabled:opacity-50"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isLoadingUsage ? 'animate-spin' : ''}`} />
+                        {t('settings.subscription.refresh', 'Actualizar')}
+                    </button>
+                    {subscriptionDetails?.stripe && (
+                        <button
+                            type="button"
+                            onClick={handleOpenBillingPortal}
+                            disabled={isOpeningPortal}
+                            className="inline-flex h-10 items-center gap-2 rounded-lg border border-q-border bg-q-surface px-4 text-sm font-semibold text-foreground transition-colors hover:bg-q-surface-overlay disabled:opacity-50"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            {t('settings.subscription.billingPortal', 'Portal de facturación')}
+                        </button>
+                    )}
+                </div>
+            </div>
 
-                <div className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-                        {/* Plan info */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentGradient} flex items-center justify-center`}>
-                                    <PlanIcon className="w-7 h-7 text-white" />
+            <section className={`relative ${settingsPanelClass}`}>
+                <div className={`h-1 bg-gradient-to-r ${currentGradient}`} />
+                <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)]">
+                    <div className="min-w-0 p-5 sm:p-6">
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex min-w-0 items-start gap-4">
+                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${currentGradient}`}>
+                                    <PlanIcon className="h-6 w-6 text-white" />
                                 </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-foreground">
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h3 className="text-2xl font-semibold text-foreground">
                                             {currentPlan.name}
-                                        </h2>
-                                        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${statusClass}`}>
+                                        </h3>
+                                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
                                             {statusLabel}
                                         </span>
+                                        {isUnlimitedUsage && (
+                                            <span className="inline-flex items-center gap-1 rounded-full border border-q-accent/25 bg-q-accent/10 px-2.5 py-1 text-xs font-semibold text-q-accent">
+                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                {t('settings.subscription.platformOverride', 'Override interno')}
+                                            </span>
+                                        )}
                                     </div>
-                                    <p className="text-sm text-q-text-muted mt-0.5">
+                                    <p className="mt-2 max-w-2xl text-sm leading-6 text-q-text-muted">
                                         {currentPlan.description}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Plan features mini grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <SettingsStatCard
-                                    label={t('settings.subscription.aiCredits', 'Créditos IA')}
-                                    value={isUnlimitedUsage ? '∞' : currentPlan.limits.maxAiCredits.toLocaleString()}
-                                    icon={Sparkles}
-                                />
-                                <SettingsStatCard
-                                    label={t('settings.subscription.projects', 'Proyectos')}
-                                    value={currentPlan.limits.maxProjects === -1 ? '∞' : currentPlan.limits.maxProjects}
-                                    icon={Rocket}
-                                />
-                                <SettingsStatCard
-                                    label={t('settings.subscription.storage', 'Almacenamiento')}
-                                    value={`${currentPlan.limits.maxStorageGB} GB`}
-                                    icon={Gift}
-                                />
+                            <div className="shrink-0 text-left sm:text-right">
+                                <div className="text-3xl font-semibold text-foreground">
+                                    {formatPrice(currentPlan.price.monthly)}
+                                    <span className="ml-1 text-sm font-medium text-q-text-muted">/mes</span>
+                                </div>
+                                <p className="mt-1 text-xs text-q-text-muted">
+                                    {t('settings.subscription.currentBilling', 'Plan actual')}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Usage card */}
-                        <div className="lg:w-80 bg-q-bg rounded-2xl border border-q-border p-5">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <Zap size={14} className="text-q-accent" />
-                                    {t('settings.subscription.usageStatus', 'Uso de Créditos')}
-                                </h4>
-                                <button
-                                    onClick={handleRefresh}
-                                    disabled={isLoadingUsage}
-                                    className="p-1.5 rounded-lg hover:bg-secondary text-q-text-muted hover:text-foreground transition-colors"
-                                >
-                                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsage ? 'animate-spin' : ''}`} />
-                                </button>
-                            </div>
+                        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {currentPlanSpecs.slice(0, 6).map((spec) => {
+                                const Icon = spec.icon;
+                                return (
+                                    <div key={spec.labelKey} className="min-w-0 rounded-lg border border-q-border/70 bg-q-bg/60 p-4">
+                                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-q-text-muted">
+                                            <Icon className="h-4 w-4 text-q-accent" />
+                                            {t(spec.labelKey, spec.fallback)}
+                                        </div>
+                                        <div className="mt-2 text-xl font-semibold leading-tight text-foreground">
+                                            {spec.value}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                            {isLoadingUsage ? (
-                                <div className="animate-pulse space-y-3">
-                                    <div className="h-3 bg-secondary rounded-full" />
-                                    <div className="h-4 bg-secondary rounded w-1/3" />
+                    <div className="border-t border-q-border bg-q-bg/45 p-5 sm:p-6 lg:border-l lg:border-t-0">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <Zap className="h-4 w-4 text-q-accent" />
+                                    {t('settings.subscription.usageStatus', 'Uso de créditos')}
+                                </h4>
+                                <p className="mt-1 text-xs leading-5 text-q-text-muted">
+                                    {isUnlimitedUsage
+                                        ? t('settings.subscription.overrideUsageHint', 'Tu rol interno no consume el saldo del plan.')
+                                        : t('settings.subscription.usageHint', 'Consumo mensual del workspace.')}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleRefresh}
+                                disabled={isLoadingUsage}
+                                className="rounded-lg p-2 text-q-text-muted transition-colors hover:bg-q-surface-overlay hover:text-foreground disabled:opacity-50"
+                                aria-label={t('common.refresh', 'Actualizar')}
+                            >
+                                <RefreshCw className={`h-4 w-4 ${isLoadingUsage ? 'animate-spin' : ''}`} />
+                            </button>
+                        </div>
+
+                        {isLoadingUsage ? (
+                            <div className="mt-6 animate-pulse space-y-4">
+                                <div className="h-3 rounded-full bg-q-surface-overlay" />
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="h-16 rounded-lg bg-q-surface-overlay" />
+                                    <div className="h-16 rounded-lg bg-q-surface-overlay" />
+                                    <div className="h-16 rounded-lg bg-q-surface-overlay" />
                                 </div>
-                            ) : (
-                                <>
-                                    {/* Animated progress bar with gradient */}
-                                    <div className="relative h-3 bg-secondary rounded-full overflow-hidden mb-3">
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mt-6">
+                                    <div className="mb-2 flex items-center justify-between text-xs text-q-text-muted">
+                                        <span>{t('settings.subscription.used', 'Usado')}</span>
+                                        <span className="font-semibold text-foreground">{usagePercentage}%</span>
+                                    </div>
+                                    <div className="h-2.5 overflow-hidden rounded-full bg-q-surface-overlay">
                                         <div
-                                            className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
+                                            className="h-full rounded-full transition-all duration-700"
                                             style={{
                                                 width: `${usagePercentage}%`,
                                                 background: usagePercentage > 90
                                                     ? 'linear-gradient(90deg, #ef4444, #f87171)'
                                                     : usagePercentage > 70
                                                         ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                                                        : `linear-gradient(90deg, var(--quimera-status-accent-from), var(--quimera-status-accent-to))`,
-                                            }}
-                                        />
-                                        {/* Shimmer effect */}
-                                        <div
-                                            className="absolute inset-y-0 left-0 rounded-full opacity-30"
-                                            style={{
-                                                width: `${usagePercentage}%`,
-                                                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
-                                                animation: 'shimmer 2s infinite',
+                                                        : 'linear-gradient(90deg, var(--quimera-status-accent-from), var(--quimera-status-accent-to))',
                                             }}
                                         />
                                     </div>
+                                </div>
 
-                                    {/* Stats row */}
-                                    <div className="flex items-center justify-between text-xs mb-3">
-                                        <span className="text-q-text-muted">
-                                            {t('settings.subscription.used', 'Usado')}: <span className="font-semibold text-foreground">{usage?.used || 0}</span>
-                                        </span>
-                                        <span className="text-q-text-muted">
-                                            {t('settings.subscription.limit', 'Límite')}: <span className="font-semibold text-foreground">{creditsLimitDisplay}</span>
-                                        </span>
+                                <div className="mt-5 grid grid-cols-3 gap-3">
+                                    <div className="rounded-lg border border-q-border/70 bg-q-surface/70 p-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-q-text-muted">
+                                            {t('settings.subscription.used', 'Usado')}
+                                        </p>
+                                        <p className="mt-1 text-lg font-semibold text-foreground">{creditsUsedDisplay}</p>
                                     </div>
-
-                                    {/* Remaining highlight */}
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-q-border">
-                                        <span className="text-sm text-q-text-muted">
+                                    <div className="rounded-lg border border-q-border/70 bg-q-surface/70 p-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-q-text-muted">
+                                            {t('settings.subscription.limit', 'Límite')}
+                                        </p>
+                                        <p className="mt-1 text-lg font-semibold text-foreground">{planCreditLimitDisplay}</p>
+                                    </div>
+                                    <div className="rounded-lg border border-q-border/70 bg-q-surface/70 p-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-q-text-muted">
                                             {t('settings.subscription.remaining', 'Restante')}
-                                        </span>
-                                        <span
-                                            className="text-lg font-bold"
-                                            style={{ color: usage?.color || 'var(--quimera-status-accent-from)' }}
-                                        >
-                                            {creditsRemainingDisplay}
-                                        </span>
+                                        </p>
+                                        <p className="mt-1 text-lg font-semibold text-q-accent">{creditsRemainingDisplay}</p>
                                     </div>
+                                </div>
 
-                                    {/* Warnings */}
-                                    {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
-                                        <div className={`mt-3 p-3 rounded-xl border flex items-start gap-2 ${usage?.hasExceededLimit
-                                            ? 'bg-q-error/5 border-q-error/20'
-                                            : 'bg-q-accent/5 border-q-accent/20'
-                                            }`}>
-                                            <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${usage?.hasExceededLimit ? 'text-q-error' : 'text-q-accent'
-                                                }`} />
-                                            <div className="flex-1">
-                                                <p className={`text-xs font-semibold ${usage?.hasExceededLimit
-                                                    ? 'text-q-error dark:text-q-error'
-                                                    : 'text-q-accent dark:text-q-accent'
-                                                    }`}>
+                                {(usage?.isNearLimit || usage?.hasExceededLimit) && !isUserOwner && (
+                                    <div className={`mt-4 rounded-lg border p-3 ${usage?.hasExceededLimit
+                                        ? 'border-q-error/25 bg-q-error/10'
+                                        : 'border-q-accent/25 bg-q-accent/10'
+                                        }`}>
+                                        <div className="flex items-start gap-2">
+                                            <AlertTriangle className={`mt-0.5 h-4 w-4 shrink-0 ${usage?.hasExceededLimit ? 'text-q-error' : 'text-q-accent'}`} />
+                                            <div className="min-w-0">
+                                                <p className={`text-xs font-semibold ${usage?.hasExceededLimit ? 'text-q-error' : 'text-q-accent'}`}>
                                                     {usage?.hasExceededLimit
-                                                        ? t('settings.subscription.exceededLimit')
-                                                        : t('settings.subscription.nearLimit')
-                                                    }
+                                                        ? t('settings.subscription.exceededLimit', 'Límite excedido')
+                                                        : t('settings.subscription.nearLimit', 'Cerca del límite')}
                                                 </p>
                                                 {usage?.hasExceededLimit && (
                                                     <button
                                                         onClick={() => handleUpgradeClick('credits')}
-                                                        className="mt-2 w-full py-1.5 text-xs font-semibold bg-q-error text-white rounded-lg hover:bg-q-error transition-colors"
+                                                        className="mt-2 rounded-lg bg-q-error px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-q-error/90"
                                                     >
-                                                        {t('settings.subscription.upgradeNow')}
+                                                        {t('settings.subscription.upgradeNow', 'Mejorar ahora')}
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
-            </div>
+            </section>
 
             {requiresPayment && (
                 <div className="bg-q-error/10 border border-q-error/25 rounded-2xl p-5">
@@ -564,132 +645,128 @@ const SubscriptionSettings: React.FC = () => {
                 </div>
             )}
 
-            {/* ═══════════════════════════════════════════════ */}
-            {/* PLANS COMPARISON                               */}
-            {/* ═══════════════════════════════════════════════ */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-foreground">
-                        {t('settings.subscription.availablePlans', 'Planes Disponibles')}
-                    </h3>
+            <section className="space-y-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h3 className="text-xl font-semibold text-foreground">
+                            {t('settings.subscription.availablePlans', 'Planes disponibles')}
+                        </h3>
+                        <p className="text-sm text-q-text-muted">
+                            {t('settings.subscription.comparePlansDesc', 'Compara límites reales antes de cambiar el plan del workspace.')}
+                        </p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
                     {allPlans.map((plan) => {
                         const PlanIconComp = PLAN_ICONS[plan.id] || Sparkles;
                         const Icon = PlanIconComp || (() => <div className="w-5 h-5 bg-muted rounded-full" />);
                         const isCurrentPlan = plan.id === currentPlanId;
-                        const isUpgrade = allPlans.findIndex(p => p.id === plan.id) > currentPlanIndex;
+                        const isUpgrade = allPlans.findIndex(p => p.id === plan.id) > safeCurrentPlanIndex;
                         const isRecommended = plan.id === recommendedPlanId;
                         const isLoading = loadingPlanId === plan.id;
                         const gradient = PLAN_GRADIENTS[plan.id] || PLAN_GRADIENTS.free;
+                        const specs = getPlanSpecs(plan.limits);
 
                         return (
-                            <div key={plan.id} className="relative">
-                                {/* Recommended badge — outside overflow-hidden card so it isn't clipped */}
-                                {isRecommended && !isCurrentPlan && (
-                                    <div className="absolute top-0 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-                                        <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-gradient-to-r from-q-accent to-q-accent text-q-text-on-accent rounded-full shadow-md">
-                                            <Star size={11} />
-                                            {t('settings.subscription.recommended', 'Recomendado')}
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div
-                                    className={`relative flex flex-col overflow-hidden transition-all duration-300 ${settingsPanelClass} ${isCurrentPlan
-                                        ? 'border-[color-mix(in_srgb,var(--quimera-status-accent-from)_40%,transparent)] bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_8%,transparent)]'
-                                        : isRecommended
-                                            ? 'border-q-accent/50'
-                                            : 'hover:border-q-border'
-                                        }`}
-                                >
-                                {/* Gradient top strip */}
+                            <article
+                                key={plan.id}
+                                className={`relative flex min-h-[24rem] flex-col overflow-hidden rounded-lg border bg-q-surface/80 transition-colors ${isCurrentPlan
+                                    ? 'border-q-accent/55'
+                                    : isRecommended
+                                        ? 'border-q-accent/40'
+                                        : 'border-q-border/60 hover:border-q-border'
+                                    }`}
+                            >
                                 <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
-
-                                <div className="p-5 flex flex-col flex-1">
-                                    {/* Header */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${gradient}`}
-                                            >
-                                                <Icon className="w-5 h-5 text-white" />
+                                <div className="flex flex-1 flex-col p-5">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="flex min-w-0 items-start gap-3">
+                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${gradient}`}>
+                                                <Icon className="h-5 w-5 text-white" />
                                             </div>
-                                            <div>
-                                                <h4 className="font-semibold text-foreground">{plan.name}</h4>
-                                                {isCurrentPlan && (
-                                                    <span className="text-[10px] font-bold quimera-status-card-accent-text bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] px-1.5 py-0.5 rounded-full">
-                                                        {t('settings.subscription.current', 'Actual')}
-                                                    </span>
-                                                )}
+                                            <div className="min-w-0">
+                                                <h4 className="text-lg font-semibold leading-tight text-foreground">{plan.name}</h4>
+                                                <p className="mt-1 text-sm leading-5 text-q-text-muted">{plan.description}</p>
                                             </div>
+                                        </div>
+                                        <div className="flex shrink-0 flex-col items-end gap-1">
+                                            {isCurrentPlan && (
+                                                <span className="rounded-full bg-q-accent/15 px-2 py-1 text-[11px] font-semibold text-q-accent">
+                                                    {t('settings.subscription.current', 'Actual')}
+                                                </span>
+                                            )}
+                                            {isRecommended && !isCurrentPlan && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-q-accent px-2 py-1 text-[11px] font-semibold text-q-text-on-accent">
+                                                    <Star className="h-3 w-3" />
+                                                    {t('settings.subscription.recommended', 'Recomendado')}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Price */}
-                                    <div className="mb-4">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-3xl font-extrabold text-foreground">${plan.price.monthly}</span>
-                                            <span className="text-sm text-q-text-muted">/mes</span>
+                                    <div className="mt-5 flex items-end justify-between gap-3 border-y border-q-border/60 py-4">
+                                        <div>
+                                            <div className="text-3xl font-semibold text-foreground">
+                                                {formatPrice(plan.price.monthly)}
+                                                <span className="ml-1 text-sm font-medium text-q-text-muted">/mes</span>
+                                            </div>
+                                            {typeof plan.price.annually === 'number' && plan.price.annually > 0 && (
+                                                <p className="mt-1 text-xs text-q-text-muted">
+                                                    {formatPrice(plan.price.annually)}/{t('settings.subscription.year', 'año')}
+                                                </p>
+                                            )}
                                         </div>
-                                        <p className="text-xs text-q-text-muted mt-1 line-clamp-2 min-h-[2.5em]">
-                                            {plan.description}
+                                        <p className="text-right text-xs font-medium text-q-text-muted">
+                                            {plan.features?.prioritySupport
+                                                ? t('settings.subscription.prioritySupport', 'Soporte prioritario')
+                                                : t('settings.subscription.standardSupport', 'Soporte estándar')}
                                         </p>
                                     </div>
 
-                                    {/* Features */}
-                                    <ul className="space-y-2.5 mb-6 flex-grow">
-                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <Sparkles className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
-                                            <span>
-                                                <strong className="text-foreground">{plan.limits.maxAiCredits.toLocaleString()}</strong> créditos IA
-                                            </span>
-                                        </li>
-                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <Rocket className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
-                                            <span>
-                                                <strong className="text-foreground">
-                                                    {plan.limits.maxProjects === -1 ? 'Ilimitados' : plan.limits.maxProjects}
-                                                </strong> proyectos
-                                            </span>
-                                        </li>
-                                        <li className="flex items-center gap-2.5 text-xs text-q-text-muted">
-                                            <Gift className="w-4 h-4 quimera-status-card-accent-text flex-shrink-0" strokeWidth={2} />
-                                            <span>
-                                                <strong className="text-foreground">{plan.limits.maxStorageGB} GB</strong> almacenamiento
-                                            </span>
-                                        </li>
-                                    </ul>
+                                    <div className="mt-5 grid grid-cols-2 gap-2.5">
+                                        {specs.map((spec) => {
+                                            const SpecIcon = spec.icon;
+                                            return (
+                                                <div key={spec.labelKey} className="min-w-0 rounded-lg bg-q-bg/60 p-3">
+                                                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-q-text-muted">
+                                                        <SpecIcon className="h-3.5 w-3.5 text-q-accent" />
+                                                        <span className="truncate">{t(spec.labelKey, spec.fallback)}</span>
+                                                    </div>
+                                                    <div className="mt-1 text-base font-semibold text-foreground">{spec.value}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
 
-                                    {/* Action Button */}
-                                    {isCurrentPlan ? (
+                                    <div className="mt-auto pt-5">
+                                        {isCurrentPlan ? (
                                         <button
                                             disabled
-                                            className="w-full py-2.5 rounded-xl bg-[color-mix(in_srgb,var(--quimera-status-accent-from)_15%,transparent)] quimera-status-card-accent-text text-sm font-semibold flex items-center justify-center gap-2 cursor-default"
+                                            className="flex h-11 w-full cursor-default items-center justify-center gap-2 rounded-lg bg-q-accent/15 text-sm font-semibold text-q-accent"
                                         >
-                                            <Check className="w-4 h-4" />
+                                            <Check className="h-4 w-4" />
                                             {t('settings.subscription.currentPlan', 'Plan Actual')}
                                         </button>
-                                    ) : (
+                                        ) : (
                                         <button
                                             type="button"
                                             onClick={() => handleSelectPlan(plan.id)}
                                             disabled={isLoading || loadingPlanId !== null}
-                                            className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${isUpgrade
+                                            className={`flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 ${isUpgrade
                                                 ? 'quimera-guide-cta'
-                                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                                : 'bg-q-surface-overlay text-foreground hover:bg-q-border/50'
                                                 }`}
                                         >
                                             {isLoading ? (
                                                 <>
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
                                                     {t('common.processing', 'Procesando...')}
                                                 </>
                                             ) : isUpgrade ? (
                                                 <>
                                                     {t('settings.subscription.upgrade', 'Mejorar Plan')}
-                                                    <ArrowRight className="w-4 h-4" />
+                                                    <ArrowRight className="h-4 w-4" />
                                                 </>
                                             ) : (
                                                 <>
@@ -697,14 +774,14 @@ const SubscriptionSettings: React.FC = () => {
                                                 </>
                                             )}
                                         </button>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                                </div>
-                            </div>
+                            </article>
                         );
                     })}
                 </div>
-            </div>
+            </section>
 
             {/* ═══════════════════════════════════════════════ */}
             {/* BILLING & MANAGEMENT                           */}

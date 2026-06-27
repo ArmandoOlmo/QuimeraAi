@@ -54,17 +54,29 @@ describe('globalCommandSearch', () => {
         });
     });
 
-    it('filters disabled services and admin commands', () => {
+    it('filters disabled services and admin commands while keeping core website navigation', () => {
         const items = buildGlobalCommandItems({
-            query: 'admin email ecommerce',
+            query: 'admin ai studio edit website email ecommerce bio page',
             projects,
             activeProjectId: 'project-1',
             canAccessAdmin: false,
-            canAccessService: serviceId => serviceId !== 'emailMarketing' && serviceId !== 'ecommerce',
+            canAccessService: serviceId => (
+                serviceId !== 'aiFeatures'
+                && serviceId !== 'emailMarketing'
+                && serviceId !== 'ecommerce'
+                && serviceId !== 'bioPage'
+            ),
         });
 
+        expect(items.some(item => item.id === 'action:create-website')).toBe(false);
+        expect(items.some(item => item.id === 'action:generate-image')).toBe(false);
+        expect(items.some(item => item.id === 'nav:assets')).toBe(false);
         expect(items.some(item => item.id === 'nav:email')).toBe(false);
         expect(items.some(item => item.id === 'nav:ecommerce')).toBe(false);
+        expect(items.some(item => item.id === 'nav:biopage')).toBe(false);
+        expect(items.some(item => item.id === 'action:create-bio-page')).toBe(false);
+        expect(items.some(item => item.id === 'action:edit-website')).toBe(true);
+        expect(items.some(item => item.id === 'nav:editor')).toBe(true);
         expect(items.some(item => item.type === 'admin')).toBe(false);
         expect(items[0].type).toBe('assistant_request');
     });
@@ -132,6 +144,48 @@ describe('globalCommandSearch', () => {
         expect(items.some(item => item.id === 'nav:editor')).toBe(false);
         expect(items.some(item => item.id === 'action:edit-website')).toBe(false);
         expect(items[0].type).toBe('assistant_request');
+    });
+
+    it('exposes guide-only command-center actions for supporting modules', () => {
+        const items = buildGlobalCommandItems({
+            query: 'blog domains seo finance restaurants realty owner',
+            projects,
+            activeProjectId: 'project-1',
+            canAccessAdmin: true,
+            canAccessService: () => true,
+            maxItems: 100,
+        });
+
+        expect(items).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: 'action:use-blog-hub', type: 'action', assistantModule: 'website' }),
+            expect.objectContaining({ id: 'action:use-domains', type: 'action', assistantModule: 'settings' }),
+            expect.objectContaining({ id: 'action:use-seo', type: 'action', assistantModule: 'website' }),
+            expect.objectContaining({ id: 'action:use-finance', type: 'action', assistantModule: 'finance' }),
+            expect.objectContaining({ id: 'action:use-restaurants', type: 'action', assistantModule: 'restaurants' }),
+            expect.objectContaining({ id: 'action:use-realty', type: 'action', assistantModule: 'realEstate' }),
+            expect.objectContaining({ id: 'action:use-owner-mode', type: 'action', assistantModule: 'admin', requiresAdmin: true }),
+        ]));
+        expect(items.find(item => item.id === 'action:use-blog-hub')?.prompt).toBe('Blog Hub');
+        expect(items.find(item => item.id === 'action:use-domains')?.prompt).toBe('Domains');
+    });
+
+    it('keeps project and admin boundaries for new guide-only command actions', () => {
+        const noProjectItems = buildGlobalCommandItems({
+            query: 'cms domains finance templates owner',
+            projects,
+            activeProjectId: null,
+            canAccessAdmin: false,
+            canAccessService: () => true,
+            maxItems: 100,
+        });
+
+        expect(noProjectItems.some(item => item.id === 'action:use-cms')).toBe(false);
+        expect(noProjectItems.some(item => item.id === 'action:use-domains')).toBe(false);
+        expect(noProjectItems.some(item => item.id === 'action:use-finance')).toBe(false);
+        expect(noProjectItems.some(item => item.id === 'action:use-owner-mode')).toBe(false);
+        expect(noProjectItems).toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: 'action:use-templates', assistantModule: 'project' }),
+        ]));
     });
 
     it('exposes i18n keys for command labels, descriptions, and prompts', () => {

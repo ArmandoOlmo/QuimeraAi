@@ -71,7 +71,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
 
     if (isLoading) {
         return (
-            <div className="bg-q-surface border border-q-border rounded-xl p-6">
+            <div className="quimera-dashboard-panel-card p-5">
                 <div className="animate-pulse">
                     <div className="h-6 w-32 bg-q-surface-overlay rounded mb-4" />
                     <div className="h-64 bg-q-surface-overlay rounded" />
@@ -81,7 +81,7 @@ export function MRRChart({ data, currentMRR, previousMRR = 0, isLoading }: MRRCh
     }
 
     return (
-        <MotionCard hoverMotion className="bg-q-surface border border-q-border rounded-xl p-6">
+        <MotionCard hoverMotion className="quimera-dashboard-panel-card p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>

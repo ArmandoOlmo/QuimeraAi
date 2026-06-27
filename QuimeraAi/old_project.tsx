@@ -1144,15 +1144,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
+        // Check project limit. Only owner/superadmin bypass project limits.
         const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+        const projectLimit = typeof maxProjects === 'number' && Number.isFinite(maxProjects) && maxProjects > 0 ? maxProjects : 0;
         if (loadingAuth) return; // Wait for auth to be sure
-        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
+        if (!isOwner && currentProjectCount >= projectLimit) {
             // Show upgrade modal if available
             if (upgradeContext) {
-                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+                upgradeContext.showProjectsUpgrade(currentProjectCount, projectLimit);
             }
-            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+            throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
         const pathSegments = getProjectsCollectionPath(user.uid, currentTenantId);
@@ -1316,15 +1317,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
+        // Check project limit. Only owner/superadmin bypass project limits.
         const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+        const projectLimit = typeof maxProjects === 'number' && Number.isFinite(maxProjects) && maxProjects > 0 ? maxProjects : 0;
         // Note: loadingAuth guard removed - by the time a user is on the dashboard, auth is loaded
-        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
+        if (!isOwner && currentProjectCount >= projectLimit) {
             // Show upgrade modal if available
             if (upgradeContext) {
-                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+                upgradeContext.showProjectsUpgrade(currentProjectCount, projectLimit);
             }
-            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+            throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
         const template = projects.find(p => p.id === templateId);

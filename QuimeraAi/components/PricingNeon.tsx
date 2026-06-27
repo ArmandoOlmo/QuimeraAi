@@ -43,7 +43,7 @@ const PricingNeon: React.FC<PricingNeonProps> = (props) => {
             price: '$99',
             billingPeriod: '/month',
             description: 'For large scale operations.',
-            features: ['Unlimited Users', '24/7 Support', 'Unlimited Storage', 'Custom Integrations'],
+            features: ['Up to 250 Users', '24/7 Support', '2TB Storage', 'Custom Integrations'],
             buttonText: 'Contact Sales',
             isPopular: false
         }

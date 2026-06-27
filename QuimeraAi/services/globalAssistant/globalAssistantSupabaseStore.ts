@@ -460,10 +460,14 @@ export class SupabaseGlobalAssistantTaskRepository {
 }
 
 export class SupabaseGlobalAssistantConversationRepository {
+    private readonly contexts: SupabaseGlobalAssistantContextRepository;
+
     constructor(
         private readonly client: SupabaseClientLike = defaultSupabase,
         private readonly options: SupabaseGlobalAssistantStoreOptions = {},
-    ) {}
+    ) {
+        this.contexts = new SupabaseGlobalAssistantContextRepository(client);
+    }
 
     async upsertConversation(conversation: AssistantConversation): Promise<AssistantConversation> {
         try {
@@ -507,6 +511,14 @@ export class SupabaseGlobalAssistantConversationRepository {
         } catch (error) {
             handleStoreError(error, 'listMessages', this.options);
             return [];
+        }
+    }
+
+    async recordContextSnapshot(context: AssistantContextSnapshot): Promise<void> {
+        try {
+            await this.contexts.recordContextSnapshot(context);
+        } catch (error) {
+            handleStoreError(error, 'recordContextSnapshot', this.options);
         }
     }
 }

@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { EdgeAccessError, requireServiceAccess } from "../_shared/access.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  { auth: { persistSession: false, autoRefreshToken: false } },
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,11 +20,22 @@ serve(async (req) => {
   }
 
   try {
-    const { email, token, tenantName, role, inviterName } = await req.json();
+    const { email, token, tenantName, role, inviterName, tenantId } = await req.json();
 
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is missing");
     }
+
+    const resolvedTenantId = await resolveInviteTenantId(tenantId, token);
+    if (!resolvedTenantId) {
+      throw new Error("Tenant ID is required to send invite email");
+    }
+
+    await requireServiceAccess(req, {
+      tenantId: resolvedTenantId,
+      requiredPermission: "canInviteMembers",
+      action: "send_invite_email",
+    });
 
     const inviteUrl = `https://app.quimera.ai/invite/${token}`;
 
@@ -65,9 +83,27 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    if (error instanceof EdgeAccessError) {
+      return new Response(JSON.stringify({ error: error.message, decision: error.decision }), {
+        status: error.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
+async function resolveInviteTenantId(tenantId?: string | null, token?: string | null): Promise<string | null> {
+  if (tenantId) return tenantId;
+  if (!token) return null;
+  const { data } = await supabase
+    .from("tenant_invites")
+    .select("tenant_id")
+    .eq("token", token)
+    .maybeSingle();
+  return data?.tenant_id || null;
+}

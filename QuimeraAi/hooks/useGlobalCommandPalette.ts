@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/core/AuthContext';
-import { useProject } from '../contexts/project';
+import { useSafeProject } from '../contexts/project';
 import { useUI } from '../contexts/core/UIContext';
 import { useSafeTenant } from '../contexts/tenant/TenantContext';
 import { useServiceAvailability } from './useServiceAvailability';
@@ -17,16 +17,44 @@ import {
 } from '../services/globalAssistant/globalCommandSearch';
 import { translateCommandTextSafe } from '../services/globalAssistant/globalCommandTranslations';
 
+const COMMAND_GUIDE_TARGETS: Record<string, string> = {
+    'action:create-website': 'create_website',
+    'action:edit-website': 'open_website_builder',
+    'action:generate-image': 'generate_hero_image',
+    'action:create-video': 'create_video',
+    'action:create-email': 'create_email',
+    'action:create-product': 'open_ecommerce',
+    'action:create-appointment': 'create_appointment',
+    'action:review-leads': 'review_leads',
+    'action:create-bio-page': 'improve_bio_page',
+    'action:train-chatcore': 'train_chatcore',
+    'action:analyze-project': 'analyze_project',
+    'action:use-cms': 'open_cms',
+    'action:use-blog-hub': 'open_blog',
+    'action:use-navigation': 'open_navigation',
+    'action:use-domains': 'open_domains',
+    'action:use-seo': 'open_seo',
+    'action:use-templates': 'open_templates',
+    'action:use-finance': 'open_finance',
+    'action:use-restaurants': 'open_restaurants',
+    'action:use-realty': 'open_realty',
+    'action:use-owner-mode': 'review_platform_errors',
+};
+
 export function useGlobalCommandPalette() {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const { canAccessSuperAdmin } = useAuth();
-    const { projects, activeProjectId, activeProject, loadProject } = useProject();
+    const projectContext = useSafeProject();
+    const projects = projectContext?.projects || [];
+    const activeProjectId = projectContext?.activeProjectId || null;
+    const activeProject = projectContext?.activeProject || null;
+    const loadProject = projectContext?.loadProject;
     const { setView, setAdminView } = useUI();
     const tenantContext = useSafeTenant();
-    const { canAccessService, isLoading: isLoadingServices } = useServiceAvailability();
+    const { isServicePublic, isLoading: isLoadingServices } = useServiceAvailability();
     const router = useRouter();
     const canAccessOwnerMode = Boolean(
         canAccessSuperAdmin
@@ -71,7 +99,7 @@ export function useGlobalCommandPalette() {
                 projects: Array.isArray(projects) ? projects : [],
                 activeProjectId,
                 canAccessAdmin: canAccessOwnerMode,
-                canAccessService: serviceId => isLoadingServices || canAccessService(serviceId),
+                canAccessService: serviceId => !isLoadingServices && isServicePublic(serviceId),
             });
         } catch (error) {
             console.error('[GlobalCommandPalette] Failed to build command items:', error);
@@ -80,10 +108,10 @@ export function useGlobalCommandPalette() {
                 projects: [],
                 activeProjectId,
                 canAccessAdmin: false,
-                canAccessService: () => true,
+                canAccessService: () => false,
             });
         }
-    }, [activeProjectId, canAccessOwnerMode, canAccessService, isLoadingServices, projects, query]);
+    }, [activeProjectId, canAccessOwnerMode, isLoadingServices, isServicePublic, projects, query]);
 
     useEffect(() => {
         setSelectedIndex(0);
@@ -103,12 +131,14 @@ export function useGlobalCommandPalette() {
             const prompt = translateCommandTextSafe(t, item.promptKey, item.prompt || query.trim(), item.promptParams);
             if (!prompt) return;
             const activeModule = item.assistantModule || inferGlobalAssistantEntryModule(prompt);
+            const quickActionId = COMMAND_GUIDE_TARGETS[item.id] || null;
             dispatchGlobalAssistantEntryRequest(createGlobalAssistantEntryPayload(prompt, {
                 source: 'command_palette',
                 surface: item.requiresAdmin ? 'admin' : 'app',
                 metadata: {
                     commandId: item.id,
                     commandType: item.type,
+                    ...(quickActionId ? { quickActionId } : {}),
                     sourceComponent: 'GlobalCommandPalette',
                     assistantLayer: 'global_operating_layer',
                     commandCenter: true,
@@ -125,6 +155,7 @@ export function useGlobalCommandPalette() {
         }
 
         if (item.type === 'project' && item.projectId) {
+            if (!loadProject) return;
             await loadProject(item.projectId, false, true);
             close();
             return;

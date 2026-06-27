@@ -12,6 +12,12 @@ import {
     SubscriptionPlanId,
     getUsageColor,
 } from '../types/subscription';
+import {
+    getCanonicalPlan,
+    isPlatformUnlimitedUser,
+    normalizePlanId,
+    normalizePlanLimits,
+} from '../services/billing/planCatalog';
 
 export interface CreditsUsageData {
     used: number;
@@ -40,7 +46,7 @@ interface UseCreditsUsageReturn {
 }
 
 export function useCreditsUsage(): UseCreditsUsageReturn {
-    const { loadingAuth, userDocument, isUserOwner } = useAuth();
+    const { loadingAuth, userDocument } = useAuth();
     const tenantContext = useSafeTenant();
     const [usage, setUsage] = useState<CreditsUsageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +56,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
     const tenantId = currentTenant?.id;
     const isLoadingTenant = tenantContext?.isLoadingTenant ?? false;
     const userRole = userDocument?.role;
-    const isUnlimitedCreditsUser = userRole === 'owner' || userRole === 'superadmin' || isUserOwner;
+    const isUnlimitedCreditsUser = isPlatformUnlimitedUser(userRole);
 
     const loadUsage = useCallback(async () => {
         if (!tenantId) {
@@ -72,19 +78,18 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 throw error;
             }
 
-            const subscriptionPlanKey: SubscriptionPlanId = (data?.plan_id as SubscriptionPlanId) || (currentTenant?.subscriptionPlan as SubscriptionPlanId) || 'free';
-            const planKey: SubscriptionPlanId = isUnlimitedCreditsUser ? 'enterprise' : subscriptionPlanKey;
-            const plan = SUBSCRIPTION_PLANS[planKey] || SUBSCRIPTION_PLANS.free;
+            const subscriptionPlanKey = normalizePlanId(data?.plan_id || currentTenant?.subscriptionPlan || 'free') as SubscriptionPlanId;
+            const planKey: SubscriptionPlanId = subscriptionPlanKey;
+            const plan = SUBSCRIPTION_PLANS[planKey] || getCanonicalPlan(planKey);
             const status = isUnlimitedCreditsUser ? 'active' : data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
             const used = Number(aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0);
-            const tenantLimit = Number(currentTenant?.limits?.maxAiCredits);
-            const fallbackLimit = Number.isFinite(tenantLimit) && tenantLimit > 0
-                ? tenantLimit
-                : plan.limits.maxAiCredits ?? 0;
+            const safeLimits = normalizePlanLimits(currentTenant?.limits || plan.limits, planKey);
+            const tenantLimit = Number(safeLimits.maxAiCredits);
+            const fallbackLimit = tenantLimit > 0 ? tenantLimit : plan.limits.maxAiCredits ?? 0;
             const limit = isUnlimitedCreditsUser
-                ? plan.limits.maxAiCredits
+                ? fallbackLimit
                 : Number(aiUsage?.creditsIncluded ?? fallbackLimit);
             
             const remaining = isUnlimitedCreditsUser
@@ -120,7 +125,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits?.maxAiCredits, isUnlimitedCreditsUser]);
+    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits, isUnlimitedCreditsUser]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {

@@ -28,6 +28,7 @@ import {
     syncWebsiteBlueprintFromEditor,
     type WebsiteEditorSyncInput,
 } from '../../utils/businessBlueprint';
+import { isFinitePlanLimit, isPlatformUnlimitedUser } from '../../services/billing/planCatalog';
 
 export interface ProjectUndoState {
     data: PageData | null;
@@ -1579,15 +1580,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
-        const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+        // Owner and Super Admin are the only roles that bypass resource limits.
+        const isOwner = isPlatformUnlimitedUser(userDocument?.role);
         if (loadingAuth) return; // Wait for auth to be sure
-        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
+        const projectLimit = isFinitePlanLimit(maxProjects) ? maxProjects : 0;
+        if (!isOwner && currentProjectCount >= projectLimit) {
             // Show upgrade modal if available
             if (upgradeContext) {
-                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+                upgradeContext.showProjectsUpgrade(currentProjectCount, projectLimit);
             }
-            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+            throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
         const { id: providedId, ...projectData } = project;
@@ -1781,15 +1783,16 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const userProjects = projects.filter(p => p.status !== 'Template');
         const currentProjectCount = userProjects.length;
 
-        // Check project limit (-1 means unlimited, owner/superadmin has no limits)
-        const isOwner = userDocument?.role === 'owner' || userDocument?.role === 'superadmin';
+        // Owner and Super Admin are the only roles that bypass resource limits.
+        const isOwner = isPlatformUnlimitedUser(userDocument?.role);
         // Note: loadingAuth guard removed - by the time a user is on the dashboard, auth is loaded
-        if (!isOwner && maxProjects !== -1 && currentProjectCount >= maxProjects) {
+        const projectLimit = isFinitePlanLimit(maxProjects) ? maxProjects : 0;
+        if (!isOwner && currentProjectCount >= projectLimit) {
             // Show upgrade modal if available
             if (upgradeContext) {
-                upgradeContext.showProjectsUpgrade(currentProjectCount, maxProjects);
+                upgradeContext.showProjectsUpgrade(currentProjectCount, projectLimit);
             }
-            throw new Error(`Has alcanzado el límite de ${maxProjects} proyectos. Actualiza tu plan para crear más.`);
+            throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
         const template = projects.find(p => p.id === templateId);

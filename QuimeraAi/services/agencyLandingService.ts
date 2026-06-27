@@ -15,7 +15,6 @@ import {
     where,
     getDocs,
     serverTimestamp,
-    Timestamp,
 } from '@/utils/compatData';
 import { db } from '@/utils/compatData';
 import {
@@ -26,6 +25,62 @@ import {
 
 // Collection name for agency landing pages
 const COLLECTION_NAME = 'agencyLandings';
+
+let hasWarnedMissingAgencyLandingTable = false;
+
+function isMissingAgencyLandingTableError(error: unknown): boolean {
+    const candidate = error as { code?: string; status?: number; message?: string; details?: string; hint?: string };
+    const errorText = [
+        candidate?.code,
+        candidate?.message,
+        candidate?.details,
+        candidate?.hint,
+    ].filter(Boolean).join(' ');
+
+    return candidate?.status === 404
+        || candidate?.code === '42P01'
+        || candidate?.code === 'PGRST205'
+        || /agencyLandings|agency_landings|schema cache|could not find|does not exist|relation .* does not exist/i.test(errorText);
+}
+
+function warnMissingAgencyLandingTable(error: unknown) {
+    if (hasWarnedMissingAgencyLandingTable) return;
+    hasWarnedMissingAgencyLandingTable = true;
+    console.warn('[AgencyLandingService] agency_landings table is not available yet. Falling back to default agency landing config.', error);
+}
+
+function normalizeSubdomain(config: Partial<AgencyLandingConfig>): string | null {
+    const value = config.domain?.subdomain;
+    if (typeof value !== 'string') return null;
+    const normalized = value.toLowerCase().trim();
+    return normalized || null;
+}
+
+function normalizeCustomDomain(config: Partial<AgencyLandingConfig>): string | null {
+    const value = config.domain?.customDomain;
+    if (typeof value !== 'string') return null;
+    const normalized = value.toLowerCase().trim();
+    return normalized || null;
+}
+
+function buildAgencyLandingWrite(
+    tenantId: string,
+    config: Partial<AgencyLandingConfig>,
+    extra: Record<string, unknown> = {}
+) {
+    const payload = {
+        ...config,
+        ...extra,
+        tenantId,
+    };
+
+    return {
+        ...payload,
+        subdomain: normalizeSubdomain(payload),
+        customDomain: normalizeCustomDomain(payload),
+        isPublished: payload.isPublished === true,
+    };
+}
 
 // =============================================================================
 // CRUD OPERATIONS
@@ -54,6 +109,10 @@ export async function getAgencyLanding(tenantId: string): Promise<AgencyLandingC
             ...doc.data(),
         } as AgencyLandingConfig;
     } catch (error) {
+        if (isMissingAgencyLandingTableError(error)) {
+            warnMissingAgencyLandingTable(error);
+            return null;
+        }
         console.error('Error fetching agency landing:', error);
         throw error;
     }
@@ -76,6 +135,10 @@ export async function getAgencyLandingById(landingId: string): Promise<AgencyLan
             ...docSnap.data(),
         } as AgencyLandingConfig;
     } catch (error) {
+        if (isMissingAgencyLandingTableError(error)) {
+            warnMissingAgencyLandingTable(error);
+            return null;
+        }
         console.error('Error fetching agency landing by ID:', error);
         throw error;
     }
@@ -96,27 +159,33 @@ export async function saveAgencyLanding(
         if (existing?.id) {
             // Update existing
             const docRef = doc(db, COLLECTION_NAME, existing.id);
-            await updateDoc(docRef, {
+            await updateDoc(docRef, buildAgencyLandingWrite(tenantId, {
+                ...existing,
                 ...config,
+                domain: {
+                    ...existing.domain,
+                    ...config.domain,
+                },
+            }, {
                 updatedAt: serverTimestamp(),
                 lastUpdated: serverTimestamp(),
                 updatedBy: userId || null,
-            });
+            }));
             return existing.id;
         } else {
             // Create new
             const newConfig = createDefaultAgencyLandingConfig(tenantId);
             const docRef = doc(collection(db, COLLECTION_NAME));
             
-            await setDoc(docRef, {
+            await setDoc(docRef, buildAgencyLandingWrite(tenantId, {
                 ...newConfig,
                 ...config,
-                tenantId,
+            }, {
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 lastUpdated: serverTimestamp(),
                 updatedBy: userId || null,
-            });
+            }));
             
             return docRef.id;
         }
@@ -238,7 +307,7 @@ export async function isSubdomainAvailable(subdomain: string, excludeTenantId?: 
 
         const q = query(
             collection(db, COLLECTION_NAME),
-            where('domain.subdomain', '==', normalizedSubdomain)
+            where('subdomain', '==', normalizedSubdomain)
         );
         
         const snapshot = await getDocs(q);
@@ -254,6 +323,10 @@ export async function isSubdomainAvailable(subdomain: string, excludeTenantId?: 
 
         return false;
     } catch (error) {
+        if (isMissingAgencyLandingTableError(error)) {
+            warnMissingAgencyLandingTable(error);
+            return true;
+        }
         console.error('Error checking subdomain availability:', error);
         throw error;
     }
@@ -264,6 +337,7 @@ export async function isSubdomainAvailable(subdomain: string, excludeTenantId?: 
  */
 export async function reserveSubdomain(tenantId: string, subdomain: string): Promise<boolean> {
     try {
+        const normalizedSubdomain = subdomain.toLowerCase().trim();
         const isAvailable = await isSubdomainAvailable(subdomain, tenantId);
         
         if (!isAvailable) {
@@ -275,14 +349,19 @@ export async function reserveSubdomain(tenantId: string, subdomain: string): Pro
         if (!existing?.id) {
             // Create new with subdomain
             await saveAgencyLanding(tenantId, {
-                domain: { subdomain: subdomain.toLowerCase().trim() },
+                domain: { subdomain: normalizedSubdomain },
             });
         } else {
             const docRef = doc(db, COLLECTION_NAME, existing.id);
-            await updateDoc(docRef, {
-                'domain.subdomain': subdomain.toLowerCase().trim(),
+            await updateDoc(docRef, buildAgencyLandingWrite(tenantId, {
+                ...existing,
+                domain: {
+                    ...existing.domain,
+                    subdomain: normalizedSubdomain,
+                },
+            }, {
                 updatedAt: serverTimestamp(),
-            });
+            }));
         }
 
         return true;
@@ -301,7 +380,7 @@ export async function getAgencyLandingBySubdomain(subdomain: string): Promise<Ag
         
         const q = query(
             collection(db, COLLECTION_NAME),
-            where('domain.subdomain', '==', normalizedSubdomain),
+            where('subdomain', '==', normalizedSubdomain),
             where('isPublished', '==', true)
         );
         
@@ -317,6 +396,10 @@ export async function getAgencyLandingBySubdomain(subdomain: string): Promise<Ag
             ...doc.data(),
         } as AgencyLandingConfig;
     } catch (error) {
+        if (isMissingAgencyLandingTableError(error)) {
+            warnMissingAgencyLandingTable(error);
+            return null;
+        }
         console.error('Error fetching agency landing by subdomain:', error);
         throw error;
     }
@@ -331,7 +414,7 @@ export async function getAgencyLandingByCustomDomain(domain: string): Promise<Ag
         
         const q = query(
             collection(db, COLLECTION_NAME),
-            where('domain.customDomain', '==', normalizedDomain),
+            where('customDomain', '==', normalizedDomain),
             where('isPublished', '==', true)
         );
         
@@ -347,6 +430,10 @@ export async function getAgencyLandingByCustomDomain(domain: string): Promise<Ag
             ...doc.data(),
         } as AgencyLandingConfig;
     } catch (error) {
+        if (isMissingAgencyLandingTableError(error)) {
+            warnMissingAgencyLandingTable(error);
+            return null;
+        }
         console.error('Error fetching agency landing by custom domain:', error);
         throw error;
     }
