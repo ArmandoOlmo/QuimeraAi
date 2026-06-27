@@ -201,60 +201,62 @@ export function WhiteLabelSettings() {
                 icon={Building2}
                 contentClassName="space-y-5"
             >
-                    {/* Company Name */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {t('dashboard.agency.whiteLabel.companyName')}
-                        </label>
-                        <input
-                            type="text"
-                            value={branding.companyName || ''}
-                            onChange={(e) => updateField('companyName', e.target.value)}
-                            placeholder={t('dashboard.agency.whiteLabel.companyNamePlaceholder')}
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        />
-                    </div>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        {/* Company Name */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                                {t('dashboard.agency.whiteLabel.companyName')}
+                            </label>
+                            <input
+                                type="text"
+                                value={branding.companyName || ''}
+                                onChange={(e) => updateField('companyName', e.target.value)}
+                                placeholder={t('dashboard.agency.whiteLabel.companyNamePlaceholder')}
+                                className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            />
+                        </div>
 
-                    {/* Support Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {t('dashboard.agency.whiteLabel.supportEmail')}
-                        </label>
-                        <input
-                            type="email"
-                            value={branding.supportEmail || ''}
-                            onChange={(e) => updateField('supportEmail', e.target.value)}
-                            placeholder="soporte@tuagencia.com"
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        />
-                    </div>
+                        {/* Support Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                                {t('dashboard.agency.whiteLabel.supportEmail')}
+                            </label>
+                            <input
+                                type="email"
+                                value={branding.supportEmail || ''}
+                                onChange={(e) => updateField('supportEmail', e.target.value)}
+                                placeholder="soporte@tuagencia.com"
+                                className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            />
+                        </div>
 
-                    {/* Support URL */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {t('dashboard.agency.whiteLabel.supportUrl')}
-                        </label>
-                        <input
-                            type="url"
-                            value={branding.supportUrl || ''}
-                            onChange={(e) => updateField('supportUrl', e.target.value)}
-                            placeholder="https://soporte.tuagencia.com"
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        />
-                    </div>
+                        {/* Support URL */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                                {t('dashboard.agency.whiteLabel.supportUrl')}
+                            </label>
+                            <input
+                                type="url"
+                                value={branding.supportUrl || ''}
+                                onChange={(e) => updateField('supportUrl', e.target.value)}
+                                placeholder="https://soporte.tuagencia.com"
+                                className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            />
+                        </div>
 
-                    {/* Footer Text */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                            {t('dashboard.agency.whiteLabel.footerText')}
-                        </label>
-                        <input
-                            type="text"
-                            value={branding.footerText || ''}
-                            onChange={(e) => updateField('footerText', e.target.value)}
-                            placeholder={t('dashboard.agency.whiteLabel.footerTextPlaceholder')}
-                            className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                        />
+                        {/* Footer Text */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                                {t('dashboard.agency.whiteLabel.footerText')}
+                            </label>
+                            <input
+                                type="text"
+                                value={branding.footerText || ''}
+                                onChange={(e) => updateField('footerText', e.target.value)}
+                                placeholder={t('dashboard.agency.whiteLabel.footerTextPlaceholder')}
+                                className="w-full px-4 py-2.5 rounded-lg border border-input bg-q-bg text-foreground placeholder:text-q-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            />
+                        </div>
                     </div>
             </AgencyPanel>
 
