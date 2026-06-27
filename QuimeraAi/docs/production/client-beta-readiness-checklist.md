@@ -46,6 +46,24 @@ curl -i https://<preview-url>/api/appointments/google/jobs/run
 curl -i -X POST https://<preview-url>/api/mcp/jobs/run
 ```
 
+Latest controlled-readiness evidence, 2026-06-27:
+
+- Production unauthenticated cron smokes returned handler-level `401` for email,
+  appointment email, Google Calendar sync, and MCP job routes. Because these
+  handlers return `500` when `CRON_SECRET` is missing, `401` proves the secret is
+  present in production without running the jobs.
+- Read-only Supabase preflight used the production custom domain
+  `auth.quimera.ai`, whose CNAME resolves to the linked project
+  `elfcrnhffuvntlfuvumd.supabase.co`; no customer payloads or secret values were
+  printed.
+- Queue preflight at `2026-06-27T21:23:57.712Z`:
+  `email_outbox` due/runnable `0`, active queued/sending `0`,
+  appointments `email_logs` queued/scheduled `0`, Google Calendar connected sync
+  integrations `0`, pending Google webhook syncs `0`, and pending MCP jobs `0`.
+- Do not run authenticated cron routes until the owner confirms a controlled
+  production window, current queue volume, rate limits, and provider secret
+  correctness.
+
 ## 3. Required Secrets And Environment Contract
 
 Server-only in Vercel/Supabase. Never expose with a `VITE_` prefix:
@@ -85,6 +103,17 @@ Hard blockers:
 - [ ] No `VITE_CLOUDFLARE_TOKEN` in env files, code, Vercel env vars, or bundles.
 - [ ] No Supabase service role key in frontend code, browser env, logs, or tests.
 - [ ] No real secret values committed to Git.
+
+Verification notes:
+
+- Vercel env names can be checked safely by CLI, but production value validation
+  may not be provable from `vercel env pull` because sensitive values can be
+  returned as empty/redacted in the local pull file. Treat this as names-present
+  evidence only.
+- Before the first authorized production email/calendar/Stripe smoke, confirm
+  the actual values in the Vercel/Supabase dashboards or through a protected
+  runtime readiness probe that validates shape/connectivity without printing
+  secrets.
 
 ## 4. Supabase Security Gate
 
