@@ -15,6 +15,7 @@ import {
     SubscriptionPlanId
 } from '../types/subscription';
 import {
+    CANONICAL_PLAN_IDS,
     getCanonicalPlanFeatures,
     getCanonicalPlanLimits,
     isPlatformUnlimitedUser,
@@ -165,8 +166,8 @@ export function usePlanAccess(): PlanAccessData {
             return planName.toUpperCase();
         }
 
-        // Fallback to hardcoded
-        const planOrder: SubscriptionPlanId[] = ['free', 'starter', 'pro', 'agency', 'enterprise'];
+        // Fallback to canonical active plans; legacy ids are normalized elsewhere.
+        const planOrder = CANONICAL_PLAN_IDS as readonly SubscriptionPlanId[];
         for (const id of planOrder) {
             const plan = SUBSCRIPTION_PLANS[id];
             if (plan && isFeatureEnabled(plan.features[feature])) {
@@ -192,4 +193,3 @@ export function usePlanAccess(): PlanAccessData {
 // =============================================================================
 
 export default usePlanFeatures;
-

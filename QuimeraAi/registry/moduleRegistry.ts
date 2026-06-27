@@ -268,7 +268,6 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         description: 'Client-facing portal configuration for projects, reports, billing, approvals, activity, and support.',
         route: '/portal/dashboard',
         requiredService: 'agency',
-        requiredFeature: 'agencyModule',
         compatibleIndustries: ['all'],
         editableBy: ['agency-engine'],
         readsFrom: ['analytics', 'finance', 'websiteBuilder', 'storefrontBuilder', 'businessBlueprint'],

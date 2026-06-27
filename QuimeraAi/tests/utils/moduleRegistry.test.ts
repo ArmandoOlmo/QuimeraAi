@@ -167,8 +167,8 @@ describe('moduleRegistry', () => {
         expect(clientPortal).toMatchObject({
             route: '/portal/dashboard',
             requiredService: 'agency',
-            requiredFeature: 'agencyModule',
         });
+        expect(clientPortal?.requiredFeature).toBeUndefined();
     });
 
     it('declares Bio Page Engine ecosystem ownership and AI generation dependencies', () => {

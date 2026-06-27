@@ -1722,7 +1722,6 @@ async function respondClientApproval(req: Request, userId: string, payload: Reco
     tenantId: approval.client_tenant_id,
     moduleId: "agency-client-portal",
     serviceId: "agency",
-    featureKey: "agencyModule",
     action: "agency-client-approval-response",
   });
 

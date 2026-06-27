@@ -334,6 +334,20 @@ describe('Service Access Engine', () => {
         });
     });
 
+    it('allows client portal access for managed client tenants without requiring an agency plan feature', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'individual',
+            moduleId: 'agency-client-portal',
+            serviceId: 'agency',
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+            requiredService: 'agency',
+            requiredFeature: undefined,
+        });
+    });
+
     it('resolves agency_client tenants to a valid finite effective plan', () => {
         const parent = {
             subscriptionPlan: 'agency_pro',

@@ -12,6 +12,7 @@ import {
     SUBSCRIPTION_PLANS,
 } from '../types/subscription';
 import {
+    CANONICAL_PLAN_IDS,
     getCanonicalPlanFeatures,
     getCanonicalPlanLimits,
     isFinitePlanLimit,
@@ -59,6 +60,13 @@ export interface PlanStats {
 // =============================================================================
 
 const PLANS_TABLE = 'subscription_plans';
+const ACTIVE_PLANS = [...CANONICAL_PLAN_IDS] as SubscriptionPlanId[];
+
+function getPlanSortRank(planId: string): number {
+    const normalizedPlanId = normalizePlanId(planId);
+    const rank = ACTIVE_PLANS.indexOf(normalizedPlanId);
+    return rank >= 0 ? rank : ACTIVE_PLANS.length;
+}
 
 // =============================================================================
 // CACHE
@@ -532,9 +540,7 @@ export async function getPlanDistribution(): Promise<Array<{ planId: string; pla
             percentage: totalSubscribers > 0 ? (stat.activeSubscribers / totalSubscribers) * 100 : 0,
         }))
         .sort((a, b) => {
-            // Sort by plan order: free, starter, pro, agency, enterprise
-            const order = ['free', 'starter', 'pro', 'agency', 'enterprise'];
-            return order.indexOf(a.planId) - order.indexOf(b.planId);
+            return getPlanSortRank(a.planId) - getPlanSortRank(b.planId) || a.planName.localeCompare(b.planName);
         });
 }
 
@@ -615,8 +621,6 @@ const LEGACY_PLANS_TO_ARCHIVE = ['hobby', 'starter', 'pro', 'agency', 'agency_pl
 /**
  * Current active plans
  */
-const ACTIVE_PLANS = ['free', 'individual', 'agency_starter', 'agency_pro', 'agency_scale', 'enterprise'];
-
 /**
  * Migrate to new plan structure
  * - Archives legacy plans (hobby, starter, pro, agency, agency_plus)

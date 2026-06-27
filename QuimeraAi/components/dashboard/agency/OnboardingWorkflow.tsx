@@ -40,6 +40,65 @@ interface OnboardingWorkflowProps {
   onCancel?: () => void;
 }
 
+type SupabaseClient = typeof import('@/supabase')['supabase'];
+
+const CLIENT_LOGO_BUCKET = 'platform-assets';
+const MAX_CLIENT_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
+
+function sanitizeStorageFileName(fileName: string): string {
+  const [rawBaseName, ...extensionParts] = fileName.split('.');
+  const extension = extensionParts.length > 0
+    ? `.${extensionParts.pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'}`
+    : '';
+  const baseName = rawBaseName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'client-logo';
+
+  return `${baseName}${extension}`;
+}
+
+function buildClientLogoStoragePath(agencyTenantId: string, fileName: string): string {
+  const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  return `agencies/${agencyTenantId}/client-logos/${Date.now()}_${randomId}_${sanitizeStorageFileName(fileName)}`;
+}
+
+async function uploadClientLogoToStorage(
+  supabaseClient: SupabaseClient,
+  agencyTenantId: string,
+  file: File,
+): Promise<string> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('El logo debe ser una imagen válida.');
+  }
+
+  if (file.size > MAX_CLIENT_LOGO_SIZE_BYTES) {
+    throw new Error('El logo no puede superar 2MB.');
+  }
+
+  const storagePath = buildClientLogoStoragePath(agencyTenantId, file.name);
+  const { error: uploadError } = await supabaseClient.storage
+    .from(CLIENT_LOGO_BUCKET)
+    .upload(storagePath, file, {
+      cacheControl: '3600',
+      contentType: file.type || 'application/octet-stream',
+      upsert: false,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data: { publicUrl } } = supabaseClient.storage
+    .from(CLIENT_LOGO_BUCKET)
+    .getPublicUrl(storagePath);
+
+  return publicUrl;
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -84,6 +143,11 @@ export function OnboardingWorkflow({
     setProgress([]);
 
     try {
+      const { supabase } = await import('@/supabase');
+      if (!currentTenant?.id) {
+        throw new Error('No hay agencia activa para crear el cliente.');
+      }
+
       // Step 1: Upload logo if provided
       let logoUrl: string | undefined;
       if (data.logo) {
@@ -94,10 +158,7 @@ export function OnboardingWorkflow({
         );
 
         try {
-          // TODO: Implement actual file upload to legacy storage
-          // For now, just simulate
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          logoUrl = 'https://example.com/logo.png'; // Placeholder
+          logoUrl = await uploadClientLogoToStorage(supabase, currentTenant.id, data.logo);
 
           updateProgress(
             'upload_logo',
@@ -117,11 +178,6 @@ export function OnboardingWorkflow({
         'Creando workspace del cliente...'
       );
 
-      const { supabase } = await import('@/supabase');
-      if (!currentTenant?.id) {
-        throw new Error('No hay agencia activa para crear el cliente.');
-      }
-
       const result = await supabase.functions.invoke('onboarding-api', {
         body: {
             action: 'autoProvision',
@@ -133,7 +189,7 @@ export function OnboardingWorkflow({
             projectTemplate: data.projectTemplate,
             enabledFeatures: data.enabledFeatures,
             initialUsers: data.initialUsers,
-            logo: logoUrl,
+            logoUrl,
             primaryColor: data.primaryColor,
             secondaryColor: data.secondaryColor,
             monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,

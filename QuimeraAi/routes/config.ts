@@ -87,7 +87,6 @@ const AGENCY_PROJECT_TRANSFER_ROUTE_GATE = {
 
 const AGENCY_CLIENT_PORTAL_ROUTE_GATE = {
   requiredService: 'agency' as const,
-  requiredFeature: 'agencyModule' as const,
   moduleId: 'agency-client-portal',
 };
 

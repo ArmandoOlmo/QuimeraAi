@@ -76,7 +76,7 @@ Each transfer also creates a pending `agency_client_approvals` row when the appr
 
 `/portal` and `/portal/dashboard` are authenticated workspace routes. The portal uses the active tenant as the client workspace, applies tenant branding through `PortalProvider`, and renders `PortalApprovalsPanel` as the first client-facing operational queue.
 
-Client Portal routes and approval responses require Service Access Engine module `agency-client-portal` with service `agency` and feature `agencyModule`. The approval queue reads `agency_client_approvals` for the active client tenant and lets the client approve, reject, or request changes. Responses create `agency_activity.type = approval_responded` so Agency Command Center and Client 360 can show client decisions.
+Client Portal routes and approval responses require Service Access Engine module `agency-client-portal` with service `agency`; they do not require the client tenant itself to have the agency plan feature. The approval queue reads `agency_client_approvals` for the active client tenant and lets the client approve, reject, or request changes. Responses create `agency_activity.type = approval_responded` so Agency Command Center and Client 360 can show client decisions.
 
 The portal dashboard also renders a client-facing operations feed backed by `agency_activity` plus summary metrics from the latest shared `agency_reports` row. Client reads use `quimera_can_view_agency_relationship`; clients do not write activity rows from the portal.
 

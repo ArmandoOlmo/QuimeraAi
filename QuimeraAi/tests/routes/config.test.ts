@@ -138,14 +138,14 @@ describe('route config', () => {
         });
         expect(getRouteConfig(ROUTES.PORTAL_HOME)).toMatchObject({
             requiredService: 'agency',
-            requiredFeature: 'agencyModule',
             moduleId: 'agency-client-portal',
         });
+        expect(getRouteConfig(ROUTES.PORTAL_HOME)?.requiredFeature).toBeUndefined();
         expect(getRouteConfig(ROUTES.PORTAL_DASHBOARD)).toMatchObject({
             requiredService: 'agency',
-            requiredFeature: 'agencyModule',
             moduleId: 'agency-client-portal',
         });
+        expect(getRouteConfig(ROUTES.PORTAL_DASHBOARD)?.requiredFeature).toBeUndefined();
 
         for (const path of [
             ROUTES.AGENCY_LANDING,

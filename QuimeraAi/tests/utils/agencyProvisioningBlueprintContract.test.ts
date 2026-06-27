@@ -7,6 +7,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 
 describe('Agency provisioning BusinessBlueprint contract', () => {
     const onboardingApi = read('supabase/functions/onboarding-api/index.ts');
+    const onboardingWorkflow = read('components/dashboard/agency/OnboardingWorkflow.tsx');
 
     it('maps agency AI generation flags to canonical client modules', () => {
         expect(onboardingApi).toContain('modules.add("ecommerce-engine")');
@@ -85,11 +86,27 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
         expect(onboardingApi).toContain('moduleActivationsPrepared: true');
     });
 
+    it('uploads agency client logos to Supabase Storage and sends logoUrl to the blueprint', () => {
+        expect(onboardingWorkflow).toContain("const CLIENT_LOGO_BUCKET = 'platform-assets'");
+        expect(onboardingWorkflow).toContain('uploadClientLogoToStorage(supabase, currentTenant.id, data.logo)');
+        expect(onboardingWorkflow).toContain('.storage');
+        expect(onboardingWorkflow).toContain('.upload(storagePath, file');
+        expect(onboardingWorkflow).toContain('.getPublicUrl(storagePath)');
+        expect(onboardingWorkflow).toContain('logoUrl,');
+        expect(onboardingWorkflow).not.toContain('https://example.com/logo.png');
+        expect(onboardingWorkflow).not.toContain('simulate');
+        expect(onboardingWorkflow).not.toContain('Placeholder');
+    });
+
     it('routes client approval responses through Service Access Engine', () => {
         expect(onboardingApi).toContain('return jsonResponse(await respondClientApproval(req, user.id, payload))');
         expect(onboardingApi).toContain('async function respondClientApproval(req: Request, userId: string, payload: Record<string, unknown>)');
         expect(onboardingApi).toContain('moduleId: "agency-client-portal"');
+        expect(onboardingApi).toContain('serviceId: "agency"');
         expect(onboardingApi).toContain('action: "agency-client-approval-response"');
+        expect(onboardingApi).not.toContain(`moduleId: "agency-client-portal",
+    serviceId: "agency",
+    featureKey: "agencyModule"`);
     });
 
     it('preserves a Version History checkpoint during Agency Project Transfer', () => {
