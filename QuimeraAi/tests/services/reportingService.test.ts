@@ -168,6 +168,14 @@ describe('Agency reporting canonical contract', () => {
         expect(reportingService).not.toContain('.from("orders")');
     });
 
+    it('discovers agency report clients from canonical agency_clients with legacy fallback', () => {
+        expect(reportingService).toContain("function fetchAgencyClientTenantRows");
+        expect(reportingService).toContain(".from('agency_clients')");
+        expect(reportingService).toContain(".select('client_tenant_id')");
+        expect(reportingService).toContain(".eq('agency_tenant_id', agencyTenantId)");
+        expect(reportingService).toContain(".eq('owner_tenant_id', agencyTenantId)");
+    });
+
     it('persists generated agency reports and activity snapshots', () => {
         expect(reportingService).toContain(".from('agency_reports')");
         expect(reportingService).toContain("source: 'agency_reporting_service'");

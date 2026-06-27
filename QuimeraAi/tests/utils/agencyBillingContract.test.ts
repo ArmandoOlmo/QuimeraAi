@@ -10,6 +10,8 @@ describe('Agency billing canonical contract', () => {
     const stripeApi = read('supabase/functions/stripe-api/index.ts');
     const stripeWebhook = read('supabase/functions/stripe-webhook/index.ts');
     const checkoutPage = read('components/checkout/AgencyCheckoutPage.tsx');
+    const tenantContext = read('contexts/tenant/TenantContext.tsx');
+    const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
 
     it('stores agency client payment links in a canonical Supabase table with RLS', () => {
         expect(migration).toContain('create or replace function public.quimera_can_manage_agency(p_agency_tenant_id text)');
@@ -63,5 +65,23 @@ describe('Agency billing canonical contract', () => {
         expect(stripeApi).toContain('action: "updateTenantLimits"');
         expect(stripeApi).toContain('moduleId: "agency-service-plans"');
         expect(stripeApi).toContain('requiredPermission: "canManageBilling"');
+    });
+
+    it('creates agency clients through Service Access and canonical plan assignment', () => {
+        expect(tenantContext).toContain("moduleId: 'agency-client-provisioning'");
+        expect(tenantContext).toContain('resolveServiceAccess({');
+        expect(tenantContext).toContain('agencyPlanId: selectedAgencyPlanId || undefined');
+        expect(tenantContext).toContain('assignPlanToClient(tenantId, selectedAgencyPlanId');
+        expect(tenantContext).toContain(".from('agency_clients')");
+        expect(tenantContext).toContain("onConflict: 'agency_tenant_id,client_tenant_id'");
+    });
+
+    it('loads Agency Command Center clients from canonical agency relationships', () => {
+        expect(agencyMetricsHook).toContain('async function fetchAgencyClientTenantRows');
+        expect(agencyMetricsHook).toContain(".from('agency_clients')");
+        expect(agencyMetricsHook).toContain(".select('client_tenant_id')");
+        expect(agencyMetricsHook).toContain(".from('store_orders')");
+        expect(agencyMetricsHook).not.toContain(".from('orders')");
+        expect(agencyMetricsHook).not.toContain('.from("orders")');
     });
 });

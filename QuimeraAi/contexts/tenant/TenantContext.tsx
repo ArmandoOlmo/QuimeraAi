@@ -27,7 +27,13 @@ import {
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
-import { normalizePlanId } from '../../services/billing/planCatalog';
+import {
+    getCanonicalPlanFeatures,
+    normalizePlanId,
+    normalizePlanLimits,
+} from '../../services/billing/planCatalog';
+import { resolveServiceAccess } from '../../services/access/serviceAccessEngine';
+import { assignPlanToClient, getAgencyPlanById } from '../../services/agencyPlansService';
 
 // =============================================================================
 // CONTEXT TYPES
@@ -74,6 +80,15 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 const ACTIVE_TENANT_KEY = 'quimera_active_tenant_id';
 
+function isMissingAgencyEngineTable(error: unknown): boolean {
+    const err = error as { code?: string; message?: string } | null;
+    const message = String(err?.message || '').toLowerCase();
+    return err?.code === '42P01' ||
+        err?.code === 'PGRST205' ||
+        message.includes('agency_clients') ||
+        message.includes('could not find the table');
+}
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -87,6 +102,29 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [currentMembership, setCurrentMembership] = useState<TenantMembership | null>(null);
     const [isLoadingTenant, setIsLoadingTenant] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const assertAgencyClientProvisioningAccess = useCallback(() => {
+        const effectivePlanId = normalizePlanId(resolveTenantEffectivePlan(currentTenant));
+        const decision = resolveServiceAccess({
+            userId: user?.id,
+            userRole: userDocument?.role,
+            tenantId: currentTenant?.id,
+            tenantStatus: currentTenant?.status,
+            subscriptionStatus: currentTenant?.status,
+            planId: effectivePlanId,
+            moduleId: 'agency-client-provisioning',
+            serviceId: 'agency',
+            featureKey: 'agencyModule',
+            permissions: currentMembership?.permissions as Record<string, unknown> | undefined,
+            planFeatures: getCanonicalPlanFeatures(effectivePlanId),
+            planLimits: normalizePlanLimits(resolveTenantEffectiveLimits(currentTenant), effectivePlanId),
+            currentUsage: currentTenant?.usage as Record<string, unknown> | undefined,
+        });
+
+        if (!decision.allowed) {
+            throw new Error(decision.message || 'No tienes permiso para crear sub-clientes');
+        }
+    }, [currentMembership?.permissions, currentTenant, user?.id, userDocument?.role]);
 
     // ==========================================================================
     // LOAD USER TENANTS
@@ -385,13 +423,28 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const createTenant = useCallback(async (data: CreateTenantData, skipSwitch = false): Promise<string> => {
         if (!user) throw new Error('Usuario no autenticado');
 
+        const parentTenant = data.type === 'agency_client' ? currentTenant : null;
+        const parentAgencyTenantId = data.parentTenantId || parentTenant?.id;
+        const selectedAgencyPlanId = data.type === 'agency_client'
+            ? (data.agencyPlanId || data.selectedPlanId || null)
+            : null;
+        let selectedAgencyPlan: Awaited<ReturnType<typeof getAgencyPlanById>> = null;
+
         // Verify sub-client limit
         if (data.type === 'agency_client') {
-            if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
-                throw new Error('No tienes permiso para crear sub-clientes');
-            }
-            if ((currentTenant.usage.subClientCount || 0) >= (currentTenant.limits.maxSubClients || 0)) {
+            assertAgencyClientProvisioningAccess();
+            if (!parentTenant || !parentAgencyTenantId) throw new Error('No hay agencia activa para crear sub-clientes');
+            if ((parentTenant.usage.subClientCount || 0) >= (parentTenant.limits.maxSubClients || 0)) {
                 throw new Error('Has alcanzado el límite de sub-clientes para tu plan');
+            }
+            selectedAgencyPlan = selectedAgencyPlanId
+                ? await getAgencyPlanById(selectedAgencyPlanId)
+                : null;
+            if (selectedAgencyPlanId && !selectedAgencyPlan) {
+                throw new Error('Plan de servicio de agencia no encontrado');
+            }
+            if (selectedAgencyPlan && selectedAgencyPlan.tenantId !== parentAgencyTenantId) {
+                throw new Error('El plan seleccionado no pertenece a la agencia activa');
             }
         }
 
@@ -413,30 +466,34 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
         }
 
-        const parentTenant = data.type === 'agency_client' ? currentTenant : null;
         const plan = data.type === 'agency_client'
             ? resolveTenantEffectivePlan({
                 type: 'agency_client',
                 subscriptionPlan: normalizePlanId(data.plan || parentTenant?.subscriptionPlan || 'individual') as any,
                 billing: {
-                    mode: data.useParentCreditsPool === false ? 'direct' : 'included_in_parent',
+                    mode: data.useParentCreditsPool === false ? 'direct' : (data.setupBilling ? 'agency_managed' : 'included_in_parent'),
                     effectivePlanId: normalizePlanId(parentTenant?.subscriptionPlan || data.plan || 'individual') as any,
                 },
             }, parentTenant)
             : normalizeTenantSubscriptionPlanForType(data.type, data.plan);
         const billing: TenantBilling | undefined = data.type === 'agency_client'
             ? {
-                mode: data.useParentCreditsPool === false ? 'direct' : 'included_in_parent',
+                mode: data.useParentCreditsPool === false ? 'direct' : (data.setupBilling ? 'agency_managed' : 'included_in_parent'),
                 effectivePlanId: plan,
+                agencyTenantId: parentAgencyTenantId,
+                agencyPlanId: selectedAgencyPlanId || undefined,
+                agencyPlanName: selectedAgencyPlan?.name || data.agencyPlanName || undefined,
+                monthlyPrice: data.monthlyPrice ?? selectedAgencyPlan?.price,
+                status: data.setupBilling ? 'billing_setup_pending' : undefined,
             }
             : undefined;
         const limits = data.type === 'agency_client'
-            ? resolveTenantEffectiveLimits({
+            ? (selectedAgencyPlan ? selectedAgencyPlan.limits : resolveTenantEffectiveLimits({
                 type: 'agency_client',
                 subscriptionPlan: plan as any,
                 limits: data.useParentCreditsPool === false ? undefined : parentTenant?.limits,
                 billing,
-            }, parentTenant)
+            }, parentTenant))
             : getDefaultLimitsForPlan(plan as any);
 
         const tenantRecord = {
@@ -484,6 +541,37 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         await supabase.from('tenant_members').insert(membershipData);
 
+        if (data.type === 'agency_client' && parentAgencyTenantId) {
+            if (selectedAgencyPlanId) {
+                const assignment = await assignPlanToClient(tenantId, selectedAgencyPlanId, user.id);
+                if (!assignment.success) {
+                    throw new Error(assignment.error || 'No se pudo asignar el plan de servicio al cliente');
+                }
+            } else {
+                const { error: relationshipError } = await supabase
+                    .from('agency_clients')
+                    .upsert({
+                        agency_tenant_id: parentAgencyTenantId,
+                        client_tenant_id: tenantId,
+                        status: 'active',
+                        lifecycle_stage: 'onboarding',
+                        billing_mode: billing?.mode || 'included_in_parent',
+                        onboarding_status: 'active',
+                        project_count: 0,
+                        client_owner_email: user.email || null,
+                        metadata: {
+                            source: 'TenantContext.createTenant',
+                            effectivePlanId: plan,
+                        },
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'agency_tenant_id,client_tenant_id' });
+
+                if (relationshipError && !isMissingAgencyEngineTable(relationshipError)) {
+                    throw relationshipError;
+                }
+            }
+        }
+
         await refreshTenants();
 
         if (!skipSwitch) {
@@ -491,7 +579,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         return tenantId;
-    }, [user, currentTenant, currentMembership, switchTenant, refreshTenants]);
+    }, [user, currentTenant, assertAgencyClientProvisioningAccess, switchTenant, refreshTenants]);
 
     // ==========================================================================
     // UPDATE TENANT
@@ -655,9 +743,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // ==========================================================================
 
     const createSubClient = useCallback(async (data: CreateTenantData, initialUsers: { email: string, name: string, role: AgencyRole }[] = []): Promise<string> => {
-        if (!currentTenant || !currentMembership || !hasPermission(currentMembership, 'canManageSettings')) {
-            throw new Error('No tienes permiso para gestionar sub-clientes');
-        }
+        assertAgencyClientProvisioningAccess();
+        if (!currentTenant) throw new Error('No hay agencia activa para gestionar sub-clientes');
 
         const subClientCount = currentTenant.usage?.subClientCount || 0;
         const maxSubClients = currentTenant.limits?.maxSubClients || 0;
@@ -670,7 +757,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const subClientId = await createTenant({
             ...data,
             type: 'agency_client',
-            parentTenantId: currentTenant.id
+            parentTenantId: currentTenant.id,
+            agencyPlanId: data.agencyPlanId || data.selectedPlanId || null,
         }, true);
 
         // Invite initial users
@@ -716,7 +804,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }).eq('id', currentTenant.id);
 
         return subClientId;
-    }, [currentTenant, currentMembership, createTenant, user, userDocument]);
+    }, [currentTenant, assertAgencyClientProvisioningAccess, createTenant, user, userDocument]);
 
     // ==========================================================================
     // GET SUB-CLIENTS

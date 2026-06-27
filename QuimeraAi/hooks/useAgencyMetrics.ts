@@ -118,6 +118,66 @@ function mapTenantRow(row: any): Tenant {
     } as Tenant;
 }
 
+function isMissingAgencyRelationshipTable(error: unknown): boolean {
+    const err = error as { code?: string; message?: string } | null;
+    const message = String(err?.message || '').toLowerCase();
+    return err?.code === '42P01' ||
+        err?.code === 'PGRST205' ||
+        message.includes('agency_clients') ||
+        message.includes('could not find the table');
+}
+
+async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
+    const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
+    const rows: any[] = [];
+
+    for (let i = 0; i < uniqueIds.length; i += 50) {
+        const chunk = uniqueIds.slice(i, i + 50);
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .in('id', chunk)
+            .in('status', ['active', 'trial', 'suspended']);
+
+        if (error) throw error;
+        rows.push(...(data || []));
+    }
+
+    return rows;
+}
+
+async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[]> {
+    const tenantsById = new Map<string, any>();
+
+    const { data: relationships, error: relationshipError } = await supabase
+        .from('agency_clients')
+        .select('client_tenant_id')
+        .eq('agency_tenant_id', agencyTenantId);
+
+    if (relationshipError && !isMissingAgencyRelationshipTable(relationshipError)) {
+        throw relationshipError;
+    }
+
+    if (!relationshipError && relationships?.length) {
+        const canonicalClientIds = relationships
+            .map(row => row.client_tenant_id)
+            .filter(Boolean);
+        const canonicalRows = await fetchTenantRowsByIds(canonicalClientIds);
+        canonicalRows.forEach(row => tenantsById.set(row.id, row));
+    }
+
+    const { data: legacyRows, error: legacyError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('owner_tenant_id', agencyTenantId)
+        .in('status', ['active', 'trial', 'suspended']);
+
+    if (legacyError) throw legacyError;
+    (legacyRows || []).forEach(row => tenantsById.set(row.id, row));
+
+    return Array.from(tenantsById.values());
+}
+
 function isValidPositiveLimit(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
@@ -340,22 +400,13 @@ export function useAgencyMetrics(agencyTenantId: string) {
 
         const fetchSubClients = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('tenants')
-                    .select('*')
-                    .eq('owner_tenant_id', agencyTenantId)
-                    .in('status', ['active', 'trial', 'suspended']);
-
+                const data = await fetchAgencyClientTenantRows(agencyTenantId);
                 if (!isMounted) return;
 
-                if (error) throw error;
-
                 const clients: Tenant[] = [];
-                if (data) {
-                    data.forEach((doc: any) => {
-                        clients.push(mapTenantRow(doc));
-                    });
-                }
+                data.forEach((doc: any) => {
+                    clients.push(mapTenantRow(doc));
+                });
 
                 setSubClients(clients);
 
@@ -386,6 +437,13 @@ export function useAgencyMetrics(agencyTenantId: string) {
         const channelId = `tenants_${agencyTenantId}_${Math.random().toString(36).substring(2, 9)}`;
         const subscription = supabase
             .channel(channelId)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'agency_clients', filter: `agency_tenant_id=eq.${agencyTenantId}` },
+                () => {
+                    if (isMounted) fetchSubClients();
+                }
+            )
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'tenants', filter: `owner_tenant_id=eq.${agencyTenantId}` },

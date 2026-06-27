@@ -342,6 +342,11 @@ export interface CreateTenantData {
     branding?: Partial<TenantBranding>;
     parentTenantId?: string;       // If creating sub-client
     useParentCreditsPool?: boolean; // If sub-client should use agency's credits pool
+    selectedPlanId?: string | null; // Agency service plan selected in intake flows
+    agencyPlanId?: string | null;   // Canonical agency_service_plans.id
+    agencyPlanName?: string | null;
+    monthlyPrice?: number;
+    setupBilling?: boolean;
 }
 
 export interface InviteMemberData {

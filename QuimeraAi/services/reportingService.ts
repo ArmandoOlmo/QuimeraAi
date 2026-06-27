@@ -97,6 +97,77 @@ function readPositiveNumber(...values: unknown[]): number {
     return 0;
 }
 
+function isMissingAgencyRelationshipTable(error: unknown): boolean {
+    const err = error as { code?: string; message?: string } | null;
+    const message = String(err?.message || '').toLowerCase();
+    return err?.code === '42P01' ||
+        err?.code === 'PGRST205' ||
+        message.includes('agency_clients') ||
+        message.includes('could not find the table');
+}
+
+async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
+    const uniqueIds = Array.from(new Set(clientIds.filter(Boolean)));
+    const rows: any[] = [];
+
+    for (let i = 0; i < uniqueIds.length; i += 50) {
+        const chunk = uniqueIds.slice(i, i + 50);
+        const { data, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .in('id', chunk);
+
+        if (error) throw error;
+        rows.push(...(data || []));
+    }
+
+    return rows;
+}
+
+async function fetchAgencyClientTenantRows(
+    agencyTenantId: string,
+    clientIds: string[]
+): Promise<any[]> {
+    const tenantsById = new Map<string, any>();
+    let relationshipQuery = supabase
+        .from('agency_clients')
+        .select('client_tenant_id')
+        .eq('agency_tenant_id', agencyTenantId);
+
+    if (clientIds.length > 0) {
+        relationshipQuery = relationshipQuery.in('client_tenant_id', clientIds);
+    }
+
+    const { data: relationships, error: relationshipError } = await relationshipQuery;
+
+    if (relationshipError && !isMissingAgencyRelationshipTable(relationshipError)) {
+        throw relationshipError;
+    }
+
+    if (!relationshipError && relationships?.length) {
+        const canonicalClientIds = relationships
+            .map(row => row.client_tenant_id)
+            .filter(Boolean);
+        const canonicalRows = await fetchTenantRowsByIds(canonicalClientIds);
+        canonicalRows.forEach(row => tenantsById.set(row.id, row));
+    }
+
+    let legacyQuery = supabase
+        .from('tenants')
+        .select('*')
+        .eq('owner_tenant_id', agencyTenantId);
+
+    if (clientIds.length > 0) {
+        legacyQuery = legacyQuery.in('id', clientIds);
+    }
+
+    const { data: legacyRows, error: legacyError } = await legacyQuery;
+    if (legacyError) throw legacyError;
+    (legacyRows || []).forEach(row => tenantsById.set(row.id, row));
+
+    return Array.from(tenantsById.values());
+}
+
 function formatDateOnly(date: Date): string {
     return date.toISOString().slice(0, 10);
 }
@@ -217,21 +288,11 @@ export class ReportingService {
             includeRecommendations?: boolean;
         } = {}
     ): Promise<AggregatedReportData> {
-        // Fetch all client data
-        let query = supabase
-            .from('tenants')
-            .select('*')
-            .eq('owner_tenant_id', agencyTenantId);
-
-        if (clientIds.length > 0) {
-            query = query.in('id', clientIds);
-        }
-
-        const { data: clientsData, error } = await query;
-        if (error) {
+        const clientsData = await fetchAgencyClientTenantRows(agencyTenantId, clientIds).catch(error => {
             console.error('[ReportingService] Error fetching clients:', error);
-            return this.getEmptyReport(dateRange, clientIds, metrics);
-        }
+            return null;
+        });
+        if (!clientsData) return this.getEmptyReport(dateRange, clientIds, metrics);
 
         const clients: Tenant[] = (clientsData || []).map(doc => ({
             id: doc.id,
