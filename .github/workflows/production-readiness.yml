@@ -1,0 +1,78 @@
+name: Production Readiness Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'QuimeraAi/**'
+      - '.github/workflows/production-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'QuimeraAi/**'
+      - '.github/workflows/production-readiness.yml'
+  workflow_dispatch:
+
+jobs:
+  app-gates:
+    name: App, serverless, and Edge Function gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: QuimeraAi
+    env:
+      CI: true
+      APP_BASE_URL: https://www.quimera.ai
+      VITE_PUBLIC_APP_URL: https://www.quimera.ai
+      VITE_WIDGET_API_BASE_URL: https://www.quimera.ai/api/widget
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co' }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
+      VITE_AI_PROXY_URL: ${{ secrets.VITE_AI_PROXY_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co/functions/v1/ai-proxy' }}
+      VITE_VIDEO_PROXY_URL: ${{ secrets.VITE_VIDEO_PROXY_URL || 'https://elfcrnhffuvntlfuvumd.supabase.co/functions/v1/ai-proxy' }}
+      VITE_META_OAUTH_ENABLED: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: QuimeraAi/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Serverless API type-check
+        run: npm run type-check:serverless-api
+
+      - name: Serverless API import smoke
+        run: npm run test:serverless-api
+
+      - name: Critical production tests
+        run: npm run test:critical:production
+
+      - name: Build Vite app
+        run: npm run build
+
+      - name: Global type-check snapshot
+        continue-on-error: true
+        run: npm run type-check
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Deno check Supabase Edge Functions
+        run: |
+          deno check \
+            supabase/functions/ai-proxy/index.ts \
+            supabase/functions/email-api/index.ts \
+            supabase/functions/stripe-api/index.ts \
+            supabase/functions/stripe-webhook/index.ts \
+            supabase/functions/create-public-restaurant-reservation/index.ts \
+            supabase/functions/storefront-api/index.ts \
+            supabase/functions/onboarding-api/index.ts

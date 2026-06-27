@@ -716,93 +716,22 @@ class DeploymentService {
     }
 
     /**
-     * Deploy to Cloudflare Pages (placeholder)
+     * Cloudflare deployments must run server-side. A Cloudflare API token in a
+     * VITE_ env var is exposed to the browser bundle and is not beta-safe.
      */
     private async deployToCloudflare(
         project: Project,
         domain: Domain,
         html: string
     ): Promise<DeploymentResult> {
-        try {
-            console.log('Deploying to Cloudflare Pages via API...');
+        void project;
+        void domain;
+        void html;
 
-            const CLOUDFLARE_TOKEN = import.meta.env.VITE_CLOUDFLARE_TOKEN;
-            const CLOUDFLARE_ACCOUNT_ID = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
-
-            if (!CLOUDFLARE_TOKEN || !CLOUDFLARE_ACCOUNT_ID) {
-                console.warn('Cloudflare credentials not found. Using simulation mode.');
-                return await this.simulateDeployment(project, domain, html);
-            }
-
-            const projectName = domain.name.replace(/\./g, '-');
-
-            // 1. Create or Get Project
-            const projectCheckResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}`, {
-                headers: {
-                    'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (projectCheckResponse.status === 404) {
-                console.log('Project not found. Creating new Cloudflare Pages project...');
-                const createResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: projectName,
-                        production_branch: 'main'
-                    })
-                });
-
-                if (!createResponse.ok) {
-                    const error = await createResponse.json();
-                    throw new Error(`Failed to create Cloudflare project: ${error.errors?.[0]?.message || 'Unknown error'}`);
-                }
-            }
-
-            // 2. Direct Upload
-            // Cloudflare Direct Upload requires multipart/form-data
-            const formData = new FormData();
-
-            // We need to provide the directory structure
-            // For a single file, we can just name it index.html
-            const file = new Blob([html], { type: 'text/html' });
-            formData.append('file', file, 'index.html');
-            formData.append('branch', 'main');
-
-            const deploymentResponse = await fetch(`https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${projectName}/deployments`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${CLOUDFLARE_TOKEN}`,
-                },
-                body: formData
-            });
-
-            if (!deploymentResponse.ok) {
-                const errorData = await deploymentResponse.json();
-                console.error('Cloudflare Deployment Error:', errorData);
-                throw new Error(`Cloudflare API error: ${errorData.errors?.[0]?.message || 'Upload failed'}`);
-            }
-
-            const deploymentData = await deploymentResponse.json();
-
-            return {
-                success: true,
-                deploymentUrl: `https://${projectName}.pages.dev`,
-                deploymentId: deploymentData.result?.id || `cf_${Date.now()}`,
-                dnsRecords: this.generateDNSRecords('cloudflare')
-            };
-        } catch (error) {
-            console.error('Cloudflare deployment failed:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Cloudflare API failed'
-            };
-        }
+        return {
+            success: false,
+            error: 'Cloudflare deployment requires a server-side deployment proxy. Configure CLOUDFLARE_API_TOKEN only in server runtime secrets, never as VITE_CLOUDFLARE_TOKEN.',
+        };
     }
 
     /**
