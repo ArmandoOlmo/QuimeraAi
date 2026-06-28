@@ -308,6 +308,7 @@ function normalizeBriefCompletion(brief: BusinessBrief): BusinessBrief {
             }))
             .filter(service => service.name),
         contactInfo: mergeContactInfo(brief.contactInfo),
+        suggestedComponents: normalizePageSectionList(brief.suggestedComponents),
         missingFields: [],
     };
 
@@ -386,6 +387,31 @@ const ALL_SECTIONS: PageSection[] = [
     'appointmentsQuimera', 'bioPageQuimera', 'emailMarketingQuimera',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
+
+const SECTION_BY_COMPACT_KEY = new Map<string, PageSection>(
+    ALL_SECTIONS.map(section => [section.toLowerCase().replace(/[^a-z0-9]/g, ''), section])
+);
+
+function normalizePageSectionKey(component: unknown): PageSection | null {
+    const cleaned = cleanBriefTextValue(String(component));
+    if (!cleaned) return null;
+    const compactKey = cleaned.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const section = SECTION_BY_COMPACT_KEY.get(compactKey);
+    if (!section || isRetiredDesignSuiteSection(section)) return null;
+    return section;
+}
+
+function normalizePageSectionList(components: unknown): PageSection[] {
+    if (!Array.isArray(components)) return [];
+    const seen = new Set<PageSection>();
+    return components.reduce<PageSection[]>((acc, component) => {
+        const section = normalizePageSectionKey(component);
+        if (!section || seen.has(section)) return acc;
+        seen.add(section);
+        acc.push(section);
+        return acc;
+    }, []);
+}
 
 function buildVisibility(enabledSections: PageSection[]): Record<string, boolean> {
     const vis: Record<string, boolean> = {};
@@ -1402,7 +1428,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
         try {
             const briefData = JSON.parse(briefMatch[1]);
             const normalizedSuggestedComponents = briefData.suggestedComponents && Array.isArray(briefData.suggestedComponents)
-                ? filterAllowedComponents(briefData.suggestedComponents as PageSection[])
+                ? filterAllowedComponents(normalizePageSectionList(briefData.suggestedComponents))
                 : null;
             const briefBusinessName = cleanBriefTextValue(briefData.businessName);
             const briefIndustry = cleanBriefTextValue(briefData.industry);
@@ -2452,14 +2478,16 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
     }, []);
 
     const toggleBriefComponent = useCallback((component: PageSection) => {
-        if (filterAllowedComponents([component]).length === 0) return;
+        const section = normalizePageSectionKey(component);
+        if (!section || filterAllowedComponents([section]).length === 0) return;
         setBusinessBrief(prev => {
-            const exists = prev.suggestedComponents.includes(component);
+            const normalizedComponents = filterAllowedComponents(normalizePageSectionList(prev.suggestedComponents));
+            const exists = normalizedComponents.includes(section);
             return {
                 ...prev,
                 suggestedComponents: exists
-                    ? prev.suggestedComponents.filter(c => c !== component)
-                    : [...prev.suggestedComponents, component],
+                    ? normalizedComponents.filter(c => c !== section)
+                    : [...normalizedComponents, section],
             };
         });
     }, [filterAllowedComponents]);
@@ -2467,7 +2495,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
     const setBriefComponents = useCallback((components: PageSection[]) => {
         setBusinessBrief(prev => ({
             ...prev,
-            suggestedComponents: filterAllowedComponents(components),
+            suggestedComponents: filterAllowedComponents(normalizePageSectionList(components)),
         }));
     }, [filterAllowedComponents]);
 

@@ -86,39 +86,41 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
 
   return (
  <header className="quimera-dashboard-header-bar h-14 px-3 md:px-6 flex items-center justify-between z-20 sticky top-0 relative" role="banner">
-      <div className="flex items-center gap-2 md:gap-4 min-w-0">
-        {/* Mobile Menu Button - Opens DashboardSidebar */}
-        {onOpenMobileMenu && (
+      <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex items-center gap-0.5 shrink-0">
+          {/* Mobile Menu Button - Opens DashboardSidebar */}
+          {onOpenMobileMenu && (
+            <button
+              onClick={onOpenMobileMenu}
+              className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation lg:hidden"
+              title={t('common.menu')}
+              aria-label={t('common.menu')}
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Dashboard Button */}
           <button
-            onClick={onOpenMobileMenu}
-            className="h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation lg:hidden"
-            title={t('common.menu')}
-            aria-label={t('common.menu')}
+            title={t('editor.goToDashboard')}
+            className="h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation"
+            onClick={handleGoToDashboard}
           >
-            <Menu className="w-5 h-5" />
+            <LayoutDashboard className="w-4 h-4" />
           </button>
-        )}
 
-        {/* Dashboard Button - More prominent on mobile */}
-        <button
-          title={t('editor.goToDashboard')}
-          className="h-10 w-10 md:h-9 md:w-9 flex items-center justify-center text-q-text-muted hover:text-q-text transition-colors touch-manipulation"
-          onClick={handleGoToDashboard}
-        >
-          <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
-        </button>
-
-        {/* Mobile Controls Button - Editor Controls Panel */}
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`h-10 w-10 md:h-9 md:w-9 flex items-center justify-center transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-q-accent' : 'text-q-text-muted hover:text-q-text'
-            }`}
-          title={t('editor.toggleControls')}
-          aria-label={t('editor.toggleControls')}
-          aria-pressed={isSidebarOpen}
-        >
-          <SlidersHorizontal className="w-5 h-5" />
-        </button>
+          {/* Mobile Controls Button - Editor Controls Panel */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={`h-9 w-9 flex items-center justify-center transition-colors touch-manipulation md:hidden ${isSidebarOpen ? 'text-q-accent' : 'text-q-text-muted hover:text-q-text'
+              }`}
+            title={t('editor.toggleControls')}
+            aria-label={t('editor.toggleControls')}
+            aria-pressed={isSidebarOpen}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Project Name - Hidden on mobile (already shown in BrowserPreview) */}
         <div className="hidden md:flex items-center gap-2">
