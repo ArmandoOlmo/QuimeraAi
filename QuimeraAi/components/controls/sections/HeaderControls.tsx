@@ -296,8 +296,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <>
             <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
             {(data.header.links || []).map((link, i) => (
-              <div key={i} className="flex gap-2 mb-2 items-center relative">
-                <div className="w-10 flex-shrink-0">
+              <div key={i} className="flex gap-2 mb-2 items-end relative">
+                <div className="w-10 flex-shrink-0 h-[var(--editor-control-input-height)] flex items-center justify-center">
                   <IconSelector
                     value={(link.icon as any) || 'home'}
                     onChange={(icon) => {
@@ -310,11 +310,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     fullWidthModal={true}
                   />
                 </div>
-                <I18nInput className="flex-1 min-w-0 mb-0" placeholder="Title" value={link.text} onChange={(val) => {
+                <I18nInput className="flex-1 min-w-0 !mb-0" placeholder="Title" value={link.text} onChange={(val) => {
                   setNestedData(`header.links.${i}.text`, val);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
-                <I18nInput className="flex-1 min-w-0 mb-0" placeholder="URL" value={link.href} onChange={(val) => {
+                <I18nInput className="flex-1 min-w-0 !mb-0" placeholder="URL" value={link.href} onChange={(val) => {
                   setNestedData(`header.links.${i}.href`, val);
                   if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                 }} />
@@ -323,7 +323,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                     setNestedData('header.links', newLinks);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }}
-                  className="flex-shrink-0 text-q-text-secondary hover:text-red-400 p-1"
+                  className="flex-shrink-0 flex items-center justify-center h-[var(--editor-control-input-height)] w-8 rounded-md text-q-text-secondary hover:text-red-400 hover:bg-q-error/10 transition-colors"
                   title="Remove link"
                 >
                   <Trash2 size={14} />
@@ -611,34 +611,39 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
 
-      {/* ========== VISIBILITY (Login + Search) ========== */}
+      {/* ========== VISIBILITY (Login + Search + Language) ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
           <Eye size={14} />
           Visibilidad
         </label>
 
-        <div className="space-y-3">
-          <ToggleControl label={t('editor.controls.navigation.showLogin')} checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
-          {data.header.showLogin !== false && (
-            <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-              <I18nInput label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(val) => setNestedData('header.loginText', val)} className="mb-0" />
-              <Input label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(val) => setNestedData('header.loginUrl', val)} className="mb-0" />
-            </div>
-          )}
-        </div>
+        <div className="divide-y divide-q-border/60">
+          {/* Login */}
+          <div className="pb-3">
+            <ToggleControl label={t('editor.controls.navigation.showLogin')} checked={data.header.showLogin !== false} onChange={(v) => setNestedData('header.showLogin', v)} />
+            {data.header.showLogin !== false && (
+              <div className="mt-3 space-y-3 animate-fade-in-up rounded-md border border-q-border/60 bg-q-bg/40 p-3">
+                <I18nInput label={t('editor.controls.common.text')} value={data.header.loginText || 'Login'} onChange={(val) => setNestedData('header.loginText', val)} className="mb-0" />
+                <Input label={t('editor.controls.common.url')} value={data.header.loginUrl || '#'} onChange={(val) => setNestedData('header.loginUrl', val)} className="mb-0" />
+              </div>
+            )}
+          </div>
 
-        <div className="space-y-3 mt-3">
-          <ToggleControl label={t('editor.controls.navigation.showSearch')} checked={data.header.showSearch === true} onChange={(v) => setNestedData('header.showSearch', v)} />
-          {data.header.showSearch === true && (
-            <div className="animate-fade-in-up">
-              <I18nInput label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(val) => setNestedData('header.searchPlaceholder', val)} className="mb-0" />
-            </div>
-          )}
-        </div>
+          {/* Search */}
+          <div className="py-3">
+            <ToggleControl label={t('editor.controls.navigation.showSearch')} checked={data.header.showSearch === true} onChange={(v) => setNestedData('header.showSearch', v)} />
+            {data.header.showSearch === true && (
+              <div className="mt-3 animate-fade-in-up rounded-md border border-q-border/60 bg-q-bg/40 p-3">
+                <I18nInput label={t('editor.controls.navigation.placeholder')} value={data.header.searchPlaceholder || `${t('editor.controls.common.search')}...`} onChange={(val) => setNestedData('header.searchPlaceholder', val)} className="mb-0" />
+              </div>
+            )}
+          </div>
 
-        <div className="space-y-3 mt-3">
-          <ToggleControl label={t('editor.controls.navigation.showLanguageSelector', 'Selector de Idioma')} checked={data.header.showLanguageSelector !== false} onChange={(v) => setNestedData('header.showLanguageSelector', v)} />
+          {/* Language selector */}
+          <div className="pt-3">
+            <ToggleControl label={t('editor.controls.navigation.showLanguageSelector', 'Selector de Idioma')} checked={data.header.showLanguageSelector !== false} onChange={(v) => setNestedData('header.showLanguageSelector', v)} />
+          </div>
         </div>
       </div>
 
@@ -679,8 +684,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <>
               <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.navigation.customLinks')}</label>
               {(data.header.links || []).map((link, i) => (
-                <div key={i} className="flex gap-2 mb-2 items-center relative">
-                  <div className="w-10 flex-shrink-0">
+                <div key={i} className="flex gap-2 mb-2 items-end relative">
+                  <div className="w-10 flex-shrink-0 h-[var(--editor-control-input-height)] flex items-center justify-center">
                     <IconSelector
                       value={(link.icon as any) || 'home'}
                       onChange={(icon) => {
@@ -693,11 +698,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       fullWidthModal={true}
                     />
                   </div>
-                  <I18nInput className="flex-1 min-w-0 mb-0" placeholder="Title" value={link.text} onChange={(val) => {
+                  <I18nInput className="flex-1 min-w-0 !mb-0" placeholder="Title" value={link.text} onChange={(val) => {
                     setNestedData(`header.links.${i}.text`, val);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
-                  <I18nInput className="flex-1 min-w-0 mb-0" placeholder="URL" value={link.href} onChange={(val) => {
+                  <I18nInput className="flex-1 min-w-0 !mb-0" placeholder="URL" value={link.href} onChange={(val) => {
                     setNestedData(`header.links.${i}.href`, val);
                     if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                   }} />
@@ -706,7 +711,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                       setNestedData('header.links', newLinks);
                       if (activeMenuId !== 'manual') setNestedData('header.menuId', 'manual');
                     }}
-                    className="flex-shrink-0 text-q-text-secondary hover:text-red-400"
+                    className="flex-shrink-0 flex items-center justify-center h-[var(--editor-control-input-height)] w-8 rounded-md text-q-text-secondary hover:text-red-400 hover:bg-q-error/10 transition-colors"
+                    title="Remove link"
                   >
                     <Trash2 size={14} />
                   </button>
