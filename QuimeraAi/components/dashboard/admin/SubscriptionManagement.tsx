@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import { useAuth } from '../../../contexts/core/AuthContext';
+import { supabase } from '../../../supabase';
 import {
     Menu,
     Sparkles,
@@ -49,18 +50,6 @@ import DashboardSidebar from '../DashboardSidebar';
 import StatCard from './StatCard';
 import UnifiedPlanEditor from './UnifiedPlanEditor';
 import {
-    db,
-    collection,
-    getDocs,
-    query,
-    where,
-    orderBy,
-    limit,
-    doc,
-    updateDoc,
-    serverTimestamp,
-} from '@/utils/compatData';
-import {
     SUBSCRIPTION_PLANS,
     AI_CREDIT_PACKAGES,
     AiCreditOperation,
@@ -97,11 +86,43 @@ interface SubscriptionManagementProps {
 interface TenantCreditsData {
     tenantId: string;
     tenantName: string;
+    tenantSlug?: string;
+    tenantEmail?: string;
+    companyName?: string;
+    tenantType?: string;
+    tenantStatus?: string;
+    ownerUserId?: string;
+    ownerTenantId?: string;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    lastActiveAt?: string | null;
     planId: SubscriptionPlanId;
+    subscriptionStatus?: string;
+    billingCycle?: string;
+    currentPeriodStart?: string | null;
+    currentPeriodEnd?: string | null;
+    trialEndDate?: string | null;
+    cancelAtPeriodEnd?: boolean;
+    cancelledAt?: string | null;
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
+    hasSubscriptionRecord: boolean;
     creditsUsed: number;
+    storedCreditsUsed: number;
+    verifiedCreditsUsed: number;
+    transactionCreditsAdded: number;
+    transactionCount: number;
+    usageVerificationStatus: 'verified' | 'mismatch' | 'untracked';
+    usageVerificationDifference: number;
     creditsIncluded: number;
     creditsRemaining: number;
+    creditsOverage: number;
     usagePercentage: number;
+    usageByOperation: Record<string, number>;
+    dailyUsage: Array<{ date: string; credits: number }>;
+    recentTransactions: AiCreditTransaction[];
+    projectCount: number;
+    memberCount: number;
     lastActivity?: Date;
 }
 
@@ -116,6 +137,243 @@ interface GlobalStats {
     usageByOperation: Record<string, number>;
     dailyUsage: Array<{ date: string; credits: number }>;
 }
+
+type TimestampLike = { seconds: number; nanoseconds: number };
+
+type SubscriptionUsageRow = {
+    tenant_id: string;
+    plan_id: string | null;
+    billing_cycle: string | null;
+    status: string | null;
+    start_date: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    trial_end_date: string | null;
+    cancel_at_period_end: boolean | null;
+    cancelled_at: string | null;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
+    add_ons: unknown;
+    credit_packages_purchased: unknown;
+    ai_credits_usage: Partial<AiCreditsUsage> | null;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+type TenantLookupRow = {
+    id: string;
+    name: string | null;
+    slug: string | null;
+    email: string | null;
+    company_name: string | null;
+    type: string | null;
+    owner_user_id: string | null;
+    owner_tenant_id: string | null;
+    subscription_plan: string | null;
+    status: string | null;
+    limits: Record<string, any> | null;
+    usage: Record<string, any> | null;
+    billing: Record<string, any> | null;
+    trial_ends_at: string | null;
+    parent_credits_pool_id: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    last_active_at: string | null;
+};
+
+type AiCreditTransactionRow = {
+    id: string;
+    tenant_id: string | null;
+    user_id: string | null;
+    operation: string;
+    credits_used: number | string | null;
+    description: string | null;
+    metadata: Record<string, any> | null;
+    created_at: string | null;
+};
+
+type TenantScopedRow = {
+    tenant_id: string | null;
+};
+
+const toTimestamp = (value: unknown): TimestampLike => {
+    if (value && typeof value === 'object' && typeof (value as TimestampLike).seconds === 'number') {
+        return {
+            seconds: (value as TimestampLike).seconds,
+            nanoseconds: Number((value as TimestampLike).nanoseconds) || 0,
+        };
+    }
+
+    if (typeof value === 'string') {
+        const time = Date.parse(value);
+        if (Number.isFinite(time)) {
+            return { seconds: Math.floor(time / 1000), nanoseconds: 0 };
+        }
+    }
+
+    return { seconds: 0, nanoseconds: 0 };
+};
+
+const readNumber = (value: unknown, fallback = 0): number => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const formatDateTime = (value: string | TimestampLike | null | undefined): string => {
+    const timestamp = toTimestamp(value);
+    if (!timestamp.seconds) return 'N/A';
+    return new Date(timestamp.seconds * 1000).toLocaleString();
+};
+
+const formatDateRange = (start?: string | null, end?: string | null): string => {
+    const startLabel = formatDateTime(start);
+    const endLabel = formatDateTime(end);
+    if (startLabel === 'N/A' && endLabel === 'N/A') return 'N/A';
+    return `${startLabel} - ${endLabel}`;
+};
+
+const shortId = (value?: string | null): string => {
+    if (!value) return 'N/A';
+    return value.length > 12 ? `${value.slice(0, 8)}...${value.slice(-4)}` : value;
+};
+
+const normalizePlanIdForAdmin = (planId: string | null | undefined): SubscriptionPlanId => {
+    return planId && planId in SUBSCRIPTION_PLANS ? planId as SubscriptionPlanId : 'free';
+};
+
+const normalizeUsageRecord = (
+    usage: Partial<AiCreditsUsage> | null | undefined,
+    planId: SubscriptionPlanId
+): AiCreditsUsage => {
+    const planLimit = SUBSCRIPTION_PLANS[planId]?.limits.maxAiCredits || 0;
+    const creditsIncluded = readNumber(
+        (usage as any)?.creditsIncluded ?? (usage as any)?.credits_included,
+        planLimit
+    );
+    const creditsUsed = readNumber(
+        (usage as any)?.creditsUsed ?? (usage as any)?.credits_used ?? (usage as any)?.used,
+        0
+    );
+    const creditsRemaining = readNumber(
+        (usage as any)?.creditsRemaining ?? (usage as any)?.credits_remaining ?? (usage as any)?.remaining,
+        Math.max(0, creditsIncluded - creditsUsed)
+    );
+
+    return {
+        tenantId: String((usage as any)?.tenantId ?? (usage as any)?.tenant_id ?? ''),
+        periodStart: toTimestamp((usage as any)?.periodStart ?? (usage as any)?.period_start),
+        periodEnd: toTimestamp((usage as any)?.periodEnd ?? (usage as any)?.period_end),
+        creditsIncluded,
+        creditsUsed,
+        creditsRemaining,
+        creditsOverage: readNumber((usage as any)?.creditsOverage ?? (usage as any)?.credits_overage, Math.max(0, creditsUsed - creditsIncluded)),
+        usageByOperation: ((usage as any)?.usageByOperation ?? (usage as any)?.usage_by_operation ?? {}) as Record<AiCreditOperation, number>,
+        dailyUsage: Array.isArray((usage as any)?.dailyUsage)
+            ? (usage as any).dailyUsage
+            : Array.isArray((usage as any)?.daily_usage)
+                ? (usage as any).daily_usage
+                : [],
+        lastUpdated: toTimestamp((usage as any)?.lastUpdated ?? (usage as any)?.last_updated),
+        parentTenantId: (usage as any)?.parentTenantId ?? (usage as any)?.parent_tenant_id,
+        isAgencyPool: (usage as any)?.isAgencyPool ?? (usage as any)?.is_agency_pool,
+        subClientsUsage: (usage as any)?.subClientsUsage ?? (usage as any)?.sub_clients_usage,
+    };
+};
+
+const normalizeTransactionRow = (row: AiCreditTransactionRow): AiCreditTransaction => {
+    const metadata = row.metadata || {};
+    const creditsUsed = readNumber(row.credits_used, 0);
+
+    return {
+        id: row.id,
+        tenantId: row.tenant_id || '',
+        userId: row.user_id || '',
+        operation: row.operation as AiCreditOperation,
+        creditsUsed,
+        description: row.description || undefined,
+        model: metadata.model,
+        tokensInput: metadata.tokensInput ?? metadata.tokens_input,
+        tokensOutput: metadata.tokensOutput ?? metadata.tokens_output,
+        timestamp: toTimestamp(row.created_at),
+        metadata,
+        type: creditsUsed < 0 ? 'credit' : 'debit',
+        amount: -creditsUsed,
+    };
+};
+
+const groupByTenant = <T extends { tenantId?: string; tenant_id?: string | null }>(rows: T[]): Map<string, T[]> => {
+    const grouped = new Map<string, T[]>();
+    for (const row of rows) {
+        const tenantId = row.tenantId || row.tenant_id || '';
+        if (!tenantId) continue;
+        const current = grouped.get(tenantId) || [];
+        current.push(row);
+        grouped.set(tenantId, current);
+    }
+    return grouped;
+};
+
+const countByTenant = (rows: TenantScopedRow[]): Map<string, number> => {
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+        if (!row.tenant_id) continue;
+        counts.set(row.tenant_id, (counts.get(row.tenant_id) || 0) + 1);
+    }
+    return counts;
+};
+
+const isTransactionInPeriod = (
+    transaction: AiCreditTransaction,
+    periodStart?: TimestampLike,
+    periodEnd?: TimestampLike
+): boolean => {
+    const seconds = transaction.timestamp?.seconds || 0;
+    if (!seconds) return false;
+    if (periodStart?.seconds && seconds < periodStart.seconds) return false;
+    if (periodEnd?.seconds && seconds > periodEnd.seconds) return false;
+    return true;
+};
+
+const buildUsageFromTransactions = (
+    transactions: AiCreditTransaction[],
+    periodStart?: TimestampLike,
+    periodEnd?: TimestampLike
+) => {
+    const scopedTransactions = transactions.filter((transaction) => isTransactionInPeriod(transaction, periodStart, periodEnd));
+    const usageByOperation: Record<string, number> = {};
+    const dailyUsageMap: Record<string, number> = {};
+    let creditsUsed = 0;
+    let creditsAdded = 0;
+
+    for (const transaction of scopedTransactions) {
+        const amount = readNumber(transaction.creditsUsed);
+        if (amount > 0) {
+            creditsUsed += amount;
+            usageByOperation[transaction.operation] = (usageByOperation[transaction.operation] || 0) + amount;
+            const date = new Date((transaction.timestamp?.seconds || 0) * 1000).toISOString().slice(0, 10);
+            dailyUsageMap[date] = (dailyUsageMap[date] || 0) + amount;
+        } else if (amount < 0) {
+            creditsAdded += Math.abs(amount);
+        }
+    }
+
+    return {
+        creditsUsed,
+        creditsAdded,
+        transactionCount: scopedTransactions.length,
+        usageByOperation,
+        dailyUsage: Object.entries(dailyUsageMap)
+            .map(([date, credits]) => ({ date, credits }))
+            .sort((a, b) => a.date.localeCompare(b.date)),
+    };
+};
+
+const mergeUsageBreakdown = (
+    storedUsage: Record<string, number> | undefined,
+    verifiedUsage: Record<string, number>
+): Record<string, number> => {
+    return Object.keys(verifiedUsage).length > 0 ? verifiedUsage : storedUsage || {};
+};
 
 // =============================================================================
 // SUB-COMPONENTS
@@ -443,6 +701,281 @@ const AddCreditsModal: React.FC<{
     );
 };
 
+const TenantDetailsModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    tenant: TenantCreditsData | null;
+    onAddCredits: (tenant: TenantCreditsData) => void;
+}> = ({ isOpen, onClose, tenant, onAddCredits }) => {
+    if (!isOpen || !tenant) return null;
+
+    const plan = SUBSCRIPTION_PLANS[tenant.planId] || SUBSCRIPTION_PLANS.free;
+    const verificationConfig = {
+        verified: {
+            label: 'Uso verificado',
+            className: 'bg-q-success/15 text-q-success border-q-success/30',
+            description: 'El uso guardado cuadra con las transacciones del periodo.',
+        },
+        mismatch: {
+            label: 'Diferencia detectada',
+            className: 'bg-q-warning/15 text-q-warning border-q-warning/30',
+            description: 'El uso guardado no cuadra exactamente con las transacciones del periodo.',
+        },
+        untracked: {
+            label: 'Pendiente de sincronizar',
+            className: 'bg-q-warning/15 text-q-warning border-q-warning/30',
+            description: 'Hay consumo en el ledger de transacciones, pero la suscripción no tiene ese uso guardado todavía.',
+        },
+    }[tenant.usageVerificationStatus];
+
+    const operationEntries = Object.entries(tenant.usageByOperation)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl">
+                <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-q-border">
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-xl font-semibold text-q-text truncate">{tenant.tenantName}</h3>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${verificationConfig.className}`}>
+                                {verificationConfig.label}
+                            </span>
+                            {tenant.tenantStatus && (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-q-bg text-q-text-secondary border border-q-border">
+                                    {tenant.tenantStatus}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-q-text-secondary mt-1 truncate">
+                            {tenant.companyName || tenant.tenantEmail || tenant.tenantSlug || 'Sin identificador comercial'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-lg hover:bg-q-surface-overlay text-q-text-secondary hover:text-q-text transition-colors"
+                        aria-label="Cerrar"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="overflow-y-auto max-h-[calc(90vh-84px)] p-6 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-xs text-q-text-secondary">Plan</p>
+                            <p className="text-lg font-semibold text-q-text mt-1">{plan.name}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">{tenant.subscriptionStatus || 'Sin suscripción'}</p>
+                        </div>
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-xs text-q-text-secondary">Créditos usados</p>
+                            <p className="text-lg font-semibold text-q-text mt-1">{tenant.creditsUsed.toLocaleString()}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Verificado: {tenant.verifiedCreditsUsed.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-xs text-q-text-secondary">Disponibles</p>
+                            <p className="text-lg font-semibold text-q-text mt-1">{tenant.creditsRemaining.toLocaleString()}</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Incluidos: {tenant.creditsIncluded.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-xs text-q-text-secondary">Uso</p>
+                            <p className="text-lg font-semibold text-q-text mt-1">{tenant.usagePercentage}%</p>
+                            <p className="text-xs text-q-text-secondary mt-1">Overage: {tenant.creditsOverage.toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <div className={`rounded-lg border p-4 ${verificationConfig.className}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div>
+                                <p className="font-semibold">{verificationConfig.label}</p>
+                                <p className="text-sm opacity-90">{verificationConfig.description}</p>
+                            </div>
+                            <div className="text-sm sm:text-right">
+                                <p>Guardado: {tenant.storedCreditsUsed.toLocaleString()}</p>
+                                <p>Ledger: {tenant.verifiedCreditsUsed.toLocaleString()}</p>
+                                <p>Diferencia: {tenant.usageVerificationDifference.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        {!tenant.hasSubscriptionRecord && (
+                            <p className="text-sm mt-3">
+                                Este tenant no tiene fila de suscripción; el uso mostrado viene del ledger de transacciones y del límite del plan.
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
+                                <Users className="w-4 h-4 text-q-accent" />
+                                Identidad del Tenant
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <p className="text-q-text-secondary">Nombre</p>
+                                    <p className="text-q-text font-medium">{tenant.tenantName}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Slug</p>
+                                    <p className="text-q-text font-medium">{tenant.tenantSlug || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Email</p>
+                                    <p className="text-q-text font-medium">{tenant.tenantEmail || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Compañía</p>
+                                    <p className="text-q-text font-medium">{tenant.companyName || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Tipo</p>
+                                    <p className="text-q-text font-medium">{tenant.tenantType || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Owner</p>
+                                    <p className="text-q-text font-mono text-xs">{shortId(tenant.ownerUserId)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Proyectos</p>
+                                    <p className="text-q-text font-medium">{tenant.projectCount.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Miembros</p>
+                                    <p className="text-q-text font-medium">{tenant.memberCount.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-q-accent" />
+                                Suscripción
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <p className="text-q-text-secondary">Estado</p>
+                                    <p className="text-q-text font-medium">{tenant.subscriptionStatus || 'Sin registro'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Ciclo</p>
+                                    <p className="text-q-text font-medium">{tenant.billingCycle || 'N/A'}</p>
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <p className="text-q-text-secondary">Periodo actual</p>
+                                    <p className="text-q-text font-medium">{formatDateRange(tenant.currentPeriodStart, tenant.currentPeriodEnd)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Trial termina</p>
+                                    <p className="text-q-text font-medium">{formatDateTime(tenant.trialEndDate)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Cancelar al terminar</p>
+                                    <p className="text-q-text font-medium">{tenant.cancelAtPeriodEnd ? 'Sí' : 'No'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Stripe customer</p>
+                                    <p className="text-q-text font-mono text-xs">{shortId(tenant.stripeCustomerId)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-q-text-secondary">Stripe subscription</p>
+                                    <p className="text-q-text font-mono text-xs">{shortId(tenant.stripeSubscriptionId)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
+                                <PieChart className="w-4 h-4 text-q-accent" />
+                                Uso por Operación
+                            </h4>
+                            <div className="space-y-3">
+                                {operationEntries.map(([operation, credits]) => (
+                                    <div key={operation}>
+                                        <div className="flex justify-between gap-3 text-sm mb-1">
+                                            <span className="text-q-text-secondary truncate">{operation}</span>
+                                            <span className="text-q-text font-medium">{credits.toLocaleString()}</span>
+                                        </div>
+                                        <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full bg-q-accent"
+                                                style={{ width: `${tenant.creditsUsed > 0 ? Math.min((credits / tenant.creditsUsed) * 100, 100) : 0}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                                {operationEntries.length === 0 && (
+                                    <p className="text-sm text-q-text-secondary">No hay operaciones de consumo registradas.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
+                                <History className="w-4 h-4 text-q-accent" />
+                                Transacciones Recientes
+                            </h4>
+                            <div className="space-y-3">
+                                {tenant.recentTransactions.map((transaction) => (
+                                    <div key={transaction.id} className="flex items-start justify-between gap-3 border-b border-q-border pb-3 last:border-0 last:pb-0">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-q-text truncate">{transaction.description || transaction.operation}</p>
+                                            <p className="text-xs text-q-text-secondary">{formatDateTime(transaction.timestamp)}</p>
+                                        </div>
+                                        <span className={`text-sm font-semibold ${transaction.creditsUsed < 0 ? 'text-q-success' : 'text-q-text'}`}>
+                                            {transaction.creditsUsed < 0 ? '+' : '-'}{Math.abs(transaction.creditsUsed).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                                {tenant.recentTransactions.length === 0 && (
+                                    <p className="text-sm text-q-text-secondary">No hay transacciones recientes.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-q-text-secondary">Creado</p>
+                            <p className="text-q-text font-medium">{formatDateTime(tenant.createdAt)}</p>
+                        </div>
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-q-text-secondary">Actualizado</p>
+                            <p className="text-q-text font-medium">{formatDateTime(tenant.updatedAt)}</p>
+                        </div>
+                        <div className="bg-q-bg rounded-lg border border-q-border p-4">
+                            <p className="text-q-text-secondary">Última actividad</p>
+                            <p className="text-q-text font-medium">{tenant.lastActivity ? tenant.lastActivity.toLocaleString() : formatDateTime(tenant.lastActiveAt)}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 rounded-lg bg-q-surface-overlay text-q-text hover:bg-q-surface-overlay/80 transition-colors"
+                        >
+                            Cerrar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onAddCredits(tenant);
+                                onClose();
+                            }}
+                            className="px-4 py-2 rounded-lg bg-q-accent text-q-text-on-accent hover:opacity-90 transition-colors inline-flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Agregar Credits
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 /**
  * Fila de tenant en la tabla
  */
@@ -452,14 +985,32 @@ const TenantRow: React.FC<{
     onViewDetails: (tenant: TenantCreditsData) => void;
 }> = ({ tenant, onAddCredits, onViewDetails }) => {
     const usageColor = getUsageColor(tenant.usagePercentage);
-    const plan = SUBSCRIPTION_PLANS[tenant.planId];
+    const plan = SUBSCRIPTION_PLANS[tenant.planId] || SUBSCRIPTION_PLANS.free;
+    const subtitle = tenant.companyName || tenant.tenantEmail || tenant.tenantSlug || shortId(tenant.tenantId);
+    const verificationBadge = {
+        verified: 'bg-q-success/10 text-q-success border-q-success/25',
+        mismatch: 'bg-q-warning/10 text-q-warning border-q-warning/25',
+        untracked: 'bg-q-warning/10 text-q-warning border-q-warning/25',
+    }[tenant.usageVerificationStatus];
+    const verificationLabel = {
+        verified: 'Verificado',
+        mismatch: 'Diferencia',
+        untracked: 'Por sincronizar',
+    }[tenant.usageVerificationStatus];
 
     return (
         <tr className="border-b border-q-border hover:bg-q-bg transition-colors">
             <td className="p-4">
-                <div>
+                <div className="min-w-[220px]">
                     <p className="text-q-text font-medium">{tenant.tenantName}</p>
-                    <p className="text-xs text-q-text-secondary">{tenant.tenantId}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <p className="text-xs text-q-text-secondary">{subtitle}</p>
+                        {tenant.tenantStatus && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-q-bg text-q-text-secondary border border-q-border">
+                                {tenant.tenantStatus}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </td>
             <td className="p-4">
@@ -475,7 +1026,7 @@ const TenantRow: React.FC<{
             </td>
             <td className="p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex-1 max-w-[120px]">
+                    <div className="flex-1 min-w-[96px] max-w-[120px]">
                         <div className="h-2 bg-q-surface-overlay rounded-full overflow-hidden">
                             <div
                                 className="h-full rounded-full transition-all"
@@ -490,6 +1041,9 @@ const TenantRow: React.FC<{
                         {tenant.usagePercentage}%
                     </span>
                 </div>
+                <span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${verificationBadge}`}>
+                    {verificationLabel}
+                </span>
             </td>
             <td className="p-4 text-right">
                 <span className="text-q-text font-medium">
@@ -560,6 +1114,11 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         tenant: TenantCreditsData | null;
     }>({ isOpen: false, tenant: null });
 
+    const [tenantDetailsModal, setTenantDetailsModal] = useState<{
+        isOpen: boolean;
+        tenant: TenantCreditsData | null;
+    }>({ isOpen: false, tenant: null });
+
     const [planEditorModal, setPlanEditorModal] = useState<{
         isOpen: boolean;
         plan: StoredPlan | null;
@@ -570,8 +1129,47 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
         try {
             setError(null);
 
-            // Cargar uso de credits de todos los tenants
-            const usageSnapshot = await getDocs(collection(db, 'aiCreditsUsage'));
+            // Cargar tenants primero: algunos tenants legacy no tienen fila en subscriptions,
+            // pero sí tienen consumo real en ai_credits_transactions.
+            const [
+                { data: subscriptionRows, error: subscriptionsError },
+                { data: tenantRows, error: tenantsError },
+                { data: transactionRows, error: transactionsError },
+                { data: projectRows, error: projectsError },
+                { data: memberRows, error: membersError },
+            ] = await Promise.all([
+                supabase
+                    .from('subscriptions')
+                    .select('tenant_id, plan_id, billing_cycle, status, start_date, current_period_start, current_period_end, trial_end_date, cancel_at_period_end, cancelled_at, stripe_customer_id, stripe_subscription_id, add_ons, credit_packages_purchased, ai_credits_usage, created_at, updated_at'),
+                supabase
+                    .from('tenants')
+                    .select('id, name, slug, email, company_name, type, owner_user_id, owner_tenant_id, subscription_plan, status, limits, usage, billing, trial_ends_at, parent_credits_pool_id, created_at, updated_at, last_active_at'),
+                supabase
+                    .from('ai_credits_transactions')
+                    .select('id, tenant_id, user_id, operation, credits_used, description, metadata, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(5000),
+                supabase
+                    .from('projects')
+                    .select('tenant_id'),
+                supabase
+                    .from('tenant_members')
+                    .select('tenant_id'),
+            ]);
+
+            if (subscriptionsError) throw subscriptionsError;
+            if (tenantsError) throw tenantsError;
+            if (transactionsError) throw transactionsError;
+            if (projectsError) throw projectsError;
+            if (membersError) throw membersError;
+
+            const subscriptionLookup = new Map<string, SubscriptionUsageRow>(
+                ((subscriptionRows ?? []) as SubscriptionUsageRow[]).map((subscription) => [subscription.tenant_id, subscription])
+            );
+            const normalizedTransactions = ((transactionRows ?? []) as AiCreditTransactionRow[]).map(normalizeTransactionRow);
+            const transactionsByTenant = groupByTenant(normalizedTransactions);
+            const projectCounts = countByTenant((projectRows ?? []) as TenantScopedRow[]);
+            const memberCounts = countByTenant((memberRows ?? []) as TenantScopedRow[]);
             const usageData: TenantCreditsData[] = [];
 
             let totalCreditsUsed = 0;
@@ -583,65 +1181,101 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
             const usageByOperation: Record<string, number> = {};
             const dailyUsageMap: Record<string, number> = {};
 
-            for (const doc of usageSnapshot.docs) {
-                const data = doc.data() as AiCreditsUsage;
-                const tenantId = doc.id;
+            for (const tenant of (tenantRows ?? []) as TenantLookupRow[]) {
+                const tenantId = tenant.id;
+                const subscription = subscriptionLookup.get(tenantId);
+                const planId = normalizePlanIdForAdmin(subscription?.plan_id || tenant.subscription_plan);
+                const data = normalizeUsageRecord(subscription?.ai_credits_usage, planId);
+                const tenantTransactions = transactionsByTenant.get(tenantId) || [];
+                const periodStart = data.periodStart.seconds ? data.periodStart : toTimestamp(subscription?.current_period_start);
+                const periodEnd = data.periodEnd.seconds ? data.periodEnd : toTimestamp(subscription?.current_period_end);
+                const verifiedUsage = buildUsageFromTransactions(tenantTransactions, periodStart, periodEnd);
+                const storedCreditsUsed = data.creditsUsed || readNumber(tenant.usage?.aiCreditsUsed ?? tenant.usage?.ai_credits_used);
+                const displayCreditsUsed = Math.max(storedCreditsUsed, verifiedUsage.creditsUsed);
+                const creditsIncluded = data.creditsIncluded || readNumber(tenant.limits?.maxAiCredits ?? tenant.limits?.max_ai_credits, SUBSCRIPTION_PLANS[planId]?.limits.maxAiCredits || 0);
+                const creditsRemaining = subscription?.ai_credits_usage
+                    ? data.creditsRemaining
+                    : Math.max(0, creditsIncluded - displayCreditsUsed);
+                const usageDifference = storedCreditsUsed - verifiedUsage.creditsUsed;
+                const usageVerificationStatus: TenantCreditsData['usageVerificationStatus'] = Math.abs(usageDifference) <= 1
+                    ? 'verified'
+                    : storedCreditsUsed === 0 && verifiedUsage.creditsUsed > 0
+                        ? 'untracked'
+                        : 'mismatch';
+                const tenantName = tenant.name || tenant.company_name || tenant.slug || `Tenant ${shortId(tenantId)}`;
+                const combinedUsageByOperation = mergeUsageBreakdown(data.usageByOperation, verifiedUsage.usageByOperation);
+                const combinedDailyUsage = verifiedUsage.dailyUsage.length > 0 ? verifiedUsage.dailyUsage : data.dailyUsage;
 
-                // Obtener nombre del tenant
-                let tenantName = tenantId;
-                try {
-                    const tenantDoc = await getDocs(
-                        query(collection(db, 'tenants'), where('id', '==', tenantId), limit(1))
-                    );
-                    if (!tenantDoc.empty) {
-                        tenantName = tenantDoc.docs[0].data().name || tenantId;
-                    }
-                } catch (e) {
-                    // Ignore
-                }
-
-                const usagePercentage = data.creditsIncluded > 0
-                    ? Math.round((data.creditsUsed / data.creditsIncluded) * 100)
-                    : 0;
-
-                // Determinar plan basado en credits incluidos
-                let planId: SubscriptionPlanId = 'free';
-                for (const [id, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-                    if (plan.limits.maxAiCredits === data.creditsIncluded) {
-                        planId = id as SubscriptionPlanId;
-                        break;
-                    }
-                }
+                const usagePercentage = creditsIncluded > 0
+                    ? Math.round((displayCreditsUsed / creditsIncluded) * 100)
+                    : displayCreditsUsed > 0 ? 100 : 0;
 
                 usageData.push({
                     tenantId,
                     tenantName,
+                    tenantSlug: tenant.slug || undefined,
+                    tenantEmail: tenant.email || undefined,
+                    companyName: tenant.company_name || undefined,
+                    tenantType: tenant.type || undefined,
+                    tenantStatus: tenant.status || undefined,
+                    ownerUserId: tenant.owner_user_id || undefined,
+                    ownerTenantId: tenant.owner_tenant_id || undefined,
+                    createdAt: tenant.created_at,
+                    updatedAt: tenant.updated_at,
+                    lastActiveAt: tenant.last_active_at,
                     planId,
-                    creditsUsed: data.creditsUsed || 0,
-                    creditsIncluded: data.creditsIncluded || 0,
-                    creditsRemaining: data.creditsRemaining || 0,
+                    subscriptionStatus: subscription?.status || undefined,
+                    billingCycle: subscription?.billing_cycle || undefined,
+                    currentPeriodStart: subscription?.current_period_start || null,
+                    currentPeriodEnd: subscription?.current_period_end || null,
+                    trialEndDate: subscription?.trial_end_date || tenant.trial_ends_at || null,
+                    cancelAtPeriodEnd: Boolean(subscription?.cancel_at_period_end),
+                    cancelledAt: subscription?.cancelled_at || null,
+                    stripeCustomerId: subscription?.stripe_customer_id || null,
+                    stripeSubscriptionId: subscription?.stripe_subscription_id || null,
+                    hasSubscriptionRecord: Boolean(subscription),
+                    creditsUsed: displayCreditsUsed,
+                    storedCreditsUsed,
+                    verifiedCreditsUsed: verifiedUsage.creditsUsed,
+                    transactionCreditsAdded: verifiedUsage.creditsAdded,
+                    transactionCount: verifiedUsage.transactionCount,
+                    usageVerificationStatus,
+                    usageVerificationDifference: usageDifference,
+                    creditsIncluded,
+                    creditsRemaining,
+                    creditsOverage: Math.max(data.creditsOverage || 0, Math.max(0, displayCreditsUsed - creditsIncluded)),
                     usagePercentage,
+                    usageByOperation: combinedUsageByOperation,
+                    dailyUsage: combinedDailyUsage,
+                    recentTransactions: tenantTransactions.slice(0, 8),
+                    projectCount: projectCounts.get(tenantId) || 0,
+                    memberCount: memberCounts.get(tenantId) || 0,
+                    lastActivity: tenantTransactions[0]?.timestamp?.seconds
+                        ? new Date(tenantTransactions[0].timestamp.seconds * 1000)
+                        : tenant.last_active_at
+                            ? new Date(tenant.last_active_at)
+                            : undefined,
                 });
 
                 // Actualizar estadísticas globales
-                totalCreditsUsed += data.creditsUsed || 0;
-                totalCreditsAllocated += data.creditsIncluded || 0;
+                totalCreditsUsed += displayCreditsUsed;
+                totalCreditsAllocated += creditsIncluded;
                 planDistribution[planId] = (planDistribution[planId] || 0) + 1;
 
                 if (usagePercentage >= 80 && usagePercentage < 100) tenantsNearLimit++;
                 if (usagePercentage >= 100) tenantsOverLimit++;
 
                 // Agregar uso por operación
-                if (data.usageByOperation) {
-                    for (const [op, count] of Object.entries(data.usageByOperation)) {
-                        usageByOperation[op] = (usageByOperation[op] || 0) + (count as number);
+                if (combinedUsageByOperation) {
+                    for (const [op, count] of Object.entries(combinedUsageByOperation)) {
+                        usageByOperation[op] = (usageByOperation[op] || 0) + readNumber(count);
                     }
                 }
 
                 // Agregar uso diario
-                if (data.dailyUsage) {
-                    for (const day of data.dailyUsage) {
-                        dailyUsageMap[day.date] = (dailyUsageMap[day.date] || 0) + day.credits;
+                if (combinedDailyUsage) {
+                    for (const day of combinedDailyUsage) {
+                        dailyUsageMap[day.date] = (dailyUsageMap[day.date] || 0) + readNumber(day.credits);
                     }
                 }
             }
@@ -671,21 +1305,7 @@ const SubscriptionManagement: React.FC<SubscriptionManagementProps> = ({ onBack 
 
             setTenants(usageData);
 
-            // Cargar transacciones recientes
-            const transactionsSnapshot = await getDocs(
-                query(
-                    collection(db, 'aiCreditsTransactions'),
-                    orderBy('timestamp', 'desc'),
-                    limit(50)
-                )
-            );
-
-            const transactions: AiCreditTransaction[] = transactionsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            } as AiCreditTransaction));
-
-            setRecentTransactions(transactions);
+            setRecentTransactions(normalizedTransactions.slice(0, 50));
 
             // Cargar planes desde Supabase
             const loadedPlans = await getAllPlans();
@@ -934,6 +1554,12 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                 tenant={addCreditsModal.tenant}
                 onAddCredits={handleAddCredits}
             />
+            <TenantDetailsModal
+                isOpen={tenantDetailsModal.isOpen}
+                onClose={() => setTenantDetailsModal({ isOpen: false, tenant: null })}
+                tenant={tenantDetailsModal.tenant}
+                onAddCredits={(tenant) => setAddCreditsModal({ isOpen: true, tenant })}
+            />
 
             <div className="flex h-screen bg-q-bg text-q-text">
                 <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
@@ -1151,10 +1777,7 @@ Los usuarios existentes NO serán afectados, mantendrán su plan actual.
                                                         key={tenant.tenantId}
                                                         tenant={tenant}
                                                         onAddCredits={(t) => setAddCreditsModal({ isOpen: true, tenant: t })}
-                                                        onViewDetails={(t) => {
-                                                            // TODO: Implementar modal de detalles del tenant
-                                                            alert(`Tenant: ${t.tenantName}\nPlan: ${t.planId}\nCredits usados: ${t.creditsUsed.toLocaleString()}\nCredits restantes: ${t.creditsRemaining.toLocaleString()}\nUso: ${t.usagePercentage}%`);
-                                                        }}
+                                                        onViewDetails={(t) => setTenantDetailsModal({ isOpen: true, tenant: t })}
                                                     />
                                                 ))}
                                             </tbody>
