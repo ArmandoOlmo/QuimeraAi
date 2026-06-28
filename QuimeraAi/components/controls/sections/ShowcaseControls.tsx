@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 
 import ColorControl from '../../ui/ColorControl';
 import ImagePicker from '../../ui/ImagePicker';
+import AnimationControls from '../../ui/AnimationControls';
 import TabbedControls from '../../ui/TabbedControls';
 import {
   BorderRadiusSelector,
@@ -198,6 +199,7 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
         <ColorControl label="Text" value={colors.text || '#1f2937'} onChange={(value) => setNestedData('showcase.colors.text', value)} />
         <ColorControl label="Description" value={colors.description || '#4b5563'} onChange={(value) => setNestedData('showcase.colors.description', value)} />
         <ColorControl label="Accent" value={colors.accent || '#111827'} onChange={(value) => setNestedData('showcase.colors.accent', value)} />
+        <ColorControl label="Border" value={colors.borderColor || '#e5e7eb'} onChange={(value) => setNestedData('showcase.colors.borderColor', value)} />
         <ColorControl label="Card background" value={colors.cardBackground || '#ffffff'} onChange={(value) => setNestedData('showcase.colors.cardBackground', value)} />
         <ColorControl label="Card heading" value={colors.cardHeading || '#111827'} onChange={(value) => setNestedData('showcase.colors.cardHeading', value)} />
         <ColorControl label="Card text" value={colors.cardText || '#374151'} onChange={(value) => setNestedData('showcase.colors.cardText', value)} />
@@ -222,6 +224,15 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
         onOpacityChange={(value) => setNestedData('showcase.cornerGradient.opacity', value)}
         onSizeChange={(value) => setNestedData('showcase.cornerGradient.size', value)}
       />
+
+      <div className="rounded-lg border border-q-border bg-q-surface/50 p-4">
+        <AnimationControls
+          animationType={showcase.animationType || 'fade-in-up'}
+          enableCardAnimation={showcase.enableCardAnimation !== false}
+          onChangeAnimationType={(value) => setNestedData('showcase.animationType', value)}
+          onToggleAnimation={(value) => setNestedData('showcase.enableCardAnimation', value)}
+        />
+      </div>
     </div>
   );
 

@@ -53,6 +53,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <I18nInput label={t('editor.controls.common.title')} value={data?.products?.title || 'Nuestros Productos'} onChange={(val) => setNestedData('products.title', val)} />
         <FontSizeSelector label={t('editor.controls.common.titleSize')} value={data?.products?.titleFontSize || 'lg'} onChange={(v) => setNestedData('products.titleFontSize', v)} />
         <I18nTextArea label={t('editor.controls.common.subtitle')} value={data?.products?.subtitle || ''} onChange={(val) => setNestedData('products.subtitle', val)} rows={2} />
+        <FontSizeSelector label={t('editor.controls.common.descriptionSize')} value={data?.products?.descriptionFontSize || 'lg'} onChange={(v) => setNestedData('products.descriptionFontSize', v)} />
       </div>
 
       {/* Info */}
@@ -74,6 +75,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Layout
         </label>
         <div className="space-y-3">
+          <div>
+            <Select
+              label={t('editor.controls.ecommerce.cardStyle', 'Card style')}
+              value={data?.products?.cardStyle || 'modern'}
+              onChange={(val) => setNestedData('products.cardStyle', val)}
+              options={[
+                { value: 'minimal', label: 'Minimal' },
+                { value: 'modern', label: 'Modern' },
+                { value: 'elegant', label: 'Elegant' },
+                { value: 'overlay', label: 'Overlay' },
+              ]}
+              noMargin
+            />
+          </div>
           <div>
             <Select
               label={t('controls.style')}
@@ -117,6 +132,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               noMargin
             />
           </div>
+        </div>
+      </div>
+
+      {/* Spacing */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+        <div className="grid grid-cols-2 gap-3">
+          <PaddingSelector label={t('controls.vertical')} value={data?.products?.paddingY || 'lg'} onChange={(v) => setNestedData('products.paddingY', v)} showNone showXl />
+          <PaddingSelector label={t('controls.horizontal')} value={data?.products?.paddingX || 'lg'} onChange={(v) => setNestedData('products.paddingX', v)} showNone showXl />
         </div>
       </div>
 

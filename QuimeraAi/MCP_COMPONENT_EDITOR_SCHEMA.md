@@ -89,7 +89,6 @@ projects (fila)
 | Login / búsqueda | `showLogin`, `loginText`, `loginUrl`, `showSearch`, `searchPlaceholder`, `showLanguageSelector` |
 | CTA barra | `showCta`, `ctaText`, `ctaUrl`, `ctaLinkType`, `buttonBorderRadius` |
 | Colores | `colors.background`, `.text`, `.accent`, `.buttonBackground`, `.buttonText`, `.tabActiveColor`, `.tabBorderColor` |
-| Estilo pill | `segmentedPillSlanted`, `segmentedPillSlantedAngle` |
 
 ### `footer`
 

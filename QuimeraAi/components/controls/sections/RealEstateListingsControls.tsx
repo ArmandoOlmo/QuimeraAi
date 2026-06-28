@@ -4,7 +4,7 @@ import ColorControl from '../../ui/ColorControl';
 import AnimationControls from '../../ui/AnimationControls';
 import TabbedControls from '../../ui/TabbedControls';
 import {
-  Input, Select, TextArea, ToggleControl
+  Input, Select, TextArea, ToggleControl, PaddingSelector, BorderRadiusSelector
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { ControlsDeps } from '../ControlsShared';
 
@@ -120,6 +120,34 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
             { value: '12', label: '12' },
           ]}
         />
+        <div className="grid grid-cols-2 gap-3">
+          <PaddingSelector
+            label={t('controls.vertical')}
+            value={sectionData.paddingY || 'lg'}
+            onChange={(v) => setNestedData('realEstateListings.paddingY', v)}
+            showNone
+            showXl
+          />
+          <PaddingSelector
+            label={t('controls.horizontal')}
+            value={sectionData.paddingX || 'md'}
+            onChange={(v) => setNestedData('realEstateListings.paddingX', v)}
+            showNone
+            showXl
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <BorderRadiusSelector
+            label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+            value={sectionData.cardBorderRadius || 'md'}
+            onChange={(v) => setNestedData('realEstateListings.cardBorderRadius', v)}
+          />
+          <BorderRadiusSelector
+            label={t('editor.controls.ecommerce.buttonRadius', 'Button Radius')}
+            value={sectionData.buttonBorderRadius || 'md'}
+            onChange={(v) => setNestedData('realEstateListings.buttonBorderRadius', v)}
+          />
+        </div>
       </div>
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
@@ -141,9 +169,13 @@ export const renderRealEstateListingsControlsWithTabs = (deps: ControlsDeps) => 
         <ColorControl label={t('editor.controls.globalStyles.secondary', 'Secondary')} value={sectionData.colors?.secondary || '#10b981'} onChange={(v) => setNestedData('realEstateListings.colors.secondary', v)} />
         <ColorControl label={t('controls.accent')} value={sectionData.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.accent', v)} />
         <ColorControl label={t('controls.cardBackground')} value={sectionData.colors?.cardBackground || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.cardBackground', v)} />
+        <ColorControl label={t('controls.cardTitle', 'Card Title')} value={sectionData.colors?.cardHeading || sectionData.colors?.heading || '#111827'} onChange={(v) => setNestedData('realEstateListings.colors.cardHeading', v)} />
+        <ColorControl label={t('controls.cardText')} value={sectionData.colors?.cardText || sectionData.colors?.text || '#374151'} onChange={(v) => setNestedData('realEstateListings.colors.cardText', v)} />
         <ColorControl label={t('controls.border')} value={sectionData.colors?.border || '#e5e7eb'} onChange={(v) => setNestedData('realEstateListings.colors.border', v)} />
         <ColorControl label={t('controls.fondoBotn')} value={sectionData.colors?.buttonBackground || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={sectionData.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.buttonText', v)} />
+        <ColorControl label={t('controls.badgeBackground', 'Badge Background')} value={sectionData.colors?.badgeBackground || sectionData.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.badgeBackground', v)} />
+        <ColorControl label={t('controls.badgeText', 'Badge Text')} value={sectionData.colors?.badgeText || '#ffffff'} onChange={(v) => setNestedData('realEstateListings.colors.badgeText', v)} />
         <ColorControl label={t('controls.priceColor', 'Price Color')} value={sectionData.colors?.priceColor || sectionData.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('realEstateListings.colors.priceColor', v)} />
         <ColorControl label={t('editor.controls.globalStyles.success', 'Success')} value={sectionData.colors?.success || '#16a34a'} onChange={(v) => setNestedData('realEstateListings.colors.success', v)} />
         <ColorControl label={t('editor.controls.globalStyles.error', 'Error')} value={sectionData.colors?.error || '#dc2626'} onChange={(v) => setNestedData('realEstateListings.colors.error', v)} />

@@ -17,7 +17,7 @@ import { useAdmin } from '../../contexts/admin';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
 import { initialData } from '../../data/initialData';
-import { canAccessRegistryItem, getRegistryItem } from '../../data/componentRegistry';
+import { canAccessRegistryItem, componentHasEditableControls, getRegistryItem } from '../../data/componentRegistry';
 import { isRetiredDesignSuiteSection } from '../../data/retiredSuites';
 import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
@@ -478,6 +478,8 @@ const Controls: React.FC = () => {
 
   const availableComponentsToAdd = (Object.keys(sectionConfig) as PageSection[]).filter(
     section => isComponentEnabled(section) &&
+      componentHasEditableControls(section) &&
+      section !== 'header' &&
       section !== 'typography' &&
       section !== 'footer' &&
       section !== 'colors' &&

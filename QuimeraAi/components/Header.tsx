@@ -243,8 +243,6 @@ const Header: React.FC<HeaderData & {
   onCartClick,
   colors = {},
   gradientFadeSize = 15,
-  segmentedPillSlanted = false,
-  segmentedPillSlantedAngle = 15,
   isPreviewMode = false,
   containerRef,
   linkFontSize = 14,
@@ -284,9 +282,9 @@ const Header: React.FC<HeaderData & {
     const resolvedLoginText = resolveText(loginText);
     const resolvedSearchPlaceholder = resolveText(searchPlaceholder);
     const actualIsSticky = isSticky ?? sticky;
-    let style = transparent ? 'sticky-transparent' : rawStyle;
-    if (style === 'transparent') style = 'sticky-transparent'; // Map legacy transparent style
-    if (!isHeaderVariant(style)) style = 'sticky-solid';
+    let styleCandidate = String(transparent ? 'sticky-transparent' : rawStyle);
+    if (styleCandidate === 'transparent') styleCandidate = 'sticky-transparent'; // Map legacy transparent style
+    const style = isHeaderVariant(styleCandidate) ? styleCandidate : 'sticky-solid';
 
     // TopBar offset for floating styles - measure actual TopBar element if present
     const [measuredTopBarOffset, setMeasuredTopBarOffset] = useState(0);
@@ -396,7 +394,7 @@ const Header: React.FC<HeaderData & {
 
     useEffect(() => {
       // Para estilos flotantes, siempre mostrar como "scrolled"
-      if (style.startsWith('floating') || style === 'rounded-shell' || style === 'dark-dock' || style === 'segmented-pill') {
+      if (style.startsWith('floating') || style === 'rounded-shell' || style === 'dark-dock') {
         setIsScrolled(true);
         return;
       }
@@ -429,8 +427,8 @@ const Header: React.FC<HeaderData & {
     // Glass Effect
     const glassClasses = (glassEffect && !isTransparent) ? 'border-b' : '';
     const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
-    const isFloatingLayout = style.startsWith('floating') || style === 'segmented-pill' || style === 'rounded-shell' || style === 'dark-dock';
-    const isContainedFloatingLayout = isFloatingLayout && style !== 'segmented-pill';
+    const isFloatingLayout = style.startsWith('floating') || style === 'rounded-shell' || style === 'dark-dock';
+    const isContainedFloatingLayout = isFloatingLayout;
 
     // ============================================
     // ESTILOS DE CONTENEDOR SEGÚN VARIANTE
@@ -446,8 +444,6 @@ const Header: React.FC<HeaderData & {
             return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border';
           case 'floating-shadow':
             return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl overflow-hidden';
-          case 'segmented-pill':
-            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border shadow-sm overflow-hidden segmented-pill-container';
           case 'rounded-shell':
             return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-full border shadow-lg';
           case 'dark-dock':
@@ -484,8 +480,6 @@ const Header: React.FC<HeaderData & {
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
           return 'w-full tabbed-nav-container';
-        case 'segmented-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-xl border shadow-sm overflow-hidden segmented-pill-container`;
         case 'mega-panel':
           return 'w-full rounded-none border-b mega-panel-nav-container';
         case 'split-cta':
@@ -581,8 +575,6 @@ const Header: React.FC<HeaderData & {
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
           return { backgroundColor: actualColors.background, borderBottom: `1px solid ${colors?.tabBorderColor || actualColors.separator}` };
-        case 'segmented-pill':
-          return { backgroundColor: actualColors.background, borderColor: actualColors.border };
         case 'mega-panel':
         case 'split-cta':
         case 'center-stage':
@@ -705,7 +697,7 @@ const Header: React.FC<HeaderData & {
       window.location.hash = href;
     };
 
-    const isSpecialStyle = style === 'tabbed' || style === 'segmented-pill';
+    const isSpecialStyle = style === 'tabbed';
     const shouldUseCenterStage = style === 'center-stage';
 
     const renderLayout = () => {
@@ -910,9 +902,7 @@ const Header: React.FC<HeaderData & {
               minHeight: isFloatingLayout ? 'auto' : computedMinHeight,
               padding: isContainedFloatingLayout
                 ? (style === 'floating-pill' || style === 'rounded-shell' ? '10px 48px' : '12px 24px')
-                : style === 'segmented-pill'
-                  ? '0 24px'
-                  : `0 ${isScrolled ? '1.5rem' : '2rem'}`
+                : `0 ${isScrolled ? '1.5rem' : '2rem'}`
             }}
           >
             <div className={`container mx-auto w-full h-full flex items-center justify-between relative ${isFloatingLayout ? '' : 'px-0'
@@ -1066,63 +1056,6 @@ const Header: React.FC<HeaderData & {
               }
             `}</style>
           )}
-
-          {style === 'segmented-pill' && (
-            <style>{`
-              .segmented-pill-container > div {
-                align-items: stretch !important;
-              }
-              .segmented-pill-container > div > div:not(nav) {
-                align-self: center;
-              }
-              .segmented-pill-container ul {
-                display: flex;
-                align-items: stretch;
-                height: 100%;
-                gap: 0 !important;
-              }
-              .segmented-pill-container ul li {
-                height: 100%;
-                display: flex;
-                align-items: stretch;
-                ${segmentedPillSlanted ? `transform: skewX(-${segmentedPillSlantedAngle}deg);` : ''}
-              }
-              .segmented-pill-container ul li:not(:last-child) {
-                border-right: 1px solid ${actualColors.separator};
-              }
-              .segmented-pill-container ul li a {
-                padding: 0 24px;
-                height: 100%;
-                color: ${actualColors.accent} !important;
-                font-weight: 700;
-                transition: all 0.2s ease;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-              }
-              ${segmentedPillSlanted ? `
-              .segmented-pill-container ul li a > * {
-                transform: skewX(${segmentedPillSlantedAngle}deg);
-                display: inline-block;
-              }
-              .segmented-pill-container ul li:first-child {
-                padding-left: 12px;
-                margin-left: -12px;
-              }
-              .segmented-pill-container ul li:last-child {
-                padding-right: 12px;
-                margin-right: -12px;
-              }
-              ` : ''}
-              /* Efecto activo o hover */
-              .segmented-pill-container ul li:first-child a,
-              .segmented-pill-container ul li a:hover {
-                background: linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.accent} 15px, color-mix(in srgb, ${actualColors.accent} 80%, ${actualColors.surfaceAlt}) calc(100% - 15px), ${actualColors.background} 100%);
-                color: ${actualColors.buttonText} !important;
-              }
-            `}</style>
-          )}
-
 
           {/* === GRADIENT FADE STRIP below transparent-blur === */}
           {style === 'transparent-blur' && (

@@ -65,6 +65,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.background')} value={data?.newsletter.colors?.background || '#000000'} onChange={(v) => setNestedData('newsletter.colors.background', v)} />
         <ColorControl label={t('controls.sectionTitle')} value={data?.newsletter.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('newsletter.colors.heading', v)} />
         <ColorControl label={t('controls.sectionDescription')} value={data?.newsletter.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('newsletter.colors.text', v)} />
+        <ColorControl label={t('controls.accent')} value={data?.newsletter.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('newsletter.colors.accent', v)} />
       </div>
 
 

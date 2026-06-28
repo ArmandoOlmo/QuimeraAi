@@ -207,6 +207,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
 
+      {/* ========== VISUAL VARIANT & SPACING ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+          <SlidersHorizontal size={14} />
+          Visual
+        </label>
+        <Select
+          label={t('editor.controls.common.styleVariant')}
+          value={data.hero.heroVariant || 'classic'}
+          onChange={(v) => setNestedData('hero.heroVariant', v)}
+          options={[
+            { value: 'classic', label: 'Classic' },
+            { value: 'modern', label: 'Modern' },
+            { value: 'gradient', label: 'Gradient' },
+            { value: 'fitness', label: 'Fitness' },
+            { value: 'cinematic-gym', label: 'Cinematic Gym' },
+          ]}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <PaddingSelector label={t('controls.vertical')} value={data.hero.paddingY || 'md'} onChange={(v) => setNestedData('hero.paddingY', v)} showNone showXl />
+          <PaddingSelector label={t('controls.horizontal')} value={data.hero.paddingX || 'md'} onChange={(v) => setNestedData('hero.paddingX', v)} showNone showXl />
+        </div>
+      </div>
+
       {/* ========== TYPOGRAPHY ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -225,6 +249,39 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         showImageOpacityControl
         showBlurControls
       />
+
+      {/* ========== HERO MEDIA ========== */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+          <Image size={14} />
+          Imagen visual
+        </label>
+        <ImagePicker
+          label={t('editor.controls.common.image')}
+          value={data.hero.imageUrl || ''}
+          onChange={(url) => setNestedData('hero.imageUrl', url)}
+          onRemove={() => setNestedData('hero.imageUrl', '')}
+        />
+      </div>
+
+      {/* ========== BADGE ========== */}
+      {(['modern', 'gradient', 'fitness'] as string[]).includes(data.hero.heroVariant || '') && (
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
+            <Sparkles size={14} />
+            Badge
+          </label>
+          <ToggleControl label={t('controls.showBadge', 'Show badge')} checked={data.hero.showBadge !== false} onChange={(v) => setNestedData('hero.showBadge', v)} />
+          {data.hero.showBadge !== false && (
+            <>
+              <I18nInput label={t('controls.badgeText', 'Badge text')} value={data.hero.badgeText || ''} onChange={(val) => setNestedData('hero.badgeText', val)} />
+              <IconSelector value={data.hero.badgeIcon || 'sparkles'} onChange={(icon) => setNestedData('hero.badgeIcon', icon)} label={t('controls.badgeIcon', 'Badge icon')} />
+              <ColorControl label={t('controls.badgeColor', 'Badge text/icon')} value={data.hero.badgeColor || data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.badgeColor', v)} />
+              <ColorControl label={t('controls.badgeBackground', 'Badge background')} value={data.hero.badgeBackgroundColor || data.hero.colors?.primary || '#4f46e5'} onChange={(v) => setNestedData('hero.badgeBackgroundColor', v)} />
+            </>
+          )}
+        </div>
+      )}
 
       {/* ========== COLORS ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">

@@ -244,6 +244,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           onChange={(v) => setNestedData('map.height', v)}
           min={200} max={800} step={50} suffix="px"
         />
+        <BorderRadiusSelector
+          label={t('editor.controls.common.borderRadius')}
+          value={data?.map.borderRadius || 'none'}
+          onChange={(v) => setNestedData('map.borderRadius', v)}
+        />
       </div>
 
       {/* Spacing */}

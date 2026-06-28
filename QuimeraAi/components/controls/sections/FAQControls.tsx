@@ -69,6 +69,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
   const styleTab = (
     <div className="space-y-4">      <BackgroundImageControl sectionKey="faq" data={data} setNestedData={setNestedData} />
+      {/* Spacing */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
+        <div className="grid grid-cols-2 gap-3">
+          <PaddingSelector label={t('controls.vertical')} value={data.faq.paddingY || 'md'} onChange={(v) => setNestedData('faq.paddingY', v)} />
+          <PaddingSelector label={t('controls.horizontal')} value={data.faq.paddingX || 'md'} onChange={(v) => setNestedData('faq.paddingX', v)} />
+        </div>
+      </div>
+
       {/* Section Colors */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.sectionColors')}</label>

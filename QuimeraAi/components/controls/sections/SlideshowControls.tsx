@@ -399,6 +399,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onChange={(v) => setNestedData('slideshow.borderRadius', v)}
       />
 
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.layout')}</label>
+        <ToggleControl label={t('controls.showTitle', 'Show title')} checked={data.slideshow.showTitle !== false} onChange={(v) => setNestedData('slideshow.showTitle', v)} />
+        <ToggleControl label={t('controls.fullWidth', 'Full width')} checked={data.slideshow.fullWidth === true} onChange={(v) => setNestedData('slideshow.fullWidth', v)} />
+        {data.slideshow.fullWidth === true && (
+          <SliderControl
+            label={t('controls.slideHeight', 'Slide height')}
+            value={data.slideshow.slideHeight || 600}
+            onChange={(v) => setNestedData('slideshow.slideHeight', v)}
+            min={240}
+            max={1000}
+            step={20}
+            suffix="px"
+          />
+        )}
+      </div>
+
 
       {/* Animation Settings */}
       <div className="space-y-3">

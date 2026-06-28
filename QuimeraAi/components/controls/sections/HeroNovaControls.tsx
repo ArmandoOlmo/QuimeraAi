@@ -294,6 +294,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
+      {/* Button Radius */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <BorderRadiusSelector
+          label={t('controls.buttonRadius')}
+          value={data.heroNova.buttonBorderRadius || 'xl'}
+          onChange={(v) => setNestedData('heroNova.buttonBorderRadius', v)}
+        />
+      </div>
+
       {/* Colors */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">

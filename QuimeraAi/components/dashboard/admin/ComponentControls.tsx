@@ -16,6 +16,7 @@ import {
     HEADER_SPECIAL_COLOR_VARIANT_VALUES,
     HEADER_VARIANT_GROUPS,
     getHeaderVariantMeta,
+    isHeaderVariant,
     type HeaderVariant,
 } from '../../../data/headerVariants';
 import ColorControl from '../../ui/ColorControl';
@@ -1612,7 +1613,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderHeaderControls = () => {
         const s = styles as any;
         const colors = (s.colors || {}) as any;
-        const currentHeaderStyle = (s.style || 'sticky-solid') as HeaderVariant;
+        const rawHeaderStyle = s.style === 'transparent' ? 'sticky-transparent' : (s.style || 'sticky-solid');
+        const currentHeaderStyle: HeaderVariant = isHeaderVariant(rawHeaderStyle) ? rawHeaderStyle : 'sticky-solid';
         const headerVariantMeta = getHeaderVariantMeta(currentHeaderStyle);
         const isHeaderGradientStyle = HEADER_GRADIENT_VARIANT_VALUES.includes(currentHeaderStyle);
         const usesHeaderPanelColors = HEADER_SPECIAL_COLOR_VARIANT_VALUES.includes(currentHeaderStyle) || HEADER_FLOATING_VARIANT_VALUES.includes(currentHeaderStyle);
@@ -1875,7 +1877,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <ColorControl label="Gradient Dark" value={colors?.gradientDarkColor || colors?.surfaceAlt || colors?.background || '#000000'} onChange={v => handleColorChange('gradientDarkColor', v)} />
                     </div>
                 )}
-                {(currentHeaderStyle === 'tabbed' || currentHeaderStyle === 'segmented-pill') && (
+                {currentHeaderStyle === 'tabbed' && (
                     <div className="grid grid-cols-2 gap-4">
                         <ColorControl label="Active Tab" value={colors?.tabActiveColor || colors?.accent || colors?.text || '#000000'} onChange={v => handleColorChange('tabActiveColor', v)} />
                         <ColorControl label="Tab Border" value={colors?.tabBorderColor || colors?.separator || colors?.border || 'transparent'} onChange={v => handleColorChange('tabBorderColor', v)} />
