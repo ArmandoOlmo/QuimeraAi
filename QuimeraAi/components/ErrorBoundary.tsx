@@ -1,7 +1,50 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logError } from '../utils/monitoring';
 import { isChunkLoadError, ChunkLoadError } from '../utils/lazyWithRetry';
-import { AlertTriangle, RefreshCw, Home, Download } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+
+const DEFAULT_APP_ICON_URL = '/logos/quimera-icon.svg';
+
+const updateCopy = {
+  es: {
+    title: 'Nueva versión disponible',
+    message: 'Hay una actualización lista para Quimera.ai. Actualiza la aplicación para cargar los últimos cambios.',
+    refresh: 'Actualizar ahora',
+    home: 'Ir al inicio',
+    help: 'Esto puede pasar cuando publicamos cambios mientras estás usando la aplicación. Tus datos están seguros.',
+  },
+  en: {
+    title: 'New version available',
+    message: 'An update is ready for Quimera.ai. Refresh the app to load the latest changes.',
+    refresh: 'Refresh now',
+    home: 'Go to homepage',
+    help: "This can happen when we publish changes while you're using the app. Your data is safe.",
+  },
+};
+
+function getUpdateCopy() {
+  if (typeof window === 'undefined') return updateCopy.es;
+
+  const preferredLanguage = (() => {
+    try {
+      return localStorage.getItem('i18nextLng') || document.documentElement.lang || navigator.language || 'es';
+    } catch {
+      return document.documentElement.lang || navigator.language || 'es';
+    }
+  })();
+
+  return preferredLanguage.toLowerCase().startsWith('en') ? updateCopy.en : updateCopy.es;
+}
+
+function getAppIconUrl() {
+  if (typeof document === 'undefined') return DEFAULT_APP_ICON_URL;
+
+  const iconLink = document.querySelector<HTMLLinkElement>(
+    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+  );
+
+  return iconLink?.href || DEFAULT_APP_ICON_URL;
+}
 
 interface Props {
   children: ReactNode;
@@ -116,48 +159,66 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Special UI for chunk loading errors (deployment mismatch)
       if (this.state.isChunkError) {
+        const copy = getUpdateCopy();
+        const appIconUrl = getAppIconUrl();
+
         return (
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-6">
-            <div className="max-w-lg w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-8 shadow-2xl backdrop-blur">
-              {/* Update Icon */}
-              <div className="flex justify-center mb-6">
-                <div className="p-4 bg-blue-500/20 rounded-full animate-pulse">
-                  <Download size={56} className="text-blue-400" />
+          <div className="min-h-screen bg-q-bg text-q-text flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 bg-q-text/60 backdrop-blur-sm" aria-hidden="true" />
+
+            <div
+              className="relative w-full max-w-md overflow-hidden rounded-[var(--radius-panel)] border border-border-subtle bg-q-surface shadow-[var(--shadow-elevated)] animate-fade-in-up"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="quimera-update-title"
+            >
+              <div className="flex flex-col items-center px-6 py-7 text-center sm:px-8">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[var(--radius-card)] border border-q-accent/25 bg-q-accent/10 shadow-sm">
+                  <img
+                    src={appIconUrl}
+                    alt="Quimera.ai"
+                    className="h-11 w-11 object-contain drop-shadow-[0_0_18px_rgba(251,185,43,0.28)]"
+                    width={44}
+                    height={44}
+                    loading="eager"
+                    decoding="sync"
+                  />
                 </div>
+
+                <p className="mb-3 inline-flex items-center rounded-md border border-q-border bg-q-surface-overlay px-2.5 py-1 text-xs font-semibold text-q-text-muted">
+                  Quimera.ai
+                </p>
+
+                <h1 id="quimera-update-title" className="text-xl font-semibold leading-tight text-q-text sm:text-2xl">
+                  {copy.title}
+                </h1>
+
+                <p className="mt-3 text-sm leading-relaxed text-q-text-secondary">
+                  {copy.message}
+                </p>
+
+                <div className="mt-6 flex w-full flex-col gap-2.5">
+                  <button
+                    onClick={this.handleHardReload}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--q-radius-md)] bg-q-accent px-4 py-2.5 text-sm font-semibold text-q-text-on-accent transition-all hover:shadow-lg hover:shadow-primary/20 focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                  >
+                    <RefreshCw size={18} />
+                    {copy.refresh}
+                  </button>
+
+                  <button
+                    onClick={this.handleGoHome}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--q-radius-md)] border border-q-border bg-q-surface-overlay px-4 py-2.5 text-sm font-semibold text-q-text-secondary transition-colors hover:border-q-border-strong hover:text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/30"
+                  >
+                    <Home size={18} />
+                    {copy.home}
+                  </button>
+                </div>
+
+                <p className="mt-5 text-xs leading-relaxed text-q-text-muted">
+                  {copy.help}
+                </p>
               </div>
-
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-white text-center mb-3">
-                New Version Available
-              </h1>
-
-              {/* Message */}
-              <p className="text-slate-300 text-center mb-6 leading-relaxed">
-                We've deployed a new version of the app. Please refresh to load the latest updates.
-              </p>
-
-              {/* Primary Action */}
-              <button
-                onClick={this.handleHardReload}
-                className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25"
-              >
-                <RefreshCw size={20} />
-                Refresh Now
-              </button>
-
-              {/* Secondary Action */}
-              <button
-                onClick={this.handleGoHome}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-3 text-slate-400 hover:text-white transition-colors"
-              >
-                <Home size={18} />
-                Go to Homepage
-              </button>
-
-              {/* Help Text */}
-              <p className="text-xs text-slate-500 text-center mt-6">
-                This happens when we update the app while you're using it. Your data is safe.
-              </p>
             </div>
           </div>
         );
@@ -267,4 +328,3 @@ export function useErrorHandler() {
 
   return { error, handleError, resetError };
 }
-

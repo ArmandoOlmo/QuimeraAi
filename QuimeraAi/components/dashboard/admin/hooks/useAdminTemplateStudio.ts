@@ -135,6 +135,10 @@ const ALL_SECTIONS: PageSection[] = [
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
 ];
 
+const SECTION_BY_COMPACT_KEY = new Map<string, PageSection>(
+    ALL_SECTIONS.map(section => [section.toLowerCase().replace(/[^a-z0-9]/g, ''), section])
+);
+
 const TEMPLATE_HERO_KEYS = ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroNeon', 'heroLumina', 'heroQuimera'];
 const HERO_TEXT_COLOR = '#ffffff';
 
@@ -458,14 +462,25 @@ function normalizeMissingFieldPath(field: unknown): string | undefined {
 
 function normalizeSuggestedComponents(components: unknown): PageSection[] | null {
     if (!Array.isArray(components)) return null;
-    const allowed = new Set<PageSection>(ALL_SECTIONS);
-    const normalized = components
-        .map(component => cleanBriefTextValue(String(component)))
-        .filter((component): component is string => Boolean(component))
-        .filter((component, index, all) => all.indexOf(component) === index)
-        .filter((component): component is PageSection => allowed.has(component as PageSection) && !isRetiredDesignSuiteSection(component as PageSection));
+    const seen = new Set<PageSection>();
+    const normalized = components.reduce<PageSection[]>((acc, component) => {
+        const section = normalizePageSectionKey(component);
+        if (!section || seen.has(section)) return acc;
+        seen.add(section);
+        acc.push(section);
+        return acc;
+    }, []);
 
     return normalized.length > 0 ? normalized : null;
+}
+
+function normalizePageSectionKey(component: unknown): PageSection | null {
+    const cleaned = cleanBriefTextValue(String(component));
+    if (!cleaned) return null;
+    const compactKey = cleaned.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const section = SECTION_BY_COMPACT_KEY.get(compactKey);
+    if (!section || isRetiredDesignSuiteSection(section)) return null;
+    return section;
 }
 
 function normalizeColorPalette(colorPalette: unknown): Partial<BusinessBrief['colorPalette']> | null {
@@ -1630,14 +1645,16 @@ Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs real
     }, []);
 
     const toggleBriefComponent = useCallback((component: PageSection) => {
-        if (isRetiredDesignSuiteSection(component)) return;
+        const section = normalizePageSectionKey(component);
+        if (!section) return;
         setBusinessBrief(prev => {
-            const exists = prev.suggestedComponents.includes(component);
+            const normalizedComponents = normalizeSuggestedComponents(prev.suggestedComponents) || [];
+            const exists = normalizedComponents.includes(section);
             return {
                 ...prev,
                 suggestedComponents: exists
-                    ? prev.suggestedComponents.filter(c => c !== component)
-                    : [...prev.suggestedComponents, component],
+                    ? normalizedComponents.filter(c => c !== section)
+                    : [...normalizedComponents, section],
             };
         });
     }, []);
@@ -1645,7 +1662,7 @@ Remember: You are building a REUSABLE TEMPLATE DRAFT. Every component needs real
     const setBriefComponents = useCallback((components: PageSection[]) => {
         setBusinessBrief(prev => ({
             ...prev,
-            suggestedComponents: components.filter(section => !isRetiredDesignSuiteSection(section))
+            suggestedComponents: normalizeSuggestedComponents(components) || [],
         }));
     }, []);
 

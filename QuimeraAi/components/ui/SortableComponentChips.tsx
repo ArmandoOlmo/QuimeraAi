@@ -20,6 +20,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { X, GripVertical } from 'lucide-react';
 import { PageSection } from '../../types/ui';
 
+const COMPONENT_LABEL_ALIASES: Record<string, string> = {
+  showCase: 'showcase',
+};
+
 interface SortableChipProps {
   id: string;
   onRemove: (id: string) => void;
@@ -35,7 +39,8 @@ function SortableChip({ id, onRemove }: SortableChipProps) {
     transition,
     isDragging,
   } = useSortable({ id });
-  const label = t(`studioUX.componentLabels.${id}`);
+  const labelKey = COMPONENT_LABEL_ALIASES[id] || id;
+  const label = t(`studioUX.componentLabels.${labelKey}`, { defaultValue: id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
