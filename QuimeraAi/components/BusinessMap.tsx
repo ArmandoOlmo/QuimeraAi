@@ -5,6 +5,7 @@ import { MapPin, Navigation, Phone, Mail, Clock } from 'lucide-react';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
+import { resolveI18nField } from '../utils/i18nContent';
 
 // Define libraries outside component to prevent re-renders
 const libraries: Libraries = ['places', 'geocoding'];
@@ -76,6 +77,34 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
     );
 };
 
+interface GoogleMapIframeProps {
+    query: string;
+    zoom?: number;
+    title: string;
+    renderFallback: () => React.ReactNode;
+}
+
+const GoogleMapIframe: React.FC<GoogleMapIframeProps> = ({ query, zoom, title, renderFallback }) => {
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+        return <>{renderFallback()}</>;
+    }
+
+    const embedUrl = `https://www.google.com/maps?q=${encodeURIComponent(trimmedQuery)}&z=${Math.max(1, Math.min(20, zoom || 15))}&output=embed`;
+
+    return (
+        <iframe
+            title={title}
+            src={embedUrl}
+            className="h-full min-h-[320px] w-full border-0"
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+        />
+    );
+};
+
 // Estilos de mapa profesionales
 const silverMapStyle = [
     { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
@@ -135,7 +164,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     businessHours,
     buttonText,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
     const primaryColor = getColor('primary.main', '#4f46e5');
@@ -150,16 +179,25 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
     };
 
     // Translated strings
-    const directionsText = buttonText || t('components.map.getDirections', 'Get Directions');
+    const defaultDirectionsText = t('components.map.getDirections', 'Get Directions');
     const loadingText = t('components.map.loading', 'Loading Map...');
     const locationLabel = t('components.map.locationLabel', 'Location');
     const navigateText = t('components.map.navigate', 'Navigate');
-    const hoursLabel = t('components.map.hours', 'Hours');
     const openInMapsText = t('components.map.openInMaps', 'Open in Google Maps');
     const mapFallbackText = t(
         'components.map.fallbackNotice',
         'Interactive map unavailable. Open the address in Google Maps for directions.'
     );
+
+    const activeLanguage = i18n?.language || 'es';
+    const resolvedTitle = resolveI18nField(title as any, activeLanguage) || locationLabel;
+    const resolvedDescription = resolveI18nField(description as any, activeLanguage);
+    const resolvedAddress = resolveI18nField(address as any, activeLanguage);
+    const resolvedPhone = resolveI18nField(phone as any, activeLanguage);
+    const resolvedEmail = resolveI18nField(email as any, activeLanguage);
+    const resolvedBusinessHours = resolveI18nField(businessHours as any, activeLanguage);
+    const resolvedButtonText = resolveI18nField(buttonText as any, activeLanguage);
+    const directionsText = resolvedButtonText || defaultDirectionsText;
     
     // Only load Google Maps if we have a valid API key (not a placeholder)
     const hasValidApiKey = isValidGoogleMapsApiKey(apiKey);
@@ -223,7 +261,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         fullscreenControl: true,
     }), [mapVariant]);
 
-    const mapQuery = address?.trim() || (hasCoordinates ? `${lat},${lng}` : title || locationLabel);
+    const mapQuery = resolvedAddress.trim() || (hasCoordinates ? `${lat},${lng}` : resolvedTitle || locationLabel);
     const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
     // Reusable contact info items for info cards
@@ -235,27 +273,27 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                 {/* Address */}
                 <div className="flex items-start gap-3">
                     <MapPin className={`${iconSize} mt-0.5 shrink-0`} style={{ color: accentColor }} />
-                    <span className={textSize} style={{ color: textColor }}>{address}</span>
+                    <span className={textSize} style={{ color: textColor }}>{resolvedAddress}</span>
                 </div>
                 {/* Phone */}
-                {phone && (
-                    <a href={`tel:${phone}`} className="flex items-center gap-3 group">
+                {resolvedPhone && (
+                    <a href={`tel:${resolvedPhone}`} className="flex items-center gap-3 group">
                         <Phone className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{phone}</span>
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{resolvedPhone}</span>
                     </a>
                 )}
                 {/* Email */}
-                {email && (
-                    <a href={`mailto:${email}`} className="flex items-center gap-3 group">
+                {resolvedEmail && (
+                    <a href={`mailto:${resolvedEmail}`} className="flex items-center gap-3 group">
                         <Mail className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{email}</span>
+                        <span className={`${textSize} group-hover:underline`} style={{ color: textColor }}>{resolvedEmail}</span>
                     </a>
                 )}
                 {/* Business Hours */}
-                {businessHours && (
+                {resolvedBusinessHours && (
                     <div className="flex items-center gap-3">
                         <Clock className={`${iconSize} shrink-0`} style={{ color: accentColor }} />
-                        <span className={textSize} style={{ color: textColor }}>{businessHours}</span>
+                        <span className={textSize} style={{ color: textColor }}>{resolvedBusinessHours}</span>
                     </div>
                 )}
             </div>
@@ -309,11 +347,11 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                         {locationLabel}
                     </p>
                     <h3 className="mb-2 text-lg font-bold leading-tight font-header" style={{ color: fallbackHeading }}>
-                        {title || locationLabel}
+                        {resolvedTitle || locationLabel}
                     </h3>
-                    {address && (
+                    {resolvedAddress && (
                         <p className="mb-4 text-sm leading-relaxed opacity-80">
-                            {address}
+                            {resolvedAddress}
                         </p>
                     )}
                     <a
@@ -335,9 +373,21 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
         );
     };
 
-    // Shared map renderer. The Google script is never mounted without a valid key.
+    const renderIframeMapFallback = () => (
+        <GoogleMapIframe
+            query={mapQuery}
+            zoom={zoom}
+            title={resolvedTitle || locationLabel}
+            renderFallback={renderStaticMapFallback}
+        />
+    );
+
+    // Shared map renderer. The Google script is never mounted without a valid key and coordinates.
     const renderMapEmbed = () => {
-        if (!hasValidApiKey) return renderStaticMapFallback();
+        if (!hasValidApiKey || !hasCoordinates) {
+            return renderIframeMapFallback();
+        }
+
         return (
             <GoogleMapEmbed
                 apiKey={apiKey!.trim()}
@@ -345,7 +395,7 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                 zoom={zoom}
                 options={options}
                 loadingText={loadingText}
-                renderFallback={renderStaticMapFallback}
+                renderFallback={renderIframeMapFallback}
             />
         );
     };
@@ -378,10 +428,10 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 className="text-2xl @lg:text-3xl font-bold mb-3 font-header"
                                 style={{ color: mapColors.heading }}
                             >
-                                {title}
+                                {resolvedTitle}
                             </h3>
                             <p className="text-sm leading-relaxed opacity-80" style={{ color: colors?.text }}>
-                                {description}
+                                {resolvedDescription}
                             </p>
                         </div>
 
@@ -438,12 +488,12 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 <MapPin className="w-5 h-5" style={{ color: accentColor }} />
                             </div>
                             <div className="min-w-0 w-full">
-                                <p className="text-sm font-bold mb-1 truncate" style={{ color: mapColors.heading }}>{title}</p>
-                                <p className="text-xs mb-2 @md:mb-3" style={{ color: colors?.text }}>{address}</p>
-                                {phone && (
+                                <p className="text-sm font-bold mb-1 truncate" style={{ color: mapColors.heading }}>{resolvedTitle}</p>
+                                <p className="text-xs mb-2 @md:mb-3" style={{ color: colors?.text }}>{resolvedAddress}</p>
+                                {resolvedPhone && (
                                     <p className="text-xs flex items-center gap-1.5 mb-1" style={{ color: colors?.text }}>
                                         <Phone className="w-3 h-3" style={{ color: accentColor }} />
-                                        {phone}
+                                        {resolvedPhone}
                                     </p>
                                 )}
                                 <a
@@ -486,8 +536,8 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                                 {locationLabel}
                             </span>
                         </div>
-                        <h3 className="text-lg font-bold mb-2 font-header" style={{ color: mapColors.heading }}>{title}</h3>
-                        <p className="text-sm mb-4 @md:mb-5 leading-relaxed" style={{ color: colors?.text }}>{description}</p>
+                        <h3 className="text-lg font-bold mb-2 font-header" style={{ color: mapColors.heading }}>{resolvedTitle}</h3>
+                        <p className="text-sm mb-4 @md:mb-5 leading-relaxed" style={{ color: colors?.text }}>{resolvedDescription}</p>
 
                         {/* Contact info */}
                         <div className="mb-5 @sm:mb-0">
@@ -533,12 +583,12 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                     />
                     <div className="max-w-7xl mx-auto flex flex-col @md:flex-row @md:items-end @md:justify-between gap-4 @md:pointer-events-auto relative z-10">
                         <div className="flex-1">
-                            <h3 className="text-xl font-bold mb-1 font-header" style={{ color: mapColors.heading }}>{title}</h3>
-                            <p className="text-sm mb-2 @md:mb-1" style={{ color: colors?.text }}>{address}</p>
-                            {phone && (
+                            <h3 className="text-xl font-bold mb-1 font-header" style={{ color: mapColors.heading }}>{resolvedTitle}</h3>
+                            <p className="text-sm mb-2 @md:mb-1" style={{ color: colors?.text }}>{resolvedAddress}</p>
+                            {resolvedPhone && (
                                 <p className="text-sm flex items-center gap-2" style={{ color: colors?.text }}>
                                     <Phone className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                                    {phone}
+                                    {resolvedPhone}
                                 </p>
                             )}
                         </div>
@@ -572,13 +622,13 @@ const BusinessMap: React.FC<BusinessMapProps> = ({
                             className={getFontSize(titleFontSize || 'md', 'title')}
                             style={{ color: mapColors.heading }}
                         >
-                            {title}
+                            {resolvedTitle}
                         </h2>
                         <p 
                             className={getFontSize(descriptionFontSize || 'md', 'desc')}
                             style={{ color: colors?.text }}
                         >
-                            {description}
+                            {resolvedDescription}
                         </p>
                     </div>
                 )}

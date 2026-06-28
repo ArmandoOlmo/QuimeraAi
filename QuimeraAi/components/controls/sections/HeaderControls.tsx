@@ -17,6 +17,14 @@ import {
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
+  HEADER_FLOATING_VARIANT_VALUES,
+  HEADER_GRADIENT_VARIANT_VALUES,
+  HEADER_SPECIAL_COLOR_VARIANT_VALUES,
+  HEADER_VARIANT_GROUPS,
+  getHeaderVariantMeta,
+  type HeaderVariant,
+} from '../../../data/headerVariants';
+import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
@@ -33,6 +41,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   if (!data?.header) return null;
 
   const activeMenuId = data.header.menuId || '';
+  const currentHeaderStyle = (data.header.style || 'sticky-solid') as HeaderVariant;
+  const headerVariantMeta = getHeaderVariantMeta(currentHeaderStyle);
+  const isHeaderGradientStyle = HEADER_GRADIENT_VARIANT_VALUES.includes(currentHeaderStyle);
+  const usesHeaderPanelColors = HEADER_SPECIAL_COLOR_VARIANT_VALUES.includes(currentHeaderStyle) || HEADER_FLOATING_VARIANT_VALUES.includes(currentHeaderStyle);
 
   return (
     <div className="space-y-4">
@@ -68,35 +80,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             label={t('editor.controls.header.style')}
             value={data.header.style}
             onChange={(val) => setNestedData('header.style', val)}
-            groups={[
-              { label: t('editor.controls.header.classic'), options: [
-                { value: 'sticky-solid', label: 'Solid' },
-                { value: 'sticky-transparent', label: 'Transparent' },
-                { value: 'floating', label: 'Floating' },
-              ]},
-              { label: 'Edge-to-Edge', options: [
-                { value: 'edge-solid', label: 'Edge Solid' },
-                { value: 'edge-minimal', label: 'Edge Minimal' },
-                { value: 'edge-bordered', label: 'Edge Bordered' },
-              ]},
-              { label: 'Floating', options: [
-                { value: 'floating-pill', label: 'Floating Pill' },
-                { value: 'floating-glass', label: t('editor.controls.header.glass') },
-                { value: 'floating-shadow', label: 'Floating Shadow' },
-              ]},
-              { label: 'Gradient', options: [
-                { value: 'transparent-blur', label: 'Gradient Blur' },
-                { value: 'transparent-bordered', label: 'Gradient Bordered' },
-                { value: 'transparent-gradient', label: 'Gradient Fade' },
-                { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
-              ]},
-              { label: 'Special', options: [
-                { value: 'tabbed', label: 'Tabbed Menu' },
-                { value: 'segmented-pill', label: 'Segmented Pill' },
-              ]},
-            ]}
+            groups={HEADER_VARIANT_GROUPS}
             noMargin
           />
+          <p className="mt-1 text-[11px] text-q-text-secondary">{headerVariantMeta.description}</p>
         </div>
       </div>
       {data.header.style === 'segmented-pill' && (
@@ -474,7 +461,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
       <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
       <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
-      {(data.header.style === 'transparent-gradient' || data.header.style === 'transparent-gradient-dark') && (
+      <ColorControl label={t('editor.controls.common.border', 'Borde')} value={data.header.colors?.border || data.header.colors?.separator || 'transparent'} onChange={(v) => setNestedData('header.colors.border', v)} />
+      <ColorControl label={t('controls.separador', 'Separador')} value={data.header.colors?.separator || data.header.colors?.border || 'transparent'} onChange={(v) => setNestedData('header.colors.separator', v)} />
+      {usesHeaderPanelColors && (
+        <>
+          <ColorControl label={t('controls.superficie', 'Superficie')} value={data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surface', v)} />
+          <ColorControl label={t('controls.panel', 'Panel')} value={data.header.colors?.panelBackground || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.panelBackground', v)} />
+          <ColorControl label={t('controls.textoPanel', 'Texto panel')} value={data.header.colors?.panelText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.panelText', v)} />
+          <ColorControl label={t('controls.textoSecundario', 'Texto secundario')} value={data.header.colors?.mutedText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.mutedText', v)} />
+          <ColorControl label={t('controls.hoverLink', 'Hover link')} value={data.header.colors?.linkHover || data.header.colors?.accent} onChange={(v) => setNestedData('header.colors.linkHover', v)} />
+          <ColorControl label={t('controls.badgeCarrito', 'Badge carrito')} value={data.header.colors?.cartBadge || data.header.colors?.accent} onChange={(v) => setNestedData('header.colors.cartBadge', v)} />
+        </>
+      )}
+      {isHeaderGradientStyle && (
         <>
           <ColorControl
             label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
@@ -494,16 +493,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </>
       )}
-      {data.header.style === 'tabbed' && (
+      {(data.header.style === 'tabbed' || data.header.style === 'segmented-pill') && (
         <>
           <ColorControl
             label="Color Tab Activo"
-            value={data.header.colors?.tabActiveColor || data.header.colors?.accent || '#3b82f6'}
+            value={data.header.colors?.tabActiveColor || data.header.colors?.accent || data.header.colors?.text}
             onChange={(v) => setNestedData('header.colors.tabActiveColor', v)}
           />
           <ColorControl
             label="Color Borde Inferior"
-            value={data.header.colors?.tabBorderColor || 'rgba(128,128,128,0.15)'}
+            value={data.header.colors?.tabBorderColor || data.header.colors?.separator || data.header.colors?.border || 'transparent'}
             onChange={(v) => setNestedData('header.colors.tabBorderColor', v)}
           />
         </>
@@ -518,6 +517,10 @@ export const renderHeaderControlsWithTabs = (deps: ControlsDeps, hideNavigationL
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.header) return null;
   const activeMenuId = data.header.menuId || '';
+  const currentHeaderStyle = (data.header.style || 'sticky-solid') as HeaderVariant;
+  const headerVariantMeta = getHeaderVariantMeta(currentHeaderStyle);
+  const isHeaderGradientStyle = HEADER_GRADIENT_VARIANT_VALUES.includes(currentHeaderStyle);
+  const usesHeaderPanelColors = HEADER_SPECIAL_COLOR_VARIANT_VALUES.includes(currentHeaderStyle) || HEADER_FLOATING_VARIANT_VALUES.includes(currentHeaderStyle);
 
   const contentTab = (
     <div className="space-y-4">
@@ -874,35 +877,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               label={t('editor.controls.header.style')}
               value={data.header.style || 'floating-glass'}
               onChange={(val) => setNestedData('header.style', val)}
-              groups={[
-                { label: t('editor.controls.header.classic'), options: [
-                  { value: 'sticky-solid', label: 'Solid' },
-                  { value: 'sticky-transparent', label: 'Transparent' },
-                  { value: 'floating', label: 'Floating' },
-                ]},
-                { label: 'Edge-to-Edge', options: [
-                  { value: 'edge-solid', label: 'Edge Solid' },
-                  { value: 'edge-minimal', label: 'Edge Minimal' },
-                  { value: 'edge-bordered', label: 'Edge Bordered' },
-                ]},
-                { label: 'Floating', options: [
-                  { value: 'floating-pill', label: 'Floating Pill' },
-                  { value: 'floating-glass', label: t('editor.controls.header.glass') },
-                  { value: 'floating-shadow', label: 'Floating Shadow' },
-                ]},
-                { label: 'Gradient', options: [
-                  { value: 'transparent-blur', label: 'Gradient Blur' },
-                  { value: 'transparent-bordered', label: 'Gradient Bordered' },
-                  { value: 'transparent-gradient', label: 'Gradient Fade' },
-                  { value: 'transparent-gradient-dark', label: 'Gradient Dark' },
-                ]},
-                { label: 'Special', options: [
-                  { value: 'tabbed', label: 'Tabbed Menu' },
-                  { value: 'segmented-pill', label: 'Segmented Pill' },
-                ]},
-              ]}
+              groups={HEADER_VARIANT_GROUPS}
               noMargin
             />
+            <p className="mt-1 text-[11px] text-q-text-secondary">{headerVariantMeta.description}</p>
           </div>
         </div>
         {data.header.style === 'segmented-pill' && (
@@ -1022,7 +1000,19 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.background')} value={data.header.colors?.background} onChange={(v) => setNestedData('header.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.header.colors?.text} onChange={(v) => setNestedData('header.colors.text', v)} />
           <ColorControl label={t('editor.controls.common.accent')} value={data.header.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('header.colors.accent', v)} />
-          {(data.header.style === 'transparent-gradient' || data.header.style === 'transparent-gradient-dark') && (
+          <ColorControl label={t('editor.controls.common.border', 'Borde')} value={data.header.colors?.border || data.header.colors?.separator || 'transparent'} onChange={(v) => setNestedData('header.colors.border', v)} />
+          <ColorControl label={t('controls.separador', 'Separador')} value={data.header.colors?.separator || data.header.colors?.border || 'transparent'} onChange={(v) => setNestedData('header.colors.separator', v)} />
+          {usesHeaderPanelColors && (
+            <>
+              <ColorControl label={t('controls.superficie', 'Superficie')} value={data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surface', v)} />
+              <ColorControl label={t('controls.panel', 'Panel')} value={data.header.colors?.panelBackground || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.panelBackground', v)} />
+              <ColorControl label={t('controls.textoPanel', 'Texto panel')} value={data.header.colors?.panelText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.panelText', v)} />
+              <ColorControl label={t('controls.textoSecundario', 'Texto secundario')} value={data.header.colors?.mutedText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.mutedText', v)} />
+              <ColorControl label={t('controls.hoverLink', 'Hover link')} value={data.header.colors?.linkHover || data.header.colors?.accent} onChange={(v) => setNestedData('header.colors.linkHover', v)} />
+              <ColorControl label={t('controls.badgeCarrito', 'Badge carrito')} value={data.header.colors?.cartBadge || data.header.colors?.accent} onChange={(v) => setNestedData('header.colors.cartBadge', v)} />
+            </>
+          )}
+          {isHeaderGradientStyle && (
             <>
               <ColorControl
                 label={data.header.style === 'transparent-gradient-dark' ? "Color Gradiente Oscuro" : "Color Gradiente Fade"}
@@ -1042,16 +1032,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
             </>
           )}
-          {data.header.style === 'tabbed' && (
+          {(data.header.style === 'tabbed' || data.header.style === 'segmented-pill') && (
             <>
               <ColorControl
                 label="Color Tab Activo"
-                value={data.header.colors?.tabActiveColor || data.header.colors?.accent || '#3b82f6'}
+                value={data.header.colors?.tabActiveColor || data.header.colors?.accent || data.header.colors?.text}
                 onChange={(v) => setNestedData('header.colors.tabActiveColor', v)}
               />
               <ColorControl
                 label="Color Borde Inferior"
-                value={data.header.colors?.tabBorderColor || 'rgba(128,128,128,0.15)'}
+                value={data.header.colors?.tabBorderColor || data.header.colors?.separator || data.header.colors?.border || 'transparent'}
                 onChange={(v) => setNestedData('header.colors.tabBorderColor', v)}
               />
             </>

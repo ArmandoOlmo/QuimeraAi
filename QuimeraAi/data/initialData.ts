@@ -44,6 +44,17 @@ const pageData = {
       background: '#4f46e5', // Solid brand color
       text: '#ffffff', // White text for contrast
       accent: '#ffffff',
+      border: 'transparent',
+      surface: '#4f46e5',
+      surfaceAlt: '#3730a3',
+      panelBackground: '#4f46e5',
+      panelText: '#ffffff',
+      mutedText: '#ddd6fe',
+      linkHover: '#ffffff',
+      separator: 'transparent',
+      cartBadge: '#10b981',
+      buttonBackground: '#ffffff',
+      buttonText: '#4f46e5',
     },
     buttonBorderRadius: 'xl',
     linkFontSize: 14,
@@ -904,7 +915,7 @@ const pageData = {
     ]
   },
   features: {
-    featuresVariant: 'bento-premium',
+    featuresVariant: 'product-highlights',
     paddingY: 'lg',
     paddingX: 'md',
     title: {
@@ -926,6 +937,11 @@ const pageData = {
                   en: "Our AI analyzes your brand and automatically generates a conversion-optimized structure."
               },
         imageUrl: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=2670&ixlib=rb-4.0.3",
+        icon: "Sparkles",
+        eyebrow: {
+          es: "Estrategia",
+          en: "Strategy"
+        },
       },
       {
         title: {
@@ -937,6 +953,11 @@ const pageData = {
                   en: "Every page is built following SEO best practices to ensure maximum visibility."
               },
         imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426&ixlib=rb-4.0.3",
+        icon: "TrendingUp",
+        eyebrow: {
+          es: "Crecimiento",
+          en: "Growth"
+        },
       },
       {
         title: {
@@ -948,10 +969,31 @@ const pageData = {
                   en: "Sell physical or digital products with a robust and easy-to-configure payment platform."
               },
         imageUrl: "https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=2664&ixlib=rb-4.0.3",
+        icon: "ShoppingBag",
+        eyebrow: {
+          es: "Comercio",
+          en: "Commerce"
+        },
+      },
+      {
+        title: {
+          es: "Automatización con IA",
+          en: "AI Automation"
+        },
+        description: {
+          es: "Convierte operaciones repetitivas en flujos inteligentes conectados a tus datos y herramientas.",
+          en: "Turn repetitive operations into intelligent flows connected to your data and tools."
+        },
+        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2670&ixlib=rb-4.0.3",
+        icon: "Bot",
+        eyebrow: {
+          es: "Agente",
+          en: "Agent"
+        },
       },
     ],
-    gridColumns: 3,
-    imageHeight: 430,
+    gridColumns: 4,
+    imageHeight: 320,
     imageObjectFit: 'cover',
     animationType: 'fade-in-up',
     enableCardAnimation: true,
@@ -964,6 +1006,13 @@ const pageData = {
       heading: '#F9FAFB',
       description: '#94a3b8',
       cardBackground: '#1e293b',
+      cardHeading: '#ffffff',
+      cardText: '#cbd5e1',
+      glowColor: '#4f46e5',
+      cardGradientStart: '#1e293b',
+      cardGradientEnd: '#0f172a',
+      overlayText: '#ffffff',
+      overlayMuted: '#cbd5e1',
     },
   },
   testimonials: {
@@ -1079,7 +1128,7 @@ const pageData = {
     },
   },
   pricing: {
-    pricingVariant: 'gradient',
+    pricingVariant: 'featured-plan',
     title: {
               es: "Our Plans",
               en: "Our Plans"
@@ -1166,13 +1215,27 @@ const pageData = {
       accent: '#4f46e5',
       borderColor: '#334155',
       text: '#94a3b8',
+      mutedText: '#64748b',
       heading: '#F9FAFB',
+      description: '#94a3b8',
       buttonBackground: '#4f46e5',
       buttonText: '#ffffff',
       checkmarkColor: '#10b981',
       cardBackground: '#1f2937',
+      cardHeading: '#ffffff',
+      cardText: '#94a3b8',
+      priceColor: '#ffffff',
       gradientStart: '#4f46e5',
       gradientEnd: '#10b981',
+      panelBackground: '#111827',
+      panelText: '#ffffff',
+      surfaceAlt: '#e5e7eb',
+      featuredBackground: '#111827',
+      featuredText: '#ffffff',
+      badgeBackground: '#4f46e5',
+      badgeText: '#ffffff',
+      dividerColor: '#334155',
+      imageOverlay: '#000000',
     },
     animationType: 'fade-in-up',
     enableCardAnimation: true,
@@ -1206,14 +1269,24 @@ const pageData = {
         answer: "Explain your support options and how customers can reach you. Include response times and available channels."
       }
     ],
-    colors: {
-      background: '#1e293b', // bg-dark-800
-      accent: '#4f46e5',
-      borderColor: '#334155',
-      text: '#94a3b8',
-      heading: '#F9FAFB',
-    }
-  },
+	    colors: {
+	      background: '#1e293b', // bg-dark-800
+	      accent: '#4f46e5',
+	      borderColor: '#334155',
+	      text: '#94a3b8',
+	      heading: '#F9FAFB',
+	      description: '#cbd5e1',
+	      cardBackground: '#0f172a',
+	      cardHeading: '#F9FAFB',
+	      cardText: '#cbd5e1',
+	      panelBackground: '#111827',
+	      activeBackground: '#4f46e5',
+	      activeText: '#ffffff',
+	      iconBackground: '#4f46e5',
+	      gradientStart: '#4f46e5',
+	      gradientEnd: '#7c3aed',
+	    }
+	  },
   leads: {
     leadsVariant: 'classic',
     title: {
@@ -1370,6 +1443,108 @@ const pageData = {
       borderColor: '#334155',
       text: '#94a3b8',
       heading: '#F9FAFB',
+    },
+  },
+  showcase: {
+    showcaseVariant: 'recent-work',
+    paddingY: 'lg',
+    paddingX: 'md',
+    title: {
+      es: "Trabajo destacado",
+      en: "Selected work"
+    },
+    description: {
+      es: "Una vitrina visual para proyectos, productos, campañas y piezas editoriales que necesitan verse antes de explicarse.",
+      en: "A visual showcase for projects, products, campaigns, and editorial pieces that should be seen before they are explained."
+    },
+    eyebrow: {
+      es: "Showcase",
+      en: "Showcase"
+    },
+    categories: ['All', 'Brand', 'Product', 'Editorial'],
+    items: [
+      {
+        title: {
+          es: "ServiceNow",
+          en: "ServiceNow"
+        },
+        description: {
+          es: "Identidad visual y sistema de campaña para una plataforma global.",
+          en: "Visual identity and campaign system for a global platform."
+        },
+        category: 'Brand',
+        meta: '# Brand',
+        imageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        title: {
+          es: "Mercury",
+          en: "Mercury"
+        },
+        description: {
+          es: "Escena de producto con composición editorial y foco comercial.",
+          en: "Product scene with editorial composition and commercial focus."
+        },
+        category: 'Product',
+        meta: '# Product',
+        imageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        title: {
+          es: "Procore",
+          en: "Procore"
+        },
+        description: {
+          es: "Narrativa fotográfica para comunicar escala, oficio y confianza.",
+          en: "Photo-led storytelling to communicate scale, craft, and trust."
+        },
+        category: 'Marketing',
+        meta: '# Marketing',
+        imageUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        title: {
+          es: "Microsoft",
+          en: "Microsoft"
+        },
+        description: {
+          es: "Pieza visual de alto impacto para campañas y contenido social.",
+          en: "High-impact visual piece for campaigns and social content."
+        },
+        category: 'Editorial',
+        meta: '# Editorial',
+        imageUrl: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80',
+      },
+    ],
+    titleFontSize: 'lg',
+    descriptionFontSize: 'md',
+    borderRadius: 'lg',
+    gridColumns: 4,
+    imageHeight: 340,
+    imageObjectFit: 'cover',
+    showSectionHeader: true,
+    showFilters: true,
+    showMeta: true,
+    showFloatingCta: false,
+    animationType: 'fade-in-up',
+    enableCardAnimation: true,
+    colors: {
+      background: '#f8fafc',
+      accent: '#111827',
+      borderColor: '#d1d5db',
+      text: '#1f2937',
+      heading: '#111827',
+      description: '#4b5563',
+      cardBackground: '#ffffff',
+      cardHeading: '#111827',
+      cardText: '#374151',
+      mutedText: '#6b7280',
+      pillBackground: '#111827',
+      pillText: '#ffffff',
+      overlayStart: 'rgba(0,0,0,0)',
+      overlayEnd: 'rgba(0,0,0,0.7)',
+      buttonBackground: '#111827',
+      buttonText: '#ffffff',
     },
   },
   services: {
@@ -2745,7 +2920,7 @@ const componentOrder: PageSection[] = [
     // Content
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
     'separator1', 'separator2', 'separator3', 'separator4', 'separator5',
-    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
+    'pricing', 'faq', 'portfolio', 'showcase', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu',
     // Ecommerce
     'storeSettings', 'products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown',
     'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar',

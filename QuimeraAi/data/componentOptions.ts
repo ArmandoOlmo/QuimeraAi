@@ -4,6 +4,12 @@
  * Usado por el LLM para generar configuraciones válidas
  */
 
+import { ACTIVE_FEATURE_VARIANT_VALUES } from './featureVariants';
+import { FAQ_VARIANT_VALUES } from './faqVariants';
+import { FOOTER_VARIANT_VALUES } from './footerVariants';
+import { HEADER_VARIANT_VALUES } from './headerVariants';
+import { PRICING_VARIANT_VALUES } from './pricingVariants';
+
 // ============================================================================
 // TIPOS GLOBALES
 // ============================================================================
@@ -27,12 +33,12 @@ export const COMPONENT_OPTIONS = {
         name: 'Header / Navigation',
         category: 'navigation',
         options: {
-            style: ['sticky-solid', 'sticky-transparent', 'floating'],
-            layout: ['minimal'],
+            style: HEADER_VARIANT_VALUES,
+            layout: ['minimal', 'center', 'stack', 'classic'],
             hoverStyle: ['simple', 'underline', 'bracket', 'highlight', 'glow'],
             logoType: ['text', 'image', 'both'],
         },
-        colorFields: ['background', 'text', 'accent', 'border'],
+        colorFields: ['background', 'text', 'accent', 'border', 'surface', 'surfaceAlt', 'panelBackground', 'panelText', 'mutedText', 'linkHover', 'separator', 'cartBadge', 'gradientFadeColor', 'gradientDarkColor', 'buttonBackground', 'buttonText', 'tabBorderColor', 'tabActiveColor'],
     },
     
     hero: {
@@ -61,11 +67,11 @@ export const COMPONENT_OPTIONS = {
         name: 'Features Section',
         category: 'content',
         options: {
-            featuresVariant: ['classic', 'modern', 'bento-premium', 'image-overlay', 'bento-overlay', 'neon-glow', 'press-release', 'editorial-mosaic'],
+            featuresVariant: ACTIVE_FEATURE_VARIANT_VALUES,
             gridColumns: [2, 3, 4],
             overlayTextAlignment: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'glowColor', 'cardGradientStart', 'cardGradientEnd', 'overlayText', 'overlayMuted'],
     },
     
     testimonials: {
@@ -94,18 +100,18 @@ export const COMPONENT_OPTIONS = {
         name: 'Pricing Section',
         category: 'cta',
         options: {
-            pricingVariant: ['classic', 'gradient', 'glassmorphism', 'minimalist'],
+            pricingVariant: PRICING_VARIANT_VALUES,
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'cardHeading', 'cardText', 'priceColor', 'gradientStart', 'gradientEnd'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'mutedText', 'heading', 'description', 'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'cardHeading', 'cardText', 'priceColor', 'gradientStart', 'gradientEnd', 'panelBackground', 'panelText', 'surfaceAlt', 'featuredBackground', 'featuredText', 'badgeBackground', 'badgeText', 'dividerColor', 'imageOverlay'],
     },
     
     faq: {
         name: 'FAQ Section',
         category: 'content',
         options: {
-            faqVariant: ['classic', 'cards', 'gradient', 'minimal'],
+            faqVariant: FAQ_VARIANT_VALUES,
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'gradientStart', 'gradientEnd'],
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'panelBackground', 'activeBackground', 'activeText', 'iconBackground', 'gradientStart', 'gradientEnd'],
     },
     
     leads: {
@@ -140,6 +146,17 @@ export const COMPONENT_OPTIONS = {
             overlayTextAlignment: ['left', 'center', 'right'],
         },
         colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardTitleColor', 'cardTextColor', 'cardOverlayStart', 'cardOverlayEnd'],
+    },
+
+    showcase: {
+        name: 'Showcase Section',
+        category: 'media',
+        options: {
+            showcaseVariant: ['featured-device', 'curated-row', 'editorial-stack', 'vertical-strips', 'dark-carousel', 'minimal-index', 'case-grid-dark', 'recent-work'],
+            gridColumns: [2, 3, 4, 5],
+            imageObjectFit: GLOBAL_OPTIONS.objectFit,
+        },
+        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'mutedText', 'pillBackground', 'pillText', 'overlayStart', 'overlayEnd', 'buttonBackground', 'buttonText'],
     },
     
     services: {
@@ -236,10 +253,11 @@ export const COMPONENT_OPTIONS = {
         name: 'Footer Section',
         category: 'navigation',
         options: {
+            footerVariant: FOOTER_VARIANT_VALUES,
             logoType: ['text', 'image'],
         },
-        colorFields: ['background', 'border', 'text', 'linkHover', 'heading', 'description'],
-        socialPlatforms: ['twitter', 'github', 'facebook', 'instagram', 'linkedin'],
+        colorFields: ['background', 'border', 'text', 'linkHover', 'heading', 'description', 'accent', 'mutedText', 'panelBackground', 'panelText', 'buttonBackground', 'buttonText', 'wordmark', 'iconBackground', 'inputBackground', 'inputText', 'inputBorder', 'legalBackground', 'imageOverlay'],
+        socialPlatforms: ['twitter', 'x', 'github', 'facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram', 'snapchat', 'discord', 'threads'],
     },
     
     chatbot: {
@@ -466,7 +484,7 @@ export const COMPONENT_LIST = Object.keys(COMPONENT_OPTIONS);
 export const COMPONENT_CATEGORIES = {
     hero: ['hero', 'heroSplit', 'banner'],
     content: ['features', 'testimonials', 'faq', 'services', 'team', 'howItWorks', 'menu'],
-    media: ['slideshow', 'portfolio', 'video'],
+    media: ['slideshow', 'portfolio', 'showcase', 'video'],
     cta: ['pricing', 'cta'],
     form: ['leads', 'newsletter'],
     navigation: ['header', 'footer'],

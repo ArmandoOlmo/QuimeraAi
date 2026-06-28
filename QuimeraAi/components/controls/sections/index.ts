@@ -20,6 +20,7 @@ export * from './MapControls';
 export * from './MenuControls';
 export * from './NewsletterControls';
 export * from './PortfolioControls';
+export * from './ShowcaseControls';
 export * from './PricingControls';
 export * from './ProductsControls';
 export * from './ServicesControls';

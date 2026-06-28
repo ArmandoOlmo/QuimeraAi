@@ -78,18 +78,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const handleAuthChange = async (supabaseUser: SupabaseUser | null) => {
             const runId = ++authChangeRunId;
-            clearTimeout(timeout);
             console.log('[AuthProvider] Auth state changed:', supabaseUser ? `id=${supabaseUser.id}, email=${supabaseUser.email}` : 'null (signed out)');
             setUser(toCompatUser(supabaseUser));
 
             if (supabaseUser) {
                 try {
-                    // Fetch from Supabase Postgres
-                    const { data: userSnap, error: fetchError } = await supabase
+                    // Fetch from Supabase Postgres. Guard against a hung network
+                    // request (e.g. Supabase auth/CORS 522) so loadingAuth can still resolve.
+                    const usersQuery = supabase
                         .from('users')
                         .select('*')
                         .eq('id', supabaseUser.id)
                         .maybeSingle();
+                    const { data: userSnap, error: fetchError } = await Promise.race([
+                        usersQuery,
+                        new Promise<never>((_, reject) =>
+                            setTimeout(() => reject(new Error('users query timed out')), 6000),
+                        ),
+                    ]) as Awaited<typeof usersQuery>;
 
                     let finalUserDoc: Omit<UserDocument, 'id'>;
 
@@ -163,13 +169,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUserPermissions(getPermissions('user'));
             }
 
+            clearTimeout(timeout);
             setLoadingAuth(false);
         };
 
-        // Initialize from existing session if available
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            handleAuthChange(session?.user ?? null);
-        });
+        // Initialize from existing session if available. A rejection here
+        // (e.g. auth refresh CORS/522 or a stolen Navigator lock) must still
+        // resolve the loading state instead of hanging on the Loading screen.
+        supabase.auth.getSession()
+            .then(({ data: { session } }) => {
+                handleAuthChange(session?.user ?? null);
+            })
+            .catch((error) => {
+                console.error('[AuthProvider] getSession failed; continuing unauthenticated:', error);
+                handleAuthChange(null);
+            });
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(

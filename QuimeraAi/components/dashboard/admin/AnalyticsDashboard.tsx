@@ -29,6 +29,7 @@ const AnalyticsDashboard: React.FC = () => {
     pricing: 'Pricing Section',
     faq: 'FAQ Section',
     portfolio: 'Portfolio Section',
+    showcase: 'Showcase Section',
     leads: 'Leads Section',
     newsletter: 'Newsletter Section',
     cta: 'CTA Section',
@@ -349,4 +350,3 @@ const AnalyticsDashboard: React.FC = () => {
 };
 
 export default AnalyticsDashboard;
-

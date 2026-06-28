@@ -39,6 +39,7 @@ import {
     renderTeamControlsWithTabs,
     renderFAQControlsWithTabs,
     renderPortfolioControlsWithTabs,
+    renderShowcaseControlsWithTabs,
     renderLeadsControlsWithTabs,
     renderCMSFeedControlsWithTabs,
     renderNewsletterControlsWithTabs,
@@ -505,6 +506,7 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
             case 'team': return renderTeamControlsWithTabs(deps);
             case 'faq': return renderFAQControlsWithTabs(deps);
             case 'portfolio': return renderPortfolioControlsWithTabs(deps);
+            case 'showcase': return renderShowcaseControlsWithTabs(deps);
             case 'leads': return renderLeadsControlsWithTabs(deps);
             case 'cmsFeed': return renderCMSFeedControlsWithTabs(deps);
             case 'newsletter': return renderNewsletterControlsWithTabs(deps);

@@ -222,10 +222,10 @@ projects (fila)
 
 | Campo | Uso |
 |-------|-----|
-| `pricingVariant` / variantes Lumina-Neon | según suite |
+| `pricingVariant` | dark-saas-cards, featured-plan, voice-credit-columns, dark-plan-cards, finance-comparison, subscription-shop, bi-panels, grouped-plan-grid, workflow-rows, addon-cards |
 | Encabezado | `title`, `description`, `cardsAlignment` |
-| **tiers[]** | `name`, `price`, `frequency`, `description`, `features[]` (strings), `buttonText`, `buttonLink`, `featured` |
-| Gradientes | `colors.gradientStart`, `.gradientEnd` (pricing clásico) |
+| **tiers[]** | `name`, `price`, `frequency`, `description`, `features[]` (strings), `buttonText`, `buttonLink`, `featured`, `badge`, `eyebrow`, `footerText`, `imageUrl`, `secondaryButtonText`, `secondaryButtonLink` |
+| Colores | `background`, `text`, `mutedText`, `heading`, `description`, `accent`, `borderColor`, `cardBackground`, `cardHeading`, `cardText`, `priceColor`, `buttonBackground`, `buttonText`, `checkmarkColor`, `gradientStart`, `gradientEnd`, `panelBackground`, `panelText`, `surfaceAlt`, `featuredBackground`, `featuredText`, `badgeBackground`, `badgeText`, `dividerColor`, `imageOverlay` |
 | Lumina | `luminaAnimation` + campos específicos del control Lumina |
 
 ### `faq` / `faqLumina` / `faqNeon`

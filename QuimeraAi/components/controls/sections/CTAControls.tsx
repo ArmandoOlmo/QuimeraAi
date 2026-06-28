@@ -193,7 +193,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.textButton')}</label>
         <ColorControl label={t('editor.controls.common.title')} value={data?.cta.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('cta.colors.heading', v)} />
-        <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.text', v)} />
+        <ColorControl label={t('editor.controls.common.description')} value={data?.cta.colors?.description || data?.cta.colors?.text || '#ffffff'} onChange={(v) => setNestedData('cta.colors.description', v)} />
         <ColorControl label={t('controls.fondoBotn')} value={data?.cta.colors?.buttonBackground || '#ffffff'} onChange={(v) => setNestedData('cta.colors.buttonBackground', v)} />
         <ColorControl label={t('editor.controls.common.buttonText')} value={data?.cta.colors?.buttonText || '#4f46e5'} onChange={(v) => setNestedData('cta.colors.buttonText', v)} />
         <ColorControl label="Texto Secundario" value={data?.cta.colors?.secondaryText || 'rgba(255, 255, 255, 0.6)'} onChange={(v) => setNestedData('cta.colors.secondaryText', v)} />

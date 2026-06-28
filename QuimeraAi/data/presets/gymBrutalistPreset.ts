@@ -348,7 +348,7 @@ export const gymPageData: PageData = {
         },
     },
     pricing: {
-        pricingVariant: 'gradient',
+        pricingVariant: 'dark-plan-cards',
         title: {
                 es: "MEMBERSHIP PLANS",
                 en: "MEMBERSHIP PLANS"

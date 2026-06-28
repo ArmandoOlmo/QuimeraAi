@@ -21,6 +21,10 @@ import { getGoogleGenAI } from '../../utils/genAiClient';
 import { generateContentViaProxy, extractTextFromResponse, generateMultimodalContentViaProxy } from '../../utils/geminiProxyClient';
 import { captureCurrentView } from '../../utils/visionUtils';
 import { PROMPT_TEMPLATES, compileTemplates, getDefaultEnabledTemplates } from '../../data/promptTemplates';
+import { FEATURE_VARIANT_PROMPT_VALUES } from '../../data/featureVariants';
+import { FAQ_VARIANT_PROMPT_VALUES } from '../../data/faqVariants';
+import { FOOTER_VARIANT_PROMPT_VALUES } from '../../data/footerVariants';
+import { PRICING_VARIANT_PROMPT_VALUES } from '../../data/pricingVariants';
 import { logApiCall } from '../../services/apiLoggingService';
 import { supabase } from '../../supabase';
 import { dateToTimestamp } from '../dashboard/appointments/utils/appointmentHelpers';
@@ -774,6 +778,10 @@ THEME (Global):
 HEADER:
 - header.logoText, header.style, header.layout, header.logoType
 - header.colors?.background, header.colors?.text, header.colors?.accent
+- header.colors?.border, header.colors?.surface, header.colors?.surfaceAlt
+- header.colors?.panelBackground, header.colors?.panelText, header.colors?.mutedText
+- header.colors?.linkHover, header.colors?.separator, header.colors?.cartBadge
+- header.colors?.buttonBackground, header.colors?.buttonText, header.colors?.tabBorderColor, header.colors?.tabActiveColor
 - header.showCta, header.ctaText, header.showLogin
 
 HERO:
@@ -786,8 +794,13 @@ HERO:
 FEATURES:
 - features.title, features.description, features.titleFontSize, features.descriptionFontSize
 - features.colors?.background, features.colors?.accent, features.colors?.borderColor, features.colors?.text, features.colors?.heading
-- features.gridColumns, features.paddingY, features.paddingX
+- features.colors?.cardBackground, features.colors?.cardHeading, features.colors?.cardText
+- features.colors?.glowColor, features.colors?.cardGradientStart, features.colors?.cardGradientEnd
+- features.colors?.overlayText, features.colors?.overlayMuted
+- features.featuresVariant (${FEATURE_VARIANT_PROMPT_VALUES}), features.gridColumns, features.paddingY, features.paddingX
 - features.imageHeight, features.imageObjectFit
+- features.items.[index].title, features.items.[index].description, features.items.[index].icon, features.items.[index].eyebrow
+- features.items.[index].bullets, features.items.[index].imageUrl, features.items.[index].linkText, features.items.[index].linkUrl
 
 TESTIMONIALS:
 - testimonials.title, testimonials.description, testimonials.titleFontSize, testimonials.descriptionFontSize
@@ -801,13 +814,25 @@ SLIDESHOW:
 
 PRICING:
 - pricing.title, pricing.description, pricing.titleFontSize, pricing.descriptionFontSize
-- pricing.colors?.background, pricing.colors?.accent, pricing.colors?.borderColor, pricing.colors?.text, pricing.colors?.heading
-- pricing.colors?.buttonBackground, pricing.colors?.buttonText
-- pricing.paddingY, pricing.paddingX
+- pricing.pricingVariant (${PRICING_VARIANT_PROMPT_VALUES})
+- pricing.colors?.background, pricing.colors?.accent, pricing.colors?.borderColor, pricing.colors?.text, pricing.colors?.mutedText, pricing.colors?.heading
+- pricing.colors?.description, pricing.colors?.buttonBackground, pricing.colors?.buttonText, pricing.colors?.checkmarkColor
+- pricing.colors?.cardBackground, pricing.colors?.cardHeading, pricing.colors?.cardText, pricing.colors?.priceColor
+- pricing.colors?.gradientStart, pricing.colors?.gradientEnd, pricing.colors?.panelBackground, pricing.colors?.panelText
+- pricing.colors?.surfaceAlt, pricing.colors?.featuredBackground, pricing.colors?.featuredText
+- pricing.colors?.badgeBackground, pricing.colors?.badgeText, pricing.colors?.dividerColor, pricing.colors?.imageOverlay
+- pricing.paddingY, pricing.paddingX, pricing.cardBorderRadius, pricing.cardsAlignment
+- pricing.tiers.[index].name, pricing.tiers.[index].price, pricing.tiers.[index].frequency
+- pricing.tiers.[index].description, pricing.tiers.[index].features, pricing.tiers.[index].buttonText
+- pricing.tiers.[index].badge, pricing.tiers.[index].eyebrow, pricing.tiers.[index].footerText, pricing.tiers.[index].imageUrl
 
 FAQ:
 - faq.title, faq.description, faq.titleFontSize, faq.descriptionFontSize
 - faq.colors?.background, faq.colors?.accent, faq.colors?.borderColor, faq.colors?.text, faq.colors?.heading
+- faq.colors?.description, faq.colors?.cardBackground, faq.colors?.cardHeading, faq.colors?.cardText
+- faq.colors?.panelBackground, faq.colors?.activeBackground, faq.colors?.activeText, faq.colors?.iconBackground
+- faq.colors?.gradientStart, faq.colors?.gradientEnd
+- faq.faqVariant (${FAQ_VARIANT_PROMPT_VALUES}), faq.imageUrl
 - faq.paddingY, faq.paddingX
 
 LEADS (Contact Form):
@@ -857,7 +882,14 @@ HOWITWORKS:
 
 FOOTER:
 - footer.title, footer.description, footer.copyrightText, footer.titleFontSize, footer.descriptionFontSize
+- footer.footerVariant (${FOOTER_VARIANT_PROMPT_VALUES}), footer.wordmarkText, footer.backgroundImageUrl
+- footer.newsletterLabel, footer.newsletterPlaceholder, footer.newsletterButtonText
+- footer.ctaTitle, footer.ctaBullets, footer.primaryButtonText, footer.secondaryButtonText
+- footer.disclaimerText, footer.languageLabel, footer.countryLabel
 - footer.colors?.background, footer.colors?.border, footer.colors?.text, footer.colors?.linkHover, footer.colors?.heading
+- footer.colors?.description, footer.colors?.accent, footer.colors?.mutedText, footer.colors?.panelBackground, footer.colors?.panelText
+- footer.colors?.buttonBackground, footer.colors?.buttonText, footer.colors?.wordmark, footer.colors?.iconBackground
+- footer.colors?.inputBackground, footer.colors?.inputText, footer.colors?.inputBorder, footer.colors?.legalBackground, footer.colors?.imageOverlay
 
 CHATBOT:
 - chatbot.welcomeMessage, chatbot.placeholderText, chatbot.knowledgeBase, chatbot.position, chatbot.isActive
@@ -872,6 +904,8 @@ EXAMPLES:
 - Change button color: path="hero.colors?.buttonBackground", value="#ff6b6b"
 - Enable chatbot: path="chatbot.isActive", value="true"
 - Change grid columns: path="features.gridColumns", value="3"
+- Change feature style: path="features.featuresVariant", value="product-highlights"
+- Add feature bullets: path="features.items.0.bullets", value=["Setup rápido", "Compatible con el agente"]
 `;
 
 // ACTION_PROTOCOL removed - this content is now managed via the 'coreMandate' prompt template

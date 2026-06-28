@@ -30,6 +30,7 @@ const SECTION_LABEL_KEYS: Partial<Record<PageSection, string>> = {
     leads: 'aiWebsiteStudio.preview.sections.leads',
     newsletter: 'aiWebsiteStudio.preview.sections.newsletter',
     portfolio: 'aiWebsiteStudio.preview.sections.portfolio',
+    showcase: 'aiWebsiteStudio.preview.sections.showcase',
     pricing: 'aiWebsiteStudio.preview.sections.pricing',
     menu: 'aiWebsiteStudio.preview.sections.menu',
     map: 'aiWebsiteStudio.preview.sections.map',

@@ -1883,18 +1883,25 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const templateImageUrls = extractProjectImageUrls(template);
 
             if (templateImageUrls.length > 0) {
+                const libraryTenantId = resolvedTenantId || user.id;
                 const fileRecords = templateImageUrls.map((downloadURL, index) => ({
+                    tenant_id: libraryTenantId,
+                    project_id: docRef.id,
                     name: getImageNameFromUrl(downloadURL, index),
                     type: inferImageType(downloadURL),
                     size: 0,
-                    download_url: downloadURL,
-                    storage_path: '',
-                    project_id: docRef.id,
-                    source_template_id: templateId,
-                    notes: 'Imported from template',
+                    url: downloadURL,
+                    metadata: {
+                        storagePath: '',
+                        sourceTemplateId: templateId,
+                        importedFromTemplate: true,
+                        notes: 'Imported from template',
+                    },
+                    created_at: now,
                 }));
 
-                await supabase.from('project_files').insert(fileRecords);
+                const { error: filesInsertErr } = await supabase.from('files').insert(fileRecords);
+                if (filesInsertErr) throw filesInsertErr;
             }
 
             const createdProject = { ...newProject, id: docRef.id } as Project;

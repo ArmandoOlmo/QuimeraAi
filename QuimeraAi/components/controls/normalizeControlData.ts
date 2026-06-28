@@ -12,6 +12,8 @@ const CONTROL_ARRAY_PATHS: ArrayPath[] = [
   ['pricing', 'tiers'],
   ['faq', 'items'],
   ['portfolio', 'items'],
+  ['showcase', 'items'],
+  ['showcase', 'categories'],
   ['howItWorks', 'items'],
   ['menu', 'items'],
   ['newsletter', 'items'],

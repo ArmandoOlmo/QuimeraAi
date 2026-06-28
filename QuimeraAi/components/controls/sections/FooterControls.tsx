@@ -15,6 +15,7 @@ import {
   Input, TextArea, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps, CardGlowControl } from '../ControlsShared';
+import { FOOTER_IMAGE_VARIANTS, FOOTER_VARIANT_GROUPS, FOOTER_WORDMARK_VARIANTS, getFooterVariantMeta } from '../../../data/footerVariants';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -30,9 +31,24 @@ import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector 
 export const renderFooterControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.footer) return null;
+  const currentFooterVariant = data.footer.footerVariant || 'classic';
+  const currentFooterVariantMeta = getFooterVariantMeta(currentFooterVariant);
 
   return (
     <div className="space-y-4">
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Layout size={14} /> Footer Variant
+        </label>
+        <Select
+          value={currentFooterVariant}
+          onChange={(val) => setNestedData('footer.footerVariant', val)}
+          groups={FOOTER_VARIANT_GROUPS}
+          noMargin
+        />
+        <p className="text-xs text-q-text-secondary">{currentFooterVariantMeta.description}</p>
+      </div>
+
       {/* ========== GLASSMORPHISM ========== */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2 mb-4">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
@@ -296,6 +312,9 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
         <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+        <ColorControl label={t('controls.accent', 'Accent')} value={data.footer.colors?.accent || data.footer.colors?.linkHover} onChange={(v) => setNestedData('footer.colors.accent', v)} />
+        <ColorControl label={t('editor.controls.footer.wordmarkColor', 'Wordmark')} value={data.footer.colors?.wordmark || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.wordmark', v)} />
+        <ColorControl label={t('editor.controls.footer.panelBackground', 'Panel background')} value={data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.panelBackground', v)} />
       </div>
     </div>
   );
@@ -306,6 +325,10 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 export const renderFooterControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.footer) return null;
+  const currentFooterVariant = data.footer.footerVariant || 'classic';
+  const currentFooterVariantMeta = getFooterVariantMeta(currentFooterVariant);
+  const usesFooterImage = FOOTER_IMAGE_VARIANTS.includes(currentFooterVariant as any);
+  const usesFooterWordmark = FOOTER_WORDMARK_VARIANTS.includes(currentFooterVariant as any);
 
   const contentTab = (
     <div className="space-y-4">
@@ -351,6 +374,35 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <I18nInput label={t('editor.controls.common.title')} value={data.footer.title} onChange={(val) => setNestedData('footer.title', val)} />
         <I18nTextArea label={t('editor.controls.common.description')} value={data.footer.description} onChange={(val) => setNestedData('footer.description', val)} rows={2} />
         <I18nInput label={t('editor.controls.common.copyright')} value={data.footer.copyrightText} onChange={(val) => setNestedData('footer.copyrightText', val)} />
+        {usesFooterWordmark && (
+          <I18nInput
+            label={t('editor.controls.footer.wordmarkText', 'Wordmark text')}
+            value={data.footer.wordmarkText || ''}
+            onChange={(val) => setNestedData('footer.wordmarkText', val)}
+          />
+        )}
+        {['grid-newsletter', 'grid-wordmark'].includes(currentFooterVariant) && (
+          <div className="grid grid-cols-1 gap-3">
+            <I18nInput label={t('editor.controls.footer.newsletterLabel', 'Newsletter label')} value={data.footer.newsletterLabel || ''} onChange={(val) => setNestedData('footer.newsletterLabel', val)} />
+            <I18nInput label={t('editor.controls.footer.newsletterPlaceholder', 'Newsletter placeholder')} value={data.footer.newsletterPlaceholder || ''} onChange={(val) => setNestedData('footer.newsletterPlaceholder', val)} />
+            <I18nInput label={t('editor.controls.footer.newsletterButton', 'Newsletter button')} value={data.footer.newsletterButtonText || ''} onChange={(val) => setNestedData('footer.newsletterButtonText', val)} />
+          </div>
+        )}
+        {currentFooterVariant === 'cta-card' && (
+          <div className="space-y-3">
+            <I18nInput label={t('editor.controls.footer.ctaTitle', 'CTA title')} value={data.footer.ctaTitle || ''} onChange={(val) => setNestedData('footer.ctaTitle', val)} />
+            <I18nInput label={t('editor.controls.footer.primaryButton', 'Primary button')} value={data.footer.primaryButtonText || ''} onChange={(val) => setNestedData('footer.primaryButtonText', val)} />
+            <I18nInput label={t('editor.controls.footer.secondaryButton', 'Secondary button')} value={data.footer.secondaryButtonText || ''} onChange={(val) => setNestedData('footer.secondaryButtonText', val)} />
+          </div>
+        )}
+        {['press-landscape', 'compliance-wordmark'].includes(currentFooterVariant) && (
+          <I18nTextArea
+            label={t('editor.controls.footer.disclaimer', 'Disclaimer')}
+            value={data.footer.disclaimerText || ''}
+            onChange={(val) => setNestedData('footer.disclaimerText', val)}
+            rows={3}
+          />
+        )}
       </div>
 
 
@@ -537,18 +589,30 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Footer Variant
         </label>
         <Select
-          value={data.footer.footerVariant || 'classic'}
+          value={currentFooterVariant}
           onChange={(val) => setNestedData('footer.footerVariant', val)}
-          options={[
-            { value: 'classic', label: 'Classic' },
-            { value: 'neon-glow', label: 'Neon Glow' }
-          ]}
+          groups={FOOTER_VARIANT_GROUPS}
           noMargin
         />
+        <p className="mt-2 text-xs text-q-text-secondary">{currentFooterVariantMeta.description}</p>
       </div>
 
+      {usesFooterImage && (
+        <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Image size={14} />
+            {t('editor.controls.footer.backgroundImage', 'Footer image')}
+          </label>
+          <ImagePicker
+            label={t('editor.controls.common.backgroundImage', 'Background image')}
+            value={data.footer.backgroundImageUrl || ''}
+            onChange={(url) => setNestedData('footer.backgroundImageUrl', url)}
+          />
+        </div>
+      )}
+
       {/* ========== NEON GLOW ========== */}
-      {data.footer.footerVariant === 'neon-glow' && (
+      {currentFooterVariant === 'neon-glow' && (
         <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
           <CardGlowControl
             enabled={data.footer.cardGlow?.enabled !== false}
@@ -590,6 +654,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
           <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+          <ColorControl label={t('editor.controls.common.description', 'Description')} value={data.footer.colors?.description || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.description', v)} />
+          <ColorControl label={t('controls.accent', 'Accent')} value={data.footer.colors?.accent || data.footer.colors?.linkHover} onChange={(v) => setNestedData('footer.colors.accent', v)} />
+          <ColorControl label={t('editor.controls.footer.wordmarkColor', 'Wordmark')} value={data.footer.colors?.wordmark || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.wordmark', v)} />
+          <ColorControl label={t('editor.controls.footer.panelBackground', 'Panel background')} value={data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.panelBackground', v)} />
+          <ColorControl label={t('editor.controls.footer.panelText', 'Panel text')} value={data.footer.colors?.panelText || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.panelText', v)} />
+          <ColorControl label={t('editor.controls.footer.buttonBackground', 'Button background')} value={data.footer.colors?.buttonBackground || data.footer.colors?.accent} onChange={(v) => setNestedData('footer.colors.buttonBackground', v)} />
+          <ColorControl label={t('editor.controls.footer.buttonText', 'Button text')} value={data.footer.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('footer.colors.buttonText', v)} />
+          <ColorControl label={t('editor.controls.footer.inputBackground', 'Input background')} value={data.footer.colors?.inputBackground || '#ffffff'} onChange={(v) => setNestedData('footer.colors.inputBackground', v)} />
+          <ColorControl label={t('editor.controls.footer.inputText', 'Input text')} value={data.footer.colors?.inputText || '#111111'} onChange={(v) => setNestedData('footer.colors.inputText', v)} />
+          <ColorControl label={t('editor.controls.footer.legalBackground', 'Legal background')} value={data.footer.colors?.legalBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.legalBackground', v)} />
         </div>
       </div>
     </div>

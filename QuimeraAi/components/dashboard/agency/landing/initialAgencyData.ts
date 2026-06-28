@@ -30,9 +30,27 @@ export const initialAgencyData = {
     data: {
         ...initialData.data,
         header: {
-          style: 'glass',
+          ...initialData.data.header,
+          style: 'floating-glass',
           showGlobalButton: true,
-          globalButtonText: "Contactar"
+          globalButtonText: "Contactar",
+          colors: {
+            ...initialData.data.header.colors,
+            background: "#020617",
+            text: "#f8fafc",
+            accent: "#eab308",
+            border: "#1e293b",
+            surface: "#0f172a",
+            surfaceAlt: "#111827",
+            panelBackground: "#0f172a",
+            panelText: "#f8fafc",
+            mutedText: "#94a3b8",
+            linkHover: "#eab308",
+            separator: "#1e293b",
+            cartBadge: "#eab308",
+            buttonBackground: "#eab308",
+            buttonText: "#111827"
+          }
         },
         hero: {
             headline: "Escalamos tu <span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary\">Negocio Digital</span>",
@@ -65,26 +83,62 @@ export const initialAgencyData = {
             style: "cards"
         },
         features: {
+            featuresVariant: "strategy-cards",
             title: "Por qué elegirnos",
             description: "Aportamos valor real a cada proyecto.",
             columns: 3,
+            gridColumns: 3,
+            imageHeight: 320,
+            imageObjectFit: "cover",
+            paddingY: "lg",
+            paddingX: "md",
+            borderRadius: "xl",
             items: [
                 {
                     title: "Enfoque en Resultados",
                     description: "No solo diseñamos, creamos embudos que venden.",
-                    icon: "Target"
+                    icon: "Target",
+                    eyebrow: "Performance",
+                    imageUrl: ""
                 },
                 {
                     title: "Tecnología Moderna",
                     description: "Usamos el stack más avanzado de la industria.",
-                    icon: "Zap"
+                    icon: "Zap",
+                    eyebrow: "Stack",
+                    imageUrl: ""
                 },
                 {
                     title: "Soporte Continuo",
                     description: "Estamos contigo antes, durante y después del lanzamiento.",
-                    icon: "LifeBuoy"
+                    icon: "LifeBuoy",
+                    eyebrow: "Operación",
+                    imageUrl: ""
+                },
+                {
+                    title: "Agente Integrado",
+                    description: "Conectamos contenido, automatización y medición para que tu web trabaje contigo.",
+                    icon: "Bot",
+                    eyebrow: "AI",
+                    imageUrl: ""
                 }
-            ]
+            ],
+            colors: {
+                background: "#020617",
+                heading: "#ffffff",
+                description: "#94a3b8",
+                text: "#cbd5e1",
+                accent: "#6366f1",
+                cardBackground: "#0f172a",
+                cardHeading: "#ffffff",
+                cardText: "#cbd5e1",
+                borderColor: "#1e293b",
+                glowColor: "#6366f1",
+                cardGradientStart: "#0f172a",
+                cardGradientEnd: "#020617",
+                overlayText: "#ffffff",
+                overlayMuted: "#cbd5e1"
+            }
         },
         cta: {
             title: "¿Listo para empezar?",

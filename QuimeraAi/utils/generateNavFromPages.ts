@@ -119,6 +119,7 @@ export function getSectionLinks(page: SitePage): NavLink[] {
         pricing: 'Precios',
         faq: 'FAQ',
         portfolio: 'Portafolio',
+        showcase: 'Showcase',
         team: 'Equipo',
         cta: 'Contacto',
         products: 'Productos',
@@ -128,7 +129,7 @@ export function getSectionLinks(page: SitePage): NavLink[] {
     };
 
     // Filter sections that are typically navigable
-    const navigableSections = ['features', 'services', 'testimonials', 'pricing', 'faq', 'portfolio', 'team', 'cta', 'products'];
+    const navigableSections = ['features', 'services', 'testimonials', 'pricing', 'faq', 'portfolio', 'showcase', 'team', 'cta', 'products'];
     
     return page.sections
         .filter(section => navigableSections.includes(section))
@@ -137,4 +138,3 @@ export function getSectionLinks(page: SitePage): NavLink[] {
             href: `#${section}`,
         }));
 }
-

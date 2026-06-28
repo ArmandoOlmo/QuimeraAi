@@ -1,5 +1,10 @@
 
 import { LLMPrompt } from '../types';
+import { FEATURE_VARIANT_PROMPT_VALUES } from './featureVariants';
+import { FAQ_VARIANT_PROMPT_VALUES } from './faqVariants';
+import { FOOTER_VARIANT_PROMPT_VALUES } from './footerVariants';
+import { HEADER_VARIANT_PROMPT_VALUES } from './headerVariants';
+import { PRICING_VARIANT_PROMPT_VALUES } from './pricingVariants';
 
 export type DefaultPrompt = Omit<LLMPrompt, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -35,7 +40,7 @@ Choose components that best fit the {{industry}} and {{summary}}. Consider:
 - For service businesses: Consider 'services', 'team', 'testimonials', 'leads'
 - For realtor/property businesses: Consider 'realEstateListings' with the existing 'leads' form
 - For e-commerce/products: Consider 'features', 'pricing', 'testimonials'
-- For portfolios/agencies: Consider 'portfolio', 'services', 'team'
+- For portfolios/agencies: Consider 'portfolio', 'showcase', 'services', 'team'
 - For restaurants/food: Consider 'menu', 'slideshow', 'leads'
 - For any business: 'faq' builds trust, 'newsletter' grows audience, 'leads' captures contacts
 - DO NOT include 'cta' (Call to Action) section - users can add it later if needed
@@ -91,20 +96,21 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 **Available Component Settings (use these EXACT values):**
 - cardBorderRadius: 'none' | 'md' | 'xl' | 'full'
 - buttonBorderRadius: 'none' | 'md' | 'xl' | 'full'
-- headerLayout: 'minimal' (ONLY option available)
-- headerStyle: 'sticky-solid' (ALWAYS use 'sticky-solid' - header must have solid brand color background)
+- headerLayout: 'minimal' | 'center' | 'stack' | 'classic'
+- headerStyle: ${HEADER_VARIANT_PROMPT_VALUES}
 - heroImageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
 - heroImagePosition: 'left' | 'right'
 
 **Component Variant Options (for componentOrder selection):**
 - hero: Main landing section (REQUIRED)
-- features: Key benefits display [variants: classic, modern, bento-premium, bento-overlay, image-overlay, editorial-mosaic]
+- features: Key benefits display [variants: ${FEATURE_VARIANT_PROMPT_VALUES}]
 - services: Services showcase [variants: cards, grid, minimal]
 - testimonials: Customer reviews [variants: classic, minimal-cards, glassmorphism, gradient-glow, floating-cards, editorial-mosaic]
-- pricing: Pricing tiers [variants: classic, gradient, glassmorphism, minimalist]
-- faq: FAQ section [variants: classic, cards, gradient, minimal]
+- pricing: Pricing tiers [variants: ${PRICING_VARIANT_PROMPT_VALUES}]
+- faq: FAQ section [variants: ${FAQ_VARIANT_PROMPT_VALUES}]
 - team: Team members [variants: classic, cards, minimal, overlay]
 - portfolio: Work showcase
+- showcase: Curated visual showcase [variants: featured-device, curated-row, editorial-stack, vertical-strips, dark-carousel, minimal-index, case-grid-dark, recent-work]
 - slideshow: Image gallery [variants: classic, kenburns, cards3d, thumbnails]
 - menu: Restaurant menu [variants: classic, modern-grid, elegant-list, full-image, editorial-mosaic]
 - leads: Contact form [variants: classic, split-gradient, floating-glass, minimal-border]
@@ -114,7 +120,7 @@ Non-Profit: header='outfit' or 'manrope', body='inter' or 'open-sans', button='o
 - video: Video embed
 - howItWorks: Process steps
 - banner: Promotional banner [variants: classic, gradient-overlay, side-text, centered]
-- footer: Site footer (REQUIRED - always last)
+- footer: Site footer (REQUIRED - always last) [variants: ${FOOTER_VARIANT_PROMPT_VALUES}]
 
 ═══════════════════════════════════════════════════════════
 EXPERT COLOR THEORY — PALETTE DESIGN
@@ -139,7 +145,7 @@ EXPERT COLOR THEORY — PALETTE DESIGN
 6. For LIGHT backgrounds: text MUST be #1a1a1a or very dark (luminance < 0.2)
 7. Buttons always use primary brand color with contrasting text
 8. Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background and text must be neutral roles, not extra brand hues.
-9. Header and footer MUST use the same solid dark brand color with white (#ffffff) typography. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
+9. Header and footer MUST use semantic palette roles with readable typography. If headerStyle is solid, match footer background to the header shell; if it is floating, transparent, or panel-based, keep footer solid and map header surface/panel/border tokens explicitly.
 10. Text placed directly over images MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If text sits inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
 
 **Modern Palette Trends 2025-2026:**
@@ -170,8 +176,8 @@ Generate a JSON object defining the visual strategy.
       "buttonBorderRadius": "size"
   },
   "layoutStrategy": {
-      "headerLayout": "minimal",
-      "headerStyle": "sticky-solid",
+      "headerLayout": "minimal | center | stack | classic",
+      "headerStyle": "From the allowed headerStyle values above",
       "heroImageStyle": "type",
       "heroImagePosition": "left | right"
   },
@@ -192,9 +198,9 @@ Generate a JSON object defining the visual strategy.
 - If Aesthetic is 'Organic': Earth tones (greens, browns, creams), natural serif + sans pairing (fraunces + figtree). Soft radius ('xl'). Warm, inviting feel.
 
 **HEADER & FOOTER RULES (MANDATORY):**
-- headerStyle MUST always be 'sticky-solid' - the header will use the primary brand color as solid background, never transparent.
-- Header and Footer MUST have the SAME background color: a solid dark brand color with white (#ffffff) typography.
-- Both header and footer backgrounds must be SOLID colors, never white, off-white, pale, transparent, glass, or gradient.
+- headerStyle MUST be one of: ${HEADER_VARIANT_PROMPT_VALUES}.
+- Header colors must include background, text, accent, border, surface, panelBackground, panelText, mutedText, separator, buttonBackground, buttonText, and cartBadge when the selected style uses panels, floating shells, tabs, or badges.
+- Footer remains solid and readable. For solid header styles, match footer background to the header shell; for transparent, glass, floating, or gradient header styles, use the darkest readable brand surface for the footer.
 - Use no more than three non-neutral brand colors total: primary, secondary, and accent.
 - Page background should default to white (#ffffff) or a very light neutral color to provide contrast`,
     model: 'gemini-3.1-pro-preview',
@@ -249,11 +255,12 @@ Generate a JSON object defining the visual strategy.
 - hero.heroVariant: 'classic' | 'modern' | 'gradient' | 'fitness'
 - hero.imageStyle: 'default' | 'glow' | 'float' | 'hexagon' | 'polaroid'
 - hero.imagePosition: 'left' | 'right'
-- features.featuresVariant: 'classic' | 'modern' | 'bento-premium' | 'bento-overlay' | 'image-overlay' | 'neon-glow' | 'press-release' | 'editorial-mosaic'
+- features.featuresVariant: ${FEATURE_VARIANT_PROMPT_VALUES.split('|').map(value => `'${value}'`).join(' | ')}
 - portfolio.portfolioVariant: 'classic' | 'image-overlay'
+- showcase.showcaseVariant: 'featured-device' | 'curated-row' | 'editorial-stack' | 'vertical-strips' | 'dark-carousel' | 'minimal-index' | 'case-grid-dark' | 'recent-work'
 - testimonials.testimonialsVariant: 'classic' | 'minimal-cards' | 'glassmorphism' | 'gradient-glow' | 'neon-border' | 'floating-cards' | 'gradient-shift' | 'neon-glow' | 'editorial-mosaic'
-- pricing.pricingVariant: 'classic' | 'gradient' | 'glassmorphism' | 'minimalist'
-- faq.faqVariant: 'classic' | 'cards' | 'gradient' | 'minimal'
+- pricing.pricingVariant: ${PRICING_VARIANT_PROMPT_VALUES.split('|').map(value => `'${value}'`).join(' | ')}
+- faq.faqVariant: ${FAQ_VARIANT_PROMPT_VALUES.split('|').map(value => `'${value}'`).join(' | ')}
 - services.servicesVariant: 'cards' | 'grid' | 'minimal'
 - team.teamVariant: 'classic' | 'cards' | 'minimal' | 'overlay'
 - slideshow.slideshowVariant: 'classic' | 'kenburns' | 'cards3d' | 'thumbnails'
@@ -261,8 +268,9 @@ Generate a JSON object defining the visual strategy.
 - menu.menuVariant: 'classic' | 'modern-grid' | 'elegant-list' | 'full-image' | 'text-only' | 'editorial-mosaic'
 - map.mapVariant: 'modern' | 'minimal' | 'dark-tech' | 'retro' | 'night'
 - banner.bannerVariant: 'classic' | 'gradient-overlay' | 'side-text' | 'centered'
-- header.layout: 'minimal'
-- header.style: 'sticky-solid' | 'sticky-transparent' | 'floating'
+- header.layout: 'minimal' | 'center' | 'stack' | 'classic'
+- header.style: ${HEADER_VARIANT_PROMPT_VALUES}
+- footer.footerVariant: ${FOOTER_VARIANT_PROMPT_VALUES}
 
 **VALID SIZE OPTIONS:**
 - paddingY/paddingX: 'sm' | 'md' | 'lg'
@@ -340,12 +348,19 @@ Return ONLY valid JSON. No markdown.
     },
     "data": {
         "header": {
-            "style": "sticky-solid",
+            "style": "From Design Plan",
             "layout": "From Design Plan",
             "colors": { 
-                "background": "PRIMARY brand color from palette (solid, not transparent)", 
+                "background": "PRIMARY brand color from palette",
                 "text": "Contrasting color (white for dark bg, black for light bg)", 
-                "accent": "Secondary or accent color" 
+                "accent": "Secondary or accent color",
+                "border": "Semantic border color from palette",
+                "surface": "Semantic surface color from palette",
+                "panelBackground": "Panel surface color from palette",
+                "panelText": "Readable panel text color",
+                "mutedText": "Muted readable text color",
+                "separator": "Subtle separator color",
+                "cartBadge": "Accent badge color"
             },
             "logoText": "{{businessName}}",
             "links": [{"text": "Home", "href": "/"}, {"text": "Services", "href": "/#services"}, {"text": "Contact", "href": "/#leads"}]
@@ -363,20 +378,31 @@ Return ONLY valid JSON. No markdown.
             "colors": { "background": "Palette Background", "text": "Palette Text", "heading": "Palette Text" }
         },
         "features": { 
+            "featuresVariant": "Choose from: ${FEATURE_VARIANT_PROMPT_VALUES}",
             "title": "Based on {{offerings}}", 
             "description": "Expand on value", 
             "items": [
-                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "imageUrl": "" },
-                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "imageUrl": "" },
-                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "imageUrl": "" }
+                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "icon": "Award", "eyebrow": "Short label", "bullets": ["Short point"], "imageUrl": "" },
+                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "icon": "Heart", "eyebrow": "Short label", "bullets": ["Short point"], "imageUrl": "" },
+                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "icon": "CheckCircle", "eyebrow": "Short label", "bullets": ["Short point"], "imageUrl": "" },
+                { "title": "From {{offerings}} or {{products}}", "description": "Detailed benefit", "icon": "Star", "eyebrow": "Short label", "bullets": ["Short point"], "imageUrl": "" }
             ], 
             "colors": { 
                 "background": "Contrasting to hero", 
                 "accent": "Palette Accent", 
                 "text": "Palette Text",
+                "heading": "Palette Text",
+                "description": "Muted palette text",
                 "cardBackground": "PRIMARY brand color",
+                "cardHeading": "Readable text over cardBackground",
+                "cardText": "Readable muted text over cardBackground",
+                "glowColor": "Palette Accent for Neon Glow",
+                "cardGradientStart": "Visible gradient start for glow/overlay cards",
+                "cardGradientEnd": "Visible gradient end for glow/overlay cards",
+                "overlayText": "Readable text over image overlays",
+                "overlayMuted": "Readable muted text over image overlays",
                 "borderColor": "Slightly darker/lighter than primary"
-            } 
+            }
         },
         "testimonials": { 
             "title": "What Our Clients Say", 
@@ -415,6 +441,20 @@ Return ONLY valid JSON. No markdown.
             ],
             "colors": { "background": "Palette Background", "accent": "Palette Accent", "text": "Palette Text" }
         },
+        "showcase": {
+            "showcaseVariant": "recent-work",
+            "title": "Selected Work",
+            "description": "Curated visual proof",
+            "eyebrow": "Showcase",
+            "categories": ["All", "Brand", "Product", "Editorial"],
+            "items": [
+                { "title": "Showcase Item", "description": "Brief description", "category": "Brand", "meta": "# Brand", "imageUrl": "" },
+                { "title": "Showcase Item", "description": "Brief description", "category": "Product", "meta": "# Product", "imageUrl": "" },
+                { "title": "Showcase Item", "description": "Brief description", "category": "Editorial", "meta": "# Editorial", "imageUrl": "" },
+                { "title": "Showcase Item", "description": "Brief description", "category": "Marketing", "meta": "# Marketing", "imageUrl": "" }
+            ],
+            "colors": { "background": "Palette Background", "accent": "Palette Accent", "text": "Palette Text" }
+        },
         "slideshow": {
             "title": "Gallery",
             "items": [
@@ -449,20 +489,59 @@ Return ONLY valid JSON. No markdown.
             "colors": { "background": "Palette Background", "text": "Palette Text" } 
         },
         "pricing": { 
+            "pricingVariant": "Choose from: ${PRICING_VARIANT_PROMPT_VALUES}",
             "title": "Pricing Plans", 
             "description": "Choose your perfect plan", 
-            "tiers": "BUILD from {{products}} if provided, else create industry-appropriate tiers",
-            "colors": { "background": "Palette Secondary", "text": "Palette Text" } 
+            "tiers": "BUILD from {{products}} if provided, else create industry-appropriate tiers. Include name, price, frequency, description, features, buttonText, buttonLink, featured, and optional badge, eyebrow, footerText, imageUrl.",
+            "colors": {
+                "background": "Palette Secondary",
+                "text": "Palette Text",
+                "mutedText": "Muted text",
+                "heading": "Readable heading",
+                "description": "Muted description",
+                "accent": "PRIMARY brand color",
+                "borderColor": "Subtle divider/border",
+                "cardBackground": "Readable card surface",
+                "cardHeading": "Readable card title",
+                "cardText": "Readable card copy",
+                "priceColor": "Readable price text",
+                "buttonBackground": "CTA background",
+                "buttonText": "CTA text",
+                "checkmarkColor": "Feature icon/check color",
+                "gradientStart": "Brand gradient start",
+                "gradientEnd": "Brand gradient end",
+                "panelBackground": "Dark or contrast panel",
+                "panelText": "Text over panel",
+                "surfaceAlt": "Alternate light surface",
+                "featuredBackground": "Featured plan background",
+                "featuredText": "Text over featured background",
+                "badgeBackground": "Badge fill",
+                "badgeText": "Badge text",
+                "dividerColor": "Feature divider color",
+                "imageOverlay": "Overlay for image-based cards"
+            }
         },
-        "faq": { 
+        "faq": {
+            "faqVariant": "Choose from: ${FAQ_VARIANT_PROMPT_VALUES}",
             "title": "Frequently Asked Questions", 
             "description": "Everything you need to know", 
+            "imageUrl": "Optional image for image-split/contact-card variants",
             "items": "Create 5-7 relevant to {{industry}} and {{goal}}",
             "colors": { 
                 "background": "SECONDARY color", 
                 "text": "Contrasting text color",
                 "heading": "Contrasting heading color",
                 "accent": "PRIMARY brand color",
+                "description": "Muted contrasting text color",
+                "cardBackground": "Readable card surface",
+                "cardHeading": "Readable card title text",
+                "cardText": "Readable card answer text",
+                "panelBackground": "Panel surface for split/support layouts",
+                "activeBackground": "Active question background",
+                "activeText": "Readable text over activeBackground",
+                "iconBackground": "Icon button background",
+                "gradientStart": "Brand gradient start",
+                "gradientEnd": "Brand gradient end",
                 "borderColor": "Slightly darker/lighter than secondary"
             } 
         },
@@ -479,14 +558,34 @@ Return ONLY valid JSON. No markdown.
             } 
         },
         "footer": { 
+            "footerVariant": "Choose from: ${FOOTER_VARIANT_PROMPT_VALUES}",
             "title": "{{businessName}}", 
             "description": "Brief value prop", 
             "copyrightText": "© 2024 {{businessName}}",
+            "wordmarkText": "{{businessName}} or short brand slogan for wordmark variants",
+            "newsletterLabel": "Short newsletter label for newsletter variants",
+            "newsletterPlaceholder": "Email placeholder for newsletter variants",
+            "newsletterButtonText": "Newsletter button label",
+            "ctaTitle": "CTA headline for cta-card variant",
+            "ctaBullets": ["Benefit 1", "Benefit 2"],
+            "primaryButtonText": "Primary CTA label",
+            "secondaryButtonText": "Secondary CTA label",
+            "disclaimerText": "Legal/compliance copy for compliance or press variants",
             "socialLinks": "BUILD from {{contactInfo.socialMedia}} if provided",
             "colors": { 
                 "background": "PRIMARY brand color (SAME as header)", 
                 "text": "Contrasting color (white for dark bg, black for light bg)",
-                "heading": "Contrasting color (white for dark bg, black for light bg)"
+                "heading": "Contrasting color (white for dark bg, black for light bg)",
+                "accent": "Accent brand color",
+                "panelBackground": "Readable panel surface",
+                "panelText": "Readable panel text",
+                "buttonBackground": "Semantic CTA color",
+                "buttonText": "Readable button text",
+                "wordmark": "Oversized wordmark color",
+                "inputBackground": "Newsletter input background",
+                "inputText": "Newsletter input text",
+                "legalBackground": "Legal/disclaimer strip background",
+                "imageOverlay": "Overlay color for image-backed variants"
             } 
         }
     }
@@ -504,6 +603,10 @@ Return ONLY valid JSON. No markdown.
     "portfolio.items.0.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, high quality",
     "portfolio.items.1.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, professional",
     "portfolio.items.2.imageUrl": "Portfolio showcase image, {{industry}} project, {{aesthetic}} style, premium",
+    "showcase.items.0.imageUrl": "Curated showcase image for {{industry}}, {{aesthetic}} editorial style, premium visual proof",
+    "showcase.items.1.imageUrl": "Showcase image for product, campaign, or case study, {{aesthetic}} aesthetic, professional",
+    "showcase.items.2.imageUrl": "Editorial showcase image, {{industry}} context, strong composition, high quality",
+    "showcase.items.3.imageUrl": "Visual case-study showcase image, {{aesthetic}} style, polished and brand-relevant",
     
     "slideshow.items.0.imageUrl": "Gallery image for {{industry}}, {{aesthetic}} aesthetic, cinematic, high resolution",
     
@@ -519,6 +622,7 @@ Return ONLY valid JSON. No markdown.
 3. If "menu" is in componentOrder, include ONLY 3 menu.items prompts (0, 1, 2) - users can add more later
 4. If "slideshow" is in componentOrder, include ONLY 1 slideshow.items prompt (0) - users can add more later
 5. If "portfolio" is NOT in componentOrder, do NOT include portfolio.items.X.imageUrl prompts
+6. If "showcase" is NOT in componentOrder, do NOT include showcase.items.X.imageUrl prompts
 6. Each prompt must be detailed and specific to the {{industry}} and {{aesthetic}}
 7. Use imageStyleDescription from Design Plan for consistent visual style`,
     model: 'gemini-3.1-pro-preview',
@@ -667,10 +771,10 @@ Return JSON with this exact structure (only include sections that were requested
     { "title": "Slide 3 headline", "subtitle": "Brief description", "ctaText": "Call to action" }
   ],
   "features": [
-    { "title": "Feature 1", "description": "Brief benefit description" },
-    { "title": "Feature 2", "description": "Brief benefit description" },
-    { "title": "Feature 3", "description": "Brief benefit description" },
-    { "title": "Feature 4", "description": "Brief benefit description" }
+    { "title": "Feature 1", "description": "Brief benefit description", "icon": "Award", "eyebrow": "Short label", "bullets": ["Short point"] },
+    { "title": "Feature 2", "description": "Brief benefit description", "icon": "Heart", "eyebrow": "Short label", "bullets": ["Short point"] },
+    { "title": "Feature 3", "description": "Brief benefit description", "icon": "CheckCircle", "eyebrow": "Short label", "bullets": ["Short point"] },
+    { "title": "Feature 4", "description": "Brief benefit description", "icon": "Star", "eyebrow": "Short label", "bullets": ["Short point"] }
   ]
 }
 

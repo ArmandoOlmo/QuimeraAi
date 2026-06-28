@@ -5,6 +5,9 @@ import { FaqData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
 import { Plus, Minus, ChevronDown, HelpCircle } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import ImagePlaceholder from './ui/ImagePlaceholder';
+import { isPendingImage } from '../utils/imagePlaceholders';
+import { FaqVariant } from '../data/faqVariants';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -46,8 +49,6 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-3xl',
 };
 
-type FaqVariant = 'classic' | 'cards' | 'gradient' | 'minimal';
-
 interface FaqItemProps {
   question: string;
   answer: string;
@@ -62,12 +63,14 @@ interface FaqItemProps {
   borderColor?: string;
   gradientStart?: string;
   gradientEnd?: string;
+  activeTextColor?: string;
+  iconBackground?: string;
 }
 
 const FaqItemClassic: React.FC<FaqItemProps> = ({
   question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
   return (
-    <div className="border-b backdrop-blur-lg" style={{ borderColor: borderColor || 'rgba(255, 255, 255, 0.1)' }}>
+    <div className="border-b backdrop-blur-lg" style={{ borderColor }}>
       <button
         onClick={onClick}
         className="w-full flex justify-between items-center text-left py-6 transition-colors"
@@ -103,10 +106,10 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
 const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, cardBackground, borderColor }) => {
   return (
     <div
-      className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border border-white/10 backdrop-blur-xl`}
+      className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border backdrop-blur-xl`}
       style={{
-        backgroundColor: hexToRgba((cardBackground && !cardBackground.startsWith('rgba')) ? cardBackground : '#1e293b', 0.35),
-        borderColor: isOpen ? accentColor : 'rgba(255, 255, 255, 0.1)'
+        backgroundColor: hexToRgba((cardBackground && !cardBackground.startsWith('rgba')) ? cardBackground : accentColor, 0.35),
+        borderColor: isOpen ? accentColor : borderColor
       }}
     >
       <button
@@ -144,14 +147,14 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
   );
 };
 
-const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, gradientStart, gradientEnd }) => {
+const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, gradientStart, gradientEnd, activeTextColor }) => {
   return (
     <div
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-500 relative group`}
       style={{
         background: isOpen
           ? `linear-gradient(135deg, ${hexToRgba(gradientStart || accentColor, 0.08)}, ${hexToRgba(gradientEnd || accentColor, 0.03)})`
-          : 'rgba(30, 41, 59, 0.3)',
+          : hexToRgba(gradientEnd || accentColor, 0.3),
         border: isOpen ? `2px solid ${hexToRgba(accentColor, 0.31)}` : '2px solid transparent'
       }}
     >
@@ -185,7 +188,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
         >
           <Plus
             className={`h-5 w-5 transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}
-            style={{ color: isOpen ? '#ffffff' : accentColor }}
+            style={{ color: isOpen ? activeTextColor || headingColor : accentColor }}
           />
         </div>
       </button>
@@ -209,7 +212,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
   );
 };
 
-const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius }) => {
+const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, activeTextColor, iconBackground }) => {
   return (
     <div
       className={`mb-8 transition-all duration-300`}
@@ -222,13 +225,13 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
         <div
           className={`flex-shrink-0 w-12 h-12 ${borderRadiusClasses[borderRadius]} flex items-center justify-center transition-all duration-300`}
           style={{
-            backgroundColor: isOpen ? accentColor : hexToRgba(accentColor, 0.125),
+            backgroundColor: isOpen ? iconBackground || accentColor : hexToRgba(iconBackground || accentColor, 0.18),
             transform: isOpen ? 'scale(1.1)' : 'scale(1)'
           }}
         >
           <HelpCircle
             className="h-6 w-6"
-            style={{ color: isOpen ? '#ffffff' : accentColor }}
+            style={{ color: isOpen ? activeTextColor || headingColor : accentColor }}
           />
         </div>
         <div className="flex-1">
@@ -268,6 +271,8 @@ const Faq: React.FC<FaqProps> = ({
   title: rawTitle,
   description: rawDescription,
   items: rawItems = [],
+  imageUrl,
+  backgroundImageUrl,
   paddingY,
   paddingX,
   colors,
@@ -276,7 +281,7 @@ const Faq: React.FC<FaqProps> = ({
   descriptionFontSize = 'md',
   faqVariant = 'classic'
 }) => {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   // Get design tokens for primary color
   const { colors: tokenColors } = useDesignTokens();
@@ -308,22 +313,39 @@ const Faq: React.FC<FaqProps> = ({
 
   // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
-    // Section-level colors
-    const sectionHeading = colors?.heading || '#F9FAFB';
-    const sectionDescription = colors?.description || '#94a3b8';
-    // Card/Question-level colors  
-    const questionText = colors?.text || '#F9FAFB';
-    const answerText = colors?.text || '#94a3b8';
+    const background = colors?.background || primaryColor;
+    const accent = colors?.accent || primaryColor;
+    const sectionHeading = colors?.heading || colors?.text || '#F9FAFB';
+    const sectionDescription = colors?.description || colors?.text || '#94a3b8';
+    const questionText = colors?.cardHeading || colors?.text || colors?.heading || '#F9FAFB';
+    const answerText = colors?.cardText || colors?.description || colors?.text || '#94a3b8';
+    const cardBackground = colors?.cardBackground || colors?.panelBackground || background;
 
     return {
+      background,
+      accent,
       heading: sectionHeading,
       text: questionText,
       description: sectionDescription,
       cardHeading: questionText,
       cardText: answerText,
-      border: colors?.borderColor || '#334155',
+      cardBackground,
+      panelBackground: colors?.panelBackground || cardBackground,
+      activeBackground: colors?.activeBackground || accent,
+      activeText: colors?.activeText || sectionHeading,
+      iconBackground: colors?.iconBackground || accent,
+      border: colors?.borderColor || hexToRgba(accent, 0.28),
+      gradientStart: colors?.gradientStart || accent,
+      gradientEnd: colors?.gradientEnd || cardBackground,
     };
-  }, [colors]);
+  }, [colors, primaryColor]);
+
+  const sectionClass = `w-full ${glassEffect ? 'backdrop-blur-xl border-y z-20' : ''}`;
+  const sectionStyle: React.CSSProperties = {
+    backgroundColor: glassEffect ? hexToRgba(safeColors.background, 0.4) : safeColors.background,
+    borderColor: glassEffect ? hexToRgba(safeColors.border, 0.35) : undefined,
+    boxShadow: glassEffect ? `0 4px 30px ${hexToRgba(safeColors.background, 0.1)}` : undefined,
+  };
 
   const renderFaqItem = (item: any, index: number) => {
     // For card-based variants, use card-specific colors
@@ -334,15 +356,17 @@ const Faq: React.FC<FaqProps> = ({
       answer: item.answer,
       isOpen: openIndex === index,
       onClick: () => handleToggle(index),
-      accentColor: colors?.accent,
+      accentColor: safeColors.accent,
       textColor: isCardVariant ? safeColors.cardText : safeColors.text,
       headingColor: isCardVariant ? safeColors.cardHeading : safeColors.heading,
       variant: faqVariant,
       borderRadius,
-      cardBackground: colors?.cardBackground,
+      cardBackground: safeColors.cardBackground,
       borderColor: safeColors.border,
-      gradientStart: colors?.gradientStart,
-      gradientEnd: colors?.gradientEnd,
+      gradientStart: safeColors.gradientStart,
+      gradientEnd: safeColors.gradientEnd,
+      activeTextColor: safeColors.activeText,
+      iconBackground: safeColors.iconBackground,
     };
 
     switch (faqVariant) {
@@ -357,8 +381,229 @@ const Faq: React.FC<FaqProps> = ({
     }
   };
 
+  const faqImageUrl = imageUrl || backgroundImageUrl;
+  const activeIndex = openIndex ?? 0;
+  const activeItem = items[activeIndex] || items[0];
+
+  const renderInlineAnswer = (item: any, index: number, answerClassName = 'pb-6') => {
+    const isOpen = openIndex === index;
+    return (
+      <div
+        key={index}
+        className="border-t"
+        style={{ borderColor: safeColors.border }}
+      >
+        <button
+          type="button"
+          onClick={() => handleToggle(index)}
+          className="flex w-full items-center justify-between gap-6 py-6 text-left transition-opacity hover:opacity-80"
+          aria-expanded={isOpen}
+        >
+          <h3 className="font-header text-xl font-medium leading-snug" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>
+            {item.question}
+          </h3>
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center border transition-transform"
+            style={{ borderColor: safeColors.border, color: isOpen ? safeColors.accent : safeColors.cardHeading }}
+          >
+            {isOpen ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </span>
+        </button>
+        <div className={`grid overflow-hidden transition-all duration-300 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <div className="overflow-hidden">
+            <p className={`font-body leading-relaxed ${answerClassName}`} style={{ color: safeColors.cardText }}>
+              {item.answer}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMediaPanel = () => (
+    <div
+      className={`relative min-h-[420px] overflow-hidden ${borderRadiusClasses[borderRadius]}`}
+      style={{
+        background: `linear-gradient(135deg, ${hexToRgba(safeColors.gradientStart, 0.22)}, ${hexToRgba(safeColors.gradientEnd, 0.16)})`,
+      }}
+    >
+      {faqImageUrl && !isPendingImage(faqImageUrl) ? (
+        <img src={faqImageUrl} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <ImagePlaceholder aspectRatio="4:5" showGenerateButton={false} className="absolute inset-0 h-full w-full" />
+      )}
+    </div>
+  );
+
+  const renderEditorialSplit = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="grid gap-12 lg:grid-cols-[minmax(220px,0.42fr)_minmax(0,1fr)]">
+          <div>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-[0.95]`} style={{ color: safeColors.heading }}>{title}</h2>
+            {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-6 max-w-sm font-body leading-relaxed`} style={{ color: safeColors.description }}>{description}</p>}
+          </div>
+          <div>
+            {items.map((item, index) => renderInlineAnswer(item, index))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderBoxedList = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="mx-auto mb-12 max-w-4xl text-center">
+          <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+          {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-4 max-w-2xl font-body`} style={{ color: safeColors.description }}>{description}</p>}
+        </div>
+        <div className={`mx-auto max-w-4xl overflow-hidden border ${borderRadiusClasses[borderRadius]}`} style={{ borderColor: safeColors.border, backgroundColor: safeColors.cardBackground }}>
+          {items.map((item, index) => (
+            <div key={index} className="px-7">
+              {renderInlineAnswer(item, index, 'pb-8')}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderDarkPanel = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className={`grid gap-10 border p-8 md:p-14 lg:grid-cols-[0.9fr_1.1fr] ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.panelBackground, borderColor: safeColors.border }}>
+          <div>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 max-w-md font-body`} style={{ color: safeColors.description }}>{description}</p>}
+          </div>
+          <div className="space-y-4">
+            {items.map((item, index) => {
+              const isOpen = openIndex === index;
+              return (
+                <div key={index} className={`border p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: isOpen ? safeColors.accent : safeColors.border }}>
+                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full items-start justify-between gap-4 text-left" aria-expanded={isOpen}>
+                    <h3 className="font-header text-lg font-medium" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>{item.question}</h3>
+                    {isOpen ? <Minus className="h-5 w-5 shrink-0" style={{ color: safeColors.accent }} /> : <Plus className="h-5 w-5 shrink-0" style={{ color: safeColors.cardHeading }} />}
+                  </button>
+                  {isOpen && <p className="mt-4 font-body leading-relaxed" style={{ color: safeColors.cardText }}>{item.answer}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderImageSplit = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="grid gap-12 lg:grid-cols-[minmax(280px,0.95fr)_minmax(0,1fr)] lg:items-center">
+          {renderMediaPanel()}
+          <div>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            <div className="mt-10">
+              {items.map((item, index) => renderInlineAnswer(item, index))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderStackedCards = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="grid gap-10 lg:grid-cols-[0.55fr_1fr]">
+          <div>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+          </div>
+          <div className="space-y-4">
+            {items.map((item, index) => {
+              const isOpen = openIndex === index;
+              return (
+                <div key={index} className={`p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isOpen ? safeColors.activeBackground : safeColors.cardBackground, borderColor: safeColors.border }}>
+                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full items-center justify-between gap-5 text-left" aria-expanded={isOpen}>
+                    <h3 className="font-header text-xl font-medium" style={{ color: isOpen ? safeColors.activeText : safeColors.cardHeading }}>{item.question}</h3>
+                    <span style={{ color: isOpen ? safeColors.activeText : safeColors.accent }}>{isOpen ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}</span>
+                  </button>
+                  {isOpen && <p className="mt-5 font-body leading-relaxed" style={{ color: isOpen ? safeColors.activeText : safeColors.cardText }}>{item.answer}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderAnswerPanel = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="grid min-h-[520px] lg:grid-cols-2">
+          <div className="flex flex-col justify-center p-6 lg:p-14">
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <div className="mt-10 space-y-3">
+              {items.map((item, index) => {
+                const isActive = activeIndex === index;
+                return (
+                  <button key={index} type="button" onClick={() => setOpenIndex(index)} className={`w-full p-5 text-left ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isActive ? safeColors.activeBackground : safeColors.cardBackground, color: isActive ? safeColors.activeText : safeColors.cardHeading }}>
+                    {item.question}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="p-6 lg:p-14" style={{ backgroundColor: safeColors.panelBackground }}>
+            {activeItem && (
+              <div className="max-w-xl">
+                <p className="font-body text-sm uppercase tracking-widest" style={{ color: safeColors.activeText }}>Answer</p>
+                <div className="my-8 h-px" style={{ backgroundColor: hexToRgba(safeColors.activeText, 0.55) }} />
+                <h3 className="font-header text-2xl font-semibold" style={{ color: safeColors.activeText }}>{activeItem.question}</h3>
+                <p className="mt-6 font-body text-lg leading-relaxed" style={{ color: safeColors.activeText }}>{activeItem.answer}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderContactCard = () => (
+    <section id="faq" className={sectionClass} style={sectionStyle}>
+      <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
+          <div>
+            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <div className="mt-10">
+              {items.map((item, index) => renderInlineAnswer(item, index))}
+            </div>
+          </div>
+          <div className={`border p-8 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: safeColors.border }}>
+            {faqImageUrl && !isPendingImage(faqImageUrl) && (
+              <img src={faqImageUrl} alt="" className={`mb-8 aspect-video w-full object-cover ${borderRadiusClasses[borderRadius]}`} />
+            )}
+            <h3 className="font-header text-2xl font-semibold" style={{ color: safeColors.cardHeading }}>{description || title}</h3>
+            {activeItem && <p className="mt-5 font-body leading-relaxed" style={{ color: safeColors.cardText }}>{activeItem.answer}</p>}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  if (faqVariant === 'editorial-split') return renderEditorialSplit();
+  if (faqVariant === 'boxed-list') return renderBoxedList();
+  if (faqVariant === 'dark-panel') return renderDarkPanel();
+  if (faqVariant === 'image-split') return renderImageSplit();
+  if (faqVariant === 'stacked-cards') return renderStackedCards();
+  if (faqVariant === 'answer-panel') return renderAnswerPanel();
+  if (faqVariant === 'contact-card') return renderContactCard();
+
   return (
-    <section id="faq" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background || primaryColor , 0.4) : colors?.background || primaryColor }}>
+    <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>

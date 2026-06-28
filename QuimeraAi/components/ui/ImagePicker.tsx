@@ -83,6 +83,14 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>(initialTab);
 
     const mediaCtx = useSafeMedia();
+    const effectiveAdminCategory = adminCategory || (activeProject?.status === 'Template' ? 'template' : undefined);
+    const defaultCategory = effectiveAdminCategory || 'other';
+    const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(defaultCategory);
+    const activeAdminCategoryFilter = adminCategory || (activeProject?.status === 'Template' ? selectedAdminCategory : undefined);
+
+    useEffect(() => {
+        if (effectiveAdminCategory) setSelectedAdminCategory(effectiveAdminCategory);
+    }, [effectiveAdminCategory]);
 
     // Handle closing the modal
     const handleClose = () => {
@@ -97,7 +105,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
         if (!isLibraryOpen) return;
         if (mediaCtx) {
             if (destination === 'admin') {
-                mediaCtx.fetchMediaAssets(adminCategory as MediaCategory);
+                mediaCtx.fetchMediaAssets(activeAdminCategoryFilter as MediaCategory);
             } else if (destination === 'global') {
                 mediaCtx.fetchMediaAssets();
             }
@@ -110,7 +118,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [destination, isLibraryOpen]);
+    }, [destination, activeAdminCategoryFilter, isLibraryOpen]);
 
     // Product images - only fetch if storeId is provided
     const { products: storeProducts, isLoading: isLoadingProducts } = usePublicProducts(
@@ -134,14 +142,6 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
 
     // Detailed preview state
     const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
-
-    // Selected Category for Admin Uploads
-    const defaultCategory = adminCategory || (activeProject?.status === 'Template' ? 'template' : 'other');
-    const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(defaultCategory);
-
-    useEffect(() => {
-        if (adminCategory) setSelectedAdminCategory(adminCategory);
-    }, [adminCategory]);
 
     const handleSelectImageUrl = async (urlValue: unknown, selectedAsset?: Partial<FileRecord>) => {
         const selectedImageUrl = normalizeImageUrl(urlValue);
@@ -241,7 +241,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
             // Use unified media context if available
             if (mediaCtx) {
                 sourceFiles = mediaCtx.mediaAssets
-                    .filter(a => adminCategory ? a.category === adminCategory : true)
+                    .filter(a => activeAdminCategoryFilter ? a.category === activeAdminCategoryFilter : true)
                     .map(a => ({
                         id: a.id, name: a.name, url: a.url, downloadURL: a.downloadURL,
                         size: a.size, type: a.type, storagePath: a.storagePath || '',
@@ -249,8 +249,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                     } as unknown as FileRecord));
             } else if (adminAssets.length > 0) {
                 sourceFiles = adminAssets;
-                if (adminCategory) {
-                    sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
+                if (activeAdminCategoryFilter) {
+                    sourceFiles = sourceFiles.filter(f => (f as any).category === activeAdminCategoryFilter);
                 }
             } else {
                 sourceFiles = [];
@@ -280,7 +280,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
         }
 
         return result;
-    }, [files, adminAssets, globalFiles, mediaCtx?.mediaAssets, searchQuery, activeProjectId, destination, adminCategory]);
+    }, [files, adminAssets, globalFiles, mediaCtx?.mediaAssets, searchQuery, activeProjectId, destination, activeAdminCategoryFilter]);
 
     const isLibraryLoading = mediaCtx ? mediaCtx.isMediaLoading : isFilesLoading;
 
@@ -655,7 +655,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
                             {activeTab === 'generate' && (
                             <MediaGeneratorPanel
                                     destination={destination}
-                                    adminCategory={adminCategory}
+                                    adminCategory={adminCategory || selectedAdminCategory}
                                     projectId={activeProjectId || undefined}
                                     className="h-full"
                                     generationContext={generationContext}

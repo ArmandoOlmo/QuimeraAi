@@ -59,6 +59,7 @@ import Team from './Team';
 import Video from './Video';
 import Slideshow from './Slideshow';
 import Portfolio from './Portfolio';
+import Showcase from './Showcase';
 import Leads from './Leads';
 import AppointmentBooking from './AppointmentBooking';
 import Newsletter from './Newsletter';
@@ -240,6 +241,7 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             video: mergeComponentData('video') || baseData.video,
             slideshow: mergeComponentData('slideshow') || baseData.slideshow,
             portfolio: mergeComponentData('portfolio') || baseData.portfolio,
+            showcase: mergeComponentData('showcase') || baseData.showcase,
             leads: mergeComponentData('leads') || baseData.leads,
             newsletter: mergeComponentData('newsletter') || baseData.newsletter,
             howItWorks: mergeComponentData('howItWorks') || baseData.howItWorks,
@@ -620,6 +622,18 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                             key={key}
                             {...mergedData.portfolio}
                             borderRadius={cardBorderRadius}
+                            onNavigate={handleLinkNavigation}
+                        />
+                    </SectionBackground>
+                );
+
+            case 'showcase':
+                return (
+                    <SectionBackground backgroundImageUrl={mergedData.showcase?.backgroundImageUrl} backgroundColor={mergedData.showcase?.colors?.background} backgroundOverlayEnabled={mergedData.showcase?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.showcase?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.showcase?.backgroundOverlayColor} backgroundPosition={mergedData.showcase?.backgroundPosition}>
+                        <Showcase
+                            key={key}
+                            {...mergedData.showcase}
+                            borderRadius={mergedData.showcase?.borderRadius || cardBorderRadius}
                             onNavigate={handleLinkNavigation}
                         />
                     </SectionBackground>

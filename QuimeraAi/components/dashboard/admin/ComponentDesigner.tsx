@@ -10,7 +10,7 @@ import ComponentPermissionsEditor from './ComponentPermissionsEditor';
 import ComponentDocumentationEditor from './ComponentDocumentationEditor';
 import { useAdmin } from '../../../contexts/admin';
 import { generateComponentThumbnail, createPlaceholderThumbnail } from '../../../utils/thumbnailGenerator';
-import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin } from 'lucide-react';
+import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Grid, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin } from 'lucide-react';
 
 interface ComponentDesignerProps {
     previewDevice: PreviewDevice;
@@ -30,6 +30,7 @@ const componentOptions: { id: EditableComponentID, name: string, icon: React.Rea
     { id: 'pricing', name: 'Pricing', icon: <Tag size={18} /> },
     { id: 'faq', name: 'FAQ', icon: <HelpCircle size={18} /> },
     { id: 'portfolio', name: 'Portfolio', icon: <Briefcase size={18} /> },
+    { id: 'showcase', name: 'Showcase', icon: <Grid size={18} /> },
     { id: 'leads', name: 'Leads Form', icon: <Mail size={18} /> },
     { id: 'menu', name: 'Restaurant Menu', icon: <Menu size={18} /> },
     { id: 'newsletter', name: 'Newsletter', icon: <FilePenLine size={18} /> },

@@ -243,7 +243,7 @@ export function checkKeyboardNavigation(componentData: any, componentType: strin
     const issues: A11yIssue[] = [];
 
     // Check interactive components
-    const interactiveTypes = ['slideshow', 'faq', 'pricing', 'portfolio'];
+    const interactiveTypes = ['slideshow', 'faq', 'pricing', 'portfolio', 'showcase'];
     if (interactiveTypes.includes(componentType)) {
         issues.push({
             id: `keyboard-nav-${Date.now()}`,
@@ -327,4 +327,3 @@ export function autoFixIssue(issue: A11yIssue, componentData: any): any {
 
     return fixed;
 }
-
