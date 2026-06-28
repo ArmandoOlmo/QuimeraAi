@@ -6,6 +6,7 @@ import { HeaderData, NavLink, BorderRadiusSize, NavbarLayout, NavLinkHoverStyle 
 import { getIconComponent } from './ui/IconSelector';
 import { Menu, X, ArrowRight, ShoppingCart, Home, FileText, Briefcase, Lightbulb, Calendar, Mail, Info } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
+import { isHeaderVariant } from '../data/headerVariants';
 
 const HeaderGlobalSearch = React.lazy(() => import('./HeaderGlobalSearch'));
 
@@ -144,7 +145,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
       case 'underline': return 'after:content-[""] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-current after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left';
       case 'highlight': return 'hover:opacity-70 transition-colors';
       case 'bracket': return 'before:content-["["] before:mr-1 before:opacity-0 hover:before:opacity-100 after:content-["]"] after:ml-1 after:opacity-0 hover:after:opacity-100 before:transition-all after:transition-all';
-      case 'glow': return 'hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all';
+      case 'glow': return 'nav-link-glow transition-all';
       default: return 'hover:opacity-70';
     }
   }
@@ -179,7 +180,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links, textColor, accentColor, hove
             className={`
                   relative transition-all duration-300 font-header font-medium
                   ${isMobile
-                ? 'text-xl py-4 px-4 -mx-4 block rounded-xl hover:bg-white/5 active:bg-white/10 touch-manipulation'
+                ? 'text-xl py-4 px-4 -mx-4 block rounded-xl hover:opacity-75 active:opacity-90 touch-manipulation'
                 : ''
               } 
                   ${getHoverClass()}
@@ -285,6 +286,7 @@ const Header: React.FC<HeaderData & {
     const actualIsSticky = isSticky ?? sticky;
     let style = transparent ? 'sticky-transparent' : rawStyle;
     if (style === 'transparent') style = 'sticky-transparent'; // Map legacy transparent style
+    if (!isHeaderVariant(style)) style = 'sticky-solid';
 
     // TopBar offset for floating styles - measure actual TopBar element if present
     const [measuredTopBarOffset, setMeasuredTopBarOffset] = useState(0);
@@ -369,20 +371,32 @@ const Header: React.FC<HeaderData & {
       setDragOffset(0);
     }, [dragOffset]);
 
-    // Colors are now 100% from props - no hardcoded fallbacks
-    // colors.background, colors.text, colors.accent come from the editor
     const isAnyTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
+    const baseBackground = colors?.background || backgroundColor || (isAnyTransparentStyle ? 'transparent' : '#1a1a2e');
+    const baseText = colors?.text || textColor || '#ffffff';
+    const baseAccent = colors?.accent || baseText;
+    const derivedSeparator = colors?.separator || colors?.border || `color-mix(in srgb, ${baseText} 18%, transparent)`;
 
-    // Use colors directly from props - colors.X (from controls) takes priority over root-level props (from palette application)
     const actualColors = {
-      background: colors?.background || backgroundColor || (isAnyTransparentStyle ? 'transparent' : '#1a1a2e'),
-      text: colors?.text || textColor || '#ffffff',
-      accent: colors?.accent,
+      background: baseBackground,
+      text: baseText,
+      accent: baseAccent,
+      border: colors?.border || derivedSeparator,
+      surface: colors?.surface || colors?.panelBackground || baseBackground,
+      surfaceAlt: colors?.surfaceAlt || colors?.surface || colors?.panelBackground || baseBackground,
+      panelBackground: colors?.panelBackground || colors?.surface || baseBackground,
+      panelText: colors?.panelText || baseText,
+      mutedText: colors?.mutedText || `color-mix(in srgb, ${baseText} 70%, transparent)`,
+      linkHover: colors?.linkHover || baseAccent,
+      separator: derivedSeparator,
+      buttonBackground: colors?.buttonBackground || baseAccent,
+      buttonText: colors?.buttonText || '#ffffff',
+      cartBadge: colors?.cartBadge || baseAccent,
     };
 
     useEffect(() => {
       // Para estilos flotantes, siempre mostrar como "scrolled"
-      if (style.startsWith('floating')) {
+      if (style.startsWith('floating') || style === 'rounded-shell' || style === 'dark-dock' || style === 'segmented-pill') {
         setIsScrolled(true);
         return;
       }
@@ -409,15 +423,14 @@ const Header: React.FC<HeaderData & {
     const isTransparentStyle = style === 'sticky-transparent' || style.startsWith('transparent');
     // When forceSolid is true, never use transparent background (useful for ecommerce pages without hero)
     const isTransparent = !forceSolid && isTransparentStyle && !isScrolled && !isMenuOpen;
-    const bgColor = isTransparent ? 'transparent' : actualColors.background;
-
     // Ensure contrast on transparent backgrounds by falling back to white if text is the default dark
-    const finalTextColor = (isTransparent && actualColors.text?.toLowerCase() === '#e2e8f0') ? '#FFFFFF' : actualColors.text;
+    const finalTextColor = (isTransparent && actualColors.text?.toLowerCase() === '#e2e8f0') ? '#ffffff' : actualColors.text;
 
     // Glass Effect
-    const glassClasses = (glassEffect && !isTransparent) ? 'border-b border-white/10' : '';
+    const glassClasses = (glassEffect && !isTransparent) ? 'border-b' : '';
     const shadowClasses = (isScrolled && !isTransparent && !glassEffect) ? 'shadow-md' : '';
-    const isFloatingLayout = style.startsWith('floating') || style === 'segmented-pill';
+    const isFloatingLayout = style.startsWith('floating') || style === 'segmented-pill' || style === 'rounded-shell' || style === 'dark-dock';
+    const isContainedFloatingLayout = isFloatingLayout && style !== 'segmented-pill';
 
     // ============================================
     // ESTILOS DE CONTENEDOR SEGÚN VARIANTE
@@ -428,16 +441,20 @@ const Header: React.FC<HeaderData & {
       if (forceSolid && isFloatingLayout) {
         switch (style) {
           case 'floating-pill':
-            return `mx-auto w-[calc(100%-3rem)] ${forceWideFloating ? 'max-w-7xl' : 'max-w-5xl'} rounded-full border border-white/15 shadow-lg`;
+            return `mx-auto w-[calc(100%-3rem)] ${forceWideFloating ? 'max-w-7xl' : 'max-w-5xl'} rounded-full border shadow-lg`;
           case 'floating-glass':
-            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border border-white/20';
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border';
           case 'floating-shadow':
-            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden';
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl overflow-hidden';
           case 'segmented-pill':
-            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container';
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-xl border shadow-sm overflow-hidden segmented-pill-container';
+          case 'rounded-shell':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-full border shadow-lg';
+          case 'dark-dock':
+            return 'mx-auto w-[calc(100%-3rem)] max-w-6xl rounded-2xl border overflow-hidden';
           case 'floating':
           default:
-            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl border border-white/10';
+            return 'mx-auto w-[calc(100%-3rem)] max-w-7xl rounded-2xl border';
         }
       }
 
@@ -453,18 +470,28 @@ const Header: React.FC<HeaderData & {
         // --- FLOTANTES ---
         // Note: `top` is handled via inline style to account for topBarOffset
         case 'floating':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl border border-white/10 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl border max-w-7xl mx-auto`;
         case 'floating-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-5xl mx-auto rounded-full border border-white/15 shadow-lg`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-5xl mx-auto rounded-full border shadow-lg`;
         case 'floating-glass':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-xl border border-white/20 max-w-7xl mx-auto`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-xl border max-w-7xl mx-auto`;
         case 'floating-shadow':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl max-w-7xl mx-auto shadow-[0_4px_20px_rgba(0,0,0,0.12)] overflow-hidden`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] rounded-2xl max-w-7xl mx-auto overflow-hidden`;
+        case 'rounded-shell':
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-full border shadow-lg`;
+        case 'dark-dock':
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-6xl mx-auto rounded-2xl border overflow-hidden`;
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
           return 'w-full tabbed-nav-container';
         case 'segmented-pill':
-          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-xl border border-gray-200 shadow-sm overflow-hidden segmented-pill-container`;
+          return `${isPreviewMode ? 'absolute' : 'fixed'} left-0 right-0 w-[calc(100%-3rem)] max-w-7xl mx-auto rounded-xl border shadow-sm overflow-hidden segmented-pill-container`;
+        case 'mega-panel':
+          return 'w-full rounded-none border-b mega-panel-nav-container';
+        case 'split-cta':
+          return 'w-full rounded-none border-b';
+        case 'center-stage':
+          return 'w-full rounded-none border-b';
 
         // --- TRANSPARENTES ---
         case 'sticky-transparent':
@@ -493,7 +520,8 @@ const Header: React.FC<HeaderData & {
           backgroundColor: `color-mix(in srgb, ${actualColors.background} 55%, transparent)`,
           backdropFilter: 'blur(16px) saturate(180%)',
           WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+          borderColor: actualColors.border,
+          boxShadow: `0 4px 30px color-mix(in srgb, ${actualColors.background} 18%, transparent)`,
         };
       }
 
@@ -506,36 +534,59 @@ const Header: React.FC<HeaderData & {
             backgroundColor: `color-mix(in srgb, ${actualColors.background} 90%, transparent)`,
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(128, 128, 128, 0.15)',
-            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.03)'
+            borderBottom: `1px solid ${actualColors.separator}`,
+            boxShadow: `0 4px 30px color-mix(in srgb, ${actualColors.background} 8%, transparent)`
           };
         case 'edge-bordered':
           return {
             backgroundColor: actualColors.background,
-            borderColor: colors?.accent
+            borderColor: actualColors.accent
           };
 
         // --- FLOTANTES ---
         case 'floating':
-          return { backgroundColor: actualColors.background };
+          return { backgroundColor: actualColors.background, borderColor: actualColors.border };
         case 'floating-pill':
           return {
             backgroundColor: `color-mix(in srgb, ${actualColors.background} 94%, transparent)`,
-            backdropFilter: 'blur(8px)'
+            backdropFilter: 'blur(8px)',
+            borderColor: actualColors.border,
           };
         case 'floating-glass':
           return {
             backgroundColor: `color-mix(in srgb, ${actualColors.background} 25%, transparent)`,
-            backdropFilter: 'blur(20px) saturate(180%)'
+            backdropFilter: 'blur(20px) saturate(180%)',
+            borderColor: actualColors.border,
           };
         case 'floating-shadow':
-          return { backgroundColor: actualColors.background };
+          return {
+            backgroundColor: actualColors.background,
+            borderColor: actualColors.border,
+            boxShadow: `0 18px 50px color-mix(in srgb, ${actualColors.background} 20%, transparent)`
+          };
+        case 'rounded-shell':
+          return {
+            backgroundColor: `color-mix(in srgb, ${actualColors.background} 94%, transparent)`,
+            backdropFilter: 'blur(10px)',
+            borderColor: actualColors.border,
+            boxShadow: `0 20px 55px color-mix(in srgb, ${actualColors.background} 24%, transparent)`
+          };
+        case 'dark-dock':
+          return {
+            backgroundColor: actualColors.background,
+            borderColor: actualColors.border,
+            boxShadow: `0 18px 60px color-mix(in srgb, ${actualColors.accent} 18%, transparent)`
+          };
 
         // --- NUEVOS: Diseños Especiales ---
         case 'tabbed':
-          return { backgroundColor: actualColors.background, borderBottom: `1px solid ${colors?.tabBorderColor || 'rgba(128, 128, 128, 0.15)'}` };
+          return { backgroundColor: actualColors.background, borderBottom: `1px solid ${colors?.tabBorderColor || actualColors.separator}` };
         case 'segmented-pill':
-          return { backgroundColor: actualColors.background };
+          return { backgroundColor: actualColors.background, borderColor: actualColors.border };
+        case 'mega-panel':
+        case 'split-cta':
+        case 'center-stage':
+          return { backgroundColor: actualColors.background, borderColor: actualColors.separator };
 
         // --- TRANSPARENTES ---
         case 'sticky-transparent':
@@ -548,7 +599,7 @@ const Header: React.FC<HeaderData & {
         case 'transparent-bordered':
           return {
             backgroundColor: `color-mix(in srgb, ${actualColors.background} 88%, transparent)`,
-            borderColor: 'rgba(255,255,255,0.2)'
+            borderColor: actualColors.border
           };
         case 'transparent-gradient': {
           const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 15;
@@ -563,7 +614,7 @@ const Header: React.FC<HeaderData & {
           const fadeSize = typeof gradientFadeSize === 'number' ? gradientFadeSize : 15;
           const startPercent = Math.max(0, 100 - fadeSize);
           // Use a darker tone of the header's own background — never pure black
-          const edgeColor = colors?.gradientDarkColor || `color-mix(in srgb, ${actualColors.background}, #0a0a0a 40%)`;
+          const edgeColor = colors?.gradientDarkColor || `color-mix(in srgb, ${actualColors.background} 60%, ${actualColors.surfaceAlt})`;
           return {
             background: `linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.background} ${startPercent}%, ${edgeColor} 100%)`
           };
@@ -607,8 +658,8 @@ const Header: React.FC<HeaderData & {
           ${fullWidth ? 'w-full' : ''}
       `}
           style={{
-            backgroundColor: colors?.buttonBackground || actualColors.accent,
-            color: colors?.buttonText || '#ffffff',
+            backgroundColor: actualColors.buttonBackground,
+            color: actualColors.buttonText,
             borderRadius: ctaBorderRadius
           }}
         >
@@ -630,15 +681,15 @@ const Header: React.FC<HeaderData & {
     const CartButton = () => (
       <button
         onClick={onCartClick}
-        className="relative p-2 rounded-full transition-colors hover:bg-white/10"
+        className="relative p-2 rounded-full transition-colors hover:opacity-75"
         style={{ color: finalTextColor }}
         aria-label={`Carrito (${cartItemCount} productos)`}
       >
         <ShoppingCart size={22} />
         {cartItemCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-white text-xs font-bold shadow-lg"
-            style={{ backgroundColor: '#ef4444' }}
+            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold shadow-lg"
+            style={{ backgroundColor: actualColors.cartBadge, color: actualColors.buttonText }}
           >
             {cartItemCount > 99 ? '99+' : cartItemCount}
           </span>
@@ -655,6 +706,7 @@ const Header: React.FC<HeaderData & {
     };
 
     const isSpecialStyle = style === 'tabbed' || style === 'segmented-pill';
+    const shouldUseCenterStage = style === 'center-stage';
 
     const renderLayout = () => {
       switch (layout) {
@@ -665,7 +717,7 @@ const Header: React.FC<HeaderData & {
                 <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
               <div className={`hidden nav:flex flex-1 justify-center ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={actualColors.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="hidden nav:flex flex-shrink-0 ml-4 justify-end items-center gap-4">
                 {showSearch && (
@@ -674,7 +726,7 @@ const Header: React.FC<HeaderData & {
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
                     placeholder={resolvedSearchPlaceholder}
-                    primaryColor={colors?.accent}
+                    primaryColor={actualColors.accent}
                     textColor={finalTextColor}
                   />
                   </React.Suspense>
@@ -690,7 +742,7 @@ const Header: React.FC<HeaderData & {
           return (
             <>
               <div className={`hidden nav:flex flex-1 justify-start ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={actualColors.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
               </div>
               <div className="flex-shrink-0 nav:mx-auto absolute left-1/2 -translate-x-1/2 nav:static nav:translate-x-0 px-4">
                 <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
@@ -702,7 +754,7 @@ const Header: React.FC<HeaderData & {
                     onProductClick={handleProductClick}
                     onContentClick={handleContentClick}
                     placeholder={resolvedSearchPlaceholder}
-                    primaryColor={colors?.accent}
+                    primaryColor={actualColors.accent}
                     textColor={finalTextColor}
                   />
                   </React.Suspense>
@@ -720,8 +772,8 @@ const Header: React.FC<HeaderData & {
               <div className="flex justify-center mb-4">
                 <Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} />
               </div>
-              <div className={`hidden nav:flex justify-center border-t border-white/10 pt-2 ${isSpecialStyle ? 'items-end h-full' : 'items-center'}`}>
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+              <div className={`hidden nav:flex justify-center border-t pt-2 ${isSpecialStyle ? 'items-end h-full' : 'items-center'}`} style={{ borderColor: actualColors.separator }}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={actualColors.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`ml-8 flex items-center gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
                     <React.Suspense fallback={null}>
@@ -729,7 +781,7 @@ const Header: React.FC<HeaderData & {
                     onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
                       placeholder={resolvedSearchPlaceholder}
-                      primaryColor={colors?.accent}
+                      primaryColor={actualColors.accent}
                       textColor={finalTextColor}
                   />
                   </React.Suspense>
@@ -745,9 +797,9 @@ const Header: React.FC<HeaderData & {
         default: // Classic
           return (
             <>
-              <div className="flex-shrink-0 mr-8"><Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} /></div>
-              <div className={`hidden nav:flex flex-1 justify-end gap-8 ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
-                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={colors?.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
+              <div className={`flex-shrink-0 ${shouldUseCenterStage ? 'nav:absolute nav:left-1/2 nav:-translate-x-1/2 mr-0' : 'mr-8'}`}><Logo logoType={logoType} logoText={resolvedLogoText} logoImageUrl={actualLogoImageUrl} logoWidth={logoWidth} logoHeight={logoHeight} textColor={finalTextColor} onNavigate={onNavigate} /></div>
+              <div className={`hidden nav:flex flex-1 ${shouldUseCenterStage ? 'justify-between' : 'justify-end'} gap-8 ${isSpecialStyle ? 'h-full items-end' : 'items-center'}`}>
+                <NavLinks links={allLinks} textColor={finalTextColor} accentColor={actualColors.accent} hoverStyle={hoverStyle} className={`flex ${isSpecialStyle ? 'items-end gap-1 h-full' : 'items-center gap-8'}`} linkFontSize={linkFontSize} onNavigate={onNavigate} showIcons={isSpecialStyle || allLinks.some(l => l.icon)} />
                 <div className={`flex items-center ml-4 gap-4 ${isSpecialStyle ? 'pb-2' : ''}`}>
                   {showSearch && (
                     <React.Suspense fallback={null}>
@@ -755,7 +807,7 @@ const Header: React.FC<HeaderData & {
                     onProductClick={handleProductClick}
                       onContentClick={handleContentClick}
                       placeholder={resolvedSearchPlaceholder}
-                      primaryColor={colors?.accent}
+                      primaryColor={actualColors.accent}
                       textColor={finalTextColor}
                   />
                   </React.Suspense>
@@ -790,7 +842,7 @@ const Header: React.FC<HeaderData & {
       }
 
       // Floating styles - absolute o fixed
-      if (style.startsWith('floating') || style === 'segmented-pill') {
+      if (isFloatingLayout) {
         return isPreviewMode ? 'absolute' : 'fixed';
       }
 
@@ -814,11 +866,12 @@ const Header: React.FC<HeaderData & {
     // Determinar si toma espacio en el flujo del documento
     // When forceSolid is true, always take space (the header is solid and visible)
     const shouldNotTakeSpace = !forceSolid && (
-      style.startsWith('floating') || style === 'segmented-pill' ||
+      isFloatingLayout ||
       ((style.startsWith('transparent') || style === 'sticky-transparent') && !isScrolled && style !== 'transparent-blur' && style !== 'transparent-bordered' && style !== 'transparent-gradient' && style !== 'transparent-gradient-dark')
     );
 
     const activeTopBarOffset = isScrolled ? 0 : resolvedTopBarOffset;
+    const megaPanelLinks = allLinks.slice(0, 6);
 
     return (
       <>
@@ -845,23 +898,24 @@ const Header: React.FC<HeaderData & {
 
           <div
             data-site-header-surface="true"
-            className={`transition-all duration-500 ease-out ${containerClasses} ${glassEffect ? glassClasses : ''
-              } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect ? shadowClasses : ''}`}
+            className={`site-header-surface transition-all duration-500 ease-out ${containerClasses} ${glassEffect ? glassClasses : ''
+              } ${!style.startsWith('floating') && !style.includes('transparent') && !glassEffect && style !== 'rounded-shell' && style !== 'dark-dock' ? shadowClasses : ''}`}
             style={{
               ...backgroundStyle,
+              borderColor: backgroundStyle.borderColor || actualColors.border,
               ...(!forceSolid && isFloatingLayout ? {
-                top: `${(style === 'floating-pill' ? 16 : 24) + resolvedTopBarOffset}px`,
+                top: `${(style === 'floating-pill' || style === 'rounded-shell' ? 16 : 24) + resolvedTopBarOffset}px`,
               } : {}),
               height: isFloatingLayout ? 'auto' : computedHeight,
               minHeight: isFloatingLayout ? 'auto' : computedMinHeight,
-              padding: style.startsWith('floating')
-                ? (style === 'floating-pill' ? '10px 48px' : '12px 24px')
+              padding: isContainedFloatingLayout
+                ? (style === 'floating-pill' || style === 'rounded-shell' ? '10px 48px' : '12px 24px')
                 : style === 'segmented-pill'
                   ? '0 24px'
                   : `0 ${isScrolled ? '1.5rem' : '2rem'}`
             }}
           >
-            <div className={`container mx-auto w-full h-full flex items-center justify-between relative ${style.startsWith('floating') || style === 'segmented-pill' ? '' : 'px-0'
+            <div className={`container mx-auto w-full h-full flex items-center justify-between relative ${isFloatingLayout ? '' : 'px-0'
               }`}>
 
               {/* Desktop Layouts */}
@@ -873,15 +927,15 @@ const Header: React.FC<HeaderData & {
                 {showCart && (
                   <button
                     onClick={onCartClick}
-                    className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                    className="relative flex items-center justify-center w-9 h-9 rounded-full hover:opacity-75 transition-all touch-manipulation"
                     style={{ color: finalTextColor }}
                     aria-label={`Carrito (${cartItemCount} productos)`}
                   >
                     <ShoppingCart size={20} />
                     {cartItemCount > 0 && (
                       <span
-                        className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full text-white text-[10px] font-bold shadow-lg"
-                        style={{ backgroundColor: '#ef4444' }}
+                        className="absolute -top-0.5 -right-0.5 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold shadow-lg"
+                        style={{ backgroundColor: actualColors.cartBadge, color: actualColors.buttonText }}
                       >
                         {cartItemCount > 99 ? '99+' : cartItemCount}
                       </span>
@@ -891,7 +945,7 @@ const Header: React.FC<HeaderData & {
                 {/* Menu Button */}
                 <button
                   onClick={() => setIsMenuOpen(true)}
-                  className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-white/10 active:bg-white/20 transition-all touch-manipulation"
+                  className="flex items-center justify-center w-9 h-9 rounded-full hover:opacity-75 transition-all touch-manipulation"
                   style={{ color: finalTextColor }}
                   aria-label="Abrir menú"
                 >
@@ -900,9 +954,68 @@ const Header: React.FC<HeaderData & {
               </div>
 
             </div>
+
+            {style === 'mega-panel' && megaPanelLinks.length > 0 && (
+              <div
+                className="mega-panel-content hidden nav:block absolute left-0 right-0 top-full"
+                style={{
+                  backgroundColor: actualColors.panelBackground,
+                  color: actualColors.panelText,
+                  borderColor: actualColors.separator,
+                  boxShadow: `0 24px 50px color-mix(in srgb, ${actualColors.background} 18%, transparent)`
+                }}
+              >
+                <div className="container mx-auto grid grid-cols-3 gap-4 px-8 py-6">
+                  {megaPanelLinks.map((link, index) => (
+                    <a
+                      key={`${resolveText(link.text)}-${index}`}
+                      href={link.href || '#'}
+                      onClick={(e) => {
+                        if (onNavigate && link.href) {
+                          e.preventDefault();
+                          onNavigate(link.href);
+                        }
+                      }}
+                      className="group flex items-start justify-between gap-4 rounded-lg border p-4 transition-all hover:-translate-y-0.5"
+                      style={{
+                        borderColor: actualColors.separator,
+                        backgroundColor: index === 0 ? actualColors.surfaceAlt : actualColors.surface,
+                        color: actualColors.panelText,
+                      }}
+                    >
+                      <span>
+                        <span className="block text-sm font-semibold">{resolveText(link.text)}</span>
+                        <span className="mt-1 block text-xs" style={{ color: actualColors.mutedText }}>{link.href || '/'}</span>
+                      </span>
+                      <ArrowRight size={16} className="mt-0.5 transition-transform group-hover:translate-x-0.5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* NUEVOS ESTILOS INYECTADOS */}
+          <style>{`
+            .site-header-surface .nav-link-glow:hover {
+              color: ${actualColors.linkHover} !important;
+              filter: drop-shadow(0 0 8px ${actualColors.linkHover});
+            }
+            .site-header-surface .mega-panel-content {
+              opacity: 0;
+              transform: translateY(8px);
+              pointer-events: none;
+              border-top: 1px solid ${actualColors.separator};
+              transition: opacity 180ms ease, transform 180ms ease;
+            }
+            .site-header-surface:hover .mega-panel-content,
+            .site-header-surface:focus-within .mega-panel-content {
+              opacity: 1;
+              transform: translateY(0);
+              pointer-events: auto;
+            }
+          `}</style>
+
           {style === 'tabbed' && (
             <style>{`
               .tabbed-nav-container ul {
@@ -935,8 +1048,8 @@ const Header: React.FC<HeaderData & {
               .tabbed-nav-container ul li:first-child a,
               .tabbed-nav-container ul li a:hover {
                 opacity: 1;
-                background: linear-gradient(to top, color-mix(in srgb, ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} 10%, transparent), transparent);
-                color: ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} !important;
+                background: linear-gradient(to top, color-mix(in srgb, ${colors?.tabActiveColor || actualColors.accent} 10%, transparent), transparent);
+                color: ${colors?.tabActiveColor || actualColors.accent} !important;
               }
 
               .tabbed-nav-container ul li:first-child a::after,
@@ -947,8 +1060,8 @@ const Header: React.FC<HeaderData & {
                 left: 0;
                 right: 0;
                 height: 2px;
-                background-color: ${colors?.tabActiveColor || colors?.accent || '#3b82f6'};
-                box-shadow: 0 -2px 12px color-mix(in srgb, ${colors?.tabActiveColor || colors?.accent || '#3b82f6'} 80%, transparent);
+                background-color: ${colors?.tabActiveColor || actualColors.accent};
+                box-shadow: 0 -2px 12px color-mix(in srgb, ${colors?.tabActiveColor || actualColors.accent} 80%, transparent);
                 border-radius: 2px 2px 0 0;
               }
             `}</style>
@@ -975,12 +1088,12 @@ const Header: React.FC<HeaderData & {
                 ${segmentedPillSlanted ? `transform: skewX(-${segmentedPillSlantedAngle}deg);` : ''}
               }
               .segmented-pill-container ul li:not(:last-child) {
-                border-right: 1px solid rgba(0, 0, 0, 0.06);
+                border-right: 1px solid ${actualColors.separator};
               }
               .segmented-pill-container ul li a {
                 padding: 0 24px;
                 height: 100%;
-                color: ${colors?.accent || '#3b82f6'} !important;
+                color: ${actualColors.accent} !important;
                 font-weight: 700;
                 transition: all 0.2s ease;
                 display: flex;
@@ -1004,8 +1117,8 @@ const Header: React.FC<HeaderData & {
               /* Efecto activo o hover */
               .segmented-pill-container ul li:first-child a,
               .segmented-pill-container ul li a:hover {
-                background: linear-gradient(180deg, ${actualColors.background} 0%, ${colors?.accent || '#3b82f6'} 15px, color-mix(in srgb, ${colors?.accent || '#3b82f6'} 80%, black) calc(100% - 15px), ${actualColors.background} 100%);
-                color: #ffffff !important;
+                background: linear-gradient(180deg, ${actualColors.background} 0%, ${actualColors.accent} 15px, color-mix(in srgb, ${actualColors.accent} 80%, ${actualColors.surfaceAlt}) calc(100% - 15px), ${actualColors.background} 100%);
+                color: ${actualColors.buttonText} !important;
               }
             `}</style>
           )}
@@ -1034,12 +1147,12 @@ const Header: React.FC<HeaderData & {
                   backgroundColor: actualColors.text
                 }}
               />
-              {/* Gradient fade below the bar - black gradient */}
+              {/* Gradient fade below the bar */}
               <div
                 className="absolute left-0 right-0 h-16 pointer-events-none"
                 style={{
                   top: 'calc(100% + 2px)',
-                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
+                  background: `linear-gradient(to bottom, color-mix(in srgb, ${actualColors.background} 65%, transparent) 0%, transparent 100%)`
                 }}
               />
             </>
@@ -1063,8 +1176,8 @@ const Header: React.FC<HeaderData & {
                 style={{
                   top: '100%',
                   background: style === 'transparent-gradient-dark'
-                    ? `linear-gradient(to bottom, color-mix(in srgb, ${actualColors.background}, #000 50%) 0%, transparent 100%)`
-                    : 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)'
+                    ? `linear-gradient(to bottom, color-mix(in srgb, ${actualColors.background} 65%, ${actualColors.surfaceAlt}) 0%, transparent 100%)`
+                    : `linear-gradient(to bottom, color-mix(in srgb, ${actualColors.background} 65%, transparent) 0%, transparent 100%)`
                 }}
               />
             </>
@@ -1080,7 +1193,8 @@ const Header: React.FC<HeaderData & {
             {/* Overlay */}
             {isMenuOpen && (
               <div
-                className="fixed inset-0 bg-black/50 z-[10000] nav:hidden"
+                className="fixed inset-0 z-[10000] nav:hidden"
+                style={{ backgroundColor: `color-mix(in srgb, ${actualColors.background} 64%, transparent)` }}
                 onClick={() => setIsMenuOpen(false)}
               />
             )}
@@ -1093,15 +1207,15 @@ const Header: React.FC<HeaderData & {
             transform transition-transform duration-300 ease-out nav:hidden
             ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}
           `}
-              style={{ backgroundColor: colors?.background }}
+              style={{ backgroundColor: actualColors.panelBackground }}
             >
               <div className="flex flex-col h-full p-5">
                 {/* Close button */}
                 <div className="flex justify-end mb-6">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors touch-manipulation"
-                    style={{ color: colors?.text }}
+                    className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-75 transition-colors touch-manipulation"
+                    style={{ color: actualColors.panelText }}
                     aria-label="Cerrar menú"
                   >
                     <X size={24} />
@@ -1122,8 +1236,8 @@ const Header: React.FC<HeaderData & {
                         setIsMenuOpen(false);
                       }}
                       placeholder={resolvedSearchPlaceholder}
-                      primaryColor={colors?.accent}
-                      textColor={colors?.text}
+                      primaryColor={actualColors.accent}
+                      textColor={actualColors.panelText}
                   />
                   </React.Suspense>
                   </div>
@@ -1143,8 +1257,8 @@ const Header: React.FC<HeaderData & {
                             }
                             setIsMenuOpen(false);
                           }}
-                          className="block py-3 px-4 text-lg font-medium rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
-                          style={{ color: colors?.text }}
+                          className="block py-3 px-4 text-lg font-medium rounded-lg hover:opacity-75 transition-colors touch-manipulation"
+                          style={{ color: actualColors.panelText }}
                         >
                           {resolveText(link.text)}
                         </a>
@@ -1154,7 +1268,7 @@ const Header: React.FC<HeaderData & {
                 </nav>
 
                 {/* Footer Actions */}
-                <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="pt-4 border-t space-y-3" style={{ borderColor: actualColors.separator }}>
                   {actualShowLogin && (
                     <a
                       href={loginUrl || '#'}
@@ -1165,8 +1279,8 @@ const Header: React.FC<HeaderData & {
                         }
                         setIsMenuOpen(false);
                       }}
-                      className="block w-full text-center py-3 font-bold rounded-lg hover:bg-white/10 transition-colors touch-manipulation"
-                      style={{ color: colors?.text }}
+                      className="block w-full text-center py-3 font-bold rounded-lg hover:opacity-75 transition-colors touch-manipulation"
+                      style={{ color: actualColors.panelText }}
                     >
                       {resolvedLoginText}
                     </a>

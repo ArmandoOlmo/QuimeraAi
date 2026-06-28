@@ -14,7 +14,7 @@ import SocialLinksEditor from '../../ui/SocialLinksEditor';
 import {
   Input, TextArea, I18nStringArrayEditor, Select, ToggleControl, FontSizeSelector, PaddingSelector, BorderRadiusSelector
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
-import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
+import { BackgroundImageControl, CornerGradientControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
@@ -25,12 +25,18 @@ import {
   Layers, UserPlus
 } from 'lucide-react';
 import { SingleProductSelector, SingleCollectionSelector, SingleContentSelector } from '../../ui/EcommerceControls';
+import {
+  PRICING_VARIANT_GROUPS,
+  getPricingVariantMeta,
+  normalizePricingVariant,
+} from '../../../data/pricingVariants';
 
 
 export const renderPricingControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.pricing) return null;
-  const currentVariant = data.pricing.pricingVariant || 'classic';
+  const currentVariant = normalizePricingVariant(data.pricing.pricingVariant);
+  const currentVariantMeta = getPricingVariantMeta(currentVariant);
 
   return (
     <div className="space-y-4">
@@ -38,17 +44,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="mb-4">
         <Select
           label={t('editor.controls.pricing.styleVariant')}
-          value={currentVariant || 'classic'}
+          value={currentVariant}
           onChange={(v) => setNestedData('pricing.pricingVariant', v)}
-          options={[
-            { value: 'classic', label: `${t('editor.controls.pricing.classic')} - ${t('editor.controls.pricing.classicDesc')}` },
-            { value: 'gradient', label: `${t('editor.controls.pricing.gradient')} - ${t('editor.controls.pricing.gradientDesc')}` },
-            { value: 'glassmorphism', label: `${t('editor.controls.pricing.glassmorphism')} - ${t('editor.controls.pricing.glassmorphismDesc')}` },
-            { value: 'minimalist', label: `${t('editor.controls.pricing.minimalist')} - ${t('editor.controls.pricing.minimalistDesc')}` },
-            { value: 'neon-glow', label: `Neon Glow - Deep inner glow effect` },
-            { value: 'comparison', label: `Comparison - Detailed` }
-          ]}
+          groups={PRICING_VARIANT_GROUPS}
         />
+        <p className="mt-2 text-[11px] leading-relaxed text-q-text-secondary">{currentVariantMeta.description}</p>
       </div>
 
       <div className="mb-4">
@@ -99,43 +99,6 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         onSizeChange={(v) => setNestedData('pricing.cornerGradient.size', v)}
       />
 
-      {/* Gradient Colors - Only for gradient variant */}
-      {currentVariant === 'gradient' && (
-        <>
-          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Sparkles size={14} className="text-q-accent" />
-            {t('editor.controls.pricing.gradientColors')}
-          </label>
-          <div className="space-y-1">
-            <ColorControl label={t('editor.controls.pricing.gradientStart')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
-            <ColorControl label={t('editor.controls.pricing.gradientEnd')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
-          </div>
-          <div className="mt-2 p-3 rounded-lg" style={{
-            backgroundImage: `linear-gradient(135deg, ${data.pricing.colors?.gradientStart || '#4f46e5'}, ${data.pricing.colors?.gradientEnd || '#10b981'})`
-          }}>
-            <p className="text-xs text-white font-semibold text-center">{t('editor.controls.pricing.gradientPreview')}</p>
-          </div>
-        </>
-      )}
-
-      {/* Neon Glow Controls */}
-      {currentVariant === 'neon-glow' && (
-        <CardGlowControl
-          enabled={data.pricing.cardGlow?.enabled !== false}
-          color={data.pricing.cardGlow?.color || '#144CCD'}
-          intensity={data.pricing.cardGlow?.intensity ?? 100}
-          borderRadius={data.pricing.cardGlow?.borderRadius ?? 80}
-          gradientStart={data.pricing.cardGlow?.gradientStart || '#0A0909'}
-          gradientEnd={data.pricing.cardGlow?.gradientEnd || '#09101F'}
-          onEnabledChange={(v) => setNestedData('pricing.cardGlow.enabled', v)}
-          onColorChange={(v) => setNestedData('pricing.cardGlow.color', v)}
-          onIntensityChange={(v) => setNestedData('pricing.cardGlow.intensity', v)}
-          onBorderRadiusChange={(v) => setNestedData('pricing.cardGlow.borderRadius', v)}
-          onGradientStartChange={(v) => setNestedData('pricing.cardGlow.gradientStart', v)}
-          onGradientEndChange={(v) => setNestedData('pricing.cardGlow.gradientEnd', v)}
-        />
-      )}
-
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.cardColors')}</label>
       <ColorControl label={t('editor.controls.pricing.cardBackground')} value={data.pricing.colors?.cardBackground || '#1f2937'} onChange={(v) => setNestedData('pricing.colors.cardBackground', v)} />
       <ColorControl label={t('editor.controls.pricing.cardTitle')} value={data.pricing.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.cardHeading', v)} />
@@ -144,6 +107,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={t('editor.controls.pricing.borderColor')} value={data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.borderColor', v)} />
       <ColorControl label={t('editor.controls.pricing.featuredAccent')} value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
       <ColorControl label={t('editor.controls.pricing.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
+
+      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">Advanced pricing surfaces</label>
+      <ColorControl label="Muted text" value={data.pricing.colors?.mutedText || data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.mutedText', v)} />
+      <ColorControl label="Panel background" value={data.pricing.colors?.panelBackground || '#111827'} onChange={(v) => setNestedData('pricing.colors.panelBackground', v)} />
+      <ColorControl label="Panel text" value={data.pricing.colors?.panelText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.panelText', v)} />
+      <ColorControl label="Alternate surface" value={data.pricing.colors?.surfaceAlt || '#f3f4f6'} onChange={(v) => setNestedData('pricing.colors.surfaceAlt', v)} />
+      <ColorControl label="Featured background" value={data.pricing.colors?.featuredBackground || data.pricing.colors?.accent || '#111827'} onChange={(v) => setNestedData('pricing.colors.featuredBackground', v)} />
+      <ColorControl label="Featured text" value={data.pricing.colors?.featuredText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.featuredText', v)} />
+      <ColorControl label="Badge background" value={data.pricing.colors?.badgeBackground || data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.badgeBackground', v)} />
+      <ColorControl label="Badge text" value={data.pricing.colors?.badgeText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.badgeText', v)} />
+      <ColorControl label="Divider" value={data.pricing.colors?.dividerColor || data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.dividerColor', v)} />
+      <ColorControl label="Image overlay" value={data.pricing.colors?.imageOverlay || '#000000'} onChange={(v) => setNestedData('pricing.colors.imageOverlay', v)} />
+      <ColorControl label={t('editor.controls.pricing.gradientStart')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
+      <ColorControl label={t('editor.controls.pricing.gradientEnd')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
 
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.pricing.defaultButtonColors')}</label>
       <div className="space-y-1">
@@ -178,6 +155,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               className="mb-0"
             />
 
+            <div className="grid grid-cols-2 gap-2">
+              <I18nInput placeholder="Eyebrow" value={tier.eyebrow || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.eyebrow`, val)} className="mb-0" />
+              <I18nInput placeholder="Badge" value={tier.badge || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.badge`, val)} className="mb-0" />
+            </div>
+
+            <I18nInput placeholder="Footer text" value={tier.footerText || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.footerText`, val)} className="mb-0" />
+
+            <ImagePicker
+              label="Plan image"
+              value={tier.imageUrl || ''}
+              onChange={(url) => setNestedData(`pricing.tiers.${index}.imageUrl`, url)}
+              aspectRatio="4:3"
+              generationContext="general"
+            />
+
             <div>
               <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('editor.controls.pricing.featuresHelp')}</label>
               <I18nStringArrayEditor
@@ -198,6 +190,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 placeholder="Button Link"
                 value={tier.buttonLink || ''}
                 onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonLink`, val)}
+                className="mb-0"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <I18nInput
+                placeholder="Secondary button"
+                value={tier.secondaryButtonText || ''}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.secondaryButtonText`, val)}
+                className="mb-0"
+              />
+              <Input
+                placeholder="Secondary link"
+                value={tier.secondaryButtonLink || ''}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.secondaryButtonLink`, val)}
                 className="mb-0"
               />
             </div>
@@ -238,40 +245,20 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 export const renderPricingControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.pricing) return null;
-  const currentVariant = data.pricing.pricingVariant || 'classic';
+  const currentVariant = normalizePricingVariant(data.pricing.pricingVariant);
+  const currentVariantMeta = getPricingVariantMeta(currentVariant);
 
   const contentTab = (
     <div className="space-y-4">
       {/* Variant Selector */}
       <div className="mb-4">
-        <label className="block text-xs font-bold text-q-text-secondary mb-2 uppercase tracking-wider">{t('controls.styleVariant')}</label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { value: 'classic', label: 'Classic', desc: 'Traditional card layout' },
-            { value: 'gradient', label: 'Gradient', desc: 'Vibrant gradients' },
-            { value: 'glassmorphism', label: 'Glass', desc: 'Frosted glass effect' },
-            { value: 'minimalist', label: 'Minimal', desc: 'Clean & simple' },
-            { value: 'neon-glow', label: 'Neon Glow', desc: 'Deep inner glow' }
-          ].map((variant) => (
-            <button type="button"               key={variant.value}
-              onClick={() => setNestedData('pricing.pricingVariant', variant.value)}
-              className={`
-                p-3 text-left rounded-lg border transition-all
-                ${currentVariant === variant.value
-                  ? 'bg-q-accent border-q-accent text-q-bg'
-                  : 'bg-q-surface border-q-border text-q-text-secondary hover:border-q-accent/50'
-                }
-              `}
-            >
-              <div className={`text-xs font-bold mb-1 ${currentVariant === variant.value ? 'text-q-bg' : 'text-q-text-primary'}`}>
-                {variant.label}
-              </div>
-              <div className={`text-[10px] ${currentVariant === variant.value ? 'text-q-bg/80' : 'text-q-text-secondary'}`}>
-                {variant.desc}
-              </div>
-            </button>
-          ))}
-        </div>
+        <Select
+          label={t('controls.styleVariant')}
+          value={currentVariant}
+          onChange={(v) => setNestedData('pricing.pricingVariant', v)}
+          groups={PRICING_VARIANT_GROUPS}
+        />
+        <p className="mt-2 text-[11px] leading-relaxed text-q-text-secondary">{currentVariantMeta.description}</p>
       </div>
 
       <div className="mb-4">
@@ -324,6 +311,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               className="mb-0"
             />
 
+            <div className="grid grid-cols-2 gap-2">
+              <I18nInput placeholder="Eyebrow" value={tier.eyebrow || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.eyebrow`, val)} className="mb-0" />
+              <I18nInput placeholder="Badge" value={tier.badge || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.badge`, val)} className="mb-0" />
+            </div>
+
+            <I18nInput placeholder="Footer text" value={tier.footerText || ''} onChange={(val) => setNestedData(`pricing.tiers.${index}.footerText`, val)} className="mb-0" />
+
+            <ImagePicker
+              label="Plan image"
+              value={tier.imageUrl || ''}
+              onChange={(url) => setNestedData(`pricing.tiers.${index}.imageUrl`, url)}
+              aspectRatio="4:3"
+              generationContext="general"
+            />
+
             <div>
               <label className="block text-[10px] font-bold text-q-text-secondary mb-1 uppercase tracking-wider">{t('controls.featuresOnePerLine')}</label>
               <I18nStringArrayEditor
@@ -344,6 +346,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
                 placeholder="Button Link"
                 value={tier.buttonLink || ''}
                 onChange={(val) => setNestedData(`pricing.tiers.${index}.buttonLink`, val)}
+                className="mb-0"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <I18nInput
+                placeholder="Secondary button"
+                value={tier.secondaryButtonText || ''}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.secondaryButtonText`, val)}
+                className="mb-0"
+              />
+              <Input
+                placeholder="Secondary link"
+                value={tier.secondaryButtonLink || ''}
+                onChange={(val) => setNestedData(`pricing.tiers.${index}.secondaryButtonLink`, val)}
                 className="mb-0"
               />
             </div>
@@ -389,6 +406,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('editor.controls.common.title')} value={data.pricing.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.heading', v)} />
         <ColorControl label={t('editor.controls.common.description')} value={data.pricing.colors?.description || data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.description', v)} />
         <ColorControl label={t('controls.text')} value={data.pricing.colors?.text} onChange={(v) => setNestedData('pricing.colors.text', v)} />
+        <ColorControl label="Muted text" value={data.pricing.colors?.mutedText || data.pricing.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('pricing.colors.mutedText', v)} />
       </div>
 
 
@@ -402,6 +420,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.borderColor')} value={data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.borderColor', v)} />
         <ColorControl label={t('controls.featuredAccent')} value={data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.accent', v)} />
         <ColorControl label={t('controls.checkmarkIcon')} value={data.pricing.colors?.checkmarkColor || '#10b981'} onChange={(v) => setNestedData('pricing.colors.checkmarkColor', v)} />
+        <ColorControl label="Panel background" value={data.pricing.colors?.panelBackground || '#111827'} onChange={(v) => setNestedData('pricing.colors.panelBackground', v)} />
+        <ColorControl label="Panel text" value={data.pricing.colors?.panelText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.panelText', v)} />
+        <ColorControl label="Alternate surface" value={data.pricing.colors?.surfaceAlt || '#f3f4f6'} onChange={(v) => setNestedData('pricing.colors.surfaceAlt', v)} />
+        <ColorControl label="Featured background" value={data.pricing.colors?.featuredBackground || data.pricing.colors?.accent || '#111827'} onChange={(v) => setNestedData('pricing.colors.featuredBackground', v)} />
+        <ColorControl label="Featured text" value={data.pricing.colors?.featuredText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.featuredText', v)} />
+        <ColorControl label="Badge background" value={data.pricing.colors?.badgeBackground || data.pricing.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.badgeBackground', v)} />
+        <ColorControl label="Badge text" value={data.pricing.colors?.badgeText || '#ffffff'} onChange={(v) => setNestedData('pricing.colors.badgeText', v)} />
+        <ColorControl label="Divider" value={data.pricing.colors?.dividerColor || data.pricing.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('pricing.colors.dividerColor', v)} />
+        <ColorControl label="Image overlay" value={data.pricing.colors?.imageOverlay || '#000000'} onChange={(v) => setNestedData('pricing.colors.imageOverlay', v)} />
       </div>
 
 
@@ -414,44 +441,21 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </div>
       </div>
 
-      {/* Gradient Colors - Only for gradient variant */}
-      {currentVariant === 'gradient' && (
-        <>
-          <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
-            <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
-              <Sparkles size={14} className="text-q-accent" />
-              Gradient Colors
-            </label>
-            <div className="space-y-1">
-              <ColorControl label={t('controls.start')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
-              <ColorControl label={t('controls.end')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
-            </div>
-            <div className="mt-2 p-3 rounded-lg" style={{
-              backgroundImage: `linear-gradient(135deg, ${data.pricing.colors?.gradientStart || '#4f46e5'}, ${data.pricing.colors?.gradientEnd || '#10b981'})`
-            }}>
-              <p className="text-xs text-white font-semibold text-center">Gradient Preview</p>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Neon Glow Controls */}
-      {currentVariant === 'neon-glow' && (
-        <CardGlowControl
-          enabled={data.pricing.cardGlow?.enabled !== false}
-          color={data.pricing.cardGlow?.color || '#144CCD'}
-          intensity={data.pricing.cardGlow?.intensity ?? 100}
-          borderRadius={data.pricing.cardGlow?.borderRadius ?? 80}
-          gradientStart={data.pricing.cardGlow?.gradientStart || '#0A0909'}
-          gradientEnd={data.pricing.cardGlow?.gradientEnd || '#09101F'}
-          onEnabledChange={(v) => setNestedData('pricing.cardGlow.enabled', v)}
-          onColorChange={(v) => setNestedData('pricing.cardGlow.color', v)}
-          onIntensityChange={(v) => setNestedData('pricing.cardGlow.intensity', v)}
-          onBorderRadiusChange={(v) => setNestedData('pricing.cardGlow.borderRadius', v)}
-          onGradientStartChange={(v) => setNestedData('pricing.cardGlow.gradientStart', v)}
-          onGradientEndChange={(v) => setNestedData('pricing.cardGlow.gradientEnd', v)}
-        />
-      )}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
+        <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider flex items-center gap-2">
+          <Sparkles size={14} className="text-q-accent" />
+          Gradient Colors
+        </label>
+        <div className="space-y-1">
+          <ColorControl label={t('controls.start')} value={data.pricing.colors?.gradientStart || '#4f46e5'} onChange={(v) => setNestedData('pricing.colors.gradientStart', v)} />
+          <ColorControl label={t('controls.end')} value={data.pricing.colors?.gradientEnd || '#10b981'} onChange={(v) => setNestedData('pricing.colors.gradientEnd', v)} />
+        </div>
+        <div className="mt-2 p-3 rounded-lg" style={{
+          backgroundImage: `linear-gradient(135deg, ${data.pricing.colors?.gradientStart || '#4f46e5'}, ${data.pricing.colors?.gradientEnd || '#10b981'})`
+        }}>
+          <p className="text-xs text-white font-semibold text-center">Gradient Preview</p>
+        </div>
+      </div>
 
 
       {/* Corner Gradient */}

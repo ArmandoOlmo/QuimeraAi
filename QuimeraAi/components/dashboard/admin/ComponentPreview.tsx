@@ -30,6 +30,7 @@ import Slideshow from '../../Slideshow';
 import Pricing from '../../Pricing';
 import Faq from '../../Faq';
 import Portfolio from '../../Portfolio';
+import Showcase from '../../Showcase';
 import Leads from '../../Leads';
 import Newsletter from '../../Newsletter';
 import Video from '../../Video';
@@ -224,6 +225,8 @@ const ComponentPreview: React.FC<ComponentPreviewProps> = ({ selectedComponentId
                 return <Faq {...mergedProps} borderRadius={theme.cardBorderRadius} />;
             case 'portfolio':
                 return <Portfolio {...mergedProps} borderRadius={theme.cardBorderRadius} />;
+            case 'showcase':
+                return <Showcase {...mergedProps} borderRadius={(styles as any).borderRadius || theme.cardBorderRadius} />;
             case 'leads':
                 return <Leads {...mergedProps} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} />;
             case 'realEstateListings':

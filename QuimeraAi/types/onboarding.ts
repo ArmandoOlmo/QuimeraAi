@@ -273,17 +273,17 @@ export const INDUSTRY_COMPONENT_DEFAULTS: Record<string, {
 }> = {
     'restaurant': {
         recommended: ['header', 'hero', 'menu', 'testimonials', 'map', 'leads', 'footer'],
-        optional: ['slideshow', 'team', 'faq', 'newsletter', 'banner', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['slideshow', 'showcase', 'team', 'faq', 'newsletter', 'banner', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['pricing', 'portfolio', 'howItWorks', 'features', 'services'],
     },
     'cafe': {
         recommended: ['header', 'hero', 'menu', 'testimonials', 'map', 'leads', 'footer'],
-        optional: ['slideshow', 'team', 'newsletter', 'banner', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['slideshow', 'showcase', 'team', 'newsletter', 'banner', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['pricing', 'portfolio', 'howItWorks', 'features', 'services', 'faq'],
     },
     'technology': {
         recommended: ['header', 'hero', 'features', 'pricing', 'testimonials', 'faq', 'cta', 'footer'],
-        optional: ['team', 'portfolio', 'video', 'howItWorks', 'newsletter', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
+        optional: ['team', 'portfolio', 'showcase', 'video', 'howItWorks', 'newsletter', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'map', 'services', 'banner', 'slideshow'],
     },
     'healthcare': {
@@ -293,37 +293,37 @@ export const INDUSTRY_COMPONENT_DEFAULTS: Record<string, {
     },
     'consulting': {
         recommended: ['header', 'hero', 'services', 'testimonials', 'team', 'leads', 'cta', 'footer'],
-        optional: ['faq', 'portfolio', 'newsletter', 'video', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
+        optional: ['faq', 'portfolio', 'showcase', 'newsletter', 'video', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'map', 'pricing', 'slideshow', 'banner', 'howItWorks'],
     },
     'ecommerce': {
         recommended: ['header', 'hero', 'features', 'testimonials', 'faq', 'newsletter', 'cta', 'footer'],
-        optional: ['video', 'howItWorks', 'team', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
+        optional: ['showcase', 'video', 'howItWorks', 'team', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'map', 'leads', 'services', 'portfolio', 'slideshow'],
     },
     'fitness-gym': {
         recommended: ['header', 'hero', 'services', 'pricing', 'team', 'testimonials', 'leads', 'map', 'footer'],
-        optional: ['slideshow', 'video', 'faq', 'newsletter', 'cta', 'chatbot', 'topBar', 'signupFloat', 'cmsFeed'],
+        optional: ['slideshow', 'showcase', 'video', 'faq', 'newsletter', 'cta', 'chatbot', 'topBar', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'portfolio', 'howItWorks', 'banner', 'logoBanner'],
     },
     'photography': {
-        recommended: ['header', 'hero', 'portfolio', 'testimonials', 'pricing', 'leads', 'footer'],
+        recommended: ['header', 'hero', 'showcase', 'portfolio', 'testimonials', 'pricing', 'leads', 'footer'],
         optional: ['slideshow', 'video', 'faq', 'team', 'cmsFeed', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'map', 'services', 'features', 'howItWorks', 'newsletter', 'banner', 'chatbot'],
     },
     'real-estate': {
         recommended: ['header', 'hero', 'portfolio', 'services', 'testimonials', 'leads', 'map', 'footer'],
-        optional: ['team', 'faq', 'video', 'slideshow', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['showcase', 'team', 'faq', 'video', 'slideshow', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'pricing', 'howItWorks', 'newsletter', 'banner'],
     },
     'beauty-spa': {
         recommended: ['header', 'hero', 'services', 'pricing', 'testimonials', 'team', 'leads', 'map', 'footer'],
-        optional: ['slideshow', 'faq', 'newsletter', 'video', 'chatbot', 'topBar', 'signupFloat', 'cmsFeed'],
+        optional: ['slideshow', 'showcase', 'faq', 'newsletter', 'video', 'chatbot', 'topBar', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'portfolio', 'howItWorks', 'banner', 'logoBanner'],
     },
     'automotive': {
         recommended: ['header', 'hero', 'services', 'portfolio', 'testimonials', 'leads', 'map', 'footer'],
-        optional: ['team', 'faq', 'slideshow', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['team', 'showcase', 'faq', 'slideshow', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'pricing', 'howItWorks', 'newsletter', 'banner'],
     },
     'legal': {
@@ -338,27 +338,27 @@ export const INDUSTRY_COMPONENT_DEFAULTS: Record<string, {
     },
     'construction': {
         recommended: ['header', 'hero', 'services', 'portfolio', 'testimonials', 'leads', 'map', 'footer'],
-        optional: ['team', 'faq', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['team', 'showcase', 'faq', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'pricing', 'howItWorks', 'newsletter', 'banner', 'slideshow'],
     },
     'education': {
         recommended: ['header', 'hero', 'features', 'services', 'testimonials', 'team', 'faq', 'leads', 'footer'],
-        optional: ['video', 'pricing', 'newsletter', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
+        optional: ['showcase', 'video', 'pricing', 'newsletter', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'portfolio', 'howItWorks', 'banner', 'slideshow', 'map'],
     },
     'travel': {
-        recommended: ['header', 'hero', 'portfolio', 'testimonials', 'leads', 'footer'],
+        recommended: ['header', 'hero', 'showcase', 'portfolio', 'testimonials', 'leads', 'footer'],
         optional: ['slideshow', 'team', 'faq', 'video', 'newsletter', 'map', 'cmsFeed', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'pricing', 'services', 'howItWorks', 'banner', 'chatbot'],
     },
     'event-planning': {
         recommended: ['header', 'hero', 'services', 'portfolio', 'testimonials', 'leads', 'footer'],
-        optional: ['team', 'faq', 'pricing', 'slideshow', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
+        optional: ['team', 'showcase', 'faq', 'pricing', 'slideshow', 'video', 'chatbot', 'topBar', 'logoBanner', 'signupFloat', 'cmsFeed'],
         disabled: ['menu', 'map', 'howItWorks', 'newsletter', 'banner'],
     },
     'default': {
         recommended: ['header', 'hero', 'features', 'testimonials', 'cta', 'leads', 'footer'],
-        optional: ['services', 'team', 'faq', 'newsletter', 'video', 'portfolio', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
+        optional: ['services', 'team', 'faq', 'newsletter', 'video', 'portfolio', 'showcase', 'cmsFeed', 'chatbot', 'topBar', 'logoBanner', 'signupFloat'],
         disabled: ['menu', 'map', 'slideshow', 'banner', 'howItWorks', 'pricing'],
     },
 };
@@ -747,6 +747,5 @@ const shouldShowInNav = (templateId: PageTemplateId): boolean => {
     // Dynamic pages and cart/checkout shouldn't show in main navigation
     return !['product-detail', 'category', 'article', 'cart', 'checkout'].includes(templateId);
 };
-
 
 

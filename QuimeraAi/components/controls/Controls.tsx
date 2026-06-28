@@ -70,7 +70,7 @@ import {
   renderMapControls,
   renderTopBarControls, renderLogoBannerControls,
   renderServicesControlsWithTabs, renderTeamControlsWithTabs,
-  renderFAQControlsWithTabs, renderPortfolioControlsWithTabs,
+  renderFAQControlsWithTabs, renderPortfolioControlsWithTabs, renderShowcaseControlsWithTabs,
   renderLeadsControlsWithTabs, renderCMSFeedControlsWithTabs,
   renderNewsletterControlsWithTabs, renderCTAControlsWithTabs,
   renderHowItWorksControlsWithTabs, renderMenuControlsWithTabs,
@@ -421,6 +421,7 @@ const Controls: React.FC = () => {
     pricing: { label: 'Pricing', icon: DollarSign, renderer: () => renderPricingControls(deps) },
     faq: { label: 'FAQ', icon: HelpCircle, renderer: () => renderFAQControlsWithTabs(deps) },
     portfolio: { label: 'Portfolio', icon: Briefcase, renderer: () => renderPortfolioControlsWithTabs(deps) },
+    showcase: { label: 'Showcase', icon: Grid, renderer: () => renderShowcaseControlsWithTabs(deps) },
     leads: { label: 'Lead Form', icon: Mail, renderer: () => renderLeadsControlsWithTabs(deps) },
     newsletter: { label: 'Newsletter', icon: Send, renderer: () => renderNewsletterControlsWithTabs(deps) },
     cta: { label: 'Call to Action', icon: MessageCircle, renderer: () => renderCTAControlsWithTabs(deps) },
@@ -582,6 +583,7 @@ const Controls: React.FC = () => {
       case 'team': return renderTeamControlsWithTabs(deps);
       case 'faq': return renderFAQControlsWithTabs(deps);
       case 'portfolio': return renderPortfolioControlsWithTabs(deps);
+      case 'showcase': return renderShowcaseControlsWithTabs(deps);
       case 'leads': return renderLeadsControlsWithTabs(deps);
       case 'newsletter': return renderNewsletterControlsWithTabs(deps);
       case 'cmsFeed': return renderCMSFeedControlsWithTabs(deps);

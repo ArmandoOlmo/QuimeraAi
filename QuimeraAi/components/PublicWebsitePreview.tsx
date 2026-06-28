@@ -105,6 +105,7 @@ const AppointmentBooking = lazy(() => import('./AppointmentBooking'));
 const Newsletter = lazy(() => import('./Newsletter'));
 const CTASection = lazy(() => import('./CTASection'));
 const Portfolio = lazy(() => import('./Portfolio'));
+const Showcase = lazy(() => import('./Showcase'));
 const Services = lazy(() => import('./Services'));
 const Team = lazy(() => import('./Team'));
 const Video = lazy(() => import('./Video'));
@@ -2328,6 +2329,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return withBackground(<CTASection {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} onNavigate={handleLinkNavigation} />);
       case 'portfolio':
         return withBackground(<Portfolio {...compData} borderRadius={borderRadius} onNavigate={handleLinkNavigation} />);
+      case 'showcase':
+        return withBackground(<Showcase {...compData} borderRadius={compData.borderRadius || borderRadius} onNavigate={handleLinkNavigation} />);
       case 'services':
         return withBackground(<Services {...compData} borderRadius={borderRadius} />);
       case 'team':

@@ -39,7 +39,13 @@ import { useServiceAvailability } from '../../../hooks/useServiceAvailability';
 import { getAccessibleComponentRegistry, registryToPromptList, filterAccessibleSections } from '../../../data/componentRegistry';
 import type { ComponentAccessContext } from '../../../data/componentRegistry';
 import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
+import { FEATURE_VARIANT_PROMPT_VALUES, getFeatureVariantMeta } from '../../../data/featureVariants';
+import { FAQ_VARIANT_PROMPT_VALUES } from '../../../data/faqVariants';
+import { FOOTER_IMAGE_VARIANTS, FOOTER_VARIANT_PROMPT_VALUES, isFooterVariant } from '../../../data/footerVariants';
+import { HEADER_VARIANT_PROMPT_VALUES, isHeaderVariant } from '../../../data/headerVariants';
+import { PRICING_VARIANT_PROMPT_VALUES, normalizePricingVariant } from '../../../data/pricingVariants';
 import type { WebsitePlan } from '../../../types/websitePlan';
+import { ensureGeneratedPortfolioSections } from '../../../utils/aiStudioPortfolio';
 import {
     buildAssetPlan,
     buildComponentPlan,
@@ -367,7 +373,7 @@ const ALL_SECTIONS: PageSection[] = [
     'colors', 'typography', 'header',
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'slideshow',
-    'pricing', 'faq', 'portfolio', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
+    'pricing', 'faq', 'portfolio', 'showcase', 'cta', 'services', 'team', 'video', 'howItWorks', 'menu', 'realEstateListings',
     'leads', 'newsletter', 'map', 'chatbot', 'cmsFeed', 'signupFloat', 'footer',
     'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges', 'saleCountdown',
     'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle', 'restaurantReservation',
@@ -472,6 +478,7 @@ const NAV_LABELS: Partial<Record<PageSection, { es: string; en: string }>> = {
     faq: { es: 'FAQ', en: 'FAQ' },
     pricing: { es: 'Precios', en: 'Pricing' },
     portfolio: { es: 'Portafolio', en: 'Portfolio' },
+    showcase: { es: 'Showcase', en: 'Showcase' },
     slideshow: { es: 'Galería', en: 'Gallery' },
     team: { es: 'Equipo', en: 'Team' },
     cta: { es: 'Comenzar', en: 'Start' },
@@ -502,6 +509,7 @@ function normalizeDesignIndustry(brief: BusinessBrief): string {
     if (brief.hasEcommerce || /ecommerce|e-commerce|shop|store|retail|producto|tienda/.test(text)) return 'ecommerce';
     if (/restaurant|restaurante|cafe|food|bakery|bar|menu/.test(text)) return 'restaurant';
     if (/real estate|inmobili|property|propiedad|realtor/.test(text)) return 'real-estate';
+    if (/finance|financ|bank|banco|loan|prestamo|préstamo|insurance|seguro|mortgage|hipoteca|credit|cr[eé]dito|fintech/.test(text)) return 'finance';
     if (/tech|software|saas|ai|ia|web3|cyber/.test(text)) return 'technology';
     if (/creative|portfolio|arte|cultur|diseño|design|artist|photograph/.test(text)) return 'creative';
     return 'services';
@@ -582,21 +590,21 @@ function pickHeaderStyle(brief: BusinessBrief, componentOrder: PageSection[], _c
     const seed = `${brief.businessName}|${industry}|${componentOrder.join(',')}`;
 
     if (industry === 'ecommerce') {
-        return pickFrom(['sticky-solid', 'edge-bordered', 'edge-solid'], seed);
+        return pickFrom(['split-cta', 'rounded-shell', 'edge-bordered', 'sticky-solid'], seed);
     }
     if (industry === 'restaurant') {
-        return pickFrom(['edge-solid', 'sticky-solid', 'edge-bordered'], seed);
+        return pickFrom(['edge-solid', 'center-stage', 'sticky-solid', 'edge-bordered'], seed);
     }
     if (industry === 'real-estate') {
-        return pickFrom(['edge-bordered', 'edge-solid', 'sticky-solid'], seed);
+        return pickFrom(['mega-panel', 'edge-bordered', 'rounded-shell', 'sticky-solid'], seed);
     }
     if (industry === 'technology') {
-        return pickFrom(['sticky-solid', 'edge-bordered', 'edge-solid'], seed);
+        return pickFrom(['dark-dock', 'rounded-shell', 'mega-panel', 'sticky-solid'], seed);
     }
     if (industry === 'creative') {
-        return pickFrom(['edge-bordered', 'sticky-solid', 'edge-solid'], seed);
+        return pickFrom(['center-stage', 'transparent-blur', 'floating-glass', 'edge-bordered'], seed);
     }
-    return pickFrom(['sticky-solid', 'edge-solid', 'edge-bordered'], seed);
+    return pickFrom(['sticky-solid', 'rounded-shell', 'edge-solid', 'mega-panel'], seed);
 }
 
 function getHeaderCtaTarget(componentOrder: PageSection[], hasEcommerce: boolean): string {
@@ -620,11 +628,13 @@ function repairGeneratedWebsiteDesign(
     const colors = finalTheme?.globalColors || brief.colorPalette || {};
     const hasEcommerce = componentOrder.some(section => ECOMMERCE_SECTIONS.has(section));
     const suggestedStyle = pickHeaderStyle(brief, componentOrder, colors);
-    const solidHeaderStyles = new Set(['sticky-solid', 'edge-solid', 'edge-bordered']);
-    const style = solidHeaderStyles.has(suggestedStyle) ? suggestedStyle : 'sticky-solid';
-    const headerBackground = getSolidShellBackgroundForWhiteText(colors);
-    const headerText = '#ffffff';
+    const generatedStyle = typeof data.header?.style === 'string' ? data.header.style : '';
+    const style = isHeaderVariant(generatedStyle) ? generatedStyle : (isHeaderVariant(suggestedStyle) ? suggestedStyle : 'sticky-solid');
+    const headerBackground = data.header?.colors?.background || getSolidShellBackgroundForWhiteText(colors);
+    const headerText = data.header?.colors?.text || '#ffffff';
     const buttonBackground = colors.accent || colors.secondary || colors.primary || headerBackground;
+    const shouldUseGlass = ['floating-glass', 'transparent-blur', 'rounded-shell'].includes(style);
+    const separatorColor = colors.border || `color-mix(in srgb, ${headerText} 18%, transparent)`;
 
     if (!data.header || typeof data.header !== 'object') data.header = {};
     data.header = {
@@ -632,7 +642,7 @@ function repairGeneratedWebsiteDesign(
         style,
         layout: data.header.layout || 'classic',
         isSticky: true,
-        glassEffect: false,
+        glassEffect: data.header.glassEffect ?? shouldUseGlass,
         height: 82,
         logoType: data.header.logoType || 'text',
         logoText: data.header.logoText || brief.businessName || 'Website',
@@ -645,12 +655,20 @@ function repairGeneratedWebsiteDesign(
             ...(data.header.colors || {}),
             background: headerBackground,
             text: headerText,
-            accent: headerText,
-            border: style === 'edge-bordered' ? (colors.border || 'rgba(255, 255, 255, 0.18)') : 'transparent',
+            accent: data.header.colors?.accent || colors.accent || headerText,
+            border: data.header.colors?.border || (style === 'edge-bordered' ? separatorColor : 'transparent'),
+            surface: data.header.colors?.surface || colors.surface || headerBackground,
+            surfaceAlt: data.header.colors?.surfaceAlt || colors.background || headerBackground,
+            panelBackground: data.header.colors?.panelBackground || colors.surface || headerBackground,
+            panelText: data.header.colors?.panelText || headerText,
+            mutedText: data.header.colors?.mutedText || colors.textMuted || `color-mix(in srgb, ${headerText} 72%, transparent)`,
+            linkHover: data.header.colors?.linkHover || colors.accent || headerText,
+            separator: data.header.colors?.separator || separatorColor,
+            cartBadge: data.header.colors?.cartBadge || colors.accent || buttonBackground,
             buttonBackground,
             buttonText: readableTextOn(buttonBackground),
             tabActiveColor: colors.primary || colors.accent,
-            tabBorderColor: colors.border,
+            tabBorderColor: data.header.colors?.tabBorderColor || separatorColor,
         },
     };
 
@@ -661,11 +679,24 @@ function repairGeneratedWebsiteDesign(
         colors: {
             ...(data.footer.colors || {}),
             background: headerBackground,
-            border: 'rgba(255, 255, 255, 0.18)',
-            text: '#ffffff',
-            heading: '#ffffff',
-            description: 'rgba(255, 255, 255, 0.82)',
-            linkHover: '#ffffff',
+            border: separatorColor,
+            text: headerText,
+            heading: headerText,
+            description: `color-mix(in srgb, ${headerText} 82%, transparent)`,
+            linkHover: headerText,
+            accent: colors.accent || colors.primary || headerText,
+            mutedText: `color-mix(in srgb, ${headerText} 72%, transparent)`,
+            panelBackground: colors.surface || headerBackground,
+            panelText: readableTextOn(colors.surface || headerBackground),
+            buttonBackground: colors.accent || colors.primary || buttonBackground,
+            buttonText: readableTextOn(colors.accent || colors.primary || buttonBackground),
+            wordmark: colors.accent || headerText,
+            iconBackground: colors.background || headerBackground,
+            inputBackground: colors.background || '#ffffff',
+            inputText: readableTextOn(colors.background || '#ffffff'),
+            inputBorder: colors.border || separatorColor,
+            legalBackground: colors.text || headerBackground,
+            imageOverlay: headerBackground,
         },
     };
 }
@@ -755,13 +786,16 @@ function applyDesignStrategyToGeneratedData(
 
     if (data.features && typeof data.features === 'object') {
         const options = industry === 'technology'
-            ? ['bento-premium', 'neon-glow', 'press-release']
+            ? ['metrics-panel', 'dark-capability-grid', 'visual-proof-grid', 'bento-premium', 'neon-glow']
             : isVisual
-                ? ['image-overlay', 'bento-overlay', 'bento-premium', 'editorial-mosaic']
-                : ['bento-premium', 'modern', 'press-release', 'editorial-mosaic'];
+                ? ['gallery-strip', 'image-overlay', 'dark-showcase', 'product-highlights', 'editorial-mosaic']
+                : isPremium
+                    ? ['strategy-cards', 'offer-showcase', 'product-highlights', 'gallery-strip']
+                    : ['checklist-cards', 'icon-columns', 'bento-premium', 'modern', 'product-highlights'];
         data.features.featuresVariant = pickFrom(options, `${seed}|features`);
-        data.features.gridColumns = ['image-overlay', 'editorial-mosaic'].includes(data.features.featuresVariant) ? 4 : 3;
-        data.features.imageHeight = ['image-overlay', 'editorial-mosaic'].includes(data.features.featuresVariant) ? 420 : 340;
+        const featureVariantMeta = getFeatureVariantMeta(data.features.featuresVariant);
+        data.features.gridColumns = featureVariantMeta.recommendedColumns;
+        data.features.imageHeight = featureVariantMeta.recommendedImageHeight;
         data.features.showSectionHeader = true;
         data.features.enableCardAnimation = true;
     }
@@ -789,7 +823,12 @@ function applyDesignStrategyToGeneratedData(
     }
 
     if (data.faq && typeof data.faq === 'object') {
-        data.faq.faqVariant = pickFrom(isPremium ? ['minimal', 'cards'] : ['cards', 'gradient', 'minimal'], `${seed}|faq`);
+        data.faq.faqVariant = pickFrom(
+            isPremium
+                ? ['editorial-split', 'image-split', 'boxed-list', 'minimal', 'cards']
+                : ['cards', 'gradient', 'minimal', 'dark-panel', 'answer-panel', 'stacked-cards'],
+            `${seed}|faq`,
+        );
     }
 
     if (data.leads && typeof data.leads === 'object') {
@@ -814,7 +853,44 @@ function applyDesignStrategyToGeneratedData(
     }
 
     if (data.pricing && typeof data.pricing === 'object') {
-        data.pricing.pricingVariant = pickFrom(industry === 'technology' ? ['neon-glow', 'glassmorphism', 'gradient'] : ['glassmorphism', 'gradient', 'minimalist'], `${seed}|pricing`);
+        const pricingOptions = industry === 'technology'
+            ? ['dark-saas-cards', 'featured-plan', 'voice-credit-columns', 'dark-plan-cards', 'bi-panels', 'grouped-plan-grid', 'addon-cards']
+            : industry === 'ecommerce' || industry === 'restaurant' || isVisual
+                ? ['subscription-shop', 'featured-plan', 'grouped-plan-grid']
+                : industry === 'finance'
+                    ? ['finance-comparison', 'bi-panels', 'workflow-rows']
+                    : ['featured-plan', 'workflow-rows', 'grouped-plan-grid', 'bi-panels'];
+        data.pricing.pricingVariant = pickFrom(pricingOptions, `${seed}|pricing`);
+    }
+
+    if (data.footer && typeof data.footer === 'object') {
+        const footerOptions = industry === 'technology'
+            ? ['grid-wordmark', 'gradient-silhouette', 'grid-newsletter', 'mega-wordmark']
+            : industry === 'restaurant'
+                ? ['mega-wordmark', 'compliance-wordmark', 'cta-card']
+                : industry === 'real-estate'
+                    ? ['landscape-links', 'press-landscape', 'classic']
+                    : isVisual
+                        ? ['mega-wordmark', 'press-landscape', 'super-wordmark', 'social-directory']
+                        : isPremium
+                            ? ['cta-card', 'grid-newsletter', 'compliance-wordmark', 'gradient-silhouette']
+                            : ['grid-newsletter', 'cta-card', 'classic', 'mega-wordmark'];
+        const selectedFooterVariant = data.footer.footerVariant && isFooterVariant(data.footer.footerVariant)
+            ? data.footer.footerVariant
+            : pickFrom(footerOptions, `${seed}|footer`);
+        data.footer.footerVariant = selectedFooterVariant;
+        data.footer.wordmarkText = data.footer.wordmarkText || brief.businessName || data.footer.title;
+        data.footer.newsletterLabel = data.footer.newsletterLabel || 'Get updates';
+        data.footer.newsletterPlaceholder = data.footer.newsletterPlaceholder || 'email@example.com';
+        data.footer.newsletterButtonText = data.footer.newsletterButtonText || 'Subscribe';
+        data.footer.ctaTitle = data.footer.ctaTitle || data.footer.description || brief.tagline || brief.businessName;
+        data.footer.primaryButtonText = data.footer.primaryButtonText || 'Get started';
+        data.footer.secondaryButtonText = data.footer.secondaryButtonText || 'Talk to us';
+        if (FOOTER_IMAGE_VARIANTS.includes(selectedFooterVariant as any) && !data.footer.backgroundImageUrl) {
+            data.footer.backgroundImageUrl = '';
+            data.footer.backgroundOverlayEnabled = true;
+            data.footer.backgroundOverlayOpacity = data.footer.backgroundOverlayOpacity ?? 42;
+        }
     }
 
     if (data.cta && typeof data.cta === 'object') {
@@ -824,7 +900,7 @@ function applyDesignStrategyToGeneratedData(
     }
 
     const globalColors = finalTheme?.globalColors || brief.colorPalette;
-    for (const key of ['hero', 'services', 'features', 'testimonials', 'menu', 'faq', 'leads', 'portfolio', 'slideshow', 'pricing', 'cta']) {
+    for (const key of ['hero', 'services', 'features', 'testimonials', 'menu', 'faq', 'leads', 'portfolio', 'slideshow', 'pricing', 'cta', 'footer']) {
         if (data[key] && typeof data[key] === 'object') {
             data[key].colors = {
                 ...(data[key].colors || {}),
@@ -1067,7 +1143,7 @@ RULES:
    - realEstateListings = only for property/real estate. Pair with leads.
 - banner is optional. Include it only when it improves the plan.
 - ALWAYS include at least one hero variant.
-- Use solid header styles only: sticky-solid, edge-solid, or edge-bordered. Never use transparent, glass, floating, or gradient headers.
+- Header style must be one of the active navigation styles: ${HEADER_VARIANT_PROMPT_VALUES}. Use semantic color tokens for background, text, accent, border, surface, panelBackground, panelText, mutedText, separator, buttonBackground, buttonText, and cartBadge when relevant.
 
 ═══════════════════════════════════════════════════════════
 COLOR THEORY FUNDAMENTALS
@@ -1081,8 +1157,8 @@ COLOR THEORY FUNDAMENTALS
 
 **Hard Rules:**
 - Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text roles must stay neutral and must not introduce extra brand hues.
-- Header and footer MUST use the exact same solid dark brand color. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
-- Header and footer typography MUST be white (#ffffff) with WCAG AA contrast.
+- Header style must be one of: ${HEADER_VARIANT_PROMPT_VALUES}. Footer variant must be one of: ${FOOTER_VARIANT_PROMPT_VALUES}. Solid headers should share a readable shell with the footer; transparent, glass, floating, gradient, tabbed, and panel headers must map background, surface, panel, border, separator, and text tokens explicitly.
+- Header and footer typography MUST meet WCAG AA contrast.
 - Text over colored backgrounds MUST be white (#ffffff) — critical for nav & hero.
 - Text placed directly over images MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If text sits inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
 - Never request or reuse images only to create blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors.
@@ -1845,34 +1921,7 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
             const finalData = websiteData.data;
             applyExistingAssetPlan(finalData, planForGeneration.assetPlan);
 
-            // Ensure all components have required fields
-            ensureComponentCompleteness(finalData, brief, isSpanish);
-
-            // Apply fonts
-            applyFontsToComponents(finalData, finalTheme);
-
-            // Apply color mappings
-            const globalColors = finalTheme.globalColors;
-            const componentColorMappings = generateComponentColorMappings(globalColors);
-            for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
-                if (finalData[componentId] && typeof finalData[componentId] === 'object') {
-                    finalData[componentId] = { ...finalData[componentId], colors: { ...(finalData[componentId].colors || {}), ...componentColors } };
-                }
-            }
-            if (!finalData.heroWave || typeof finalData.heroWave !== 'object') finalData.heroWave = {} as any;
-            finalData.heroWave.gradientColors = generateHeroWaveGradientColors(globalColors);
-
-            // TopBar uses flat fields (backgroundColor, textColor, etc.), not a colors sub-object
-            if (finalData.topBar && typeof finalData.topBar === 'object') {
-                const tbColors = finalData.topBar.colors || {};
-                if (tbColors.background && !finalData.topBar.backgroundColor) finalData.topBar.backgroundColor = tbColors.background;
-                if (tbColors.text && !finalData.topBar.textColor) finalData.topBar.textColor = tbColors.text;
-                if (tbColors.linkColor && !finalData.topBar.linkColor) finalData.topBar.linkColor = tbColors.linkColor;
-                if (tbColors.iconColor && !finalData.topBar.iconColor) finalData.topBar.iconColor = tbColors.iconColor;
-                delete finalData.topBar.colors; // TopBar doesn't use colors sub-object
-            }
-
-            // Build component order & visibility
+            // Build component order before completeness checks so active sections can be created if the AI omitted their data.
             const plannedOrder = sanitizeComponentOrder(brief.suggestedComponents, accessibleComponentRegistry);
             const plannedSet = new Set<PageSection>(plannedOrder);
             const generatedOrder = Array.isArray(websiteData.componentOrder)
@@ -1898,6 +1947,33 @@ ${t('aiWebsiteStudio.welcome.startQuestion')}`, [t]);
                 } else {
                     componentOrder.push('banner');
                 }
+            }
+
+            // Ensure all components have required fields
+            ensureComponentCompleteness(finalData, brief, isSpanish, componentOrder);
+
+            // Apply fonts
+            applyFontsToComponents(finalData, finalTheme);
+
+            // Apply color mappings
+            const globalColors = finalTheme.globalColors;
+            const componentColorMappings = generateComponentColorMappings(globalColors);
+            for (const [componentId, componentColors] of Object.entries(componentColorMappings)) {
+                if (finalData[componentId] && typeof finalData[componentId] === 'object') {
+                    finalData[componentId] = { ...finalData[componentId], colors: { ...(finalData[componentId].colors || {}), ...componentColors } };
+                }
+            }
+            if (!finalData.heroWave || typeof finalData.heroWave !== 'object') finalData.heroWave = {} as any;
+            finalData.heroWave.gradientColors = generateHeroWaveGradientColors(globalColors);
+
+            // TopBar uses flat fields (backgroundColor, textColor, etc.), not a colors sub-object
+            if (finalData.topBar && typeof finalData.topBar === 'object') {
+                const tbColors = finalData.topBar.colors || {};
+                if (tbColors.background && !finalData.topBar.backgroundColor) finalData.topBar.backgroundColor = tbColors.background;
+                if (tbColors.text && !finalData.topBar.textColor) finalData.topBar.textColor = tbColors.text;
+                if (tbColors.linkColor && !finalData.topBar.linkColor) finalData.topBar.linkColor = tbColors.linkColor;
+                if (tbColors.iconColor && !finalData.topBar.iconColor) finalData.topBar.iconColor = tbColors.iconColor;
+                delete finalData.topBar.colors; // TopBar doesn't use colors sub-object
             }
 
             pruneUnplannedComponentData(finalData, componentOrder);
@@ -2645,6 +2721,20 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
         }
     }
 
+    // ── Image-backed footer variants ────────────────────────────────────
+    if (componentOrder.includes('footer') && data.footer && typeof data.footer === 'object') {
+        const footerVariant = data.footer.footerVariant;
+        if (FOOTER_IMAGE_VARIANTS.includes(footerVariant as any) && !data.footer.backgroundImageUrl) {
+            data.footer.backgroundImageUrl = '';
+            slots.push({
+                path: 'footer.backgroundImageUrl',
+                componentType: 'footer',
+                context: data.footer.wordmarkText || data.footer.title || data.footer.description || brief.businessName,
+                aspectRatio: '21:9',
+            });
+        }
+    }
+
     // ── Features items ─────────────────────────────────────────────────────
     if (componentOrder.includes('features')) {
         if (data.features?.items && Array.isArray(data.features.items)) {
@@ -2678,11 +2768,13 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
     // ── Portfolio items ─────────────────────────────────────────────────────
     for (const portfolioKey of ['portfolio', 'portfolioNeon', 'portfolioLumina']) {
         if (componentOrder.includes(portfolioKey) && data[portfolioKey]) {
-            const items = data[portfolioKey].items || data[portfolioKey].projects; // support both keys
+            const items = portfolioKey === 'portfolio'
+                ? data[portfolioKey].items || data[portfolioKey].projects
+                : data[portfolioKey].projects || data[portfolioKey].items;
             if (Array.isArray(items)) {
                 items.slice(0, 3).forEach((item: any, i: number) => {
                     if (!item.imageUrl) {
-                        const pathKey = data[portfolioKey].projects ? 'projects' : 'items';
+                        const pathKey = portfolioKey === 'portfolio' ? 'items' : 'projects';
                         slots.push({
                             path: `${portfolioKey}.${pathKey}.${i}.imageUrl`,
                             componentType: portfolioKey,
@@ -2693,6 +2785,20 @@ function collectImageSlots(data: any, brief: any, componentOrder: string[]): Ima
                 });
             }
         }
+    }
+
+    // ── Showcase items ─────────────────────────────────────────────────────
+    if (componentOrder.includes('showcase') && data.showcase?.items && Array.isArray(data.showcase.items)) {
+        data.showcase.items.slice(0, 6).forEach((item: any, i: number) => {
+            if (!item.imageUrl) {
+                slots.push({
+                    path: `showcase.items.${i}.imageUrl`,
+                    componentType: 'showcase',
+                    context: item.title || item.description || item.category || item.meta || `Showcase image ${i + 1}`,
+                    aspectRatio: i >= 4 ? '4:5' : '4:3',
+                });
+            }
+        });
     }
 
     // ── Team items ─────────────────────────────────────────────────────────
@@ -2774,6 +2880,7 @@ function buildImageArtDirection(brief: BusinessBrief, slot: ImageSlot): string {
         testimonials: 'customer portrait style, candid and credible, clean background',
         banner: 'wide campaign image with clear depth and enough empty space for text overlay',
         cta: 'ambient conversion background, subtle and text-safe',
+        footer: 'wide scenic footer background with calm negative space for link columns, no embedded typography',
     };
 
     return [
@@ -2807,6 +2914,7 @@ function buildSmartImagePrompt(brief: BusinessBrief, slot: ImageSlot): string {
         portfolio: `A portfolio showcase image demonstrating quality work/results.`,
         cta: `A conversion-focused section visual only when the CTA component explicitly supports an image. Avoid decorative blur-only backgrounds; prefer solid colors and gradient controls for ambient depth.`,
         banner: `A stunning ultra-wide panoramic background image. Cinematic composition, atmospheric depth, dramatic lighting.`,
+        footer: `A wide scenic or atmospheric footer background for an image-backed footer. No text, no logos, leave calm negative space for navigation links.`,
     };
 
     const typeInstruction = typeInstructions[slot.componentType] || 'A professional, high-quality image.';
@@ -2919,6 +3027,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         team:         { es: 'Equipo',           en: 'Team',          href: '/#team' },
         pricing:      { es: 'Precios',          en: 'Pricing',       href: '/#pricing' },
         portfolio:    { es: 'Portafolio',       en: 'Portfolio',     href: '/#portfolio' },
+        showcase:     { es: 'Showcase',         en: 'Showcase',      href: '/#showcase' },
         faq:          { es: 'FAQ',              en: 'FAQ',           href: '/#faq' },
         leads:        { es: 'Contacto',         en: 'Contact',       href: '/#leads' },
         realEstateListings: { es: 'Listados',   en: 'Listings',      href: '/#realEstateListings' },
@@ -2933,11 +3042,9 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     }
 
 
-    const solidHeaderStyles = 'sticky-solid|edge-solid|edge-bordered';
-
     componentExamples += `
     "header": {
-      "style": "[SELECT ONE. Options: ${solidHeaderStyles}]",
+      "style": "[SELECT ONE. Options: ${HEADER_VARIANT_PROMPT_VALUES}]",
       "layout": "[SELECT: minimal|center|stack|classic]",
       "isSticky": true,
       "height": 95,
@@ -2947,8 +3054,18 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "ctaText": "${isSpanish ? '¡Comienza Ya!' : 'Get Started'}",
       "ctaUrl": "/#leads",
       "colors": {
-        "background": "[GENERATE HEX COLOR MATCHING BRAND OR DARK THEME — NEVER use white #ffffff]",
-        "text": "#ffffff",
+        "background": "[GENERATE HEX COLOR MATCHING BRAND OR THEME]",
+        "text": "[READABLE TEXT COLOR]",
+        "accent": "${brief.colorPalette.accent}",
+        "border": "${brief.colorPalette.surface}",
+        "surface": "${brief.colorPalette.surface}",
+        "surfaceAlt": "${brief.colorPalette.background}",
+        "panelBackground": "${brief.colorPalette.surface}",
+        "panelText": "[READABLE PANEL TEXT COLOR]",
+        "mutedText": "${brief.colorPalette.text}99",
+        "linkHover": "${brief.colorPalette.accent}",
+        "separator": "${brief.colorPalette.surface}",
+        "cartBadge": "${brief.colorPalette.accent}",
         "buttonBackground": "${brief.colorPalette.accent}",
         "buttonText": "[GENERATE HEX COLOR that strongly contrasts with buttonBackground]"
       },
@@ -3067,7 +3184,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         "interactionStrength": 1.0
       },
       "colors": {
-        "panelBackground": "rgba(255, 255, 255, 0.05)",
+        "panelBackground": "color-mix(in srgb, ${brief.colorPalette.surface} 40%, transparent)",
         "heading": "#ffffff",
         "text": "#e2e8f0",
         "primaryButtonBackground": "[GENERATE_HEX_COLOR]",
@@ -3078,7 +3195,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
         const heroBaseKey = filteredComponents.find(c => c.startsWith('hero') && !['heroGallery', 'heroWave', 'heroNova', 'heroLead', 'heroSplit'].includes(c)) || 'hero';
         componentExamples += `
     "${heroBaseKey}": {
-      "heroVariant": "[SELECT: classic|modern|gradient|cinematic|cinematic-gym|minimal|overlap|verticalSplit|stacked]",
+      "heroVariant": "[SELECT: classic|modern|gradient|cinematic|minimal|overlap|verticalSplit|stacked]",
       "headline": "[GENERATE_TEXT]",
       "subheadline": "[GENERATE_TEXT]",
       "primaryCta": "${isSpanish ? 'Comenzar' : 'Get Started'}",
@@ -3130,7 +3247,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
       "subheadline": "[GENERATE_TEXT]",
       "glassEffect": true,
       "luminaAnimation": { "enabled": true, "colors": ["${brief.colorPalette.primary}", "${brief.colorPalette.secondary}"], "pulseSpeed": 1.0, "interactionStrength": 1.0 },
-      "colors": { "background": "${brief.colorPalette.background}", "heading": "#ffffff", "text": "#e2e8f0", "panelBackground": "rgba(255, 255, 255, 0.05)" },
+      "colors": { "background": "${brief.colorPalette.background}", "heading": "#ffffff", "text": "#e2e8f0", "panelBackground": "color-mix(in srgb, ${brief.colorPalette.surface} 40%, transparent)" },
       "features": [
         {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Award", "image": ""},
         {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Heart", "image": ""},
@@ -3141,16 +3258,16 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     } else {
         componentExamples += `
     "${featuresKey}": {
-      "featuresVariant": "[SELECT: classic|modern|bento-premium|bento-overlay|image-overlay|editorial-mosaic]",
-      "gridColumns": "[IF featuresVariant IS 'image-overlay' OR 'editorial-mosaic' THEN select 4 ELSE select 2 or 3]",
+      "featuresVariant": "[SELECT: ${FEATURE_VARIANT_PROMPT_VALUES}]",
+      "gridColumns": "[USE variant recommendation: 2, 3, or 4. Use 4 for gallery-strip, image-overlay, product-highlights, editorial-mosaic, or dark-showcase]",
       "title": "${isSpanish ? 'Características' : 'Features'}",
       "imageHeight": 430,
       "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.primary}", "opacity": 15, "size": 35},
       "items": [
-        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Award", "imageUrl": ""},
-        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Heart", "imageUrl": ""},
-        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "CheckCircle", "imageUrl": ""},
-        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Star", "imageUrl": ""}
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Award", "eyebrow": "[SHORT_LABEL]", "bullets": ["[OPTIONAL_SHORT_POINT]"], "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Heart", "eyebrow": "[SHORT_LABEL]", "bullets": ["[OPTIONAL_SHORT_POINT]"], "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "CheckCircle", "eyebrow": "[SHORT_LABEL]", "bullets": ["[OPTIONAL_SHORT_POINT]"], "imageUrl": ""},
+        {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "icon": "Star", "eyebrow": "[SHORT_LABEL]", "bullets": ["[OPTIONAL_SHORT_POINT]"], "imageUrl": ""}
       ]
     },`;
     }
@@ -3251,7 +3368,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "faqLumina": {"headline": "FAQ", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "faqs": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
     } else {
         componentExamples += `
-    "${faqKey}": {"faqVariant": "[SELECT: classic|cards|gradient|minimal]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
+    "${faqKey}": {"faqVariant": "[SELECT: ${FAQ_VARIANT_PROMPT_VALUES}]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "imageUrl": "", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.accent}", "opacity": 15, "size": 30}, "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "description": "${brief.colorPalette.text}cc", "text": "${brief.colorPalette.text}", "accent": "${brief.colorPalette.accent}", "cardBackground": "${brief.colorPalette.surface}", "cardHeading": "${brief.colorPalette.text}", "cardText": "${brief.colorPalette.text}cc", "panelBackground": "${brief.colorPalette.surface}", "activeBackground": "${brief.colorPalette.accent}", "activeText": "#ffffff", "iconBackground": "${brief.colorPalette.accent}", "borderColor": "${brief.colorPalette.surface}", "gradientStart": "${brief.colorPalette.primary}", "gradientEnd": "${brief.colorPalette.accent}"}, "items": [{"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}, {"question": "[GENERATE_TEXT]", "answer": "[GENERATE_TEXT]"}]},`;
     }
 
     const ctaKey = filteredComponents.find(c => c.startsWith('cta')) || 'cta';
@@ -3269,13 +3386,18 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     const portfolioKey = filteredComponents.find(c => c.startsWith('portfolio')) || 'portfolio';
     if (hasHeroNeon && portfolioKey === 'portfolioNeon') {
         componentExamples += `
-    "portfolioNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    "portfolioNeon": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "glowIntensity": 50, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
     } else if (hasHeroLumina && portfolioKey === 'portfolioLumina') {
         componentExamples += `
-    "portfolioLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    "portfolioLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
     } else {
         componentExamples += `
-    "${portfolioKey}": {"title": "[GENERATE_TEXT]", "projects": [{"title": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    "${portfolioKey}": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "items": [{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    }
+
+    if (filteredComponents.includes('showcase')) {
+        componentExamples += `
+    "showcase": {"showcaseVariant": "[SELECT: featured-device|curated-row|editorial-stack|vertical-strips|dark-carousel|minimal-index|case-grid-dark|recent-work]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "eyebrow": "Showcase", "categories": ["All", "Brand", "Product", "Editorial"], "gridColumns": 4, "imageHeight": 340, "showFilters": true, "showMeta": true, "items": [{"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "meta": "# [LABEL]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "meta": "# [LABEL]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "meta": "# [LABEL]", "imageUrl": ""}, {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "category": "[GENERATE_TEXT]", "meta": "# [LABEL]", "imageUrl": ""}]},`;
     }
 
     const pricingKey = filteredComponents.find(c => c.startsWith('pricing')) || 'pricing';
@@ -3287,7 +3409,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "pricingLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "period": "/mo", "description": "[GENERATE_TEXT]", "features": ["[GENERATE_TEXT]"], "isPopular": true, "buttonText": "[GENERATE_TEXT]"}]},`;
     } else {
         componentExamples += `
-    "${pricingKey}": {"title": "[GENERATE_TEXT]", "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "features": ["[GENERATE_TEXT]"], "isPopular": true}]},`;
+    "${pricingKey}": {"pricingVariant": "[SELECT: ${PRICING_VARIANT_PROMPT_VALUES}]", "title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "cardsAlignment": "[SELECT: start|center|end]", "cardBorderRadius": "[SELECT: none|md|xl|full]", "colors": {"background": "${brief.colorPalette.background}", "heading": "${brief.colorPalette.text}", "description": "${brief.colorPalette.text}cc", "text": "${brief.colorPalette.text}", "mutedText": "${brief.colorPalette.text}99", "accent": "${brief.colorPalette.accent}", "borderColor": "${brief.colorPalette.surface}", "cardBackground": "${brief.colorPalette.surface}", "cardHeading": "${brief.colorPalette.text}", "cardText": "${brief.colorPalette.text}cc", "priceColor": "${brief.colorPalette.text}", "buttonBackground": "${brief.colorPalette.primary}", "buttonText": "#ffffff", "checkmarkColor": "${brief.colorPalette.accent}", "gradientStart": "${brief.colorPalette.primary}", "gradientEnd": "${brief.colorPalette.accent}", "panelBackground": "${brief.colorPalette.text}", "panelText": "${brief.colorPalette.background}", "surfaceAlt": "${brief.colorPalette.surface}", "featuredBackground": "${brief.colorPalette.text}", "featuredText": "${brief.colorPalette.background}", "badgeBackground": "${brief.colorPalette.accent}", "badgeText": "#ffffff", "dividerColor": "${brief.colorPalette.surface}", "imageOverlay": "#000000"}, "tiers": [{"name": "[GENERATE_TEXT]", "price": "$...", "frequency": "/mo", "description": "[GENERATE_TEXT]", "eyebrow": "[OPTIONAL_SHORT_LABEL]", "badge": "[OPTIONAL_SHORT_LABEL]", "footerText": "[OPTIONAL_SHORT_TEXT]", "imageUrl": "", "features": ["[GENERATE_TEXT]"], "buttonText": "[GENERATE_TEXT]", "buttonLink": "#", "featured": true}]},`;
     }
 
     componentExamples += `
@@ -3296,7 +3418,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "newsletter": {"title": "[GENERATE_TEXT]", "description": "[GENERATE_TEXT]", "buttonText": "[GENERATE_TEXT]"},
         "logoBanner": {"title": "${isSpanish ? 'Confían en nosotros' : 'Trusted By'}", "scrollEnabled": true, "scrollSpeed": 30, "pauseOnHover": true, "grayscale": true, "useGradient": false, "logos": [{"imageUrl": "", "alt": "Logo 1"}, {"imageUrl": "", "alt": "Logo 2"}, {"imageUrl": "", "alt": "Logo 3"}, {"imageUrl": "", "alt": "Logo 4"}, {"imageUrl": "", "alt": "Logo 5"}]},
     "map": {"title": "${isSpanish ? 'Ubicación' : 'Location'}", "description": "${isSpanish ? 'Encuéntranos aquí' : 'Find us here'}", "address": "${fullMapAddress}", "city": "${safeStr(brief.contactInfo?.city || '')}", "state": "${safeStr(brief.contactInfo?.state || '')}", "lat": 0, "lng": 0, "zoom": 15, "mapVariant": "[SELECT: modern|minimal|dark-tech|night]", "height": 400, "phone": "${safeStr(brief.contactInfo?.phone || '')}", "email": "${safeStr(brief.contactInfo?.email || '')}", "businessHours": "${isSpanish ? 'Lun-Vie 9:00-18:00' : 'Mon-Fri 9:00AM-6:00PM'}", "buttonText": "${isSpanish ? 'Cómo Llegar' : 'Get Directions'}"},
-    "footer": {"title": "${safeStr(brief.businessName)}", "description": "${isSpanish ? 'Síguenos en nuestras redes' : 'Follow us on social media'}", "linkColumns": [{"title": "Enlaces", "links": [{"text": "Inicio", "url": "/"}, {"text": "Servicios", "url": "/#services"}]}], "contactInfo": {"address": "${safeStr(brief.contactInfo?.address || '')}", "phone": "${safeStr(brief.contactInfo?.phone || '')}", "businessHours": {"monday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "tuesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "wednesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "thursday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "friday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}}}, "socialLinks": [{"platform": "facebook", "href": "https://facebook.com"}, {"platform": "instagram", "href": "https://instagram.com"}, {"platform": "whatsapp", "href": "https://wa.me/${(brief.contactInfo?.phone || '').replace(/[^0-9]/g, '')}"}]},
+    "footer": {"footerVariant": "[SELECT: ${FOOTER_VARIANT_PROMPT_VALUES}]", "title": "${safeStr(brief.businessName)}", "description": "${isSpanish ? 'Síguenos en nuestras redes' : 'Follow us on social media'}", "wordmarkText": "${safeStr(brief.businessName)}", "newsletterLabel": "${isSpanish ? 'Recibe novedades' : 'Get updates'}", "newsletterPlaceholder": "email@example.com", "newsletterButtonText": "${isSpanish ? 'Suscribirme' : 'Subscribe'}", "ctaTitle": "[GENERATE_TEXT]", "ctaBullets": ["[GENERATE_TEXT]", "[GENERATE_TEXT]"], "primaryButtonText": "${isSpanish ? 'Comenzar' : 'Get started'}", "secondaryButtonText": "${isSpanish ? 'Hablar' : 'Talk to us'}", "disclaimerText": "[GENERATE_TEXT for regulated/compliance variants only, otherwise empty string]", "backgroundImageUrl": "", "linkColumns": [{"title": "Enlaces", "links": [{"text": "Inicio", "href": "/"}, {"text": "Servicios", "href": "/#services"}]}], "contactInfo": {"address": "${safeStr(brief.contactInfo?.address || '')}", "phone": "${safeStr(brief.contactInfo?.phone || '')}", "businessHours": {"monday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "tuesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "wednesday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "thursday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}, "friday": {"isOpen": true, "openTime": "09:00", "closeTime": "18:00"}}}, "socialLinks": [{"platform": "facebook", "href": "https://facebook.com"}, {"platform": "instagram", "href": "https://instagram.com"}, {"platform": "whatsapp", "href": "https://wa.me/${(brief.contactInfo?.phone || '').replace(/[^0-9]/g, '')}"}]},
     "signupFloat": {"headerText": "[GENERATE_TEXT]", "descriptionText": "[GENERATE_TEXT]", "buttonText": "${isSpanish ? 'Registrarse' : 'Sign Up'}"}`;
 
     return `You are a professional website designer. Generate a COMPLETE website data structure as a single JSON object.
@@ -3325,12 +3447,12 @@ If a component needs button text, badge text, overlays, cards, or ecommerce colo
 
 CHROME AND IMAGE TEXT RULES:
 - Use no more than three non-neutral brand colors total: primary, secondary, and accent. Background, surface, and text are neutral roles.
-- Header and footer MUST use the same solid dark brand color and white (#ffffff) typography. Never use white, off-white, pale, transparent, glass, or gradient backgrounds for header/footer.
-- Header style MUST be one of: sticky-solid, edge-solid, edge-bordered.
+- Header style MUST be one of: ${HEADER_VARIANT_PROMPT_VALUES}.
+- Header colors must include semantic tokens for background, text, accent, border, surface, panelBackground, panelText, mutedText, separator, buttonBackground, buttonText, and cartBadge when relevant. For solid header styles, footer can match the shell; for transparent, floating, glass, gradient, tabbed, or panel headers, footer remains a solid readable surface.
 - Any text placed directly over an image MUST be white (#ffffff) with a dark overlay/scrim strong enough for WCAG AA contrast. If the text is inside an opaque solid panel/card over the image, the panel may use a semantic brand color with readable text.
 - Menu cards using menuVariant "full-image" or "editorial-mosaic" place text over images: all price/title/description/category text over the image MUST be #ffffff, and the background gradient/scrim opacity MUST be strong enough for WCAG AA contrast.
 - Never use generated images only as blurred/glass/decorative section backgrounds. Use the existing gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial or multi-stop overlays when supported, plus solid semantic colors. Do not limit decorative backgrounds to linear gradients.
-- Keep image-backed content for hero sections, banner, menu items, Realty/property components, product/collection heroes, portfolio, slideshow, team, and testimonial portraits.
+- Keep image-backed content for hero sections, banner, menu items, Realty/property components, product/collection heroes, showcase, portfolio, slideshow, team, and testimonial portraits.
 
 COMPONENTS TO GENERATE: ${filteredComponents.join(', ')}
 
@@ -3357,25 +3479,25 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 }
 
 CRITICAL RULES:
-1. For image-backed components (hero/heroGallery/heroWave/heroNova/heroLead/heroSplit, banner, menu, Realty/property components, product/collection heroes, features, portfolio, team, testimonials, slideshow), YOU MUST set imageUrl, backgroundImage, or backgroundImageUrl to an empty string "" so the image generator can fill it.
+1. For image-backed components (hero/heroGallery/heroWave/heroNova/heroLead/heroSplit, banner, menu, Realty/property components, product/collection heroes, features, showcase, portfolio, team, testimonials, slideshow, and footer only when footerVariant is press-landscape, social-waitlist, or landscape-links), YOU MUST set imageUrl, backgroundImage, or backgroundImageUrl to an empty string "" so the image generator can fill it.
 2. Include RICH, detailed, REAL content for EVERY component — no lorem ipsum, no placeholder text.
-3. Each component's items array MUST have the correct number of items with full content. Features MUST have at least 4 items with photos. Portfolio, team, testimonials, services, and faq MUST have EXACTLY 3 items.
+3. Each component's items array MUST have the correct number of items with full content. Features MUST have at least 4 items with photos. Portfolio MUST have at least 3 project items with photos. Team, testimonials, services, and faq MUST have EXACTLY 3 items.
 4. For topBar: messages MUST be promotional announcements or call-to-actions. NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
 5. For heroGallery/heroNeon/heroNova/heroWave: generate EXACTLY 2 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage or imageUrl (empty string "").
 6. For menu: generate at least 6 realistic menu items with real names, descriptions, prices, categories, and "imageUrl": "". Use a visual menuVariant: classic, modern-grid, elegant-list, full-image, or editorial-mosaic. Never use text-only.
 7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services"). Only link to sections that exist in the componentOrder.
-8. For features: generate AT LEAST 4 items and include "imageUrl": "" in each item. For portfolio, team, testimonials, and slideshow: generate EXACTLY 3 items and include "imageUrl": "" (or "backgroundImage": "") in each item.
+8. For features: generate AT LEAST 4 items with "imageUrl": "", "icon", optional "eyebrow", and optional "bullets". For showcase: generate AT LEAST 4 curated visual items with title, description, category, meta, and "imageUrl": "". For portfolio: generate AT LEAST 3 project items and include "imageUrl": "" in each item. For team, testimonials, and slideshow: generate EXACTLY 3 items and include "imageUrl": "" (or "backgroundImage": "") in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
 10. For FAQ: generate EXACTLY 3 relevant questions and answers.
 11. For leads: include proper form fields with labels and placeholders.
-12. For footer: Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'.
+12. For footer: choose footerVariant from ${FOOTER_VARIANT_PROMPT_VALUES}. Include real contact info inside the 'contactInfo' object. 'linkColumns' is strictly for page navigation links like 'Inicio' or 'Servicios'. Use wordmarkText for mega/compliance/grid/social/super wordmark variants, newsletter fields for grid-newsletter/grid-wordmark, CTA fields for cta-card, and disclaimerText for compliance/press variants.
 13. For howItWorks: generate EXACTLY 3 steps with titles, descriptions, and valid lucide icons.
 14. For properties marked with [SELECT: a|b|c...], you MUST intelligently choose exactly ONE of the provided options based on what best fits the industry's aesthetic. Do not output the brackets.
-15. For header.style: choose ONLY a solid style from 'sticky-solid', 'edge-solid', or 'edge-bordered'. Do not use transparent, glass, floating, blur, or gradient header styles.
-16. Header and footer colors must match exactly: same solid dark background, white text, white headings, and no light/white shell backgrounds.
+15. For header.style: choose one active style from ${HEADER_VARIANT_PROMPT_VALUES}. Do not invent styles.
+16. Header and footer colors must be readable and derived from the semantic palette. Solid header styles can match the footer shell; transparent, floating, glass, gradient, tabbed, and panel headers must expose their own surface/panel/border/separator tokens.
 17. Do not generate arbitrary new hex colors. Use the COLOR PALETTE values as semantic tokens; the application will apply validated component mappings after generation.
 18. For map: use the COMPLETE address including street, city, state, and country. The address field must contain the full location string.
-19. Do not set section-level backgroundImageUrl/imageUrl for decorative glass, blur, or ambient backgrounds outside the allowed image-backed components. Use the component's gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial/multi-stop overlays where supported, and semantic colors.
+19. Do not set section-level backgroundImageUrl/imageUrl for decorative glass, blur, or ambient backgrounds outside the allowed image-backed components. For footer, backgroundImageUrl is allowed only with press-landscape, social-waitlist, or landscape-links. Use the component's gradient controls instead: cornerGradient, gradientStart/gradientEnd, gradientColors, radial/multi-stop overlays where supported, and semantic colors.
 
 RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 }
@@ -3455,7 +3577,7 @@ function normalizeGeneratedSlideshowItems(items: any, brief: any, isSpanish: boo
     return normalized.length > 0 ? normalized : createDefaultSlideshowItems(brief, isSpanish);
 }
 
-function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean): void {
+function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean, componentOrder: string[] = []): void {
     if (!data || typeof data !== 'object') return;
 
     // Header defaults
@@ -3463,12 +3585,27 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.header.logoText) data.header.logoText = brief.businessName || 'My Business';
         if (!data.header.logoType) data.header.logoType = 'text';
         if (!data.header.style) data.header.style = 'sticky-solid';
+        if (!isHeaderVariant(data.header.style)) data.header.style = 'sticky-solid';
         if (!data.header.layout) data.header.layout = 'minimal';
         if (data.header.isSticky === undefined) data.header.isSticky = true;
 
-        // Enforce white text for navigation
         if (!data.header.colors) data.header.colors = {};
-        data.header.colors.text = '#ffffff';
+        const headerBackground = data.header.colors.background || getSolidShellBackgroundForWhiteText(brief.colorPalette || {});
+        const headerText = data.header.colors.text || readableTextOn(headerBackground);
+        data.header.colors.background = headerBackground;
+        data.header.colors.text = headerText;
+        data.header.colors.accent = data.header.colors.accent || brief.colorPalette?.accent || headerText;
+        data.header.colors.border = data.header.colors.border || 'transparent';
+        data.header.colors.surface = data.header.colors.surface || brief.colorPalette?.surface || headerBackground;
+        data.header.colors.surfaceAlt = data.header.colors.surfaceAlt || brief.colorPalette?.background || headerBackground;
+        data.header.colors.panelBackground = data.header.colors.panelBackground || data.header.colors.surface;
+        data.header.colors.panelText = data.header.colors.panelText || headerText;
+        data.header.colors.mutedText = data.header.colors.mutedText || brief.colorPalette?.textMuted || `color-mix(in srgb, ${headerText} 72%, transparent)`;
+        data.header.colors.linkHover = data.header.colors.linkHover || data.header.colors.accent;
+        data.header.colors.separator = data.header.colors.separator || data.header.colors.border;
+        data.header.colors.cartBadge = data.header.colors.cartBadge || data.header.colors.accent;
+        data.header.colors.buttonBackground = data.header.colors.buttonBackground || data.header.colors.accent;
+        data.header.colors.buttonText = data.header.colors.buttonText || readableTextOn(data.header.colors.buttonBackground);
 
         // Normalize: AI may generate 'navLinks' but HeaderData uses 'links'
         if (data.header.navLinks && !data.header.links) {
@@ -3488,6 +3625,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
             team:         { es: 'Equipo',           en: 'Team',          href: '/#team' },
             pricing:      { es: 'Precios',          en: 'Pricing',       href: '/#pricing' },
             portfolio:    { es: 'Portafolio',       en: 'Portfolio',     href: '/#portfolio' },
+            showcase:     { es: 'Showcase',         en: 'Showcase',      href: '/#showcase' },
             faq:          { es: 'FAQ',              en: 'FAQ',           href: '/#faq' },
             leads:        { es: 'Contacto',         en: 'Contact',       href: '/#leads' },
             realEstateListings: { es: 'Listados',   en: 'Listings',      href: '/#realEstateListings' },
@@ -3601,13 +3739,13 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
             ];
         }
         const fallbackFeatures = [
-            { title: isSpanish ? 'Calidad Premium' : 'Premium Quality', description: isSpanish ? 'Ofrecemos la más alta calidad en todos nuestros servicios.' : 'We offer the highest quality across all our services.', icon: 'Award', imageUrl: '' },
-            { title: isSpanish ? 'Atención Personalizada' : 'Personalized Attention', description: isSpanish ? 'Cada cliente recibe un trato único y especial.' : 'Every client receives unique and special treatment.', icon: 'Heart', imageUrl: '' },
-            { title: isSpanish ? 'Resultados Garantizados' : 'Guaranteed Results', description: isSpanish ? 'Nos comprometemos con resultados excepcionales.' : 'We commit to exceptional results.', icon: 'CheckCircle', imageUrl: '' },
-            { title: isSpanish ? 'Innovación Constante' : 'Constant Innovation', description: isSpanish ? 'Siempre a la vanguardia con las últimas tendencias y tecnologías.' : 'Always at the forefront with the latest trends and technologies.', icon: 'Star', imageUrl: '' },
+            { title: isSpanish ? 'Calidad Premium' : 'Premium Quality', description: isSpanish ? 'Ofrecemos la más alta calidad en todos nuestros servicios.' : 'We offer the highest quality across all our services.', icon: 'Award', eyebrow: isSpanish ? 'Calidad' : 'Quality', bullets: [isSpanish ? 'Entrega consistente' : 'Consistent delivery'], imageUrl: '' },
+            { title: isSpanish ? 'Atención Personalizada' : 'Personalized Attention', description: isSpanish ? 'Cada cliente recibe un trato único y especial.' : 'Every client receives unique and special treatment.', icon: 'Heart', eyebrow: isSpanish ? 'Servicio' : 'Service', bullets: [isSpanish ? 'Acompañamiento cercano' : 'Close guidance'], imageUrl: '' },
+            { title: isSpanish ? 'Resultados Garantizados' : 'Guaranteed Results', description: isSpanish ? 'Nos comprometemos con resultados excepcionales.' : 'We commit to exceptional results.', icon: 'CheckCircle', eyebrow: isSpanish ? 'Impacto' : 'Impact', bullets: [isSpanish ? 'Objetivos claros' : 'Clear outcomes'], imageUrl: '' },
+            { title: isSpanish ? 'Innovación Constante' : 'Constant Innovation', description: isSpanish ? 'Siempre a la vanguardia con las últimas tendencias y tecnologías.' : 'Always at the forefront with the latest trends and technologies.', icon: 'Star', eyebrow: isSpanish ? 'Futuro' : 'Future', bullets: [isSpanish ? 'Mejora continua' : 'Continuous improvement'], imageUrl: '' },
         ];
         while (data.features.items.length < 4) {
-            data.features.items.push(fallbackFeatures[data.features.items.length]);
+            data.features.items.push({ ...fallbackFeatures[data.features.items.length] });
         }
         data.features.items.slice(0, 4).forEach((item: any, index: number) => {
             if (!Object.prototype.hasOwnProperty.call(item, 'imageUrl')) {
@@ -3615,6 +3753,12 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
             }
             if (!item.icon) {
                 item.icon = fallbackFeatures[index]?.icon || 'Star';
+            }
+            if (!item.eyebrow) {
+                item.eyebrow = fallbackFeatures[index]?.eyebrow || (isSpanish ? 'Beneficio' : 'Benefit');
+            }
+            if (!Array.isArray(item.bullets) || item.bullets.length === 0) {
+                item.bullets = fallbackFeatures[index]?.bullets || [item.description].filter(Boolean);
             }
         });
     }
@@ -3646,6 +3790,8 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.cta.description) data.cta.description = brief.description?.substring(0, 120) || '';
         if (!data.cta.buttonText) data.cta.buttonText = isSpanish ? 'Contáctanos' : 'Contact Us';
     }
+
+    ensureGeneratedPortfolioSections(data, brief, isSpanish, componentOrder);
 
     // --- Neon & Lumina Completeness Fallbacks ---
     const neonLuminaKeys = [
@@ -3707,6 +3853,13 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
     if (data.footer && typeof data.footer === 'object') {
         if (!data.footer.title) data.footer.title = brief.businessName || '';
         if (!data.footer.description) data.footer.description = brief.description?.substring(0, 200) || '';
+        if (!isFooterVariant(data.footer.footerVariant)) data.footer.footerVariant = 'classic';
+        if (!data.footer.wordmarkText) data.footer.wordmarkText = data.footer.title || brief.businessName || '';
+        if (!data.footer.newsletterLabel) data.footer.newsletterLabel = isSpanish ? 'Recibe novedades' : 'Get updates';
+        if (!data.footer.newsletterPlaceholder) data.footer.newsletterPlaceholder = 'email@example.com';
+        if (!data.footer.newsletterButtonText) data.footer.newsletterButtonText = isSpanish ? 'Suscribirme' : 'Subscribe';
+        if (!data.footer.primaryButtonText) data.footer.primaryButtonText = isSpanish ? 'Comenzar' : 'Get started';
+        if (!data.footer.secondaryButtonText) data.footer.secondaryButtonText = isSpanish ? 'Hablar' : 'Talk to us';
     }
 
     // Leads / Newsletter defaults
@@ -3744,9 +3897,97 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         if (!data.team.title) data.team.title = isSpanish ? 'Nuestro Equipo' : 'Our Team';
     }
 
+    // Showcase defaults
+    if (data.showcase && typeof data.showcase === 'object') {
+        if (!data.showcase.title) data.showcase.title = isSpanish ? 'Trabajo destacado' : 'Selected work';
+        if (!data.showcase.description) data.showcase.description = isSpanish ? 'Una vitrina visual de proyectos y piezas destacadas.' : 'A visual showcase of selected projects and work.';
+        if (!data.showcase.eyebrow) data.showcase.eyebrow = 'Showcase';
+        if (!data.showcase.showcaseVariant) data.showcase.showcaseVariant = 'recent-work';
+        if (!Array.isArray(data.showcase.categories) || data.showcase.categories.length === 0) {
+            data.showcase.categories = ['All', 'Brand', 'Product', 'Editorial'];
+        }
+        if (!Array.isArray(data.showcase.items) || data.showcase.items.length === 0) {
+            data.showcase.items = [
+                { title: isSpanish ? 'Proyecto destacado' : 'Featured project', description: brief.description || '', category: 'Brand', meta: '# Brand', imageUrl: '' },
+                { title: isSpanish ? 'Producto visual' : 'Product story', description: brief.tagline || '', category: 'Product', meta: '# Product', imageUrl: '' },
+                { title: isSpanish ? 'Campaña editorial' : 'Editorial campaign', description: brief.services?.[0]?.description || '', category: 'Editorial', meta: '# Editorial', imageUrl: '' },
+                { title: isSpanish ? 'Caso reciente' : 'Recent case', description: brief.services?.[1]?.description || '', category: 'Marketing', meta: '# Marketing', imageUrl: '' },
+            ];
+        }
+        data.showcase.items = data.showcase.items.slice(0, 6).map((item: any, index: number) => ({
+            title: item.title || (isSpanish ? `Item ${index + 1}` : `Item ${index + 1}`),
+            description: item.description || brief.description || '',
+            category: item.category || item.tags?.[0] || 'Brand',
+            meta: item.meta || `# ${item.category || 'Brand'}`,
+            imageUrl: item.imageUrl || '',
+            linkText: item.linkText || '',
+            linkUrl: item.linkUrl || '',
+        }));
+        if (!data.showcase.gridColumns) data.showcase.gridColumns = 4;
+        if (!data.showcase.imageHeight) data.showcase.imageHeight = 340;
+        if (!data.showcase.imageObjectFit) data.showcase.imageObjectFit = 'cover';
+        if (data.showcase.showFilters === undefined) data.showcase.showFilters = true;
+        if (data.showcase.showMeta === undefined) data.showcase.showMeta = true;
+        data.showcase.colors = {
+            background: brief.colorPalette.background,
+            heading: brief.colorPalette.text,
+            description: `${brief.colorPalette.text}cc`,
+            text: brief.colorPalette.text,
+            accent: brief.colorPalette.accent,
+            borderColor: brief.colorPalette.surface,
+            cardBackground: brief.colorPalette.surface,
+            cardHeading: brief.colorPalette.text,
+            cardText: `${brief.colorPalette.text}cc`,
+            mutedText: `${brief.colorPalette.text}99`,
+            pillBackground: brief.colorPalette.text,
+            pillText: brief.colorPalette.background,
+            overlayStart: 'rgba(0,0,0,0)',
+            overlayEnd: 'rgba(0,0,0,0.72)',
+            buttonBackground: brief.colorPalette.primary,
+            buttonText: '#ffffff',
+            ...(data.showcase.colors || {}),
+        };
+    }
+
     // Pricing defaults
     if (data.pricing && typeof data.pricing === 'object') {
         if (!data.pricing.title) data.pricing.title = isSpanish ? 'Planes y Precios' : 'Plans & Pricing';
+        data.pricing.pricingVariant = normalizePricingVariant(data.pricing.pricingVariant);
+        if (Array.isArray(data.pricing.tiers)) {
+            data.pricing.tiers = data.pricing.tiers.map((tier: any) => ({
+                ...tier,
+                frequency: tier.frequency ?? tier.period ?? '',
+                featured: tier.featured ?? tier.isPopular ?? false,
+            }));
+        }
+        data.pricing.colors = {
+            background: brief.colorPalette.background,
+            heading: brief.colorPalette.text,
+            description: `${brief.colorPalette.text}cc`,
+            text: brief.colorPalette.text,
+            mutedText: `${brief.colorPalette.text}99`,
+            accent: brief.colorPalette.accent,
+            borderColor: brief.colorPalette.surface,
+            cardBackground: brief.colorPalette.surface,
+            cardHeading: brief.colorPalette.text,
+            cardText: `${brief.colorPalette.text}cc`,
+            priceColor: brief.colorPalette.text,
+            buttonBackground: brief.colorPalette.primary,
+            buttonText: '#ffffff',
+            checkmarkColor: brief.colorPalette.accent,
+            gradientStart: brief.colorPalette.primary,
+            gradientEnd: brief.colorPalette.accent,
+            panelBackground: brief.colorPalette.text,
+            panelText: brief.colorPalette.background,
+            surfaceAlt: brief.colorPalette.surface,
+            featuredBackground: brief.colorPalette.text,
+            featuredText: brief.colorPalette.background,
+            badgeBackground: brief.colorPalette.accent,
+            badgeText: '#ffffff',
+            dividerColor: brief.colorPalette.surface,
+            imageOverlay: '#000000',
+            ...(data.pricing.colors || {}),
+        };
     }
 
     // HowItWorks defaults
@@ -3807,7 +4048,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean):
         'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
         'features', 'services', 'testimonials', 'pricing', 'faq',
         'cta', 'leads', 'newsletter', 'video', 'howItWorks', 'slideshow',
-        'team', 'portfolio',
+        'team', 'portfolio', 'showcase',
     ];
     for (const comp of glassComponents) {
         if (data[comp] && typeof data[comp] === 'object') {
@@ -3841,7 +4082,7 @@ function applyFontsToComponents(data: any, theme: any): void {
     const componentsToApplyFonts = [
         'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
         'header', 'footer', 'services', 'features', 'testimonials',
-        'team', 'pricing', 'faq', 'portfolio', 'cta', 'howItWorks',
+        'team', 'pricing', 'faq', 'portfolio', 'showcase', 'cta', 'howItWorks',
         'leads', 'newsletter', 'banner', 'video', 'slideshow', 'menu',
         'map', 'topBar', 'signupFloat', 'cmsFeed',
         'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid',

@@ -210,6 +210,7 @@ export function recommendSectionsForBrief(brief: BriefLike, registry: ComponentR
 
     if (industry === 'portfolio') {
         const sections: PageSection[] = [chooseGeneralHero(brief, industry, registry)];
+        pushIfAvailable(sections, registry, 'showcase');
         pushIfAvailable(sections, registry, 'portfolio');
         pushIfAvailable(sections, registry, 'slideshow', hasVisualProofSignal(industry, text));
         pushIfAvailable(sections, registry, 'services', brief.services?.length > 0);
@@ -234,8 +235,9 @@ export function recommendSectionsForBrief(brief: BriefLike, registry: ComponentR
     const sections: PageSection[] = [chooseGeneralHero(brief, industry, registry)];
     pushIfAvailable(sections, registry, 'services', brief.services?.length > 0 || industry !== 'other');
     pushIfAvailable(sections, registry, 'features');
+    pushIfAvailable(sections, registry, 'showcase', hasVisualProofSignal(industry, text));
     pushIfAvailable(sections, registry, 'portfolio', hasVisualProofSignal(industry, text));
-    pushIfAvailable(sections, registry, 'slideshow', hasVisualProofSignal(industry, text) && !sections.includes('portfolio'));
+    pushIfAvailable(sections, registry, 'slideshow', hasVisualProofSignal(industry, text) && !sections.includes('portfolio') && !sections.includes('showcase'));
     pushIfAvailable(sections, registry, 'howItWorks', hasBookingSignal(text) || industry !== 'other');
     pushIfAvailable(sections, registry, 'team', hasExpertSignal(industry, text));
     pushIfAvailable(sections, registry, 'testimonials');
@@ -291,15 +293,15 @@ function scoreImageForPurpose(
         if (use.includes('logo') || /logo|brand/.test(haystack)) score += 60;
         if (!use.includes('logo') && !/logo|brand/.test(haystack)) score -= 35;
     } else if (lowerPurpose.includes('hero') || lowerPurpose.includes('background') || lowerPurpose.includes('banner')) {
-        if (use.includes('hero') || use.includes('gallery') || use.includes('portfolio')) score += 42;
+        if (use.includes('hero') || use.includes('gallery') || use.includes('portfolio') || use.includes('showcase')) score += 42;
         if (/hero|banner|cover|header|main|og:image/.test(haystack)) score += 22;
         if (use.includes('logo') || /logo|brandmark|favicon/.test(haystack)) score -= 60;
         if (image.width && image.height && image.width >= image.height) score += 8;
     } else if (lowerPurpose.includes('portrait') || lowerPurpose.includes('team') || lowerPurpose.includes('customer')) {
         if (use.includes('team') || /team|staff|person|portrait|headshot|founder|customer|client/.test(haystack)) score += 45;
         if (use.includes('logo')) score -= 50;
-    } else if (lowerPurpose.includes('portfolio') || lowerPurpose.includes('gallery') || lowerPurpose.includes('project')) {
-        if (use.includes('portfolio') || use.includes('gallery') || /portfolio|project|gallery|work|case/.test(haystack)) score += 42;
+    } else if (lowerPurpose.includes('portfolio') || lowerPurpose.includes('showcase') || lowerPurpose.includes('gallery') || lowerPurpose.includes('project')) {
+        if (use.includes('portfolio') || use.includes('showcase') || use.includes('gallery') || /portfolio|showcase|project|gallery|work|case/.test(haystack)) score += 42;
         if (use.includes('logo')) score -= 45;
     } else if (lowerPurpose.includes('menu') || lowerPurpose.includes('food')) {
         if (use.includes('menu') || /menu|food|dish|plate|restaurant|coffee|drink/.test(haystack)) score += 48;

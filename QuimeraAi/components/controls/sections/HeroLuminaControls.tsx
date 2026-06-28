@@ -81,6 +81,7 @@ export const renderHeroLuminaControls = (deps: ControlsDeps) => {
                 { value: '/#contact', label: 'Contact' },
                 { value: '/#cta', label: 'CTA' },
                 { value: '/#portfolio', label: 'Portfolio' },
+                { value: '/#showcase', label: 'Showcase' },
                 { value: '/#heroSplit', label: 'Hero Split' },
                 { value: '/#leads', label: 'Leads' },
                 { value: '/#newsletter', label: 'Newsletter' },

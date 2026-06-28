@@ -75,6 +75,17 @@ export const motoForcePageData: PageData = {
             background: COLORS.bg,
             text: COLORS.heading,
             accent: COLORS.accent,
+            border: COLORS.border,
+            surface: COLORS.surface,
+            surfaceAlt: COLORS.carbon,
+            panelBackground: COLORS.surface,
+            panelText: COLORS.heading,
+            mutedText: COLORS.text,
+            linkHover: COLORS.accent,
+            separator: COLORS.border,
+            cartBadge: COLORS.accent,
+            buttonBackground: COLORS.accent,
+            buttonText: COLORS.bg,
         },
         buttonBorderRadius: 'md',
         linkFontSize: 13,
@@ -605,7 +616,7 @@ export const motoForcePageData: PageData = {
         },
     },
     pricing: {
-        pricingVariant: 'default',
+        pricingVariant: 'workflow-rows',
         paddingY: 'lg',
         paddingX: 'md',
         title: {
@@ -925,7 +936,7 @@ export const motoForcePageData: PageData = {
         },
     },
     faq: {
-        faqVariant: 'default',
+        faqVariant: 'classic',
         paddingY: 'lg',
         paddingX: 'md',
         title: {

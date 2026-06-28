@@ -90,6 +90,7 @@ export type ComponentId =
     | 'appointmentCTA'
     | 'publicBookingForm'
     | 'gallery'
+    | 'showcase'
     | 'imageWithText'
     | 'pricing'
     | 'process'
@@ -191,6 +192,7 @@ export interface ComponentAvailableData {
     menuItemsCount?: number;
     listingsCount?: number;
     portfolioItemsCount?: number;
+    showcaseItemsCount?: number;
     testimonialsCount?: number;
     reviewsCount?: number;
     salesCount?: number;

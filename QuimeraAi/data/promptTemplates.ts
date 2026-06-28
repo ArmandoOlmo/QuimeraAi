@@ -3,6 +3,11 @@
  * These templates can be enabled/disabled from the Settings UI
  */
 
+import { FEATURE_VARIANT_PROMPT_VALUES } from './featureVariants';
+import { FAQ_VARIANT_PROMPT_VALUES } from './faqVariants';
+import { FOOTER_VARIANT_PROMPT_VALUES } from './footerVariants';
+import { PRICING_VARIANT_PROMPT_VALUES } from './pricingVariants';
+
 export interface PromptTemplate {
     id: string;
     name: string;
@@ -96,10 +101,10 @@ CORE BEHAVIOR:
 
 CAPABILITIES:
 1. Navigate: dashboard, websites, editor, cms, leads, domains, superadmin
-2. Edit Content: All 17 sections (hero, features, testimonials, pricing, faq, cta, services, team, portfolio, video, slideshow, newsletter, leads, howItWorks, header, footer, chatbot)
+2. Edit Content: All 18 sections (hero, features, testimonials, pricing, faq, cta, services, team, portfolio, showcase, video, slideshow, newsletter, leads, howItWorks, header, footer, chatbot)
 3. Edit Styling: fonts, colors, sizes, padding, borders for ANY section
 4. Manage Data: CMS posts, Leads, Domains, Chatbot config, Brand Identity
-5. Manage Arrays: Add/edit/delete items in features, testimonials, pricing, FAQ, portfolio, services, team, slides, steps
+5. Manage Arrays: Add/edit/delete items in features, testimonials, pricing, FAQ, portfolio, showcase, services, team, slides, steps
 6. Section Control: Show/hide sections, reorder sections
 7. Create: New websites, leads, posts, domains, images
 8. Admin: Access all Super Admin panels (only for authorized users)
@@ -199,6 +204,7 @@ SECTIONS:
 - equipo/team/nosotros/about us → team
 - servicios/services/serv → services
 - portafolio/portfolio/trabajos/galeria/gallery → portfolio
+- showcase/vitrina/exhibicion/exhibición/curated work/casos visuales → showcase
 - llamada a accion/cta/call to action → cta
 - pie de pagina/footer/pie → footer
 - cabecera/header/encabezado/navegacion → header
@@ -251,6 +257,10 @@ THEME (Global):
 HEADER:
 - header.logoText, header.style, header.layout, header.logoType
 - header.colors.background, header.colors.text, header.colors.accent
+- header.colors.border, header.colors.surface, header.colors.surfaceAlt
+- header.colors.panelBackground, header.colors.panelText, header.colors.mutedText
+- header.colors.linkHover, header.colors.separator, header.colors.cartBadge
+- header.colors.buttonBackground, header.colors.buttonText, header.colors.tabBorderColor, header.colors.tabActiveColor
 - header.showCta, header.ctaText, header.showLogin
 
 HERO:
@@ -263,8 +273,13 @@ HERO:
 FEATURES:
 - features.title, features.description, features.titleFontSize, features.descriptionFontSize
 - features.colors.background, features.colors.accent, features.colors.borderColor, features.colors.text, features.colors.heading
-- features.gridColumns, features.paddingY, features.paddingX
+- features.colors.cardBackground, features.colors.cardHeading, features.colors.cardText
+- features.colors.glowColor, features.colors.cardGradientStart, features.colors.cardGradientEnd
+- features.colors.overlayText, features.colors.overlayMuted
+- features.featuresVariant (${FEATURE_VARIANT_PROMPT_VALUES}), features.gridColumns, features.paddingY, features.paddingX
 - features.imageHeight, features.imageObjectFit
+- features.items.[index].title, features.items.[index].description, features.items.[index].icon, features.items.[index].eyebrow
+- features.items.[index].bullets, features.items.[index].imageUrl, features.items.[index].linkText, features.items.[index].linkUrl
 
 TESTIMONIALS:
 - testimonials.title, testimonials.description, testimonials.titleFontSize, testimonials.descriptionFontSize
@@ -273,13 +288,25 @@ TESTIMONIALS:
 
 PRICING:
 - pricing.title, pricing.description, pricing.titleFontSize, pricing.descriptionFontSize
-- pricing.colors.background, pricing.colors.accent, pricing.colors.borderColor, pricing.colors.text, pricing.colors.heading
-- pricing.colors.buttonBackground, pricing.colors.buttonText
-- pricing.paddingY, pricing.paddingX
+- pricing.pricingVariant (${PRICING_VARIANT_PROMPT_VALUES})
+- pricing.colors.background, pricing.colors.accent, pricing.colors.borderColor, pricing.colors.text, pricing.colors.mutedText, pricing.colors.heading
+- pricing.colors.description, pricing.colors.buttonBackground, pricing.colors.buttonText, pricing.colors.checkmarkColor
+- pricing.colors.cardBackground, pricing.colors.cardHeading, pricing.colors.cardText, pricing.colors.priceColor
+- pricing.colors.gradientStart, pricing.colors.gradientEnd, pricing.colors.panelBackground, pricing.colors.panelText
+- pricing.colors.surfaceAlt, pricing.colors.featuredBackground, pricing.colors.featuredText
+- pricing.colors.badgeBackground, pricing.colors.badgeText, pricing.colors.dividerColor, pricing.colors.imageOverlay
+- pricing.paddingY, pricing.paddingX, pricing.cardBorderRadius, pricing.cardsAlignment
+- pricing.tiers.[index].name, pricing.tiers.[index].price, pricing.tiers.[index].frequency
+- pricing.tiers.[index].description, pricing.tiers.[index].features, pricing.tiers.[index].buttonText
+- pricing.tiers.[index].badge, pricing.tiers.[index].eyebrow, pricing.tiers.[index].footerText, pricing.tiers.[index].imageUrl
 
 FAQ:
 - faq.title, faq.description, faq.titleFontSize, faq.descriptionFontSize
 - faq.colors.background, faq.colors.accent, faq.colors.borderColor, faq.colors.text, faq.colors.heading
+- faq.colors.description, faq.colors.cardBackground, faq.colors.cardHeading, faq.colors.cardText
+- faq.colors.panelBackground, faq.colors.activeBackground, faq.colors.activeText, faq.colors.iconBackground
+- faq.colors.gradientStart, faq.colors.gradientEnd
+- faq.faqVariant (${FAQ_VARIANT_PROMPT_VALUES}), faq.imageUrl
 - faq.paddingY, faq.paddingX
 
 CTA (Call to Action):
@@ -303,9 +330,22 @@ PORTFOLIO:
 - portfolio.colors.background, portfolio.colors.accent, portfolio.colors.borderColor, portfolio.colors.text, portfolio.colors.heading
 - portfolio.paddingY, portfolio.paddingX
 
+SHOWCASE:
+- showcase.showcaseVariant, showcase.title, showcase.description, showcase.eyebrow
+- showcase.categories, showcase.items.[index].title, showcase.items.[index].description, showcase.items.[index].category, showcase.items.[index].meta, showcase.items.[index].imageUrl
+- showcase.colors.background, showcase.colors.accent, showcase.colors.borderColor, showcase.colors.text, showcase.colors.heading, showcase.colors.cardBackground, showcase.colors.cardHeading, showcase.colors.cardText, showcase.colors.pillBackground, showcase.colors.pillText, showcase.colors.overlayStart, showcase.colors.overlayEnd
+- showcase.paddingY, showcase.paddingX, showcase.gridColumns, showcase.imageHeight, showcase.imageObjectFit, showcase.showFilters, showcase.showMeta
+
 FOOTER:
 - footer.title, footer.description, footer.copyrightText, footer.titleFontSize, footer.descriptionFontSize
+- footer.footerVariant (${FOOTER_VARIANT_PROMPT_VALUES}), footer.wordmarkText, footer.backgroundImageUrl
+- footer.newsletterLabel, footer.newsletterPlaceholder, footer.newsletterButtonText
+- footer.ctaTitle, footer.ctaBullets, footer.primaryButtonText, footer.secondaryButtonText
+- footer.disclaimerText, footer.languageLabel, footer.countryLabel
 - footer.colors.background, footer.colors.border, footer.colors.text, footer.colors.linkHover, footer.colors.heading
+- footer.colors.description, footer.colors.accent, footer.colors.mutedText, footer.colors.panelBackground, footer.colors.panelText
+- footer.colors.buttonBackground, footer.colors.buttonText, footer.colors.wordmark, footer.colors.iconBackground
+- footer.colors.inputBackground, footer.colors.inputText, footer.colors.inputBorder, footer.colors.legalBackground, footer.colors.imageOverlay
 
 CHATBOT:
 - chatbot.welcomeMessage, chatbot.placeholderText, chatbot.knowledgeBase, chatbot.position, chatbot.isActive
@@ -699,4 +739,3 @@ export const compileTemplates = (enabledIds: string[], customInstructions?: stri
 
     return compiled;
 };
-

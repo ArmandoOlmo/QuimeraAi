@@ -26,8 +26,8 @@ export const getAspectRatioForPath = (path: string): ImageAspectRatio => {
   // Hero and slideshow are widescreen
   if (path.includes('hero') || path.includes('slideshow')) return '16:9';
   
-  // Features, portfolio, and menu are standard landscape
-  if (path.includes('features') || path.includes('portfolio') || path.includes('menu')) return '4:3';
+  // Features, showcase, portfolio, and menu are standard landscape
+  if (path.includes('features') || path.includes('showcase') || path.includes('portfolio') || path.includes('menu')) return '4:3';
   
   // Default to standard landscape
   return '4:3';
@@ -49,7 +49,6 @@ export const getSectionFromPath = (path: string): string => {
 export const aspectRatioToCss = (ratio: ImageAspectRatio): string => {
   return ratio.replace(':', '/');
 };
-
 
 
 

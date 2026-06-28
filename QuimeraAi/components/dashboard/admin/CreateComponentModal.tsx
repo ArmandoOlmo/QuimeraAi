@@ -19,6 +19,7 @@ const componentOptions: { id: EditableComponentID, name: string }[] = [
     { id: 'services', name: 'Services Section' },
     { id: 'testimonials', name: 'Testimonials Section' },
     { id: 'team', name: 'Team Section' },
+    { id: 'showcase', name: 'Showcase Section' },
     { id: 'cta', name: 'CTA Section' },
 ];
 

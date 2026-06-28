@@ -101,6 +101,7 @@ export const renderHeroNeonControls = (deps: ControlsDeps) => {
                 { value: '/#contact', label: 'Contact' },
                 { value: '/#cta', label: 'CTA' },
                 { value: '/#portfolio', label: 'Portfolio' },
+                { value: '/#showcase', label: 'Showcase' },
                 { value: '/#leads', label: 'Leads' },
                 { value: '/tienda', label: 'Tienda' },
               ]}

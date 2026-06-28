@@ -164,6 +164,52 @@ const generateStaticHTML = (project: Project): string => {
                 </div>
             </section>
         `,
+        showcase: (d) => {
+            const items = (d.items || [
+                { title: 'Selected Work', description: 'A curated visual proof point for the brand.', category: 'Brand', meta: '# Brand', imageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=1200' },
+                { title: 'Product Story', description: 'Image-led detail with editorial pacing.', category: 'Product', meta: '# Product', imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=1200' },
+                { title: 'Campaign Index', description: 'A clean gallery item for recent work.', category: 'Marketing', meta: '# Marketing', imageUrl: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=1200' },
+                { title: 'Editorial Piece', description: 'A visual case study with premium restraint.', category: 'Editorial', meta: '# Editorial', imageUrl: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=1200' },
+            ]).slice(0, 8);
+            const variant = d.showcaseVariant || 'recent-work';
+            const isRow = ['curated-row', 'dark-carousel'].includes(variant);
+            const isStrip = variant === 'vertical-strips';
+            const columns = Math.min(Math.max(Number(d.gridColumns) || 3, 2), 5);
+            const imageHeight = Math.min(Math.max(Number(d.imageHeight) || 340, 180), 720);
+            const categories = Array.isArray(d.categories) ? d.categories.filter(Boolean).slice(0, 8) : [];
+
+            return `
+            <section id="showcase" class="py-24 px-6 overflow-hidden" style="background-color: ${d.colors?.background || pageBg}; color: ${d.colors?.text || '#fff'}">
+                <div class="container mx-auto">
+                    ${d.showSectionHeader !== false ? `
+                        <div class="max-w-4xl ${variant === 'recent-work' || variant === 'curated-row' ? 'text-left' : 'text-center mx-auto'} mb-12">
+                            ${d.eyebrow ? `<p class="text-xs font-black uppercase tracking-[0.24em] mb-4" style="color: ${d.colors?.accent || primaryColor}">${d.eyebrow}</p>` : ''}
+                            <h2 class="text-4xl md:text-6xl font-black leading-tight" style="color: ${d.colors?.heading || '#fff'}">${d.title || 'Selected Work'}</h2>
+                            ${d.description ? `<p class="mt-5 text-lg max-w-2xl ${variant === 'recent-work' || variant === 'curated-row' ? '' : 'mx-auto'}" style="color: ${d.colors?.description || d.colors?.text || 'rgba(255,255,255,0.72)'}">${d.description}</p>` : ''}
+                        </div>
+                    ` : ''}
+                    ${d.showFilters !== false && categories.length ? `
+                        <div class="flex flex-wrap gap-2 ${variant === 'recent-work' || variant === 'curated-row' ? 'justify-start' : 'justify-center'} mb-10">
+                            ${categories.map((category: string, index: number) => `<span class="px-4 py-2 rounded-full border text-sm font-bold" style="background-color: ${index === 0 ? d.colors?.pillBackground || '#fff' : 'transparent'}; border-color: ${index === 0 ? d.colors?.pillBackground || '#fff' : d.colors?.borderColor || 'rgba(255,255,255,0.18)'}; color: ${index === 0 ? d.colors?.pillText || '#111827' : d.colors?.text || '#fff'}">${category}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="${isRow ? 'flex gap-6 overflow-x-auto pb-4 snap-x' : `grid gap-6 ${isStrip ? 'md:grid-cols-3 lg:grid-cols-6' : `md:grid-cols-${columns}`}`}">
+                        ${items.map((item: any, index: number) => `
+                            <article class="${isRow ? 'min-w-[300px] md:min-w-[380px] snap-start' : ''} group overflow-hidden border" style="border-color: ${d.colors?.borderColor || 'rgba(255,255,255,0.12)'}; background-color: ${d.colors?.cardBackground || 'rgba(255,255,255,0.04)'}; border-radius: ${variant === 'case-grid-dark' ? '0' : '18px'}">
+                                <div class="overflow-hidden" style="height: ${isStrip ? imageHeight + 180 : imageHeight}px; background-color: ${d.colors?.cardBackground || 'rgba(255,255,255,0.04)'}">
+                                    <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=1200'}" alt="${item.title || `Showcase ${index + 1}`}" class="w-full h-full object-${d.imageObjectFit || 'cover'} transition-transform duration-700 group-hover:scale-105">
+                                </div>
+                                <div class="p-6">
+                                    ${d.showMeta !== false ? `<p class="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style="color: ${d.colors?.mutedText || d.colors?.text || 'rgba(255,255,255,0.55)'}">${item.meta || item.category || ''}</p>` : ''}
+                                    <h3 class="text-2xl font-black mb-3" style="color: ${d.colors?.cardHeading || d.colors?.heading || '#fff'}">${item.title || `Showcase ${index + 1}`}</h3>
+                                    ${item.description ? `<p class="text-sm leading-relaxed" style="color: ${d.colors?.cardText || d.colors?.text || 'rgba(255,255,255,0.72)'}">${item.description}</p>` : ''}
+                                </div>
+                            </article>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `},
         categoryGrid: (d) => `
             <section class="py-24 px-6" style="background-color: ${d.colors?.background || pageBg}">
                 <div class="container mx-auto">

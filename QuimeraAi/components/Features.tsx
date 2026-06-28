@@ -6,8 +6,9 @@ import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import FeaturesCinematicGym from './cinematic/FeaturesCinematicGym';
+import { getIconComponent } from './ui/IconSelector';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -94,6 +95,103 @@ const textAlignmentClasses: Record<TextAlignment, string> = {
   right: 'text-right items-end',
 };
 
+const normalizeFeatureIconName = (icon?: string) => {
+  if (!icon || icon === 'none') return 'sparkles';
+  return icon
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/_/g, '-')
+    .toLowerCase();
+};
+
+const FeatureIconMark = ({
+  icon,
+  color,
+  size = 24,
+  className = '',
+}: {
+  icon?: string;
+  color: string;
+  size?: number;
+  className?: string;
+}) => (
+  <span className={`inline-flex shrink-0 items-center justify-center ${className}`} style={{ color }}>
+    {getIconComponent(normalizeFeatureIconName(icon), size)}
+  </span>
+);
+
+const FeatureImagePanel = ({
+  feature,
+  aspectRatio,
+  className = '',
+  imageObjectFit,
+  backgroundColor = 'transparent',
+  borderColor,
+}: {
+  feature: FeatureItem;
+  aspectRatio: string;
+  className?: string;
+  imageObjectFit: ObjectFit;
+  backgroundColor?: string;
+  borderColor?: string;
+}) => (
+  <div className={`relative overflow-hidden ${className}`} style={{ aspectRatio, backgroundColor, borderColor }}>
+    {isPendingImage(feature.imageUrl) ? (
+      <ImagePlaceholder aspectRatio="4:3" showGenerateButton={false} className="absolute inset-0 h-full w-full" />
+    ) : (
+      <img
+        src={feature.imageUrl}
+        alt={feature.title}
+        className={`absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit] || 'object-cover'}`}
+      />
+    )}
+  </div>
+);
+
+const FeatureLink = ({
+  feature,
+  color,
+  onNavigate,
+  className = '',
+}: {
+  feature: FeatureItem;
+  color: string;
+  onNavigate?: (href: string) => void;
+  className?: string;
+}) => {
+  if (!feature.linkUrl) return null;
+  const isExternal = feature.linkUrl.startsWith('http');
+  return (
+    <a
+      href={feature.linkUrl}
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+      onClick={(e) => {
+        if (onNavigate && feature.linkUrl && !feature.linkUrl.startsWith('http://') && !feature.linkUrl.startsWith('https://')) {
+          e.preventDefault();
+          onNavigate(feature.linkUrl);
+        }
+      }}
+      className={`inline-flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-75 ${className}`}
+      style={{ color }}
+    >
+      <span>{feature.linkText || 'Learn more'}</span>
+      <ArrowRight className="h-4 w-4" />
+    </a>
+  );
+};
+
+const getFeatureBullets = (feature: FeatureItem): string[] => {
+  if (Array.isArray(feature.bullets) && feature.bullets.length > 0) {
+    return feature.bullets.filter(Boolean).slice(0, 4);
+  }
+  if (!feature.description) return [];
+  const parts = feature.description
+    .split(/[.;]\s+/)
+    .map(part => part.trim())
+    .filter(part => part.length > 2);
+  return parts.length > 1 ? parts.slice(0, 3) : [feature.description];
+};
+
 const FeatureCard: React.FC<FeatureCardProps> = ({
   imageUrl,
   title,
@@ -118,7 +216,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 
   return (
     <div
-      className={`border border-white/10 transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
+      className={`border transform hover:-translate-y-2 transition-transform duration-300 overflow-hidden backdrop-blur-xl ${borderRadiusClasses[borderRadius]} ${animationClass}`}
       style={{ animationDelay: delay, borderColor: borderColor, backgroundColor: hexToRgba(cardBackground, 0.35) }}
     >
       {isPendingImage(imageUrl) ? (
@@ -171,9 +269,15 @@ const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate }:
   const isExternal = feature.linkUrl?.startsWith('http');
 
   return (
-    <div className={`group relative overflow-hidden border border-white/10 p-8 transition-all duration-500 backdrop-blur-xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: hexToRgba(colors?.cardBackground || '#1f2937', 0.35) }}>
+    <div className={`group relative overflow-hidden border p-8 transition-all duration-500 backdrop-blur-xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: hexToRgba(colors?.cardBackground || '#1f2937', 0.35) }}>
       {/* Efecto Glow sutil */}
-      <div className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full bg-gradient-to-br from-white/10 to-transparent blur-[100px] transition-all duration-500 group-hover:bg-white/20" style={{ opacity: 0.5 }} />
+      <div
+        className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full blur-[100px] transition-all duration-500"
+        style={{
+          opacity: 0.5,
+          background: `radial-gradient(circle, ${hexToRgba(colors?.glowColor || colors?.accent || colors?.cardHeading || '#ffffff', 0.24)} 0%, transparent 68%)`,
+        }}
+      />
 
       <div className="relative z-10 flex flex-col h-full justify-between">
         <div className="mb-8">
@@ -224,6 +328,9 @@ interface ImageOverlayCardProps {
   index: number;
   colors: {
     accent: string;
+    overlayText?: string;
+    overlayMuted?: string;
+    overlayScrim?: string;
   };
   imageHeight: number;
   imageObjectFit: ObjectFit;
@@ -272,14 +379,18 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
 
       {/* Gradient overlay for text readability */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+        className="absolute inset-0 opacity-70 group-hover:opacity-90 transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(to top, ${hexToRgba(colors.overlayScrim || '#000000', 0.82)} 0%, ${hexToRgba(colors.overlayScrim || '#000000', 0.32)} 48%, transparent 100%)`,
+        }}
       />
 
       {/* Text overlay - position based on alignment */}
       <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`}>
         <h3
-          className="text-xl md:text-2xl font-bold mb-2 font-header text-white drop-shadow-lg"
+          className="text-xl md:text-2xl font-bold mb-2 font-header drop-shadow-lg"
           style={{
+            color: colors.overlayText || '#ffffff',
             textTransform: 'var(--headings-transform, none)' as any,
             letterSpacing: 'var(--headings-spacing, normal)'
           }}
@@ -287,7 +398,8 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
           {feature.title}
         </h3>
         <p
-          className="text-sm md:text-base font-body text-white/80 max-w-md drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2"
+          className="text-sm md:text-base font-body max-w-md drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2"
+          style={{ color: colors.overlayMuted || colors.overlayText || '#ffffff' }}
         >
           {feature.description}
         </p>
@@ -302,7 +414,8 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
                 onNavigate(feature.linkUrl);
               }
             }}
-            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
+            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 hover:opacity-75"
+            style={{ color: colors.overlayText || '#ffffff' }}
           >
             <span>{feature.linkText || 'Learn more'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -350,7 +463,10 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
 
       {/* Gradient overlay for text readability */}
       <div
-        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+        className="absolute inset-0 opacity-80 group-hover:opacity-95 transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(to top, ${hexToRgba(colors?.cardGradientEnd || colors?.background || '#000000', 0.85)} 0%, ${hexToRgba(colors?.cardGradientEnd || colors?.background || '#000000', 0.4)} 48%, ${hexToRgba(colors?.cardGradientStart || colors?.background || '#000000', 0.1)} 100%)`,
+        }}
       />
 
       {/* Hover accent glow */}
@@ -364,15 +480,19 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
       {/* Text overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-10 flex flex-col">
         <h3
-          className={`${isWide ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl'} font-bold mb-2 font-header text-white drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300`}
+          className={`${isWide ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl'} font-bold mb-2 font-header drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300`}
           style={{
+            color: colors?.overlayText || colors?.cardHeading || '#ffffff',
             textTransform: 'var(--headings-transform, none)' as any,
             letterSpacing: 'var(--headings-spacing, normal)'
           }}
         >
           {feature.title}
         </h3>
-        <p className="text-sm md:text-base font-body text-white/75 drop-shadow-md max-w-lg line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <p
+          className="text-sm md:text-base font-body drop-shadow-md max-w-lg line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{ color: colors?.overlayMuted || colors?.cardText || '#ffffff' }}
+        >
           {feature.description}
         </p>
         {feature.linkUrl && (
@@ -386,7 +506,8 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
                 onNavigate(feature.linkUrl);
               }
             }}
-            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
+            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 hover:opacity-75"
+            style={{ color: colors?.overlayText || colors?.cardHeading || '#ffffff' }}
           >
             <span>{feature.linkText || 'Learn more'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -461,7 +582,7 @@ const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, im
                     onNavigate(feature.linkUrl);
                   }
                 }}
-                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-6 py-2 border rounded-full transition-colors hover:bg-black/5"
+                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-6 py-2 border rounded-full transition-opacity hover:opacity-75"
                 style={{ borderColor: colors?.cardText || '#000', color: colors?.cardText || '#000' }}
               >
                 <span>{feature.linkText || 'Learn More'}</span>
@@ -496,9 +617,10 @@ const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNa
 
   const imagePanel = (
     <div
-      className={`group relative overflow-hidden border bg-black ${borderRadius}`}
+      className={`group relative overflow-hidden border ${borderRadius}`}
       style={{
         aspectRatio: EDITORIAL_MOSAIC_IMAGE_ASPECT_RATIO,
+        backgroundColor: cardBackground,
         borderColor,
       }}
     >
@@ -643,7 +765,13 @@ const Features: React.FC<FeaturesProps> = ({
     ...item,
     title: resolveText(item.title),
     description: resolveText(item.description),
-    linkText: resolveText(item.linkText)
+    eyebrow: resolveText((item as any).eyebrow),
+    badge: resolveText((item as any).badge),
+    metric: resolveText((item as any).metric),
+    linkText: resolveText(item.linkText),
+    bullets: Array.isArray((item as any).bullets)
+      ? (item as any).bullets.map((bullet: any) => resolveText(bullet)).filter(Boolean)
+      : undefined,
   }));
 
   if (featuresVariant === 'cinematic-gym') {
@@ -665,6 +793,11 @@ const Features: React.FC<FeaturesProps> = ({
     heading: colors?.heading,
     description: colors?.description || colors?.text,
     cardBackground: colors?.cardBackground || primaryColor,
+    glowColor: (colors as any)?.glowColor || colors?.accent || primaryColor,
+    cardGradientStart: (colors as any)?.cardGradientStart || colors?.cardBackground || colors?.background || primaryColor,
+    cardGradientEnd: (colors as any)?.cardGradientEnd || colors?.background || colors?.cardBackground || primaryColor,
+    overlayText: (colors as any)?.overlayText,
+    overlayMuted: (colors as any)?.overlayMuted,
     // Separate card colors
     cardHeading: (colors as any)?.cardHeading,
     cardText: (colors as any)?.cardText,
@@ -681,8 +814,23 @@ const Features: React.FC<FeaturesProps> = ({
       // Card-level colors (for text inside cards) - independent from section colors
       cardHeading: actualColors.cardHeading || '#ffffff',
       cardText: actualColors.cardText || '#94a3b8',
+      overlayText: actualColors.overlayText || actualColors.cardHeading || actualColors.heading || '#ffffff',
+      overlayMuted: actualColors.overlayMuted || actualColors.cardText || actualColors.description || actualColors.text || '#d1d5db',
     };
   }, [actualColors]);
+
+  const glassSectionClass = `w-full ${glassEffect ? 'backdrop-blur-xl border-y z-20' : ''}`;
+  const getSectionStyle = (fallbackBackground = actualColors.background, glassOpacity = 0.55): React.CSSProperties => ({
+    backgroundColor: glassEffect
+      ? hexToRgba(actualColors.background || fallbackBackground, glassOpacity)
+      : actualColors.background,
+    borderColor: glassEffect
+      ? hexToRgba(actualColors.borderColor || actualColors.accent || actualColors.cardBackground || actualColors.background || fallbackBackground, 0.16)
+      : undefined,
+    boxShadow: glassEffect
+      ? `0 4px 30px ${hexToRgba(actualColors.background || fallbackBackground, 0.1)}`
+      : undefined,
+  });
 
   // Responsive grid columns - mobile-first approach
   const gridColsClasses: Record<number, string> = {
@@ -691,9 +839,380 @@ const Features: React.FC<FeaturesProps> = ({
     4: 'md:grid-cols-2 lg:grid-cols-4',
   };
 
+  if (featuresVariant === 'gallery-strip') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-14 grid gap-8 lg:grid-cols-[minmax(220px,0.75fr)_minmax(0,1.6fr)] lg:items-start">
+              {description && (
+                <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-md font-body leading-relaxed`} style={{ color: safeColors.description }}>
+                  {description}
+                </p>
+              )}
+              {title && (
+                <h2 className={`${titleSizeClasses[titleFontSize]} max-w-5xl font-header font-normal leading-[1.02]`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                  {title}
+                </h2>
+              )}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((feature, index) => (
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
+                <div className="pt-4">
+                  <h3 className="font-header text-lg font-semibold" style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{feature.title}</h3>
+                  <p className="mt-2 font-body text-sm leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                  <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-3" />
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'visual-proof-grid') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mx-auto mb-14 max-w-4xl text-center">
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-4 max-w-2xl font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-5 md:gap-6`}>
+            {items.map((feature, index) => (
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <FeatureImagePanel feature={feature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} borderColor={actualColors.borderColor} className={`${borderRadiusClasses[borderRadius]} border p-4`} />
+                <div className="pt-5">
+                  <h3 className="font-header text-xl font-semibold" style={{ color: safeColors.heading }}>{feature.title}</h3>
+                  <p className="mt-2 font-body text-base leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'strategy-cards') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-16 grid gap-6 lg:grid-cols-[0.32fr_1fr] lg:items-start">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ color: actualColors.accent, borderColor: actualColors.borderColor || hexToRgba(actualColors.accent, 0.25), backgroundColor: hexToRgba(actualColors.accent, 0.08) }}>
+                  <span className="h-2 w-2" style={{ backgroundColor: actualColors.accent }} />
+                  {items[0]?.eyebrow || 'Approach'}
+                </span>
+              </div>
+              <div className="max-w-5xl">
+                {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-normal leading-[1.05]`} style={{ color: safeColors.heading }}>{title}</h2>}
+                {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-8 max-w-3xl font-body leading-relaxed`} style={{ color: safeColors.description }}>{description}</p>}
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {items.slice(0, 3).map((feature, index) => {
+              const isPrimary = index === 0;
+              const cardBg = isPrimary ? (actualColors.cardBackground || actualColors.heading || '#111827') : hexToRgba(actualColors.cardBackground || '#ffffff', isPrimary ? 1 : 0.82);
+              const cardHeading = isPrimary ? actualColors.background || '#ffffff' : safeColors.cardHeading;
+              const cardText = isPrimary ? hexToRgba(actualColors.background || '#ffffff', 0.78) : safeColors.cardText;
+              return (
+                <article key={index} className={`flex min-h-[320px] flex-col justify-between border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: cardBg, borderColor: actualColors.borderColor || 'transparent' }}>
+                  <FeatureIconMark icon={feature.icon} color={isPrimary ? actualColors.background || '#ffffff' : safeColors.heading} size={38} className="h-12 w-12" />
+                  <div>
+                    <p className="mb-5 font-body text-xs uppercase tracking-[0.18em]" style={{ color: cardText }}>{feature.eyebrow || `Strategy ${index + 1}`}</p>
+                    <h3 className="font-header text-2xl font-semibold leading-tight" style={{ color: cardHeading }}>{feature.title}</h3>
+                    <p className="mt-5 font-body text-base leading-relaxed" style={{ color: cardText }}>{feature.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'offer-showcase') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.6)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+                {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-2 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+              </div>
+              {(items[0]?.linkUrl || items[0]?.linkText) && <FeatureLink feature={items[0]} color={safeColors.heading} onNavigate={onNavigate} className="rounded-full px-5 py-2 text-xs" />}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {items.slice(0, 3).map((feature, index) => (
+              <article key={index} className={`group relative min-h-[520px] overflow-hidden border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: actualColors.cardBackground || '#f8fafc', borderColor: actualColors.borderColor || 'transparent' }}>
+                {!isPendingImage(feature.imageUrl) && (
+                  <img src={feature.imageUrl} alt={feature.title} className={`absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit] || 'object-cover'}`} />
+                )}
+                <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${hexToRgba(actualColors.cardBackground || actualColors.background || '#ffffff', 0.88)} 0%, ${hexToRgba(actualColors.cardBackground || actualColors.background || '#ffffff', 0.42)} 42%, ${hexToRgba(actualColors.cardBackground || actualColors.background || '#ffffff', 0.05)} 100%)` }} />
+                <div className="relative z-10 max-w-md">
+                  <h3 className="font-header text-3xl font-semibold leading-tight" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
+                  <p className="mt-4 font-body text-base leading-relaxed" style={{ color: safeColors.cardText }}>{feature.description}</p>
+                  <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-7 rounded-full px-5 py-2 text-xs" />
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'product-highlights') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-16 max-w-xl">
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-normal leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-6 font-body leading-relaxed`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((feature, index) => (
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} borderColor={actualColors.borderColor} className={`${borderRadiusClasses[borderRadius]} border`} />
+                <h3 className="mt-5 font-header text-lg font-semibold" style={{ color: safeColors.heading }}>{feature.title}</h3>
+                <p className="mt-5 font-body text-sm leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-5" />
+                {feature.badge && <span className="mt-4 inline-flex rounded-full px-3 py-1 text-xs" style={{ color: safeColors.cardText, backgroundColor: hexToRgba(actualColors.cardBackground || actualColors.accent, 0.18) }}>{feature.badge}</span>}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'icon-columns') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {title && <h2 className={`${titleSizeClasses[titleFontSize]} mx-auto mb-16 max-w-4xl text-center font-header font-normal leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+          <div className={`grid grid-cols-1 gap-12 md:grid-cols-3`}>
+            {items.slice(0, 3).map((feature, index) => (
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <FeatureIconMark icon={feature.icon} color={safeColors.heading} size={64} className="mb-8 h-20 w-20" />
+                <h3 className="font-header text-2xl font-normal" style={{ color: safeColors.heading }}>{feature.title}</h3>
+                <p className="mt-5 font-body text-base leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-8" />
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'dark-showcase') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-10 max-w-3xl">
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold`} style={{ color: safeColors.heading }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((feature, index) => (
+              <article key={index} className={`border-y py-6 ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.18) }}>
+                <div className="relative">
+                  <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
+                  {feature.linkUrl && (
+                    <FeatureLink
+                      feature={feature}
+                      color={safeColors.overlayText}
+                      onNavigate={onNavigate}
+                      className="absolute bottom-4 right-4 rounded-full px-3 py-3 text-xs backdrop-blur-md"
+                    />
+                  )}
+                </div>
+                <h3 className="mt-5 font-header text-lg font-semibold" style={{ color: safeColors.heading }}>{feature.title}</h3>
+                <p className="mt-2 font-body text-sm leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'split-list') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto max-w-6xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mx-auto mb-16 max-w-3xl text-center">
+              {items[0]?.eyebrow && <span className="mb-5 inline-flex rounded-full px-4 py-2 text-xs font-semibold" style={{ color: actualColors.accent, backgroundColor: hexToRgba(actualColors.accent, 0.1) }}>{items[0].eyebrow}</span>}
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className="space-y-8">
+            {items.map((feature, index) => (
+              <article key={index} className={`grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.95fr)] md:items-center ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <FeatureImagePanel feature={feature} aspectRatio="21 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
+                <div className="border-l pl-8" style={{ borderColor: hexToRgba(actualColors.borderColor || actualColors.accent, 0.25) }}>
+                  <FeatureIconMark icon={feature.icon} color={safeColors.heading} size={24} className="mb-8 h-8 w-8" />
+                  <h3 className="font-header text-2xl font-semibold leading-tight" style={{ color: safeColors.heading }}>{feature.title}</h3>
+                  <p className="mt-6 font-body text-base leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'app-showcase') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto max-w-7xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          <div className="grid gap-14 lg:grid-cols-2">
+            {items.slice(0, 4).map((feature, index) => {
+              const imageFirst = index % 2 === 0;
+              const media = <FeatureImagePanel feature={feature} aspectRatio="4 / 3" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} borderColor={actualColors.borderColor} className={`${borderRadiusClasses[borderRadius]} border`} />;
+              const copy = (
+                <div className="flex flex-col justify-center">
+                  {feature.eyebrow && <span className="mb-5 w-fit rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide" style={{ color: safeColors.cardText, borderColor: actualColors.borderColor }}>{feature.eyebrow}</span>}
+                  <h3 className={`${index < 2 ? 'text-3xl md:text-5xl' : 'text-2xl md:text-4xl'} font-header font-bold leading-tight`} style={{ color: safeColors.heading }}>{feature.title}</h3>
+                  <p className="mt-6 font-body text-base leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
+                  <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-8" />
+                </div>
+              );
+              return (
+                <article key={index} className={`grid min-h-[360px] gap-8 ${index < 2 ? '' : 'lg:pt-16'} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                  {imageFirst ? <>{copy}{media}</> : <>{media}{copy}</>}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'metrics-panel') {
+    const heroFeature = items[0];
+    const supportFeatures = items.slice(0, 3);
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto max-w-6xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mb-10 max-w-3xl">
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-normal leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          {heroFeature && (
+            <div className={`overflow-hidden border ${borderRadiusClasses[borderRadius]}`} style={{ borderColor: actualColors.borderColor || 'transparent', backgroundColor: actualColors.cardBackground || '#ffffff' }}>
+              <FeatureImagePanel feature={heroFeature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className="rounded-none" />
+              <div className="grid grid-cols-1 md:grid-cols-3">
+                {supportFeatures.map((feature, index) => (
+                  <article key={index} className="border-t p-7 md:border-l md:first:border-l-0" style={{ borderColor: hexToRgba(actualColors.borderColor || '#000000', 0.14), backgroundColor: index === 0 ? hexToRgba(actualColors.accent, 0.08) : 'transparent' }}>
+                    <div className="mb-4 flex items-center gap-3">
+                      <span className="h-2.5 w-2.5" style={{ backgroundColor: index === 0 ? actualColors.accent : hexToRgba(actualColors.accent, 0.65) }} />
+                      <h3 className="font-header text-lg font-semibold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
+                    </div>
+                    <p className="font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>{feature.description}</p>
+                    <FeatureLink feature={feature} color={actualColors.accent} onNavigate={onNavigate} className="mt-5" />
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'checklist-cards') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mx-auto mb-16 max-w-5xl text-center">
+              {title && <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-bold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-5 max-w-3xl font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {items.slice(0, 3).map((feature, index) => (
+              <article key={index} className={`overflow-hidden border ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: actualColors.cardBackground || '#f8fafc', borderColor: actualColors.borderColor || 'transparent' }}>
+                <FeatureImagePanel feature={feature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className="rounded-none" />
+                <div className="p-7">
+                  <h3 className="font-header text-2xl font-bold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
+                  <ul className="mt-6 space-y-3">
+                    {getFeatureBullets(feature).map((bullet, bulletIndex) => (
+                      <li key={bulletIndex} className="flex items-start gap-3 font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
+                        <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ color: actualColors.accent, backgroundColor: hexToRgba(actualColors.accent, 0.14) }}>
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuresVariant === 'dark-capability-grid') {
+    return (
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
+        <div className={`container mx-auto max-w-6xl ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
+          {(title?.trim() || description?.trim()) && (
+            <div className="mx-auto mb-16 max-w-4xl text-center">
+              {title && (
+                <h2
+                  className={`${titleSizeClasses[titleFontSize]} font-header font-bold leading-tight`}
+                  style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}
+                >
+                  {title}
+                </h2>
+              )}
+              {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 font-body`} style={{ color: safeColors.description }}>{description}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {items.slice(0, 6).map((feature, index) => (
+              <article key={index} className={`border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: hexToRgba(actualColors.cardBackground || '#27272a', 0.72), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.08) }}>
+                <FeatureIconMark icon={feature.icon} color={actualColors.accent} size={28} className="mb-8 h-8 w-8" />
+                <h3 className="font-header text-xl font-semibold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
+                <p className="mt-5 font-body text-base leading-relaxed" style={{ color: safeColors.cardText }}>{feature.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (featuresVariant === 'editorial-mosaic') {
     return (
-      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || '#f7f1e8', 0.55) : actualColors.background }}>
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background)}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           {(title?.trim() || description?.trim()) && (
             <div className="mx-auto mb-16 max-w-4xl text-center md:mb-20">
@@ -721,12 +1240,12 @@ const Features: React.FC<FeaturesProps> = ({
                 index={index}
                 colors={{
                   ...actualColors,
-                  cardBackground: colors?.cardBackground || '#ffffff',
-                  cardHeading: (colors as any)?.cardHeading || '#242424',
-                  cardText: (colors as any)?.cardText || '#3f3a33',
-                  heading: (colors as any)?.cardHeading || '#242424',
-                  text: (colors as any)?.cardText || '#3f3a33',
-                  borderColor: colors?.borderColor || '#e5ded2',
+                  cardBackground: actualColors.cardBackground,
+                  cardHeading: safeColors.cardHeading,
+                  cardText: safeColors.cardText,
+                  heading: safeColors.cardHeading,
+                  text: safeColors.cardText,
+                  borderColor: actualColors.borderColor,
                 }}
                 borderRadius={borderRadiusClasses[borderRadius]}
                 onNavigate={onNavigate}
@@ -783,7 +1302,10 @@ const Features: React.FC<FeaturesProps> = ({
               feature={feature}
               index={index}
               colors={{
-                accent: actualColors.accent
+                accent: actualColors.accent,
+                overlayText: safeColors.overlayText,
+                overlayMuted: safeColors.overlayMuted,
+                overlayScrim: actualColors.cardGradientEnd || actualColors.background,
               }}
               imageHeight={imageHeight}
               imageObjectFit={imageObjectFit}
@@ -801,7 +1323,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO BENTO OVERLAY ---
   if (featuresVariant === 'bento-overlay') {
     return (
-      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.4)}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
             {(title?.trim() || description?.trim()) && (
@@ -828,7 +1350,13 @@ const Features: React.FC<FeaturesProps> = ({
                   key={index}
                   feature={feature}
                   index={index}
-                  colors={actualColors}
+                  colors={{
+                    ...actualColors,
+                    overlayText: safeColors.overlayText,
+                    overlayMuted: safeColors.overlayMuted,
+                    cardHeading: safeColors.cardHeading,
+                    cardText: safeColors.cardText,
+                  }}
                   borderRadius={borderRadiusClasses[borderRadius]}
                   showNumbering={showNumbering}
                   onNavigate={onNavigate}
@@ -847,29 +1375,47 @@ const Features: React.FC<FeaturesProps> = ({
   if (featuresVariant === 'neon-glow') {
     const glowConfig = {
       enabled: cardGlow?.enabled !== false,
-      color: cardGlow?.color || '#144CCD',
+      color: cardGlow?.color || actualColors.glowColor,
       intensity: cardGlow?.intensity ?? 100,
       borderRadius: cardGlow?.borderRadius ?? 80,
-      gradientStart: cardGlow?.gradientStart || '#0A0909',
-      gradientEnd: cardGlow?.gradientEnd || '#09101F'
+      gradientStart: cardGlow?.gradientStart || actualColors.cardGradientStart,
+      gradientEnd: cardGlow?.gradientEnd || actualColors.cardGradientEnd
     };
 
     const neonStyles = getNeonGlowStyles(glowConfig);
 
     return (
-      <section id="features" className={`w-full bg-black ${glassEffect ? 'backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`}>
+      <section
+        id="features"
+        className={`w-full ${glassEffect ? 'backdrop-blur-xl border-y z-20' : ''}`}
+        style={{
+          backgroundColor: actualColors.background,
+          borderColor: glassEffect ? hexToRgba(actualColors.borderColor || actualColors.glowColor, 0.18) : undefined,
+          boxShadow: glassEffect ? `0 4px 30px ${hexToRgba(actualColors.background, 0.1)}` : undefined,
+        }}
+      >
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
             {/* Header section with glow accents */}
             {(title?.trim() || description?.trim()) && (
               <div className="mb-20 max-w-3xl">
                 {title && (
-                  <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6 text-white font-header`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                  <h2
+                    className={`${titleSizeClasses[titleFontSize]} font-extrabold tracking-tight mb-6 font-header`}
+                    style={{
+                      color: safeColors.heading,
+                      textTransform: 'var(--headings-transform, none)' as any,
+                      letterSpacing: 'var(--headings-spacing, normal)',
+                    }}
+                  >
                     {title}
                   </h2>
                 )}
                 {description && (
-                  <p className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6 text-gray-400 font-body`} style={{ borderColor: glowConfig.color || actualColors.accent }}>
+                  <p
+                    className={`${descriptionSizeClasses[descriptionFontSize]} border-l-4 pl-6 font-body`}
+                    style={{ borderColor: glowConfig.color || actualColors.accent, color: safeColors.description }}
+                  >
                     {description}
                   </p>
                 )}
@@ -927,15 +1473,25 @@ const Features: React.FC<FeaturesProps> = ({
                               style={{ backgroundColor: glowConfig.color }}
                             />
                             {/* Inner shadow for the image */}
-                            <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none" />
+                            <div
+                              className="absolute inset-0 pointer-events-none"
+                              style={{ boxShadow: `inset 0 0 20px ${hexToRgba(actualColors.background, 0.5)}` }}
+                            />
                           </>
                         )}
                       </div>
                       
-                      <h3 className="text-2xl font-bold mb-4 font-header text-white" style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
+                      <h3
+                        className="text-2xl font-bold mb-4 font-header"
+                        style={{
+                          color: safeColors.cardHeading,
+                          textTransform: 'var(--headings-transform, none)' as any,
+                          letterSpacing: 'var(--headings-spacing, normal)',
+                        }}
+                      >
                         {feature.title}
                       </h3>
-                      <p className="leading-relaxed font-light font-body text-gray-400 mb-6">
+                      <p className="leading-relaxed font-light font-body mb-6" style={{ color: safeColors.cardText }}>
                         {feature.description}
                       </p>
                     </div>
@@ -954,7 +1510,7 @@ const Features: React.FC<FeaturesProps> = ({
                         className="inline-flex items-center gap-2 text-sm font-bold group/link transition-all"
                         style={{ color: glowConfig.color || actualColors.accent }}
                       >
-                        <span className="hover:text-white transition-colors">{feature.linkText || 'Learn more'}</span>
+                        <span className="transition-opacity hover:opacity-75">{feature.linkText || 'Learn more'}</span>
                         <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                       </a>
                     )}
@@ -971,7 +1527,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO PRESS RELEASE ---
   if (featuresVariant === 'press-release') {
     return (
-      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.4)}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
             {(title?.trim() || description?.trim()) && (
@@ -995,7 +1551,7 @@ const Features: React.FC<FeaturesProps> = ({
                   key={index}
                   feature={feature}
                   index={index}
-                  colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
+                  colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText, cardHeading: safeColors.cardHeading, cardText: safeColors.cardText }}
                   borderRadius={borderRadiusClasses[borderRadius]}
                   onNavigate={onNavigate}
                   imageHeight={imageHeight}
@@ -1014,7 +1570,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO MODERNO ---
   if (featuresVariant === 'modern') {
     return (
-      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.4)}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative z-10">
             {(title?.trim() || description?.trim()) && (
@@ -1053,7 +1609,7 @@ const Features: React.FC<FeaturesProps> = ({
   // --- RENDERIZADO BENTO PREMIUM ---
   if (featuresVariant === 'bento-premium') {
     return (
-      <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+      <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.4)}>
         <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
           <div className="relative">
             {/* Section Header con línea decorativa */}
@@ -1197,7 +1753,7 @@ const Features: React.FC<FeaturesProps> = ({
   }
 
   return (
-    <section id="features" className={`w-full ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background || "#0f172a", 0.4) : actualColors.background }}>
+    <section id="features" className={glassSectionClass} style={getSectionStyle(actualColors.background, 0.4)}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         {(title?.trim() || description?.trim()) && (
           <div className="text-center max-w-3xl mx-auto mb-16">

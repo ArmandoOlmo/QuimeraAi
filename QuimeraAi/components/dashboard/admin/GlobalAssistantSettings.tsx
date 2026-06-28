@@ -44,6 +44,7 @@ const ALL_SCOPES = [
     { id: 'video', nameKey: 'superadmin.videoSection', type: 'component' },
     { id: 'slideshow', nameKey: 'superadmin.slideshowSection', type: 'component' },
     { id: 'portfolio', nameKey: 'superadmin.portfolioSection', type: 'component' },
+    { id: 'showcase', nameKey: 'superadmin.showcaseSection', type: 'component' },
     { id: 'leads-form', nameKey: 'superadmin.leadsForm', type: 'component' },
     { id: 'newsletter', nameKey: 'superadmin.newsletterSection', type: 'component' },
     { id: 'howItWorks', nameKey: 'superadmin.howItWorksSection', type: 'component' },

@@ -16,6 +16,22 @@ type Rgb = { r: number; g: number; b: number };
 type Hsl = { h: number; s: number; l: number };
 type StrategyStyle = 'brand' | 'earth' | 'pastel' | 'monochrome' | 'botanical' | 'dopamine' | 'premium-dark';
 
+export type ColorGenerationDirection =
+    | 'auto'
+    | 'premium-dark'
+    | 'warm'
+    | 'cool'
+    | 'earth'
+    | 'pastel'
+    | 'botanical'
+    | 'vibrant'
+    | 'monochrome';
+
+export interface ColorGenerationOptions {
+    direction?: ColorGenerationDirection;
+    variation?: number;
+}
+
 interface StrategyProfile {
     id: string;
     label: string;
@@ -31,9 +47,111 @@ interface StrategyProfile {
     backgroundTint: number;
 }
 
+interface DirectionConfig {
+    hueBias: number;
+    preferredStyles: StrategyStyle[];
+    forceMode?: Exclude<ColorSystemMode, 'auto'>;
+    primaryShift: number;
+    secondaryShift: number;
+    accentShift: number;
+    saturationBias: number;
+    backgroundTintBias: number;
+}
+
+const DIRECTION_CONFIG: Record<ColorGenerationDirection, DirectionConfig> = {
+    auto: {
+        hueBias: 0,
+        preferredStyles: ['brand', 'earth', 'pastel', 'monochrome', 'botanical', 'dopamine', 'premium-dark'],
+        primaryShift: 0,
+        secondaryShift: 0,
+        accentShift: 0,
+        saturationBias: 0,
+        backgroundTintBias: 0,
+    },
+    'premium-dark': {
+        hueBias: 282,
+        preferredStyles: ['premium-dark', 'brand', 'monochrome'],
+        forceMode: 'dark',
+        primaryShift: -10,
+        secondaryShift: 136,
+        accentShift: 74,
+        saturationBias: 8,
+        backgroundTintBias: -0.02,
+    },
+    warm: {
+        hueBias: 24,
+        preferredStyles: ['earth', 'brand', 'pastel', 'dopamine'],
+        forceMode: 'light',
+        primaryShift: 8,
+        secondaryShift: 28,
+        accentShift: 58,
+        saturationBias: 4,
+        backgroundTintBias: 0.04,
+    },
+    cool: {
+        hueBias: 204,
+        preferredStyles: ['brand', 'monochrome', 'premium-dark', 'botanical'],
+        primaryShift: -12,
+        secondaryShift: 92,
+        accentShift: 146,
+        saturationBias: 5,
+        backgroundTintBias: 0.01,
+    },
+    earth: {
+        hueBias: 34,
+        preferredStyles: ['earth', 'botanical', 'pastel'],
+        forceMode: 'light',
+        primaryShift: 12,
+        secondaryShift: 42,
+        accentShift: 72,
+        saturationBias: -3,
+        backgroundTintBias: 0.08,
+    },
+    pastel: {
+        hueBias: 318,
+        preferredStyles: ['pastel', 'brand', 'earth'],
+        forceMode: 'light',
+        primaryShift: -6,
+        secondaryShift: 46,
+        accentShift: 132,
+        saturationBias: -7,
+        backgroundTintBias: 0.12,
+    },
+    botanical: {
+        hueBias: 126,
+        preferredStyles: ['botanical', 'earth', 'brand'],
+        primaryShift: 0,
+        secondaryShift: 86,
+        accentShift: 34,
+        saturationBias: 6,
+        backgroundTintBias: 0.05,
+    },
+    vibrant: {
+        hueBias: 302,
+        preferredStyles: ['dopamine', 'premium-dark', 'botanical'],
+        primaryShift: -18,
+        secondaryShift: 150,
+        accentShift: 102,
+        saturationBias: 16,
+        backgroundTintBias: 0.02,
+    },
+    monochrome: {
+        hueBias: 0,
+        preferredStyles: ['monochrome', 'brand'],
+        primaryShift: 0,
+        secondaryShift: 0,
+        accentShift: 0,
+        saturationBias: -8,
+        backgroundTintBias: 0.03,
+    },
+};
+
+const VARIATION_HUE_STEPS = [0, 37, -53, 89, -131, 173, -211, 251];
+
 const DEFAULT_LIGHT_TEXT = '#22252b';
 const DEFAULT_DARK_TEXT = '#e7e9ee';
 const KNOWN_NEUTRALS = new Set(['#ffffff', '#000000', '#fff', '#000', '#f8fafc', '#f9fafb']);
+const COLOR_GENERATION_DIRECTIONS = new Set<ColorGenerationDirection>(Object.keys(DIRECTION_CONFIG) as ColorGenerationDirection[]);
 
 /** 60-30-10 color proportion rule used by Quimera Color Expert and AI Studio. */
 export const COLOR_PROPORTION_RULE_603010 = {
@@ -58,6 +176,16 @@ export const COLOR_PROPORTION_RULE_603010 = {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const roundScore = (value: number) => Math.round(clamp(value, 0, 100));
+
+function normalizeGenerationDirection(direction?: string): ColorGenerationDirection {
+    return direction && COLOR_GENERATION_DIRECTIONS.has(direction as ColorGenerationDirection)
+        ? direction as ColorGenerationDirection
+        : 'auto';
+}
+
+function normalizeVariation(variation?: number): number {
+    return Number.isFinite(variation) ? Math.max(0, Math.floor(Number(variation))) : 0;
+}
 
 function isWebsiteColorSystem(value: WebsiteColorSystem | GlobalColors | ColorCandidate): value is WebsiteColorSystem {
     return Boolean(value && typeof value === 'object' && typeof (value as WebsiteColorSystem).colors === 'object' && typeof (value as WebsiteColorSystem).score === 'number');
@@ -128,6 +256,37 @@ function hslToHex({ h, s, l }: Hsl): string {
     else [r, g, b] = [c, 0, x];
 
     return rgbToHex({ r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 });
+}
+
+function shortestHueDelta(from: number, to: number): number {
+    return ((((to - from) % 360) + 540) % 360) - 180;
+}
+
+function blendHue(from: number, to: number, amount: number): number {
+    return from + shortestHueDelta(from, to) * clamp(amount, 0, 1);
+}
+
+function getVariationHueStep(variation: number): number {
+    return VARIATION_HUE_STEPS[variation % VARIATION_HUE_STEPS.length] || 0;
+}
+
+function shiftSeedForGeneration(seed: string, options: ColorGenerationOptions = {}): string {
+    const direction = normalizeGenerationDirection(options.direction);
+    const variation = normalizeVariation(options.variation);
+    if (direction === 'auto' && variation === 0) return seed;
+
+    const config = DIRECTION_CONFIG[direction];
+    const seedHsl = hexToHsl(seed);
+    const variationStep = getVariationHueStep(variation);
+    const targetHue = direction === 'auto'
+        ? seedHsl.h + variationStep
+        : blendHue(seedHsl.h, config.hueBias, 0.58) + variationStep * 0.36;
+
+    return hslToHex({
+        h: targetHue,
+        s: clamp(seedHsl.s + config.saturationBias * 0.6 + (variation % 3) * 3, 36, 86),
+        l: clamp(seedHsl.l + (variation % 2 === 0 ? -3 : 4), 34, 66),
+    });
 }
 
 function rotateHue(color: string, degrees: number, saturation?: number, lightness?: number): string {
@@ -335,9 +494,13 @@ export function createColorBriefFromTheme(params: {
     };
 }
 
-function getStrategies(brief: ColorBrief, seed: string): StrategyProfile[] {
+function getStrategies(brief: ColorBrief, seed: string, options: ColorGenerationOptions = {}): StrategyProfile[] {
     const industry = normalizeIndustry(brief.industry);
     const seedHue = hexToHsl(seed).h;
+    const direction = normalizeGenerationDirection(options.direction);
+    const variation = normalizeVariation(options.variation);
+    const directionConfig = DIRECTION_CONFIG[direction];
+    const variationHueStep = getVariationHueStep(variation);
     const prefersDark = brief.mode === 'dark' || (brief.mode === 'auto' && ['technology'].includes(industry) && brief.mood.includes('modern'));
     const commerceLight = brief.hasEcommerce && brief.mode !== 'dark';
     const expressive = ['creative', 'ecommerce', 'restaurant'].includes(industry) || brief.mood.some(item => ['cultural', 'commerce', 'warm'].includes(item));
@@ -439,7 +602,26 @@ function getStrategies(brief: ColorBrief, seed: string): StrategyProfile[] {
     if (industry === 'technology') {
         base[4] = { ...base[4], id: 'cool-blue-citron', label: 'Cool Blue + Citron', labelEs: 'Azul Frío + Citron', secondaryHueOffset: 112, accentHueOffset: 158, saturation: 14 };
     }
-    return base;
+
+    const adjusted = base.map((strategy, index) => ({
+        ...strategy,
+        mode: directionConfig.forceMode || strategy.mode,
+        primaryHueOffset: strategy.primaryHueOffset + directionConfig.primaryShift + variationHueStep * (0.08 + index * 0.015),
+        secondaryHueOffset: strategy.secondaryHueOffset + directionConfig.secondaryShift + variationHueStep * (index % 2 === 0 ? 0.24 : -0.18),
+        accentHueOffset: strategy.accentHueOffset + directionConfig.accentShift + variationHueStep * (index % 2 === 0 ? -0.18 : 0.26),
+        saturation: strategy.saturation + directionConfig.saturationBias + (variation % 4) * 2,
+        backgroundTint: clamp(strategy.backgroundTint + directionConfig.backgroundTintBias, 0.01, 0.2),
+    }));
+
+    if (direction === 'auto' && variation === 0) return adjusted;
+
+    return adjusted.sort((a, b) => {
+        const aIndex = directionConfig.preferredStyles.indexOf(a.style);
+        const bIndex = directionConfig.preferredStyles.indexOf(b.style);
+        const normalizedA = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+        const normalizedB = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+        return normalizedA - normalizedB;
+    });
 }
 
 function buildSystemFromStrategy(brief: ColorBrief, strategy: StrategyProfile, seed: string): GlobalColors {
@@ -576,7 +758,7 @@ function buildSystemFromStrategy(brief: ColorBrief, strategy: StrategyProfile, s
     }).colors;
 }
 
-function isNeutralColor(color: string, maxSaturation = COLOR_PROPORTION_RULE_603010.targets.dominantMaxSaturation): boolean {
+function isNeutralColor(color: string, maxSaturation: number = COLOR_PROPORTION_RULE_603010.targets.dominantMaxSaturation): boolean {
     return hexToHsl(color).s <= maxSaturation;
 }
 
@@ -1025,7 +1207,64 @@ export function repairColorSystem(colors: Partial<GlobalColors>): { colors: Glob
     return { colors: finalColors, warnings: [...new Set(warnings)] };
 }
 
-export function generateColorCandidates(brief: ColorBrief): ColorCandidate[] {
+export function createColorCandidateFromGlobalColors(
+    brief: ColorBrief,
+    colors: Partial<GlobalColors>,
+    metadata: {
+        id: string;
+        label: string;
+        labelEs: string;
+        description: string;
+        descriptionEs: string;
+        strategy?: string;
+        sourceColors?: string[];
+    },
+): ColorCandidate {
+    const repaired = repairColorSystem(colors);
+    const seed = normalizeHexColor(colors.primary) || pickWeightedSeed([
+        ...(brief.logoColors || []),
+        ...(brief.importedColors || []),
+        ...(brief.imageColors || []),
+    ], industryFallbackColor(brief.industry));
+    const scores = scoreSystem(repaired.colors, brief, seed, {
+        id: metadata.strategy || metadata.id,
+        style: metadata.strategy?.includes('mono') ? 'monochrome' : undefined,
+    });
+    const validation = validateColorSystem(repaired.colors);
+    const score = validation.valid ? totalScore(scores) : Math.min(totalScore(scores), 58);
+    const warnings = [
+        ...repaired.warnings,
+        ...validation.issues.filter(issue => issue.severity === 'warning').map(issue => issue.message),
+    ];
+    const sourceColors = metadata.sourceColors?.length
+        ? metadata.sourceColors.map(color => normalizeHexColor(color)).filter((color): color is string => Boolean(color))
+        : Object.values(colors).map(color => normalizeHexColor(color)).filter((color): color is string => Boolean(color));
+
+    const system: WebsiteColorSystem = {
+        id: metadata.id,
+        name: metadata.label,
+        nameEs: metadata.labelEs,
+        strategy: metadata.strategy || metadata.id,
+        mode: getLuminance(repaired.colors.background) < 0.35 ? 'dark' : 'light',
+        colors: repaired.colors,
+        score,
+        scores,
+        warnings: [...new Set(warnings)],
+        sourceColors: [...new Set(sourceColors)].slice(0, 8),
+    };
+
+    return {
+        id: system.id,
+        label: system.name,
+        labelEs: system.nameEs,
+        description: metadata.description,
+        descriptionEs: metadata.descriptionEs,
+        preview: [repaired.colors.background, repaired.colors.primary, repaired.colors.secondary, repaired.colors.accent, repaired.colors.heading],
+        system,
+    };
+}
+
+export function generateColorCandidates(brief: ColorBrief, options: ColorGenerationOptions = {}): ColorCandidate[] {
     const normalizedBrief: ColorBrief = {
         ...brief,
         importedColors: normalizeSignals(brief.importedColors),
@@ -1039,10 +1278,11 @@ export function generateColorCandidates(brief: ColorBrief): ColorCandidate[] {
         ...(normalizedBrief.imageColors || []),
     ];
     const fallback = industryFallbackColor(normalizedBrief.industry);
-    const seed = pickWeightedSeed(allSignals, fallback);
+    const baseSeed = pickWeightedSeed(allSignals, fallback);
+    const seed = shiftSeedForGeneration(baseSeed, options);
     const sourceColors = [...new Set(allSignals.map(signal => normalizeHexColor(signal.color)).filter(Boolean) as string[])].slice(0, 8);
 
-    return getStrategies(normalizedBrief, seed).map((strategy, index) => {
+    return getStrategies(normalizedBrief, seed, options).map((strategy, index) => {
         const colors = buildSystemFromStrategy(normalizedBrief, strategy, seed);
         const repaired = repairColorSystem(colors);
         const scores = scoreSystem(repaired.colors, normalizedBrief, seed, strategy);

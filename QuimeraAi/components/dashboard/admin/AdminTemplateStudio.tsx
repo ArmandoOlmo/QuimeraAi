@@ -452,7 +452,7 @@ const ChatBubble: React.FC<{ message: { role: 'user' | 'model'; text: string; is
 const AVAILABLE_COMPONENTS: PageSection[] = [
     'hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead',
     'topBar', 'logoBanner', 'banner', 'features', 'testimonials', 'pricing',
-    'faq', 'cta', 'services', 'video', 'howItWorks', 'menu',
+    'faq', 'cta', 'services', 'video', 'howItWorks', 'menu', 'showcase',
     'leads', 'newsletter', 'map', 'signupFloat', 'slideshow', 'portfolio',
     'team', 'separator1', 'separator2', 'separator3',
 ];

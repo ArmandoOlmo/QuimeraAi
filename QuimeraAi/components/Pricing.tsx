@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { PricingData, PaddingSize, BorderRadiusSize, FontSize, PricingVariant, AnimationType, CornerGradientConfig } from '../types';
-import { CheckCircle, Check, Sparkles, Zap } from 'lucide-react';
+import { Check, CheckCircle, CreditCard, Globe2, Link2, Mic2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { PricingData, PaddingSize, BorderRadiusSize, FontSize, AnimationType, CornerGradientConfig } from '../types';
 import { useDesignTokens } from '../hooks/useDesignTokens';
-import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
+import { hexToRgba } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
+import { normalizePricingVariant } from '../data/pricingVariants';
 import CornerGradient from './ui/CornerGradient';
-
-// Use primary color for section background
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -49,7 +49,23 @@ const borderRadiusClasses: Record<BorderRadiusSize, string> = {
   full: 'rounded-3xl',
 };
 
-// Update props to accept separate border radius for card and button to align with other components and fix type errors.
+type RenderTier = {
+  name: string;
+  price: string;
+  frequency: string;
+  description: string;
+  features: string[];
+  buttonText: string;
+  buttonLink: string;
+  featured: boolean;
+  badge?: string;
+  eyebrow?: string;
+  footerText?: string;
+  imageUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonLink?: string;
+};
+
 interface PricingProps extends PricingData {
   cardBorderRadius: BorderRadiusSize;
   buttonBorderRadius: BorderRadiusSize;
@@ -58,676 +74,536 @@ interface PricingProps extends PricingData {
   cornerGradient?: CornerGradientConfig;
 }
 
+const featureIcons = [CheckCircle, Sparkles, Zap, Globe2, ShieldCheck, Link2, CreditCard, Mic2];
+const accentCycle = ['#ff00c7', '#139df2', '#13bfa6', '#ff4b16'];
+
+const getLinkProps = (href?: string) => ({
+  href: href || '#',
+  target: href?.startsWith('http') ? '_blank' : undefined,
+  rel: href?.startsWith('http') ? 'noopener noreferrer' : undefined,
+});
+
 const Pricing: React.FC<PricingProps> = ({
-  pricingVariant = 'classic',
-  title,
-  description,
-  tiers,
-  paddingY,
-  paddingX,
+  pricingVariant = 'featured-plan',
+  title: rawTitle,
+  description: rawDescription,
+  tiers: rawTiers = [],
+  paddingY = 'lg',
+  paddingX = 'md',
   colors,
   cardBorderRadius = 'xl',
-  buttonBorderRadius,
-  titleFontSize = 'md',
+  buttonBorderRadius = 'xl',
+  titleFontSize = 'lg',
   descriptionFontSize = 'md',
   animationType = 'fade-in-up',
   enableCardAnimation = true,
   cornerGradient,
   glassEffect = false,
-  cardGlow,
-  cardsAlignment = 'center'
+  cardsAlignment = 'center',
+  backgroundImageUrl,
 }) => {
-  // Get design tokens with fallback to component colors
+  const { i18n } = useTranslation();
   const { getColor, colors: tokenColors } = useDesignTokens();
+  const colorConfig = (colors || {}) as Record<string, string | undefined>;
 
-  // Use primary color for section background
-  const primaryColor = tokenColors.primary;
-
-  // Merge component colors with Design Tokens (component colors take priority)
-  const actualColors = {
-    background: colors?.background || primaryColor, // Fallback to primary if not set
-    accent: colors?.accent || getColor('primary.main', '#4f46e5'),
-    borderColor: colors?.borderColor || '#374151',
-    text: colors?.text,
-    heading: colors?.heading,
-    description: colors?.description || colors?.text,
-    cardBackground: colors?.cardBackground || '#1f2937',
-    cardHeading: colors?.cardHeading,
-    cardText: colors?.cardText,
-    priceColor: colors?.priceColor,
-    buttonBackground: colors?.buttonBackground || getColor('primary.main', '#4f46e5'),
-    buttonText: colors?.buttonText || '#ffffff',
-    checkmarkColor: colors?.checkmarkColor || getColor('success.main', '#10b981'),
-    gradientStart: colors?.gradientStart || '#4f46e5',
-    gradientEnd: colors?.gradientEnd || '#10b981',
+  const resolveText = (text: unknown): string => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    if (typeof text === 'object' && text !== null) {
+      const value = text as Record<string, unknown>;
+      const preferred = i18n.language?.startsWith('es') ? 'es' : 'en';
+      const resolved = value[preferred] || value.es || value.en || Object.values(value)[0];
+      return resolved ? String(resolved) : '';
+    }
+    return String(text);
   };
 
-  // Use user-selected colors directly - respect their choices
-  const safeColors = useMemo(() => {
-    return {
-      // Section-level colors
-      heading: actualColors.heading || '#ffffff',
-      text: actualColors.text || '#94a3b8',
-      description: actualColors.description || actualColors.text || '#94a3b8',
-      // Card-level colors (use specific card colors if set, otherwise fallback to section colors)
-      cardHeading: actualColors.cardHeading || actualColors.heading || '#ffffff',
-      cardText: actualColors.cardText || actualColors.text || '#94a3b8',
-      // Price color (use specific price color if set, otherwise fallback to card heading)
-      priceColor: actualColors.priceColor || actualColors.cardHeading || actualColors.heading || '#ffffff',
-    };
-  }, [actualColors]);
+  const tiers = useMemo<RenderTier[]>(() => (rawTiers || []).map((tier: any) => ({
+    name: resolveText(tier.name) || 'Plan',
+    price: resolveText(tier.price) || '$0',
+    frequency: resolveText(tier.frequency) || resolveText(tier.period) || '/mo',
+    description: resolveText(tier.description),
+    features: Array.isArray(tier.features) ? tier.features.map(resolveText).filter(Boolean) : [],
+    buttonText: resolveText(tier.buttonText) || 'Get Started',
+    buttonLink: tier.buttonLink || '#',
+    featured: Boolean(tier.featured || tier.isPopular),
+    badge: resolveText(tier.badge) || (tier.featured || tier.isPopular ? 'Popular' : ''),
+    eyebrow: resolveText(tier.eyebrow),
+    footerText: resolveText(tier.footerText),
+    imageUrl: tier.imageUrl || tier.image,
+    secondaryButtonText: resolveText(tier.secondaryButtonText),
+    secondaryButtonLink: tier.secondaryButtonLink,
+  })), [rawTiers, i18n.language]);
 
-  // Normalize to classic if provided variant is unknown
-  const actualVariant = ['gradient', 'glassmorphism', 'minimalist', 'neon-glow'].includes(pricingVariant as string)
-    ? pricingVariant
-    : 'classic';
+  const primaryColor = tokenColors.primary;
+  const actualColors = {
+    background: colorConfig.background || primaryColor,
+    accent: colorConfig.accent || getColor('primary.main', '#2563eb'),
+    borderColor: colorConfig.borderColor || '#d8dce3',
+    text: colorConfig.text || '#1f2937',
+    mutedText: colorConfig.mutedText || colorConfig.description || colorConfig.text || '#6b7280',
+    heading: colorConfig.heading || '#111827',
+    description: colorConfig.description || colorConfig.text || '#6b7280',
+    cardBackground: colorConfig.cardBackground || '#ffffff',
+    cardHeading: colorConfig.cardHeading || colorConfig.heading || '#111827',
+    cardText: colorConfig.cardText || colorConfig.text || '#4b5563',
+    priceColor: colorConfig.priceColor || colorConfig.heading || '#111827',
+    buttonBackground: colorConfig.buttonBackground || getColor('primary.main', '#111827'),
+    buttonText: colorConfig.buttonText || '#ffffff',
+    checkmarkColor: colorConfig.checkmarkColor || colorConfig.accent || '#111827',
+    gradientStart: colorConfig.gradientStart || colorConfig.accent || '#2563eb',
+    gradientEnd: colorConfig.gradientEnd || '#ec4899',
+    panelBackground: colorConfig.panelBackground || '#111827',
+    panelText: colorConfig.panelText || '#ffffff',
+    surfaceAlt: colorConfig.surfaceAlt || '#f3f4f6',
+    featuredBackground: colorConfig.featuredBackground || '#111827',
+    featuredText: colorConfig.featuredText || '#ffffff',
+    badgeBackground: colorConfig.badgeBackground || colorConfig.accent || '#2563eb',
+    badgeText: colorConfig.badgeText || '#ffffff',
+    dividerColor: colorConfig.dividerColor || colorConfig.borderColor || '#e5e7eb',
+    imageOverlay: colorConfig.imageOverlay || '#000000',
+  };
 
-  // Classic Variant (Original Design)
-  if (actualVariant === 'classic') {
+  const variant = normalizePricingVariant(pricingVariant);
+  const title = resolveText(rawTitle) || 'Pricing';
+  const description = resolveText(rawDescription);
+  const cardRadius = borderRadiusClasses[cardBorderRadius] || borderRadiusClasses.xl;
+  const buttonRadius = borderRadiusClasses[buttonBorderRadius] || borderRadiusClasses.xl;
+  const sectionBaseClass = `${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`;
+  const animated = (index: number) => ({
+    className: getAnimationClass(animationType, enableCardAnimation),
+    style: { animationDelay: getAnimationDelay(index) },
+  });
+
+  const Header = ({ align = 'center', dark = false, label }: { align?: 'left' | 'center'; dark?: boolean; label?: string }) => (
+    <div className={clsx('relative z-10 mb-12', align === 'center' ? 'mx-auto max-w-3xl text-center' : 'max-w-4xl')}>
+      {label && (
+        <span className={clsx(
+          'mb-4 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em]',
+          dark ? 'bg-white/10 text-white/70' : 'bg-black/5 text-black/50',
+        )}>
+          {label}
+        </span>
+      )}
+      <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-bold leading-tight`} style={{ color: dark ? actualColors.featuredText : actualColors.heading }}>
+        {title}
+      </h2>
+      {description && (
+        <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body leading-7`} style={{ color: dark ? hexToRgba(actualColors.featuredText, 0.62) : actualColors.description }}>
+          {description}
+        </p>
+      )}
+    </div>
+  );
+
+  const PlanButton = ({ tier, featured = false, color, textColor }: { tier: RenderTier; featured?: boolean; color?: string; textColor?: string }) => (
+    <a
+      {...getLinkProps(tier.buttonLink)}
+      className={clsx('block w-full px-6 py-3 text-center font-button text-sm font-bold transition hover:-translate-y-0.5', buttonRadius)}
+      style={{
+        backgroundColor: featured ? (color || actualColors.buttonBackground) : actualColors.buttonBackground,
+        color: textColor || actualColors.buttonText,
+        textTransform: 'var(--buttons-transform, none)' as any,
+        letterSpacing: 'var(--buttons-spacing, normal)',
+      }}
+    >
+      {tier.buttonText}
+    </a>
+  );
+
+  const renderDarkSaasCards = () => {
+    const planTiers = tiers.slice(0, 3);
+    const enterprise = tiers[3];
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
+      <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: '#000000' }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-              {description}
-            </p>
-          </div>
-
-          <div className={clsx(
-            "flex flex-wrap gap-8 items-center",
-            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
-          )}>
-            {(tiers || []).map((tier, index) => (
-              <div
-                key={index}
-                className={`
-                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
-                    p-8 border border-white/10 relative flex flex-col h-full
-                    transform transition-all duration-300 hover:scale-105
-                    backdrop-blur-xl
-                    ${borderRadiusClasses[cardBorderRadius]}
-                    ${tier.featured ? 'border-2' : 'border'}
-                    ${getAnimationClass(animationType, enableCardAnimation)}
-                  `}
-                style={{
-                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.35),
-                  borderColor: tier.featured ? actualColors.accent : 'rgba(255,255,255,0.1)',
-                  animationDelay: getAnimationDelay(index)
-                }}
-              >
-                {tier.featured && (
-                  <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
-                    <span
-                      className={`animate-pulse px-4 py-1.5 text-xs font-bold text-white uppercase tracking-wider ${borderRadiusClasses.full} shadow-lg flex items-center gap-1.5`}
-                      style={{
-                        backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart || actualColors.accent}, ${actualColors.gradientEnd || '#ec4899'})`,
-                        boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.4)}`
-                      }}
-                    >
-                      <Sparkles size={12} />
-                      Más Popular
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex-grow">
-                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                    {tier.name}
-                  </h3>
-
-                  {tier.description && (
-                    <p className="text-center text-sm font-body mb-4" style={{ color: safeColors.cardText, opacity: 0.8 }}>
-                      {tier.description}
-                    </p>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <span className="text-5xl font-extrabold font-header" style={{ color: safeColors.priceColor }}>
-                      {tier.price}
-                    </span>
-                    <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
-                      {tier.frequency}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-4 mb-8">
-                    {(tier.features || []).map((feature, i) => (
-                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                        <CheckCircle
-                          size={20}
-                          className="mr-3 flex-shrink-0"
-                          style={{ color: actualColors.checkmarkColor }}
-                        />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <a
-                  href={tier.buttonLink || '#'}
-                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className={`
-                      w-full text-center block font-bold py-3 px-8
-                      backdrop-blur-md border border-white/15
-                      transition-all duration-300 transform hover:scale-105 font-button
-                      ${borderRadiusClasses[buttonBorderRadius]}
-                    `}
-                  style={{
-                    backgroundColor: hexToRgba(tier.featured ? actualColors.accent : actualColors.buttonBackground, 0.6),
-                    color: actualColors.buttonText,
-                    textTransform: 'var(--buttons-transform, none)' as any,
-                    letterSpacing: 'var(--buttons-spacing, normal)'
-                  }}
-                >
-                  {tier.buttonText}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Gradient Variant - Modern with vibrant gradients
-  if (pricingVariant === 'gradient') {
-    return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
-        <CornerGradient config={cornerGradient} />
-        {/* Background gradient effects */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: actualColors.gradientStart }} />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: actualColors.gradientEnd }} />
-        </div>
-
-        <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2
-              className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header bg-gradient-to-r bg-clip-text text-transparent`}
-              style={{ backgroundImage: `linear-gradient(to right, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
-            >
-              {title}
-            </h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-              {description}
-            </p>
-          </div>
-
-          <div className={clsx(
-            "flex flex-wrap gap-8 items-center",
-            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
-          )}>
-            {(tiers || []).map((tier, index) => (
-              <div
-                key={index}
-                className={`
-                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
-                    p-8 relative flex flex-col h-full
-                    transform transition-all duration-500 hover:scale-105 hover:-translate-y-2
-                    backdrop-blur-xl border border-white/10
-                    ${borderRadiusClasses[cardBorderRadius]}
-                    ${tier.featured ? 'lg:scale-110' : ''}
-                    ${getAnimationClass(animationType, enableCardAnimation)}
-                  `}
-                style={{
-                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.35),
-                  backgroundImage: tier.featured
-                    ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.08)}, ${hexToRgba(actualColors.gradientEnd, 0.08)})`
-                    : 'none',
-                  animationDelay: getAnimationDelay(index)
-                }}
-              >
-                {/* Gradient border effect */}
+          <Header dark />
+          <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-3">
+            {planTiers.map((tier, index) => {
+              const featured = tier.featured || index === 1;
+              return (
                 <div
-                  className={`absolute inset-0 ${borderRadiusClasses[cardBorderRadius]} p-[2px]`}
+                  key={`${tier.name}-${index}`}
+                  className={clsx('flex min-h-[520px] flex-col border p-8 backdrop-blur', cardRadius, animated(index).className)}
                   style={{
-                    background: tier.featured
-                      ? `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
-                      : actualColors.borderColor,
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude'
-                  }}
-                />
-
-                {tier.featured && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <div
-                      className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider shadow-lg"
-                      style={{
-                        backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`,
-                        boxShadow: `0 4px 20px ${hexToRgba(actualColors.gradientStart, 0.5)}`
-                      }}
-                    >
-                      <Sparkles size={14} className="animate-bounce" />
-                      Más Popular
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex-grow relative z-10">
-                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                    {tier.name}
-                  </h3>
-
-                  {tier.description && (
-                    <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.8 }}>
-                      {tier.description}
-                    </p>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <div className="inline-block">
-                      <span
-                        className="text-6xl font-black font-header bg-gradient-to-br bg-clip-text text-transparent"
-                        style={{ backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})` }}
-                      >
-                        {tier.price}
-                      </span>
-                      <span className="text-lg font-header ml-1" style={{ color: safeColors.cardText }}>
-                        {tier.frequency}
-                      </span>
-                    </div>
-                  </div>
-
-                  <ul className="space-y-3 mb-8">
-                    {(tier.features || []).map((feature, i) => (
-                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                        <div
-                          className="mr-3 flex-shrink-0 rounded-full p-1"
-                          style={{
-                            backgroundImage: `linear-gradient(135deg, ${actualColors.gradientStart}, ${actualColors.gradientEnd})`
-                          }}
-                        >
-                          <Check size={14} className="text-white" />
-                        </div>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <a
-                  href={tier.buttonLink || '#'}
-                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className={`
-                      relative z-10 w-full text-center block font-bold py-3 px-8
-                      backdrop-blur-md border border-white/15
-                      transition-all duration-300 transform hover:scale-105 font-button
-                      ${borderRadiusClasses[buttonBorderRadius]}
-                    `}
-                  style={{
-                    backgroundImage: tier.featured
-                      ? `linear-gradient(135deg, ${hexToRgba(actualColors.gradientStart, 0.6)}, ${hexToRgba(actualColors.gradientEnd, 0.6)})`
-                      : `linear-gradient(135deg, ${hexToRgba(actualColors.buttonBackground, 0.6)}, ${hexToRgba(actualColors.buttonBackground, 0.6)})`,
-                    color: actualColors.buttonText,
-                    textTransform: 'var(--buttons-transform, none)' as any,
-                    letterSpacing: 'var(--buttons-spacing, normal)'
+                    ...animated(index).style,
+                    background: featured
+                      ? `linear-gradient(180deg, ${hexToRgba(actualColors.gradientStart, 0.22)}, ${hexToRgba(actualColors.gradientStart, 0.46)} 72%, ${hexToRgba(actualColors.gradientEnd, 0.22)})`
+                      : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+                    borderColor: featured ? hexToRgba(actualColors.accent, 0.65) : 'rgba(255,255,255,0.15)',
                   }}
                 >
-                  {tier.buttonText}
-                </a>
-              </div>
-            ))}
+                  <div className="mb-7 flex items-start justify-between gap-4 border-b border-white/10 pb-7">
+                    <div>
+                      <h3 className="font-header text-3xl font-bold text-white">{tier.name}</h3>
+                      {tier.description && <p className="mt-2 text-sm text-white/55">{tier.description}</p>}
+                    </div>
+                    {tier.badge && <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/60">{tier.badge}</span>}
+                  </div>
+                  <div className="mb-7 border-b border-white/10 pb-7">
+                    <span className="font-header text-3xl font-bold text-white">{tier.price}</span>
+                    <span className="ml-2 text-sm text-white/55">{tier.frequency}</span>
+                  </div>
+                  <ul className="flex-1 space-y-4">
+                    {tier.features.map((feature, i) => {
+                      const Icon = featureIcons[i % featureIcons.length];
+                      return <li key={i} className="flex gap-3 text-sm text-white/65"><Icon size={17} className="mt-0.5 shrink-0 text-white" />{feature}</li>;
+                    })}
+                  </ul>
+                  <PlanButton tier={tier} featured={featured} color={featured ? actualColors.accent : '#2b2b2d'} />
+                </div>
+              );
+            })}
           </div>
+          {enterprise && (
+            <div className={clsx('mx-auto mt-5 flex max-w-7xl flex-col gap-5 border border-white/15 p-7 md:flex-row md:items-center md:justify-between', cardRadius)} style={{ backgroundColor: 'rgba(255,255,255,0.035)' }}>
+              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                <strong className="text-lg text-white">{enterprise.name}</strong>
+                <span className="text-white/55">{enterprise.description || enterprise.price}</span>
+              </div>
+              <a {...getLinkProps(enterprise.buttonLink)} className={clsx('inline-flex justify-center px-5 py-3 text-sm font-bold text-white', buttonRadius)} style={{ backgroundColor: '#2b2b2d' }}>{enterprise.buttonText}</a>
+            </div>
+          )}
         </div>
       </section>
     );
-  }
+  };
 
-  // Glassmorphism Variant - Frosted glass effect
-  if (pricingVariant === 'glassmorphism') {
+  const renderFeaturedPlan = () => {
+    const planTiers = tiers.slice(0, 3);
+    const enterprise = tiers[3];
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
-        <CornerGradient config={cornerGradient} />
-        {/* Animated background blobs */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl opacity-20 animate-pulse" style={{ background: actualColors.accent }} />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl opacity-20 animate-pulse" style={{ background: actualColors.checkmarkColor, animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-3xl opacity-10" style={{ background: actualColors.gradientStart }} />
-        </div>
-
-        <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-              {title}
-            </h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-              {description}
-            </p>
-          </div>
-
-          <div className={clsx(
-            "flex flex-wrap gap-8 items-stretch",
-            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
-          )}>
-            {(tiers || []).map((tier, index) => (
-              <div
-                key={index}
-                className={`
-                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
-                    p-8 relative flex flex-col h-full
-                    backdrop-blur-xl backdrop-saturate-150
-                    border border-white/10
-                    transform transition-all duration-500 hover:scale-105
-                    ${borderRadiusClasses[cardBorderRadius]}
-                    ${getAnimationClass(animationType, enableCardAnimation)}
-                  `}
-                style={{
-                  backgroundColor: tier.featured ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  animationDelay: getAnimationDelay(index)
-                }}
-              >
-                {tier.featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                    <div
-                      className="animate-pulse flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wider backdrop-blur-md border border-white/20 shadow-lg"
-                      style={{
-                        backgroundColor: hexToRgba(actualColors.accent, 0.5),
-                        boxShadow: `0 4px 15px ${hexToRgba(actualColors.accent, 0.3)}`
-                      }}
-                    >
-                      <Zap size={14} className="text-yellow-300" />
-                      Popular
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex-grow">
-                  <h3 className="text-2xl font-bold text-center mb-2 font-header" style={{ color: safeColors.cardHeading }}>
-                    {tier.name}
-                  </h3>
-
-                  {tier.description && (
-                    <p className="text-center text-sm font-body mb-6" style={{ color: safeColors.cardText, opacity: 0.9 }}>
-                      {tier.description}
-                    </p>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <span className="text-6xl font-black font-header" style={{ color: safeColors.priceColor }}>
-                      {tier.price}
-                    </span>
-                    <span className="text-lg font-header ml-1 block mt-1" style={{ color: safeColors.cardText }}>
-                      {tier.frequency}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-3 mb-8">
-                    {(tier.features || []).map((feature, i) => (
-                      <li key={i} className="flex items-start font-body" style={{ color: safeColors.cardText }}>
-                        <div
-                          className="mr-3 mt-0.5 flex-shrink-0 rounded-full p-1 backdrop-blur-sm"
-                          style={{
-                            backgroundColor: hexToRgba(actualColors.checkmarkColor, 0.19),
-                            border: `1px solid ${hexToRgba(actualColors.checkmarkColor, 0.38)}`
-                          }}
-                        >
-                          <Check size={12} style={{ color: actualColors.checkmarkColor }} />
-                        </div>
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <a
-                  href={tier.buttonLink || '#'}
-                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className={`
-                      w-full text-center block font-bold py-3 px-8
-                      backdrop-blur-md border border-white/20
-                      transition-all duration-300 transform hover:scale-105 font-button
-                      ${borderRadiusClasses[buttonBorderRadius]}
-                    `}
-                  style={{
-                    backgroundColor: tier.featured
-                      ? hexToRgba(actualColors.accent, 0.56)
-                      : hexToRgba(actualColors.buttonBackground, 0.44),
-                    color: actualColors.buttonText,
-                    textTransform: 'var(--buttons-transform, none)' as any,
-                    letterSpacing: 'var(--buttons-spacing, normal)'
-                  }}
-                >
-                  {tier.buttonText}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Minimalist Variant - Clean and simple
-  if (pricingVariant === 'minimalist') {
-    return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(actualColors.background , 0.4) : actualColors.background }}>
+      <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.background }}>
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-bold mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-              {title}
-            </h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
-              {description}
-            </p>
+          <Header label="Pricing" />
+          <div className="mx-auto mb-12 flex w-fit rounded-lg bg-black/5 p-1 text-sm text-black/50">
+            <span className="px-8 py-3">Monthly</span>
+            <span className="rounded-md bg-white px-8 py-3 font-bold text-black shadow-sm">Yearly <span style={{ color: actualColors.accent }}>-20%</span></span>
           </div>
-
-          <div className={clsx(
-            "grid gap-px bg-gradient-to-r",
-            tiers?.length === 1 ? 'grid-cols-1 max-w-md' : 
-            tiers?.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl' : 
-            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-            cardsAlignment === 'start' ? 'mr-auto' : 
-            cardsAlignment === 'end' ? 'ml-auto' : 'mx-auto'
-          )} style={{ backgroundImage: `linear-gradient(to right, ${actualColors.borderColor}, ${actualColors.borderColor})` }}>
-            {(tiers || []).map((tier, index) => (
-              <div
-                key={index}
-                className={`
-                    p-10 flex flex-col h-full
-                    transition-all duration-300
-                    backdrop-blur-lg border border-white/10
-                    ${tier.featured ? 'transform md:-translate-y-4' : ''}
-                    ${getAnimationClass(animationType, enableCardAnimation)}
-                  `}
-                style={{
-                  backgroundColor: hexToRgba(actualColors.cardBackground, 0.3),
-                  borderTop: tier.featured ? `3px solid ${actualColors.accent}` : 'none',
-                  animationDelay: getAnimationDelay(index)
-                }}
-              >
-                {tier.featured && (
-                  <div className="mb-4">
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: actualColors.accent }}
-                    >
-                      Recommended
-                    </span>
+          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
+            {planTiers.map((tier, index) => {
+              const featured = tier.featured || index === 1;
+              return (
+                <div
+                  key={`${tier.name}-${index}`}
+                  className={clsx('flex min-h-[620px] flex-col overflow-hidden border shadow-sm', cardRadius, animated(index).className)}
+                  style={{
+                    ...animated(index).style,
+                    backgroundColor: featured ? actualColors.featuredBackground : actualColors.cardBackground,
+                    borderColor: featured ? actualColors.featuredBackground : actualColors.borderColor,
+                    color: featured ? actualColors.featuredText : actualColors.cardText,
+                  }}
+                >
+                  <div className="p-8" style={{ backgroundColor: featured ? hexToRgba('#ffffff', 0.08) : actualColors.cardBackground }}>
+                    <h3 className="font-header text-2xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.cardHeading }}>{tier.name}</h3>
+                    {tier.description && <p className="mt-3 text-sm leading-6 opacity-70">{tier.description}</p>}
                   </div>
-                )}
-
-                <div className="flex-grow">
-                  <h3 className="text-lg font-semibold mb-1 font-header uppercase tracking-wide" style={{ color: safeColors.cardHeading }}>
-                    {tier.name}
-                  </h3>
-
-                  {tier.description && (
-                    <p className="text-xs font-body mb-8 leading-relaxed" style={{ color: safeColors.cardText, opacity: 0.7 }}>
-                      {tier.description}
-                    </p>
-                  )}
-
-                  <div className="mb-10 pb-8 border-b" style={{ borderColor: actualColors.borderColor }}>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-5xl font-light font-header" style={{ color: safeColors.priceColor }}>
-                        {tier.price}
-                      </span>
-                      <span className="text-sm font-header" style={{ color: safeColors.cardText, opacity: 0.6 }}>
-                        {tier.frequency}
-                      </span>
+                  <div className="flex flex-1 flex-col p-8">
+                    <div className="mb-7">
+                      <span className="font-header text-5xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.priceColor }}>{tier.price}</span>
+                      <span className="ml-2 text-sm opacity-55">{tier.frequency}</span>
                     </div>
+                    <PlanButton tier={tier} featured={featured} color={featured ? actualColors.accent : actualColors.buttonBackground} />
+                    <div className="my-8 border-t border-dotted" style={{ borderColor: featured ? 'rgba(255,255,255,0.15)' : actualColors.dividerColor }} />
+                    {tier.eyebrow && <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] opacity-55">{tier.eyebrow}</p>}
+                    <ul className="space-y-4 text-sm">
+                      {tier.features.map((feature, i) => {
+                        const Icon = featureIcons[i % featureIcons.length];
+                        return <li key={i} className="flex gap-3 leading-6 opacity-75"><Icon size={17} className="mt-1 shrink-0" />{feature}</li>;
+                      })}
+                    </ul>
                   </div>
-
-                  <ul className="space-y-4 mb-10">
-                    {(tier.features || []).map((feature, i) => (
-                      <li key={i} className="flex items-start font-body text-sm leading-relaxed" style={{ color: safeColors.cardText }}>
-                        <span className="mr-3 mt-1 flex-shrink-0" style={{ color: actualColors.accent }}>—</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
-
-                <a
-                  href={tier.buttonLink || '#'}
-                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className={`
-                      w-full text-center block font-medium py-3 px-8 border
-                      transition-all duration-300 font-button text-sm
-                    `}
-                  style={{
-                    backgroundColor: tier.featured ? actualColors.accent : 'transparent',
-                    borderColor: tier.featured ? actualColors.accent : actualColors.borderColor,
-                    color: tier.featured ? actualColors.buttonText : safeColors.cardHeading,
-                    textTransform: 'var(--buttons-transform, none)' as any,
-                    letterSpacing: 'var(--buttons-spacing, normal)'
-                  }}
-                >
-                  {tier.buttonText}
-                </a>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {enterprise && (
+            <div className={clsx('mx-auto mt-8 grid max-w-6xl gap-6 border p-8 md:grid-cols-[1fr_auto]', cardRadius)} style={{ backgroundColor: actualColors.surfaceAlt, borderColor: actualColors.borderColor }}>
+              <div>
+                <h3 className="font-header text-2xl font-bold" style={{ color: actualColors.heading }}>{enterprise.name}</h3>
+                <p className="mt-2" style={{ color: actualColors.description }}>{enterprise.description || enterprise.price}</p>
+              </div>
+              <a {...getLinkProps(enterprise.buttonLink)} className={clsx('self-center px-6 py-3 text-center text-sm font-bold', buttonRadius)} style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{enterprise.buttonText}</a>
+            </div>
+          )}
         </div>
       </section>
     );
-  }
+  };
 
-  // Neon Glow Variant - Deep inner glow effect
-  if (actualVariant === 'neon-glow') {
-    // Default neon config if not provided
-    const glowConfig = cardGlow || {
-      enabled: true,
-      color: '#144CCD',
-      intensity: 100,
-      borderRadius: 80,
-      gradientStart: '#0A0909',
-      gradientEnd: '#09101F'
-    };
+  const renderVoiceCreditColumns = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.background }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header align="left" />
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="inline-flex w-fit rounded-full border p-1" style={{ borderColor: actualColors.borderColor }}>
+            {['Creative', 'Agents', 'API'].map((item, index) => <span key={item} className={clsx('rounded-full px-6 py-2 text-sm', index === 0 && 'bg-white shadow-sm')} style={{ color: actualColors.text }}>{item}</span>)}
+          </div>
+          <span className={clsx('w-fit border px-5 py-2 text-sm', buttonRadius)} style={{ borderColor: actualColors.borderColor, color: actualColors.heading }}>Monthly billing</span>
+        </div>
+        <div className="grid border-l lg:grid-cols-4" style={{ borderColor: actualColors.dividerColor }}>
+          {tiers.slice(0, 4).map((tier, index) => {
+            const featured = tier.featured || index === 2;
+            return (
+              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[700px] flex-col border-r px-6 py-5', animated(index).className)} style={{ ...animated(index).style, borderColor: actualColors.dividerColor }}>
+                <div className={clsx('mb-6 min-h-[170px] p-7', cardRadius)} style={{
+                  background: featured
+                    ? `radial-gradient(circle at 20% 15%, ${actualColors.gradientStart}, transparent 35%), radial-gradient(circle at 90% 70%, ${actualColors.gradientEnd}, transparent 45%), ${actualColors.cardBackground}`
+                    : actualColors.surfaceAlt,
+                  color: featured ? '#ffffff' : actualColors.cardHeading,
+                }}>
+                  <h3 className="font-header text-3xl">{tier.name}</h3>
+                  {tier.badge && <span className="mt-3 inline-flex rounded-full border border-current px-3 py-1 text-xs">{tier.badge}</span>}
+                  <div className="mt-auto pt-16">
+                    <span className="font-header text-2xl">{tier.price}</span>
+                    <span className="ml-1 text-sm opacity-70">{tier.frequency}</span>
+                  </div>
+                </div>
+                <PlanButton tier={tier} featured={featured} color={featured ? actualColors.accent : actualColors.buttonBackground} />
+                <div className="my-8 border-t border-dotted" style={{ borderColor: actualColors.dividerColor }} />
+                {tier.eyebrow && <p className="mb-5 text-xs font-bold uppercase tracking-widest" style={{ color: actualColors.mutedText }}>{tier.eyebrow}</p>}
+                <ul className="space-y-4 text-sm" style={{ color: actualColors.cardText }}>
+                  {tier.features.map((feature, i) => <li key={i} className="border-b border-dotted pb-3" style={{ borderColor: actualColors.dividerColor }}><Check size={15} className="mr-3 inline" />{feature}</li>)}
+                </ul>
+                {tier.footerText && <p className="mt-auto pt-8 font-header text-2xl" style={{ color: actualColors.heading }}>{tier.footerText}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
 
-    const neonStyles = getNeonGlowStyles(glowConfig);
+  const renderDarkPlanCards = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: '#000000' }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header dark />
+        <p className="mb-12 text-center text-sm text-white/45">Pay annually (save 20%)</p>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {tiers.slice(0, 3).map((tier, index) => {
+            const featured = tier.featured || index === 1;
+            return (
+              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[610px] flex-col border p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, borderColor: featured ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.16)' }}>
+                <div className="mb-7 flex items-start justify-between">
+                  <h3 className="font-header text-2xl font-bold text-white">{tier.name}</h3>
+                  {tier.badge && <span className="rounded bg-white px-2 py-1 text-xs font-bold text-black">{tier.badge}</span>}
+                </div>
+                <div className="mb-8">
+                  <span className="font-header text-5xl text-white">{tier.price}</span>
+                  <span className="ml-2 text-white/55">{tier.frequency}</span>
+                </div>
+                {tier.description && <p className="mb-6 text-white/55">{tier.description}</p>}
+                <ul className="flex-1 space-y-5 text-white/80">
+                  {tier.features.map((feature, i) => <li key={i} className="flex gap-3"><Check size={18} className="mt-1 shrink-0 text-white" />{feature}</li>)}
+                </ul>
+                <a {...getLinkProps(tier.buttonLink)} className="mt-10 block border px-6 py-4 text-center font-button font-bold text-white transition hover:bg-white hover:text-black" style={{ borderColor: featured ? '#ffffff' : 'rgba(255,255,255,0.35)', backgroundColor: featured ? '#f4f4f5' : 'transparent', color: featured ? '#111111' : '#ffffff' }}>{tier.buttonText}</a>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
 
+  const renderFinanceComparison = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.accent }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <h2 className={`${titleSizeClasses[titleFontSize]} mb-12 max-w-4xl font-header font-light leading-tight text-white`}>{title}</h2>
+        <div className="grid gap-8 lg:grid-cols-2">
+          {tiers.slice(0, 2).map((tier, index) => (
+            <div key={`${tier.name}-${index}`} className={clsx('p-10 md:p-14', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: index === 0 ? '#000000' : hexToRgba('#000000', 0.2), color: '#ffffff' }}>
+              <h3 className="mb-16 font-header text-3xl">{tier.name}</h3>
+              <div className="mb-16 flex flex-wrap items-end gap-3">
+                <span className="font-header text-7xl md:text-8xl">{tier.price}</span>
+                <span className="pb-3 text-4xl">{tier.frequency}</span>
+              </div>
+              <div className="grid gap-6 text-sm md:grid-cols-2">
+                <p>{tier.description}</p>
+                <ul className="space-y-1">
+                  {tier.features.map((feature, i) => <li key={i}>- {feature}</li>)}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+        {description && <p className="mt-12 max-w-5xl text-sm leading-6 text-white">{description}</p>}
+      </div>
+    </section>
+  );
+
+  const renderSubscriptionShop = () => (
+    <section id="pricing" className={clsx(sectionBaseClass, 'min-h-[760px]')} style={{
+      backgroundColor: actualColors.panelBackground,
+      backgroundImage: backgroundImageUrl ? `linear-gradient(90deg, ${hexToRgba(actualColors.imageOverlay, 0.68)}, ${hexToRgba(actualColors.imageOverlay, 0.14)}), url(${backgroundImageUrl})` : `linear-gradient(120deg, ${actualColors.panelBackground}, ${actualColors.surfaceAlt})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header align="left" dark />
+        <div className="grid max-w-4xl gap-8 md:grid-cols-2">
+          {tiers.slice(0, 2).map((tier, index) => (
+            <div key={`${tier.name}-${index}`} className={clsx('p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: actualColors.cardBackground, color: actualColors.cardText }}>
+              <div className={clsx('mb-8 aspect-[4/3] overflow-hidden bg-black/5', cardRadius)}>
+                {tier.imageUrl ? <img src={tier.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(135deg,#f4eadc,#c7b99f)]" />}
+              </div>
+              <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+                <h3 className="font-header text-2xl font-bold" style={{ color: actualColors.cardHeading }}>{tier.name}</h3>
+                <span className="text-sm tracking-widest" style={{ color: actualColors.mutedText }}>{tier.price}</span>
+              </div>
+              {tier.description && <p className="mt-5 line-clamp-3 text-sm leading-6">{tier.description}</p>}
+              <a {...getLinkProps(tier.buttonLink)} className="mt-8 inline-flex px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{tier.buttonText}</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderBiPanels = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.surfaceAlt }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header align="left" />
+        <div className="grid gap-5 lg:grid-cols-3">
+          {tiers.slice(0, 3).map((tier, index) => {
+            const featured = tier.featured || index === 1;
+            return (
+              <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[690px] flex-col border p-8', animated(index).className)} style={{ ...animated(index).style, backgroundColor: featured ? actualColors.featuredBackground : actualColors.cardBackground, borderColor: actualColors.borderColor, color: featured ? actualColors.featuredText : actualColors.cardText }}>
+                <div className="absolute right-0 top-0 h-12 w-12 bg-[linear-gradient(135deg,transparent_50%,#7c3aed_50%)] opacity-90" />
+                <p className="mb-2 text-sm" style={{ color: featured ? actualColors.accent : actualColors.mutedText }}>{tier.eyebrow || tier.badge}</p>
+                <h3 className="font-header text-3xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.cardHeading }}>{tier.name}</h3>
+                <div className="my-6">
+                  <span className="font-header text-4xl font-bold">{tier.price}</span>
+                  <span className="ml-1 text-sm opacity-70">{tier.frequency}</span>
+                </div>
+                {tier.description && <p className="mb-8 text-sm leading-6">{tier.description}</p>}
+                <PlanButton tier={tier} featured={featured} color={featured ? '#ffffff' : actualColors.buttonBackground} textColor={featured ? actualColors.featuredBackground : actualColors.buttonText} />
+                <div className="my-8 border-t border-dashed" style={{ borderColor: featured ? 'rgba(255,255,255,0.28)' : actualColors.dividerColor }} />
+                <ul className="space-y-4 text-sm leading-6">
+                  {tier.features.map((feature, i) => <li key={i} className="flex gap-3"><Check size={16} className="mt-1 shrink-0" style={{ color: featured ? actualColors.accent : actualColors.checkmarkColor }} />{feature}</li>)}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderGroupedPlanGrid = () => {
+    const individual = tiers.slice(0, 3);
+    const team = tiers.slice(3, 5);
+    const renderCard = (tier: RenderTier, index: number, wide = false) => (
+      <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[350px] flex-col border p-8', cardRadius, animated(index).className, wide && 'md:min-h-[300px]')} style={{ ...animated(index).style, backgroundColor: actualColors.cardBackground, borderColor: actualColors.borderColor, overflow: 'hidden' }}>
+        {tier.featured && <div className="absolute inset-x-0 bottom-0 h-40 opacity-70" style={{ background: `radial-gradient(circle at 30% 100%, ${actualColors.gradientEnd}, transparent 42%), radial-gradient(circle at 80% 100%, ${actualColors.gradientStart}, transparent 48%)` }} />}
+        <div className="relative z-10">
+          <h3 className="font-header text-2xl" style={{ color: actualColors.cardHeading }}>{tier.name}</h3>
+          <div className="my-6 border-t" style={{ borderColor: actualColors.dividerColor }} />
+          <div className="mb-6">
+            <span className="font-header text-5xl font-bold" style={{ color: actualColors.priceColor }}>{tier.price}</span>
+            <span className="ml-1 text-sm" style={{ color: actualColors.mutedText }}>{tier.frequency}</span>
+          </div>
+          {tier.description && <p className="mb-5 text-sm" style={{ color: actualColors.description }}>{tier.description}</p>}
+          <ul className="space-y-2 text-sm" style={{ color: actualColors.cardText }}>
+            {tier.features.slice(0, wide ? 5 : 4).map((feature, i) => <li key={i}><Check size={15} className="mr-2 inline" />{feature}</li>)}
+          </ul>
+        </div>
+        <a {...getLinkProps(tier.buttonLink)} className={clsx('relative z-10 mt-auto inline-flex w-fit px-5 py-3 text-sm font-bold', buttonRadius)} style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{tier.buttonText}</a>
+      </div>
+    );
     return (
-      <section id="pricing" className={`${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden bg-black`}>
+      <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.surfaceAlt }}>
         <CornerGradient config={cornerGradient} />
-        
         <div className="container mx-auto relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold mb-4 font-header text-white`} style={{ textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
-              {title}
-            </h2>
-            <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body text-gray-400`}>
-              {description}
-            </p>
-          </div>
-
-          <div className={clsx(
-            "flex flex-wrap gap-8 items-center",
-            cardsAlignment === 'start' ? 'justify-start' : cardsAlignment === 'end' ? 'justify-end' : 'justify-center'
-          )}>
-            {(tiers || []).map((tier, index) => (
-              <div
-                key={index}
-                className={`
-                    w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.333rem)] max-w-md
-                    p-10 relative flex flex-col h-full
-                    transform transition-all duration-300 hover:scale-[1.02]
-                    ${tier.featured ? 'md:scale-105 z-10' : ''}
-                    ${getAnimationClass(animationType, enableCardAnimation)}
-                  `}
-                style={{
-                  ...neonStyles,
-                  animationDelay: getAnimationDelay(index)
-                }}
-              >
-                {/* Optional drop shadow for outer glow using Beautiful Shadows concept if featured */}
-                {tier.featured && glowConfig.enabled && (
-                  <div className="absolute inset-0 -z-10 rounded-full blur-[100px] opacity-30 pointer-events-none" style={{ backgroundColor: glowConfig.color }} />
-                )}
-
-                <div className="flex-grow relative z-10">
-                  <h3 className="text-2xl font-bold text-center mb-2 font-header text-white">
-                    {tier.name}
-                  </h3>
-
-                  {tier.description && (
-                    <p className="text-center text-sm font-body mb-6 text-gray-400">
-                      {tier.description}
-                    </p>
-                  )}
-
-                  <div className="text-center mb-8">
-                    <span className="text-5xl font-extrabold font-header text-white">
-                      {tier.price}
-                    </span>
-                    <span className="text-lg font-header ml-1 text-gray-400">
-                      {tier.frequency}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-4 mb-8">
-                    {(tier.features || []).map((feature, i) => (
-                      <li key={i} className="flex items-start font-body text-gray-300">
-                        <CheckCircle
-                          size={20}
-                          className="mr-3 flex-shrink-0"
-                          style={{ color: glowConfig.color || actualColors.accent }}
-                        />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <a
-                  href={tier.buttonLink || '#'}
-                  target={tier.buttonLink?.startsWith('http') ? '_blank' : undefined}
-                  rel={tier.buttonLink?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className={`
-                      w-full text-center block font-bold py-4 px-8
-                      transition-all duration-300 transform hover:-translate-y-1 font-button relative z-10
-                    `}
-                  style={{
-                    backgroundColor: glowConfig.color || actualColors.buttonBackground,
-                    color: '#ffffff', // Usually white on deep glow colors
-                    borderRadius: `${buttonBorderRadius === 'full' ? 9999 : 12}px`,
-                    textTransform: 'var(--buttons-transform, none)' as any,
-                    letterSpacing: 'var(--buttons-spacing, normal)',
-                    boxShadow: `0 10px 20px -10px ${glowConfig.color || actualColors.buttonBackground}`
-                  }}
-                >
-                  {tier.buttonText}
-                </a>
-              </div>
-            ))}
-          </div>
+          <Header align="left" />
+          <div className="mb-8 text-center text-xs font-bold uppercase tracking-widest" style={{ color: actualColors.mutedText }}>Monthly / Yearly</div>
+          <h3 className="mb-6 font-header text-2xl font-bold" style={{ color: actualColors.heading }}>Individual Plans</h3>
+          <div className="grid gap-6 lg:grid-cols-3">{individual.map((tier, index) => renderCard(tier, index))}</div>
+          {team.length > 0 && <>
+            <h3 className="mb-6 mt-12 font-header text-2xl font-bold" style={{ color: actualColors.heading }}>Team Plans</h3>
+            <div className="grid gap-6 md:grid-cols-2">{team.map((tier, index) => renderCard(tier, index + 3, true))}</div>
+          </>}
         </div>
       </section>
     );
-  }
+  };
 
-  // Fallback to classic if variant is not recognized
-  return null;
+  const renderWorkflowRows = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: actualColors.background }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header />
+        <div className={clsx('mx-auto max-w-5xl overflow-hidden border p-4', borderRadiusClasses['2xl'])} style={{ backgroundColor: actualColors.surfaceAlt, borderColor: actualColors.borderColor }}>
+          {tiers.map((tier, index) => (
+            <div key={`${tier.name}-${index}`} className={clsx('grid gap-8 border bg-white p-8 md:grid-cols-[0.75fr_1.25fr]', index > 0 && '-mt-px', cardRadius, animated(index).className)} style={{ ...animated(index).style, borderColor: actualColors.borderColor }}>
+              <div className="flex flex-col">
+                <h3 className="font-header text-3xl font-bold" style={{ color: actualColors.cardHeading }}>{tier.name}</h3>
+                {tier.description && <p className="mt-3 text-sm leading-6" style={{ color: actualColors.description }}>{tier.description}</p>}
+                <div className="mt-auto pt-16">
+                  <span className="font-header text-5xl font-bold" style={{ color: actualColors.priceColor }}>{tier.price}</span>
+                  <span className="ml-1 text-sm" style={{ color: actualColors.mutedText }}>{tier.frequency}</span>
+                  <a {...getLinkProps(tier.buttonLink)} className={clsx('mt-8 block max-w-sm px-6 py-4 text-center font-bold shadow-xl', buttonRadius)} style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{tier.buttonText}</a>
+                </div>
+              </div>
+              <ul className="divide-y" style={{ borderColor: actualColors.dividerColor }}>
+                {tier.features.map((feature, i) => <li key={i} className="flex gap-4 py-4 text-sm" style={{ color: actualColors.cardText }}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: actualColors.accent }}><Check size={16} /></span>{feature}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderAddonCards = () => (
+    <section id="pricing" className={sectionBaseClass} style={{ backgroundColor: '#000000' }}>
+      <CornerGradient config={cornerGradient} />
+      <div className="container mx-auto relative z-10">
+        <Header dark />
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
+          {tiers.slice(0, 3).map((tier, index) => {
+            const accent = index === 0 ? actualColors.gradientEnd : index === 1 ? actualColors.gradientStart : actualColors.accent;
+            return (
+              <div key={`${tier.name}-${index}`} className={clsx('border-b p-8', animated(index).className)} style={{ ...animated(index).style, backgroundColor: 'rgba(255,255,255,0.03)', borderColor: accent }}>
+                <div className="mb-8 flex items-center gap-3">
+                  <Sparkles size={26} style={{ color: '#ffffff' }} />
+                  <h3 className="font-header text-2xl font-bold text-white">{tier.name}</h3>
+                </div>
+                <div className="mb-8 flex items-end gap-3">
+                  <span className="font-header text-6xl text-white">{tier.price}</span>
+                  <span className="pb-2 text-white/60">{tier.frequency}</span>
+                </div>
+                {tier.description && <p className="mb-10 min-h-20 text-lg leading-7 text-white/85">{tier.description}</p>}
+                <a {...getLinkProps(tier.buttonLink)} className={clsx('block px-6 py-4 text-center text-lg font-bold text-white', buttonRadius)} style={{ backgroundColor: accent }}>{tier.buttonText}</a>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+
+  if (variant === 'dark-saas-cards') return renderDarkSaasCards();
+  if (variant === 'voice-credit-columns') return renderVoiceCreditColumns();
+  if (variant === 'dark-plan-cards') return renderDarkPlanCards();
+  if (variant === 'finance-comparison') return renderFinanceComparison();
+  if (variant === 'subscription-shop') return renderSubscriptionShop();
+  if (variant === 'bi-panels') return renderBiPanels();
+  if (variant === 'grouped-plan-grid') return renderGroupedPlanGrid();
+  if (variant === 'workflow-rows') return renderWorkflowRows();
+  if (variant === 'addon-cards') return renderAddonCards();
+
+  return (
+    <div className={glassEffect ? 'backdrop-blur-xl' : undefined}>
+      {renderFeaturedPlan()}
+    </div>
+  );
 };
 
 export default Pricing;

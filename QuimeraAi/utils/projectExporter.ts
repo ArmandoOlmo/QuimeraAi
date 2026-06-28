@@ -466,6 +466,76 @@ const renderGallery = (section: string, data: SectionRecord | undefined): string
     </section>`;
 };
 
+const renderShowcase = (section: string, data: SectionRecord | undefined): string => {
+  const items = getItems(data, ['items', 'projects', 'cards']).slice(0, 12);
+  if (!items.length && !firstText(data, ['title', 'headline', 'description'])) return '';
+
+  const colors = data?.colors || {};
+  const variant = normalizeText(data?.showcaseVariant || 'recent-work');
+  const columns = Math.min(Math.max(Number(data?.gridColumns) || 3, 1), 5);
+  const imageHeight = Math.min(Math.max(Number(data?.imageHeight) || 340, 160), 760);
+  const categories = Array.isArray(data?.categories)
+    ? data.categories.map((category: unknown) => escapeHtml(category)).filter(Boolean)
+    : [];
+  const background = firstUrl(data, ['backgroundImageUrl', 'backgroundImage']);
+  const backgroundColor = cssColor(normalizeText(colors.background || data?.backgroundColor || 'var(--background)'), 'var(--background)');
+  const styleEntries = [
+    `--showcase-cols: ${columns}`,
+    `--showcase-image-height: ${imageHeight}px`,
+    `--showcase-card: ${escapeAttribute(cssColor(normalizeText(colors.cardBackground || 'var(--surface)'), 'var(--surface)'))}`,
+    `--showcase-heading: ${escapeAttribute(cssColor(normalizeText(colors.heading || 'var(--heading)'), 'var(--heading)'))}`,
+    `--showcase-text: ${escapeAttribute(cssColor(normalizeText(colors.text || 'var(--muted)'), 'var(--muted)'))}`,
+    `--showcase-card-heading: ${escapeAttribute(cssColor(normalizeText(colors.cardHeading || colors.heading || 'var(--heading)'), 'var(--heading)'))}`,
+    `--showcase-card-text: ${escapeAttribute(cssColor(normalizeText(colors.cardText || colors.text || 'var(--muted)'), 'var(--muted)'))}`,
+    `--showcase-muted: ${escapeAttribute(cssColor(normalizeText(colors.mutedText || colors.text || 'var(--muted)'), 'var(--muted)'))}`,
+    `--showcase-accent: ${escapeAttribute(cssColor(normalizeText(colors.accent || 'var(--accent)'), 'var(--accent)'))}`,
+    `--showcase-border: ${escapeAttribute(cssColor(normalizeText(colors.borderColor || 'var(--border)'), 'var(--border)'))}`,
+    `--showcase-pill-bg: ${escapeAttribute(cssColor(normalizeText(colors.pillBackground || 'var(--heading)'), 'var(--heading)'))}`,
+    `--showcase-pill-text: ${escapeAttribute(cssColor(normalizeText(colors.pillText || 'var(--background)'), 'var(--background)'))}`,
+  ];
+
+  if (background) {
+    styleEntries.push(`background-image: linear-gradient(rgba(15, 23, 42, 0.52), rgba(15, 23, 42, 0.52)), url(&quot;${escapeAttribute(background)}&quot;)`);
+    styleEntries.push('background-size: cover');
+    styleEntries.push(`background-position: ${escapeAttribute(data?.backgroundPosition || 'center')}`);
+  } else {
+    styleEntries.push(`background: ${escapeAttribute(backgroundColor)}`);
+  }
+
+  return `
+    <section id="${escapeAttribute(section)}" class="section showcase-section" data-variant="${escapeAttribute(variant)}" style="${styleEntries.join('; ')}">
+      <div class="container">
+        ${renderSectionTitle(data, 'Showcase')}
+        ${categories.length && data?.showFilters !== false ? `
+          <div class="showcase-filters">
+            ${categories.slice(0, 8).map((category, index) => `<span class="${index === 0 ? 'active' : ''}">${category}</span>`).join('')}
+          </div>` : ''}
+        <div class="showcase-grid">
+          ${items.map((item, index) => {
+            const title = firstText(item, ['title', 'name', 'label'], `Showcase ${index + 1}`);
+            const description = firstText(item, ['description', 'body', 'summary', 'caption']);
+            const meta = firstText(item, ['meta', 'category', 'eyebrow']);
+            const image = firstUrl(item, ['imageUrl', 'image', 'src', 'thumbnailUrl', 'photoUrl']);
+            const linkText = firstText(item, ['linkText', 'ctaText']);
+            const linkUrl = isSafeUrl(item.linkUrl || item.href) ? normalizeText(item.linkUrl || item.href) : '';
+            return `
+              <article class="showcase-card">
+                <div class="showcase-media">
+                  ${renderImage(image, title, 'showcase-image')}
+                </div>
+                <div class="showcase-copy">
+                  ${meta && data?.showMeta !== false ? `<p class="showcase-meta">${escapeHtml(meta)}</p>` : ''}
+                  <h3>${escapeHtml(title)}</h3>
+                  ${description ? `<p>${escapeHtml(description)}</p>` : ''}
+                  ${linkText ? renderButton(linkText, linkUrl || '#', 'showcase-link') : ''}
+                </div>
+              </article>`;
+          }).join('')}
+        </div>
+      </div>
+    </section>`;
+};
+
 const renderCta = (section: string, data: SectionRecord | undefined): string => {
   const title = firstText(data, ['title', 'headline', 'heading'], 'Hablemos');
   const description = firstText(data, ['description', 'subtitle', 'subheadline']);
@@ -572,6 +642,7 @@ const renderSection = (section: PageSection | string, rawData: SectionRecord | u
   if (HERO_SECTIONS.has(section)) return renderHero(section, data, project);
   if (FEATURE_SECTIONS.has(section)) return renderCards(section, data, section === 'services' ? 'Servicios' : 'Caracteristicas');
   if (CARD_GRID_SECTIONS.has(section)) return renderCards(section, data, section === 'menu' ? 'Menu' : 'Contenido');
+  if (section === 'showcase') return renderShowcase(section, data);
   if (TESTIMONIAL_SECTIONS.has(section)) return renderTestimonials(section, data);
   if (FAQ_SECTIONS.has(section)) return renderFaq(section, data);
   if (section === 'pricing' || section === 'pricingQuimera') return renderPricing(section, data);
@@ -675,6 +746,33 @@ const buildStyles = (project: Project): string => {
     .image-placeholder { min-height: 320px; background: radial-gradient(circle at 20% 20%, var(--accent), transparent 35%), linear-gradient(135deg, var(--surface), var(--secondary)); }
     .card-grid, .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
     .card-body { padding: 22px; display: grid; gap: 10px; }
+    .showcase-section { color: var(--showcase-text); }
+    .showcase-section h2 { color: var(--showcase-heading); }
+    .showcase-filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: -18px auto 34px; }
+    .showcase-filters span { border: 1px solid var(--showcase-border); border-radius: 999px; padding: 8px 14px; color: var(--showcase-text); font-weight: 700; font-size: 0.9rem; }
+    .showcase-filters span.active { background: var(--showcase-pill-bg); color: var(--showcase-pill-text); border-color: var(--showcase-pill-bg); }
+    .showcase-grid { display: grid; grid-template-columns: repeat(var(--showcase-cols), minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 28px); }
+    .showcase-card { overflow: hidden; border: 1px solid var(--showcase-border); background: var(--showcase-card); border-radius: 18px; }
+    .showcase-media { background: color-mix(in srgb, var(--showcase-card) 72%, black); overflow: hidden; }
+    .showcase-image { width: 100%; height: var(--showcase-image-height); object-fit: cover; }
+    .showcase-copy { padding: 20px; display: grid; gap: 9px; }
+    .showcase-copy h3 { color: var(--showcase-card-heading); font-size: clamp(1.2rem, 2vw, 1.7rem); }
+    .showcase-copy p { color: var(--showcase-card-text); }
+    .showcase-meta { color: var(--showcase-muted); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 800; }
+    .showcase-link { color: var(--showcase-accent); text-decoration: none; font-weight: 800; }
+    .showcase-section[data-variant="curated-row"] .showcase-grid,
+    .showcase-section[data-variant="dark-carousel"] .showcase-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+    .showcase-section[data-variant="curated-row"] .showcase-card { min-width: min(380px, 82vw); scroll-snap-align: start; }
+    .showcase-section[data-variant="dark-carousel"] .showcase-card { min-width: min(300px, 78vw); scroll-snap-align: start; position: relative; }
+    .showcase-section[data-variant="vertical-strips"] .showcase-grid { grid-template-columns: repeat(6, minmax(120px, 1fr)); }
+    .showcase-section[data-variant="vertical-strips"] .showcase-image { height: calc(var(--showcase-image-height) + 180px); }
+    .showcase-section[data-variant="featured-device"] .showcase-grid { display: block; }
+    .showcase-section[data-variant="featured-device"] .showcase-card:not(:first-child) { display: none; }
+    .showcase-section[data-variant="featured-device"] .showcase-card { max-width: 980px; margin: 0 auto; border-radius: 24px; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.26); }
+    .showcase-section[data-variant="minimal-index"] .showcase-copy h3,
+    .showcase-section[data-variant="minimal-index"] .showcase-copy p { display: none; }
+    .showcase-section[data-variant="case-grid-dark"] .showcase-card { border-radius: 0; }
+    .showcase-section[data-variant="case-grid-dark"] .showcase-image { aspect-ratio: 1 / 1; height: auto; }
     .testimonial cite { color: var(--heading); font-style: normal; font-weight: 700; }
     .faq-list { display: grid; gap: 12px; text-align: left; }
     .faq-item { border: 1px solid var(--border); border-radius: 18px; padding: 18px 20px; background: color-mix(in srgb, var(--surface) 86%, transparent); }
@@ -693,12 +791,14 @@ const buildStyles = (project: Project): string => {
       .nav { align-items: flex-start; flex-direction: column; padding: 16px 0; }
       .hero-grid, .map-grid, .footer-grid { grid-template-columns: 1fr; }
       .card-grid, .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .showcase-grid, .showcase-section[data-variant="vertical-strips"] .showcase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .hero-section { min-height: auto; }
     }
     @media (max-width: 640px) {
       .container, .narrow { width: min(100% - 28px, 1120px); }
       .section { padding: 56px 0; }
       .card-grid, .gallery-grid { grid-template-columns: 1fr; }
+      .showcase-grid, .showcase-section[data-variant="vertical-strips"] .showcase-grid { grid-template-columns: 1fr; }
       .nav-links { gap: 10px; }
       .button { width: 100%; }
       .hero-image { height: 320px; }

@@ -33,20 +33,20 @@ const capabilityPatterns: Array<[BusinessCapability, RegExp]> = [
 ];
 
 const intentOrder: Record<PageIntent, ComponentId[]> = {
-    website_home: ['hero', 'about', 'services', 'features', 'testimonials', 'leadForm', 'faq', 'footer'],
+    website_home: ['hero', 'about', 'services', 'features', 'showcase', 'testimonials', 'leadForm', 'faq', 'footer'],
     service_landing: ['hero', 'services', 'trustBadges', 'process', 'testimonials', 'appointmentCTA', 'leadForm', 'faq', 'footer'],
-    ecommerce_home: ['hero', 'trustBadges', 'featuredProducts', 'categoryShowcase', 'productCarousel', 'appointmentCTA', 'shopCTA', 'faq', 'footer'],
+    ecommerce_home: ['hero', 'trustBadges', 'featuredProducts', 'categoryShowcase', 'productCarousel', 'showcase', 'appointmentCTA', 'shopCTA', 'faq', 'footer'],
     storefront_home: ['hero', 'storefrontFeaturedProducts', 'storefrontCategoryGrid', 'trustBadges', 'newsletter', 'footer'],
     product_collection: ['collectionBanner', 'categoryShowcase', 'productCarousel', 'shopCTA', 'faq', 'footer'],
     product_detail: ['productHero', 'trustBadges', 'featuredProducts', 'faq', 'shopCTA', 'footer'],
     restaurant_home: ['hero', 'restaurantMenu', 'restaurantReservation', 'restaurantLocation', 'trustBadges', 'newsletter', 'faq', 'footer'],
     appointment_landing: ['hero', 'services', 'process', 'appointmentCTA', 'trustBadges', 'leadForm', 'faq', 'footer'],
     real_estate_home: ['hero', 'propertySearch', 'realEstateListings', 'neighborhoods', 'leadForm', 'testimonials', 'faq', 'footer'],
-    portfolio_home: ['hero', 'gallery', 'imageWithText', 'about', 'testimonials', 'leadForm', 'footer'],
+    portfolio_home: ['hero', 'showcase', 'gallery', 'imageWithText', 'about', 'testimonials', 'leadForm', 'footer'],
     blog_home: ['hero', 'newsletter', 'features', 'faq', 'footer'],
     lead_capture: ['hero', 'services', 'trustBadges', 'leadForm', 'faq', 'footer'],
     local_business_home: ['hero', 'services', 'trustBadges', 'process', 'testimonials', 'contact', 'leadForm', 'footer'],
-    gallery_home: ['hero', 'gallery', 'imageWithText', 'testimonials', 'leadForm', 'footer'],
+    gallery_home: ['hero', 'showcase', 'gallery', 'imageWithText', 'testimonials', 'leadForm', 'footer'],
     bio_page: ['bioProfile', 'bioLinks', 'bioSocialLinks', 'bioShop', 'bioBooking', 'bioLeadCapture', 'bioEmailSubscribe', 'bioChatCTA'],
     ai_saas_landing: ['hero', 'features', 'process', 'pricing', 'testimonials', 'faq', 'leadForm', 'footer'],
 };
@@ -147,6 +147,7 @@ function availableDataFromInput(
         menuItemsCount: plan?.contentMap.menuItems?.length || menuSignalCount || (/\b(menu|dish|catering|steakhouse|bakery|sushi|pizza|brunch)\b/i.test(getBriefText(input)) ? Math.max(servicesCount, 1) : 0),
         listingsCount: plan?.contentMap.properties?.length || 0,
         portfolioItemsCount: plan?.contentMap.extractedImages?.length || 0,
+        showcaseItemsCount: plan?.contentMap.extractedImages?.length || 0,
         testimonialsCount: plan?.contentMap.testimonials?.length || 0,
         reviewsCount: 0,
         salesCount: 0,
@@ -229,6 +230,8 @@ function dataAvailabilityScore(componentId: ComponentId, context: ComponentSelec
             return context.capabilities?.includes('realEstate') ? 0.8 : 0.15;
         case 'gallery':
             return (data.portfolioItemsCount || 0) > 0 || context.capabilities?.includes('portfolio') ? 0.9 : 0.45;
+        case 'showcase':
+            return ((data.showcaseItemsCount || data.portfolioItemsCount || 0) > 0) || context.capabilities?.some(item => ['portfolio', 'ecommerce', 'physicalProducts', 'premiumRetail', 'contentMarketing'].includes(item)) ? 0.9 : 0.5;
         case 'testimonials':
             return (data.testimonialsCount || 0) > 0 || (data.reviewsCount || 0) > 0 ? 1 : 0.6;
         case 'appointmentCTA':

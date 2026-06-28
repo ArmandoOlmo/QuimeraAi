@@ -285,6 +285,10 @@ export const deriveColorsFromPalette = (
         } else if (componentType === 'features' || componentType === 'services') {
             // For feature cards, use primary color with reduced opacity effect
             derived.cardBackground = hexToRgba(primaryColor, 0.15);
+        } else if (componentType === 'showcase') {
+            derived.cardBackground = isDarkColor(bgColor)
+                ? lightenColor(bgColor, 8)
+                : '#ffffff';
         } else {
             derived.cardBackground = bgColor;
         }
@@ -341,6 +345,31 @@ export const deriveColorsFromPalette = (
         }
         if (!colors.priceColor) {
             derived.priceColor = colors.cardHeading || headingColor;
+        }
+    }
+
+    // Derive editorial showcase colors
+    if (componentType === 'showcase') {
+        if (!colors.cardHeading) {
+            derived.cardHeading = headingColor;
+        }
+        if (!colors.cardText) {
+            derived.cardText = textColor;
+        }
+        if (!colors.mutedText) {
+            derived.mutedText = isDarkColor(bgColor) ? 'rgba(255, 255, 255, 0.68)' : 'rgba(17, 24, 39, 0.62)';
+        }
+        if (!colors.pillBackground) {
+            derived.pillBackground = isDarkColor(bgColor) ? '#ffffff' : '#111827';
+        }
+        if (!colors.pillText) {
+            derived.pillText = getContrastingTextColor(derived.pillBackground);
+        }
+        if (!colors.overlayStart) {
+            derived.overlayStart = 'rgba(0, 0, 0, 0)';
+        }
+        if (!colors.overlayEnd) {
+            derived.overlayEnd = isDarkColor(bgColor) ? 'rgba(0, 0, 0, 0.78)' : 'rgba(0, 0, 0, 0.64)';
         }
     }
     

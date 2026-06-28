@@ -349,7 +349,7 @@ export const elitePageData: PageData = {
         },
     },
     pricing: {
-        pricingVariant: 'gradient',
+        pricingVariant: 'featured-plan',
         title: {
                 es: "Menús Degustación",
                 en: "Tasting Menus"

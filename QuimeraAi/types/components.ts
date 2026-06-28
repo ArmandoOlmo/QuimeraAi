@@ -6,6 +6,8 @@
 import { PaddingSize, FontSize, ImageStyle, BorderRadiusSize, BorderSize, JustifyContent, ImagePosition, AspectRatio, ObjectFit, AnimationType, FontFamily } from './ui';
 import type { ProductCardVariant } from './productCard';
 import type { WebsiteEcommerceCTARouteType, WebsiteEcommerceResponsiveBehavior } from './websiteEcommerceBlocks';
+import type { FooterVariant } from '../data/footerVariants';
+import type { PricingVariant } from '../data/pricingVariants';
 
 // Re-export Project from types/project for backward compatibility
 export type { Project } from './project';
@@ -100,6 +102,11 @@ export type NavbarStyle =
     // NUEVOS: Diseños Especiales
     | 'tabbed'               // Pestañas sobre línea gruesa
     | 'segmented-pill'      // Barra de píldora con bloque activo
+    | 'mega-panel'           // Header with desktop mega-menu panel
+    | 'rounded-shell'        // Large rounded navbar shell
+    | 'split-cta'            // Conversion-focused split actions
+    | 'dark-dock'            // Dark floating product dock
+    | 'center-stage'         // Centered brand navigation
     | 'transparent';        // Legacy alias for transparent-blur
 
 export type LocalizedText = string | Record<string, string>;
@@ -140,7 +147,26 @@ export interface HeaderData extends SectionBackgroundFields {
     showCart?: boolean;
     cartItemCount?: number;
     onCartClick?: () => void;
-    colors: { background: string; text: string; accent: string; border?: string; gradientFadeColor?: string; gradientDarkColor?: string; buttonBackground?: string; buttonText?: string; tabBorderColor?: string; tabActiveColor?: string };
+    colors: {
+        background: string;
+        text: string;
+        accent: string;
+        border?: string;
+        surface?: string;
+        surfaceAlt?: string;
+        panelBackground?: string;
+        panelText?: string;
+        mutedText?: string;
+        linkHover?: string;
+        separator?: string;
+        cartBadge?: string;
+        gradientFadeColor?: string;
+        gradientDarkColor?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        tabBorderColor?: string;
+        tabActiveColor?: string;
+    };
     buttonBorderRadius: BorderRadiusSize;
     isPreviewMode?: boolean;
     linkFontSize?: number;
@@ -696,6 +722,11 @@ export interface FeatureItem {
     title: string;
     description: string;
     imageUrl: string;
+    icon?: ServiceIcon | string;
+    eyebrow?: string;
+    badge?: string;
+    metric?: string;
+    bullets?: string[];
     linkUrl?: string;
     linkType?: 'manual' | 'product' | 'collection' | 'content';
     linkText?: string;
@@ -703,14 +734,32 @@ export interface FeatureItem {
 
 export interface FeaturesData extends SectionBackgroundFields {
     glassEffect?: boolean;
-    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release' | 'editorial-mosaic';
+    featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release' | 'editorial-mosaic' | 'gallery-strip' | 'visual-proof-grid' | 'strategy-cards' | 'offer-showcase' | 'product-highlights' | 'icon-columns' | 'dark-showcase' | 'split-list' | 'app-showcase' | 'metrics-panel' | 'checklist-cards' | 'dark-capability-grid';
+    sectionEyebrow?: string;
+    ctaText?: string;
+    ctaUrl?: string;
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
     items: FeatureItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    colors: { background: string; accent: string; borderColor: string; text: string; heading: string; description?: string; cardBackground?: string; cardHeading?: string; cardText?: string; };
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
+        description?: string;
+        cardBackground?: string;
+        cardHeading?: string;
+        cardText?: string;
+        glowColor?: string;
+        cardGradientStart?: string;
+        cardGradientEnd?: string;
+        overlayText?: string;
+        overlayMuted?: string;
+    };
     gridColumns: number;
     imageHeight: number;
     imageObjectFit: ObjectFit;
@@ -821,7 +870,7 @@ export interface SlideshowData extends SectionBackgroundFields {
 // =============================================================================
 // PRICING
 // =============================================================================
-export type PricingVariant = 'classic' | 'gradient' | 'glassmorphism' | 'minimalist' | 'neon-glow';
+export type { PricingVariant };
 
 export interface PricingTier {
     name: string;
@@ -832,6 +881,12 @@ export interface PricingTier {
     buttonText: string;
     buttonLink: string;
     featured: boolean;
+    badge?: string;
+    eyebrow?: string;
+    footerText?: string;
+    imageUrl?: string;
+    secondaryButtonText?: string;
+    secondaryButtonLink?: string;
 }
 
 export interface PricingData extends SectionBackgroundFields {
@@ -850,6 +905,7 @@ export interface PricingData extends SectionBackgroundFields {
         accent: string;
         borderColor: string;
         text: string;
+        mutedText?: string;
         heading: string;
         description?: string;
         buttonBackground?: string;
@@ -861,6 +917,15 @@ export interface PricingData extends SectionBackgroundFields {
         priceColor?: string;
         gradientStart?: string;
         gradientEnd?: string;
+        panelBackground?: string;
+        panelText?: string;
+        surfaceAlt?: string;
+        featuredBackground?: string;
+        featuredText?: string;
+        badgeBackground?: string;
+        badgeText?: string;
+        dividerColor?: string;
+        imageOverlay?: string;
     };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
@@ -868,7 +933,7 @@ export interface PricingData extends SectionBackgroundFields {
     enableCardAnimation?: boolean;
     // Corner gradient overlay
     cornerGradient?: CornerGradientConfig;
-    // Configuration for neon-glow variant
+    // Legacy configuration retained for older saved pages.
     cardGlow?: CardGlowConfig;
 }
 
@@ -885,10 +950,11 @@ export interface FaqData extends SectionBackgroundFields {
     title: string;
     subtitle?: string;              // Alias for description
     description: string;
+    imageUrl?: string;
     items: FaqItem[];
     paddingY: PaddingSize;
     paddingX: PaddingSize;
-    faqVariant?: 'classic' | 'cards' | 'gradient' | 'minimal';
+    faqVariant?: 'classic' | 'cards' | 'gradient' | 'minimal' | 'editorial-split' | 'boxed-list' | 'dark-panel' | 'image-split' | 'stacked-cards' | 'answer-panel' | 'contact-card';
     colors: {
         background: string;
         accent: string;
@@ -897,6 +963,12 @@ export interface FaqData extends SectionBackgroundFields {
         heading: string;
         description?: string;
         cardBackground?: string;
+        cardHeading?: string;
+        cardText?: string;
+        panelBackground?: string;
+        activeBackground?: string;
+        activeText?: string;
+        iconBackground?: string;
         gradientStart?: string;
         gradientEnd?: string;
     };
@@ -1106,6 +1178,77 @@ export interface PortfolioData extends SectionBackgroundFields {
     overlayTextAlignment?: TextAlignment;
     showSectionHeader?: boolean;
     // Corner gradient overlay
+    cornerGradient?: CornerGradientConfig;
+}
+
+// =============================================================================
+// SHOWCASE
+// =============================================================================
+export type ShowcaseVariant =
+    | 'featured-device'
+    | 'curated-row'
+    | 'editorial-stack'
+    | 'vertical-strips'
+    | 'dark-carousel'
+    | 'minimal-index'
+    | 'case-grid-dark'
+    | 'recent-work';
+
+export interface ShowcaseItem {
+    title: string;
+    description?: string;
+    imageUrl: string;
+    altText?: string;
+    category?: string;
+    tags?: string[];
+    meta?: string;
+    eyebrow?: string;
+    linkText?: string;
+    linkUrl?: string;
+}
+
+export interface ShowcaseData extends SectionBackgroundFields {
+    glassEffect?: boolean;
+    showcaseVariant?: ShowcaseVariant;
+    title: string;
+    description?: string;
+    eyebrow?: string;
+    categories?: string[];
+    items: ShowcaseItem[];
+    paddingY: PaddingSize;
+    paddingX: PaddingSize;
+    colors: {
+        background: string;
+        accent: string;
+        borderColor: string;
+        text: string;
+        heading: string;
+        description?: string;
+        cardBackground?: string;
+        cardHeading?: string;
+        cardText?: string;
+        mutedText?: string;
+        pillBackground?: string;
+        pillText?: string;
+        overlayStart?: string;
+        overlayEnd?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+    };
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
+    borderRadius?: BorderRadiusSize;
+    gridColumns?: number;
+    imageHeight?: number;
+    imageObjectFit?: ObjectFit;
+    showSectionHeader?: boolean;
+    showFilters?: boolean;
+    showMeta?: boolean;
+    showFloatingCta?: boolean;
+    floatingCtaText?: string;
+    floatingCtaLink?: string;
+    animationType?: AnimationType;
+    enableCardAnimation?: boolean;
     cornerGradient?: CornerGradientConfig;
 }
 
@@ -1336,9 +1479,41 @@ export interface FooterData extends SectionBackgroundFields {
     copyrightText: string;
     linkColumns: FooterColumn[];
     socialLinks: SocialLink[];
-    colors: { background: string; border: string; text: string; linkHover: string; heading: string; description?: string; };
+    colors: {
+        background: string;
+        border: string;
+        text: string;
+        linkHover: string;
+        heading: string;
+        description?: string;
+        accent?: string;
+        mutedText?: string;
+        panelBackground?: string;
+        panelText?: string;
+        buttonBackground?: string;
+        buttonText?: string;
+        wordmark?: string;
+        iconBackground?: string;
+        inputBackground?: string;
+        inputText?: string;
+        inputBorder?: string;
+        legalBackground?: string;
+        imageOverlay?: string;
+    };
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    wordmarkText?: string;
+    footerEyebrow?: string;
+    disclaimerText?: string;
+    newsletterLabel?: string;
+    newsletterPlaceholder?: string;
+    newsletterButtonText?: string;
+    ctaTitle?: string;
+    ctaBullets?: string[];
+    primaryButtonText?: string;
+    secondaryButtonText?: string;
+    languageLabel?: string;
+    countryLabel?: string;
     // Logo settings
     logoType?: 'text' | 'image';
     logoImageUrl?: string;
@@ -1347,7 +1522,7 @@ export interface FooterData extends SectionBackgroundFields {
     // Branding settings
     hideBranding?: boolean;
     // Glow and Variant
-    footerVariant?: 'classic' | 'neon-glow';
+    footerVariant?: FooterVariant;
     cardGlow?: CardGlowConfig;
 }
 
@@ -2754,6 +2929,7 @@ export interface PageData {
     newsletter: NewsletterData;
     cta: CtaData;
     portfolio: PortfolioData;
+    showcase: ShowcaseData;
     services: ServicesData;
     team: TeamData;
     video: VideoData;

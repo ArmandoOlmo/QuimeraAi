@@ -40,7 +40,7 @@ export interface DesignCriticResult {
 
 const clamp = (value: number, max: number) => Math.max(0, Math.min(max, value));
 
-const isGridLike = (variant: ComponentVariantPlan): boolean => /(grid|cards|categoryGrid|listingCards|pricingCards|bento)/i.test(variant.layoutVariant);
+const isGridLike = (variant: ComponentVariantPlan): boolean => /(grid|cards|categoryGrid|listingCards|bento)/i.test(variant.layoutVariant);
 const isCentered = (variant: ComponentVariantPlan): boolean => /(centered|textOnly)/i.test(variant.layoutVariant);
 const isCtaComponent = (componentId: string): boolean => ['leadForm', 'shopCTA', 'appointmentCTA', 'restaurantReservation', 'newsletter'].includes(componentId);
 const isTrustComponent = (componentId: string): boolean => ['trustBadges', 'testimonials', 'stats'].includes(componentId);

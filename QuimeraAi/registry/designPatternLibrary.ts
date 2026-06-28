@@ -182,7 +182,7 @@ export const designPatternLibrary: DesignPatternEntry[] = [
             { componentId: 'hero', layoutVariant: 'gradientOrb' },
             { componentId: 'features', layoutVariant: 'bentoGrid' },
             { componentId: 'process', layoutVariant: 'cardsGrid' },
-            { componentId: 'pricing', layoutVariant: 'pricingCards' },
+            { componentId: 'pricing', layoutVariant: 'dark-saas-cards' },
         ],
         antiPatterns: ['Do not make the page only gradients.', 'Do not sacrifice CTA clarity for atmosphere.'],
     }),

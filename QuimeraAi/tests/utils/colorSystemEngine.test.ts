@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     COLOR_PROPORTION_RULE_603010,
     contrastRatio,
+    createColorCandidateFromGlobalColors,
     createColorBriefFromWebsitePlan,
     createImportedPaletteCandidates,
     generateColorCandidates,
@@ -270,5 +271,48 @@ describe('colorSystemEngine', () => {
         expect(COLOR_PROPORTION_RULE_603010.roles.dominant).toContain('background');
         expect(COLOR_PROPORTION_RULE_603010.roles.brand).toContain('primary');
         expect(COLOR_PROPORTION_RULE_603010.roles.accent).toContain('accent');
+    });
+
+    it('regenerates a genuinely different candidate set when variation changes', () => {
+        const brief = createColorBriefFromWebsitePlan(basePlan);
+        const firstRun = generateColorCandidates(brief, { direction: 'vibrant', variation: 0 });
+        const secondRun = generateColorCandidates(brief, { direction: 'vibrant', variation: 2 });
+        const signature = (candidate: typeof firstRun[number]) => [
+            candidate.system.colors.primary,
+            candidate.system.colors.secondary,
+            candidate.system.colors.accent,
+            candidate.system.colors.background,
+        ].join('|');
+
+        expect(secondRun.map(signature)).not.toEqual(firstRun.map(signature));
+        expect(secondRun.every(candidate => validateColorSystem(candidate.system).valid)).toBe(true);
+    });
+
+    it('can convert LLM palette suggestions into validated Color Expert candidates', () => {
+        const brief = createColorBriefFromWebsitePlan(basePlan);
+        const candidate = createColorCandidateFromGlobalColors(brief, {
+            primary: '#0f766e',
+            secondary: '#f97316',
+            accent: '#e11d48',
+            background: '#fff7ed',
+            surface: '#ffffff',
+            text: '#1f2937',
+            textMuted: '#6b7280',
+            heading: '#111827',
+            border: '#fed7aa',
+            success: '#16a34a',
+            error: '#dc2626',
+        }, {
+            id: 'ai-color-expert-test',
+            label: 'AI Test',
+            labelEs: 'Prueba IA',
+            description: 'AI palette suggestion.',
+            descriptionEs: 'Propuesta de paleta IA.',
+            strategy: 'ai-warm-test',
+        });
+
+        expect(candidate.id).toBe('ai-color-expert-test');
+        expect(validateColorSystem(candidate.system).valid).toBe(true);
+        expect(candidate.system.scores.proportionBalance).toBeGreaterThanOrEqual(55);
     });
 });

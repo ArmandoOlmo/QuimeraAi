@@ -1,6 +1,9 @@
 import type { PageSection } from '../types/ui';
 import type { PlanFeatures } from '../types/subscription';
 import type { PlatformServiceId } from '../types/serviceAvailability';
+import { FEATURE_VARIANT_PROMPT_VALUES } from './featureVariants';
+import { FOOTER_VARIANT_PROMPT_VALUES } from './footerVariants';
+import { PRICING_VARIANT_PROMPT_VALUES } from './pricingVariants';
 
 export type ComponentRole =
     | 'hero'
@@ -166,8 +169,9 @@ export const componentRegistry: ComponentRegistryItem[] = [
             { path: 'features.items.0.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
             { path: 'features.items.1.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
             { path: 'features.items.2.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
+            { path: 'features.items.3.imageUrl', aspectRatio: '4:3', purpose: 'feature card image' },
         ],
-        promptHints: 'Benefits and differentiators. Use bento, image-overlay, or editorial-mosaic variants when visuals matter or the page needs a premium magazine-style proof wall.',
+        promptHints: `Benefits and differentiators. Generate at least 4 items with title, description, icon, optional eyebrow/bullets, and imageUrl. Valid featuresVariant values: ${FEATURE_VARIANT_PROMPT_VALUES}. Use image-led variants when visuals matter and icon/list variants for compact proof.`,
     },
     { id: 'services', label: 'Services', role: 'offer', industries: ['all'], goals: ['leads', 'authority'], promptHints: 'Concrete services or offers. Use real service names from the brief or imported site.' },
     {
@@ -179,7 +183,7 @@ export const componentRegistry: ComponentRegistryItem[] = [
         imageSlots: [{ path: 'testimonials.items.0.imageUrl', aspectRatio: '1:1', purpose: 'customer portrait' }],
         promptHints: 'Social proof. Use specific customer outcomes when available. Use editorial-mosaic for premium, visual, press-like, or portrait-backed testimonial walls.',
     },
-    { id: 'pricing', label: 'Pricing', role: 'conversion', industries: ['technology', 'consulting', 'fitness-gym', 'education', 'beauty-spa'], goals: ['sales', 'leads'], promptHints: 'Pricing tiers or packages. Use only if pricing or package structure makes sense.' },
+    { id: 'pricing', label: 'Pricing', role: 'conversion', industries: ['technology', 'consulting', 'fitness-gym', 'education', 'beauty-spa', 'finance', 'retail'], goals: ['sales', 'leads'], promptHints: `Pricing tiers or packages. Use only if pricing or package structure makes sense. Valid pricingVariant values: ${PRICING_VARIANT_PROMPT_VALUES}. Prefer finance-comparison for loans/financing, subscription-shop for product subscriptions, workflow-rows for service packages, and SaaS card variants for software plans.` },
     { id: 'faq', label: 'FAQ', role: 'trust', industries: ['all'], goals: ['authority', 'leads', 'sales'], promptHints: 'Objection handling and buyer questions. Use specific industry questions.' },
     { id: 'cta', label: 'CTA', role: 'conversion', industries: ['all'], goals: ['leads', 'bookings', 'sales'], promptHints: 'Strong conversion section with primary and secondary CTA.' },
     {
@@ -194,6 +198,21 @@ export const componentRegistry: ComponentRegistryItem[] = [
             { path: 'portfolio.items.2.imageUrl', aspectRatio: '4:3', purpose: 'portfolio project image' },
         ],
         promptHints: 'Project/work showcase. Use when proof of work matters.',
+    },
+    {
+        id: 'showcase',
+        label: 'Showcase',
+        role: 'media',
+        industries: ['all', 'portfolio', 'agency', 'creative-studio', 'ecommerce', 'restaurant', 'fashion', 'architecture', 'technology', 'education', 'media'],
+        goals: ['portfolio', 'authority', 'sales'],
+        imageSlots: [
+            { path: 'showcase.items.0.imageUrl', aspectRatio: '4:3', purpose: 'featured showcase image' },
+            { path: 'showcase.items.1.imageUrl', aspectRatio: '4:3', purpose: 'showcase grid image' },
+            { path: 'showcase.items.2.imageUrl', aspectRatio: '4:3', purpose: 'showcase grid image' },
+            { path: 'showcase.items.3.imageUrl', aspectRatio: '4:3', purpose: 'showcase grid image' },
+            { path: 'showcase.items.4.imageUrl', aspectRatio: '4:5', purpose: 'editorial showcase image' },
+        ],
+        promptHints: 'Curated visual showcase inspired by editorial indexes, product rows, case-study grids, vertical strips, and dark carousels. Use variants featured-device, curated-row, editorial-stack, vertical-strips, dark-carousel, minimal-index, case-grid-dark, or recent-work when the site needs image-led proof beyond a simple portfolio.',
     },
     {
         id: 'team',
@@ -264,6 +283,7 @@ export const componentRegistry: ComponentRegistryItem[] = [
     { id: 'productGrid', label: 'Product Grid', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Catalog product grid section. Requires ecommerce service and plan access.' },
     { id: 'cart', label: 'Cart', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Cart page section. Requires ecommerce service and plan access.' },
     { id: 'checkout', label: 'Checkout', role: 'ecommerce', industries: ['ecommerce', 'retail'], goals: ['sales'], ...ECOMMERCE_SERVICE, promptHints: 'Checkout page section. Requires ecommerce service and plan access.' },
+    { id: 'footer', label: 'Footer', role: 'structure', industries: ['all'], goals: ['leads', 'bookings', 'sales', 'authority', 'portfolio', 'restaurant', 'real-estate'], promptHints: `Required global footer. Valid footerVariant values: ${FOOTER_VARIANT_PROMPT_VALUES}. Use brand-rich variants for product/creative sites, compliance-wordmark or press-landscape for legal/finance/regulated brands, cta-card or grid-newsletter for conversion, and social-directory for communities.` },
     { id: 'propertyDirectory', label: 'Property Directory', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], ...REAL_ESTATE_SERVICE, promptHints: 'Real estate public directory page. Requires Realty service and plan access.' },
     { id: 'propertyDetail', label: 'Property Detail', role: 'industry', industries: ['real-estate'], goals: ['real-estate', 'leads'], ...REAL_ESTATE_SERVICE, promptHints: 'Real estate property detail page. Requires Realty service and plan access.' },
     { id: 'articleContent', label: 'Article Content', role: 'media', industries: ['education', 'media', 'technology', 'consulting'], goals: ['authority'], ...CMS_SERVICE, promptHints: 'Article content page section. Requires CMS service and plan access.' },

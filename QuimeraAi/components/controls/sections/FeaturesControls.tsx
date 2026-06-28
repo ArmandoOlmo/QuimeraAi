@@ -16,6 +16,13 @@ import {
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import { BackgroundImageControl, CornerGradientControl, CardGlowControl, extractVideoId, ControlsDeps } from '../ControlsShared';
 import {
+  ACTIVE_FEATURE_VARIANTS,
+  FEATURE_VARIANT_GROUPS,
+  IMAGE_LED_FEATURE_VARIANTS,
+  getFeatureVariantMeta,
+  type FeatureVariant,
+} from '../../../data/featureVariants';
+import {
   Trash2, Plus, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, HelpCircle,
   Layout, Image, List, Star, PlaySquare, Users, DollarSign, Eye,
   Briefcase, MessageCircle, Mail, Send, Type, MousePointerClick,
@@ -51,12 +58,56 @@ const applyFeaturesEditorialMosaicDefaults = (data: any, setNestedData: Controls
   });
 };
 
+const applyFeatureVariantDefaults = (variant: FeatureVariant, data: any, setNestedData: ControlsDeps['setNestedData']) => {
+  if (variant === 'editorial-mosaic') {
+    applyFeaturesEditorialMosaicDefaults(data, setNestedData);
+    return;
+  }
+
+  const currentFeatures = data?.features || {};
+  const meta = getFeatureVariantMeta(variant);
+  setNestedData('features', {
+    ...currentFeatures,
+    featuresVariant: variant,
+    gridColumns: meta.recommendedColumns,
+    imageHeight: meta.recommendedImageHeight,
+    showSectionHeader: currentFeatures.showSectionHeader ?? true,
+  });
+};
+
+const featureVariantDescription = (variant: string) => (
+  ACTIVE_FEATURE_VARIANTS.find(item => item.value === variant)?.description || ''
+);
+
+const variantUsesImageControls = (variant: string) => (
+  IMAGE_LED_FEATURE_VARIANTS.includes(variant as FeatureVariant)
+  || ['classic', 'bento-overlay', 'image-overlay', 'neon-glow', 'press-release'].includes(variant)
+);
+
+const variantUsesIconControls = (variant: string) => (
+  ['strategy-cards', 'icon-columns', 'split-list', 'dark-capability-grid'].includes(variant)
+);
+
+const variantUsesBullets = (variant: string) => (
+  variant === 'checklist-cards'
+);
+
+const getFeatureGlowDefaults = (featureData: any) => {
+  const featureColors = featureData?.colors || {};
+  return {
+    color: featureData?.cardGlow?.color || featureColors.glowColor || featureColors.accent || featureColors.heading || '#4f46e5',
+    gradientStart: featureData?.cardGlow?.gradientStart || featureColors.cardGradientStart || featureColors.cardBackground || featureColors.background || '#111827',
+    gradientEnd: featureData?.cardGlow?.gradientEnd || featureColors.cardGradientEnd || featureColors.background || featureColors.cardBackground || '#020617',
+  };
+};
+
 export const renderFeaturesControls = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.features) return null;
 
   // Get current variant from data, fallback to classic
   const currentVariant = (data.features as any).featuresVariant || 'classic';
+  const glowDefaults = getFeatureGlowDefaults(data.features);
 
   return (
     <div className="space-y-4">
@@ -66,62 +117,16 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <I18nTextArea label={t('editor.controls.common.description')} value={data.features.description} onChange={(val) => setNestedData('features.description', val)} rows={2} />
       <FontSizeSelector label={`${t('editor.controls.common.description')} ${t('editor.controls.common.size')}`} value={data.features.descriptionFontSize || 'md'} onChange={(v) => setNestedData('features.descriptionFontSize', v)} />
 
-      <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.sectionStyle')}</label>
-      <div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-q-bg p-1 rounded-md border border-q-border">
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'classic')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'classic' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            {t('editor.controls.hero.classic')}
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'modern')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'modern' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            {t('editor.controls.features.bento')}
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-premium')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-premium' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            {t('editor.controls.features.premium')}
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'bento-overlay')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'bento-overlay' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            B. Overlay
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'image-overlay')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'image-overlay' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            {t('editor.controls.features.overlay')}
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'neon-glow')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'neon-glow' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            Neon Glow
-          </button>
-          <button type="button"             onClick={() => setNestedData('features.featuresVariant', 'press-release')}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'press-release' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            Press Release
-          </button>
-          <button type="button"             onClick={() => applyFeaturesEditorialMosaicDefaults(data, setNestedData)}
-            className={`py-1 text-xs font-medium rounded-sm transition-colors ${currentVariant === 'editorial-mosaic' ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}
-          >
-            {t('editor.controls.features.editorialMosaic')}
-          </button>
-        </div>
-        <p className="text-xs text-q-text-secondary mt-2">
-          {currentVariant === 'classic'
-            ? t('editor.controls.features.descClassic')
-            : currentVariant === 'modern'
-              ? t('editor.controls.features.descBento')
-              : currentVariant === 'bento-premium'
-                ? t('editor.controls.features.descPremium')
-                : currentVariant === 'bento-overlay'
-                  ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
-                  : currentVariant === 'editorial-mosaic'
-                    ? t('editor.controls.features.descEditorialMosaic')
-                    : t('editor.controls.features.descOverlay')}
+      <div className="bg-q-surface/50 p-3 rounded-lg border border-q-border">
+        <Select
+          label={t('editor.controls.features.styleVariant')}
+          value={currentVariant}
+          onChange={(v) => applyFeatureVariantDefaults(v as FeatureVariant, data, setNestedData)}
+          groups={FEATURE_VARIANT_GROUPS}
+          noMargin
+        />
+        <p className="text-[11px] text-q-text-secondary mt-2">
+          {featureVariantDescription(currentVariant)}
         </p>
       </div>
 
@@ -169,11 +174,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {currentVariant === 'neon-glow' && (
         <CardGlowControl
           enabled={data.features.cardGlow?.enabled !== false}
-          color={data.features.cardGlow?.color || '#144CCD'}
+          color={glowDefaults.color}
           intensity={data.features.cardGlow?.intensity ?? 100}
           borderRadius={data.features.cardGlow?.borderRadius ?? 80}
-          gradientStart={data.features.cardGlow?.gradientStart || '#0A0909'}
-          gradientEnd={data.features.cardGlow?.gradientEnd || '#09101F'}
+          gradientStart={glowDefaults.gradientStart}
+          gradientEnd={glowDefaults.gradientEnd}
           onEnabledChange={(v) => setNestedData('features.cardGlow.enabled', v)}
           onColorChange={(v) => setNestedData('features.cardGlow.color', v)}
           onIntensityChange={(v) => setNestedData('features.cardGlow.intensity', v)}
@@ -242,6 +247,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.title')}`} value={(data.features.colors as any)?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
       <ColorControl label={`${t('editor.controls.features.cardImage')} ${t('editor.controls.common.text')}`} value={(data.features.colors as any)?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
       <ColorControl label={t('editor.controls.hero.borderColor')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
+      <ColorControl label="Glow" value={(data.features.colors as any)?.glowColor || data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.glowColor', v)} />
+      <ColorControl label="Gradient Start" value={(data.features.colors as any)?.cardGradientStart || data.features.colors?.cardBackground || '#111827'} onChange={(v) => setNestedData('features.colors.cardGradientStart', v)} />
+      <ColorControl label="Gradient End" value={(data.features.colors as any)?.cardGradientEnd || data.features.colors?.background || '#020617'} onChange={(v) => setNestedData('features.colors.cardGradientEnd', v)} />
+      <ColorControl label="Overlay Text" value={(data.features.colors as any)?.overlayText || (data.features.colors as any)?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.overlayText', v)} />
+      <ColorControl label="Overlay Muted" value={(data.features.colors as any)?.overlayMuted || (data.features.colors as any)?.cardText || '#cbd5e1'} onChange={(v) => setNestedData('features.colors.overlayMuted', v)} />
       <div className="mb-3 mt-3">
         <SliderControl
           label="Border Thickness"
@@ -262,15 +272,17 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.features.featureList')}</label>
       {(data.features.items || []).map((item, index) => (
         <div key={index} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 group">
-          <ImagePicker
-            label={`${t('editor.controls.features.feature')} #${index + 1}`}
-            value={item.imageUrl}
-            onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
-            onRemove={() => {
-              const newItems = data.features.items.filter((_, i) => i !== index);
-              setNestedData('features.items', newItems);
-            }}
-          />
+          {variantUsesImageControls(currentVariant) && (
+            <ImagePicker
+              label={`${t('editor.controls.features.feature')} #${index + 1}`}
+              value={item.imageUrl}
+              onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
+              onRemove={() => {
+                const newItems = data.features.items.filter((_, i) => i !== index);
+                setNestedData('features.items', newItems);
+              }}
+            />
+          )}
           <I18nInput
             placeholder="Title"
             value={item.title}
@@ -284,10 +296,34 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             rows={2}
             className="mb-2"
           />
+          {variantUsesIconControls(currentVariant) && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <IconSelector
+                label="Icon"
+                value={(item as any).icon || 'sparkles'}
+                onChange={(icon) => setNestedData(`features.items.${index}.icon`, icon)}
+                size="sm"
+              />
+              <I18nInput
+                placeholder="Eyebrow"
+                value={(item as any).eyebrow || ''}
+                onChange={(val) => setNestedData(`features.items.${index}.eyebrow`, val)}
+              />
+            </div>
+          )}
+          {variantUsesBullets(currentVariant) && (
+            <TextArea
+              placeholder="Bullets, one per line"
+              value={Array.isArray((item as any).bullets) ? (item as any).bullets.join('\n') : ''}
+              onChange={(event) => setNestedData(`features.items.${index}.bullets`, event.target.value.split('\n').map(line => line.trim()).filter(Boolean))}
+              rows={3}
+              className="mb-2"
+            />
+          )}
         </div>
       ))}
       <button type="button"         onClick={() => {
-          setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
+          setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', icon: 'sparkles', eyebrow: '', bullets: [], imageUrl: '' }]);
         }}
         className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
       >
@@ -304,6 +340,7 @@ export const renderFeaturesControlsWithTabs = (deps: ControlsDeps) => {
 const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFavicon, menus, categories, navigate, uploadImageAndGetURL, faviconInputRef, isUploadingFavicon, setIsUploadingFavicon, heroProducts, heroCategories, isLoadingHeroProducts, heroProductSearch, setHeroProductSearch, showHeroImagePicker, setShowHeroImagePicker, showHeroPrimaryProductPicker, setShowHeroPrimaryProductPicker, showHeroSecondaryProductPicker, setShowHeroSecondaryProductPicker, showHeroPrimaryCollectionPicker, setShowHeroPrimaryCollectionPicker, showHeroSecondaryCollectionPicker, setShowHeroSecondaryCollectionPicker, heroPrimaryLinkType, setHeroPrimaryLinkType, heroSecondaryLinkType, setHeroSecondaryLinkType, isGeocoding, setIsGeocoding, geocodeError, setGeocodeError, componentStyles, renderListSectionControls } = deps;
   if (!data?.features) return null;
   const currentVariant = (data.features as any).featuresVariant || 'classic';
+  const glowDefaults = getFeatureGlowDefaults(data.features);
 
   const contentTab = (
     <div className="space-y-4">
@@ -350,11 +387,37 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               rows={2}
               className="mb-2"
             />
-            <ImagePicker
-              label={t('editor.controls.common.image')}
-              value={item.imageUrl}
-              onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
-            />
+            {variantUsesIconControls(currentVariant) && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <IconSelector
+                  label="Icon"
+                  value={(item as any).icon || 'sparkles'}
+                  onChange={(icon) => setNestedData(`features.items.${index}.icon`, icon)}
+                  size="sm"
+                />
+                <I18nInput
+                  placeholder="Eyebrow"
+                  value={(item as any).eyebrow || ''}
+                  onChange={(val) => setNestedData(`features.items.${index}.eyebrow`, val)}
+                />
+              </div>
+            )}
+            {variantUsesBullets(currentVariant) && (
+              <TextArea
+                placeholder="Bullets, one per line"
+                value={Array.isArray((item as any).bullets) ? (item as any).bullets.join('\n') : ''}
+                onChange={(event) => setNestedData(`features.items.${index}.bullets`, event.target.value.split('\n').map(line => line.trim()).filter(Boolean))}
+                rows={3}
+                className="mb-2"
+              />
+            )}
+            {variantUsesImageControls(currentVariant) && (
+              <ImagePicker
+                label={t('editor.controls.common.image')}
+                value={item.imageUrl}
+                onChange={(url) => setNestedData(`features.items.${index}.imageUrl`, url)}
+              />
+            )}
 
             {/* Link Controls */}
             <div className="mt-3 pt-3 border-t border-q-border/50">
@@ -437,7 +500,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         ))}
         <button type="button"           onClick={() => {
-            setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', imageUrl: '' }]);
+            setNestedData('features.items', [...(data.features.items || []), { title: '', description: '', icon: 'sparkles', eyebrow: '', bullets: [], imageUrl: '' }]);
           }}
           className="w-full py-2 border border-dashed border-q-border rounded-lg text-q-text-secondary hover:text-q-accent hover:border-q-accent transition-all flex items-center justify-center gap-2 text-sm font-medium"
         >
@@ -459,41 +522,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <Select
             label={t('editor.controls.features.styleVariant')}
             value={currentVariant}
-            onChange={(v) => {
-              if (v === 'editorial-mosaic') {
-                applyFeaturesEditorialMosaicDefaults(data, setNestedData);
-                return;
-              }
-              setNestedData('features.featuresVariant', v);
-              if (v === 'image-overlay') {
-                setNestedData('features.gridColumns', 4);
-              }
-            }}
-            options={[
-              { value: 'classic', label: 'Classic (Grid Uniforme)' },
-              { value: 'modern', label: 'Modern (Bento Asimétrico)' },
-              { value: 'bento-premium', label: 'Premium (Bento Destacado)' },
-              { value: 'bento-overlay', label: 'Bento Overlay (Imágenes + Texto)' },
-              { value: 'image-overlay', label: 'Overlay (Tarjetas Completas)' },
-              { value: 'neon-glow', label: 'Neon Glow (Resplandor Interior)' },
-              { value: 'press-release', label: 'Press Release (Curvas Dinámicas)' },
-              { value: 'editorial-mosaic', label: t('editor.controls.features.editorialMosaic') }
-            ]}
+            onChange={(v) => applyFeatureVariantDefaults(v as FeatureVariant, data, setNestedData)}
+            groups={FEATURE_VARIANT_GROUPS}
           />
           <p className="text-xs text-q-text-secondary mt-2">
-            {currentVariant === 'classic'
-              ? t('editor.controls.features.descClassic', '📦 Layout de cuadrícula tradicional')
-              : currentVariant === 'modern'
-                ? t('editor.controls.features.descBento', '✨ Layout moderno bento asimétrico')
-                : currentVariant === 'bento-premium'
-                  ? t('editor.controls.features.descPremium', '🎯 Bento premium con primera tarjeta destacada')
-                  : currentVariant === 'bento-overlay'
-                    ? '🎭 Bento layout con imágenes full-bleed y texto overlay'
-                    : currentVariant === 'press-release'
-                      ? '📰 Tarjetas de prensa con bordes curvos dinámicos'
-                      : currentVariant === 'editorial-mosaic'
-                        ? t('editor.controls.features.descEditorialMosaic', 'Editorial mosaic with photo cards and text tiles')
-                        : t('editor.controls.features.descOverlay', '🖼️ Imágenes completas con texto superpuesto')}
+            {featureVariantDescription(currentVariant)}
           </p>
         </div>
 
@@ -516,11 +549,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-3">
             <CardGlowControl
               enabled={data.features.cardGlow?.enabled !== false}
-              color={data.features.cardGlow?.color || '#144CCD'}
+              color={glowDefaults.color}
               intensity={data.features.cardGlow?.intensity ?? 100}
               borderRadius={data.features.cardGlow?.borderRadius ?? 80}
-              gradientStart={data.features.cardGlow?.gradientStart || '#0A0909'}
-              gradientEnd={data.features.cardGlow?.gradientEnd || '#09101F'}
+              gradientStart={glowDefaults.gradientStart}
+              gradientEnd={glowDefaults.gradientEnd}
               onEnabledChange={(v) => setNestedData('features.cardGlow.enabled', v)}
               onColorChange={(v) => setNestedData('features.cardGlow.color', v)}
               onIntensityChange={(v) => setNestedData('features.cardGlow.intensity', v)}
@@ -582,7 +615,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       </div>
 
       {/* Grid Layout */}
-      {currentVariant !== 'cinematic-gym' && (
+      {currentVariant !== 'cinematic-gym' && currentVariant !== 'metrics-panel' && currentVariant !== 'app-showcase' && (
         <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
           <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
             <Grid size={14} />
@@ -603,7 +636,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       )}
 
       {/* Card Image */}
-      {currentVariant !== 'modern' && currentVariant !== 'bento-premium' && currentVariant !== 'cinematic-gym' && (
+      {variantUsesImageControls(currentVariant) && currentVariant !== 'modern' && currentVariant !== 'bento-premium' && currentVariant !== 'cinematic-gym' && (
         <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
           <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
             <Image size={14} />
@@ -664,6 +697,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <ColorControl label={t('controls.cardTitle')} value={data.features.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.cardHeading', v)} />
         <ColorControl label={t('controls.cardText')} value={data.features.colors?.cardText || '#94a3b8'} onChange={(v) => setNestedData('features.colors.cardText', v)} />
         <ColorControl label={t('controls.border')} value={data.features.colors?.borderColor || 'transparent'} onChange={(v) => setNestedData('features.colors.borderColor', v)} />
+        <ColorControl label="Glow" value={data.features.colors?.glowColor || data.features.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('features.colors.glowColor', v)} />
+        <ColorControl label="Gradient Start" value={data.features.colors?.cardGradientStart || data.features.colors?.cardBackground || '#111827'} onChange={(v) => setNestedData('features.colors.cardGradientStart', v)} />
+        <ColorControl label="Gradient End" value={data.features.colors?.cardGradientEnd || data.features.colors?.background || '#020617'} onChange={(v) => setNestedData('features.colors.cardGradientEnd', v)} />
+        <ColorControl label="Overlay Text" value={data.features.colors?.overlayText || data.features.colors?.cardHeading || '#ffffff'} onChange={(v) => setNestedData('features.colors.overlayText', v)} />
+        <ColorControl label="Overlay Muted" value={data.features.colors?.overlayMuted || data.features.colors?.cardText || '#cbd5e1'} onChange={(v) => setNestedData('features.colors.overlayMuted', v)} />
         <div className="mt-3">
           <SliderControl
             label="Border Thickness"

@@ -33,6 +33,7 @@ const SECTION_LINKS = [
     { label: 'Team', value: '/#team' },
     { label: 'FAQ', value: '/#faq' },
     { label: 'Portfolio', value: '/#portfolio' },
+    { label: 'Showcase', value: '/#showcase' },
     { label: 'Contact / Leads', value: '/#leads' },
     { label: 'Newsletter', value: '/#newsletter' },
     { label: 'Video', value: '/#video' },

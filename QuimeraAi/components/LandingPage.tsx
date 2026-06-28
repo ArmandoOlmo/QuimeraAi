@@ -37,6 +37,7 @@ import Newsletter from './Newsletter';
 import CTASection from './CTASection';
 import Footer from './Footer';
 import Portfolio from './Portfolio';
+import Showcase from './Showcase';
 import Services from './Services';
 import Team from './Team';
 import Video from './Video';
@@ -1098,6 +1099,8 @@ const LandingPageContent: React.FC = () => {
         return <CTASection {...mergedData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />;
       case 'portfolio':
         return <Portfolio {...mergedData} borderRadius={borderRadius} />;
+      case 'showcase':
+        return <Showcase {...mergedData} borderRadius={mergedData.borderRadius || borderRadius} onNavigate={handleLinkNavigation} />;
       case 'services':
         return <Services {...mergedData} borderRadius={borderRadius} />;
       case 'team':
@@ -1172,6 +1175,7 @@ const LandingPageContent: React.FC = () => {
   const mergedNewsletterData = mergeComponentData('newsletter');
   const mergedCtaData = mergeComponentData('cta');
   const mergedPortfolioData = mergeComponentData('portfolio');
+  const mergedShowcaseData = mergeComponentData('showcase');
   const mergedServicesData = mergeComponentData('services');
   const mergedTeamData = mergeComponentData('team');
   const mergedVideoData = mergeComponentData('video');
@@ -1386,6 +1390,7 @@ const LandingPageContent: React.FC = () => {
     newsletter: <SectionBackground backgroundImageUrl={mergedNewsletterData?.backgroundImageUrl} backgroundColor={mergedNewsletterData?.colors?.background} backgroundOverlayEnabled={mergedNewsletterData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedNewsletterData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedNewsletterData?.backgroundOverlayColor} backgroundPosition={mergedNewsletterData?.backgroundPosition}><Newsletter {...mergedNewsletterData} cardBorderRadius={mergedNewsletterData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedNewsletterData?.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
     cta: <SectionBackground backgroundImageUrl={mergedCtaData?.backgroundImageUrl} backgroundColor={mergedCtaData?.colors?.background} backgroundOverlayEnabled={mergedCtaData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedCtaData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedCtaData?.backgroundOverlayColor} backgroundPosition={mergedCtaData?.backgroundPosition}><CTASection {...mergedCtaData} cardBorderRadius={mergedCtaData?.cardBorderRadius || theme.cardBorderRadius} buttonBorderRadius={mergedCtaData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     portfolio: <SectionBackground backgroundImageUrl={mergedPortfolioData?.backgroundImageUrl} backgroundColor={mergedPortfolioData?.colors?.background} backgroundOverlayEnabled={mergedPortfolioData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPortfolioData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPortfolioData?.backgroundOverlayColor} backgroundPosition={mergedPortfolioData?.backgroundPosition}><Portfolio {...mergedPortfolioData} borderRadius={mergedPortfolioData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
+    showcase: <SectionBackground backgroundImageUrl={mergedShowcaseData?.backgroundImageUrl} backgroundColor={mergedShowcaseData?.colors?.background} backgroundOverlayEnabled={mergedShowcaseData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedShowcaseData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedShowcaseData?.backgroundOverlayColor} backgroundPosition={mergedShowcaseData?.backgroundPosition}><Showcase {...mergedShowcaseData} borderRadius={mergedShowcaseData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     services: <SectionBackground backgroundImageUrl={mergedServicesData?.backgroundImageUrl} backgroundColor={mergedServicesData?.colors?.background} backgroundOverlayEnabled={mergedServicesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedServicesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedServicesData?.backgroundOverlayColor} backgroundPosition={mergedServicesData?.backgroundPosition}><Services {...mergedServicesData} borderRadius={mergedServicesData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,
     team: <SectionBackground backgroundImageUrl={mergedTeamData?.backgroundImageUrl} backgroundColor={mergedTeamData?.colors?.background} backgroundOverlayEnabled={mergedTeamData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTeamData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTeamData?.backgroundOverlayColor} backgroundPosition={mergedTeamData?.backgroundPosition}><Team {...mergedTeamData} borderRadius={mergedTeamData?.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     video: <SectionBackground backgroundImageUrl={mergedVideoData?.backgroundImageUrl} backgroundColor={mergedVideoData?.colors?.background} backgroundOverlayEnabled={mergedVideoData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedVideoData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedVideoData?.backgroundOverlayColor} backgroundPosition={mergedVideoData?.backgroundPosition}><Video {...mergedVideoData} borderRadius={mergedVideoData?.borderRadius || theme.cardBorderRadius} /></SectionBackground>,

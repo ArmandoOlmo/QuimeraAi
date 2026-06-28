@@ -9,17 +9,20 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdmin } from '../../contexts/admin/AdminContext';
+import { useAuth } from '../../contexts/core/AuthContext';
 import { useProject } from '../../contexts/project/ProjectContext';
 import { FontFamily, GlobalColors, PageData } from '../../types';
-import type { ColorCandidate } from '../../types/colorSystem';
+import type { ColorBrief, ColorCandidate } from '../../types/colorSystem';
 import ColorControl from './ColorControl';
 import CoolorsImporter from './CoolorsImporter';
 import { colorPalettes, ColorPalette, getDefaultGlobalColors } from '../../data/colorPalettes';
 import { darkenColor, hexToRgba } from '../../utils/colorUtils';
-import { createColorBriefFromTheme, generateColorCandidates, toGlobalColors } from '../../utils/colorSystemEngine';
+import { createColorBriefFromTheme, createColorCandidateFromGlobalColors, generateColorCandidates, toGlobalColors, type ColorGenerationDirection } from '../../utils/colorSystemEngine';
 import { ColorExpertScores } from './ColorExpertScores';
 import { fontOptions, fontStacks, formatFontName, getFontStack, loadAllFonts, resolveFontFamily } from '../../utils/fontLoader';
-import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown } from 'lucide-react';
+import { extractTextFromResponse, generateContentViaProxy } from '../../utils/geminiProxyClient';
+import { logApiCall } from '../../services/apiLoggingService';
+import { Type, Palette, Check, Sparkles, Grid, RotateCcw, Info, Loader2, Upload, ChevronDown, Brain, Send, Shuffle } from 'lucide-react';
 import FontFamilyPicker from './FontFamilyPicker';
 import FontWeightPicker from './FontWeightPicker';
 
@@ -306,7 +309,9 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             accent: colors?.accent,
             borderColor: colors?.border,
             text: readable.backgroundText,
+            mutedText: readable.backgroundMuted,
             heading: readable.backgroundHeading,
+            description: readable.backgroundMuted,
             buttonBackground: colors?.primary,
             buttonText: readable.primaryText,
             gradientStart: colors?.primary,
@@ -314,6 +319,17 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             cardBackground: colors?.surface,
             cardText: readable.surfaceText,
             cardHeading: readable.surfaceHeading,
+            priceColor: readable.surfaceHeading,
+            checkmarkColor: colors?.accent,
+            panelBackground: readable.backgroundHeading,
+            panelText: readableTextOn(readable.backgroundHeading || colors?.primary || '#111827'),
+            surfaceAlt: colors?.surface,
+            featuredBackground: readable.backgroundHeading,
+            featuredText: readableTextOn(readable.backgroundHeading || colors?.primary || '#111827'),
+            badgeBackground: colors?.accent,
+            badgeText: readable.accentText,
+            dividerColor: colors?.border,
+            imageOverlay: colors?.background,
         },
         faq: {
             background: colors?.surface,
@@ -409,6 +425,19 @@ export const generateComponentColorMappings = (colors: GlobalColors): Record<str
             linkHover: '#ffffff',
             heading: '#ffffff',
             description: 'rgba(255, 255, 255, 0.82)',
+            accent: colors?.accent || colors?.primary,
+            mutedText: 'rgba(255, 255, 255, 0.72)',
+            panelBackground: colors?.surface,
+            panelText: readable.surfaceHeading,
+            buttonBackground: colors?.accent || colors?.primary,
+            buttonText: readableTextOn(colors?.accent || colors?.primary),
+            wordmark: colors?.accent || '#ffffff',
+            iconBackground: colors?.background,
+            inputBackground: colors?.background,
+            inputText: readable.backgroundHeading,
+            inputBorder: colors?.border,
+            legalBackground: colors?.text || '#020617',
+            imageOverlay: shellBackground,
         },
         header: {
             background: shellBackground,
@@ -788,15 +817,124 @@ export const generateHeroWaveGradientColors = (colors: GlobalColors): string[] =
     return gradientColors;
 };
 
+const COLOR_DIRECTION_OPTIONS: Array<{
+    value: ColorGenerationDirection;
+    labelKey: string;
+    fallback: string;
+}> = [
+    { value: 'auto', labelKey: 'editor.controls.globalStyles.directionAuto', fallback: 'Auto' },
+    { value: 'premium-dark', labelKey: 'editor.controls.globalStyles.directionPremiumDark', fallback: 'Premium oscuro' },
+    { value: 'warm', labelKey: 'editor.controls.globalStyles.directionWarm', fallback: 'Cálido' },
+    { value: 'cool', labelKey: 'editor.controls.globalStyles.directionCool', fallback: 'Frío' },
+    { value: 'earth', labelKey: 'editor.controls.globalStyles.directionEarth', fallback: 'Tierra' },
+    { value: 'pastel', labelKey: 'editor.controls.globalStyles.directionPastel', fallback: 'Pastel' },
+    { value: 'botanical', labelKey: 'editor.controls.globalStyles.directionBotanical', fallback: 'Botánico' },
+    { value: 'vibrant', labelKey: 'editor.controls.globalStyles.directionVibrant', fallback: 'Vibrante' },
+    { value: 'monochrome', labelKey: 'editor.controls.globalStyles.directionMonochrome', fallback: 'Monocromo' },
+];
+
+const COLOR_AREA_PROMPTS = [
+    { id: 'hero', labelKey: 'editor.controls.globalStyles.areaHero', fallback: 'Hero', prompt: 'Hero: fondo con presencia, texto muy legible y CTA visible.' },
+    { id: 'cta', labelKey: 'editor.controls.globalStyles.areaCta', fallback: 'CTA', prompt: 'CTA: botones con alto contraste y acento diferente al fondo.' },
+    { id: 'backgrounds', labelKey: 'editor.controls.globalStyles.areaBackgrounds', fallback: 'Fondos', prompt: 'Fondos: capas suaves para página, cards y secciones alternas.' },
+    { id: 'text', labelKey: 'editor.controls.globalStyles.areaText', fallback: 'Texto', prompt: 'Texto: jerarquía clara para títulos, body y texto secundario.' },
+    { id: 'commerce', labelKey: 'editor.controls.globalStyles.areaCommerce', fallback: 'Ecommerce', prompt: 'Ecommerce: precios, badges, estados y checkout con lectura rápida.' },
+];
+
+const COLOR_KEYS: Array<keyof GlobalColors> = [
+    'primary',
+    'secondary',
+    'accent',
+    'background',
+    'surface',
+    'text',
+    'textMuted',
+    'heading',
+    'border',
+    'success',
+    'error',
+];
+
+interface AiColorPaletteSuggestion {
+    label?: string;
+    labelEs?: string;
+    description?: string;
+    descriptionEs?: string;
+    colors?: Partial<GlobalColors>;
+}
+
+interface AiColorExpertResponse {
+    summary?: string;
+    direction?: ColorGenerationDirection;
+    areaNotes?: Array<{ area?: string; recommendation?: string }> | Record<string, string>;
+    palettes?: AiColorPaletteSuggestion[];
+}
+
+const cleanJsonText = (text: string): string => {
+    const trimmed = text.trim()
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+    if (trimmed.startsWith('{')) return trimmed;
+    const match = trimmed.match(/\{[\s\S]*\}/);
+    return match?.[0] || trimmed;
+};
+
+const parseAiColorExpertResponse = (text: string): AiColorExpertResponse | null => {
+    try {
+        const parsed = JSON.parse(cleanJsonText(text));
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+        return null;
+    }
+};
+
+const normalizeAiPaletteColors = (colors?: Partial<GlobalColors>): Partial<GlobalColors> => {
+    if (!colors || typeof colors !== 'object') return {};
+    const normalized: Partial<GlobalColors> = {};
+    for (const key of COLOR_KEYS) {
+        const value = colors[key];
+        if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value.trim())) {
+            normalized[key] = value.trim().toLowerCase();
+        }
+    }
+    return normalized;
+};
+
+const formatAreaNotes = (areaNotes?: AiColorExpertResponse['areaNotes']): string[] => {
+    if (!areaNotes) return [];
+    if (Array.isArray(areaNotes)) {
+        return areaNotes
+            .map(note => [note.area, note.recommendation].filter(Boolean).join(': '))
+            .filter(Boolean);
+    }
+    return Object.entries(areaNotes)
+        .map(([area, recommendation]) => `${area}: ${recommendation}`)
+        .filter(Boolean);
+};
+
+const paletteSignature = (candidate: ColorCandidate): string => COLOR_KEYS
+    .map(key => candidate.system.colors[key])
+    .join('|')
+    .toLowerCase();
+
 const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both' }) => {
     const { t } = useTranslation();
     const { updateComponentStyle } = useAdmin();
+    const { user } = useAuth();
     const { theme, setTheme, data, setData, activeProject, brandIdentity, componentOrder } = useProject();
     const [activeTab, setActiveTab] = useState<Tab>('colors');
     const [selectedPaletteId, setSelectedPaletteId] = useState<string | null>(null);
     const [selectedExpertCandidateId, setSelectedExpertCandidateId] = useState<string | null>(null);
     const [expertColorCandidates, setExpertColorCandidates] = useState<ColorCandidate[]>([]);
     const [isApplying, setIsApplying] = useState(false);
+    const [isColorExpertThinking, setIsColorExpertThinking] = useState(false);
+    const [colorGenerationDirection, setColorGenerationDirection] = useState<ColorGenerationDirection>('auto');
+    const [colorGenerationVariation, setColorGenerationVariation] = useState(0);
+    const [colorExpertPrompt, setColorExpertPrompt] = useState('');
+    const [colorExpertInsight, setColorExpertInsight] = useState<string[]>([]);
+    const [colorExpertError, setColorExpertError] = useState<string | null>(null);
     const [showCoolorsImporter, setShowCoolorsImporter] = useState(false);
 
     // Website colors are the canonical palette for this project.
@@ -952,24 +1090,230 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
         }
     };
 
-    const handleGenerateExpertPalettes = () => {
-        const hasEcommerce = componentOrder.some(section => [
-            'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges',
-            'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
-            'productGrid', 'productDetail', 'cart', 'checkout',
-        ].includes(section));
-        const colorBrief = createColorBriefFromTheme({
+    const hasEcommerceComponents = () => componentOrder.some(section => [
+        'announcementBar', 'productHero', 'featuredProducts', 'categoryGrid', 'trustBadges',
+        'saleCountdown', 'collectionBanner', 'recentlyViewed', 'productReviews', 'productBundle',
+        'productGrid', 'productDetail', 'cart', 'checkout',
+    ].includes(section));
+
+    const buildColorBrief = (extraDescription = ''): ColorBrief => {
+        const description = [
+            brandIdentity?.coreValues || activeProject?.brandIdentity?.coreValues || '',
+            extraDescription,
+        ].filter(Boolean).join('\n');
+
+        return createColorBriefFromTheme({
             theme,
             industry: brandIdentity?.industry || activeProject?.brandIdentity?.industry || '',
             businessName: activeProject?.name,
-            description: brandIdentity?.coreValues || activeProject?.brandIdentity?.coreValues || '',
+            description,
             activeComponents: componentOrder,
-            hasEcommerce,
+            hasEcommerce: hasEcommerceComponents(),
         });
-        const candidates = generateColorCandidates(colorBrief);
-        setExpertColorCandidates(candidates);
-        setSelectedExpertCandidateId(candidates[0]?.id || null);
+    };
+
+    const setExpertCandidates = (candidates: ColorCandidate[], insight?: string[]) => {
+        const uniqueCandidates = Array.from(
+            new Map(candidates.map(candidate => [paletteSignature(candidate), candidate])).values()
+        );
+        setExpertColorCandidates(uniqueCandidates);
+        setSelectedExpertCandidateId(uniqueCandidates[0]?.id || null);
         setSelectedPaletteId(null);
+        if (insight) setColorExpertInsight(insight);
+    };
+
+    const handleGenerateExpertPalettes = (options: {
+        direction?: ColorGenerationDirection;
+        variation?: number;
+        extraDescription?: string;
+    } = {}) => {
+        const direction = options.direction || colorGenerationDirection;
+        const variation = options.variation ?? colorGenerationVariation;
+        const colorBrief = buildColorBrief(options.extraDescription || colorExpertPrompt);
+        const candidates = generateColorCandidates(colorBrief, { direction, variation });
+        setExpertCandidates(candidates, []);
+        setColorExpertError(null);
+    };
+
+    const handleRegenerateExpertPalettes = () => {
+        const nextVariation = colorGenerationVariation + 1;
+        setColorGenerationVariation(nextVariation);
+        handleGenerateExpertPalettes({ variation: nextVariation });
+    };
+
+    const appendColorAreaPrompt = (prompt: string) => {
+        setColorExpertPrompt(prev => {
+            const next = prev.trim() ? `${prev.trim()}\n${prompt}` : prompt;
+            return next;
+        });
+    };
+
+    const buildColorExpertBrainPrompt = (colorBrief: ColorBrief): string => {
+        const currentColors = JSON.stringify(globalColors, null, 2);
+        const projectContext = {
+            businessName: activeProject?.name || brandIdentity?.name || '',
+            industry: brandIdentity?.industry || activeProject?.brandIdentity?.industry || '',
+            targetAudience: brandIdentity?.targetAudience || activeProject?.brandIdentity?.targetAudience || '',
+            toneOfVoice: brandIdentity?.toneOfVoice || activeProject?.brandIdentity?.toneOfVoice || '',
+            coreValues: brandIdentity?.coreValues || activeProject?.brandIdentity?.coreValues || '',
+            activeComponents: componentOrder,
+            hasEcommerce: colorBrief.hasEcommerce,
+        };
+
+        return `
+You are Quimera Color Expert, a senior brand and website color-system designer.
+The user is speaking naturally about the project and about color ideas for different website areas.
+
+Project context:
+${JSON.stringify(projectContext, null, 2)}
+
+Current global color tokens:
+${currentColors}
+
+Selected local direction: ${colorGenerationDirection}
+User color idea:
+${colorExpertPrompt || 'The user wants a fresh color direction that does not repeat the current palette.'}
+
+Design goals:
+- Create color systems for a real website editor, not a moodboard.
+- Respect WCAG AA readability for text/background and text/surface.
+- Follow 60-30-10: neutral dominant layers, brand colors, one vivid accent.
+- Consider area usage: hero, CTA/buttons, backgrounds/surfaces, text hierarchy, ecommerce if present.
+- Avoid repeating the current palette. Propose clearly different color directions.
+
+Return ONLY valid JSON without markdown:
+{
+  "summary": "Short Spanish explanation of the color strategy.",
+  "direction": "auto | premium-dark | warm | cool | earth | pastel | botanical | vibrant | monochrome",
+  "areaNotes": [
+    { "area": "Hero", "recommendation": "..." },
+    { "area": "CTA", "recommendation": "..." },
+    { "area": "Fondos", "recommendation": "..." },
+    { "area": "Texto", "recommendation": "..." }
+  ],
+  "palettes": [
+    {
+      "labelEs": "Nombre corto en español",
+      "label": "Short English name",
+      "descriptionEs": "Una frase breve explicando uso por áreas.",
+      "description": "Brief English description.",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#000000",
+        "accent": "#000000",
+        "background": "#000000",
+        "surface": "#000000",
+        "text": "#000000",
+        "textMuted": "#000000",
+        "heading": "#000000",
+        "border": "#000000",
+        "success": "#16a34a",
+        "error": "#dc2626"
+      }
+    }
+  ]
+}
+
+Return 3 to 5 palettes. Every color must be a 6-digit hex value.`;
+    };
+
+    const handleAskColorExpertBrain = async () => {
+        const trimmedPrompt = colorExpertPrompt.trim();
+        if (!trimmedPrompt) {
+            handleRegenerateExpertPalettes();
+            return;
+        }
+
+        const colorBrief = buildColorBrief(trimmedPrompt);
+        const nextVariation = colorGenerationVariation + 1;
+        setIsColorExpertThinking(true);
+        setColorExpertError(null);
+        setColorGenerationVariation(nextVariation);
+
+        let modelToUse = 'gemini-2.5-flash';
+        try {
+            const response = await generateContentViaProxy(
+                activeProject?.id || 'color-expert',
+                buildColorExpertBrainPrompt(colorBrief),
+                modelToUse,
+                {
+                    temperature: 0.9,
+                    maxOutputTokens: 4096,
+                    billing: {
+                        projectId: activeProject?.id,
+                        userId: user?.id,
+                        operation: 'text_generation',
+                        description: 'Color Expert conversational palette planning',
+                    },
+                },
+                user?.id,
+            );
+            const responseText = extractTextFromResponse(response);
+            const parsed = parseAiColorExpertResponse(responseText);
+            if (!parsed) {
+                throw new Error('Color Expert brain returned invalid JSON.');
+            }
+            const aiDirection = parsed?.direction || colorGenerationDirection;
+            const aiCandidates = (parsed?.palettes || [])
+                .map((palette, index) => {
+                    const colors = normalizeAiPaletteColors(palette.colors);
+                    if (Object.keys(colors).length < 5) return null;
+                    return createColorCandidateFromGlobalColors(colorBrief, colors, {
+                        id: `ai-color-expert-${Date.now()}-${index}`,
+                        label: palette.label || palette.labelEs || `AI palette ${index + 1}`,
+                        labelEs: palette.labelEs || palette.label || `Paleta IA ${index + 1}`,
+                        description: palette.description || palette.descriptionEs || 'AI-assisted color system for this project.',
+                        descriptionEs: palette.descriptionEs || palette.description || 'Sistema de color asistido por IA para este proyecto.',
+                        strategy: `ai-${aiDirection}-${index + 1}`,
+                        sourceColors: Object.values(colors).filter((color): color is string => Boolean(color)),
+                    });
+                })
+                .filter((candidate): candidate is ColorCandidate => Boolean(candidate));
+
+            const fallbackCandidates = generateColorCandidates(colorBrief, {
+                direction: aiDirection,
+                variation: nextVariation,
+            });
+            const insight = [
+                parsed?.summary,
+                ...formatAreaNotes(parsed?.areaNotes),
+            ].filter((note): note is string => Boolean(note));
+
+            setColorGenerationDirection(aiDirection);
+            setExpertCandidates([...aiCandidates, ...fallbackCandidates].slice(0, 6), insight);
+
+            if (user) {
+                logApiCall({
+                    userId: user.id,
+                    projectId: activeProject?.id,
+                    model: modelToUse,
+                    feature: 'color-expert-brain',
+                    success: true,
+                });
+            }
+        } catch (error) {
+            const fallbackCandidates = generateColorCandidates(colorBrief, {
+                direction: colorGenerationDirection,
+                variation: nextVariation,
+            });
+            setExpertCandidates(fallbackCandidates, [
+                t('editor.controls.globalStyles.brainFallback', 'No pude leer una respuesta estructurada del cerebro. Generé una variación local usando tu idea como contexto.'),
+            ]);
+            setColorExpertError(error instanceof Error ? error.message : String(error));
+
+            if (user) {
+                logApiCall({
+                    userId: user.id,
+                    projectId: activeProject?.id,
+                    model: modelToUse,
+                    feature: 'color-expert-brain',
+                    success: false,
+                    errorMessage: error instanceof Error ? error.message : 'Unknown error',
+                });
+            }
+        } finally {
+            setIsColorExpertThinking(false);
+        }
     };
 
     const handleExpertCandidateSelect = async (candidate: ColorCandidate) => {
@@ -1167,24 +1511,108 @@ const GlobalStylesControl: React.FC<GlobalStylesControlProps> = ({ mode = 'both'
 
                     {/* Quimera Color Expert Section */}
                     <div className="order-3 rounded-lg border border-q-border bg-q-surface/30 p-3">
-                        <div className="flex items-center justify-between gap-3 mb-3">
+                        <div className="flex items-start justify-between gap-3 mb-3">
                             <div className="min-w-0">
                                 <label className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
-                                    <Sparkles size={14} />
+                                    <Brain size={14} />
                                     {t('editor.controls.globalStyles.colorExpert', 'Color Expert')}
                                 </label>
                                 <p className="mt-1 text-[11px] text-q-text-secondary">
-                                    {t('editor.controls.globalStyles.colorExpertDescription', 'Genera sistemas de color validados para este website.')}
+                                    {t('editor.controls.globalStyles.colorExpertDescription', 'Habla con el Color Expert o regenera una dirección distinta para este website.')}
                                 </p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleGenerateExpertPalettes}
-                                disabled={isApplying}
-                                className="shrink-0 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-[11px] font-medium text-q-text-secondary hover:border-q-accent/60 hover:text-q-accent disabled:opacity-50"
-                            >
-                                {t('editor.controls.globalStyles.generateExpertPalettes', 'Generar paletas expertas')}
-                            </button>
+                        </div>
+
+                        <div className="space-y-3 mb-3">
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                                <select
+                                    value={colorGenerationDirection}
+                                    onChange={(event) => {
+                                        const direction = event.target.value as ColorGenerationDirection;
+                                        setColorGenerationDirection(direction);
+                                        handleGenerateExpertPalettes({ direction });
+                                    }}
+                                    className="min-w-0 rounded-lg border border-q-border bg-q-bg px-3 py-2 text-xs text-q-text focus:border-q-accent focus:outline-none"
+                                    disabled={isApplying || isColorExpertThinking}
+                                >
+                                    {COLOR_DIRECTION_OPTIONS.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {t(option.labelKey, option.fallback)}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={handleRegenerateExpertPalettes}
+                                    disabled={isApplying || isColorExpertThinking}
+                                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-q-border bg-q-bg px-3 text-[11px] font-medium text-q-text-secondary hover:border-q-accent/60 hover:text-q-accent disabled:opacity-50"
+                                >
+                                    <Shuffle size={13} className={isApplying ? 'animate-spin' : ''} />
+                                    <span className="hidden sm:inline">{t('editor.controls.globalStyles.regenerateDifferent', 'Otro tipo')}</span>
+                                </button>
+                            </div>
+
+                            <textarea
+                                value={colorExpertPrompt}
+                                onChange={(event) => setColorExpertPrompt(event.target.value)}
+                                rows={3}
+                                className="w-full resize-none rounded-lg border border-q-border bg-q-bg p-3 text-xs leading-relaxed text-q-text placeholder:text-q-text-secondary focus:border-q-accent focus:outline-none"
+                                placeholder={t('editor.controls.globalStyles.brainPlaceholder', 'Ej: Quiero un hero premium oscuro, CTAs coral, fondos suaves y texto muy legible.')}
+                                disabled={isColorExpertThinking}
+                            />
+
+                            <div className="flex flex-wrap gap-1.5">
+                                {COLOR_AREA_PROMPTS.map(area => (
+                                    <button
+                                        key={area.id}
+                                        type="button"
+                                        onClick={() => appendColorAreaPrompt(area.prompt)}
+                                        disabled={isColorExpertThinking}
+                                        className="rounded-full border border-q-border bg-q-bg px-2.5 py-1 text-[11px] text-q-text-secondary hover:border-q-accent/60 hover:text-q-accent disabled:opacity-50"
+                                    >
+                                        {t(area.labelKey, area.fallback)}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleAskColorExpertBrain}
+                                    disabled={isApplying || isColorExpertThinking}
+                                    className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg bg-q-accent px-3 text-[11px] font-semibold text-q-bg hover:bg-q-accent/90 disabled:opacity-50"
+                                >
+                                    {isColorExpertThinking ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                    {t('editor.controls.globalStyles.askBrain', 'Hablar con experto')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleGenerateExpertPalettes()}
+                                    disabled={isApplying || isColorExpertThinking}
+                                    className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-q-border bg-q-bg px-3 text-[11px] font-medium text-q-text-secondary hover:border-q-accent/60 hover:text-q-accent disabled:opacity-50"
+                                >
+                                    <Sparkles size={14} />
+                                    {t('editor.controls.globalStyles.generateExpertPalettes', 'Generar paletas')}
+                                </button>
+                            </div>
+
+                            {colorExpertInsight.length > 0 && (
+                                <div className="rounded-lg border border-q-accent/20 bg-q-accent/10 p-2.5">
+                                    <div className="space-y-1">
+                                        {colorExpertInsight.slice(0, 5).map((note, index) => (
+                                            <p key={`${note}-${index}`} className="text-[11px] leading-relaxed text-q-accent">
+                                                {note}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {colorExpertError && (
+                                <p className="text-[11px] leading-relaxed text-q-text-secondary">
+                                    {t('editor.controls.globalStyles.brainError', 'El cerebro no pudo completar la consulta; se usó una regeneración local.')}
+                                </p>
+                            )}
                         </div>
 
                         {expertColorCandidates.length > 0 && (

@@ -6,6 +6,18 @@ import { useAdmin } from '../../../contexts/admin';
 import { useProject } from '../../../contexts/project';
 import { useTenant } from '../../../contexts/tenant';
 import { componentStyles } from '../../../data/componentStyles';
+import { ACTIVE_FEATURE_VARIANTS, getFeatureVariantMeta, type FeatureVariant } from '../../../data/featureVariants';
+import { FAQ_VARIANT_GROUPS, getFaqVariantMeta, type FaqVariant } from '../../../data/faqVariants';
+import { FOOTER_VARIANT_GROUPS, getFooterVariantMeta, type FooterVariant } from '../../../data/footerVariants';
+import { PRICING_VARIANT_GROUPS, getPricingVariantMeta, normalizePricingVariant } from '../../../data/pricingVariants';
+import {
+    HEADER_FLOATING_VARIANT_VALUES,
+    HEADER_GRADIENT_VARIANT_VALUES,
+    HEADER_SPECIAL_COLOR_VARIANT_VALUES,
+    HEADER_VARIANT_GROUPS,
+    getHeaderVariantMeta,
+    type HeaderVariant,
+} from '../../../data/headerVariants';
 import ColorControl from '../../ui/ColorControl';
 import IconSelector from '../../ui/IconSelector';
 import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palette, Clock, MapPin, Phone, Mail } from 'lucide-react';
@@ -391,8 +403,42 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
         // Asegurarse de que featuresVariant tenga un valor
         const currentVariant = (s as any).featuresVariant || 'classic';
+        const currentVariantMeta = getFeatureVariantMeta(currentVariant);
         const currentTextAlignment = (s as any).overlayTextAlignment || 'left';
         const showHeader = (s as any).showSectionHeader !== false;
+        const groupedFeatureVariants = (['Core', 'Media', 'Editorial', 'Product', 'Technical'] as const)
+            .map(group => ({
+                group,
+                options: ACTIVE_FEATURE_VARIANTS.filter(variant => variant.group === group),
+            }))
+            .filter(({ options }) => options.length > 0);
+        const applyFeatureVariant = (variant: FeatureVariant) => {
+            const meta = getFeatureVariantMeta(variant);
+            if (variant === 'editorial-mosaic') {
+                applyEditorialMosaicPreset('featuresVariant', {
+                    gridColumns: meta.recommendedColumns,
+                    imageHeight: meta.recommendedImageHeight,
+                    paddingY: 'lg',
+                    paddingX: 'md',
+                    borderRadius: 'xl',
+                    colors: {
+                        background: '#f7f1e8',
+                        heading: '#242424',
+                        description: '#2f2f2f',
+                        text: '#3f3a33',
+                        accent: '#b45d3f',
+                        cardBackground: '#ffffff',
+                        cardHeading: '#242424',
+                        cardText: '#3f3a33',
+                        borderColor: '#e5ded2',
+                    },
+                });
+                return;
+            }
+            handleStyleChange('featuresVariant', variant);
+            handleStyleChange('gridColumns', meta.recommendedColumns);
+            handleStyleChange('imageHeight', meta.recommendedImageHeight);
+        };
 
         return (
             <div className="space-y-4">
@@ -401,80 +447,24 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-2">
                         Features Style
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-2">
-                        <button
-                            onClick={() => handleStyleChange('featuresVariant', 'classic')}
-                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'classic'
-                                ? 'bg-q-accent text-q-bg border-q-accent'
-                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                }`}
-                        >
-                            Classic
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('featuresVariant', 'modern')}
-                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'modern'
-                                ? 'bg-q-accent text-q-bg border-q-accent'
-                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                }`}
-                        >
-                            Bento
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('featuresVariant', 'bento-premium')}
-                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'bento-premium'
-                                ? 'bg-q-accent text-q-bg border-q-accent'
-                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                }`}
-                        >
-                            Premium
-                        </button>
-                        <button
-                            onClick={() => handleStyleChange('featuresVariant', 'image-overlay')}
-                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'image-overlay'
-                                ? 'bg-q-accent text-q-bg border-q-accent'
-                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                }`}
-                        >
-                            Overlay
-                        </button>
-                        <button
-                            onClick={() => applyEditorialMosaicPreset('featuresVariant', {
-                                gridColumns: 4,
-                                imageHeight: 430,
-                                paddingY: 'lg',
-                                paddingX: 'md',
-                                borderRadius: 'xl',
-                                colors: {
-                                    background: '#f7f1e8',
-                                    heading: '#242424',
-                                    description: '#2f2f2f',
-                                    text: '#3f3a33',
-                                    accent: '#b45d3f',
-                                    cardBackground: '#ffffff',
-                                    cardHeading: '#242424',
-                                    cardText: '#3f3a33',
-                                    borderColor: '#e5ded2',
-                                },
-                            })}
-                            className={`px-3 py-2 rounded-md border transition-all text-sm ${currentVariant === 'editorial-mosaic'
-                                ? 'bg-q-accent text-q-bg border-q-accent'
-                                : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                }`}
-                        >
-                            {t('editor.controls.features.editorialMosaic', 'Editorial Mosaic')}
-                        </button>
-                    </div>
+                    <AppSelect
+                        value={currentVariant}
+                        onChange={(event) => applyFeatureVariant(event.target.value as FeatureVariant)}
+                        className="w-full"
+                        aria-label="Features style"
+                    >
+                        {groupedFeatureVariants.map(({ group, options }) => (
+                            <optgroup key={group} label={group}>
+                                {options.map(variant => (
+                                    <option key={variant.value} value={variant.value}>
+                                        {variant.label}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </AppSelect>
                     <p className="text-xs text-q-text-secondary mt-1">
-                        {currentVariant === 'classic'
-                            ? '📦 Traditional uniform grid layout'
-                            : currentVariant === 'modern'
-                                ? '✨ Modern asymmetrical bento grid layout'
-                                : currentVariant === 'bento-premium'
-                                    ? '🎯 Premium bento with featured first card'
-                                    : currentVariant === 'editorial-mosaic'
-                                        ? t('editor.controls.features.descEditorialMosaic', 'Editorial mosaic with photo cards and text tiles')
-                                        : '🖼️ Full-width images with text overlay'}
+                        {currentVariantMeta.description}
                     </p>
                 </div>
 
@@ -923,7 +913,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Description Color" value={s.colors?.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Description Color" value={s.colors?.description || '#cbd5e1'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
@@ -932,7 +922,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <hr className="border-q-border/50" />
                 <h4 className="font-semibold text-q-text text-sm">Card Box Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Card Background" value={s.colors?.cardBackground || 'rgba(79, 70, 229, 0.75)'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Background" value={s.colors?.cardBackground || '#4f46e5'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Border" value={s.colors?.borderColor || '#374151'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -1057,6 +1047,195 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         );
     };
 
+    const renderShowcaseControls = () => {
+        const s = styles as any;
+        const colors = (s.colors || {}) as any;
+        const variants = ['recent-work', 'featured-device', 'curated-row', 'editorial-stack', 'vertical-strips', 'dark-carousel', 'minimal-index', 'case-grid-dark'];
+
+        return (
+            <div className="space-y-4">
+                <div>
+                    <Label>Showcase Style</Label>
+                    <AppSelect
+                        value={s.showcaseVariant || 'recent-work'}
+                        onChange={(event) => handleStyleChange('showcaseVariant', event.currentTarget.value)}
+                        className="w-full"
+                        aria-label="Showcase style"
+                    >
+                        {variants.map(variant => (
+                            <option key={variant} value={variant}>{variant}</option>
+                        ))}
+                    </AppSelect>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'lg'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <FontSizeControl label="Title Size" value={s.titleFontSize || 'lg'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                    <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+                </div>
+
+                <BorderRadiusControl label="Card Border Radius" value={s.borderRadius || 'lg'} onChange={v => handleStyleChange('borderRadius', v)} />
+
+                <div>
+                    <Label>Columns</Label>
+                    <div className="flex bg-q-bg p-1 rounded-md space-x-1 border border-q-border">
+                        {[2, 3, 4, 5].map(cols => (
+                            <button key={cols} onClick={() => handleStyleChange('gridColumns', cols)} className={`flex-1 text-center px-3 py-1 text-sm font-semibold rounded-sm transition-colors ${s.gridColumns === cols ? 'bg-q-accent text-q-bg' : 'text-q-text-secondary hover:bg-q-surface-overlay'}`}>
+                                {cols}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <div className="flex justify-between items-center">
+                        <Label>Image Height</Label>
+                        <span className="text-sm font-medium text-q-text">{s.imageHeight || 340}px</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="180"
+                        max="720"
+                        step="10"
+                        value={s.imageHeight || 340}
+                        onChange={event => handleStyleChange('imageHeight', parseInt(event.target.value, 10))}
+                        className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
+                    />
+                </div>
+
+                <ObjectFitControl value={s.imageObjectFit || 'cover'} onChange={value => handleStyleChange('imageObjectFit', value)} />
+
+                <div className="space-y-3">
+                    <ToggleControl label="Show Section Header" checked={s.showSectionHeader !== false} onChange={value => handleStyleChange('showSectionHeader', value)} />
+                    <ToggleControl label="Show Filters" checked={s.showFilters !== false} onChange={value => handleStyleChange('showFilters', value)} />
+                    <ToggleControl label="Show Meta Labels" checked={s.showMeta !== false} onChange={value => handleStyleChange('showMeta', value)} />
+                    <ToggleControl label="Floating CTA" checked={s.showFloatingCta === true} onChange={value => handleStyleChange('showFloatingCta', value)} />
+                </div>
+
+                <hr className="border-q-border/50" />
+
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#0f172a'} onChange={value => handleColorChange('background', value)} />
+                    <ColorControl label="Heading" value={colors.heading || '#f8fafc'} onChange={value => handleColorChange('heading', value)} />
+                    <ColorControl label="Text" value={colors.text || '#cbd5e1'} onChange={value => handleColorChange('text', value)} />
+                    <ColorControl label="Description" value={colors.description || '#94a3b8'} onChange={value => handleColorChange('description', value)} />
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={value => handleColorChange('accent', value)} />
+                    <ColorControl label="Card Background" value={colors.cardBackground || '#111827'} onChange={value => handleColorChange('cardBackground', value)} />
+                    <ColorControl label="Card Heading" value={colors.cardHeading || '#f8fafc'} onChange={value => handleColorChange('cardHeading', value)} />
+                    <ColorControl label="Card Text" value={colors.cardText || '#cbd5e1'} onChange={value => handleColorChange('cardText', value)} />
+                    <ColorControl label="Pill Background" value={colors.pillBackground || '#ffffff'} onChange={value => handleColorChange('pillBackground', value)} />
+                    <ColorControl label="Pill Text" value={colors.pillText || '#111827'} onChange={value => handleColorChange('pillText', value)} />
+                    <ColorControl label="Overlay End" value={colors.overlayEnd || 'rgba(0,0,0,0.72)'} onChange={value => handleColorChange('overlayEnd', value)} />
+                    <ColorControl label="Button Background" value={colors.buttonBackground || '#f8fafc'} onChange={value => handleColorChange('buttonBackground', value)} />
+                </div>
+            </div>
+        );
+    };
+
+    const renderPricingControls = () => {
+        const s = styles as any;
+        const colors = (s.colors || {}) as any;
+        const currentVariant = normalizePricingVariant(s.pricingVariant);
+        const currentVariantMeta = getPricingVariantMeta(currentVariant);
+
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                    <Layout size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Pricing Layout</h4>
+                </div>
+                <div>
+                    <Label>Style Variant</Label>
+                    <select
+                        value={currentVariant}
+                        onChange={(event) => handleStyleChange('pricingVariant', event.currentTarget.value)}
+                        className="w-full rounded-lg border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                    >
+                        {PRICING_VARIANT_GROUPS.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                                {group.options.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
+                    <p className="mt-2 text-xs leading-relaxed text-q-text-secondary">{currentVariantMeta.description}</p>
+                </div>
+
+                <div>
+                    <Label>Cards Alignment</Label>
+                    <select
+                        value={s.cardsAlignment || 'center'}
+                        onChange={(event) => handleStyleChange('cardsAlignment', event.currentTarget.value)}
+                        className="w-full rounded-lg border border-q-border bg-q-bg px-3 py-2 text-sm text-q-text focus:outline-none focus:ring-2 focus:ring-q-accent/40"
+                    >
+                        <option value="start">Left</option>
+                        <option value="center">Center</option>
+                        <option value="end">Right</option>
+                    </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
+                    <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
+                </div>
+
+                <BorderRadiusControl
+                    label="Card Radius"
+                    value={s.cardBorderRadius || 'xl'}
+                    onChange={(v) => handleStyleChange('cardBorderRadius', v)}
+                />
+
+                <hr className="border-q-border/50" />
+
+                <div className="flex items-center space-x-2">
+                    <Type size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Typography</h4>
+                </div>
+                <FontSizeControl label="Title Size" value={s.titleFontSize || 'md'} onChange={v => handleStyleChange('titleFontSize', v)} />
+                <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
+
+                <hr className="border-q-border/50" />
+
+                <div className="flex items-center space-x-2">
+                    <Palette size={16} className="text-q-accent" />
+                    <h4 className="font-semibold text-q-text">Colors</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Background" value={colors.background || '#ffffff'} onChange={v => handleColorChange('background', v)} />
+                    <ColorControl label="Heading" value={colors.heading || '#111827'} onChange={v => handleColorChange('heading', v)} />
+                    <ColorControl label="Description" value={colors.description || colors.text || '#4b5563'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Text" value={colors.text || '#111827'} onChange={v => handleColorChange('text', v)} />
+                    <ColorControl label="Muted Text" value={colors.mutedText || colors.cardText || '#6b7280'} onChange={v => handleColorChange('mutedText', v)} />
+                    <ColorControl label="Accent" value={colors.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Card Background" value={colors.cardBackground || '#ffffff'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Heading" value={colors.cardHeading || colors.heading || '#111827'} onChange={v => handleColorChange('cardHeading', v)} />
+                    <ColorControl label="Card Text" value={colors.cardText || '#6b7280'} onChange={v => handleColorChange('cardText', v)} />
+                    <ColorControl label="Price" value={colors.priceColor || colors.heading || '#111827'} onChange={v => handleColorChange('priceColor', v)} />
+                    <ColorControl label="Border" value={colors.borderColor || '#e5e7eb'} onChange={v => handleColorChange('borderColor', v)} />
+                    <ColorControl label="Divider" value={colors.dividerColor || colors.borderColor || '#e5e7eb'} onChange={v => handleColorChange('dividerColor', v)} />
+                    <ColorControl label="Button Background" value={colors.buttonBackground || colors.accent || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
+                    <ColorControl label="Button Text" value={colors.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
+                    <ColorControl label="Checkmark" value={colors.checkmarkColor || colors.accent || '#10b981'} onChange={v => handleColorChange('checkmarkColor', v)} />
+                    <ColorControl label="Panel Background" value={colors.panelBackground || '#111827'} onChange={v => handleColorChange('panelBackground', v)} />
+                    <ColorControl label="Panel Text" value={colors.panelText || '#ffffff'} onChange={v => handleColorChange('panelText', v)} />
+                    <ColorControl label="Surface Alt" value={colors.surfaceAlt || '#f3f4f6'} onChange={v => handleColorChange('surfaceAlt', v)} />
+                    <ColorControl label="Featured Background" value={colors.featuredBackground || colors.accent || '#111827'} onChange={v => handleColorChange('featuredBackground', v)} />
+                    <ColorControl label="Featured Text" value={colors.featuredText || '#ffffff'} onChange={v => handleColorChange('featuredText', v)} />
+                    <ColorControl label="Badge Background" value={colors.badgeBackground || colors.accent || '#4f46e5'} onChange={v => handleColorChange('badgeBackground', v)} />
+                    <ColorControl label="Badge Text" value={colors.badgeText || '#ffffff'} onChange={v => handleColorChange('badgeText', v)} />
+                    <ColorControl label="Gradient Start" value={colors.gradientStart || '#4f46e5'} onChange={v => handleColorChange('gradientStart', v)} />
+                    <ColorControl label="Gradient End" value={colors.gradientEnd || '#10b981'} onChange={v => handleColorChange('gradientEnd', v)} />
+                    <ColorControl label="Image Overlay" value={colors.imageOverlay || '#000000'} onChange={v => handleColorChange('imageOverlay', v)} />
+                </div>
+            </div>
+        );
+    };
+
     const renderCtaControls = () => {
         const ctaStyles = styles as typeof componentStyles['cta'];
         const colors = (ctaStyles.colors || {}) as any;
@@ -1094,7 +1273,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Heading Color" value={colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Description Color" value={colors?.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Description Color" value={colors?.description || '#cbd5e1'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Gradient Start" value={colors?.gradientStart || '#0000ff'} onChange={v => handleColorChange('gradientStart', v)} />
@@ -1113,6 +1292,8 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
         // Check subscription plan
         const plan = currentTenant?.subscriptionPlan || 'free';
         const canRemoveBranding = ['individual', 'agency_starter', 'agency_pro', 'agency_scale', 'enterprise'].includes(plan);
+        const currentVariant = ((s as any).footerVariant || 'classic') as FooterVariant;
+        const currentMeta = getFooterVariantMeta(currentVariant);
 
         // Helper to update contact info fields
         const handleContactInfoChange = (field: string, value: any) => {
@@ -1166,6 +1347,27 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
         return (
             <div className="space-y-4">
+                <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+                    <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
+                        <Layout size={14} />
+                        Footer Style
+                    </h4>
+                    <AppSelect
+                        value={currentVariant}
+                        onChange={(event) => handleStyleChange('footerVariant', event.currentTarget.value as FooterVariant)}
+                        aria-label="Footer style"
+                    >
+                        {FOOTER_VARIANT_GROUPS.map(group => (
+                            <optgroup key={group.label} label={group.label}>
+                                {group.options.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </AppSelect>
+                    <p className="text-xs text-q-text-secondary mt-2">{currentMeta.description}</p>
+                </div>
+
                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                     <h4 className="font-semibold text-q-text mb-3 flex items-center gap-2">
                         <Layout size={14} />
@@ -1387,6 +1589,22 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Link Hover" value={colors?.linkHover || '#aaaaaa'} onChange={v => handleColorChange('linkHover', v)} />
                     <ColorControl label="Border" value={colors?.border || 'transparent'} onChange={v => handleColorChange('border', v)} />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Accent" value={colors?.accent || colors?.linkHover || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
+                    <ColorControl label="Wordmark" value={colors?.wordmark || colors?.heading || '#ffffff'} onChange={v => handleColorChange('wordmark', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Panel Background" value={colors?.panelBackground || colors?.background || '#0f172a'} onChange={v => handleColorChange('panelBackground', v)} />
+                    <ColorControl label="Panel Text" value={colors?.panelText || colors?.heading || '#ffffff'} onChange={v => handleColorChange('panelText', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Button Background" value={colors?.buttonBackground || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('buttonBackground', v)} />
+                    <ColorControl label="Button Text" value={colors?.buttonText || '#ffffff'} onChange={v => handleColorChange('buttonText', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Input Background" value={colors?.inputBackground || '#ffffff'} onChange={v => handleColorChange('inputBackground', v)} />
+                    <ColorControl label="Legal Background" value={colors?.legalBackground || colors?.background || '#020617'} onChange={v => handleColorChange('legalBackground', v)} />
+                </div>
             </div>
         );
     };
@@ -1394,6 +1612,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderHeaderControls = () => {
         const s = styles as any;
         const colors = (s.colors || {}) as any;
+        const currentHeaderStyle = (s.style || 'sticky-solid') as HeaderVariant;
+        const headerVariantMeta = getHeaderVariantMeta(currentHeaderStyle);
+        const isHeaderGradientStyle = HEADER_GRADIENT_VARIANT_VALUES.includes(currentHeaderStyle);
+        const usesHeaderPanelColors = HEADER_SPECIAL_COLOR_VARIANT_VALUES.includes(currentHeaderStyle) || HEADER_FLOATING_VARIANT_VALUES.includes(currentHeaderStyle);
 
         return (
             <div className="space-y-4">
@@ -1423,10 +1645,15 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                             onChange={(e) => handleStyleChange('style', e.target.value)}
                             className="w-full bg-q-surface border border-q-border rounded-md px-2 py-2 text-sm text-q-text"
                         >
-                            <option value="sticky-solid">Solid</option>
-                            <option value="sticky-transparent">Transparent</option>
-                            <option value="floating">Floating</option>
+                            {HEADER_VARIANT_GROUPS.map(group => (
+                                <optgroup key={group.label} label={group.label}>
+                                    {group.options.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </optgroup>
+                            ))}
                         </AppSelect>
+                        <p className="mt-1 text-[11px] text-q-text-secondary">{headerVariantMeta.description}</p>
                     </div>
                 </div>
 
@@ -1622,6 +1849,38 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border" value={colors?.border || 'transparent'} onChange={v => handleColorChange('border', v)} />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Separator" value={colors?.separator || colors?.border || 'transparent'} onChange={v => handleColorChange('separator', v)} />
+                    <ColorControl label="Link Hover" value={colors?.linkHover || colors?.accent || colors?.text || '#000000'} onChange={v => handleColorChange('linkHover', v)} />
+                </div>
+                {usesHeaderPanelColors && (
+                    <>
+                        <div className="grid grid-cols-2 gap-4">
+                            <ColorControl label="Surface" value={colors?.surface || colors?.background || '#ffffff'} onChange={v => handleColorChange('surface', v)} />
+                            <ColorControl label="Surface Alt" value={colors?.surfaceAlt || colors?.surface || colors?.background || '#ffffff'} onChange={v => handleColorChange('surfaceAlt', v)} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <ColorControl label="Panel" value={colors?.panelBackground || colors?.surface || colors?.background || '#ffffff'} onChange={v => handleColorChange('panelBackground', v)} />
+                            <ColorControl label="Panel Text" value={colors?.panelText || colors?.text || '#000000'} onChange={v => handleColorChange('panelText', v)} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <ColorControl label="Muted Text" value={colors?.mutedText || colors?.text || '#000000'} onChange={v => handleColorChange('mutedText', v)} />
+                            <ColorControl label="Cart Badge" value={colors?.cartBadge || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('cartBadge', v)} />
+                        </div>
+                    </>
+                )}
+                {isHeaderGradientStyle && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <ColorControl label="Gradient Fade" value={colors?.gradientFadeColor || colors?.background || '#ffffff'} onChange={v => handleColorChange('gradientFadeColor', v)} />
+                        <ColorControl label="Gradient Dark" value={colors?.gradientDarkColor || colors?.surfaceAlt || colors?.background || '#000000'} onChange={v => handleColorChange('gradientDarkColor', v)} />
+                    </div>
+                )}
+                {(currentHeaderStyle === 'tabbed' || currentHeaderStyle === 'segmented-pill') && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <ColorControl label="Active Tab" value={colors?.tabActiveColor || colors?.accent || colors?.text || '#000000'} onChange={v => handleColorChange('tabActiveColor', v)} />
+                        <ColorControl label="Tab Border" value={colors?.tabBorderColor || colors?.separator || colors?.border || 'transparent'} onChange={v => handleColorChange('tabBorderColor', v)} />
+                    </div>
+                )}
             </div>
         );
     };
@@ -2065,7 +2324,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 {/* ========== CARD COLORS ========== */}
                 <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Card Background" value={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Background" value={colors?.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Name" value={colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -2078,7 +2337,9 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderFaqControls = () => {
         const s = styles as typeof componentStyles['faq'];
         const colors = (s.colors || {}) as any;
-        const currentVariant = (s as any).faqVariant || 'classic';
+        const currentVariant = ((s as any).faqVariant || 'classic') as FaqVariant;
+        const currentMeta = getFaqVariantMeta(currentVariant);
+        const gradientVariants: FaqVariant[] = ['gradient', 'image-split', 'dark-panel', 'answer-panel', 'contact-card'];
 
         return (
             <div className="space-y-4">
@@ -2088,25 +2349,21 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         <Layout size={14} />
                         FAQ Style
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {['classic', 'cards', 'gradient', 'minimal'].map((variant) => (
-                            <button
-                                key={variant}
-                                onClick={() => handleStyleChange('faqVariant', variant)}
-                                className={`px-3 py-2 rounded-md border text-xs transition-all capitalize ${currentVariant === variant
-                                    ? 'bg-q-accent text-q-bg border-q-accent shadow-sm font-bold'
-                                    : 'bg-q-surface text-q-text border-q-border hover:border-q-accent'
-                                    }`}
-                            >
-                                {variant}
-                            </button>
+                    <AppSelect
+                        value={currentVariant}
+                        onChange={(event) => handleStyleChange('faqVariant', event.currentTarget.value as FaqVariant)}
+                        aria-label="FAQ style"
+                    >
+                        {FAQ_VARIANT_GROUPS.map(group => (
+                            <optgroup key={group.label} label={group.label}>
+                                {group.options.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </optgroup>
                         ))}
-                    </div>
-                    <p className="text-xs text-q-text-secondary mt-2 italic">
-                        {currentVariant === 'classic' && '📋 Simple accordion with border dividers'}
-                        {currentVariant === 'cards' && '🎴 Each FAQ in a separate card with shadow'}
-                        {currentVariant === 'gradient' && '✨ Modern gradient cards with glow effects'}
-                        {currentVariant === 'minimal' && '🎯 Clean minimal design with icons'}
+                    </AppSelect>
+                    <p className="text-xs text-q-text-secondary mt-2">
+                        {currentMeta.description}
                     </p>
                 </div>
 
@@ -2141,20 +2398,30 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Heading" value={colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
-                    <ColorControl label="Description" value={colors?.description || 'rgba(255, 255, 255, 0.8)'} onChange={v => handleColorChange('description', v)} />
+                    <ColorControl label="Description" value={colors?.description || '#cbd5e1'} onChange={v => handleColorChange('description', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border Color" value={colors?.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
-                {currentVariant === 'cards' && (
-                    <div className="grid grid-cols-2 gap-4">
-                        <ColorControl label="Card Background" value={colors?.cardBackground || 'rgba(30, 41, 59, 0.5)'} onChange={v => handleColorChange('cardBackground', v)} />
-                    </div>
-                )}
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Background" value={colors?.cardBackground || '#111827'} onChange={v => handleColorChange('cardBackground', v)} />
+                    <ColorControl label="Card Title" value={colors?.cardHeading || colors?.text || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Card Text" value={colors?.cardText || colors?.description || '#cbd5e1'} onChange={v => handleColorChange('cardText', v)} />
+                    <ColorControl label="Panel" value={colors?.panelBackground || colors?.cardBackground || '#111827'} onChange={v => handleColorChange('panelBackground', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Active" value={colors?.activeBackground || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('activeBackground', v)} />
+                    <ColorControl label="Active Text" value={colors?.activeText || colors?.heading || '#ffffff'} onChange={v => handleColorChange('activeText', v)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ColorControl label="Icon Fill" value={colors?.iconBackground || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('iconBackground', v)} />
+                </div>
 
                 {/* Gradient Colors for Gradient Variant */}
-                {currentVariant === 'gradient' && (
+                {gradientVariants.includes(currentVariant) && (
                     <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
                         <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">Gradient Colors</h5>
                         <div className="grid grid-cols-2 gap-4">
@@ -2549,17 +2816,17 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <ColorControl label="Heading" value={colors?.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <ColorControl label="Arrow Background" value={colors?.arrowBackground || 'rgba(0, 0, 0, 0.5)'} onChange={v => handleColorChange('arrowBackground', v)} />
+                    <ColorControl label="Arrow Background" value={colors?.arrowBackground || '#111827'} onChange={v => handleColorChange('arrowBackground', v)} />
                     <ColorControl label="Arrow Text" value={colors?.arrowText || '#ffffff'} onChange={v => handleColorChange('arrowText', v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <ColorControl label="Dot Active" value={colors?.dotActive || '#ffffff'} onChange={v => handleColorChange('dotActive', v)} />
-                    <ColorControl label="Dot Inactive" value={colors?.dotInactive || 'rgba(255, 255, 255, 0.5)'} onChange={v => handleColorChange('dotInactive', v)} />
+                    <ColorControl label="Dot Inactive" value={colors?.dotInactive || '#94a3b8'} onChange={v => handleColorChange('dotInactive', v)} />
                 </div>
 
                 {s.showCaptions && (
                     <div className="grid grid-cols-2 gap-4 animate-fade-in-up">
-                        <ColorControl label="Caption Background" value={colors?.captionBackground || 'rgba(0, 0, 0, 0.7)'} onChange={v => handleColorChange('captionBackground', v)} />
+                        <ColorControl label="Caption Background" value={colors?.captionBackground || '#111827'} onChange={v => handleColorChange('captionBackground', v)} />
                         <ColorControl label="Caption Text" value={colors?.captionText || '#ffffff'} onChange={v => handleColorChange('captionText', v)} />
                     </div>
                 )}
@@ -2600,7 +2867,10 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 return renderHowItWorksControls();
             // Standard handlers for all other components that share similar structure
             case 'pricing':
+                return renderPricingControls();
             case 'portfolio':
+            case 'showcase':
+                return baseComponent === 'showcase' ? renderShowcaseControls() : renderStandardControls();
             case 'leads':
             case 'realEstateListings':
             case 'video':

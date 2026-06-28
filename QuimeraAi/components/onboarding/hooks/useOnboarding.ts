@@ -33,6 +33,8 @@ import {
 import { PageSection, Project, SitePage } from '../../../types';
 import { generateAiAssistantConfig, GlobalColors } from '../../../utils/chatbotConfigGenerator';
 import { generatePagesFromLegacyProject } from '../../../utils/legacyMigration';
+import { ensureStandardPortfolioItems } from '../../../utils/aiStudioPortfolio';
+import { getFeatureVariantMeta } from '../../../data/featureVariants';
 
 // Alias for backward compatibility
 type OnboardingStep = OnboardingWizardStep;
@@ -1083,7 +1085,7 @@ TEMPLATE #${t.index}: "${t.name}"
         // FEATURES items (1:1 square) - Use AI-generated feature titles for context
         if (templateData.features?.items && isEnabled('features')) {
             const featuresItems = aiContent.features || [];
-            const count = Math.min(featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length, 6);
+            const count = Math.min(Math.max(4, featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length), 6);
             for (let i = 0; i < count; i++) {
                 const featureItem = featuresItems[i];
                 const featureTitle = featureItem?.title || `concept ${i + 1}`;
@@ -1103,11 +1105,13 @@ TEMPLATE #${t.index}: "${t.name}"
         }
 
         // PORTFOLIO items (4:3 landscape) - Use AI-generated portfolio titles and descriptions
-        if (templateData.portfolio?.items && isEnabled('portfolio')) {
+        if (isEnabled('portfolio')) {
+            if (!templateData.portfolio) templateData.portfolio = {};
+            ensureStandardPortfolioItems(templateData.portfolio, progress, i18n.language === 'es');
             const portfolioItems = aiContent.portfolio || [];
-            const count = Math.min(portfolioItems.length > 0 ? portfolioItems.length : templateData.portfolio.items.length, 6);
+            const count = Math.min(Math.max(portfolioItems.length, templateData.portfolio.items.length, 3), 6);
             for (let i = 0; i < count; i++) {
-                const portfolioItem = portfolioItems[i];
+                const portfolioItem = portfolioItems[i] || templateData.portfolio.items[i];
                 const projectTitle = portfolioItem?.title || `project ${i + 1}`;
                 const projectDesc = portfolioItem?.description ? `, ${portfolioItem.description}` : '';
                 const projectCategory = portfolioItem?.category ? `, ${portfolioItem.category}` : '';
@@ -1214,7 +1218,7 @@ TEMPLATE #${t.index}: "${t.name}"
         // FEATURES
         if (templateData.features?.items && isEnabled('features')) {
             const featuresItems = aiContent.features || [];
-            const count = Math.min(featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length, 6);
+            const count = Math.min(Math.max(4, featuresItems.length > 0 ? featuresItems.length : templateData.features.items.length), 6);
             for (let i = 0; i < count; i++) {
                 const feature = featuresItems[i];
                 imagesToGenerate.push({
@@ -1232,11 +1236,13 @@ TEMPLATE #${t.index}: "${t.name}"
         }
 
         // PORTFOLIO
-        if (templateData.portfolio?.items && isEnabled('portfolio')) {
+        if (isEnabled('portfolio')) {
+            if (!templateData.portfolio) templateData.portfolio = {};
+            ensureStandardPortfolioItems(templateData.portfolio, progress, i18n.language === 'es');
             const portfolioItems = aiContent.portfolio || [];
-            const count = Math.min(portfolioItems.length > 0 ? portfolioItems.length : templateData.portfolio.items.length, 6);
+            const count = Math.min(Math.max(portfolioItems.length, templateData.portfolio.items.length, 3), 6);
             for (let i = 0; i < count; i++) {
-                const project = portfolioItems[i];
+                const project = portfolioItems[i] || templateData.portfolio.items[i];
                 imagesToGenerate.push({
                     key: `portfolio.items[${i}].imageUrl`,
                     aspectRatio: '4:3',
@@ -1577,26 +1583,58 @@ TEMPLATE #${t.index}: "${t.name}"
             }));
         }
 
-        // ============ FEATURES (default: classic) - AI Generated ============
+        // ============ FEATURES (AI Generated) ============
         if (data.features && isOn('features')) {
-            data.features.featuresVariant = 'classic'; // Default style: Classic
+            const featureVariant = data.features.featuresVariant && data.features.featuresVariant !== 'classic'
+                ? data.features.featuresVariant
+                : 'product-highlights';
+            const featureVariantMeta = getFeatureVariantMeta(featureVariant);
+            data.features.featuresVariant = featureVariant;
+            data.features.gridColumns = featureVariantMeta.recommendedColumns;
+            data.features.imageHeight = featureVariantMeta.recommendedImageHeight;
             data.features.title = t('Características', 'Features');
             data.features.description = t('Por qué elegirnos', 'Why choose us');
+            const fallbackFeatures = [
+                { title: t('Calidad Premium', 'Premium Quality'), description: t('Entrega consistente para cada proyecto.', 'Consistent delivery for every project.'), icon: 'Award', eyebrow: t('Calidad', 'Quality'), bullets: [t('Resultados medibles', 'Measurable outcomes')] },
+                { title: t('Atención Personalizada', 'Personalized Attention'), description: t('Acompañamiento claro desde la estrategia hasta el lanzamiento.', 'Clear guidance from strategy to launch.'), icon: 'Heart', eyebrow: t('Servicio', 'Service'), bullets: [t('Proceso acompañado', 'Guided process')] },
+                { title: t('Ejecución Moderna', 'Modern Execution'), description: t('Tecnología, contenido y automatización listos para crecer.', 'Technology, content, and automation ready to scale.'), icon: 'Zap', eyebrow: t('Sistema', 'System'), bullets: [t('Stack conectado', 'Connected stack')] },
+                { title: t('Agente Integrado', 'Integrated Agent'), description: t('La web queda preparada para conectar contenido, datos y asistente.', 'The website is prepared to connect content, data, and assistant flows.'), icon: 'Bot', eyebrow: t('AI', 'AI'), bullets: [t('Compatible con el asistente', 'Assistant compatible')] },
+            ];
             // Prefer AI-generated features, fallback to services from onboarding
             if (aiContent.features && aiContent.features.length > 0) {
-                const maxItems = Math.min(aiContent.features.length, data.features.items?.length || 6);
-                data.features.items = aiContent.features.slice(0, maxItems).map((item: any, i: number) => ({
+                const maxItems = Math.min(Math.max(4, aiContent.features.length), 6);
+                data.features.items = Array.from({ length: maxItems }).map((_, i: number) => {
+                    const item = aiContent.features[i] || fallbackFeatures[i % fallbackFeatures.length];
+                    return {
                     ...data.features.items?.[i],
                     title: item.title || '',
                     description: item.description || '',
+                    icon: item.icon || data.features.items?.[i]?.icon || fallbackFeatures[i % fallbackFeatures.length].icon,
+                    eyebrow: item.eyebrow || data.features.items?.[i]?.eyebrow || fallbackFeatures[i % fallbackFeatures.length].eyebrow,
+                    bullets: Array.isArray(item.bullets) && item.bullets.length > 0 ? item.bullets : (data.features.items?.[i]?.bullets || fallbackFeatures[i % fallbackFeatures.length].bullets),
                     imageUrl: generatedImages[`features.items[${i}].imageUrl`] || data.features.items?.[i]?.imageUrl || '',
-                }));
+                    };
+                });
             } else if (data.features.items && services.length > 0) {
                 // Fallback to services from onboarding Step 3
-                const max = Math.min(services.length, data.features.items.length);
-                data.features.items = services.slice(0, max).map((svc, i) => ({
-                    title: svc.name,
+                const max = Math.min(Math.max(4, services.length), 6);
+                data.features.items = Array.from({ length: max }).map((_, i) => {
+                    const svc = services[i] || services[i % services.length] || fallbackFeatures[i % fallbackFeatures.length];
+                    const svcTitle = 'name' in svc ? svc.name : svc.title;
+                    return {
+                    ...data.features.items?.[i],
+                    title: svcTitle,
                     description: svc.description || '',
+                    icon: data.features.items?.[i]?.icon || fallbackFeatures[i % fallbackFeatures.length].icon,
+                    eyebrow: data.features.items?.[i]?.eyebrow || fallbackFeatures[i % fallbackFeatures.length].eyebrow,
+                    bullets: data.features.items?.[i]?.bullets || fallbackFeatures[i % fallbackFeatures.length].bullets,
+                    imageUrl: generatedImages[`features.items[${i}].imageUrl`] || data.features.items?.[i]?.imageUrl || '',
+                    };
+                });
+            } else if (!Array.isArray(data.features.items) || data.features.items.length < 4) {
+                data.features.items = Array.from({ length: 4 }).map((_, i) => ({
+                    ...data.features.items?.[i],
+                    ...fallbackFeatures[i],
                     imageUrl: generatedImages[`features.items[${i}].imageUrl`] || data.features.items?.[i]?.imageUrl || '',
                 }));
             }
@@ -1644,16 +1682,20 @@ TEMPLATE #${t.index}: "${t.name}"
         if (data.portfolio && isOn('portfolio')) {
             data.portfolio.title = t('Portafolio', 'Portfolio');
             data.portfolio.description = t('Nuestros trabajos', 'Our work');
+            ensureStandardPortfolioItems(data.portfolio, progress, i18n.language === 'es');
             // Apply AI-generated portfolio items with generated images
             if (aiContent.portfolio && aiContent.portfolio.length > 0) {
-                const maxItems = Math.min(aiContent.portfolio.length, data.portfolio.items?.length || 6);
-                data.portfolio.items = aiContent.portfolio.slice(0, maxItems).map((item: any, i: number) => ({
-                    ...data.portfolio.items?.[i],
-                    title: item.title || '',
-                    description: item.description || '',
-                    category: item.category || '',
-                    imageUrl: generatedImages[`portfolio.items[${i}].imageUrl`] || data.portfolio.items?.[i]?.imageUrl || '',
-                }));
+                const maxItems = Math.min(Math.max(aiContent.portfolio.length, data.portfolio.items?.length || 0, 3), 6);
+                data.portfolio.items = Array.from({ length: maxItems }, (_, i) => {
+                    const item = aiContent.portfolio[i] || data.portfolio.items?.[i] || {};
+                    return {
+                        ...data.portfolio.items?.[i],
+                        title: item.title || '',
+                        description: item.description || '',
+                        category: item.category || '',
+                        imageUrl: generatedImages[`portfolio.items[${i}].imageUrl`] || data.portfolio.items?.[i]?.imageUrl || '',
+                    };
+                });
             } else if (data.portfolio.items) {
                 data.portfolio.items.forEach((item: any, i: number) => {
                     if (generatedImages[`portfolio.items[${i}].imageUrl`]) {
@@ -1661,6 +1703,7 @@ TEMPLATE #${t.index}: "${t.name}"
                     }
                 });
             }
+            ensureStandardPortfolioItems(data.portfolio, progress, i18n.language === 'es');
         }
 
         // ============ HOW IT WORKS (AI Generated) ============
@@ -1679,9 +1722,9 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
 
-        // ============ PRICING (default: classic) ============
+        // ============ PRICING (default: featured-plan) ============
         if (data.pricing && isOn('pricing')) {
-            data.pricing.pricingVariant = 'classic'; // Default style: Classic
+            data.pricing.pricingVariant = 'featured-plan';
             data.pricing.title = t('Precios', 'Pricing');
             data.pricing.description = t('Planes disponibles', 'Available plans');
             // Apply AI-generated pricing tiers
@@ -1701,9 +1744,9 @@ TEMPLATE #${t.index}: "${t.name}"
             }
         }
 
-        // ============ FAQ (default: classic) - AI Generated ============
+        // ============ FAQ - AI Generated ============
         if (data.faq && isOn('faq')) {
-            data.faq.faqVariant = 'classic'; // Default style: Classic
+            data.faq.faqVariant = data.faq.faqVariant || 'boxed-list';
             data.faq.title = t('Preguntas Frecuentes', 'FAQ');
             data.faq.description = t('Respuestas a tus dudas', 'Answers to your questions');
             // Apply AI-generated FAQ items

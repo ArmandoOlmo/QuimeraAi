@@ -348,7 +348,7 @@ export const digitalEdgePageData: PageData = {
         },
     },
     pricing: {
-        pricingVariant: 'gradient',
+        pricingVariant: 'featured-plan',
         title: {
                 es: "Planes Escalables",
                 en: "Scalable Plans"
