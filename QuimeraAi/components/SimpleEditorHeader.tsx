@@ -195,7 +195,7 @@ const SimpleEditorHeader: React.FC<SimpleEditorHeaderProps> = ({
         )}
 
         {/* Publish Button */}
-        {showPublishButton && (
+        {showPublishButton && !isEditingTemplate && (
           <button
             onClick={async () => {
               if (!publishProject) {

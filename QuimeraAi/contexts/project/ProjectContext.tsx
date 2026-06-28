@@ -1409,6 +1409,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
 
         try {
+            const project = projectsRef.current.find(p => p.id === activeProjectId);
+            if (isEditingTemplate || project?.status === 'Template') {
+                console.warn('[ProjectContext] Template publish blocked; saving template draft instead', {
+                    activeProjectId,
+                    status: project?.status,
+                    isEditingTemplate,
+                });
+                await saveProject();
+                return true;
+            }
+
             // Get snapshot from editor (single source of truth)
             const snapshot = getProjectSnapshot();
             if (!snapshot) {
@@ -1535,7 +1546,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error('[ProjectContext] Error publishing project:', error);
             return false;
         }
-    }, [user, activeProjectId, data, currentTenantId, getProjectSnapshot]);
+    }, [user, activeProjectId, data, currentTenantId, getProjectSnapshot, isEditingTemplate, saveProject]);
 
     // Auto-save effect
     useEffect(() => {

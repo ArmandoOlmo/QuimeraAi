@@ -176,8 +176,14 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         const template = templates.find(t => t.id === templateId);
         if (!template) throw new Error('Template not found');
 
-        // Build the updated template in local state
-        const updatedTemplate = { ...template, ...updates, lastUpdated: new Date().toISOString() };
+        // Template Editor is only for reusable templates; never let metadata saves
+        // inherit a project/published status from a stale row or partial update.
+        const updatedTemplate: Project = {
+            ...template,
+            ...updates,
+            status: 'Template',
+            lastUpdated: new Date().toISOString(),
+        };
 
         // Build Supabase column updates.
         // The `data` JSONB column stores the full project object.
@@ -186,6 +192,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         const supabaseUpdates: Record<string, any> = {
             last_updated: updatedTemplate.lastUpdated,
             name: updatedTemplate.name,
+            status: 'Template',
             thumbnail_url: updatedTemplate.thumbnailUrl || null,
         };
 
@@ -203,6 +210,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             templateId,
             thumbnailUrl: supabaseUpdates.thumbnail_url?.substring(0, 50),
             industries: updatedTemplate.industries,
+            status: updatedTemplate.status,
         });
 
         const { error } = await supabase

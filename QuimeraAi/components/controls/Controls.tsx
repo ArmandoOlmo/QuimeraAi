@@ -36,7 +36,7 @@ import {
   Image, List, Star, PlaySquare, Users, DollarSign,
   Briefcase, MessageCircle, Mail, Send, Type,
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
-  TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
+  TrendingUp, MapIcon, ShoppingBag, Store, Waves, Bell,
   FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2, CalendarCheck,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
@@ -109,7 +109,7 @@ const Controls: React.FC = () => {
   const {
     data: projectData, setData: setProjectData,
     componentOrder, setComponentOrder, activeProject, updateProjectFavicon,
-    saveProject, syncWebsiteBlueprint,
+    syncWebsiteBlueprint,
     pages, activePage, setActivePage, addPage, updatePage, deletePage, duplicatePage,
     sectionVisibility: projectSectionVisibility,
     setSectionVisibility: setProjectSectionVisibility,
@@ -204,7 +204,6 @@ const Controls: React.FC = () => {
   const [isAddComponentOpen, setIsAddComponentOpen] = useState(false);
   const addComponentRef = useRef<HTMLDivElement>(null);
   const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
   const [heroPrimaryLinkType, setHeroPrimaryLinkType] = useState<'manual' | 'product' | 'collection' | 'section'>('section');
@@ -644,32 +643,6 @@ const Controls: React.FC = () => {
     }
   };
 
-  // ─── Save handler (shared between desktop/mobile/tablet) ──────────────────
-  const handleSave = async () => {
-    if (saveStatus === 'saving') return;
-    setSaveStatus('saving');
-    try {
-      await saveProject();
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error('Error saving:', error);
-      setSaveStatus('idle');
-    }
-  };
-
-  const saveButtonClass = `w-full py-2.5 px-4 rounded-[var(--editor-control-radius)] font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-    saveStatus === 'saved' ? 'bg-green-500 text-white'
-    : saveStatus === 'saving' ? 'bg-q-accent/70 text-q-text-on-accent cursor-wait'
-    : 'bg-q-accent text-q-text-on-accent hover:opacity-90'
-  }`;
-
-  const saveButtonText = saveStatus === 'saving'
-    ? t('common.saving', 'Guardando...')
-    : saveStatus === 'saved'
-      ? t('common.saved', '¡Guardado!')
-      : t('landingEditor.applyChanges', 'Aplicar cambios');
-
   // ─── Reorder handler (shared) ─────────────────────────────────────────────
   const handleReorder = (newOrder: PageSection[]) => {
     const sanitizedOrder = newOrder.filter(section => !isRetiredDesignSuiteSection(section));
@@ -792,11 +765,6 @@ const Controls: React.FC = () => {
             </button>
           </div>
           <div data-editor-controls-scroll className="quimera-clean-controls flex-1 min-h-0 overflow-y-auto p-4">{renderActiveSectionControls()}</div>
-          <div className="p-4 border-t border-q-border flex-shrink-0">
-            <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
-              <Check size={16} /> {saveButtonText}
-            </button>
-          </div>
         </div>
       )}
 
@@ -806,11 +774,6 @@ const Controls: React.FC = () => {
         title={activeSection ? getSectionLabel(activeSection) : ''}
         subtitle={t('landingEditor.editSection', 'Editar sección')}>
         <div data-editor-controls-surface="web-mobile" className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
-        <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
-          <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
-            <Check size={16} /> {saveButtonText}
-          </button>
-        </div>
       </MobileBottomSheet>
 
       {/* Tablet Slide Panel: Sections */}
@@ -845,11 +808,6 @@ const Controls: React.FC = () => {
         onClose={() => { onSectionSelect(null as any); setIsSidebarOpen(true); }}
         title={activeSection ? getSectionLabel(activeSection) : ''} position="left">
         <div data-editor-controls-surface="web-tablet" className="quimera-clean-controls p-4">{renderActiveSectionControls()}</div>
-        <div className="sticky bottom-0 p-4 border-t border-q-border bg-q-surface flex-shrink-0">
-          <button onClick={handleSave} disabled={saveStatus === 'saving'} className={saveButtonClass}>
-            <Check size={16} /> {saveButtonText}
-          </button>
-        </div>
       </TabletSlidePanel>
 
       {/* Page Settings Modal */}

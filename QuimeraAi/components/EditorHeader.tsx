@@ -210,63 +210,64 @@ const EditorHeader: React.FC = () => {
             </span>
           </button>
 
-          {/* Publish Button */}
-          <button
-            onClick={async () => {
-              console.log('[EditorHeader] Publish button clicked');
-              console.log('[EditorHeader] publishProject function:', typeof publishProject);
-              console.log('[EditorHeader] activeProject:', activeProject?.id, activeProject?.name);
+          {!isEditingTemplate && (
+            <button
+              onClick={async () => {
+                console.log('[EditorHeader] Publish button clicked');
+                console.log('[EditorHeader] publishProject function:', typeof publishProject);
+                console.log('[EditorHeader] activeProject:', activeProject?.id, activeProject?.name);
 
-              if (!publishProject) {
-                console.error('[EditorHeader] publishProject is not available!');
-                return;
-              }
+                if (!publishProject) {
+                  console.error('[EditorHeader] publishProject is not available!');
+                  return;
+                }
 
-              setPublishState('publishing');
-              try {
-                console.log('[EditorHeader] Calling publishProject...');
-                // Wrap in timeout to prevent hanging indefinitely on Supabase issues
-                const timeoutPromise = new Promise<boolean>((_, reject) =>
-                  setTimeout(() => reject(new Error('Publish timed out after 30 seconds')), 30000)
-                );
-                const success = await Promise.race([publishProject(), timeoutPromise]);
-                console.log('[EditorHeader] publishProject result:', success);
-                setPublishState(success ? 'published' : 'error');
-                setTimeout(() => setPublishState('idle'), 3000);
-              } catch (error) {
-                console.error('[EditorHeader] Error publishing:', error);
-                setPublishState('error');
-                setTimeout(() => setPublishState('idle'), 3000);
-              }
-            }}
-            disabled={publishState === 'publishing'}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-              publishState === 'published'
-                ? 'bg-green-500/20 text-green-500'
-                : publishState === 'error'
-                  ? 'bg-red-500/20 text-red-500'
-                  : 'bg-primary text-primary-foreground hover:opacity-90'
-            } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
-          >
-            {publishState === 'publishing' ? (
-              <>
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
-              </>
-            ) : publishState === 'published' ? (
-              <>
-                <Check className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
-              </>
-            ) : publishState === 'error' ? (
-              <span>{t('editor.publishError', 'Error')}</span>
-            ) : (
-              <>
-                <Globe className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('editor.publish')}</span>
-              </>
-            )}
-          </button>
+                setPublishState('publishing');
+                try {
+                  console.log('[EditorHeader] Calling publishProject...');
+                  // Wrap in timeout to prevent hanging indefinitely on Supabase issues
+                  const timeoutPromise = new Promise<boolean>((_, reject) =>
+                    setTimeout(() => reject(new Error('Publish timed out after 30 seconds')), 30000)
+                  );
+                  const success = await Promise.race([publishProject(), timeoutPromise]);
+                  console.log('[EditorHeader] publishProject result:', success);
+                  setPublishState(success ? 'published' : 'error');
+                  setTimeout(() => setPublishState('idle'), 3000);
+                } catch (error) {
+                  console.error('[EditorHeader] Error publishing:', error);
+                  setPublishState('error');
+                  setTimeout(() => setPublishState('idle'), 3000);
+                }
+              }}
+              disabled={publishState === 'publishing'}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                publishState === 'published'
+                  ? 'bg-green-500/20 text-green-500'
+                  : publishState === 'error'
+                    ? 'bg-red-500/20 text-red-500'
+                    : 'bg-primary text-primary-foreground hover:opacity-90'
+              } ${publishState === 'publishing' ? 'opacity-50 cursor-wait' : ''}`}
+            >
+              {publishState === 'publishing' ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="hidden sm:inline">{t('editor.publishing', 'Publicando...')}</span>
+                </>
+              ) : publishState === 'published' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('editor.published', '¡Publicado!')}</span>
+                </>
+              ) : publishState === 'error' ? (
+                <span>{t('editor.publishError', 'Error')}</span>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('editor.publish')}</span>
+                </>
+              )}
+            </button>
+          )}
           <HeaderBackButton onClick={() => goBack()} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
         </div>
       </div>
