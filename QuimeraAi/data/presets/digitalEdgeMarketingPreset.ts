@@ -1100,7 +1100,7 @@ export const digitalEdgePageData: PageData = {
             buttonText: COLORS.accent,
         },
     },
-} as PageData;
+} as unknown as PageData;
 
 // =============================================================================
 // THEME
@@ -1134,10 +1134,7 @@ export const digitalEdgeTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const digitalEdgeBrandIdentity: BrandIdentity = {
-    name: {
-            es: "Digital Edge",
-            en: "Digital Edge"
-        },
+    name: 'Digital Edge',
     industry: 'marketing-advertising',
     targetAudience: 'Startups, PYMES y empresas que buscan crecer su presencia digital con estrategias basadas en datos y resultados medibles',
     toneOfVoice: 'Professional',

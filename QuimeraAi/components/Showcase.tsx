@@ -163,8 +163,8 @@ const Showcase: React.FC<ShowcaseProps> = ({
   showFilters = true,
   showMeta = true,
   showFloatingCta = false,
-  ctaText,
-  ctaUrl,
+  floatingCtaText,
+  floatingCtaLink,
   gridColumns = 3,
   imageHeight = 420,
   imageObjectFit = 'cover',
@@ -382,20 +382,20 @@ const Showcase: React.FC<ShowcaseProps> = ({
             </article>
           ))}
         </div>
-        {showFloatingCta && ctaText && (
+        {showFloatingCta && floatingCtaText && (
           <a
-            href={ctaUrl || '#'}
+            href={floatingCtaLink || '#'}
             onClick={(event) => {
-              if (ctaUrl && !ctaUrl.startsWith('http') && onNavigate) {
+              if (floatingCtaLink && !floatingCtaLink.startsWith('http') && onNavigate) {
                 event.preventDefault();
-                onNavigate(ctaUrl);
+                onNavigate(floatingCtaLink);
               }
             }}
             className={`mt-6 inline-flex items-center gap-4 border p-3 shadow-xl ${radiusClass}`}
             style={{ backgroundColor: colors.pillBackground || colors.cardBackground, borderColor: colors.borderColor, color: colors.pillText || colors.heading }}
           >
             {items[0] && <ShowcaseImage item={items[0]} className="h-16 w-24 rounded-md object-cover" imageObjectFit="cover" />}
-            <span className="font-semibold">{ctaText}</span>
+            <span className="font-semibold">{floatingCtaText}</span>
             <ArrowRight className="h-4 w-4" />
           </a>
         )}

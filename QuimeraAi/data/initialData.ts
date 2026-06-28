@@ -2903,10 +2903,7 @@ const theme: ThemeData = {
 };
 
 const brandIdentity: BrandIdentity = {
-    name: {
-            es: "Your Business",
-            en: "Your Business"
-        },
+    name: 'Your Business',
     industry: 'General',
     targetAudience: 'Your target customers',
     toneOfVoice: 'Professional',
@@ -2938,7 +2935,7 @@ const sectionVisibility = componentOrder.reduce((acc, section) => {
 }, {} as Record<PageSection, boolean>);
 
 export const initialData = {
-    data: pageData as PageData,
+    data: pageData as unknown as PageData,
     theme,
     brandIdentity,
     componentOrder,

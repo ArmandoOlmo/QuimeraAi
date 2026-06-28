@@ -1160,7 +1160,7 @@ export const elitePageData: PageData = {
             buttonText: COLORS.accent,
         },
     },
-} as PageData;
+} as unknown as PageData;
 
 // =============================================================================
 // THEME
@@ -1194,10 +1194,7 @@ export const eliteTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const eliteBrandIdentity: BrandIdentity = {
-    name: {
-            es: "L'Élite Restaurant",
-            en: "L'Élite Restaurant"
-        },
+    name: "L'Élite Restaurant",
     industry: 'restaurant-bar',
     targetAudience: 'Personas exigentes que buscan experiencias gastronómicas de alta cocina, celebraciones especiales y eventos corporativos de lujo',
     toneOfVoice: 'Luxury',
