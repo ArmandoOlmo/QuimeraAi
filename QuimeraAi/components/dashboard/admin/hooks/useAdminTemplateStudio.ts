@@ -2571,6 +2571,11 @@ RESPOND WITH ONLY VALID JSON. NO MARKDOWN, NO BACKTICKS, NO EXPLANATION.`;
 function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean, componentOrder: string[] = []): void {
     if (!data || typeof data !== 'object') return;
 
+    const completenessIndustry = normalizeTemplateDesignIndustry(brief as BusinessBrief);
+    const preferEditorialForFaq =
+        ['creative', 'restaurant', 'real-estate'].includes(completenessIndustry) ||
+        componentOrder.some(section => ['portfolio', 'showcase', 'slideshow', 'gallery'].includes(section));
+
     // Header defaults
     if (!data.header || typeof data.header !== 'object') data.header = {};
     if (data.header && typeof data.header === 'object') {
@@ -2768,7 +2773,7 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean, 
 
     // FAQ defaults
     if (data.faq && typeof data.faq === 'object') {
-        if (!data.faq.faqVariant) data.faq.faqVariant = preferEditorial ? 'editorial-split' : 'cards';
+        if (!data.faq.faqVariant) data.faq.faqVariant = preferEditorialForFaq ? 'editorial-split' : 'cards';
         if (!data.faq.title) data.faq.title = isSpanish ? 'Preguntas Frecuentes' : 'Frequently Asked Questions';
         if (!data.faq.items || !Array.isArray(data.faq.items) || data.faq.items.length === 0) {
             data.faq.items = [

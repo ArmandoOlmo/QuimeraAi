@@ -1423,7 +1423,7 @@ export const motoForcePageData: PageData = {
         fontFamilyBody: 'inter',
         fontScale: 1,
     },
-} as PageData;
+} as unknown as PageData;
 
 // =============================================================================
 // THEME
@@ -1457,10 +1457,7 @@ export const motoForceTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const motoForceBrandIdentity: BrandIdentity = {
-    name: {
-            es: "MotoForce",
-            en: "MotoForce"
-        },
+    name: 'MotoForce',
     industry: 'automotive-motorcycle',
     targetAudience: 'Entusiastas de las motocicletas, desde principiantes hasta pilotos experimentados que buscan máquinas de alto rendimiento, aventura y estilo de vida sobre dos ruedas',
     toneOfVoice: 'Professional',

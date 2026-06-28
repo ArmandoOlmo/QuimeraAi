@@ -1102,7 +1102,7 @@ export const gymPageData: PageData = {
             buttonText: COLORS.accent,
         },
     },
-} as PageData;
+} as unknown as PageData;
 
 // =============================================================================
 // THEME
@@ -1136,10 +1136,7 @@ export const gymTheme: ThemeData = {
 // BRAND IDENTITY
 // =============================================================================
 export const gymBrandIdentity: BrandIdentity = {
-    name: {
-            es: "Iron Temple",
-            en: "Iron Temple"
-        },
+    name: 'Iron Temple',
     industry: 'fitness-gym',
     targetAudience: 'Serious athletes, powerlifters, bodybuilders, and fitness enthusiasts seeking structured training programs',
     toneOfVoice: 'Professional',

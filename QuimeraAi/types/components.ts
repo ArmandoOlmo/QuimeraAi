@@ -2929,7 +2929,7 @@ export interface PageData {
     newsletter: NewsletterData;
     cta: CtaData;
     portfolio: PortfolioData;
-    showcase: ShowcaseData;
+    showcase?: ShowcaseData;
     services: ServicesData;
     team: TeamData;
     video: VideoData;
