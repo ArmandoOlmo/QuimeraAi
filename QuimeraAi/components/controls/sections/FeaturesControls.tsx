@@ -675,6 +675,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           Spacing
         </label>
         <div className="space-y-1">
+          <BorderRadiusSelector label={t('editor.controls.common.borderRadius')} value={data.features.borderRadius || 'xl'} onChange={(v) => setNestedData('features.borderRadius', v)} extended />
           <PaddingSelector label={t('controls.vertical')} value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
         </div>

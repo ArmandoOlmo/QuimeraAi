@@ -1096,6 +1096,7 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('featuredProducts.title', v)} />
             <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'lg'} onChange={(v) => setNestedData('featuredProducts.titleFontSize', v)} />
             <I18nTextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description} onChange={(v) => setNestedData('featuredProducts.description', v)} rows={2} />
+            <FontSizeSelector label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')} value={d.descriptionFontSize || 'md'} onChange={(v) => setNestedData('featuredProducts.descriptionFontSize', v)} />
 
 
             <SelectControl
@@ -1165,6 +1166,14 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 onChange={(v) => setNestedData('featuredProducts.responsiveBehavior', v)}
             />
 
+            <NumberInput
+                label={t('editor.controls.ecommerce.columns', 'Columns')}
+                value={d.columns || 4}
+                onChange={(v) => setNestedData('featuredProducts.columns', v)}
+                min={2}
+                max={5}
+            />
+
             <ToggleControl
                 label={t('editor.controls.ecommerce.showBadge', 'Show Badge (New/Sale)')}
                 checked={d.showBadge !== false}
@@ -1178,10 +1187,44 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
             />
 
             <ToggleControl
+                label={t('editor.controls.ecommerce.showRating', 'Show Rating')}
+                checked={d.showRating !== false}
+                onChange={(v) => setNestedData('featuredProducts.showRating', v)}
+            />
+
+            <ToggleControl
                 label={t('editor.controls.ecommerce.showAddToCart', 'Show Add to Cart')}
                 checked={d.showAddToCart !== false}
                 onChange={(v) => setNestedData('featuredProducts.showAddToCart', v)}
             />
+
+            {d.variant === 'carousel' && (
+                <div className="space-y-2 rounded-md border border-q-border bg-q-bg p-3">
+                    <ToggleControl
+                        label={t('editor.controls.ecommerce.autoScroll', 'Auto Scroll')}
+                        checked={d.autoScroll === true}
+                        onChange={(v) => setNestedData('featuredProducts.autoScroll', v)}
+                    />
+                    <NumberInput
+                        label={t('editor.controls.ecommerce.scrollSpeed', 'Scroll Speed (ms)')}
+                        value={d.scrollSpeed || 5000}
+                        onChange={(v) => setNestedData('featuredProducts.scrollSpeed', v)}
+                        min={1000}
+                        max={15000}
+                        step={500}
+                    />
+                    <ToggleControl
+                        label={t('editor.controls.ecommerce.showArrows', 'Show Arrows')}
+                        checked={d.showArrows !== false}
+                        onChange={(v) => setNestedData('featuredProducts.showArrows', v)}
+                    />
+                    <ToggleControl
+                        label={t('editor.controls.ecommerce.showDots', 'Show Dots')}
+                        checked={d.showDots !== false}
+                        onChange={(v) => setNestedData('featuredProducts.showDots', v)}
+                    />
+                </div>
+            )}
 
             <ToggleControl
                 label={t('editor.controls.ecommerce.showViewAll', 'Show View All CTA')}
@@ -1215,6 +1258,75 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 value={d.cardStyle}
                 onChange={(v) => setNestedData('featuredProducts.cardStyle', v)}
             />
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('featuredProducts.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('featuredProducts.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardAspectRatio', 'Card Aspect')}
+                    value={d.cardAspectRatio || '4:5'}
+                    options={[
+                        { value: '1:1', label: '1:1' },
+                        { value: '4:3', label: '4:3' },
+                        { value: '3:4', label: '3:4' },
+                        { value: '4:5', label: '4:5' },
+                        { value: '16:9', label: '16:9' },
+                    ]}
+                    onChange={(v) => setNestedData('featuredProducts.cardAspectRatio', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.imageFit', 'Image Fit')}
+                    value={d.imageObjectFit || 'cover'}
+                    options={[
+                        { value: 'cover', label: 'Cover' },
+                        { value: 'contain', label: 'Contain' },
+                        { value: 'fill', label: 'Fill' },
+                        { value: 'scale-down', label: 'Scale down' },
+                    ]}
+                    onChange={(v) => setNestedData('featuredProducts.imageObjectFit', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('featuredProducts.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('featuredProducts.cardGap', v)}
+                />
+            </div>
 
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
@@ -1329,6 +1441,19 @@ export const useFeaturedProductsControls = ({ data, setNestedData, storeId = '' 
                 onChange={(c) => setNestedData('featuredProducts.colors?.borderColor', c)}
             />
 
+            <div className="grid grid-cols-2 gap-3">
+                <ColorControl
+                    label={t('editor.controls.ecommerce.overlayStart', 'Overlay Start')}
+                    value={d.colors?.overlayStart || 'rgba(0,0,0,0.08)'}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.overlayStart', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.overlayEnd', 'Overlay End')}
+                    value={d.colors?.overlayEnd || 'rgba(0,0,0,0.72)'}
+                    onChange={(c) => setNestedData('featuredProducts.colors?.overlayEnd', c)}
+                />
+            </div>
+
 
             {/* Padding Controls */}
             <div className="grid grid-cols-2 gap-2">
@@ -1394,6 +1519,8 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                     { value: 'overlay', label: t('editor.controls.ecommerce.overlay', 'Overlay') },
                     { value: 'minimal', label: t('editor.controls.ecommerce.minimal', 'Minimal') },
                     { value: 'banner', label: t('editor.controls.ecommerce.banner', 'Banner') },
+                    { value: 'editorial', label: t('editor.controls.ecommerce.editorial', 'Editorial') },
+                    { value: 'bento-overlay', label: t('editor.controls.ecommerce.bentoOverlay', 'Bento Overlay') },
                 ]}
                 onChange={(v) => setNestedData('categoryGrid.variant', v)}
             />
@@ -1491,80 +1618,82 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
             <div className="grid grid-cols-2 gap-3">
                 <SelectControl
                     label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
-                    value={d.textAlignment || 'left'}
+                    value={d.textAlignment || 'center'}
                     options={[
                         { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
                         { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
                         { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
                     ]}
-                    onChange={(v) => setNestedData('productHero.textAlignment', v)}
+                    onChange={(v) => setNestedData('categoryGrid.textAlignment', v)}
                 />
                 <SelectControl
                     label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
-                    value={d.contentPosition || 'left'}
+                    value={d.contentPosition || 'center'}
                     options={[
                         { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
                         { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
                         { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
                     ]}
-                    onChange={(v) => setNestedData('productHero.contentPosition', v)}
+                    onChange={(v) => setNestedData('categoryGrid.contentPosition', v)}
                 />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
                 <FontSizeSelector
-                    label={t('editor.controls.ecommerce.headlineSize', 'Headline Size')}
-                    value={d.headlineFontSize || 'xl'}
-                    onChange={(v) => setNestedData('productHero.headlineFontSize', v)}
+                    label={t('editor.controls.ecommerce.titleSize', 'Title Size')}
+                    value={d.titleFontSize || 'lg'}
+                    onChange={(v) => setNestedData('categoryGrid.titleFontSize', v)}
                 />
                 <FontSizeSelector
-                    label={t('editor.controls.ecommerce.subheadlineSize', 'Subheadline Size')}
-                    value={d.subheadlineFontSize || 'md'}
-                    onChange={(v) => setNestedData('productHero.subheadlineFontSize', v)}
+                    label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')}
+                    value={d.descriptionFontSize || 'md'}
+                    onChange={(v) => setNestedData('categoryGrid.descriptionFontSize', v)}
                 />
             </div>
 
-            <SliderControl
-                label={t('editor.controls.ecommerce.height', 'Height (px)')}
-                value={d.height || 520}
-                min={280}
-                max={900}
-                step={20}
-                onChange={(v) => setNestedData('productHero.height', v)}
-            />
-
-            <SelectControl
-                label={t('editor.controls.ecommerce.overlayStyle', 'Overlay Style')}
-                value={d.overlayStyle || 'gradient'}
-                options={[
-                    { value: 'gradient', label: t('editor.controls.ecommerce.gradient', 'Gradient') },
-                    { value: 'solid', label: t('editor.controls.ecommerce.solid', 'Solid') },
-                    { value: 'none', label: t('common.none', 'None') },
-                ]}
-                onChange={(v) => setNestedData('productHero.overlayStyle', v)}
-            />
-
-            <SliderControl
-                label={t('editor.controls.ecommerce.overlayOpacity', 'Overlay Opacity')}
-                value={d.overlayOpacity ?? 55}
-                min={0}
-                max={100}
-                step={5}
-                onChange={(v) => setNestedData('productHero.overlayOpacity', v)}
-            />
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.imageAspectRatio', 'Image Aspect')}
+                    value={d.imageAspectRatio || '4:5'}
+                    options={[
+                        { value: '1:1', label: '1:1' },
+                        { value: '4:3', label: '4:3' },
+                        { value: '3:4', label: '3:4' },
+                        { value: '4:5', label: '4:5' },
+                        { value: '16:9', label: '16:9' },
+                    ]}
+                    onChange={(v) => setNestedData('categoryGrid.imageAspectRatio', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.imageFit', 'Image Fit')}
+                    value={d.imageObjectFit || 'cover'}
+                    options={[
+                        { value: 'cover', label: 'Cover' },
+                        { value: 'contain', label: 'Contain' },
+                        { value: 'fill', label: 'Fill' },
+                        { value: 'scale-down', label: 'Scale down' },
+                    ]}
+                    onChange={(v) => setNestedData('categoryGrid.imageObjectFit', v)}
+                />
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
                 <BorderRadiusSelector
-                    label={t('editor.controls.ecommerce.sectionRadius', 'Section Radius')}
-                    value={d.borderRadius || d.buttonBorderRadius || 'xl'}
-                    onChange={(v) => setNestedData('productHero.borderRadius', v)}
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('categoryGrid.borderRadius', v)}
                     extended
                 />
-                <BorderRadiusSelector
-                    label={t('editor.controls.ecommerce.buttonRadius', 'Button Radius')}
-                    value={d.buttonBorderRadius || 'xl'}
-                    onChange={(v) => setNestedData('productHero.buttonBorderRadius', v)}
-                    extended
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('categoryGrid.cardGap', v)}
                 />
             </div>
 
@@ -1633,6 +1762,11 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                     value={d.colors?.overlayEnd || 'rgba(0,0,0,0.7)'}
                     onChange={(c) => setNestedData('categoryGrid.colors?.overlayEnd', c)}
                 />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.overlayText', 'Overlay Text')}
+                    value={d.colors?.buttonText || '#ffffff'}
+                    onChange={(c) => setNestedData('categoryGrid.colors?.buttonText', c)}
+                />
             </div>
 
 
@@ -1661,12 +1795,6 @@ export const useCategoryGridControls = ({ data, setNestedData, storeId = '' }: E
                     showXl
                 />
             </div>
-
-            <BorderRadiusSelector
-                label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
-                value={d.borderRadius || 'xl'}
-                onChange={(v) => setNestedData('categoryGrid.borderRadius', v)}
-            />
         </div>
     );
 
@@ -1989,6 +2117,7 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                 onChange={(v) => setNestedData('trustBadges.visibleIn', v)}
             />
             <I18nInput label={t('editor.controls.ecommerce.title', 'Title')} value={d.title} onChange={(v) => setNestedData('trustBadges.title', v)} />
+            <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'md'} onChange={(v) => setNestedData('trustBadges.titleFontSize', v)} />
 
             <SelectControl
                 label={t('editor.controls.ecommerce.variant', 'Variant')}
@@ -1998,6 +2127,8 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                     { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
                     { value: 'minimal', label: t('editor.controls.ecommerce.minimal', 'Minimal') },
                     { value: 'detailed', label: t('editor.controls.ecommerce.detailed', 'Detailed') },
+                    { value: 'premium-strip', label: t('editor.controls.ecommerce.premiumStrip', 'Premium Strip') },
+                    { value: 'icon-cloud', label: t('editor.controls.ecommerce.iconCloud', 'Icon Cloud') },
                 ]}
                 onChange={(v) => setNestedData('trustBadges.variant', v)}
             />
@@ -2081,6 +2212,49 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('trustBadges.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('trustBadges.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('trustBadges.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('trustBadges.cardGap', v)}
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2104,9 +2278,24 @@ export const useTrustBadgesControls = ({ data, setNestedData }: EcommerceControl
                     onChange={(c) => setNestedData('trustBadges.colors?.text', c)}
                 />
                 <ColorControl
-                    label={t('editor.controls.ecommerce.accent', 'Accent/Icon')}
+                    label={t('editor.controls.ecommerce.accent', 'Accent')}
                     value={d.colors?.accent || '#6366f1'}
                     onChange={(c) => setNestedData('trustBadges.colors?.accent', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.iconColor', 'Icon Color')}
+                    value={d.colors?.iconColor || d.colors?.accent || '#6366f1'}
+                    onChange={(c) => setNestedData('trustBadges.colors?.iconColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
+                    value={d.colors?.cardBackground || '#ffffff'}
+                    onChange={(c) => setNestedData('trustBadges.colors?.cardBackground', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.cardText', 'Card Text')}
+                    value={d.colors?.cardText || d.colors?.text || '#374151'}
+                    onChange={(c) => setNestedData('trustBadges.colors?.cardText', c)}
                 />
             </div>
 
@@ -2155,7 +2344,7 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                 onChange={(v) => setNestedData('saleCountdown.visibleIn', v)}
             />
             <Input label={t('editor.controls.ecommerce.title', 'Title')} value={d.title || ''} onChange={(e) => setNestedData('saleCountdown.title', e.target.value)} />
-            <TextArea label={t('editor.controls.ecommerce.subtitle', 'Subtitle')} value={d.subtitle || ''} onChange={(e) => setNestedData('saleCountdown.subtitle', e.target.value)} rows={2} />
+            <TextArea label={t('editor.controls.ecommerce.description', 'Description')} value={d.description || ''} onChange={(e) => setNestedData('saleCountdown.description', e.target.value)} rows={2} />
 
             <Input
                 label={t('editor.controls.ecommerce.endDate', 'End Date (ISO)')}
@@ -2165,15 +2354,21 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
             />
 
             <SelectControl
-                label={t('editor.controls.ecommerce.style', 'Style')}
-                value={d.style || 'simple'}
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'banner'}
                 options={[
-                    { value: 'simple', label: t('editor.controls.ecommerce.simpleText', 'Simple Text') },
-                    { value: 'cards', label: t('editor.controls.ecommerce.timerCards', 'Timer Cards') },
-                    { value: 'banner', label: t('editor.controls.ecommerce.fullBanner', 'Full Banner') },
+                    { value: 'banner', label: t('editor.controls.ecommerce.banner', 'Banner') },
+                    { value: 'fullwidth', label: t('editor.controls.ecommerce.fullWidth', 'Full Width') },
+                    { value: 'inline', label: t('editor.controls.ecommerce.inline', 'Inline') },
+                    { value: 'floating', label: t('editor.controls.ecommerce.floating', 'Floating') },
                 ]}
-                onChange={(v) => setNestedData('saleCountdown.style', v)}
+                onChange={(v) => setNestedData('saleCountdown.variant', v)}
             />
+
+            <div className="grid grid-cols-2 gap-2">
+                <Input label={t('editor.controls.ecommerce.badgeText', 'Badge Text')} value={d.badgeText || ''} onChange={(e) => setNestedData('saleCountdown.badgeText', e.target.value)} />
+                <Input label={t('editor.controls.ecommerce.discountText', 'Discount Text')} value={d.discountText || ''} onChange={(e) => setNestedData('saleCountdown.discountText', e.target.value)} />
+            </div>
 
             <ResponsiveBehaviorControl
                 value={d.responsiveBehavior}
@@ -2215,11 +2410,130 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
 
             <Input label={t('editor.controls.ecommerce.buttonText', 'Button Text')} value={d.buttonText || ''} onChange={(e) => setNestedData('saleCountdown.buttonText', e.target.value)} />
 
+            <div className="space-y-2 rounded-md border border-q-border bg-q-bg p-3">
+                <ToggleControl label={t('editor.controls.ecommerce.showDays', 'Show Days')} checked={d.showDays !== false} onChange={(v) => setNestedData('saleCountdown.showDays', v)} />
+                <ToggleControl label={t('editor.controls.ecommerce.showHours', 'Show Hours')} checked={d.showHours !== false} onChange={(v) => setNestedData('saleCountdown.showHours', v)} />
+                <ToggleControl label={t('editor.controls.ecommerce.showMinutes', 'Show Minutes')} checked={d.showMinutes !== false} onChange={(v) => setNestedData('saleCountdown.showMinutes', v)} />
+                <ToggleControl label={t('editor.controls.ecommerce.showSeconds', 'Show Seconds')} checked={d.showSeconds !== false} onChange={(v) => setNestedData('saleCountdown.showSeconds', v)} />
+            </div>
+
+            <div className="space-y-2 rounded-md border border-q-border bg-q-bg p-3">
+                <ToggleControl label={t('editor.controls.ecommerce.showProducts', 'Show Products')} checked={d.showProducts === true} onChange={(v) => setNestedData('saleCountdown.showProducts', v)} />
+                {d.showProducts && (
+                    <>
+                        <NumberInput
+                            label={t('editor.controls.ecommerce.productsToShow', 'Products to Show')}
+                            value={d.productsToShow || 4}
+                            onChange={(v) => setNestedData('saleCountdown.productsToShow', v)}
+                            min={1}
+                            max={12}
+                        />
+                        <ProductCardVariantControl
+                            value={d.cardStyle}
+                            onChange={(v) => setNestedData('saleCountdown.cardStyle', v)}
+                        />
+                    </>
+                )}
+            </div>
+
         </div>
     );
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.titleSize', 'Title Size')}
+                    value={d.titleFontSize || 'lg'}
+                    onChange={(v) => setNestedData('saleCountdown.titleFontSize', v)}
+                />
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')}
+                    value={d.descriptionFontSize || 'md'}
+                    onChange={(v) => setNestedData('saleCountdown.descriptionFontSize', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('saleCountdown.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('saleCountdown.contentPosition', v)}
+                />
+            </div>
+
+            <SliderControl
+                label={t('editor.controls.ecommerce.height', 'Height')}
+                value={d.height || 300}
+                min={200}
+                max={800}
+                step={20}
+                onChange={(v) => setNestedData('saleCountdown.height', v)}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('saleCountdown.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('saleCountdown.cardGap', v)}
+                />
+            </div>
+
+            {d.showProducts && (
+                <div className="grid grid-cols-2 gap-3">
+                    <SelectControl
+                        label={t('editor.controls.ecommerce.cardAspectRatio', 'Card Aspect')}
+                        value={d.cardAspectRatio || '4:5'}
+                        options={[
+                            { value: '1:1', label: '1:1' },
+                            { value: '4:3', label: '4:3' },
+                            { value: '3:4', label: '3:4' },
+                            { value: '4:5', label: '4:5' },
+                            { value: '16:9', label: '16:9' },
+                        ]}
+                        onChange={(v) => setNestedData('saleCountdown.cardAspectRatio', v)}
+                    />
+                    <SelectControl
+                        label={t('editor.controls.ecommerce.imageFit', 'Image Fit')}
+                        value={d.imageObjectFit || 'cover'}
+                        options={[
+                            { value: 'cover', label: 'Cover' },
+                            { value: 'contain', label: 'Contain' },
+                            { value: 'fill', label: 'Fill' },
+                            { value: 'scale-down', label: 'Scale down' },
+                        ]}
+                        onChange={(v) => setNestedData('saleCountdown.imageObjectFit', v)}
+                    />
+                </div>
+            )}
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2267,6 +2581,37 @@ export const useSaleCountdownControls = ({ data, setNestedData, storeId = '' }: 
                     onChange={(c) => setNestedData('saleCountdown.colors?.countdownText', c)}
                 />
             </div>
+
+            {d.showProducts && (
+                <>
+                    <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                        {t('editor.controls.ecommerce.cardColors', 'Card Colors')}
+                    </h5>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <ColorControl
+                            label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
+                            value={d.colors?.cardBackground || '#ffffff'}
+                            onChange={(c) => setNestedData('saleCountdown.colors?.cardBackground', c)}
+                        />
+                        <ColorControl
+                            label={t('editor.controls.ecommerce.cardText', 'Card Text')}
+                            value={d.colors?.cardText || d.colors?.heading || '#111827'}
+                            onChange={(c) => setNestedData('saleCountdown.colors?.cardText', c)}
+                        />
+                        <ColorControl
+                            label={t('editor.controls.ecommerce.overlayStart', 'Overlay Start')}
+                            value={d.colors?.overlayStart || 'rgba(0,0,0,0.08)'}
+                            onChange={(c) => setNestedData('saleCountdown.colors?.overlayStart', c)}
+                        />
+                        <ColorControl
+                            label={t('editor.controls.ecommerce.overlayEnd', 'Overlay End')}
+                            value={d.colors?.overlayEnd || 'rgba(0,0,0,0.72)'}
+                            onChange={(c) => setNestedData('saleCountdown.colors?.overlayEnd', c)}
+                        />
+                    </div>
+                </>
+            )}
 
 
             {/* Button Colors */}
@@ -2756,24 +3101,112 @@ export const useCollectionBannerControls = ({ data, setNestedData, storeId = '' 
                 value={d.buttonText || ''}
                 onChange={(e) => setNestedData('collectionBanner.buttonText', e.target.value)}
             />
-
-            <CTARouteControls
-                routeType={d.ctaRouteType || (d.collectionId ? 'collection' : undefined)}
-                route={d.buttonUrl}
-                collectionId={d.collectionId}
-                storeId={storeId}
-                gridCategories={gridCategories}
-                fallbackRoute="/store"
-                label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
-                onRouteTypeChange={(v) => setNestedData('collectionBanner.ctaRouteType', v)}
-                onRouteChange={(v) => setNestedData('collectionBanner.buttonUrl', v)}
-                onCollectionChange={(v) => setNestedData('collectionBanner.collectionId', v)}
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showButton', 'Show Button')}
+                checked={d.showButton !== false}
+                onChange={(v) => setNestedData('collectionBanner.showButton', v)}
             />
+
+            {d.showButton !== false && (
+                <CTARouteControls
+                    routeType={d.ctaRouteType || (d.collectionId ? 'collection' : undefined)}
+                    route={d.buttonUrl}
+                    collectionId={d.collectionId}
+                    storeId={storeId}
+                    gridCategories={gridCategories}
+                    fallbackRoute="/store"
+                    label={t('editor.controls.ecommerce.buttonRoute', 'Button Route')}
+                    onRouteTypeChange={(v) => setNestedData('collectionBanner.ctaRouteType', v)}
+                    onRouteChange={(v) => setNestedData('collectionBanner.buttonUrl', v)}
+                    onCollectionChange={(v) => setNestedData('collectionBanner.collectionId', v)}
+                />
+            )}
         </div>
     );
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.headlineSize', 'Headline Size')}
+                    value={d.headlineFontSize || 'xl'}
+                    onChange={(v) => setNestedData('collectionBanner.headlineFontSize', v)}
+                />
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')}
+                    value={d.descriptionFontSize || 'md'}
+                    onChange={(v) => setNestedData('collectionBanner.descriptionFontSize', v)}
+                />
+            </div>
+
+            <SliderControl
+                label={t('editor.controls.ecommerce.height', 'Height')}
+                value={d.height || 400}
+                min={240}
+                max={900}
+                step={20}
+                onChange={(v) => setNestedData('collectionBanner.height', v)}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('collectionBanner.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('collectionBanner.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.overlayStyle', 'Overlay Style')}
+                    value={d.overlayStyle || 'gradient'}
+                    options={[
+                        { value: 'gradient', label: t('editor.controls.ecommerce.gradient', 'Gradient') },
+                        { value: 'solid', label: t('editor.controls.ecommerce.solid', 'Solid') },
+                        { value: 'none', label: t('common.none', 'None') },
+                    ]}
+                    onChange={(v) => setNestedData('collectionBanner.overlayStyle', v)}
+                />
+                <SliderControl
+                    label={t('editor.controls.ecommerce.overlayOpacity', 'Overlay Opacity')}
+                    value={d.overlayOpacity ?? 50}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onChange={(v) => setNestedData('collectionBanner.overlayOpacity', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.sectionRadius', 'Section Radius')}
+                    value={d.borderRadius || d.buttonBorderRadius || 'xl'}
+                    onChange={(v) => setNestedData('collectionBanner.borderRadius', v)}
+                    extended
+                />
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.buttonRadius', 'Button Radius')}
+                    value={d.buttonBorderRadius || 'xl'}
+                    onChange={(v) => setNestedData('collectionBanner.buttonBorderRadius', v)}
+                    extended
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2882,17 +3315,146 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                 value={d.title || ''}
                 onChange={(e) => setNestedData('recentlyViewed.title', e.target.value)}
             />
+            <TextArea
+                label={t('editor.controls.ecommerce.description', 'Description')}
+                value={d.description || ''}
+                onChange={(e) => setNestedData('recentlyViewed.description', e.target.value)}
+                rows={2}
+            />
+            <SelectControl
+                label={t('editor.controls.ecommerce.variant', 'Variant')}
+                value={d.variant || 'carousel'}
+                options={[
+                    { value: 'carousel', label: t('editor.controls.ecommerce.carousel', 'Carousel') },
+                    { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
+                    { value: 'compact', label: t('editor.controls.ecommerce.compact', 'Compact') },
+                ]}
+                onChange={(v) => setNestedData('recentlyViewed.variant', v)}
+            />
             <Input
                 label={t('editor.controls.ecommerce.maxItems', 'Max Items')}
                 type="number"
-                value={d.maxItems || 4}
-                onChange={(e) => setNestedData('recentlyViewed.maxItems', parseInt(e.target.value) || 4)}
+                value={d.maxProducts || d.maxItems || 10}
+                onChange={(e) => {
+                    const value = parseInt(e.target.value) || 10;
+                    setNestedData('recentlyViewed.maxProducts', value);
+                    setNestedData('recentlyViewed.maxItems', value);
+                }}
             />
+            <NumberInput
+                label={t('editor.controls.ecommerce.columns', 'Columns')}
+                value={d.columns || 5}
+                onChange={(v) => setNestedData('recentlyViewed.columns', v)}
+                min={2}
+                max={6}
+            />
+            <ProductCardVariantControl
+                value={d.cardStyle}
+                onChange={(v) => setNestedData('recentlyViewed.cardStyle', v)}
+            />
+            <ToggleControl label={t('editor.controls.ecommerce.showPrice', 'Show Price')} checked={d.showPrice !== false} onChange={(v) => setNestedData('recentlyViewed.showPrice', v)} />
+            <ToggleControl label={t('editor.controls.ecommerce.showRating', 'Show Rating')} checked={d.showRating === true} onChange={(v) => setNestedData('recentlyViewed.showRating', v)} />
+            {d.variant === 'carousel' && (
+                <div className="space-y-2 rounded-md border border-q-border bg-q-bg p-3">
+                    <ToggleControl label={t('editor.controls.ecommerce.showArrows', 'Show Arrows')} checked={d.showArrows !== false} onChange={(v) => setNestedData('recentlyViewed.showArrows', v)} />
+                    <ToggleControl label={t('editor.controls.ecommerce.autoScroll', 'Auto Scroll')} checked={d.autoScroll === true} onChange={(v) => setNestedData('recentlyViewed.autoScroll', v)} />
+                    <NumberInput
+                        label={t('editor.controls.ecommerce.scrollSpeed', 'Scroll Speed (ms)')}
+                        value={d.scrollSpeed || 5000}
+                        onChange={(v) => setNestedData('recentlyViewed.scrollSpeed', v)}
+                        min={1000}
+                        max={15000}
+                        step={500}
+                    />
+                </div>
+            )}
         </div>
     );
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.titleSize', 'Title Size')}
+                    value={d.titleFontSize || 'lg'}
+                    onChange={(v) => setNestedData('recentlyViewed.titleFontSize', v)}
+                />
+                <FontSizeSelector
+                    label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')}
+                    value={d.descriptionFontSize || 'md'}
+                    onChange={(v) => setNestedData('recentlyViewed.descriptionFontSize', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('recentlyViewed.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('recentlyViewed.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardAspectRatio', 'Card Aspect')}
+                    value={d.cardAspectRatio || '4:5'}
+                    options={[
+                        { value: '1:1', label: '1:1' },
+                        { value: '4:3', label: '4:3' },
+                        { value: '3:4', label: '3:4' },
+                        { value: '4:5', label: '4:5' },
+                        { value: '16:9', label: '16:9' },
+                    ]}
+                    onChange={(v) => setNestedData('recentlyViewed.cardAspectRatio', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.imageFit', 'Image Fit')}
+                    value={d.imageObjectFit || 'cover'}
+                    options={[
+                        { value: 'cover', label: 'Cover' },
+                        { value: 'contain', label: 'Contain' },
+                        { value: 'fill', label: 'Fill' },
+                        { value: 'scale-down', label: 'Scale down' },
+                    ]}
+                    onChange={(v) => setNestedData('recentlyViewed.imageObjectFit', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('recentlyViewed.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('recentlyViewed.cardGap', v)}
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -2938,6 +3500,31 @@ export const useRecentlyViewedControls = ({ data, setNestedData }: EcommerceCont
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
                     onChange={(c) => setNestedData('recentlyViewed.colors?.cardText', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.starColor', 'Star Color')}
+                    value={d.colors?.starColor || '#fbbf24'}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.starColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
+                    value={d.colors?.borderColor || '#e5e7eb'}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.borderColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
+                    value={d.colors?.buttonText || '#ffffff'}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.buttonText', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.overlayStart', 'Overlay Start')}
+                    value={d.colors?.overlayStart || 'rgba(0,0,0,0.08)'}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.overlayStart', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.overlayEnd', 'Overlay End')}
+                    value={d.colors?.overlayEnd || 'rgba(0,0,0,0.72)'}
+                    onChange={(c) => setNestedData('recentlyViewed.colors?.overlayEnd', c)}
                 />
             </div>
 
@@ -2988,12 +3575,14 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 value={d.title}
                 onChange={(v) => setNestedData('productReviews.title', v)}
             />
+            <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'lg'} onChange={(v) => setNestedData('productReviews.titleFontSize', v)} />
             <I18nTextArea
                 label={t('editor.controls.ecommerce.description', 'Description')}
                 value={d.description}
                 onChange={(v) => setNestedData('productReviews.description', v)}
                 rows={2}
             />
+            <FontSizeSelector label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')} value={d.descriptionFontSize || 'md'} onChange={(v) => setNestedData('productReviews.descriptionFontSize', v)} />
 
             <SelectControl
                 label={t('editor.controls.ecommerce.variant', 'Variant')}
@@ -3003,6 +3592,7 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                     { value: 'list', label: t('editor.controls.ecommerce.list', 'List') },
                     { value: 'masonry', label: t('editor.controls.ecommerce.masonry', 'Masonry') },
                     { value: 'featured', label: t('editor.controls.ecommerce.featured', 'Featured') },
+                    { value: 'spotlight', label: t('editor.controls.ecommerce.spotlight', 'Spotlight') },
                 ]}
                 onChange={(v) => setNestedData('productReviews.variant', v)}
             />
@@ -3026,11 +3616,23 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                 min={1}
                 max={24}
             />
+            <NumberInput
+                label={t('editor.controls.ecommerce.columns', 'Columns')}
+                value={d.columns || 3}
+                onChange={(v) => setNestedData('productReviews.columns', v)}
+                min={2}
+                max={6}
+            />
 
             <ToggleControl
                 label={t('editor.controls.ecommerce.showRatingDistribution', 'Show Rating Distribution')}
                 checked={d.showRatingDistribution !== false}
                 onChange={(v) => setNestedData('productReviews.showRatingDistribution', v)}
+            />
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showPhotos', 'Show Photos')}
+                checked={d.showPhotos === true}
+                onChange={(v) => setNestedData('productReviews.showPhotos', v)}
             />
             <ToggleControl
                 label={t('editor.controls.ecommerce.showVerifiedBadge', 'Show Verified Badge')}
@@ -3139,6 +3741,49 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productReviews.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productReviews.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('productReviews.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('productReviews.cardGap', v)}
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -3203,6 +3848,16 @@ export const useProductReviewsControls = ({ data, setNestedData }: EcommerceCont
                     label={t('editor.controls.ecommerce.verifiedBadgeColor', 'Verified Badge')}
                     value={d.colors?.verifiedBadgeColor || '#10b981'}
                     onChange={(c) => setNestedData('productReviews.colors?.verifiedBadgeColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
+                    value={d.colors?.borderColor || '#e5e7eb'}
+                    onChange={(c) => setNestedData('productReviews.colors?.borderColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
+                    value={d.colors?.buttonText || '#ffffff'}
+                    onChange={(c) => setNestedData('productReviews.colors?.buttonText', c)}
                 />
             </div>
 
@@ -3279,12 +3934,45 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                 value={d.title || ''}
                 onChange={(e) => setNestedData('productBundle.title', e.target.value)}
             />
+            <FontSizeSelector label={t('editor.controls.ecommerce.titleSize', 'Title Size')} value={d.titleFontSize || 'lg'} onChange={(v) => setNestedData('productBundle.titleFontSize', v)} />
             <TextArea
                 label={t('editor.controls.ecommerce.description', 'Description')}
                 value={d.description || ''}
                 onChange={(e) => setNestedData('productBundle.description', e.target.value)}
                 rows={2}
             />
+            <FontSizeSelector label={t('editor.controls.ecommerce.descriptionSize', 'Description Size')} value={d.descriptionFontSize || 'md'} onChange={(v) => setNestedData('productBundle.descriptionFontSize', v)} />
+
+            <NumberInput
+                label={t('editor.controls.ecommerce.discountPercent', 'Discount Percent')}
+                value={d.discountPercent || 15}
+                onChange={(v) => setNestedData('productBundle.discountPercent', v)}
+                min={0}
+                max={90}
+            />
+
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showSavings', 'Show Savings')}
+                checked={d.showSavings !== false}
+                onChange={(v) => setNestedData('productBundle.showSavings', v)}
+            />
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showIndividualPrices', 'Show Individual Prices')}
+                checked={d.showIndividualPrices !== false}
+                onChange={(v) => setNestedData('productBundle.showIndividualPrices', v)}
+            />
+            <ToggleControl
+                label={t('editor.controls.ecommerce.showBadge', 'Show Badge')}
+                checked={d.showBadge !== false}
+                onChange={(v) => setNestedData('productBundle.showBadge', v)}
+            />
+            {d.showBadge !== false && (
+                <Input
+                    label={t('editor.controls.ecommerce.badgeText', 'Badge Text')}
+                    value={d.badgeText || ''}
+                    onChange={(e) => setNestedData('productBundle.badgeText', e.target.value)}
+                />
+            )}
 
             <ResponsiveBehaviorControl
                 value={d.responsiveBehavior}
@@ -3313,6 +4001,49 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.textAlignment', 'Text Alignment')}
+                    value={d.textAlignment || 'left'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productBundle.textAlignment', v)}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.contentPosition', 'Content Position')}
+                    value={d.contentPosition || 'center'}
+                    options={[
+                        { value: 'left', label: t('editor.controls.ecommerce.left', 'Left') },
+                        { value: 'center', label: t('editor.controls.ecommerce.center', 'Center') },
+                        { value: 'right', label: t('editor.controls.ecommerce.right', 'Right') },
+                    ]}
+                    onChange={(v) => setNestedData('productBundle.contentPosition', v)}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <BorderRadiusSelector
+                    label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                    value={d.borderRadius || 'xl'}
+                    onChange={(v) => setNestedData('productBundle.borderRadius', v)}
+                    extended
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                        { value: 'xl', label: 'XL' },
+                    ]}
+                    onChange={(v) => setNestedData('productBundle.cardGap', v)}
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -3358,6 +4089,11 @@ export const useProductBundleControls = ({ data, setNestedData, storeId = '' }: 
                     label={t('editor.controls.ecommerce.cardText', 'Card Text')}
                     value={d.colors?.cardText || '#111827'}
                     onChange={(c) => setNestedData('productBundle.colors?.cardText', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.borderColor', 'Border Color')}
+                    value={d.colors?.borderColor || '#e5e7eb'}
+                    onChange={(c) => setNestedData('productBundle.colors?.borderColor', c)}
                 />
             </div>
 
@@ -3469,11 +4205,103 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                 value={d.currencySymbol || '$'}
                 onChange={(e) => setNestedData('storeSettings.currencySymbol', e.target.value)}
             />
+
+            <div className="space-y-2 rounded-md border border-q-border bg-q-bg p-3">
+                <ToggleControl
+                    label={t('editor.controls.ecommerce.showFilterSidebar', 'Show Filter Sidebar')}
+                    checked={d.showFilterSidebar !== false}
+                    onChange={(v) => setNestedData('storeSettings.showFilterSidebar', v)}
+                />
+                <ToggleControl
+                    label={t('editor.controls.ecommerce.showSearchBar', 'Show Search Bar')}
+                    checked={d.showSearchBar !== false}
+                    onChange={(v) => setNestedData('storeSettings.showSearchBar', v)}
+                />
+                <ToggleControl
+                    label={t('editor.controls.ecommerce.showSortOptions', 'Show Sort Options')}
+                    checked={d.showSortOptions !== false}
+                    onChange={(v) => setNestedData('storeSettings.showSortOptions', v)}
+                />
+                <ToggleControl
+                    label={t('editor.controls.ecommerce.showViewModeToggle', 'Show View Toggle')}
+                    checked={d.showViewModeToggle !== false}
+                    onChange={(v) => setNestedData('storeSettings.showViewModeToggle', v)}
+                />
+            </div>
         </div>
     );
 
     const styleTab = (
         <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+                <SelectControl
+                    label={t('editor.controls.ecommerce.defaultViewMode', 'Default View')}
+                    value={d.defaultViewMode || 'grid'}
+                    options={[
+                        { value: 'grid', label: t('editor.controls.ecommerce.grid', 'Grid') },
+                        { value: 'list', label: t('editor.controls.ecommerce.list', 'List') },
+                    ]}
+                    onChange={(v) => setNestedData('storeSettings.defaultViewMode', v)}
+                />
+                <NumberInput
+                    label={t('editor.controls.ecommerce.productsPerPage', 'Products per Page')}
+                    value={d.productsPerPage || 12}
+                    onChange={(v) => setNestedData('storeSettings.productsPerPage', v)}
+                    min={4}
+                    max={48}
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <NumberInput
+                    label={t('editor.controls.ecommerce.gridColumns', 'Grid Columns')}
+                    value={d.gridColumns || 4}
+                    onChange={(v) => setNestedData('storeSettings.gridColumns', v)}
+                    min={2}
+                    max={5}
+                />
+                <SelectControl
+                    label={t('editor.controls.ecommerce.cardGap', 'Card Gap')}
+                    value={d.cardGap || 'md'}
+                    options={[
+                        { value: 'sm', label: 'Small' },
+                        { value: 'md', label: 'Medium' },
+                        { value: 'lg', label: 'Large' },
+                    ]}
+                    onChange={(v) => setNestedData('storeSettings.cardGap', v)}
+                />
+            </div>
+
+            <ProductCardVariantControl
+                label={t('editor.controls.ecommerce.cardStyle', 'Card Style')}
+                value={d.cardStyle}
+                onChange={(v) => setNestedData('storeSettings.cardStyle', v)}
+            />
+
+            <BorderRadiusSelector
+                label={t('editor.controls.ecommerce.cardRadius', 'Card Radius')}
+                value={d.borderRadius || 'xl'}
+                onChange={(v) => setNestedData('storeSettings.borderRadius', v)}
+                extended
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+                <PaddingSelector
+                    label={t('editor.controls.ecommerce.paddingY', 'Padding Y')}
+                    value={d.paddingY || 'md'}
+                    onChange={(v) => setNestedData('storeSettings.paddingY', v)}
+                    showNone
+                    showXl
+                />
+                <PaddingSelector
+                    label={t('editor.controls.ecommerce.paddingX', 'Padding X')}
+                    value={d.paddingX || 'md'}
+                    onChange={(v) => setNestedData('storeSettings.paddingX', v)}
+                    showNone
+                    showXl
+                />
+            </div>
+
             {/* Section Colors */}
             <h5 className="text-xs font-bold text-q-accent uppercase tracking-wider flex items-center gap-2">
                 <Palette size={14} />
@@ -3582,6 +4410,64 @@ export const useStoreSettingsControls = ({ data, setNestedData }: EcommerceContr
                     label={t('editor.controls.ecommerce.starColor', 'Star Color')}
                     value={d.colors?.starColor || '#fbbf24'}
                     onChange={(c) => setNestedData('storeSettings.colors?.starColor', c)}
+                />
+            </div>
+
+            {/* Cart Drawer Colors */}
+            <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">
+                {t('editor.controls.ecommerce.cartDrawerColors', 'Cart Drawer')}
+            </h5>
+
+            <div className="grid grid-cols-2 gap-3">
+                <ColorControl
+                    label={t('editor.controls.ecommerce.background', 'Background')}
+                    value={d.cartDrawerColors?.background || d.colors?.background || '#ffffff'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.background', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.heading', 'Heading')}
+                    value={d.cartDrawerColors?.heading || d.colors?.heading || '#111827'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.heading', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.text', 'Text')}
+                    value={d.cartDrawerColors?.text || d.colors?.text || '#374151'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.text', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.accent', 'Accent')}
+                    value={d.cartDrawerColors?.accent || d.colors?.accent || '#6366f1'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.accent', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.cardBackground', 'Card Background')}
+                    value={d.cartDrawerColors?.cardBackground || d.colors?.cardBackground || '#f8fafc'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.cardBackground', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.cardText', 'Card Text')}
+                    value={d.cartDrawerColors?.cardText || d.colors?.cardText || '#111827'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.cardText', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.buttonBackground', 'Button BG')}
+                    value={d.cartDrawerColors?.buttonBackground || d.colors?.buttonBackground || '#6366f1'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.buttonBackground', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.buttonText', 'Button Text')}
+                    value={d.cartDrawerColors?.buttonText || d.colors?.buttonText || '#ffffff'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.buttonText', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.priceColor', 'Price')}
+                    value={d.cartDrawerColors?.priceColor || d.colors?.priceColor || '#111827'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.priceColor', c)}
+                />
+                <ColorControl
+                    label={t('editor.controls.ecommerce.borderColor', 'Border')}
+                    value={d.cartDrawerColors?.borderColor || d.colors?.borderColor || '#e5e7eb'}
+                    onChange={(c) => setNestedData('storeSettings.cartDrawerColors.borderColor', c)}
                 />
             </div>
         </div>

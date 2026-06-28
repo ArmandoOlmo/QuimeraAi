@@ -101,7 +101,6 @@ export type NavbarStyle =
     | 'transparent-gradient-dark' // Gradiente oscuro en bordes hacia color principal
     // NUEVOS: Diseños Especiales
     | 'tabbed'               // Pestañas sobre línea gruesa
-    | 'segmented-pill'      // Barra de píldora con bloque activo
     | 'mega-panel'           // Header with desktop mega-menu panel
     | 'rounded-shell'        // Large rounded navbar shell
     | 'split-cta'            // Conversion-focused split actions
@@ -128,8 +127,6 @@ export interface HeaderData extends SectionBackgroundFields {
     logoImageUrl: string;
     logoWidth: number;
     logoHeight?: number;
-    segmentedPillSlanted?: boolean;
-    segmentedPillSlantedAngle?: number;
     links: NavLink[];
     hoverStyle: NavLinkHoverStyle;
     ctaText: string;
@@ -1820,6 +1817,10 @@ export interface ProductsProps {
     style?: StyleType;
     primaryColor?: string;
     storeUrl?: string; // URL to view all products in the store
+    paddingY?: PaddingSize;
+    paddingX?: PaddingSize;
+    titleFontSize?: FontSize;
+    descriptionFontSize?: FontSize;
 }
 
 export interface ProductsData extends SectionBackgroundFields {

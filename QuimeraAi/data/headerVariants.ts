@@ -13,7 +13,6 @@ export const HEADER_VARIANT_VALUES = [
   'transparent-gradient',
   'transparent-gradient-dark',
   'tabbed',
-  'segmented-pill',
   'mega-panel',
   'rounded-shell',
   'split-cta',
@@ -46,7 +45,6 @@ export const HEADER_VARIANTS: HeaderVariantMeta[] = [
   { value: 'transparent-gradient', label: 'Fade Overlay', group: 'Transparent', description: 'Header with a controlled gradient fade.', recommendedLayout: 'minimal' },
   { value: 'transparent-gradient-dark', label: 'Dark Fade', group: 'Transparent', description: 'Darkened overlay for high-contrast hero images.', recommendedLayout: 'minimal' },
   { value: 'tabbed', label: 'Tabbed Menu', group: 'Utility', description: 'Navigation links rendered as compact tabs.', recommendedLayout: 'classic' },
-  { value: 'segmented-pill', label: 'Segmented Pill', group: 'Utility', description: 'Segmented nav strip for product-heavy pages.', recommendedLayout: 'classic' },
   { value: 'mega-panel', label: 'Mega Panel', group: 'Editorial', description: 'Desktop mega-menu panel for rich navigation groups.', recommendedLayout: 'minimal' },
   { value: 'rounded-shell', label: 'Rounded Shell', group: 'Floating', description: 'Large rounded navbar shell with strong CTAs.', recommendedLayout: 'minimal' },
   { value: 'split-cta', label: 'Split CTA', group: 'Utility', description: 'Links and actions arranged for conversion-heavy pages.', recommendedLayout: 'classic' },
@@ -69,7 +67,7 @@ export const HEADER_FLOATING_VARIANT_VALUES: HeaderVariant[] = ['floating', 'flo
 
 export const HEADER_GRADIENT_VARIANT_VALUES: HeaderVariant[] = ['transparent-gradient', 'transparent-gradient-dark'];
 
-export const HEADER_SPECIAL_COLOR_VARIANT_VALUES: HeaderVariant[] = ['tabbed', 'segmented-pill', 'mega-panel', 'rounded-shell', 'dark-dock'];
+export const HEADER_SPECIAL_COLOR_VARIANT_VALUES: HeaderVariant[] = ['tabbed', 'mega-panel', 'rounded-shell', 'dark-dock'];
 
 export const getHeaderVariantMeta = (value?: string): HeaderVariantMeta => (
   HEADER_VARIANTS.find(variant => variant.value === value) || HEADER_VARIANTS[0]

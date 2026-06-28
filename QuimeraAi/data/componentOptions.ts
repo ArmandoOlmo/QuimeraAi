@@ -9,6 +9,12 @@ import { FAQ_VARIANT_VALUES } from './faqVariants';
 import { FOOTER_VARIANT_VALUES } from './footerVariants';
 import { HEADER_VARIANT_VALUES } from './headerVariants';
 import { PRICING_VARIANT_VALUES } from './pricingVariants';
+import { getRegistryColorFields } from './componentRegistry';
+
+const colorFieldsFor = (section: Parameters<typeof getRegistryColorFields>[0], fallback: string[] = []) => {
+    const fields = getRegistryColorFields(section);
+    return fields.length > 0 ? fields : fallback;
+};
 
 // ============================================================================
 // TIPOS GLOBALES
@@ -38,19 +44,19 @@ export const COMPONENT_OPTIONS = {
             hoverStyle: ['simple', 'underline', 'bracket', 'highlight', 'glow'],
             logoType: ['text', 'image', 'both'],
         },
-        colorFields: ['background', 'text', 'accent', 'border', 'surface', 'surfaceAlt', 'panelBackground', 'panelText', 'mutedText', 'linkHover', 'separator', 'cartBadge', 'gradientFadeColor', 'gradientDarkColor', 'buttonBackground', 'buttonText', 'tabBorderColor', 'tabActiveColor'],
+        colorFields: colorFieldsFor('header'),
     },
     
     hero: {
         name: 'Hero Section',
         category: 'hero',
         options: {
-            heroVariant: ['classic', 'modern', 'gradient', 'fitness'],
+            heroVariant: ['classic', 'modern', 'gradient', 'fitness', 'cinematic-gym'],
             imageStyle: ['default', 'rounded-full', 'glow', 'float', 'hexagon', 'polaroid'],
             imagePosition: ['left', 'right'],
             secondaryButtonStyle: ['solid', 'outline', 'ghost'],
         },
-        colorFields: ['primary', 'secondary', 'background', 'text', 'heading', 'buttonBackground', 'buttonText', 'secondaryButtonBackground', 'secondaryButtonText', 'badgeColor', 'badgeBackgroundColor', 'imageBorderColor', 'sectionBorderColor'],
+        colorFields: colorFieldsFor('hero'),
         badgeIcons: ['sparkles', 'zap', 'star', 'award', 'trophy', 'rocket', 'lightbulb', 'heart', 'check-circle', 'shield', 'target', 'trending-up'],
     },
     
@@ -60,7 +66,51 @@ export const COMPONENT_OPTIONS = {
         options: {
             imagePosition: ['left', 'right'],
         },
-        colorFields: ['textBackground', 'imageBackground', 'heading', 'text', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('heroSplit'),
+    },
+
+    heroGallery: {
+        name: 'Hero Gallery',
+        category: 'hero',
+        options: {
+            dotStyle: ['circle', 'line'],
+            textHorizontalAlign: ['left', 'center', 'right'],
+            textVerticalAlign: ['top', 'middle', 'bottom'],
+        },
+        colorFields: colorFieldsFor('heroGallery'),
+    },
+
+    heroWave: {
+        name: 'Hero Wave',
+        category: 'hero',
+        options: {
+            waveShape: ['smooth', 'bubbly', 'sharp', 'layered'],
+            textAlign: ['left', 'center', 'right'],
+            dotStyle: ['circle', 'line'],
+        },
+        colorFields: colorFieldsFor('heroWave'),
+    },
+
+    heroNova: {
+        name: 'Hero Nova',
+        category: 'hero',
+        options: {
+            dotStyle: ['circle', 'line'],
+            showDisplayText: [true, false],
+        },
+        colorFields: colorFieldsFor('heroNova'),
+    },
+
+    heroLead: {
+        name: 'Hero Lead Form',
+        category: 'hero',
+        options: {
+            formPosition: ['left', 'right'],
+            showCompanyField: [true, false],
+            showPhoneField: [true, false],
+            showMessageField: [true, false],
+        },
+        colorFields: colorFieldsFor('heroLead'),
     },
     
     features: {
@@ -71,7 +121,7 @@ export const COMPONENT_OPTIONS = {
             gridColumns: [2, 3, 4],
             overlayTextAlignment: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'glowColor', 'cardGradientStart', 'cardGradientEnd', 'overlayText', 'overlayMuted'],
+        colorFields: colorFieldsFor('features'),
     },
     
     testimonials: {
@@ -80,7 +130,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             testimonialsVariant: ['classic', 'minimal-cards', 'glassmorphism', 'gradient-glow', 'neon-border', 'floating-cards', 'gradient-shift', 'neon-glow', 'editorial-mosaic'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground'],
+        colorFields: colorFieldsFor('testimonials'),
     },
     
     slideshow: {
@@ -93,7 +143,7 @@ export const COMPONENT_OPTIONS = {
             dotStyle: ['circle', 'line', 'square', 'pill'],
             kenBurnsIntensity: ['low', 'medium', 'high'],
         },
-        colorFields: ['background', 'heading', 'arrowBackground', 'arrowText', 'dotActive', 'dotInactive', 'captionBackground', 'captionText'],
+        colorFields: colorFieldsFor('slideshow'),
     },
     
     pricing: {
@@ -102,7 +152,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             pricingVariant: PRICING_VARIANT_VALUES,
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'mutedText', 'heading', 'description', 'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'cardHeading', 'cardText', 'priceColor', 'gradientStart', 'gradientEnd', 'panelBackground', 'panelText', 'surfaceAlt', 'featuredBackground', 'featuredText', 'badgeBackground', 'badgeText', 'dividerColor', 'imageOverlay'],
+        colorFields: colorFieldsFor('pricing'),
     },
     
     faq: {
@@ -111,7 +161,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             faqVariant: FAQ_VARIANT_VALUES,
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'panelBackground', 'activeBackground', 'activeText', 'iconBackground', 'gradientStart', 'gradientEnd'],
+        colorFields: colorFieldsFor('faq'),
     },
     
     leads: {
@@ -120,21 +170,21 @@ export const COMPONENT_OPTIONS = {
         options: {
             leadsVariant: ['classic', 'split-gradient', 'floating-glass', 'minimal-border'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder', 'gradientStart', 'gradientEnd'],
+        colorFields: colorFieldsFor('leads'),
     },
     
     newsletter: {
         name: 'Newsletter Section',
         category: 'form',
         options: {},
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'cardHeading', 'cardText', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder'],
+        colorFields: colorFieldsFor('newsletter'),
     },
     
     cta: {
         name: 'CTA Section',
         category: 'cta',
         options: {},
-        colorFields: ['background', 'gradientStart', 'gradientEnd', 'text', 'heading', 'description', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('cta'),
     },
     
     portfolio: {
@@ -145,7 +195,7 @@ export const COMPONENT_OPTIONS = {
             gridColumns: [2, 3, 4],
             overlayTextAlignment: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardTitleColor', 'cardTextColor', 'cardOverlayStart', 'cardOverlayEnd'],
+        colorFields: colorFieldsFor('portfolio'),
     },
 
     showcase: {
@@ -156,7 +206,7 @@ export const COMPONENT_OPTIONS = {
             gridColumns: [2, 3, 4, 5],
             imageObjectFit: GLOBAL_OPTIONS.objectFit,
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'mutedText', 'pillBackground', 'pillText', 'overlayStart', 'overlayEnd', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('showcase'),
     },
     
     services: {
@@ -165,7 +215,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             servicesVariant: ['cards', 'grid', 'minimal'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText'],
+        colorFields: colorFieldsFor('services'),
         icons: [
             // Development & Technology
             'code', 'code2', 'terminal', 'cpu', 'database', 'server', 'cloud', 'wifi', 'globe', 'smartphone', 'monitor',
@@ -200,7 +250,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             teamVariant: ['classic', 'cards', 'minimal', 'overlay'],
         },
-        colorFields: ['background', 'text', 'heading', 'description', 'accent', 'cardBackground', 'cardHeading', 'cardText', 'photoBorderColor'],
+        colorFields: colorFieldsFor('team'),
     },
     
     video: {
@@ -209,14 +259,14 @@ export const COMPONENT_OPTIONS = {
         options: {
             source: ['youtube', 'vimeo', 'upload'],
         },
-        colorFields: ['background', 'text', 'heading', 'description'],
+        colorFields: colorFieldsFor('video'),
     },
     
     howItWorks: {
         name: 'How It Works Section',
         category: 'content',
         options: {},
-        colorFields: ['background', 'accent', 'text', 'heading', 'description', 'stepTitle', 'iconColor'],
+        colorFields: colorFieldsFor('howItWorks'),
         icons: ['upload', 'process', 'magic-wand', 'download', 'share', 'search'],
     },
     
@@ -226,7 +276,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             mapVariant: ['modern', 'minimal', 'dark-tech', 'retro', 'night', 'card-overlay'],
         },
-        colorFields: ['background', 'text', 'heading', 'description', 'accent', 'cardBackground'],
+        colorFields: colorFieldsFor('map'),
     },
     
     menu: {
@@ -236,7 +286,7 @@ export const COMPONENT_OPTIONS = {
             menuVariant: ['classic', 'modern-grid', 'elegant-list', 'full-image', 'text-only', 'editorial-mosaic'],
             textAlignment: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'priceColor', 'cardTitleColor', 'cardText'],
+        colorFields: colorFieldsFor('menu'),
     },
     
     banner: {
@@ -246,7 +296,7 @@ export const COMPONENT_OPTIONS = {
             bannerVariant: ['classic', 'gradient-overlay', 'side-text', 'centered'],
             textAlignment: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('banner'),
     },
     
     footer: {
@@ -256,8 +306,33 @@ export const COMPONENT_OPTIONS = {
             footerVariant: FOOTER_VARIANT_VALUES,
             logoType: ['text', 'image'],
         },
-        colorFields: ['background', 'border', 'text', 'linkHover', 'heading', 'description', 'accent', 'mutedText', 'panelBackground', 'panelText', 'buttonBackground', 'buttonText', 'wordmark', 'iconBackground', 'inputBackground', 'inputText', 'inputBorder', 'legalBackground', 'imageOverlay'],
+        colorFields: colorFieldsFor('footer'),
         socialPlatforms: ['twitter', 'x', 'github', 'facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'whatsapp', 'telegram', 'snapchat', 'discord', 'threads'],
+    },
+
+    topBar: {
+        name: 'Top Bar',
+        category: 'navigation',
+        options: {
+            useGradient: [true, false],
+            scrollEnabled: [true, false],
+            dismissible: [true, false],
+            fontSize: ['sm', 'md', 'lg'],
+            separator: ['dot', 'pipe', 'star', 'none'],
+        },
+        colorFields: colorFieldsFor('topBar'),
+    },
+
+    logoBanner: {
+        name: 'Logo Banner',
+        category: 'media',
+        options: {
+            useGradient: [true, false],
+            scrollEnabled: [true, false],
+            grayscale: [true, false],
+            showDivider: [true, false],
+        },
+        colorFields: colorFieldsFor('logoBanner'),
     },
     
     chatbot: {
@@ -266,7 +341,7 @@ export const COMPONENT_OPTIONS = {
         options: {
             position: ['bottom-left', 'bottom-right'],
         },
-        colorFields: ['primary', 'text', 'background'],
+        colorFields: colorFieldsFor('chatbot'),
     },
     
     products: {
@@ -274,11 +349,10 @@ export const COMPONENT_OPTIONS = {
         category: 'ecommerce',
         options: {
             style: ['minimal', 'modern', 'elegant', 'dark'],
-            layout: ['grid', 'list'],
-            cardStyle: ['minimal', 'modern', 'elegant'],
+            cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
             columns: [2, 3, 4, 5, 6],
         },
-        colorFields: ['background', 'text', 'heading', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('products'),
     },
 
     realEstateListings: {
@@ -290,7 +364,44 @@ export const COMPONENT_OPTIONS = {
             featuredOnly: [true, false],
             animationType: ['none', 'fade-in', 'fade-in-up', 'fade-in-down', 'slide-up', 'slide-down', 'scale-in', 'bounce-in'],
         },
-        colorFields: ['background', 'surface', 'heading', 'text', 'textMuted', 'primary', 'secondary', 'accent', 'cardBackground', 'cardHeading', 'cardText', 'border', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'priceColor', 'success', 'error'],
+        colorFields: colorFieldsFor('realEstateListings'),
+    },
+
+    restaurantReservation: {
+        name: 'Restaurant Reservation',
+        category: 'content',
+        options: {
+            showPhone: [true, false],
+            showNotes: [true, false],
+            showTablePreference: [true, false],
+        },
+        colorFields: colorFieldsFor('restaurantReservation'),
+    },
+
+    cmsFeed: {
+        name: 'CMS Feed',
+        category: 'content',
+        options: {
+            layout: ['grid', 'list', 'featured'],
+            showAuthor: [true, false],
+            showDate: [true, false],
+            showExcerpt: [true, false],
+            showFeaturedImage: [true, false],
+            showReadMore: [true, false],
+        },
+        colorFields: colorFieldsFor('cmsFeed'),
+    },
+
+    signupFloat: {
+        name: 'Sign Up Float',
+        category: 'form',
+        options: {
+            floatPosition: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'],
+            imagePlacement: ['top', 'bottom', 'left', 'right'],
+            showOnLoad: [true, false],
+            showSocialLinks: [true, false],
+        },
+        colorFields: colorFieldsFor('signupFloat'),
     },
     
     // ==========================================================================
@@ -304,19 +415,28 @@ export const COMPONENT_OPTIONS = {
             sourceType: ['manual', 'category', 'bestsellers', 'newest', 'on-sale'],
             cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
             columns: [2, 3, 4, 5],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardAspectRatio: ['1:1', '4:3', '3:4', '4:5', '16:9'],
+            imageObjectFit: ['cover', 'contain', 'fill', 'scale-down'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+        colorFields: colorFieldsFor('featuredProducts'),
     },
     
     categoryGrid: {
         name: 'Category Grid',
         category: 'ecommerce',
         options: {
-            variant: ['cards', 'overlay', 'minimal', 'banner'],
+            variant: ['cards', 'overlay', 'minimal', 'banner', 'editorial', 'bento-overlay'],
             columns: [2, 3, 4, 5, 6],
-            imageAspectRatio: ['auto', '1:1', '4:3', '3:4', '16:9'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            imageAspectRatio: ['auto', '1:1', '4:3', '3:4', '4:5', '16:9'],
+            imageObjectFit: ['cover', 'contain', 'fill', 'scale-down'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'overlayStart', 'overlayEnd'],
+        colorFields: colorFieldsFor('categoryGrid'),
     },
     
     productHero: {
@@ -334,7 +454,7 @@ export const COMPONENT_OPTIONS = {
             showFeatures: [true, false],
             showAddToCartButton: [true, false],
         },
-        colorFields: ['background', 'overlayColor', 'heading', 'text', 'accent', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'addToCartBackground', 'addToCartText'],
+        colorFields: colorFieldsFor('productHero'),
     },
     
     saleCountdown: {
@@ -342,18 +462,28 @@ export const COMPONENT_OPTIONS = {
         category: 'ecommerce',
         options: {
             variant: ['banner', 'floating', 'inline', 'fullwidth'],
+            cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardAspectRatio: ['1:1', '4:3', '3:4', '4:5', '16:9'],
+            imageObjectFit: ['cover', 'contain', 'fill', 'scale-down'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'countdownBackground', 'countdownText', 'badgeBackground', 'badgeText', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('saleCountdown'),
     },
     
     trustBadges: {
         name: 'Trust Badges',
         category: 'ecommerce',
         options: {
-            variant: ['horizontal', 'grid', 'minimal', 'detailed'],
+            variant: ['horizontal', 'grid', 'minimal', 'detailed', 'premium-strip', 'icon-cloud'],
+            layout: ['horizontal', 'grid', 'vertical'],
             iconSize: ['sm', 'md', 'lg'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'iconColor', 'borderColor'],
+        colorFields: colorFieldsFor('trustBadges'),
         icons: ['truck', 'shield', 'credit-card', 'refresh-cw', 'clock', 'award', 'lock', 'headphones', 'package', 'check-circle', 'star', 'heart'],
     },
     
@@ -362,20 +492,29 @@ export const COMPONENT_OPTIONS = {
         category: 'ecommerce',
         options: {
             variant: ['carousel', 'grid', 'compact'],
-            cardStyle: ['minimal', 'modern', 'elegant'],
+            cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
             columns: [2, 3, 4, 5, 6],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardAspectRatio: ['1:1', '4:3', '3:4', '4:5', '16:9'],
+            imageObjectFit: ['cover', 'contain', 'fill', 'scale-down'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText'],
+        colorFields: colorFieldsFor('recentlyViewed'),
     },
     
     productReviews: {
         name: 'Product Reviews',
         category: 'ecommerce',
         options: {
-            variant: ['list', 'cards', 'masonry', 'featured'],
+            variant: ['list', 'cards', 'masonry', 'featured', 'spotlight'],
             sortBy: ['newest', 'highest', 'lowest', 'helpful'],
+            columns: [2, 3, 4, 5, 6],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'starColor', 'verifiedBadgeColor'],
+        colorFields: colorFieldsFor('productReviews'),
     },
     
     collectionBanner: {
@@ -387,16 +526,19 @@ export const COMPONENT_OPTIONS = {
             textAlignment: ['left', 'center', 'right'],
             contentPosition: ['left', 'center', 'right'],
         },
-        colorFields: ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText'],
+        colorFields: colorFieldsFor('collectionBanner'),
     },
     
     productBundle: {
         name: 'Product Bundle',
         category: 'ecommerce',
         options: {
-            variant: ['horizontal', 'vertical', 'compact'],
+            variant: ['horizontal', 'vertical', 'compact', 'editorial', 'price-stack'],
+            textAlignment: ['left', 'center', 'right'],
+            contentPosition: ['left', 'center', 'right'],
+            cardGap: ['sm', 'md', 'lg', 'xl'],
         },
-        colorFields: ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'priceColor', 'savingsColor', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'],
+        colorFields: colorFieldsFor('productBundle'),
     },
     
     announcementBar: {
@@ -405,8 +547,19 @@ export const COMPONENT_OPTIONS = {
         options: {
             variant: ['static', 'scrolling', 'rotating'],
         },
-        colorFields: ['background', 'text', 'linkColor', 'iconColor', 'borderColor'],
+        colorFields: colorFieldsFor('announcementBar'),
         icons: ['megaphone', 'tag', 'gift', 'truck', 'percent', 'sparkles', 'bell', 'info'],
+    },
+
+    storeSettings: {
+        name: 'Store Settings',
+        category: 'ecommerce',
+        options: {
+            variant: ['grid', 'list'],
+            cardStyle: ['minimal', 'modern', 'elegant', 'overlay'],
+            defaultViewMode: ['grid', 'list'],
+        },
+        colorFields: colorFieldsFor('storeSettings'),
     },
 };
 
@@ -482,12 +635,12 @@ export const COMPONENT_LIST = Object.keys(COMPONENT_OPTIONS);
 
 // Categorías de componentes
 export const COMPONENT_CATEGORIES = {
-    hero: ['hero', 'heroSplit', 'banner'],
-    content: ['features', 'testimonials', 'faq', 'services', 'team', 'howItWorks', 'menu'],
+    hero: ['hero', 'heroSplit', 'heroGallery', 'heroWave', 'heroNova', 'heroLead', 'banner'],
+    content: ['features', 'testimonials', 'faq', 'services', 'team', 'howItWorks', 'menu', 'restaurantReservation', 'cmsFeed'],
     media: ['slideshow', 'portfolio', 'showcase', 'video'],
     cta: ['pricing', 'cta'],
-    form: ['leads', 'newsletter'],
-    navigation: ['header', 'footer'],
-    ecommerce: ['products', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar'],
+    form: ['leads', 'newsletter', 'signupFloat'],
+    navigation: ['header', 'footer', 'topBar'],
+    ecommerce: ['products', 'storeSettings', 'featuredProducts', 'categoryGrid', 'productHero', 'saleCountdown', 'trustBadges', 'recentlyViewed', 'productReviews', 'collectionBanner', 'productBundle', 'announcementBar'],
     other: ['map', 'chatbot'],
 };

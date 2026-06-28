@@ -371,6 +371,11 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <ColorControl label={t('editor.controls.common.title')} value={data.signupFloat.colors?.heading || '#F9FAFB'} onChange={(v) => setNestedData('signupFloat.colors.heading', v)} />
           <ColorControl label={t('editor.controls.common.text')} value={data.signupFloat.colors?.text || '#94a3b8'} onChange={(v) => setNestedData('signupFloat.colors.text', v)} />
           <ColorControl label={t('controls.accent')} value={data.signupFloat.colors?.accent || '#4f46e5'} onChange={(v) => setNestedData('signupFloat.colors.accent', v)} />
+          <Input
+            label={t('controls.signupFloat.cardShadow', 'Card Shadow')}
+            value={data.signupFloat.colors?.cardShadow || '0 25px 50px -12px rgba(0, 0, 0, 0.5)'}
+            onChange={(e) => setNestedData('signupFloat.colors.cardShadow', e.target.value)}
+          />
         </div>
       </div>
 

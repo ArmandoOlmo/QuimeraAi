@@ -368,6 +368,15 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         )}
       </div>
 
+      {/* Button Radius */}
+      <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
+        <BorderRadiusSelector
+          label={t('controls.buttonRadius')}
+          value={data.heroWave.buttonBorderRadius || 'xl'}
+          onChange={(v) => setNestedData('heroWave.buttonBorderRadius', v)}
+        />
+      </div>
+
       {/* Colors */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
         <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -376,6 +385,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
 
         <div className="space-y-3">
+          <ColorControl label={t('editor.controls.common.background')} value={data.heroWave.colors?.background || '#0f172a'} onChange={(v) => setNestedData('heroWave.colors.background', v)} />
           <ColorControl label={t('controls.headline')} value={data.heroWave.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.heading', v)} />
           <ColorControl label={t('controls.text')} value={data.heroWave.colors?.text || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.text', v)} />
           <ColorControl label={t('controls.ctaText')} value={data.heroWave.colors?.ctaText || '#ffffff'} onChange={(v) => setNestedData('heroWave.colors.ctaText', v)} />

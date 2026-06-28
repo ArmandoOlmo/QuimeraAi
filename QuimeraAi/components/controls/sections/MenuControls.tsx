@@ -122,6 +122,14 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             </div>
           </div>
         )}
+
+        <div className="mt-4 pt-4 border-t border-q-border/50">
+          <ToggleControl
+            label={t('controls.showCategories', 'Show categories')}
+            checked={data?.menu?.showCategories !== false}
+            onChange={(v) => setNestedData('menu.showCategories', v)}
+          />
+        </div>
       </div>
 
 
@@ -237,6 +245,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
         <div className="space-y-1">
+          <BorderRadiusSelector label={t('editor.controls.common.borderRadius')} value={data?.menu?.borderRadius || 'xl'} onChange={(v) => setNestedData('menu.borderRadius', v)} extended />
           <PaddingSelector label={t('controls.vertical')} value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
         </div>

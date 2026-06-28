@@ -22,6 +22,7 @@ import {
   HEADER_SPECIAL_COLOR_VARIANT_VALUES,
   HEADER_VARIANT_GROUPS,
   getHeaderVariantMeta,
+  isHeaderVariant,
   type HeaderVariant,
 } from '../../../data/headerVariants';
 import {
@@ -41,7 +42,8 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
   if (!data?.header) return null;
 
   const activeMenuId = data.header.menuId || '';
-  const currentHeaderStyle = (data.header.style || 'sticky-solid') as HeaderVariant;
+  const rawHeaderStyle = data.header.style === 'transparent' ? 'sticky-transparent' : (data.header.style || 'sticky-solid');
+  const currentHeaderStyle: HeaderVariant = isHeaderVariant(rawHeaderStyle) ? rawHeaderStyle : 'sticky-solid';
   const headerVariantMeta = getHeaderVariantMeta(currentHeaderStyle);
   const isHeaderGradientStyle = HEADER_GRADIENT_VARIANT_VALUES.includes(currentHeaderStyle);
   const usesHeaderPanelColors = HEADER_SPECIAL_COLOR_VARIANT_VALUES.includes(currentHeaderStyle) || HEADER_FLOATING_VARIANT_VALUES.includes(currentHeaderStyle);
@@ -78,7 +80,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         <div>
           <Select
             label={t('editor.controls.header.style')}
-            value={data.header.style}
+            value={currentHeaderStyle}
             onChange={(val) => setNestedData('header.style', val)}
             groups={HEADER_VARIANT_GROUPS}
             noMargin
@@ -86,28 +88,6 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <p className="mt-1 text-[11px] text-q-text-secondary">{headerVariantMeta.description}</p>
         </div>
       </div>
-      {data.header.style === 'segmented-pill' && (
-          <div className="mt-3">
-            <ToggleControl
-              label={t('controls.botonesEnDiagonal')}
-              checked={data.header.segmentedPillSlanted === true}
-              onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
-            />
-            {data.header.segmentedPillSlanted === true && (
-              <div className="animate-fade-in-up mt-2">
-                <SliderControl
-                  label={t('controls.inclinacin')}
-                  value={data.header.segmentedPillSlantedAngle ?? 15}
-                  onChange={(v) => setNestedData('header.segmentedPillSlantedAngle', v)}
-                  min={5}
-                  max={45}
-                  step={1}
-                  suffix="°"
-                />
-              </div>
-            )}
-          </div>
-        )}
 
 
       <div>
@@ -466,6 +446,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {usesHeaderPanelColors && (
         <>
           <ColorControl label={t('controls.superficie', 'Superficie')} value={data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surface', v)} />
+          <ColorControl label={t('controls.superficieAlt', 'Superficie alterna')} value={data.header.colors?.surfaceAlt || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surfaceAlt', v)} />
           <ColorControl label={t('controls.panel', 'Panel')} value={data.header.colors?.panelBackground || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.panelBackground', v)} />
           <ColorControl label={t('controls.textoPanel', 'Texto panel')} value={data.header.colors?.panelText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.panelText', v)} />
           <ColorControl label={t('controls.textoSecundario', 'Texto secundario')} value={data.header.colors?.mutedText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.mutedText', v)} />
@@ -493,7 +474,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           </div>
         </>
       )}
-      {(data.header.style === 'tabbed' || data.header.style === 'segmented-pill') && (
+      {currentHeaderStyle === 'tabbed' && (
         <>
           <ColorControl
             label="Color Tab Activo"
@@ -881,7 +862,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <div>
             <Select
               label={t('editor.controls.header.style')}
-              value={data.header.style || 'floating-glass'}
+              value={currentHeaderStyle}
               onChange={(val) => setNestedData('header.style', val)}
               groups={HEADER_VARIANT_GROUPS}
               noMargin
@@ -889,28 +870,6 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
             <p className="mt-1 text-[11px] text-q-text-secondary">{headerVariantMeta.description}</p>
           </div>
         </div>
-        {data.header.style === 'segmented-pill' && (
-            <div className="mt-3">
-              <ToggleControl
-                label={t('controls.botonesEnDiagonal')}
-                checked={data.header.segmentedPillSlanted === true}
-                onChange={(v) => setNestedData('header.segmentedPillSlanted', v)}
-              />
-              {data.header.segmentedPillSlanted === true && (
-                <div className="animate-fade-in-up mt-2">
-                  <SliderControl
-                    label={t('controls.inclinacin')}
-                    value={data.header.segmentedPillSlantedAngle ?? 15}
-                    onChange={(v) => setNestedData('header.segmentedPillSlantedAngle', v)}
-                    min={5}
-                    max={45}
-                    step={1}
-                    suffix="°"
-                  />
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
 
@@ -1011,6 +970,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           {usesHeaderPanelColors && (
             <>
               <ColorControl label={t('controls.superficie', 'Superficie')} value={data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surface', v)} />
+              <ColorControl label={t('controls.superficieAlt', 'Superficie alterna')} value={data.header.colors?.surfaceAlt || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.surfaceAlt', v)} />
               <ColorControl label={t('controls.panel', 'Panel')} value={data.header.colors?.panelBackground || data.header.colors?.surface || data.header.colors?.background} onChange={(v) => setNestedData('header.colors.panelBackground', v)} />
               <ColorControl label={t('controls.textoPanel', 'Texto panel')} value={data.header.colors?.panelText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.panelText', v)} />
               <ColorControl label={t('controls.textoSecundario', 'Texto secundario')} value={data.header.colors?.mutedText || data.header.colors?.text} onChange={(v) => setNestedData('header.colors.mutedText', v)} />
@@ -1038,7 +998,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
               </div>
             </>
           )}
-          {(data.header.style === 'tabbed' || data.header.style === 'segmented-pill') && (
+          {currentHeaderStyle === 'tabbed' && (
             <>
               <ColorControl
                 label="Color Tab Activo"

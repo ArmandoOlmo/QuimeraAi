@@ -30,6 +30,22 @@ export interface ComponentImageSlot {
     purpose: string;
 }
 
+export type ComponentEditorSupport = 'full' | 'style-only' | 'global' | 'runtime-only' | 'none';
+
+export interface ComponentColorMapping {
+    fields: string[];
+    paths: string[];
+    variantScopedFields?: Record<string, string[]>;
+}
+
+export interface ComponentEditorCatalog {
+    support: ComponentEditorSupport;
+    renderer?: string;
+    controlGroups: string[];
+    colorMapping?: ComponentColorMapping;
+    notes?: string;
+}
+
 export interface ComponentRegistryItem {
     id: PageSection;
     label: string;
@@ -43,6 +59,7 @@ export interface ComponentRegistryItem {
     requiredService?: PlatformServiceId;
     requiredFeature?: keyof PlanFeatures;
     adminOnly?: boolean;
+    editor?: ComponentEditorCatalog;
 }
 
 export interface ComponentAccessContext {
@@ -57,6 +74,186 @@ const ECOMMERCE_SERVICE = { requiredService: 'ecommerce' as const, requiredFeatu
 const CMS_SERVICE = { requiredService: 'cms' as const, requiredFeature: 'cmsEnabled' as const };
 const REAL_ESTATE_SERVICE = { requiredService: 'realEstate' as const, requiredFeature: 'realEstateModule' as const };
 
+const colors = (
+    section: PageSection,
+    fields: string[],
+    pathOverrides: Record<string, string> = {},
+    variantScopedFields?: Record<string, string[]>,
+): ComponentColorMapping => ({
+    fields,
+    paths: fields.map(field => pathOverrides[field] || `${section}.colors.${field}`),
+    ...(variantScopedFields ? { variantScopedFields } : {}),
+});
+
+const fullEditor = (
+    renderer: string,
+    controlGroups: string[],
+    colorMapping?: ComponentColorMapping,
+    notes?: string,
+): ComponentEditorCatalog => ({
+    support: 'full',
+    renderer,
+    controlGroups,
+    ...(colorMapping ? { colorMapping } : {}),
+    ...(notes ? { notes } : {}),
+});
+
+const runtimeOnly = (
+    colorMapping?: ComponentColorMapping,
+    notes = 'Runtime-rendered section. It is cataloged for rendering/generation but does not expose website inspector controls.',
+): ComponentEditorCatalog => ({
+    support: 'runtime-only',
+    controlGroups: [],
+    ...(colorMapping ? { colorMapping } : {}),
+    notes,
+});
+
+export const COMPONENT_EDITOR_CATALOG: Partial<Record<PageSection, ComponentEditorCatalog>> = {
+    header: fullEditor(
+        'renderHeaderControlsWithTabs',
+        ['content', 'style'],
+        colors('header', [
+            'background', 'text', 'accent', 'border', 'surface', 'surfaceAlt', 'panelBackground', 'panelText',
+            'mutedText', 'linkHover', 'separator', 'cartBadge', 'gradientFadeColor', 'gradientDarkColor',
+            'buttonBackground', 'buttonText', 'tabBorderColor', 'tabActiveColor',
+        ], {}, {
+            tabbed: ['tabActiveColor', 'tabBorderColor'],
+            'transparent-gradient': ['gradientFadeColor'],
+            'transparent-gradient-dark': ['gradientDarkColor'],
+        }),
+    ),
+    hero: fullEditor(
+        'renderHeroControlsWithTabs',
+        ['content', 'style'],
+        colors('hero', [
+            'primary', 'secondary', 'background', 'text', 'heading', 'buttonBackground', 'buttonText',
+            'secondaryButtonBackground', 'secondaryButtonText', 'badgeColor', 'badgeBackgroundColor',
+            'imageBorderColor', 'sectionBorderColor',
+        ], {
+            badgeColor: 'hero.badgeColor',
+            badgeBackgroundColor: 'hero.badgeBackgroundColor',
+            imageBorderColor: 'hero.imageBorderColor',
+            sectionBorderColor: 'hero.sectionBorderColor',
+        }),
+    ),
+    heroSplit: fullEditor('renderHeroSplitControls', ['content', 'style'], colors('heroSplit', ['textBackground', 'imageBackground', 'heading', 'text', 'buttonBackground', 'buttonText'])),
+    heroGallery: fullEditor('renderHeroGalleryControls', ['content', 'style'], colors('heroGallery', ['background', 'text', 'heading', 'ctaText', 'dotActive', 'dotInactive', 'arrowColor'])),
+    heroWave: fullEditor('renderHeroWaveControls', ['content', 'style'], colors('heroWave', ['text', 'heading', 'ctaText', 'ctaBackground', 'dotActive', 'dotInactive', 'arrowColor'])),
+    heroNova: fullEditor('renderHeroNovaControls', ['content', 'style'], colors('heroNova', ['background', 'text', 'heading', 'displayText', 'ctaText', 'ctaBackground', 'dotActive', 'dotInactive', 'arrowColor'])),
+    heroLead: fullEditor('renderHeroLeadControls', ['content', 'style'], colors('heroLead', [
+        'background', 'infoBackground', 'formBackground', 'heading', 'text', 'accent', 'buttonBackground',
+        'buttonText', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder', 'badgeBackground',
+        'badgeText', 'formHeading', 'formText', 'borderColor',
+    ])),
+    topBar: fullEditor(
+        'renderTopBarControls',
+        ['content', 'style'],
+        colors('topBar', ['backgroundColor', 'textColor', 'linkColor', 'iconColor', 'gradientFrom', 'gradientTo'], {
+            backgroundColor: 'topBar.backgroundColor',
+            textColor: 'topBar.textColor',
+            linkColor: 'topBar.linkColor',
+            iconColor: 'topBar.iconColor',
+            gradientFrom: 'topBar.gradientFrom',
+            gradientTo: 'topBar.gradientTo',
+        }, { gradient: ['gradientFrom', 'gradientTo'] }),
+    ),
+    logoBanner: fullEditor(
+        'renderLogoBannerControls',
+        ['content', 'style'],
+        colors('logoBanner', ['backgroundColor', 'titleColor', 'subtitleColor', 'dividerColor', 'gradientFrom', 'gradientTo'], {
+            backgroundColor: 'logoBanner.backgroundColor',
+            titleColor: 'logoBanner.titleColor',
+            subtitleColor: 'logoBanner.subtitleColor',
+            dividerColor: 'logoBanner.dividerColor',
+            gradientFrom: 'logoBanner.gradientFrom',
+            gradientTo: 'logoBanner.gradientTo',
+        }, { gradient: ['gradientFrom', 'gradientTo'] }),
+    ),
+    banner: fullEditor('renderBannerControlsWithTabs', ['content', 'style'], colors('banner', ['background', 'overlayColor', 'heading', 'text', 'buttonBackground', 'buttonText'])),
+    footer: fullEditor('renderFooterControlsWithTabs', ['content', 'style'], colors('footer', [
+        'background', 'border', 'text', 'linkHover', 'heading', 'description', 'accent', 'mutedText',
+        'panelBackground', 'panelText', 'buttonBackground', 'buttonText', 'wordmark', 'iconBackground',
+        'inputBackground', 'inputText', 'inputBorder', 'legalBackground', 'imageOverlay',
+    ])),
+    features: fullEditor('renderFeaturesControlsWithTabs', ['content', 'style'], colors('features', [
+        'background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground',
+        'cardHeading', 'cardText', 'glowColor', 'cardGradientStart', 'cardGradientEnd', 'overlayText', 'overlayMuted',
+    ])),
+    services: fullEditor('renderServicesControlsWithTabs', ['content', 'style'], colors('services', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText'])),
+    testimonials: fullEditor('renderTestimonialsControlsWithTabs', ['content', 'style'], colors('testimonials', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'subtitleColor', 'cardBackground'])),
+    pricing: fullEditor('renderPricingControlsWithTabs', ['content', 'style'], colors('pricing', [
+        'background', 'accent', 'borderColor', 'text', 'mutedText', 'heading', 'description',
+        'buttonBackground', 'buttonText', 'checkmarkColor', 'cardBackground', 'cardHeading', 'cardText',
+        'priceColor', 'gradientStart', 'gradientEnd', 'panelBackground', 'panelText', 'surfaceAlt',
+        'featuredBackground', 'featuredText', 'badgeBackground', 'badgeText', 'dividerColor', 'imageOverlay',
+    ])),
+    faq: fullEditor('renderFAQControlsWithTabs', ['content', 'style'], colors('faq', [
+        'background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground',
+        'cardHeading', 'cardText', 'panelBackground', 'activeBackground', 'activeText', 'iconBackground',
+        'gradientStart', 'gradientEnd',
+    ])),
+    cta: fullEditor('renderCTAControlsWithTabs', ['content', 'style'], colors('cta', ['background', 'gradientStart', 'gradientEnd', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'borderColor', 'secondaryText'])),
+    portfolio: fullEditor('renderPortfolioControlsWithTabs', ['content', 'style'], colors('portfolio', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardTitleColor', 'cardTextColor', 'cardOverlayStart', 'cardOverlayEnd'])),
+    showcase: fullEditor('renderShowcaseControlsWithTabs', ['content', 'style'], colors('showcase', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'cardHeading', 'cardText', 'mutedText', 'pillBackground', 'pillText', 'overlayStart', 'overlayEnd', 'buttonBackground', 'buttonText'])),
+    team: fullEditor('renderTeamControlsWithTabs', ['content', 'style'], colors('team', ['background', 'text', 'heading', 'description', 'accent', 'cardBackground', 'cardHeading', 'cardText', 'photoBorderColor'])),
+    slideshow: fullEditor('renderSlideshowControlsWithTabs', ['content', 'style'], colors('slideshow', ['background', 'heading', 'arrowBackground', 'arrowText', 'dotActive', 'dotInactive', 'captionBackground', 'captionText'])),
+    video: fullEditor('renderVideoControlsWithTabs', ['content', 'style'], colors('video', ['background', 'text', 'heading', 'description'])),
+    howItWorks: fullEditor('renderHowItWorksControlsWithTabs', ['content', 'style'], colors('howItWorks', ['background', 'accent', 'text', 'heading', 'description', 'stepTitle', 'iconColor'])),
+    leads: fullEditor('renderLeadsControlsWithTabs', ['content', 'style'], colors('leads', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder', 'gradientStart', 'gradientEnd'])),
+    newsletter: fullEditor('renderNewsletterControlsWithTabs', ['content', 'style'], colors('newsletter', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'cardHeading', 'cardText', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder'])),
+    map: fullEditor('renderMapControls', ['content', 'style'], colors('map', ['background', 'text', 'heading', 'description', 'accent', 'cardBackground', 'buttonBackground', 'buttonText'])),
+    menu: fullEditor('renderMenuControlsWithTabs', ['content', 'style'], colors('menu', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'cardBackground', 'priceColor', 'cardTitleColor', 'cardText'])),
+    restaurantReservation: fullEditor('renderRestaurantReservationControlsWithTabs', ['content', 'style'], colors('restaurantReservation', ['background', 'heading', 'text', 'accent', 'cardBackground', 'inputBackground', 'inputBorder', 'inputText', 'buttonBackground', 'buttonText', 'description'])),
+    realEstateListings: fullEditor('renderRealEstateListingsControlsWithTabs', ['content', 'style'], colors('realEstateListings', ['background', 'surface', 'heading', 'text', 'textMuted', 'primary', 'secondary', 'accent', 'cardBackground', 'cardHeading', 'cardText', 'border', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'priceColor', 'success', 'error'])),
+    appointmentBooking: runtimeOnly(colors('appointmentBooking', ['background', 'accent', 'borderColor', 'text', 'heading', 'description', 'buttonBackground', 'buttonText', 'cardBackground', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder'])),
+    products: fullEditor('renderProductsControlsWithTabs', ['content', 'style'], colors('products', ['background', 'text', 'heading', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText'])),
+    storeSettings: fullEditor('useStoreSettingsControls', ['content', 'style'], colors('storeSettings', [
+        'background', 'heading', 'text', 'accent', 'cardBackground', 'cardText',
+        'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'priceColor',
+        'salePriceColor', 'borderColor', 'starColor', 'cartDrawerBackground',
+        'cartDrawerHeading', 'cartDrawerText', 'cartDrawerAccent', 'cartDrawerCardBackground',
+        'cartDrawerCardText', 'cartDrawerButtonBackground', 'cartDrawerButtonText',
+        'cartDrawerPriceColor', 'cartDrawerBorderColor',
+    ], {
+        cartDrawerBackground: 'storeSettings.cartDrawerColors.background',
+        cartDrawerHeading: 'storeSettings.cartDrawerColors.heading',
+        cartDrawerText: 'storeSettings.cartDrawerColors.text',
+        cartDrawerAccent: 'storeSettings.cartDrawerColors.accent',
+        cartDrawerCardBackground: 'storeSettings.cartDrawerColors.cardBackground',
+        cartDrawerCardText: 'storeSettings.cartDrawerColors.cardText',
+        cartDrawerButtonBackground: 'storeSettings.cartDrawerColors.buttonBackground',
+        cartDrawerButtonText: 'storeSettings.cartDrawerColors.buttonText',
+        cartDrawerPriceColor: 'storeSettings.cartDrawerColors.priceColor',
+        cartDrawerBorderColor: 'storeSettings.cartDrawerColors.borderColor',
+    })),
+    featuredProducts: fullEditor('useFeaturedProductsControls', ['content', 'style'], colors('featuredProducts', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'priceColor', 'salePriceColor', 'borderColor', 'overlayStart', 'overlayEnd'])),
+    categoryGrid: fullEditor('useCategoryGridControls', ['content', 'style'], colors('categoryGrid', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'buttonText', 'overlayStart', 'overlayEnd', 'borderColor'])),
+    productHero: fullEditor('useProductHeroControls', ['content', 'style'], colors('productHero', ['background', 'overlayColor', 'heading', 'text', 'accent', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText', 'addToCartBackground', 'addToCartText'])),
+    saleCountdown: fullEditor('useSaleCountdownControls', ['content', 'style'], colors('saleCountdown', ['background', 'heading', 'text', 'accent', 'countdownBackground', 'countdownText', 'badgeBackground', 'badgeText', 'buttonBackground', 'buttonText', 'cardBackground', 'cardText', 'overlayStart', 'overlayEnd'])),
+    trustBadges: fullEditor('useTrustBadgesControls', ['content', 'style'], colors('trustBadges', ['background', 'heading', 'text', 'accent', 'iconColor', 'cardBackground', 'cardText', 'borderColor'])),
+    collectionBanner: fullEditor('useCollectionBannerControls', ['content', 'style'], colors('collectionBanner', ['background', 'overlayColor', 'heading', 'text', 'accent', 'buttonBackground', 'buttonText'])),
+    recentlyViewed: fullEditor('useRecentlyViewedControls', ['content', 'style'], colors('recentlyViewed', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'starColor', 'borderColor', 'buttonText', 'overlayStart', 'overlayEnd'])),
+    productReviews: fullEditor('useProductReviewsControls', ['content', 'style'], colors('productReviews', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'starColor', 'verifiedBadgeColor', 'borderColor', 'buttonText'])),
+    productBundle: fullEditor('useProductBundleControls', ['content', 'style'], colors('productBundle', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'borderColor', 'priceColor', 'savingsColor', 'buttonBackground', 'buttonText', 'badgeBackground', 'badgeText'])),
+    announcementBar: fullEditor('useAnnouncementBarControls', ['content', 'style'], colors('announcementBar', ['background', 'text', 'linkColor', 'iconColor', 'borderColor'])),
+    cmsFeed: fullEditor('renderCMSFeedControlsWithTabs', ['content', 'style'], colors('cmsFeed', ['background', 'buttonBackground', 'buttonText', 'cardBackground', 'cardBorder', 'cardExcerpt', 'cardHeading', 'cardText', 'categoryBadgeBackground', 'categoryBadgeText', 'heading', 'text'])),
+    signupFloat: fullEditor('renderSignupFloatControlsWithTabs', ['content', 'style'], colors('signupFloat', ['background', 'heading', 'text', 'accent', 'buttonBackground', 'buttonText', 'inputBackground', 'inputText', 'inputBorder', 'inputPlaceholder', 'socialIconColor', 'overlayBackground'])),
+    separator1: fullEditor('renderSeparatorControlsWithTabs', ['content', 'style'], colors('separator1', ['color'], { color: 'separator1.color' })),
+    separator2: fullEditor('renderSeparatorControlsWithTabs', ['content', 'style'], colors('separator2', ['color'], { color: 'separator2.color' })),
+    separator3: fullEditor('renderSeparatorControlsWithTabs', ['content', 'style'], colors('separator3', ['color'], { color: 'separator3.color' })),
+    separator4: fullEditor('renderSeparatorControlsWithTabs', ['content', 'style'], colors('separator4', ['color'], { color: 'separator4.color' })),
+    separator5: fullEditor('renderSeparatorControlsWithTabs', ['content', 'style'], colors('separator5', ['color'], { color: 'separator5.color' })),
+    chatbot: fullEditor('renderChatbotControlsWithTabs', ['content', 'style'], colors('chatbot', ['primary', 'text', 'background'])),
+    productDetail: runtimeOnly(colors('productDetail', ['background', 'heading', 'text', 'accent', 'priceColor', 'salePriceColor', 'buttonBackground', 'buttonText'])),
+    categoryProducts: runtimeOnly(colors('categoryProducts', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText'])),
+    articleContent: runtimeOnly(colors('articleContent', ['background', 'heading', 'text', 'accent', 'linkColor'])),
+    productGrid: runtimeOnly(colors('productGrid', ['background', 'heading', 'text', 'accent', 'cardBackground', 'cardText', 'buttonBackground', 'buttonText'])),
+    cart: runtimeOnly(colors('cart', ['background', 'heading', 'text', 'accent', 'cardBackground', 'buttonBackground', 'buttonText'])),
+    checkout: runtimeOnly(colors('checkout', ['background', 'heading', 'text', 'accent', 'cardBackground', 'buttonBackground', 'buttonText', 'inputBackground', 'inputBorder'])),
+    propertyDirectory: runtimeOnly(colors('propertyDirectory', ['background', 'surface', 'heading', 'text', 'textMuted', 'primary', 'secondary', 'accent', 'cardBackground', 'border', 'buttonBackground', 'buttonText', 'priceColor', 'success', 'error'])),
+    propertyDetail: runtimeOnly(colors('propertyDetail', ['background', 'surface', 'heading', 'text', 'textMuted', 'primary', 'secondary', 'accent', 'cardBackground', 'border', 'buttonBackground', 'buttonText', 'priceColor', 'success', 'error'])),
+};
+
 export const QUIMERA_ADMIN_COMPONENTS: PageSection[] = [
     'heroQuimera', 'featuresQuimera', 'pricingQuimera', 'testimonialsQuimera', 'faqQuimera', 'ctaQuimera',
     'platformShowcaseQuimera', 'aiCapabilitiesQuimera', 'industrySolutionsQuimera', 'agencyWhiteLabelQuimera',
@@ -65,7 +262,15 @@ export const QUIMERA_ADMIN_COMPONENTS: PageSection[] = [
     'appointmentsQuimera', 'bioPageQuimera', 'emailMarketingQuimera',
 ];
 
-export const componentRegistry: ComponentRegistryItem[] = [
+const baseComponentRegistry: Omit<ComponentRegistryItem, 'editor'>[] = [
+    {
+        id: 'header',
+        label: 'Header',
+        role: 'structure',
+        industries: ['all'],
+        goals: ['leads', 'bookings', 'sales', 'authority', 'portfolio', 'restaurant', 'real-estate'],
+        promptHints: 'Required global navigation/header. Use only active headerVariant values and expose only variant-specific controls for tabs, gradient fades, panels, search, login, language selector, cart badge, logo, and CTA.',
+    },
     {
         id: 'hero',
         label: 'Hero',
@@ -291,6 +496,11 @@ export const componentRegistry: ComponentRegistryItem[] = [
     { id: 'cmsFeed', label: 'CMS Feed', role: 'media', industries: ['education', 'media', 'technology', 'consulting'], goals: ['authority'], ...CMS_SERVICE, promptHints: 'Dynamic CMS/blog feed. Only use when CMS service and plan access are available.' },
 ];
 
+export const componentRegistry: ComponentRegistryItem[] = baseComponentRegistry.map(item => ({
+    ...item,
+    editor: COMPONENT_EDITOR_CATALOG[item.id] || runtimeOnly(undefined, 'Registered section without an active website inspector catalog.'),
+}));
+
 export function canAccessRegistryItem(item: ComponentRegistryItem, access: ComponentAccessContext = {}): boolean {
     if (item.adminOnly && !access.includeAdminOnly) return false;
     if (QUIMERA_ADMIN_COMPONENTS.includes(item.id) && !access.includeAdminOnly) return false;
@@ -314,6 +524,23 @@ export function filterAccessibleSections(sections: PageSection[], access: Compon
 
 export function getRegistryItem(section: PageSection): ComponentRegistryItem | undefined {
     return componentRegistry.find(item => item.id === section);
+}
+
+export function getRegistryEditorCatalog(section: PageSection): ComponentEditorCatalog | undefined {
+    return getRegistryItem(section)?.editor || COMPONENT_EDITOR_CATALOG[section];
+}
+
+export function getRegistryColorFields(section: PageSection): string[] {
+    return getRegistryEditorCatalog(section)?.colorMapping?.fields || [];
+}
+
+export function getRegistryColorPaths(section: PageSection): string[] {
+    return getRegistryEditorCatalog(section)?.colorMapping?.paths || [];
+}
+
+export function componentHasEditableControls(section: PageSection): boolean {
+    const support = getRegistryEditorCatalog(section)?.support;
+    return support === 'full' || support === 'style-only' || support === 'global';
 }
 
 export function registryToPromptList(items: ComponentRegistryItem[]): string {

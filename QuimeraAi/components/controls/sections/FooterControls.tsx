@@ -310,11 +310,23 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
+        <ColorControl label={t('controls.border', 'Border')} value={data.footer.colors?.border || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.border', v)} />
         <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
         <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
+        <ColorControl label={t('controls.mutedText', 'Muted text')} value={data.footer.colors?.mutedText || data.footer.colors?.description || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.mutedText', v)} />
         <ColorControl label={t('controls.accent', 'Accent')} value={data.footer.colors?.accent || data.footer.colors?.linkHover} onChange={(v) => setNestedData('footer.colors.accent', v)} />
+        <ColorControl label={t('editor.controls.footer.linkHover', 'Link hover')} value={data.footer.colors?.linkHover || data.footer.colors?.accent} onChange={(v) => setNestedData('footer.colors.linkHover', v)} />
         <ColorControl label={t('editor.controls.footer.wordmarkColor', 'Wordmark')} value={data.footer.colors?.wordmark || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.wordmark', v)} />
+        <ColorControl label={t('editor.controls.footer.iconBackground', 'Icon background')} value={data.footer.colors?.iconBackground || data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.iconBackground', v)} />
         <ColorControl label={t('editor.controls.footer.panelBackground', 'Panel background')} value={data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.panelBackground', v)} />
+        <ColorControl label={t('editor.controls.footer.panelText', 'Panel text')} value={data.footer.colors?.panelText || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.panelText', v)} />
+        <ColorControl label={t('editor.controls.footer.buttonBackground', 'Button background')} value={data.footer.colors?.buttonBackground || data.footer.colors?.accent} onChange={(v) => setNestedData('footer.colors.buttonBackground', v)} />
+        <ColorControl label={t('editor.controls.footer.buttonText', 'Button text')} value={data.footer.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('footer.colors.buttonText', v)} />
+        <ColorControl label={t('editor.controls.footer.inputBackground', 'Input background')} value={data.footer.colors?.inputBackground || '#ffffff'} onChange={(v) => setNestedData('footer.colors.inputBackground', v)} />
+        <ColorControl label={t('editor.controls.footer.inputText', 'Input text')} value={data.footer.colors?.inputText || '#111111'} onChange={(v) => setNestedData('footer.colors.inputText', v)} />
+        <ColorControl label={t('editor.controls.footer.inputBorder', 'Input border')} value={data.footer.colors?.inputBorder || data.footer.colors?.border || 'transparent'} onChange={(v) => setNestedData('footer.colors.inputBorder', v)} />
+        <ColorControl label={t('editor.controls.footer.legalBackground', 'Legal background')} value={data.footer.colors?.legalBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.legalBackground', v)} />
+        <ColorControl label={t('editor.controls.footer.imageOverlay', 'Image overlay')} value={data.footer.colors?.imageOverlay || data.footer.colors?.background || '#000000'} onChange={(v) => setNestedData('footer.colors.imageOverlay', v)} />
       </div>
     </div>
   );
@@ -652,18 +664,24 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
         </label>
         <div className="space-y-3">
           <ColorControl label={t('editor.controls.common.background')} value={data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.background', v)} />
+          <ColorControl label={t('controls.border', 'Border')} value={data.footer.colors?.border || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.border', v)} />
           <ColorControl label={t('editor.controls.common.title')} value={data.footer.colors?.heading || '#ffffff'} onChange={(v) => setNestedData('footer.colors.heading', v)} />
           <ColorControl label={t('controls.text')} value={data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.text', v)} />
           <ColorControl label={t('editor.controls.common.description', 'Description')} value={data.footer.colors?.description || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.description', v)} />
+          <ColorControl label={t('controls.mutedText', 'Muted text')} value={data.footer.colors?.mutedText || data.footer.colors?.description || data.footer.colors?.text} onChange={(v) => setNestedData('footer.colors.mutedText', v)} />
           <ColorControl label={t('controls.accent', 'Accent')} value={data.footer.colors?.accent || data.footer.colors?.linkHover} onChange={(v) => setNestedData('footer.colors.accent', v)} />
+          <ColorControl label={t('editor.controls.footer.linkHover', 'Link hover')} value={data.footer.colors?.linkHover || data.footer.colors?.accent} onChange={(v) => setNestedData('footer.colors.linkHover', v)} />
           <ColorControl label={t('editor.controls.footer.wordmarkColor', 'Wordmark')} value={data.footer.colors?.wordmark || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.wordmark', v)} />
+          <ColorControl label={t('editor.controls.footer.iconBackground', 'Icon background')} value={data.footer.colors?.iconBackground || data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.iconBackground', v)} />
           <ColorControl label={t('editor.controls.footer.panelBackground', 'Panel background')} value={data.footer.colors?.panelBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.panelBackground', v)} />
           <ColorControl label={t('editor.controls.footer.panelText', 'Panel text')} value={data.footer.colors?.panelText || data.footer.colors?.heading} onChange={(v) => setNestedData('footer.colors.panelText', v)} />
           <ColorControl label={t('editor.controls.footer.buttonBackground', 'Button background')} value={data.footer.colors?.buttonBackground || data.footer.colors?.accent} onChange={(v) => setNestedData('footer.colors.buttonBackground', v)} />
           <ColorControl label={t('editor.controls.footer.buttonText', 'Button text')} value={data.footer.colors?.buttonText || '#ffffff'} onChange={(v) => setNestedData('footer.colors.buttonText', v)} />
           <ColorControl label={t('editor.controls.footer.inputBackground', 'Input background')} value={data.footer.colors?.inputBackground || '#ffffff'} onChange={(v) => setNestedData('footer.colors.inputBackground', v)} />
           <ColorControl label={t('editor.controls.footer.inputText', 'Input text')} value={data.footer.colors?.inputText || '#111111'} onChange={(v) => setNestedData('footer.colors.inputText', v)} />
+          <ColorControl label={t('editor.controls.footer.inputBorder', 'Input border')} value={data.footer.colors?.inputBorder || data.footer.colors?.border || 'transparent'} onChange={(v) => setNestedData('footer.colors.inputBorder', v)} />
           <ColorControl label={t('editor.controls.footer.legalBackground', 'Legal background')} value={data.footer.colors?.legalBackground || data.footer.colors?.background} onChange={(v) => setNestedData('footer.colors.legalBackground', v)} />
+          <ColorControl label={t('editor.controls.footer.imageOverlay', 'Image overlay')} value={data.footer.colors?.imageOverlay || data.footer.colors?.background || '#000000'} onChange={(v) => setNestedData('footer.colors.imageOverlay', v)} />
         </div>
       </div>
     </div>

@@ -45,6 +45,10 @@ const Products: React.FC<ProductsWithColorsProps> = ({
     style = 'modern',
     primaryColor = '#6366f1',
     storeUrl,
+    paddingY,
+    paddingX,
+    titleFontSize,
+    descriptionFontSize,
     colors,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -235,6 +239,48 @@ const Products: React.FC<ProductsWithColorsProps> = ({
         }
     };
 
+    const getPaddingY = () => {
+        const map = {
+            none: 'py-0',
+            sm: 'py-8',
+            md: 'py-12',
+            lg: 'py-16',
+            xl: 'py-20',
+        };
+        return map[paddingY || 'lg'] || map.lg;
+    };
+
+    const getPaddingX = () => {
+        const map = {
+            none: 'px-0',
+            sm: 'px-4',
+            md: 'px-4 sm:px-6',
+            lg: 'px-4 sm:px-6 lg:px-8',
+            xl: 'px-6 sm:px-8 lg:px-12',
+        };
+        return map[paddingX || 'lg'] || map.lg;
+    };
+
+    const getTitleSize = () => {
+        const map = {
+            sm: 'text-xl md:text-2xl',
+            md: 'text-2xl md:text-3xl',
+            lg: 'text-3xl md:text-4xl',
+            xl: 'text-4xl md:text-5xl',
+        };
+        return map[titleFontSize || 'lg'] || map.lg;
+    };
+
+    const getDescriptionSize = () => {
+        const map = {
+            sm: 'text-sm',
+            md: 'text-base',
+            lg: 'text-lg',
+            xl: 'text-xl',
+        };
+        return map[descriptionFontSize || 'lg'] || map.lg;
+    };
+
     // Calculate input/select background based on section background
     const getInputBackground = () => {
         if (!effectiveColors.background) return undefined;
@@ -253,21 +299,21 @@ const Products: React.FC<ProductsWithColorsProps> = ({
 
     return (
         <section 
-            className={`py-16 ${styles.container}`}
+            className={`${getPaddingY()} ${styles.container}`}
             style={effectiveColors.background ? { backgroundColor: effectiveColors.background } : undefined}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`max-w-7xl mx-auto ${getPaddingX()}`}>
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h2 
-                        className={`text-3xl md:text-4xl font-bold mb-4 ${styles.title}`}
+                        className={`${getTitleSize()} font-bold mb-4 ${styles.title}`}
                         style={effectiveColors.heading ? { color: effectiveColors.heading } : undefined}
                     >
                         {title}
                     </h2>
                     {subtitle && (
                         <p 
-                            className={`text-lg max-w-2xl mx-auto ${styles.subtitle}`}
+                            className={`${getDescriptionSize()} max-w-2xl mx-auto ${styles.subtitle}`}
                             style={effectiveColors.text ? { color: effectiveColors.text } : undefined}
                         >
                             {subtitle}
@@ -774,4 +820,3 @@ const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 export default Products;
-
