@@ -1646,13 +1646,15 @@ TEMPLATE #${t.index}: "${t.name}"
             data.testimonials.description = t('Opiniones de clientes', 'Customer reviews');
             // Apply AI-generated testimonials
             if (aiContent.testimonials && aiContent.testimonials.length > 0) {
-                const maxItems = Math.min(aiContent.testimonials.length, data.testimonials.items?.length || 3);
-                data.testimonials.items = aiContent.testimonials.slice(0, maxItems).map((item: any, i: number) => ({
+                data.testimonials.items = Array.from({ length: 4 }, (_, i) => {
+                    const item = aiContent.testimonials[i] || aiContent.testimonials[aiContent.testimonials.length - 1];
+                    return {
                     ...data.testimonials.items?.[i],
                     quote: item.quote || '',
                     name: item.name || '',
                     title: item.title || '',
-                }));
+                    };
+                });
             }
         }
 

@@ -2417,7 +2417,7 @@ function buildContentGenerationPrompt(brief: BusinessBrief, isSpanish: boolean):
     "testimonialsLumina": {"headline": "[GENERATE_TEXT]", "subheadline": "[GENERATE_TEXT]", "glassEffect": true, "luminaAnimation": {"enabled": true}, "testimonials": [{"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}, {"quote": "[GENERATE_TEXT]", "authorName": "[GENERATE_TEXT]", "authorRole": "[GENERATE_TEXT]"}]},`;
     } else {
         componentExamples += `
-    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift|editorial-mosaic]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
+    "${testimonialsKey}": {"testimonialsVariant": "[SELECT: classic|minimal-cards|glassmorphism|gradient-glow|neon-border|floating-cards|gradient-shift|editorial-mosaic]", "title": "[GENERATE_TEXT]", "cornerGradient": {"enabled": true, "position": "[SELECT: none|top-left|top-right|bottom-left|bottom-right]", "color": "${brief.colorPalette.secondary}", "opacity": 10, "size": 40}, "items": [{"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}, {"quote": "[GENERATE_TEXT]", "name": "[GENERATE_TEXT]", "title": "[GENERATE_TEXT]", "imageUrl": ""}]},`;
     }
 
     const faqKey = filteredComponents.find(c => c.startsWith('faq')) || 'faq';
@@ -2542,12 +2542,12 @@ OUTPUT FORMAT: Return a single JSON object with this EXACT structure:
 CRITICAL RULES:
 1. For image-backed components (hero/heroGallery/heroWave/heroNova/heroLead/heroSplit, banner, menu, Realty/property components, product/collection heroes, features, showcase, portfolio, team, testimonials, slideshow, and footer only when footerVariant is press-landscape, social-waitlist, or landscape-links), YOU MUST set imageUrl, backgroundImage, or backgroundImageUrl to an empty string "" so the image generator can fill it.
 2. Include RICH, detailed, REAL content for EVERY component — no lorem ipsum, no placeholder text.
-3. Each component's items array MUST have the correct number of items with full content. Features MUST have at least 4 items with images. Showcase MUST have at least 4 curated visual items with photos. Portfolio MUST have at least 3 project items with photos. Team, testimonials, services, and faq MUST have EXACTLY 3 items.
+3. Each component's items array MUST have the correct number of items with full content. Features MUST have at least 4 items with images. Showcase MUST have at least 4 curated visual items with photos. Portfolio MUST have at least 3 project items with photos. Team, services, and faq MUST have EXACTLY 3 items. Testimonials MUST have EXACTLY 4 items.
 4. For topBar: messages MUST be promotional announcements or call-to-actions. NEVER put address or phone numbers here. Use only these icons: megaphone, tag, gift, truck, percent, sparkles, star, zap, heart, flame.
 5. For heroGallery/heroNeon/heroNova/heroWave: generate EXACTLY 2 slides with real headlines and subheadlines. Each slide must have: headline, subheadline, primaryCta, primaryCtaLink, backgroundImage or imageUrl (empty string "").
 6. For menu: generate at least 6 realistic menu items with real names, descriptions, prices, categories, and "imageUrl": "". Use a visual menuVariant: classic, modern-grid, elegant-list, full-image, or editorial-mosaic. Never use text-only.
 7. For header links: the "href" values MUST point to the actual sections on the page using anchors (e.g. "/#services"). Only link to sections that exist in the componentOrder.
-8. For showcase: generate AT LEAST 4 curated visual items with title, description, category, meta, and "imageUrl": "". For portfolio: generate AT LEAST 3 project items and include "imageUrl": "" in each item. For features: generate AT LEAST 4 items with "imageUrl": "", "icon", optional "eyebrow", and optional "bullets". For team, testimonials, and slideshow: generate EXACTLY 3 items. Include "imageUrl": "" (or "backgroundImage": "") in each item.
+8. For showcase: generate AT LEAST 4 curated visual items with title, description, category, meta, and "imageUrl": "". For portfolio: generate AT LEAST 3 project items and include "imageUrl": "" in each item. For features: generate AT LEAST 4 items with "imageUrl": "", "icon", optional "eyebrow", and optional "bullets". For team and slideshow: generate EXACTLY 3 items. Include "imageUrl": "" (or "backgroundImage": "") in each item. For testimonials: generate EXACTLY 4 items and include "imageUrl": "" in each item.
 9. For services: generate EXACTLY 3 items. Use the business's ACTUAL services from the brief (max 3). TEXT ONLY — no imageUrl.
 10. For FAQ: generate EXACTLY 3 relevant questions and answers.
 11. For leads: include proper form fields with labels and placeholders.
@@ -2763,12 +2763,23 @@ function ensureComponentCompleteness(data: any, brief: any, isSpanish: boolean, 
     // Testimonials defaults
     if (data.testimonials && typeof data.testimonials === 'object') {
         if (!data.testimonials.title) data.testimonials.title = isSpanish ? 'Lo Que Dicen Nuestros Clientes' : 'What Our Clients Say';
+        const fallbackTestimonials = [
+            { quote: isSpanish ? 'Excelente servicio, superó mis expectativas.' : 'Excellent service, exceeded my expectations.', name: 'María García', title: isSpanish ? 'Cliente' : 'Client', imageUrl: '' },
+            { quote: isSpanish ? 'Profesionales de primera. Muy recomendados.' : 'Top-notch professionals. Highly recommended.', name: 'Carlos López', title: isSpanish ? 'Empresario' : 'Entrepreneur', imageUrl: '' },
+            { quote: isSpanish ? 'Una experiencia impecable de principio a fin.' : 'A flawless experience from start to finish.', name: 'Ana Torres', title: isSpanish ? 'Directora' : 'Director', imageUrl: '' },
+            { quote: isSpanish ? 'Confianza, calidad y atención excepcional.' : 'Trust, quality, and exceptional attention.', name: 'Diego Ruiz', title: isSpanish ? 'Fundador' : 'Founder', imageUrl: '' },
+        ];
         if (!data.testimonials.items || !Array.isArray(data.testimonials.items) || data.testimonials.items.length === 0) {
-            data.testimonials.items = [
-                { quote: isSpanish ? 'Excelente servicio, superó mis expectativas.' : 'Excellent service, exceeded my expectations.', name: 'María García', title: isSpanish ? 'Cliente' : 'Client' },
-                { quote: isSpanish ? 'Profesionales de primera. Muy recomendados.' : 'Top-notch professionals. Highly recommended.', name: 'Carlos López', title: isSpanish ? 'Empresario' : 'Entrepreneur' },
-            ];
+            data.testimonials.items = fallbackTestimonials;
         }
+        while (data.testimonials.items.length < 4) {
+            data.testimonials.items.push({ ...fallbackTestimonials[data.testimonials.items.length] });
+        }
+        data.testimonials.items.slice(0, 4).forEach((item: any) => {
+            if (!Object.prototype.hasOwnProperty.call(item, 'imageUrl')) {
+                item.imageUrl = '';
+            }
+        });
     }
 
     // FAQ defaults

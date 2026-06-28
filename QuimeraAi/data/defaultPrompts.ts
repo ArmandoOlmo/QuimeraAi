@@ -727,7 +727,8 @@ Return JSON with this exact structure (only include sections that were requested
   "testimonials": [
     { "quote": "short testimonial 1", "name": "Customer Name", "title": "Role/Company" },
     { "quote": "short testimonial 2", "name": "Customer Name", "title": "Role/Company" },
-    { "quote": "short testimonial 3", "name": "Customer Name", "title": "Role/Company" }
+    { "quote": "short testimonial 3", "name": "Customer Name", "title": "Role/Company" },
+    { "quote": "short testimonial 4", "name": "Customer Name", "title": "Role/Company" }
   ],
   "team": [
     { "name": "Team Member 1", "role": "Position" },
