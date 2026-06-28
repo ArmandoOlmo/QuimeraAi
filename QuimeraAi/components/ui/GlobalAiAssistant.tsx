@@ -55,6 +55,7 @@ import {
 } from '../../services/globalAssistant/globalAssistantConfirmation';
 import { globalAssistantConversationService } from '../../services/globalAssistant/globalAssistantConversationService';
 import { recordGuideHandoffAudit } from '../../services/globalAssistant/globalAssistantGuideHandoffAudit';
+import { resolveOperatingLayerModuleRoute } from '../../services/globalAssistant/globalAssistantNavigation';
 import { GlobalAssistantMemoryService } from '../../services/globalAssistant/globalAssistantMemoryService';
 import { buildGuideOnlyMemoryPromptContext } from '../../services/globalAssistant/globalAssistantMemoryPrompt';
 import {
@@ -4244,9 +4245,10 @@ const GlobalAiAssistant: React.FC = () => {
             };
         }
 
+        const storefrontEditorRoute = resolveOperatingLayerModuleRoute('ecommerce', 'storefront') || `${ROUTES.ECOMMERCE}/storefront`;
         const targetViews: Record<string, { view: View; route: string; adminView?: AdminView }> = {
             media: { view: 'assets', route: ROUTES.ASSETS },
-            storefront: { view: 'ecommerce', route: ROUTES.ECOMMERCE },
+            storefront: { view: 'ecommerce', route: storefrontEditorRoute },
             leads: { view: 'leads', route: ROUTES.LEADS },
             email: { view: 'email', route: ROUTES.EMAIL },
             ecommerce: { view: 'ecommerce', route: ROUTES.ECOMMERCE },

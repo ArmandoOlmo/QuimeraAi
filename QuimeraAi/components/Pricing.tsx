@@ -219,7 +219,7 @@ const Pricing: React.FC<PricingProps> = ({
         <CornerGradient config={cornerGradient} />
         <div className="container mx-auto relative z-10">
           <Header dark />
-          <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3">
             {planTiers.map((tier, index) => {
               const featured = tier.featured || index === 1;
               return (
@@ -282,7 +282,7 @@ const Pricing: React.FC<PricingProps> = ({
             <span className="px-8 py-3">Monthly</span>
             <span className="rounded-md bg-white px-8 py-3 font-bold text-black shadow-sm">Yearly <span style={{ color: actualColors.accent }}>-20%</span></span>
           </div>
-          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
             {planTiers.map((tier, index) => {
               const featured = tier.featured || index === 1;
               return (
@@ -344,7 +344,7 @@ const Pricing: React.FC<PricingProps> = ({
           </div>
           <span className={clsx('w-fit border px-5 py-2 text-sm', buttonRadius)} style={{ borderColor: actualColors.borderColor, color: actualColors.heading }}>Monthly billing</span>
         </div>
-        <div className="grid border-l lg:grid-cols-4" style={{ borderColor: actualColors.dividerColor }}>
+        <div className="grid border-l md:grid-cols-2 lg:grid-cols-4" style={{ borderColor: actualColors.dividerColor }}>
           {tiers.slice(0, 4).map((tier, index) => {
             const featured = tier.featured || index === 2;
             return (
@@ -383,7 +383,7 @@ const Pricing: React.FC<PricingProps> = ({
       <div className="container mx-auto relative z-10">
         <Header dark />
         <p className="mb-12 text-center text-sm text-white/45">Pay annually (save 20%)</p>
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {tiers.slice(0, 3).map((tier, index) => {
             const featured = tier.featured || index === 1;
             return (
@@ -414,13 +414,13 @@ const Pricing: React.FC<PricingProps> = ({
       <CornerGradient config={cornerGradient} />
       <div className="container mx-auto relative z-10">
         <h2 className={`${titleSizeClasses[titleFontSize]} mb-12 max-w-4xl font-header font-light leading-tight text-white`}>{title}</h2>
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2">
           {tiers.slice(0, 2).map((tier, index) => (
-            <div key={`${tier.name}-${index}`} className={clsx('p-10 md:p-14', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: index === 0 ? '#000000' : hexToRgba('#000000', 0.2), color: '#ffffff' }}>
-              <h3 className="mb-16 font-header text-3xl">{tier.name}</h3>
+            <div key={`${tier.name}-${index}`} className={clsx('p-10 md:p-10 lg:p-14', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: index === 0 ? '#000000' : hexToRgba('#000000', 0.2), color: '#ffffff' }}>
+              <h3 className="mb-12 font-header text-3xl lg:mb-16">{tier.name}</h3>
               <div className="mb-16 flex flex-wrap items-end gap-3">
-                <span className="font-header text-7xl md:text-8xl">{tier.price}</span>
-                <span className="pb-3 text-4xl">{tier.frequency}</span>
+                <span className="font-header text-7xl md:text-6xl lg:text-7xl xl:text-8xl">{tier.price}</span>
+                <span className="pb-2 text-3xl lg:pb-3 lg:text-4xl">{tier.frequency}</span>
               </div>
               <div className="grid gap-6 text-sm md:grid-cols-2">
                 <p>{tier.description}</p>
@@ -457,7 +457,7 @@ const Pricing: React.FC<PricingProps> = ({
                 <span className="text-sm tracking-widest" style={{ color: actualColors.mutedText }}>{tier.price}</span>
               </div>
               {tier.description && <p className="mt-5 line-clamp-3 text-sm leading-6">{tier.description}</p>}
-              <a {...getLinkProps(tier.buttonLink)} className="mt-8 inline-flex px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{tier.buttonText}</a>
+              <a {...getLinkProps(tier.buttonLink)} className="mt-8 inline-flex min-h-11 items-center px-4 py-3 text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: actualColors.buttonBackground, color: actualColors.buttonText }}>{tier.buttonText}</a>
             </div>
           ))}
         </div>
@@ -470,7 +470,7 @@ const Pricing: React.FC<PricingProps> = ({
       <CornerGradient config={cornerGradient} />
       <div className="container mx-auto relative z-10">
         <Header align="left" />
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {tiers.slice(0, 3).map((tier, index) => {
             const featured = tier.featured || index === 1;
             return (
@@ -524,7 +524,7 @@ const Pricing: React.FC<PricingProps> = ({
           <Header align="left" />
           <div className="mb-8 text-center text-xs font-bold uppercase tracking-widest" style={{ color: actualColors.mutedText }}>Monthly / Yearly</div>
           <h3 className="mb-6 font-header text-2xl font-bold" style={{ color: actualColors.heading }}>Individual Plans</h3>
-          <div className="grid gap-6 lg:grid-cols-3">{individual.map((tier, index) => renderCard(tier, index))}</div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{individual.map((tier, index) => renderCard(tier, index))}</div>
           {team.length > 0 && <>
             <h3 className="mb-6 mt-12 font-header text-2xl font-bold" style={{ color: actualColors.heading }}>Team Plans</h3>
             <div className="grid gap-6 md:grid-cols-2">{team.map((tier, index) => renderCard(tier, index + 3, true))}</div>
@@ -566,7 +566,7 @@ const Pricing: React.FC<PricingProps> = ({
       <CornerGradient config={cornerGradient} />
       <div className="container mx-auto relative z-10">
         <Header dark />
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2 lg:grid-cols-3">
           {tiers.slice(0, 3).map((tier, index) => {
             const accent = index === 0 ? actualColors.gradientEnd : index === 1 ? actualColors.gradientStart : actualColors.accent;
             return (

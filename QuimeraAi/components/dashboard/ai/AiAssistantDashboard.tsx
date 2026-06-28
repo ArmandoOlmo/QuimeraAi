@@ -28,6 +28,7 @@ import SocialChannelsSettings from './SocialChannelsSettings';
 import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
 import ChatbotEngineDashboard from './ChatbotEngineDashboard';
+import ChatCoreWebsiteContentGenerator from './ChatCoreWebsiteContentGenerator';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
@@ -708,6 +709,15 @@ const AiAssistantDashboard: React.FC = () => {
             case 'knowledge':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
+                        <ChatCoreWebsiteContentGenerator
+                            project={activeProject}
+                            config={formData}
+                            userId={user?.id}
+                            onApplyConfig={(nextConfig) => {
+                                setFormData(normalizeAiAssistantDashboardConfig(nextConfig));
+                                setAiAssistantConfig(normalizeAiAssistantDashboardConfig(nextConfig));
+                            }}
+                        />
                         <div className="space-y-4">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
                                 <Building2 size={18} className="text-primary" />

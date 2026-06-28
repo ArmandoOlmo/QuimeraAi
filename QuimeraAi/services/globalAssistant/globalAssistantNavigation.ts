@@ -1,4 +1,5 @@
 import type { AssistantLifecycleResult } from './globalAssistantRuntime';
+import { ROUTES } from '../../routes/config';
 
 export interface OperatingLayerNavigation {
     type?: string;
@@ -24,6 +25,18 @@ export interface OperatingLayerProjectLoadRequest {
     fromAdmin: boolean;
     navigateToEditor: false;
 }
+
+const ECOMMERCE_MODULE_ROUTES: Record<string, string> = {
+    storefront: `${ROUTES.ECOMMERCE}/storefront`,
+    store: `${ROUTES.ECOMMERCE}/storefront`,
+    tienda: `${ROUTES.ECOMMERCE}/storefront`,
+    orders: `${ROUTES.ECOMMERCE}/orders`,
+    products: `${ROUTES.ECOMMERCE}/products`,
+    categories: `${ROUTES.ECOMMERCE}/categories`,
+    discounts: `${ROUTES.ECOMMERCE}/discounts`,
+    analytics: `${ROUTES.ECOMMERCE}/analytics`,
+    settings: `${ROUTES.ECOMMERCE}/settings`,
+};
 
 const asRecord = (value: unknown): Record<string, unknown> =>
     value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -66,6 +79,29 @@ export const buildOperatingLayerProjectLoadRequest = (
         fromAdmin: targetView === 'superadmin',
         navigateToEditor: false,
     };
+};
+
+export const resolveOperatingLayerModuleRoute = (
+    targetView: string | null | undefined,
+    moduleItem?: string | null,
+): string | null => {
+    if (!targetView) return null;
+
+    if (targetView === 'ecommerce') {
+        const normalizedModuleItem = moduleItem?.trim().toLowerCase();
+        return normalizedModuleItem
+            ? ECOMMERCE_MODULE_ROUTES[normalizedModuleItem] || ROUTES.ECOMMERCE
+            : ROUTES.ECOMMERCE;
+    }
+
+    return null;
+};
+
+export const resolveOperatingLayerNavigationRoute = (
+    navigation: OperatingLayerNavigation,
+): string | null => {
+    const { targetView, moduleItem } = readOperatingLayerNavigationTargets(navigation);
+    return resolveOperatingLayerModuleRoute(targetView, moduleItem);
 };
 
 export const formatOperatingLayerNavigationMessage = (

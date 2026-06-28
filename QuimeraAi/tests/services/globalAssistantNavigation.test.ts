@@ -4,6 +4,8 @@ import {
     findOperatingLayerNavigation,
     formatOperatingLayerNavigationMessage,
     readOperatingLayerNavigationTargets,
+    resolveOperatingLayerModuleRoute,
+    resolveOperatingLayerNavigationRoute,
 } from '../../services/globalAssistant/globalAssistantNavigation.ts';
 import type { AssistantLifecycleResult } from '../../services/globalAssistant/globalAssistantRuntime.ts';
 
@@ -89,5 +91,15 @@ describe('globalAssistantNavigation', () => {
         expect(formatOperatingLayerNavigationMessage(navigation)).toBe(
             'Open tenant in Super Admin. Project: Tenant Ops. Target: storefront.',
         );
+    });
+
+    it('routes explicit ecommerce module targets to stable subviews', () => {
+        expect(resolveOperatingLayerModuleRoute('ecommerce', 'storefront')).toBe('/ecommerce/storefront');
+        expect(resolveOperatingLayerModuleRoute('ecommerce', 'orders')).toBe('/ecommerce/orders');
+        expect(resolveOperatingLayerNavigationRoute({
+            view: 'ecommerce',
+            moduleItem: 'storefront',
+            projectId: 'project-2',
+        })).toBe('/ecommerce/storefront');
     });
 });

@@ -416,7 +416,7 @@ const Footer: React.FC<FooterData & {
                   {renderColumns({ columnsClassName: 'grid grid-cols-2 md:grid-cols-3 gap-10', headingColor: actualColors.heading, textColor: mutedColor, titleClassName: 'text-sm font-semibold mb-5 font-header', listClassName: 'space-y-3 font-body' })}
                 </div>
                 <div className="mt-20 md:mt-28 overflow-hidden">
-                  <p className="text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header truncate" style={{ color: wordmarkColor }}>
+                  <p className="text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header overflow-hidden whitespace-nowrap" style={{ color: wordmarkColor }}>
                     {footerWordmark}
                   </p>
                 </div>
@@ -448,7 +448,7 @@ const Footer: React.FC<FooterData & {
                   </div>
                   {renderColumns({ columnsClassName: 'grid sm:grid-cols-2 lg:grid-cols-3 gap-10', headingColor: mutedColor, textColor: actualColors.heading, titleClassName: 'text-sm font-semibold mb-5 font-header', listClassName: 'space-y-4 font-body font-semibold uppercase' })}
                 </div>
-                <p className="mt-20 md:mt-28 text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header truncate" style={{ color: wordmarkColor }}>
+                <p className="mt-20 md:mt-28 text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header overflow-hidden whitespace-nowrap" style={{ color: wordmarkColor }}>
                   {footerWordmark}
                 </p>
               </div>
@@ -485,7 +485,7 @@ const Footer: React.FC<FooterData & {
                     {renderNewsletter(true)}
                   </div>
                 </div>
-                <p className="mt-20 text-7xl md:text-9xl lg:text-[11rem] leading-none font-black italic font-header truncate" style={{ color: wordmarkColor }}>
+                <p className="mt-20 text-7xl md:text-9xl lg:text-[11rem] leading-none font-black italic font-header overflow-hidden whitespace-nowrap" style={{ color: wordmarkColor }}>
                   {footerWordmark}
                 </p>
               </div>
@@ -567,7 +567,7 @@ const Footer: React.FC<FooterData & {
             <footer id="contact" data-footer-style={variantMeta.value} className="relative overflow-hidden border-t min-h-[520px]" style={richFooterStyle}>
               <div className="container mx-auto px-6 py-16 md:py-24 relative z-10">
                 {renderColumns({ columnsClassName: 'grid grid-cols-2 md:grid-cols-5 gap-8 max-w-7xl mx-auto', headingColor: actualColors.heading, textColor: actualColors.heading, titleClassName: 'text-lg font-bold mb-5 font-header', listClassName: 'space-y-3 font-body' })}
-                <div className="mt-48 flex flex-wrap items-center gap-8" style={{ color: actualColors.heading }}>
+                <div className="mt-24 md:mt-48 flex flex-wrap items-center gap-8" style={{ color: actualColors.heading }}>
                   {renderLegal('text-base', actualColors.heading)}
                   {displayColumns.flatMap(column => column.links || []).slice(0, 2).map((link, index) => <span key={index}>{renderLink(link as any, 'text-base transition-opacity hover:opacity-80', actualColors.heading)}</span>)}
                 </div>
@@ -596,7 +596,7 @@ const Footer: React.FC<FooterData & {
                   </div>
                   {renderColumns({ columnsClassName: 'grid grid-cols-2 md:grid-cols-4 gap-10', headingColor: mutedColor, textColor: actualColors.heading, titleClassName: 'text-sm font-semibold mb-5 font-header', listClassName: 'space-y-4 font-body' })}
                 </div>
-                <p className="mt-24 text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header truncate" style={{ color: wordmarkColor }}>
+                <p className="mt-24 text-7xl md:text-9xl lg:text-[12rem] leading-none font-black font-header overflow-hidden whitespace-nowrap" style={{ color: wordmarkColor }}>
                   {footerWordmark}
                 </p>
               </div>
@@ -608,7 +608,7 @@ const Footer: React.FC<FooterData & {
             <footer id="contact" data-footer-style={variantMeta.value} className="relative overflow-hidden border-t" style={richFooterStyle}>
               <div className="container mx-auto px-4 py-10 md:py-14 relative z-10">
                 <div className="rounded-[2rem] p-8 md:p-14" style={{ backgroundColor: panelBackground || '#ffffff', color: panelText || '#111111' }}>
-                  <p className="text-6xl md:text-9xl lg:text-[11rem] leading-none font-black font-header truncate mb-12" style={{ color: wordmarkColor }}>
+                  <p className="text-6xl md:text-9xl lg:text-[11rem] leading-none font-black font-header overflow-hidden whitespace-nowrap mb-12" style={{ color: wordmarkColor }}>
                     {footerWordmark}
                   </p>
                   {renderColumns({ columnsClassName: 'grid grid-cols-2 md:grid-cols-5 gap-8', headingColor: panelText, textColor: panelText, titleClassName: 'text-sm font-bold mb-4 font-header', listClassName: 'space-y-4 font-body font-semibold' })}
