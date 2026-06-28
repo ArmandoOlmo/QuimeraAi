@@ -119,21 +119,31 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             .slice(0, 2);
     };
     const emptyCreateButtonClasses = [
-        'flex items-center gap-2 w-full p-2 rounded-[var(--q-radius-md)]',
+        'flex items-center rounded-[var(--q-radius-md)]',
         'bg-q-accent/10 border border-q-accent/30 border-dashed',
         'text-q-accent hover:bg-q-accent/20 transition-colors',
+        collapsed ? 'w-10 h-10 justify-center mx-auto' : 'gap-2 w-full p-2',
         className,
     ].filter(Boolean).join(' ');
-    const loadingClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
+    const loadingClasses = [
+        'flex items-center',
+        collapsed ? 'justify-center p-2' : 'gap-2 p-2',
+        className,
+    ].filter(Boolean).join(' ');
     const loadingIconClasses = 'w-8 h-8 rounded-lg bg-q-surface-overlay animate-pulse';
     const loadingTextWrapClasses = 'flex-1 space-y-1';
-    const singleTenantClasses = ['flex items-center gap-2 p-2', className].filter(Boolean).join(' ');
+    const singleTenantClasses = [
+        'flex items-center',
+        collapsed ? 'justify-center p-2' : 'gap-2 p-2',
+        className,
+    ].filter(Boolean).join(' ');
     const tenantAvatarClasses = 'w-8 h-8 rounded-[var(--q-radius-md)] border border-border-subtle bg-q-surface-overlay flex items-center justify-center text-q-text-muted text-xs font-bold';
     const triggerClasses = [
-        'flex items-center gap-2 w-full p-2 rounded-[var(--q-radius-md)]',
-        'bg-q-surface hover:bg-sidebar-control-hover border border-border-subtle hover:border-sidebar-control-border',
-        'transition-all duration-200',
-        isOpen ? 'ring-2 ring-q-accent/25 border-q-accent/45' : '',
+        'flex items-center gap-2 transition-all duration-200',
+        collapsed
+            ? 'w-10 h-10 justify-center mx-auto rounded-[var(--q-radius-md)] hover:bg-sidebar-control-hover hover:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-control-border))]'
+            : 'w-full p-2 rounded-[var(--q-radius-md)] bg-q-surface hover:bg-sidebar-control-hover border border-border-subtle hover:border-sidebar-control-border',
+        isOpen && !collapsed ? 'ring-2 ring-q-accent/25 border-q-accent/45' : '',
         isLoading ? 'opacity-50 cursor-wait' : '',
     ].filter(Boolean).join(' ');
     const triggerAvatarClasses = `${tenantAvatarClasses} flex-shrink-0`;
@@ -214,7 +224,10 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     // Single tenant - no switcher needed, just show current
     if (userTenants.length === 1) {
         return (
-            <div className={singleTenantClasses}>
+            <div
+                className={singleTenantClasses}
+                title={collapsed ? (currentTenant?.name || undefined) : undefined}
+            >
                 {/* Tenant avatar */}
                 <div className={tenantAvatarClasses}>
                     {currentTenant?.branding?.logoUrl ? (
@@ -254,6 +267,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 className={triggerClasses}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
+                title={collapsed ? (currentTenant?.name || t('workspace.selectWorkspace', 'Seleccionar Workspace')) : undefined}
             >
                 {/* Tenant avatar */}
                 <div className={triggerAvatarClasses}>
