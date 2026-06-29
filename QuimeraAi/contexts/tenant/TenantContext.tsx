@@ -79,6 +79,54 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined);
 // =============================================================================
 
 const ACTIVE_TENANT_KEY = 'quimera_active_tenant_id';
+const ACTIVE_TENANT_MANUAL_KEY = 'quimera_active_tenant_manual';
+
+const TENANT_TYPE_PRIORITY: Record<string, number> = {
+    agency: 0,
+    agency_client: 1,
+    individual: 3,
+    personal: 3,
+};
+
+const PLAN_PRIORITY: Record<string, number> = {
+    agency_scale: 0,
+    agency_pro: 1,
+    agency_starter: 2,
+    enterprise: 3,
+    individual: 4,
+    free: 5,
+};
+
+function getTenantSelectionPriority(membership: TenantMembership): number {
+    const tenant = membership.tenant;
+    const typePriority = TENANT_TYPE_PRIORITY[tenant?.type || ''] ?? 2;
+    const planPriority = PLAN_PRIORITY[normalizePlanId(tenant?.subscriptionPlan || 'free')] ?? 6;
+    const statusPenalty = tenant?.status === 'active' || tenant?.status === 'trial' ? 0 : 20;
+    return statusPenalty + (typePriority * 10) + planPriority;
+}
+
+function sortTenantMemberships(memberships: TenantMembership[]): TenantMembership[] {
+    return [...memberships].sort((a, b) => {
+        const priorityDiff = getTenantSelectionPriority(a) - getTenantSelectionPriority(b);
+        if (priorityDiff !== 0) return priorityDiff;
+
+        const joinedA = a.joinedAt ? new Date(a.joinedAt).getTime() : Number.MAX_SAFE_INTEGER;
+        const joinedB = b.joinedAt ? new Date(b.joinedAt).getTime() : Number.MAX_SAFE_INTEGER;
+        if (joinedA !== joinedB) return joinedA - joinedB;
+
+        return (a.tenant?.name || '').localeCompare(b.tenant?.name || '');
+    });
+}
+
+function shouldUseSavedTenant(savedMembership: TenantMembership | undefined, preferredMembership: TenantMembership | undefined): boolean {
+    if (!savedMembership) return false;
+    if (!preferredMembership || savedMembership.tenantId === preferredMembership.tenantId) return true;
+
+    const wasExplicitlySelected = localStorage.getItem(ACTIVE_TENANT_MANUAL_KEY) === 'true';
+    if (wasExplicitlySelected) return true;
+
+    return getTenantSelectionPriority(savedMembership) <= getTenantSelectionPriority(preferredMembership);
+}
 
 function isMissingAgencyEngineTable(error: unknown): boolean {
     const err = error as { code?: string; message?: string } | null;
@@ -359,8 +407,9 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
 
-            setUserTenants(memberships);
-            return memberships;
+            const orderedMemberships = sortTenantMemberships(memberships);
+            setUserTenants(orderedMemberships);
+            return orderedMemberships;
         } catch (err) {
             console.error('Error loading user tenants:', err);
             setError('Error cargando workspaces');
@@ -524,10 +573,15 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 let tenantToLoad: string | null = null;
 
                 if (savedTenantId) {
-                    // Verify user still has access
-                    const hasAccess = memberships.some(m => m.tenantId === savedTenantId);
-                    if (hasAccess) {
+                    // Verify user still has access and do not let stale auto-selected
+                    // personal/free workspaces shadow an active agency workspace.
+                    const savedMembership = memberships.find(m => m.tenantId === savedTenantId);
+                    const preferredMembership = memberships[0];
+                    if (shouldUseSavedTenant(savedMembership, preferredMembership)) {
                         tenantToLoad = savedTenantId;
+                    } else {
+                        localStorage.removeItem(ACTIVE_TENANT_KEY);
+                        localStorage.removeItem(ACTIVE_TENANT_MANUAL_KEY);
                     }
                 }
 
@@ -563,6 +617,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         setIsLoadingTenant(true);
         await loadTenant(tenantId);
+        localStorage.setItem(ACTIVE_TENANT_KEY, tenantId);
+        localStorage.setItem(ACTIVE_TENANT_MANUAL_KEY, 'true');
         setIsLoadingTenant(false);
     }, [userTenants, loadTenant]);
 
@@ -804,6 +860,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setCurrentTenant(null);
             setCurrentMembership(null);
             localStorage.removeItem(ACTIVE_TENANT_KEY);
+            localStorage.removeItem(ACTIVE_TENANT_MANUAL_KEY);
             await refreshTenants();
         }
     }, [currentMembership, isUserOwner, currentTenant, refreshTenants]);
