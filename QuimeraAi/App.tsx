@@ -22,6 +22,7 @@ const PublicWebsitePreview = lazyWithRetry(() => import('./components/PublicWebs
 const StorefrontApp = lazyWithRetry(() => import('./components/ecommerce/StorefrontApp'));
 const PublicBioPage = lazyWithRetry(() => import('./components/PublicBioPage'));
 const AgencyCheckoutPage = lazyWithRetry(() => import('./components/checkout/AgencyCheckoutPage'));
+const AgencyLandingPreview = lazyWithRetry(() => import('./components/AgencyLandingPreview'));
 const LandingChatbotWidget = lazyWithRetry(() => import('./components/LandingChatbotWidget'), { retries: 2 });
 
 // Minimal loading fallback for lazy components — invisible (no spinner, no branding)
@@ -37,6 +38,9 @@ const isPreviewRoute = () => {
   const path = window.location.pathname;
   return path.startsWith('/preview/');
 };
+
+const isAgencyPreviewRoute = () => window.location.pathname.startsWith('/preview/agency/');
+const isAgencyLandingRoute = () => window.location.pathname.startsWith('/agency-landing/');
 
 const isLandingEditorPreviewRoute = () => {
   return (
@@ -224,6 +228,16 @@ const App: React.FC = () => {
 
   // Preview route - no providers, no auth, no domain detection needed
   // MUST be checked FIRST to avoid being blocked by customDomain.isLoading or lightAuth
+  if (isAgencyPreviewRoute() || isAgencyLandingRoute()) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<MinimalLoader />}>
+          <AgencyLandingPreview />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
   if (isPreview) {
     return (
       <ErrorBoundary>

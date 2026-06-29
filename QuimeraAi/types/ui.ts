@@ -43,8 +43,8 @@ export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' 
 // Page Section Types
 export type PageSection =
     // Original sections
-    | 'hero' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'heroLead' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
-    | 'services' | 'team' | 'video' | 'slideshow' | 'portfolio' | 'showcase' | 'leads' | 'appointmentBooking' | 'newsletter'
+    | 'hero' | 'heroModern' | 'heroGradient' | 'heroSplit' | 'heroGallery' | 'heroWave' | 'heroNova' | 'heroLead' | 'features' | 'testimonials' | 'pricing' | 'faq' | 'cta'
+    | 'services' | 'team' | 'video' | 'slideshow' | 'screenshotCarousel' | 'portfolio' | 'showcase' | 'leads' | 'appointmentBooking' | 'newsletter'
     | 'howItWorks' | 'chatbot' | 'footer' | 'header' | 'typography' | 'colors' | 'map'
     | 'menu' | 'banner' | 'topBar' | 'logoBanner' | 'products' | 'cmsFeed' | 'signupFloat'
     | 'separator1' | 'separator2' | 'separator3' | 'separator4' | 'separator5'
@@ -54,8 +54,8 @@ export type PageSection =
     | 'heroNeon' | 'testimonialsNeon' | 'featuresNeon' | 'ctaNeon' | 'portfolioNeon' | 'pricingNeon' | 'faqNeon'
     // Quimera suite (Platform Selling)
     | 'heroQuimera' | 'featuresQuimera' | 'pricingQuimera' | 'testimonialsQuimera' | 'faqQuimera' | 'ctaQuimera'
-    | 'platformShowcaseQuimera' | 'aiCapabilitiesQuimera' | 'industrySolutionsQuimera' | 'agencyWhiteLabelQuimera'
-    | 'metricsQuimera' | 'whatIsQuimera' | 'templatesPreviewQuimera' | 'aiWebStudioQuimera' | 'contentManagerQuimera' | 'imageGeneratorQuimera' | 'chatbotWorkflowQuimera' | 'chatbotBuilderQuimera' | 'leadsManagerQuimera' | 'appointmentsQuimera' | 'bioPageQuimera' | 'emailMarketingQuimera'
+    | 'platformShowcaseQuimera' | 'bentoShowcaseQuimera' | 'agentDemonstrationQuimera' | 'aiCapabilitiesQuimera' | 'industrySolutionsQuimera' | 'agencyWhiteLabelQuimera'
+    | 'metricsQuimera' | 'finalCtaQuimera' | 'whatIsQuimera' | 'templatesPreviewQuimera' | 'aiWebStudioQuimera' | 'contentManagerQuimera' | 'imageGeneratorQuimera' | 'chatbotWorkflowQuimera' | 'chatbotBuilderQuimera' | 'leadsManagerQuimera' | 'appointmentsQuimera' | 'bioPageQuimera' | 'emailMarketingQuimera'
     // Store settings
     | 'storeSettings'
     // Ecommerce sections (for landing/store pages)

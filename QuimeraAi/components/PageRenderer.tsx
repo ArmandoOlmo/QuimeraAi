@@ -94,6 +94,18 @@ import PlatformShowcaseQuimera from './quimera/PlatformShowcaseQuimera';
 import AiCapabilitiesQuimera from './quimera/AiCapabilitiesQuimera';
 import IndustrySolutionsQuimera from './quimera/IndustrySolutionsQuimera';
 import AgencyWhiteLabelQuimera from './quimera/AgencyWhiteLabelQuimera';
+import MetricsQuimera from './quimera/MetricsQuimera';
+import WhatIsQuimeraSection from './quimera/WhatIsQuimeraSection';
+import TemplatesPreviewQuimera from './quimera/TemplatesPreviewQuimera';
+import AiWebStudioQuimera from './quimera/AiWebStudioQuimera';
+import ContentManagerQuimera from './quimera/ContentManagerQuimera';
+import ImageGeneratorQuimera from './quimera/ImageGeneratorQuimera';
+import ChatbotWorkflowQuimera from './quimera/ChatbotWorkflowQuimera';
+import ChatbotBuilderQuimera from './quimera/ChatbotBuilderQuimera';
+import LeadsManagerQuimera from './quimera/LeadsManagerQuimera';
+import AppointmentsQuimera from './quimera/AppointmentsQuimera';
+import BioPageQuimera from './quimera/BioPageQuimera';
+import EmailMarketingQuimera from './quimera/EmailMarketingQuimera';
 
 // Import ecommerce sections
 import FeaturedProducts from './ecommerce/sections/FeaturedProducts';
@@ -443,6 +455,26 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return <SectionBackground {...sectionBackgroundProps(heroData)}>{heroComponent}</SectionBackground>;
             }
 
+            case 'heroModern': {
+                const heroData = mergedData.heroModern || {};
+                const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
+                return (
+                    <SectionBackground {...sectionBackgroundProps(heroData)}>
+                        <HeroModern key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                );
+            }
+
+            case 'heroGradient': {
+                const heroData = mergedData.heroGradient || {};
+                const heroBorderRadius = heroData?.buttonBorderRadius || buttonBorderRadius;
+                return (
+                    <SectionBackground {...sectionBackgroundProps(heroData)}>
+                        <HeroGradient key={key} {...heroData} borderRadius={heroBorderRadius} onNavigate={handleLinkNavigation} />
+                    </SectionBackground>
+                );
+            }
+
             case 'heroSplit':
                 return (
                     <SectionBackground {...sectionBackgroundProps(mergedData.heroSplit)}>
@@ -610,6 +642,17 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                         <Slideshow
                             key={key}
                             {...mergedData.slideshow}
+                            borderRadius={cardBorderRadius}
+                        />
+                    </SectionBackground>
+                );
+
+            case 'screenshotCarousel':
+                return (
+                    <SectionBackground backgroundImageUrl={mergedData.screenshotCarousel?.backgroundImageUrl} backgroundColor={mergedData.screenshotCarousel?.colors?.background} backgroundOverlayEnabled={mergedData.screenshotCarousel?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedData.screenshotCarousel?.backgroundOverlayOpacity} backgroundOverlayColor={mergedData.screenshotCarousel?.backgroundOverlayColor} backgroundPosition={mergedData.screenshotCarousel?.backgroundPosition}>
+                        <Slideshow
+                            key={key}
+                            {...mergedData.screenshotCarousel}
                             borderRadius={cardBorderRadius}
                         />
                     </SectionBackground>
@@ -1230,12 +1273,42 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 return renderQuimeraSection(key, (mergedData as any).ctaQuimera, CtaQuimera, { onNavigate: handleLinkNavigation });
             case 'platformShowcaseQuimera':
                 return renderQuimeraSection(key, (mergedData as any).platformShowcaseQuimera, PlatformShowcaseQuimera);
+            case 'bentoShowcaseQuimera':
+                return renderQuimeraSection(key, (mergedData as any).bentoShowcaseQuimera, FeaturesQuimera);
+            case 'agentDemonstrationQuimera':
+                return renderQuimeraSection(key, (mergedData as any).agentDemonstrationQuimera, AiCapabilitiesQuimera);
             case 'aiCapabilitiesQuimera':
                 return renderQuimeraSection(key, (mergedData as any).aiCapabilitiesQuimera, AiCapabilitiesQuimera);
             case 'industrySolutionsQuimera':
                 return renderQuimeraSection(key, (mergedData as any).industrySolutionsQuimera, IndustrySolutionsQuimera);
             case 'agencyWhiteLabelQuimera':
                 return renderQuimeraSection(key, (mergedData as any).agencyWhiteLabelQuimera, AgencyWhiteLabelQuimera);
+            case 'metricsQuimera':
+                return renderQuimeraSection(key, (mergedData as any).metricsQuimera, MetricsQuimera);
+            case 'finalCtaQuimera':
+                return renderQuimeraSection(key, (mergedData as any).finalCtaQuimera, CtaQuimera, { onNavigate: handleLinkNavigation });
+            case 'whatIsQuimera':
+                return renderQuimeraSection(key, (mergedData as any).whatIsQuimera, WhatIsQuimeraSection);
+            case 'templatesPreviewQuimera':
+                return renderQuimeraSection(key, (mergedData as any).templatesPreviewQuimera, TemplatesPreviewQuimera);
+            case 'aiWebStudioQuimera':
+                return renderQuimeraSection(key, (mergedData as any).aiWebStudioQuimera, AiWebStudioQuimera);
+            case 'contentManagerQuimera':
+                return renderQuimeraSection(key, (mergedData as any).contentManagerQuimera, ContentManagerQuimera);
+            case 'imageGeneratorQuimera':
+                return renderQuimeraSection(key, (mergedData as any).imageGeneratorQuimera, ImageGeneratorQuimera);
+            case 'chatbotWorkflowQuimera':
+                return renderQuimeraSection(key, (mergedData as any).chatbotWorkflowQuimera, ChatbotWorkflowQuimera);
+            case 'chatbotBuilderQuimera':
+                return renderQuimeraSection(key, (mergedData as any).chatbotBuilderQuimera, ChatbotBuilderQuimera);
+            case 'leadsManagerQuimera':
+                return renderQuimeraSection(key, (mergedData as any).leadsManagerQuimera, LeadsManagerQuimera);
+            case 'appointmentsQuimera':
+                return renderQuimeraSection(key, (mergedData as any).appointmentsQuimera, AppointmentsQuimera);
+            case 'bioPageQuimera':
+                return renderQuimeraSection(key, (mergedData as any).bioPageQuimera, BioPageQuimera);
+            case 'emailMarketingQuimera':
+                return renderQuimeraSection(key, (mergedData as any).emailMarketingQuimera, EmailMarketingQuimera);
 
             // Non-renderable sections (settings, colors, typography)
             case 'colors':
@@ -1315,7 +1388,11 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             className={contentOnly ? 'w-full' : 'min-h-screen'}
             style={{ backgroundColor: theme.pageBackground || globalColors?.background }}
         >
-            {orderedSections.map((section, index) => renderSection(section, index))}
+            {orderedSections.map((section, index) => (
+                <React.Fragment key={`${section}-${index}`}>
+                    {renderSection(section, index)}
+                </React.Fragment>
+            ))}
 
             {/* Floating Sign-Up Overlay (rendered outside normal section flow) */}
             {!contentOnly && mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && effectiveComponentStatus.signupFloat && effectiveSectionVisibility.signupFloat && (

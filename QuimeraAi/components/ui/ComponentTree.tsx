@@ -48,6 +48,8 @@ interface ComponentTreeProps {
 
 const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     hero: Image,
+    heroModern: MonitorPlay,
+    heroGradient: MonitorPlay,
     heroSplit: Columns,
     heroGallery: Image,
     heroWave: Waves,
@@ -65,6 +67,7 @@ const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     newsletter: Send,
     cta: MessageCircle,
     slideshow: PlaySquare,
+    screenshotCarousel: PlaySquare,
     video: MonitorPlay,
     howItWorks: Grid,
     map: MapPin,
@@ -96,6 +99,11 @@ const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     faqNeon: HelpCircle,
     // Quimera Suite
     heroQuimera: MonitorPlay,
+    whatIsQuimera: FileText,
+    templatesPreviewQuimera: Layout,
+    aiWebStudioQuimera: MessageSquare,
+    bentoShowcaseQuimera: Grid,
+    agentDemonstrationQuimera: MessageSquare,
     featuresQuimera: List,
     pricingQuimera: DollarSign,
     testimonialsQuimera: Star,
@@ -105,6 +113,8 @@ const sectionIcons: Partial<Record<PageSection, React.ElementType>> = {
     aiCapabilitiesQuimera: MessageSquare,
     industrySolutionsQuimera: Building2,
     agencyWhiteLabelQuimera: Users,
+    metricsQuimera: Grid,
+    finalCtaQuimera: MessageCircle,
     contentManagerQuimera: FileText,
     imageGeneratorQuimera: Image,
     chatbotWorkflowQuimera: Workflow,
@@ -339,6 +349,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         ecommerce: false,
         ecommerceAdd: false,
         legacyAdd: false,
+        quimeraAdd: false,
     });
     const [activeId, setActiveId] = useState<PageSection | null>(null);
 
@@ -356,6 +367,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const sectionLabels: Partial<Record<PageSection, string>> = {
         hero: t('editor.heroSection'),
+        heroModern: t('editor.heroModernSection', 'Hero Moderno'),
+        heroGradient: t('editor.heroGradientSection', 'Hero Gradiente'),
         heroSplit: t('editor.heroSplitSection'),
         heroGallery: 'Hero Gallery',
         heroWave: 'Hero Wave',
@@ -373,6 +386,7 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         newsletter: t('editor.newsletterSection'),
         cta: t('editor.ctaSection'),
         slideshow: t('editor.slideshowSection'),
+        screenshotCarousel: t('editor.screenshotCarouselSection', 'Galeria de Pantallas'),
         video: t('editor.videoSection'),
         howItWorks: t('editor.howItWorksSection'),
         map: t('editor.locationMap'),
@@ -406,6 +420,11 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
         // Quimera Suite
         heroQuimera: t('editor.heroQuimera', 'Hero Quimera'),
+        whatIsQuimera: t('editor.whatIsQuimera', 'What is Quimera AI?'),
+        templatesPreviewQuimera: t('editor.templatesPreviewQuimera', 'Templates & AI Preview'),
+        aiWebStudioQuimera: t('editor.aiWebStudioQuimera', 'AI Web Studio'),
+        bentoShowcaseQuimera: t('editor.bentoShowcaseQuimera', 'Bento Showcase'),
+        agentDemonstrationQuimera: t('editor.agentDemonstrationQuimera', 'Agent Demonstration'),
         featuresQuimera: t('editor.featuresQuimera', 'Features Quimera'),
         pricingQuimera: t('editor.pricingQuimera', 'Pricing Quimera'),
         testimonialsQuimera: t('editor.testimonialsQuimera', 'Testimonials Quimera'),
@@ -415,6 +434,8 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
         aiCapabilitiesQuimera: t('editor.aiCapabilitiesQuimera', 'AI Capabilities'),
         industrySolutionsQuimera: t('editor.industrySolutionsQuimera', 'Industry Solutions'),
         agencyWhiteLabelQuimera: t('editor.agencyWhiteLabelQuimera', 'Agency White Label'),
+        metricsQuimera: t('editor.metricsQuimera', 'Metrics Quimera'),
+        finalCtaQuimera: t('editor.finalCtaQuimera', 'Final CTA Quimera'),
         contentManagerQuimera: t('editor.contentManagerQuimera', 'Content Manager'),
         imageGeneratorQuimera: t('editor.imageGeneratorQuimera', 'Image Generator'),
         chatbotWorkflowQuimera: t('editor.chatbotWorkflowQuimera', 'Chatbot & CRM Flow'),
@@ -513,6 +534,11 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
 
     const ecommerceAddComponents = useMemo(
         () => availableComponents.filter(isEcommerceSection),
+        [availableComponents]
+    );
+
+    const quimeraAddComponents = useMemo(
+        () => availableComponents.filter(section => section.toLowerCase().includes('quimera')),
         [availableComponents]
     );
 
@@ -696,6 +722,44 @@ const ComponentTree: React.FC<ComponentTreeProps> = ({
                                                         setShowAddMenu(false);
                                                     }}
                                                     className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left"
+                                                >
+                                                    <Icon size={14} className="text-q-accent" />
+                                                    <span className="text-sm text-q-text font-medium">
+                                                        {sectionLabels[section]}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Quimera Suite in Add Menu */}
+                        {quimeraAddComponents.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-q-border/50">
+                                <button
+                                    onClick={() => setExpandedGroups(prev => ({ ...prev, quimeraAdd: !prev.quimeraAdd }))}
+                                    className="w-full flex items-center justify-between px-2 py-2 text-sm font-bold text-q-accent hover:bg-structure-control-hover rounded-[var(--q-radius-md)] transition-colors"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <MonitorPlay size={14} /> Quimera Suite
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedGroups.quimeraAdd ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {expandedGroups.quimeraAdd && (
+                                    <div className="pl-4 mt-1 space-y-1">
+                                        {[...quimeraAddComponents].sort((a, b) => (sectionLabels[a] || a).localeCompare(sectionLabels[b] || b)).map(section => {
+                                            const Icon = sectionIcons[section] || MonitorPlay;
+                                            return (
+                                                <button
+                                                    key={section}
+                                                    onClick={() => {
+                                                        if (!isRetiredDesignSuiteSection(section)) onAddComponent(section);
+                                                        setShowAddMenu(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-2 px-2 py-2 rounded-[var(--q-radius-md)] hover:bg-structure-control-hover transition-colors text-left border-l border-transparent hover:border-q-accent/50"
                                                 >
                                                     <Icon size={14} className="text-q-accent" />
                                                     <span className="text-sm text-q-text font-medium">

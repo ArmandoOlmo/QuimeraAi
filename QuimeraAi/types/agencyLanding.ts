@@ -187,6 +187,7 @@ export interface AgencyPageData {
     // Add typography and colors for structure items
     typography?: AgencyTypography;
     colors?: GlobalColors;
+    [key: string]: any;
 }
 
 // =============================================================================
@@ -198,6 +199,31 @@ export interface AgencyPageData {
  * Same as AVAILABLE_COMPONENTS in LandingPageEditor
  */
 export const AGENCY_LANDING_COMPONENTS = [
+    { type: 'heroQuimera', label: 'Hero Quimera', category: 'quimera' },
+    { type: 'whatIsQuimera', label: 'Que es Quimera AI', category: 'quimera' },
+    { type: 'templatesPreviewQuimera', label: 'Templates y AI Preview', category: 'quimera' },
+    { type: 'aiWebStudioQuimera', label: 'AI Web Studio', category: 'quimera' },
+    { type: 'contentManagerQuimera', label: 'Gestor de Contenidos', category: 'quimera' },
+    { type: 'imageGeneratorQuimera', label: 'Generador de Imagenes', category: 'quimera' },
+    { type: 'chatbotWorkflowQuimera', label: 'Chatbot y CRM', category: 'quimera' },
+    { type: 'chatbotBuilderQuimera', label: 'Constructor de Chatbot', category: 'quimera' },
+    { type: 'leadsManagerQuimera', label: 'Gestor de Leads', category: 'quimera' },
+    { type: 'appointmentsQuimera', label: 'Citas', category: 'quimera' },
+    { type: 'bioPageQuimera', label: 'Bio Page', category: 'quimera' },
+    { type: 'emailMarketingQuimera', label: 'Email Marketing AI', category: 'quimera' },
+    { type: 'platformShowcaseQuimera', label: 'Showcase de Plataforma', category: 'quimera' },
+    { type: 'bentoShowcaseQuimera', label: 'Bento Showcase', category: 'quimera' },
+    { type: 'agentDemonstrationQuimera', label: 'Demostracion de Agentes', category: 'quimera' },
+    { type: 'featuresQuimera', label: 'Features Quimera', category: 'quimera' },
+    { type: 'pricingQuimera', label: 'Precios Quimera', category: 'quimera' },
+    { type: 'testimonialsQuimera', label: 'Testimonios Quimera', category: 'quimera' },
+    { type: 'faqQuimera', label: 'FAQ Quimera', category: 'quimera' },
+    { type: 'metricsQuimera', label: 'Metricas Quimera', category: 'quimera' },
+    { type: 'aiCapabilitiesQuimera', label: 'Capacidades de IA', category: 'quimera' },
+    { type: 'industrySolutionsQuimera', label: 'Soluciones por Industria', category: 'quimera' },
+    { type: 'agencyWhiteLabelQuimera', label: 'Marca Blanca Agencia', category: 'quimera' },
+    { type: 'ctaQuimera', label: 'CTA Quimera', category: 'quimera' },
+    { type: 'finalCtaQuimera', label: 'CTA Final Quimera', category: 'quimera' },
     { type: 'hero', label: 'Hero Principal', category: 'content' },
     { type: 'heroModern', label: 'Hero Moderno', category: 'content' },
     { type: 'heroGradient', label: 'Hero Gradiente', category: 'content' },
@@ -290,6 +316,19 @@ export const DEFAULT_AGENCY_SEO: AgencyLandingSEO = {
  * Default sections for a new agency landing page
  */
 export const DEFAULT_AGENCY_SECTIONS: AgencyLandingSection[] = [
+    { id: 'colors', type: 'colors', enabled: true, order: -2, data: {
+        primary: '#6366f1',
+        secondary: '#8b5cf6',
+        accent: '#22d3ee',
+        background: '#0f172a',
+        surface: '#1e293b',
+        text: '#94a3b8',
+        textMuted: '#64748b',
+        heading: '#f1f5f9',
+        border: '#334155',
+        success: '#22c55e',
+        error: '#ef4444',
+    }},
     { id: 'header', type: 'header', enabled: true, order: 0, data: {} },
     { id: 'typography', type: 'typography', enabled: true, order: -1, data: {
         headingFont: 'poppins',
