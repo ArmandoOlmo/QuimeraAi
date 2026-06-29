@@ -184,18 +184,22 @@ const BlogCategoryPage: React.FC<BlogCategoryPageProps> = ({
                                             className="flex items-center justify-between text-xs mt-auto pt-4"
                                             style={{ color: mutedText, borderTop: `1px solid ${cardBorder}` }}
                                         >
-                                            <div className="flex items-center gap-1.5">
-                                                <Calendar size={12} />
-                                                <span>
-                                                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString(undefined, {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    })}
-                                                </span>
-                                            </div>
-                                            {post.author && (
-                                                <span className="font-medium">{post.author}</span>
+                                            {post.showDate !== false ? (
+                                                <div className="flex items-center gap-1.5">
+                                                    <Calendar size={12} />
+                                                    <span>
+                                                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span />
+                                            )}
+                                            {post.showAuthor !== false && (post.author || post.authorName) && (
+                                                <span className="font-medium">{post.author || post.authorName}</span>
                                             )}
                                         </div>
                                     </div>

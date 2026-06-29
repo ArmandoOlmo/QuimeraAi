@@ -366,7 +366,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [featuredImage, setFeaturedImage] = useState(post?.featuredImage || '');
     const [seoTitle, setSeoTitle] = useState(post?.seoTitle || '');
     const [seoDescription, setSeoDescription] = useState(post?.seoDescription || '');
-    const [author, setAuthor] = useState(post?.author || '');
+    const [author, setAuthor] = useState(post?.authorName || post?.author || '');
     const [showAuthor, setShowAuthor] = useState(post?.showAuthor !== false);
     const [showDate, setShowDate] = useState(post?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(post?.publishedAt || '');
@@ -738,8 +738,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 seoDescription,
                 authorId: post?.authorId || '',
                 author,
-                showAuthor,
-                showDate,
+                authorName: author,
+                showAuthor: showAuthor === true,
+                showDate: showDate === true,
                 ...(publishedAt ? { publishedAt } : {}),
                 categoryId,
                 podcastAudioUrl: podcastAudioUrl || '',

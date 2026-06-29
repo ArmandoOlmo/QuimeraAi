@@ -14,6 +14,7 @@ import { useSafeTenant } from '../tenant';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { getUsableImageUrl } from '../../utils/imageUrl';
 import { resolveProjectMenus } from '../../utils/mapSupabaseProject';
+import { mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -158,26 +159,8 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (error) throw error;
 
                 setCmsPosts((data || []).map(p => ({
-                    id: p.id,
-                    projectId: activeProjectId,
-                    title: p.title,
-                    slug: p.slug || '',
-                    content: p.content || '',
-                    excerpt: p.excerpt || '',
-                    featuredImage: getUsableImageUrl(p.featured_image),
-                    categoryId: p.category || '',
-                    status: p.status as any,
-                    tags: p.tags || [],
-                    authorId: p.user_id,
-                    seoTitle: p.seo_title || '',
-                    seoDescription: p.seo_description || '',
-                    createdAt: p.created_at,
-                    updatedAt: p.updated_at,
-                    publishedAt: p.published_at,
-                    authorName: p.author_name || '',
-                    showAuthor: p.show_author ?? true,
-                    showDate: p.show_date ?? true,
-                    isFeatured: p.is_featured || false
+                    ...mapSupabasePostToCMSPost(p, activeProjectId),
+                    featuredImage: getUsableImageUrl(p.featured_image)
                 })));
             } catch (error) {
                 console.error("Error fetching CMS posts:", error);
@@ -214,6 +197,9 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             const userId = user?.id || (user as any)?.uid;
             const tags = withProjectTag(post.tags, activeProjectId);
+            const authorName = post.authorName || post.author || '';
+            const showAuthor = post.showAuthor !== false;
+            const showDate = post.showDate !== false;
             
             const postData = {
                 tenant_id: currentTenantId,
@@ -226,9 +212,9 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 category: post.categoryId,
                 status: post.status,
                 tags,
-                author_name: post.authorName,
-                show_author: post.showAuthor !== false,
-                show_date: post.showDate !== false,
+                author_name: authorName,
+                show_author: showAuthor,
+                show_date: showDate,
                 is_featured: post.isFeatured,
                 published_at: post.status === 'published' ? (post.publishedAt || new Date().toISOString()) : null,
                 updated_at: new Date().toISOString()

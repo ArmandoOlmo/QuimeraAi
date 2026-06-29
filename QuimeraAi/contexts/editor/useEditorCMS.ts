@@ -7,6 +7,7 @@ import { CMSPost, Menu } from '../../types';
 import { supabase } from '../../supabase';
 import type { User } from '@/utils/compatData'; // keep using User interface
 import { getUsableImageUrl } from '../../utils/imageUrl';
+import { mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
 
 interface UseEditorCMSParams {
     user: User | null;
@@ -62,24 +63,8 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                 if (error) throw error;
 
                 const postsData = (data || []).map(p => ({
-                    id: p.id,
-                    projectId: activeProjectId,
-                    title: p.title,
-                    slug: p.slug || '',
-                    content: p.content || '',
-                    excerpt: p.excerpt || '',
+                    ...mapSupabasePostToCMSPost(p, activeProjectId),
                     featuredImage: getUsableImageUrl(p.featured_image),
-                    categoryId: p.category || '',
-                    status: p.status as any,
-                    tags: p.tags || [],
-                    authorId: p.user_id,
-                    seoTitle: p.seo_title || '',
-                    seoDescription: p.seo_description || '',
-                    createdAt: p.created_at,
-                    updatedAt: p.updated_at,
-                    publishedAt: p.published_at,
-                    authorName: p.author_name || '',
-                    isFeatured: p.is_featured || false
                 })) as CMSPost[];
                 setCmsPosts(postsData);
             } catch (e) {
@@ -168,6 +153,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
             // Save to Supabase
             const tags = withProjectTag(data.tags, activeProjectId);
+            const authorName = data.authorName || data.author || '';
             const postData = {
                 title: data.title,
                 slug: data.slug,
@@ -177,7 +163,9 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
                 category: data.categoryId,
                 status: data.status,
                 tags,
-                author_name: data.authorName,
+                author_name: authorName,
+                show_author: data.showAuthor !== false,
+                show_date: data.showDate !== false,
                 is_featured: data.isFeatured,
                 published_at: data.status === 'published' ? (data.publishedAt || new Date().toISOString()) : null,
                 updated_at: new Date().toISOString()

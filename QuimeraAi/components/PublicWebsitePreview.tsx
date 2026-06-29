@@ -19,6 +19,7 @@ import { initialData } from '../data/initialData';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
+import { mapSupabasePostToCMSPost } from '../utils/cmsPostMapper';
 import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
@@ -33,6 +34,10 @@ import {
   resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import {
+  isProjectAiAssistantConfigActive,
+  resolveProjectAiAssistantConfig,
+} from '../utils/chatbotEngine/projectAiAssistantConfig';
 import {
   buildServiceAwareComponentStatus,
   buildServiceAwareSectionVisibility,
@@ -595,7 +600,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           const prefetched = await prefetch;
           if (prefetched.project) {
             projectData = replaceBrokenSupabaseStorageUrls(prefetched.project) as Project;
-            if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts as CMSPost[]);
+            if (prefetched.posts.length > 0) setCmsPosts(prefetched.posts.map(post => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
             if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
             if (prefetched.categories && prefetched.categories.length > 0) {
               setCategories(prefetched.categories as CMSCategory[]);
@@ -666,7 +671,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           const ssrPosts = ssrData.posts || (projectData as any).posts;
           if (ssrPosts && Array.isArray(ssrPosts)) {
             console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from SSR data:', ssrPosts.length, ssrPosts.map((p: any) => p.slug));
-            setCmsPosts(ssrPosts as CMSPost[]);
+            setCmsPosts(ssrPosts.map((post: any) => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
           } else {
             console.log('[PublicWebsitePreview] ⚠️ No CMS posts in SSR data, will need to load from Supabase');
             // Don't return yet - we need to load posts from Supabase
@@ -685,22 +690,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 .order('published_at', { ascending: false });
 
               if (!error && data && data.length > 0) {
-                const posts = data.map(d => ({
-                  id: d.id,
-                  projectId: resolvedProjectId,
-                  title: d.title,
-                  slug: d.slug,
-                  content: d.content,
-                  excerpt: d.excerpt,
-                  featuredImage: d.featured_image,
-                  status: d.status,
-                  author: d.author,
-                  seoTitle: d.seo_title,
-                  seoDescription: d.seo_description,
-                  publishedAt: d.published_at,
-                  createdAt: d.created_at,
-                  updatedAt: d.updated_at
-                } as any));
+                const posts = data.map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
                 console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from Supabase (SSR fallback):', posts.length, posts.map((p: any) => p.slug));
                 setCmsPosts(posts);
               } else {
@@ -724,8 +714,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             const { data: sessionData } = await supabase.auth.getSession();
             const canLoadDraftData = isEditorPreviewRoute && Boolean(sessionData.session);
             const projectSelect = canLoadDraftData
-              ? 'id, tenant_id, user_id, name, published_data, data'
-              : 'id, tenant_id, user_id, name, published_data';
+              ? 'id, tenant_id, user_id, name, published_data, data, ai_assistant_config'
+              : 'id, tenant_id, user_id, name, published_data, ai_assistant_config';
             const projectResult = await supabase
               .from('projects')
               .select(projectSelect)
@@ -756,6 +746,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                   userId: row.user_id,
                   name: row.name || rawData.name,
                   ...rawData,
+                  aiAssistantConfig: rawData.aiAssistantConfig || row.ai_assistant_config || null,
                 } as Project;
                 projectData = replaceBrokenSupabaseStorageUrls(projectData);
                 console.log('[PublicWebsitePreview] ✅ Loaded from Supabase:', {
@@ -767,22 +758,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             }
 
             if (!postsResult.error && postsResult.data && postsResult.data.length > 0) {
-              const posts = postsResult.data.map(d => ({
-                  id: d.id,
-                  projectId: resolvedProjectId,
-                  title: d.title,
-                  slug: d.slug,
-                  content: d.content,
-                  excerpt: d.excerpt,
-                  featuredImage: d.featured_image,
-                  status: d.status,
-                  author: d.author,
-                  seoTitle: d.seo_title,
-                  seoDescription: d.seo_description,
-                  publishedAt: d.published_at,
-                  createdAt: d.created_at,
-                  updatedAt: d.updated_at
-                } as any));
+              const posts = postsResult.data.map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
               setCmsPosts(posts);
             }
           } catch (publicErr) {
@@ -920,22 +896,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               .maybeSingle();
 
             if (!postError && postRow) {
-              const fetchedPost = {
-                id: postRow.id,
-                projectId: project.id,
-                title: postRow.title,
-                slug: postRow.slug,
-                content: postRow.content,
-                excerpt: postRow.excerpt,
-                featuredImage: postRow.featured_image,
-                status: postRow.status,
-                author: postRow.author,
-                seoTitle: postRow.seo_title,
-                seoDescription: postRow.seo_description,
-                publishedAt: postRow.published_at,
-                createdAt: postRow.created_at,
-                updatedAt: postRow.updated_at,
-              } as CMSPost;
+              const fetchedPost = mapSupabasePostToCMSPost(postRow, project.id);
               console.log('[PublicWebsitePreview] ✅ Successfully fetched post directly:', fetchedPost.title);
               setStoreView({ type: 'none' });
               setActivePage(null);
@@ -1337,22 +1298,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             .maybeSingle();
 
           if (!postError && postRow) {
-            const fetchedPost = {
-              id: postRow.id,
-              projectId: project.id,
-              title: postRow.title,
-              slug: postRow.slug,
-              content: postRow.content,
-              excerpt: postRow.excerpt,
-              featuredImage: postRow.featured_image,
-              status: postRow.status,
-              author: postRow.author,
-              seoTitle: postRow.seo_title,
-              seoDescription: postRow.seo_description,
-              publishedAt: postRow.published_at,
-              createdAt: postRow.created_at,
-              updatedAt: postRow.updated_at,
-            } as CMSPost;
+            const fetchedPost = mapSupabasePostToCMSPost(postRow, project.id);
             setStoreView({ type: 'none' });
             setActivePage(null);
             setActiveCategorySlug(null);
@@ -1963,6 +1909,19 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     project?.id,
     storeProjectId,
   ]);
+
+  const resolvedStandaloneChatbotConfig = useMemo(() => {
+    if (!project) return null;
+
+    return resolveProjectAiAssistantConfig({
+      ai_assistant_config: project.aiAssistantConfig || null,
+      data: {
+        ...(project.data || {}),
+        aiAssistantConfig: project.aiAssistantConfig,
+        businessBlueprint: (project as any).businessBlueprint || (project.data as any)?.businessBlueprint,
+      },
+    }) as AiAssistantConfig | null;
+  }, [project]);
 
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
@@ -2672,7 +2631,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       theme: 'light'
     }
   };
-  const baseStandaloneChatbotConfig = project.aiAssistantConfig || fallbackChatbotConfig;
+  const legacyStandaloneChatbotData = (project.data as any)?.chatbot || (project as any).chatbot;
+  const baseStandaloneChatbotConfig = resolvedStandaloneChatbotConfig || (legacyStandaloneChatbotData ? fallbackChatbotConfig : null);
   const propertyChatbotContext = currentPropertyForChatbot ? [
     'Current visitor context: the user is viewing a real estate property detail page.',
     `Property title: ${currentPropertyForChatbot.title}`,
@@ -2687,13 +2647,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     `Description: ${currentPropertyForChatbot.description}`,
     'When asked about this property, answer using this context. For financing or investment questions, explain estimates clearly and invite the visitor to request official guidance from the realtor.',
   ].join('\n') : '';
-  const enrichedStandaloneChatbotConfig = propertyChatbotContext ? {
+  const enrichedStandaloneChatbotConfig = baseStandaloneChatbotConfig && propertyChatbotContext ? {
     ...baseStandaloneChatbotConfig,
     specialInstructions: [
       (baseStandaloneChatbotConfig as any).specialInstructions,
       propertyChatbotContext,
     ].filter(Boolean).join('\n\n'),
   } : baseStandaloneChatbotConfig;
+  const shouldRenderChatbotWidget = Boolean(
+    enrichedStandaloneChatbotConfig &&
+    isProjectAiAssistantConfigActive(enrichedStandaloneChatbotConfig)
+  );
 
   return (
     <div
@@ -2867,7 +2831,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       )}
 
       {/* Chatbot Widget - rendered outside store views; StorefrontApp owns storefront/checkout chat context */}
-      {!isStoreViewActive && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && effectiveComponentStatus.chatbot !== false && effectiveSectionVisibility.chatbot !== false && (
+      {!isStoreViewActive && shouldRenderChatbotWidget && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && (
         <ChatbotWidget
           isPreview={false}
           hidePoweredBy={hasWhiteLabelBranding}

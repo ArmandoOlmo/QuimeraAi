@@ -375,10 +375,10 @@ export async function fetchProjectData(projectId: string): Promise<ProjectData |
         
         console.log(`[SSR] fetchProjectData called for projectId: ${projectId}`);
         
-        // Read published_data from the projects table
+        // Read published_data plus the canonical ChatCore config from the projects table.
         const { data: row, error } = await sb
             .from('projects')
-            .select('published_data')
+            .select('published_data, ai_assistant_config')
             .eq('id', projectId)
             .not('published_data', 'is', null)
             .single();
@@ -411,7 +411,7 @@ export async function fetchProjectData(projectId: string): Promise<ProjectData |
             data: data.data,
             seoConfig: data.seoConfig,
             brandIdentity: data.brandIdentity,
-            aiAssistantConfig: data.aiAssistantConfig,
+            aiAssistantConfig: data.aiAssistantConfig || row.ai_assistant_config || null,
             // Complete project data for proper rendering
             componentStyles: data.componentStyles || null,
             componentOrder: data.componentOrder || [],
@@ -749,7 +749,6 @@ function escapeHtml(str: string): string {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
-
 
 
 

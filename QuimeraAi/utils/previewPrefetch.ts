@@ -9,6 +9,7 @@
 
 import { supabase } from '../supabase';
 import { resolveProjectMenus } from './mapSupabaseProject';
+import { mapSupabasePostToCMSPost } from './cmsPostMapper';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 const PREVIEW_LOGICAL_ROUTE_SEGMENTS = new Set([
@@ -61,8 +62,8 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         const { data: sessionData } = await supabase.auth.getSession();
         const canLoadDraftData = Boolean(sessionData.session);
         const projectSelect = canLoadDraftData
-            ? 'id, tenant_id, user_id, name, published_data, data'
-            : 'id, tenant_id, user_id, name, published_data';
+            ? 'id, tenant_id, user_id, name, published_data, data, ai_assistant_config'
+            : 'id, tenant_id, user_id, name, published_data, ai_assistant_config';
 
         // Fire requests in parallel: project + posts + tenant branding
         const projectResult = await supabase
@@ -126,6 +127,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                 userId: row.user_id,
                 name: (row.name as string | undefined) || (sourceData as Record<string, unknown>).name,
                 ...(sourceData as Record<string, unknown>),
+                aiAssistantConfig: (sourceData as Record<string, unknown>).aiAssistantConfig || row.ai_assistant_config || null,
             };
             menus = resolveProjectMenus(projectData);
             categories = project.categories && Array.isArray(project.categories) ? project.categories : [];
@@ -136,7 +138,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
 
         // Process posts
         if (postsResult.data && postsResult.data.length > 0) {
-            posts = postsResult.data.map((p: any) => ({ id: p.id, ...p }));
+            posts = postsResult.data.map((p: any) => mapSupabasePostToCMSPost(p, projectId));
         }
 
         // Process tenant branding

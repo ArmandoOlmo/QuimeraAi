@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { resolveProjectAiAssistantConfig } from '../../utils/chatbotEngine/projectAiAssistantConfig';
+import {
+    isProjectAiAssistantConfigActive,
+    resolveProjectAiAssistantConfig,
+} from '../../utils/chatbotEngine/projectAiAssistantConfig';
 
 describe('widget AI assistant config resolver', () => {
+    it('treats persisted ChatCore configs as active unless explicitly disabled', () => {
+        expect(isProjectAiAssistantConfigActive({ agentName: 'ChatCore' })).toBe(true);
+        expect(isProjectAiAssistantConfigActive({ isActive: true, agentName: 'ChatCore' })).toBe(true);
+        expect(isProjectAiAssistantConfigActive({ isActive: false, agentName: 'ChatCore' })).toBe(false);
+        expect(isProjectAiAssistantConfigActive(null)).toBe(false);
+    });
+
     it('uses AI Studio ChatCore config stored in project data when the column is empty', () => {
         const config = resolveProjectAiAssistantConfig({
             ai_assistant_config: null,

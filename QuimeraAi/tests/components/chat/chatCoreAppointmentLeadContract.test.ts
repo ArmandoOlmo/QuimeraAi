@@ -89,4 +89,28 @@ describe('ChatCore appointment lead contract', () => {
         expect(bioPageBuilder).toContain("sourceSurface: 'admin_preview'");
         expect(bioPageBuilder).toContain("contextKeys: ['bio_page_builder', 'chatbot_preview']");
     });
+
+    it('renders project ChatCore from the active assistant config instead of legacy chatbot section visibility', () => {
+        const landingPage = readSource('components/LandingPage.tsx');
+        expect(landingPage).toContain('const shouldRenderChatbotWidget = Boolean(');
+        expect(landingPage).toContain('isProjectAiAssistantConfigActive(activeProjectChatbotConfig)');
+        expect(landingPage).toContain('shouldRenderChatbotWidget && isSectionServiceAvailable');
+        expect(landingPage).not.toContain('effectiveSectionVisibility.chatbot && (');
+
+        const publicPreview = readSource('components/PublicWebsitePreview.tsx');
+        expect(publicPreview).toContain('const shouldRenderChatbotWidget = Boolean(');
+        expect(publicPreview).toContain('isProjectAiAssistantConfigActive(enrichedStandaloneChatbotConfig)');
+        expect(publicPreview).toContain('shouldRenderChatbotWidget && isSectionServiceAvailable');
+        expect(publicPreview).toContain('published_data, ai_assistant_config');
+        expect(publicPreview).toContain('aiAssistantConfig: rawData.aiAssistantConfig || row.ai_assistant_config || null');
+        expect(publicPreview).not.toContain('effectiveSectionVisibility.chatbot !== false && (');
+
+        const previewPrefetch = readSource('utils/previewPrefetch.ts');
+        expect(previewPrefetch).toContain('published_data, ai_assistant_config');
+        expect(previewPrefetch).toContain('aiAssistantConfig: (sourceData as Record<string, unknown>).aiAssistantConfig || row.ai_assistant_config || null');
+
+        const ssrRenderer = readSource('server/ssrRenderer.ts');
+        expect(ssrRenderer).toContain('published_data, ai_assistant_config');
+        expect(ssrRenderer).toContain('aiAssistantConfig: data.aiAssistantConfig || row.ai_assistant_config || null');
+    });
 });
