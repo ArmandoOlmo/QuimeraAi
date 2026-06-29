@@ -7,6 +7,7 @@ const SUPABASE_AUTH_STORAGE_KEY = 'sb-elfcrnhffuvntlfuvumd-auth-token';
 const LEGACY_AUTH_STORAGE_KEYS = ['sb-auth-auth-token'];
 const CIRCUIT_FAILURE_THRESHOLD = 4;
 const CIRCUIT_OPEN_MS = 12000;
+const SUPABASE_WRITE_FETCH_TIMEOUT_MS = Math.max(supabaseFetchTimeoutMs, 20000);
 
 let consecutiveSupabaseFetchFailures = 0;
 let supabaseCircuitOpenUntil = 0;
@@ -60,10 +61,28 @@ function isNetworkFailure(error: unknown): boolean {
   );
 }
 
+function getSupabaseRequestMethod(input: RequestInfo | URL, init?: RequestInit): string {
+  if (init?.method) {
+    return init.method.toUpperCase();
+  }
+
+  if (typeof Request !== 'undefined' && input instanceof Request) {
+    return input.method.toUpperCase();
+  }
+
+  return 'GET';
+}
+
+function isCircuitBreakerEligible(method: string): boolean {
+  return method === 'GET' || method === 'HEAD';
+}
+
 function createSupabaseFetch(): typeof fetch {
   return async (input, init) => {
+    const method = getSupabaseRequestMethod(input, init);
+    const shouldUseCircuitBreaker = isCircuitBreakerEligible(method);
     const now = Date.now();
-    if (supabaseCircuitOpenUntil > now) {
+    if (shouldUseCircuitBreaker && supabaseCircuitOpenUntil > now) {
       const error = new Error('Supabase temporarily unavailable after repeated network failures');
       error.name = 'SupabaseUnavailableError';
       throw error;
@@ -71,7 +90,8 @@ function createSupabaseFetch(): typeof fetch {
 
     const controller = new AbortController();
     const upstreamSignal = init?.signal;
-    const timeout = setTimeout(() => controller.abort(), supabaseFetchTimeoutMs);
+    const timeoutMs = shouldUseCircuitBreaker ? supabaseFetchTimeoutMs : SUPABASE_WRITE_FETCH_TIMEOUT_MS;
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const abortFromUpstream = () => controller.abort();
 
     if (upstreamSignal?.aborted) {
@@ -86,15 +106,17 @@ function createSupabaseFetch(): typeof fetch {
         signal: controller.signal,
       });
 
-      if (response.status >= 500) {
-        markSupabaseFetchFailure();
-      } else {
-        markSupabaseFetchSuccess();
+      if (shouldUseCircuitBreaker) {
+        if (response.status >= 500) {
+          markSupabaseFetchFailure();
+        } else {
+          markSupabaseFetchSuccess();
+        }
       }
 
       return response;
     } catch (error) {
-      if (isNetworkFailure(error)) {
+      if (shouldUseCircuitBreaker && isNetworkFailure(error)) {
         markSupabaseFetchFailure();
       }
       throw error;
