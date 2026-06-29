@@ -57,6 +57,9 @@ const resolveText = (value: any, lang: string = 'es'): string => {
     return String(value);
 };
 
+const isPlainRecord = (value: unknown): value is Record<string, any> =>
+    Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
 // Lazy-load the AI Template Generator to avoid bloating this module
 const AdminTemplateStudio = React.lazy(() => import('./AdminTemplateStudio'));
 
@@ -185,10 +188,17 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
             lastUpdated: new Date().toISOString(),
         };
 
-        // Build Supabase column updates.
-        // The `data` JSONB column stores the full project object.
-        // When reading, loadGlobalTemplates does `...row.data` to spread all fields.
-        // So we reconstruct the full data object from the updated template.
+        // Build Supabase column updates. Keep the dashboard list lightweight,
+        // but load the full JSONB payload only for explicit template saves.
+        const { data: existingRow, error: existingError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', templateId)
+            .single();
+
+        if (existingError) throw existingError;
+
+        const existingData = isPlainRecord(existingRow?.data) ? existingRow.data : {};
         const supabaseUpdates: Record<string, any> = {
             last_updated: updatedTemplate.lastUpdated,
             name: updatedTemplate.name,
@@ -200,11 +210,24 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
         if (updates.theme !== undefined) supabaseUpdates.theme = updates.theme;
         if (updates.brandIdentity !== undefined) supabaseUpdates.brand_identity = updates.brandIdentity;
         if (updatedTemplate.menus !== undefined) supabaseUpdates.menus = updatedTemplate.menus;
+        if ((updates as any).isArchived !== undefined) supabaseUpdates.is_archived = (updates as any).isArchived;
 
-        // Rebuild the `data` JSONB — this is the full project snapshot
-        // that loadGlobalTemplates spreads via `...row.data`
-        const { id: _id, ...dataPayload } = updatedTemplate;
-        supabaseUpdates.data = dataPayload;
+        const { id: _id, ...dataPayload } = updatedTemplate as Project & Record<string, any>;
+        delete dataPayload.__quimeraSummaryProject;
+
+        const mergedDataPayload: Record<string, any> = {
+            ...existingData,
+            ...dataPayload,
+        };
+
+        const preserveFullKeys = ['data', 'theme', 'brandIdentity', 'componentOrder', 'sectionVisibility', 'pages', 'menus'];
+        preserveFullKeys.forEach((key) => {
+            if ((updates as Record<string, any>)[key] === undefined && existingData[key] !== undefined) {
+                mergedDataPayload[key] = existingData[key];
+            }
+        });
+
+        supabaseUpdates.data = mergedDataPayload;
 
         console.log('📤 Saving to Supabase:', {
             templateId,

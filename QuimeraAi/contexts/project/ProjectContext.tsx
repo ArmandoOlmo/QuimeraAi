@@ -62,6 +62,8 @@ const normalizeProject = (project: Project): Project => {
 
 const SUMMARY_PROJECT_FLAG = '__quimeraSummaryProject';
 
+// Keep dashboard lists off the large data/published_data JSONB columns. Full
+// project payloads are fetched only when the user opens a project.
 const PROJECT_LIST_COLUMNS = [
     'id',
     'tenant_id',
@@ -87,63 +89,9 @@ const PROJECT_LIST_COLUMNS = [
     'category',
     'tags',
     'industries',
-    'heroImageUrl:data->hero->>imageUrl',
-    'heroBackgroundImage:data->hero->>backgroundImage',
-    'heroBackgroundImageUrl:data->hero->>backgroundImageUrl',
-    'heroSplitImageUrl:data->heroSplit->>imageUrl',
-    'heroSplitBackgroundImage:data->heroSplit->>backgroundImage',
-    'heroSplitBackgroundImageUrl:data->heroSplit->>backgroundImageUrl',
-    'heroGalleryImageUrl:data->heroGallery->>imageUrl',
-    'heroGalleryBackgroundImage:data->heroGallery->>backgroundImage',
-    'heroGalleryBackgroundImageUrl:data->heroGallery->>backgroundImageUrl',
-    'heroWaveImageUrl:data->heroWave->>imageUrl',
-    'heroWaveBackgroundImage:data->heroWave->>backgroundImage',
-    'heroWaveBackgroundImageUrl:data->heroWave->>backgroundImageUrl',
-    'heroNovaImageUrl:data->heroNova->>imageUrl',
-    'heroNovaBackgroundImage:data->heroNova->>backgroundImage',
-    'heroNovaBackgroundImageUrl:data->heroNova->>backgroundImageUrl',
-    'heroLeadImageUrl:data->heroLead->>imageUrl',
-    'heroLeadBackgroundImage:data->heroLead->>backgroundImage',
-    'heroLeadBackgroundImageUrl:data->heroLead->>backgroundImageUrl',
-    'heroLuminaImageUrl:data->heroLumina->>imageUrl',
-    'heroLuminaBackgroundImage:data->heroLumina->>backgroundImage',
-    'heroLuminaBackgroundImageUrl:data->heroLumina->>backgroundImageUrl',
-    'heroNeonImageUrl:data->heroNeon->>imageUrl',
-    'heroNeonBackgroundImage:data->heroNeon->>backgroundImage',
-    'heroNeonBackgroundImageUrl:data->heroNeon->>backgroundImageUrl',
-    'heroQuimeraImageUrl:data->heroQuimera->>imageUrl',
-    'heroQuimeraBackgroundImage:data->heroQuimera->>backgroundImage',
-    'heroQuimeraBackgroundImageUrl:data->heroQuimera->>backgroundImageUrl',
-    'homeHeroImageUrl:pages->0->sectionData->hero->>imageUrl',
-    'homeHeroBackgroundImage:pages->0->sectionData->hero->>backgroundImage',
-    'homeHeroBackgroundImageUrl:pages->0->sectionData->hero->>backgroundImageUrl',
-    'homeHeroSplitImageUrl:pages->0->sectionData->heroSplit->>imageUrl',
-    'homeHeroSplitBackgroundImage:pages->0->sectionData->heroSplit->>backgroundImage',
-    'homeHeroSplitBackgroundImageUrl:pages->0->sectionData->heroSplit->>backgroundImageUrl',
-    'homeHeroGalleryImageUrl:pages->0->sectionData->heroGallery->>imageUrl',
-    'homeHeroGalleryBackgroundImage:pages->0->sectionData->heroGallery->>backgroundImage',
-    'homeHeroGalleryBackgroundImageUrl:pages->0->sectionData->heroGallery->>backgroundImageUrl',
-    'homeHeroWaveImageUrl:pages->0->sectionData->heroWave->>imageUrl',
-    'homeHeroWaveBackgroundImage:pages->0->sectionData->heroWave->>backgroundImage',
-    'homeHeroWaveBackgroundImageUrl:pages->0->sectionData->heroWave->>backgroundImageUrl',
-    'homeHeroNovaImageUrl:pages->0->sectionData->heroNova->>imageUrl',
-    'homeHeroNovaBackgroundImage:pages->0->sectionData->heroNova->>backgroundImage',
-    'homeHeroNovaBackgroundImageUrl:pages->0->sectionData->heroNova->>backgroundImageUrl',
-    'homeHeroLeadImageUrl:pages->0->sectionData->heroLead->>imageUrl',
-    'homeHeroLeadBackgroundImage:pages->0->sectionData->heroLead->>backgroundImage',
-    'homeHeroLeadBackgroundImageUrl:pages->0->sectionData->heroLead->>backgroundImageUrl',
-    'homeHeroLuminaImageUrl:pages->0->sectionData->heroLumina->>imageUrl',
-    'homeHeroLuminaBackgroundImage:pages->0->sectionData->heroLumina->>backgroundImage',
-    'homeHeroLuminaBackgroundImageUrl:pages->0->sectionData->heroLumina->>backgroundImageUrl',
-    'homeHeroNeonImageUrl:pages->0->sectionData->heroNeon->>imageUrl',
-    'homeHeroNeonBackgroundImage:pages->0->sectionData->heroNeon->>backgroundImage',
-    'homeHeroNeonBackgroundImageUrl:pages->0->sectionData->heroNeon->>backgroundImageUrl',
-    'homeHeroQuimeraImageUrl:pages->0->sectionData->heroQuimera->>imageUrl',
-    'homeHeroQuimeraBackgroundImage:pages->0->sectionData->heroQuimera->>backgroundImage',
-    'homeHeroQuimeraBackgroundImageUrl:pages->0->sectionData->heroQuimera->>backgroundImageUrl',
-    'deletedAt:data->deletedAt',
-    'deletedBy:data->deletedBy',
-    'isDeleted:data->isDeleted',
+    'deleted_at',
+    'deleted_by',
+    'is_deleted',
 ].join(',');
 
 // Helper to get the correct projects collection path
@@ -290,9 +238,13 @@ const buildSummaryProjectData = (thumbnailUrl: string | null, heroSection: PageS
 
 const mapSupabaseRowToProjectSummary = (row: Record<string, any>): Project => {
     const project = normalizeProject(mapSupabaseRowToProject(row));
-    const deletedAt = typeof row.deletedAt === 'string' ? row.deletedAt : undefined;
-    const deletedBy = typeof row.deletedBy === 'string' ? row.deletedBy : undefined;
-    const isDeleted = row.isDeleted === true;
+    const deletedAt = typeof row.deleted_at === 'string'
+        ? row.deleted_at
+        : typeof row.deletedAt === 'string' ? row.deletedAt : undefined;
+    const deletedBy = typeof row.deleted_by === 'string'
+        ? row.deleted_by
+        : typeof row.deletedBy === 'string' ? row.deletedBy : undefined;
+    const isDeleted = row.is_deleted === true || row.isDeleted === true;
     const summaryThumbnailUrl = resolveSummaryThumbnailUrl(row, project);
     const summaryHeroSection = getSummaryHeroSection(project.componentOrder);
     const summaryComponentOrder = summaryThumbnailUrl ? [summaryHeroSection] as PageSection[] : [] as PageSection[];
@@ -653,15 +605,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         try {
             const { data: templateSnapshot } = await supabase
                 .from('projects')
-                .select('*')
+                .select(PROJECT_LIST_COLUMNS)
                 .eq('status', 'Template')
+                .eq('is_deleted', false)
                 .order('last_updated', { ascending: false });
+
+            const { data: deletedTemplateSnapshot } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('status', 'Template')
+                .eq('is_deleted', true);
 
             const deletedIds = new Set<string>();
             const activeTemplates: Project[] = [];
 
+            (deletedTemplateSnapshot || []).forEach(row => {
+                if (row.id) deletedIds.add(row.id);
+            });
+
             (templateSnapshot || []).forEach(row => {
-                const docData = mapSupabaseRowToProject(row);
+                const docData = mapSupabaseRowToProjectSummary(row);
                 
                 if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(row.id)) {
                     deletedIds.add(row.id);
@@ -682,12 +645,24 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
+    const loadFullProjectFromSupabase = async (projectId: string): Promise<Project> => {
+        const { data: projectSnap, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single();
+
+        if (error) throw error;
+        return normalizeProject(mapSupabaseRowToProject(projectSnap));
+    };
+
 
     // Load user/tenant projects
     const loadUserProjects = useCallback(async (userId: string, tenantId?: string | null) => {
         setIsLoadingProjects(true);
         try {
             let allUserProjects: Project[] = [];
+            let allDeletedProjects: Project[] = [];
 
             // Always load from user's personal path first (Legacy support for null tenant_id)
             try {
@@ -697,10 +672,21 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                     .select(PROJECT_LIST_COLUMNS)
                     .eq('user_id', userId)
                     .is('tenant_id', null)
+                    .eq('is_deleted', false)
                     .order('last_updated', { ascending: false });
+
+                const { data: userDeletedSnapshot } = await supabase
+                    .from('projects')
+                    .select(PROJECT_LIST_COLUMNS)
+                    .eq('user_id', userId)
+                    .is('tenant_id', null)
+                    .eq('is_deleted', true)
+                    .order('deleted_at', { ascending: false });
                 
                 const personalProjects = (userSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
+                const personalDeletedProjects = (userDeletedSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                 allUserProjects = [...personalProjects];
+                allDeletedProjects = [...personalDeletedProjects];
 
             } catch (err) {
                 console.warn("Could not load personal projects:", err);
@@ -714,10 +700,20 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
                         .from('projects')
                         .select(PROJECT_LIST_COLUMNS)
                         .eq('tenant_id', tenantId)
+                        .eq('is_deleted', false)
                         .order('last_updated', { ascending: false });
+
+                    const { data: tenantDeletedSnapshot } = await supabase
+                        .from('projects')
+                        .select(PROJECT_LIST_COLUMNS)
+                        .eq('tenant_id', tenantId)
+                        .eq('is_deleted', true)
+                        .order('deleted_at', { ascending: false });
                     
                     const tenantProjects = (tenantSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
+                    const tenantDeletedProjects = (tenantDeletedSnapshot || []).map(row => mapSupabaseRowToProjectSummary(row));
                     allUserProjects = [...allUserProjects, ...tenantProjects];
+                    allDeletedProjects = [...allDeletedProjects, ...tenantDeletedProjects];
 
                 } catch (err) {
                     console.warn("Could not load tenant projects:", err);
@@ -728,10 +724,13 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             const uniqueProjects = allUserProjects.filter((project, index, self) =>
                 index === self.findIndex(p => p.id === project.id)
             );
+            const uniqueDeletedProjects = allDeletedProjects.filter((project, index, self) =>
+                index === self.findIndex(p => p.id === project.id)
+            );
 
             // Separate active projects from soft-deleted (trash) projects
-            const activeProjects = uniqueProjects.filter(p => !(p as any).deletedAt);
-            const trashedProjects = uniqueProjects.filter(p => !!(p as any).deletedAt);
+            const activeProjects = uniqueProjects.filter(p => !(p as any).isDeleted && !(p as any).deletedAt);
+            const trashedProjects = uniqueDeletedProjects;
 
             // Sort by lastUpdated
             activeProjects.sort((a, b) => {
@@ -1729,23 +1728,39 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (!project) return;
 
         const isTemplate = project.status === 'Template';
-        const projectData = project.data || {};
+        const { data: projectRow, error: projectDataError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', projectId)
+            .single();
+
+        if (projectDataError) {
+            console.error('[ProjectContext] Could not load project payload before delete:', projectDataError);
+            throw projectDataError;
+        }
+
+        const projectData = isPlainRecord(projectRow?.data) ? projectRow.data : {};
 
         if (isTemplate) {
             await supabase.from('projects').update({
-                data: { ...projectData, isDeleted: true }
+                data: { ...projectData, isDeleted: true },
+                is_deleted: true,
             }).eq('id', projectId);
 
             deletedTemplateIdsRef.current.add(projectId);
             localStorage.setItem('deletedTemplateIds', JSON.stringify(Array.from(deletedTemplateIdsRef.current)));
         } else {
+            const deletedAt = new Date().toISOString();
             // Soft-delete: set deletedAt timestamp instead of deleting
             await supabase.from('projects').update({
-                data: { ...projectData, deletedAt: new Date().toISOString(), deletedBy: user.id }
+                data: { ...projectData, deletedAt, deletedBy: user.id },
+                deleted_at: deletedAt,
+                deleted_by: user.id,
+                is_deleted: true,
             }).eq('id', projectId);
             
             // Move to deleted projects list
-            setDeletedProjects(prev => [{ ...project, deletedAt: new Date().toISOString(), deletedBy: user.id } as any, ...prev]);
+            setDeletedProjects(prev => [{ ...project, deletedAt, deletedBy: user.id, isDeleted: true } as any, ...prev]);
         }
 
         setProjects(prev => prev.filter(p => p.id !== projectId));
@@ -1763,17 +1778,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const project = deletedProjects.find(p => p.id === projectId);
         if (!project) return;
 
-        const updatedData = { ...project };
+        const { data: projectRow, error: projectDataError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', projectId)
+            .single();
+
+        if (projectDataError) {
+            console.error('[ProjectContext] Could not load project payload before restore:', projectDataError);
+            throw projectDataError;
+        }
+
+        const updatedData = { ...(isPlainRecord(projectRow?.data) ? projectRow.data : {}) };
         if ('deletedAt' in updatedData) delete (updatedData as any).deletedAt;
         if ('deletedBy' in updatedData) delete (updatedData as any).deletedBy;
 
         await supabase.from('projects').update({
-            data: updatedData
+            data: updatedData,
+            deleted_at: null,
+            deleted_by: null,
+            is_deleted: false,
         }).eq('id', projectId);
 
         // Move back to active projects
         setDeletedProjects(prev => prev.filter(p => p.id !== projectId));
-        setProjects(prev => [{ ...project } as Project, ...prev]);
+        setProjects(prev => [{ ...project, data: updatedData, deletedAt: undefined, deletedBy: undefined, isDeleted: false } as Project, ...prev]);
     };
 
     // Permanently delete a project (hard delete from Supabase)
@@ -1833,10 +1862,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
-        const template = projects.find(p => p.id === templateId);
-        if (!template) {
+        const templateSummary = projects.find(p => p.id === templateId);
+        if (!templateSummary) {
             throw new Error(`Template not found: ${templateId}`);
         }
+        const template = await loadFullProjectFromSupabase(templateId);
 
         const now = new Date().toISOString();
         const templateMenus = template.menus ? cloneProjectValue(template.menus) : [];
@@ -2073,10 +2103,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const archiveTemplate = async (templateId: string, isArchived: boolean) => {
-        const template = projects.find(p => p.id === templateId);
-        const updatedData = { ...(template?.data || {}), isArchived };
+        const { data: templateRow, error: templateError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', templateId)
+            .single();
+
+        if (templateError) throw templateError;
+
+        const updatedData = { ...(isPlainRecord(templateRow?.data) ? templateRow.data : {}), isArchived };
         await supabase.from('projects').update({
-            data: updatedData
+            data: updatedData,
+            is_archived: isArchived,
         }).eq('id', templateId);
 
         setProjects(prev => prev.map(p =>
@@ -2085,8 +2123,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const duplicateTemplate = async (templateId: string) => {
-        const template = projects.find(p => p.id === templateId);
-        if (!template) return;
+        const templateSummary = projects.find(p => p.id === templateId);
+        if (!templateSummary) return;
+        const template = await loadFullProjectFromSupabase(templateId);
 
         const now = new Date().toISOString();
         const { id, ...templateData } = template;
