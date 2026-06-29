@@ -290,6 +290,7 @@ export function mapSupabaseRowToProject(row: SupabaseProjectRow): Project {
             (Array.isArray(row.categories) && row.categories.length > 0
                 ? row.categories
                 : dataPayload.categories) ?? undefined,
+        isArchived: row.is_archived ?? dataPayload.isArchived,
         aiAssistantConfig: aiAssistantConfig ?? row.ai_assistant_config ?? dataPayload.aiAssistantConfig,
         seoConfig: row.seo_config ?? dataPayload.seoConfig,
         crmConfig: row.crm_config ?? dataPayload.crmConfig,

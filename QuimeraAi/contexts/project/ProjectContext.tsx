@@ -605,15 +605,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         try {
             const { data: templateSnapshot } = await supabase
                 .from('projects')
-                .select('*')
+                .select(PROJECT_LIST_COLUMNS)
                 .eq('status', 'Template')
+                .eq('is_deleted', false)
                 .order('last_updated', { ascending: false });
+
+            const { data: deletedTemplateSnapshot } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('status', 'Template')
+                .eq('is_deleted', true);
 
             const deletedIds = new Set<string>();
             const activeTemplates: Project[] = [];
 
+            (deletedTemplateSnapshot || []).forEach(row => {
+                if (row.id) deletedIds.add(row.id);
+            });
+
             (templateSnapshot || []).forEach(row => {
-                const docData = mapSupabaseRowToProject(row);
+                const docData = mapSupabaseRowToProjectSummary(row);
                 
                 if (docData.isDeleted === true || deletedTemplateIdsRef.current.has(row.id)) {
                     deletedIds.add(row.id);
@@ -632,6 +643,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.error("Error loading templates:", error);
             return { templates: [], deletedIds: deletedTemplateIdsRef.current };
         }
+    };
+
+    const loadFullProjectFromSupabase = async (projectId: string): Promise<Project> => {
+        const { data: projectSnap, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single();
+
+        if (error) throw error;
+        return normalizeProject(mapSupabaseRowToProject(projectSnap));
     };
 
 
@@ -1829,10 +1851,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             throw new Error(`Has alcanzado el límite de ${projectLimit} proyectos. Actualiza tu plan para crear más.`);
         }
 
-        const template = projects.find(p => p.id === templateId);
-        if (!template) {
+        const templateSummary = projects.find(p => p.id === templateId);
+        if (!templateSummary) {
             throw new Error(`Template not found: ${templateId}`);
         }
+        const template = await loadFullProjectFromSupabase(templateId);
 
         const now = new Date().toISOString();
         const templateMenus = template.menus ? cloneProjectValue(template.menus) : [];
@@ -2062,10 +2085,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const archiveTemplate = async (templateId: string, isArchived: boolean) => {
-        const template = projects.find(p => p.id === templateId);
-        const updatedData = { ...(template?.data || {}), isArchived };
+        const { data: templateRow, error: templateError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', templateId)
+            .single();
+
+        if (templateError) throw templateError;
+
+        const updatedData = { ...(isPlainRecord(templateRow?.data) ? templateRow.data : {}), isArchived };
         await supabase.from('projects').update({
-            data: updatedData
+            data: updatedData,
+            is_archived: isArchived,
         }).eq('id', templateId);
 
         setProjects(prev => prev.map(p =>
@@ -2074,8 +2105,9 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     const duplicateTemplate = async (templateId: string) => {
-        const template = projects.find(p => p.id === templateId);
-        if (!template) return;
+        const templateSummary = projects.find(p => p.id === templateId);
+        if (!templateSummary) return;
+        const template = await loadFullProjectFromSupabase(templateId);
 
         const now = new Date().toISOString();
         const { id, ...templateData } = template;
