@@ -379,7 +379,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [persistedPostId, setPersistedPostId] = useState(post?.id || '');
 
     // Editor State
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+        typeof window === 'undefined' ? true : window.matchMedia('(min-width: 1024px)').matches
+    ); // Right sidebar (settings)
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // Mobile general sidebar
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
@@ -475,7 +477,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         content: post?.content || '<p></p>',
         editorProps: {
             attributes: {
-                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[600px] px-8 py-6',
+                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[calc(100dvh-14rem)] md:min-h-[600px] px-4 sm:px-8 py-4 sm:py-6',
             },
         },
         onUpdate: ({ editor }) => {
@@ -1071,7 +1073,7 @@ IMPORTANT FORMATTING RULES:
     };
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-foreground">
             {/* General App Sidebar - Collapsed by default */}
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
@@ -1263,8 +1265,8 @@ IMPORTANT FORMATTING RULES:
 
                 {/* Link Modal */}
                 {showLinkModal && (
-                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
-                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-5 sm:p-6 w-full max-w-sm">
                             <h3 className="text-lg font-bold mb-4 text-q-text dark:text-gray-100">{t('cms_editor.editLink')}</h3>
                             <input
                                 type="url"
@@ -1275,14 +1277,14 @@ IMPORTANT FORMATTING RULES:
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
-                            <div className="flex justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <button
                                     onClick={removeLink}
                                     className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     {t('cms_editor.removeLink')}
                                 </button>
-                                <div className="flex gap-2">
+                                <div className="flex justify-end gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
                                         className="px-4 py-2 bg-q-border dark:bg-gray-700 hover:bg-q-border dark:hover:bg-gray-600 rounded-lg text-q-text dark:text-gray-100"

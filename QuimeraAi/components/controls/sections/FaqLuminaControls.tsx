@@ -51,24 +51,25 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
 
       {/* FAQs List */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
-        <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
-          <HelpCircle size={14} />
-          {t('editor.faqLumina.faqs', 'FAQs')}
+        <label className="flex min-w-0 items-center gap-2 text-xs font-bold text-q-text-secondary uppercase mb-3">
+          <HelpCircle size={14} className="flex-shrink-0" />
+          <span className="min-w-0 truncate">{t('editor.faqLumina.faqs', 'FAQs')}</span>
         </label>
 
         {faqs.map((faq: any, idx: number) => (
-          <div key={idx} className="bg-q-bg p-3 rounded-lg border border-q-border mb-3 space-y-3 relative group">
+          <div key={idx} className="min-w-0 bg-q-bg p-3 rounded-lg border border-q-border mb-3 space-y-3 relative group">
             <button
               onClick={() => {
                 const newFaqs = faqs.filter((_: any, i: number) => i !== idx);
                 setNestedData('faqLumina.faqs', newFaqs);
               }}
-              className="absolute top-2 right-2 p-1 text-red-400 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover:opacity-100 z-10"
+              className="absolute top-2 right-2 p-1 text-red-400 hover:bg-red-500/10 rounded transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100 z-10"
+              aria-label={t('editor.controls.remove', 'Eliminar')}
             >
               <Trash2 size={14} />
             </button>
             
-            <span className="text-[10px] font-bold text-q-accent uppercase block mb-2">Question #{idx + 1}</span>
+            <span className="block min-w-0 pr-8 text-[10px] font-bold text-q-accent uppercase mb-2">Question #{idx + 1}</span>
 
             <I18nInput 
               label={t('editor.faqLumina.question', 'Question')} 

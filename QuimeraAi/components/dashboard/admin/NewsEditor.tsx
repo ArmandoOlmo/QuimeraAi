@@ -146,7 +146,9 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+        typeof window === 'undefined' ? true : window.matchMedia('(min-width: 768px)').matches
+    );
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
     // Language & Translation State
@@ -223,7 +225,7 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
         content: news?.body || '<p></p>',
         editorProps: {
             attributes: {
-                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[600px] px-8 py-6',
+                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[calc(100dvh-14rem)] md:min-h-[600px] px-4 sm:px-8 py-4 sm:py-6',
             },
         },
         onUpdate: () => {
@@ -706,9 +708,9 @@ Text to format:
                     onClick={() => toggleSection(id)}
                     className="w-full flex items-center justify-between p-4 hover:bg-q-bg/50 transition-colors"
                 >
-                    <div className="flex items-center gap-2">
-                        <span className={accentColor || 'text-q-accent'}>{icon}</span>
-                        <span className="text-sm font-bold text-q-text">{sectionTitle}</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                        <span className={`flex-shrink-0 ${accentColor || 'text-q-accent'}`}>{icon}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-bold text-q-text">{sectionTitle}</span>
                     </div>
                     {isExpanded ? (
                         <ChevronUp size={14} className="text-q-text-secondary" />
@@ -723,7 +725,7 @@ Text to format:
 
     return (
         <>
-        <div className="flex h-screen bg-q-bg text-q-text">
+        <div className="flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-q-text">
             <DashboardSidebar
                 isMobileOpen={isMobileSidebarOpen}
                 onClose={() => setIsMobileSidebarOpen(false)}
@@ -732,9 +734,9 @@ Text to format:
 
             <div className="flex flex-col flex-1 min-w-0">
                 {/* ── CMS-style Header (merged, no sub-header) ── */}
- <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-12 px-3 lg:px-4 flex items-center z-20 sticky top-0">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-12 min-w-0 px-3 lg:px-4 flex items-center z-20 sticky top-0">
                     {/* Left Section - Icon */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-shrink-0 items-center gap-2">
                         <button
                             onClick={() => setIsMobileSidebarOpen(true)}
                             className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-muted hover:text-foreground transition-colors"
@@ -750,9 +752,9 @@ Text to format:
                     </div>
 
                     {/* Center - Status Toggle */}
-                    <div className="flex items-center gap-2 mx-auto">
+                    <div className="hidden items-center gap-2 mx-auto sm:flex">
                         {lastSaved && (
-                            <span className="text-xs text-q-text-muted flex items-center gap-1 mr-2">
+                            <span className="hidden text-xs text-q-text-muted md:flex items-center gap-1 mr-2">
                                 <Check size={12} className="text-q-success" />
                                 {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -771,12 +773,12 @@ Text to format:
                     </div>
 
                     {/* Right Section - Action buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-shrink-0 items-center gap-1 md:gap-2">
                         {status !== 'published' && (
                             <button
                                 onClick={handlePublish}
                                 disabled={isSaving}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-q-success text-white hover:bg-q-success disabled:opacity-50"
+                                className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-q-success text-white hover:bg-q-success disabled:opacity-50"
                             >
                                 <Send size={16} />
                                 <span className="hidden sm:inline">{t('superadmin.news.publish', 'Publicar')}</span>
@@ -785,14 +787,14 @@ Text to format:
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save size={16} />}
                             <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
                         </button>
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'}`}
+                            className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isSidebarOpen ? 'bg-primary/10 text-primary' : 'text-q-text-muted hover:text-foreground hover:bg-secondary/50'}`}
                             title={t('superadmin.news.toggleSidebar', 'Panel lateral')}
                         >
                             <MoreVertical size={16} />
@@ -833,14 +835,14 @@ Text to format:
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
-                            <div className="flex justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <button
                                     onClick={removeLink}
                                     className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     {t('superadmin.news.removeLink', 'Eliminar Enlace')}
                                 </button>
-                                <div className="flex gap-2">
+                                <div className="flex justify-end gap-2">
                                     <button
                                         onClick={() => { setShowLinkModal(false); setLinkUrl(''); }}
                                         className="px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg"
@@ -875,13 +877,13 @@ Text to format:
                             {/* Content container - full width, no border */}
                             <div className="w-full">
                                 {/* Post Title Input — inside editor area like CMS */}
-                                <div className="px-8 pt-8 pb-2">
+                                <div className="px-4 pt-5 pb-2 md:px-8 md:pt-8">
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder={t('superadmin.news.titlePlaceholder', 'Título de la noticia...')}
-                                        className="w-full text-3xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-q-text-muted/50 leading-tight"
+                                        className="w-full text-2xl sm:text-4xl font-bold bg-transparent border-none outline-none text-foreground placeholder:text-q-text-muted/50 leading-tight"
                                     />
                                     <div className="mt-3 h-px bg-border/50" />
                                 </div>
@@ -902,7 +904,24 @@ Text to format:
 
                     {/* ── Right Sidebar — CMS-style ── */}
                     {isSidebarOpen && (
-                        <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto shrink-0">
+                        <div className="fixed inset-0 z-40 bg-q-text/40 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)} />
+                    )}
+                    {isSidebarOpen && (
+                        <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] min-w-0 overflow-y-auto rounded-t-2xl border-t border-q-border bg-q-surface shadow-2xl md:static md:z-auto md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l md:shrink-0">
+                            <div className="flex items-center justify-between border-b border-q-border p-4 md:hidden">
+                                <div className="min-w-0">
+                                    <h3 className="truncate text-base font-bold text-q-text">{t('superadmin.news.tabSettings', 'Configuración')}</h3>
+                                    <p className="truncate text-xs text-q-text-secondary">{t('superadmin.news.toggleSidebar', 'Panel lateral')}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="ml-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-q-text-secondary hover:bg-q-bg hover:text-q-text"
+                                    aria-label={t('common.close', 'Cerrar')}
+                                >
+                                    <XIcon size={18} />
+                                </button>
+                            </div>
                             {/* ── Configuration Section ── */}
                             {renderSidebarSection('config', t('superadmin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
                                 {/* Featured Image — uses ImagePicker like CMS */}

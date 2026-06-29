@@ -327,7 +327,6 @@ export const BackgroundImageControl: React.FC<{
           onRemove={() => setNestedData(`${sectionKey}.backgroundImageUrl`, '')}
           generationContext="background"
           initialTab={pickerInitialTab}
-          destination="user"
           defaultOpen
           onClose={() => setShowPicker(false)}
         />

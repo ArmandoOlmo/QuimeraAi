@@ -597,7 +597,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
 
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-foreground">
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             <div className="flex-1 flex flex-col overflow-hidden relative bg-q-bg">
@@ -730,7 +730,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                     </div>
                                                     <div className="space-y-4 overflow-visible">
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible">
-                                                            <div className="flex gap-4">
+                                                            <div className="flex min-w-0 gap-4">
                                                                 <div className="w-12 flex-shrink-0">
                                                                     <label className="block text-xs font-medium text-q-text-muted mb-1">Icon</label>
                                                                     <IconSelector
@@ -739,7 +739,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ menu, onClose, isNew, projectId
                                                                         size="sm"
                                                                     />
                                                                 </div>
-                                                                <div className="flex-1">
+                                                                <div className="min-w-0 flex-1">
                                                                     <label className="block text-xs font-medium text-q-text-muted mb-1">Name</label>
                                                                     <input
                                                                         autoFocus

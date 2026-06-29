@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Save, Building2, Sparkles, Loader2, Palette, Image as ImageIcon, Zap, Wand2, Upload, RefreshCw, ChevronDown, Info } from 'lucide-react';
 import { Project, GlobalColors } from '../../../types';
 import IndustrySelector from '../../ui/IndustrySelector';
+import ImagePicker from '../../ui/ImagePicker';
 import Modal from '../../ui/Modal';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAI } from '../../../contexts/ai/AIContext';
-import { useFiles } from '../../../contexts/files/FilesContext';
 import { useAdmin } from '../../../contexts/admin/AdminContext';
 import { generateContent } from '../../../utils/genAiClient';
 import { shouldUseProxy, generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
@@ -128,7 +128,6 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const { t } = useTranslation();
     const { user } = useAuth();
     const { hasApiKey, promptForKeySelection, handleApiError, generateImage, enhancePrompt } = useAI();
-    const { uploadFile, files, uploadAdminAsset } = useFiles();
     const { getPrompt } = useAdmin();
     const [isLoading, setIsLoading] = useState(false);
     const [isAiSuggesting, setIsAiSuggesting] = useState(false);
@@ -158,7 +157,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
     const [generatedThumbnail, setGeneratedThumbnail] = useState<string | null>(null);
     const [thumbnailStyle, setThumbnailStyle] = useState('Minimalist');
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showThumbnailPicker, setShowThumbnailPicker] = useState(false);
 
     const THUMBNAIL_STYLES = [
         { label: t('superadmin.templateEditor.styles.minimalist', 'Minimalist'), value: 'Minimalist' },
@@ -380,24 +379,14 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
         }
     };
 
-    // Handle file upload for thumbnail - also sets hero image
-    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-            const downloadURL = await uploadAdminAsset(file, 'template', {
-                description: `Template thumbnail: ${formData.name}`,
-                isAiGenerated: false,
-            });
-            setFormData(prev => ({
-                ...prev,
-                thumbnailUrl: downloadURL,
-                heroImageUrl: downloadURL // Also set for hero
-            }));
-        } catch (error) {
-            console.error('Error uploading thumbnail:', error);
-        }
+    // Apply selected thumbnail from admin media library - also sets hero image.
+    const handleThumbnailSelected = (url: string) => {
+        setFormData(prev => ({
+            ...prev,
+            thumbnailUrl: url,
+            heroImageUrl: url
+        }));
+        setShowThumbnailPicker(false);
     };
 
     // AI suggestion function
@@ -1071,12 +1060,11 @@ Name:`;
                                         <span className="text-xs font-medium text-q-text-secondary">{t('superadmin.templateEditor.thumbnailLabel', 'Thumbnail')}</span>
                                     </div>
                                     <div className="flex gap-1.5">
-                                        <input type="file" ref={fileInputRef} accept="image/*" onChange={handleThumbnailUpload} className="hidden" />
                                         <button
                                             type="button"
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() => setShowThumbnailPicker(true)}
                                             className="p-1.5 text-xs bg-q-surface-overlay text-q-text-secondary hover:text-white rounded-lg transition-colors"
-                                            title={t('superadmin.templateEditor.uploadImageTitle', 'Upload image')}
+                                            title={t('dashboard.imagePicker.openLibrary', 'Open library')}
                                         >
                                             <Upload className="w-3.5 h-3.5" />
                                         </button>
@@ -1195,10 +1183,26 @@ Name:`;
                                         )}
                                     </div>
                                 )}
+                                </div>
+
+                                {showThumbnailPicker && (
+                                    <ImagePicker
+                                        label=""
+                                        value={formData.thumbnailUrl}
+                                        onChange={handleThumbnailSelected}
+                                        onRemove={() => handleThumbnailSelected('')}
+                                        destination="admin"
+                                        adminCategory="template"
+                                        generationContext="background"
+                                        defaultOpen
+                                        onClose={() => setShowThumbnailPicker(false)}
+                                        contentId={template?.id || ''}
+                                        contentType="template"
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
-                </div>
 
                 {/* Compact Footer */}
                 <div className="px-5 py-3 border-t border-q-border flex justify-end gap-2 bg-q-surface/30">

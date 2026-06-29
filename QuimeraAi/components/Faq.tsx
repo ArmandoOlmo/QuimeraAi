@@ -73,16 +73,16 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
     <div className="border-b backdrop-blur-lg" style={{ borderColor }}>
       <button
         onClick={onClick}
-        className="w-full flex justify-between items-center text-left py-6 transition-colors"
+        className="flex w-full min-w-0 items-center justify-between gap-4 text-left py-6 transition-colors"
         aria-expanded={isOpen}
       >
         <h3
-          className="text-lg font-semibold transition-colors hover:opacity-80 font-header"
+          className="min-w-0 flex-1 break-words text-lg font-semibold transition-colors hover:opacity-80 font-header"
           style={{ color: isOpen ? accentColor : headingColor }}
         >
           {question}
         </h3>
-        <span className="text-2xl transform transition-transform duration-300" style={{ color: textColor }}>
+        <span className="flex-shrink-0 text-2xl transform transition-transform duration-300" style={{ color: textColor }}>
           {isOpen ? (
             <Minus className="h-6 w-6" style={{ color: accentColor }} />
           ) : (
@@ -94,7 +94,7 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="pb-6 pr-8 font-body" style={{ color: textColor }}>
+          <p className="pb-6 pr-0 font-body sm:pr-8" style={{ color: textColor }}>
             {answer}
           </p>
         </div>
@@ -114,12 +114,12 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
     >
       <button
         onClick={onClick}
-        className="w-full flex justify-between items-center text-left p-6 transition-colors hover:opacity-90"
+        className="flex w-full min-w-0 items-center justify-between text-left p-4 transition-colors hover:opacity-90 sm:p-6"
         aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-4 flex-1">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           <div
-            className="p-2 rounded-lg transition-transform duration-300"
+            className="flex-shrink-0 p-2 rounded-lg transition-transform duration-300"
             style={{
               backgroundColor: hexToRgba(accentColor, 0.125),
               transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
@@ -127,7 +127,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
           >
             <ChevronDown className="h-5 w-5" style={{ color: accentColor }} />
           </div>
-          <h3 className="text-lg font-semibold font-header" style={{ color: isOpen ? accentColor : headingColor }}>
+          <h3 className="min-w-0 break-words text-lg font-semibold font-header" style={{ color: isOpen ? accentColor : headingColor }}>
             {question}
           </h3>
         </div>
@@ -136,7 +136,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <div className="px-6 pb-6 pl-[4.5rem]">
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6 sm:pl-[4.5rem]">
             <p className="font-body" style={{ color: textColor }}>
               {answer}
             </p>
@@ -166,11 +166,11 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
       />
       <button
         onClick={onClick}
-        className="w-full flex justify-between items-center text-left p-6 relative z-10"
+        className="relative z-10 flex w-full min-w-0 items-center justify-between gap-4 text-left p-4 sm:p-6"
         aria-expanded={isOpen}
       >
         <h3
-          className="text-lg font-semibold transition-all duration-300 flex-1 font-header"
+          className="min-w-0 flex-1 break-words text-lg font-semibold transition-all duration-300 font-header"
           style={{
             color: isOpen ? accentColor : headingColor,
             textShadow: isOpen ? `0 0 20px ${hexToRgba(accentColor, 0.25)}` : 'none'
@@ -179,7 +179,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
           {question}
         </h3>
         <div
-          className={`p-2 rounded-full transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+          className={`flex-shrink-0 p-2 rounded-full transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
           style={{
             background: isOpen
               ? `linear-gradient(135deg, ${gradientStart || accentColor}, ${gradientEnd || accentColor})`
@@ -196,7 +196,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
         className={`grid overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <div className="px-6 pb-6 relative z-10">
+          <div className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-6">
             <div
               className="pl-4 border-l-2"
               style={{ borderColor: accentColor }}
@@ -219,11 +219,11 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
     >
       <button
         onClick={onClick}
-        className="w-full flex items-start gap-6 text-left transition-all duration-300"
+        className="flex w-full min-w-0 items-start gap-4 text-left transition-all duration-300 sm:gap-6"
         aria-expanded={isOpen}
       >
         <div
-          className={`flex-shrink-0 w-12 h-12 ${borderRadiusClasses[borderRadius]} flex items-center justify-center transition-all duration-300`}
+          className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 ${borderRadiusClasses[borderRadius]} flex items-center justify-center transition-all duration-300`}
           style={{
             backgroundColor: isOpen ? iconBackground || accentColor : hexToRgba(iconBackground || accentColor, 0.18),
             transform: isOpen ? 'scale(1.1)' : 'scale(1)'
@@ -234,9 +234,9 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
             style={{ color: isOpen ? activeTextColor || headingColor : accentColor }}
           />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <h3
-            className="text-xl font-bold mb-2 transition-colors duration-300 font-header"
+            className="break-words text-lg font-bold mb-2 transition-colors duration-300 font-header sm:text-xl"
             style={{ color: isOpen ? accentColor : headingColor }}
           >
             {question}
@@ -396,10 +396,10 @@ const Faq: React.FC<FaqProps> = ({
         <button
           type="button"
           onClick={() => handleToggle(index)}
-          className="flex w-full items-center justify-between gap-6 py-6 text-left transition-opacity hover:opacity-80"
+          className="flex w-full min-w-0 items-center justify-between gap-4 py-6 text-left transition-opacity hover:opacity-80 sm:gap-6"
           aria-expanded={isOpen}
         >
-          <h3 className="font-header text-xl font-medium leading-snug" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>
+          <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium leading-snug sm:text-xl" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>
             {item.question}
           </h3>
           <span
@@ -422,7 +422,7 @@ const Faq: React.FC<FaqProps> = ({
 
   const renderMediaPanel = () => (
     <div
-      className={`relative min-h-[420px] overflow-hidden ${borderRadiusClasses[borderRadius]}`}
+      className={`relative min-h-[280px] overflow-hidden md:min-h-[420px] ${borderRadiusClasses[borderRadius]}`}
       style={{
         background: `linear-gradient(135deg, ${hexToRgba(safeColors.gradientStart, 0.22)}, ${hexToRgba(safeColors.gradientEnd, 0.16)})`,
       }}
@@ -438,9 +438,9 @@ const Faq: React.FC<FaqProps> = ({
   const renderEditorialSplit = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="grid gap-12 lg:grid-cols-[minmax(220px,0.42fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(220px,0.42fr)_minmax(0,1fr)]">
           <div>
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-[0.95]`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-[0.95]`} style={{ color: safeColors.heading }}>{title}</h2>
             {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-6 max-w-sm font-body leading-relaxed`} style={{ color: safeColors.description }}>{description}</p>}
           </div>
           <div>
@@ -455,12 +455,12 @@ const Faq: React.FC<FaqProps> = ({
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="mx-auto mb-12 max-w-4xl text-center">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
           {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-4 max-w-2xl font-body`} style={{ color: safeColors.description }}>{description}</p>}
         </div>
         <div className={`mx-auto max-w-4xl overflow-hidden border ${borderRadiusClasses[borderRadius]}`} style={{ borderColor: safeColors.border, backgroundColor: safeColors.cardBackground }}>
           {items.map((item, index) => (
-            <div key={index} className="px-7">
+            <div key={index} className="px-4 sm:px-7">
               {renderInlineAnswer(item, index, 'pb-8')}
             </div>
           ))}
@@ -472,18 +472,18 @@ const Faq: React.FC<FaqProps> = ({
   const renderDarkPanel = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className={`grid gap-10 border p-8 md:p-14 lg:grid-cols-[0.9fr_1.1fr] ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.panelBackground, borderColor: safeColors.border }}>
+        <div className={`grid grid-cols-1 gap-10 border p-5 sm:p-8 md:p-14 lg:grid-cols-[0.9fr_1.1fr] ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.panelBackground, borderColor: safeColors.border }}>
           <div>
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 max-w-md font-body`} style={{ color: safeColors.description }}>{description}</p>}
           </div>
           <div className="space-y-4">
             {items.map((item, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={index} className={`border p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: isOpen ? safeColors.accent : safeColors.border }}>
-                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full items-start justify-between gap-4 text-left" aria-expanded={isOpen}>
-                    <h3 className="font-header text-lg font-medium" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>{item.question}</h3>
+                <div key={index} className={`border p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: isOpen ? safeColors.accent : safeColors.border }}>
+                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full min-w-0 items-start justify-between gap-4 text-left" aria-expanded={isOpen}>
+                    <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>{item.question}</h3>
                     {isOpen ? <Minus className="h-5 w-5 shrink-0" style={{ color: safeColors.accent }} /> : <Plus className="h-5 w-5 shrink-0" style={{ color: safeColors.cardHeading }} />}
                   </button>
                   {isOpen && <p className="mt-4 font-body leading-relaxed" style={{ color: safeColors.cardText }}>{item.answer}</p>}
@@ -499,10 +499,10 @@ const Faq: React.FC<FaqProps> = ({
   const renderImageSplit = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="grid gap-12 lg:grid-cols-[minmax(280px,0.95fr)_minmax(0,1fr)] lg:items-center">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(280px,0.95fr)_minmax(0,1fr)] lg:items-center">
           {renderMediaPanel()}
           <div>
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 font-body`} style={{ color: safeColors.description }}>{description}</p>}
             <div className="mt-10">
               {items.map((item, index) => renderInlineAnswer(item, index))}
@@ -516,19 +516,19 @@ const Faq: React.FC<FaqProps> = ({
   const renderStackedCards = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="grid gap-10 lg:grid-cols-[0.55fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.55fr_1fr]">
           <div>
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body`} style={{ color: safeColors.description }}>{description}</p>}
           </div>
           <div className="space-y-4">
             {items.map((item, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={index} className={`p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isOpen ? safeColors.activeBackground : safeColors.cardBackground, borderColor: safeColors.border }}>
-                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full items-center justify-between gap-5 text-left" aria-expanded={isOpen}>
-                    <h3 className="font-header text-xl font-medium" style={{ color: isOpen ? safeColors.activeText : safeColors.cardHeading }}>{item.question}</h3>
-                    <span style={{ color: isOpen ? safeColors.activeText : safeColors.accent }}>{isOpen ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}</span>
+                <div key={index} className={`p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isOpen ? safeColors.activeBackground : safeColors.cardBackground, borderColor: safeColors.border }}>
+                  <button type="button" onClick={() => handleToggle(index)} className="flex w-full min-w-0 items-center justify-between gap-3 text-left sm:gap-5" aria-expanded={isOpen}>
+                    <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium sm:text-xl" style={{ color: isOpen ? safeColors.activeText : safeColors.cardHeading }}>{item.question}</h3>
+                    <span className="flex-shrink-0" style={{ color: isOpen ? safeColors.activeText : safeColors.accent }}>{isOpen ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}</span>
                   </button>
                   {isOpen && <p className="mt-5 font-body leading-relaxed" style={{ color: isOpen ? safeColors.activeText : safeColors.cardText }}>{item.answer}</p>}
                 </div>
@@ -543,14 +543,14 @@ const Faq: React.FC<FaqProps> = ({
   const renderAnswerPanel = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="grid min-h-[520px] lg:grid-cols-2">
+        <div className="grid grid-cols-1 min-h-0 lg:min-h-[520px] lg:grid-cols-2">
           <div className="flex flex-col justify-center p-6 lg:p-14">
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             <div className="mt-10 space-y-3">
               {items.map((item, index) => {
                 const isActive = activeIndex === index;
                 return (
-                  <button key={index} type="button" onClick={() => setOpenIndex(index)} className={`w-full p-5 text-left ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isActive ? safeColors.activeBackground : safeColors.cardBackground, color: isActive ? safeColors.activeText : safeColors.cardHeading }}>
+                  <button key={index} type="button" onClick={() => setOpenIndex(index)} className={`w-full break-words p-4 text-left sm:p-5 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isActive ? safeColors.activeBackground : safeColors.cardBackground, color: isActive ? safeColors.activeText : safeColors.cardHeading }}>
                     {item.question}
                   </button>
                 );
@@ -562,8 +562,8 @@ const Faq: React.FC<FaqProps> = ({
               <div className="max-w-xl">
                 <p className="font-body text-sm uppercase tracking-widest" style={{ color: safeColors.activeText }}>Answer</p>
                 <div className="my-8 h-px" style={{ backgroundColor: hexToRgba(safeColors.activeText, 0.55) }} />
-                <h3 className="font-header text-2xl font-semibold" style={{ color: safeColors.activeText }}>{activeItem.question}</h3>
-                <p className="mt-6 font-body text-lg leading-relaxed" style={{ color: safeColors.activeText }}>{activeItem.answer}</p>
+                <h3 className="break-words font-header text-2xl font-semibold" style={{ color: safeColors.activeText }}>{activeItem.question}</h3>
+                <p className="mt-6 break-words font-body text-lg leading-relaxed" style={{ color: safeColors.activeText }}>{activeItem.answer}</p>
               </div>
             )}
           </div>
@@ -575,19 +575,19 @@ const Faq: React.FC<FaqProps> = ({
   const renderContactCard = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-start">
           <div>
-            <h2 className={`${titleSizeClasses[titleFontSize]} font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
+            <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             <div className="mt-10">
               {items.map((item, index) => renderInlineAnswer(item, index))}
             </div>
           </div>
-          <div className={`border p-8 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: safeColors.border }}>
+          <div className={`border p-5 sm:p-8 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: safeColors.border }}>
             {faqImageUrl && !isPendingImage(faqImageUrl) && (
               <img src={faqImageUrl} alt="" className={`mb-8 aspect-video w-full object-cover ${borderRadiusClasses[borderRadius]}`} />
             )}
-            <h3 className="font-header text-2xl font-semibold" style={{ color: safeColors.cardHeading }}>{description || title}</h3>
-            {activeItem && <p className="mt-5 font-body leading-relaxed" style={{ color: safeColors.cardText }}>{activeItem.answer}</p>}
+            <h3 className="break-words font-header text-2xl font-semibold" style={{ color: safeColors.cardHeading }}>{description || title}</h3>
+            {activeItem && <p className="mt-5 break-words font-body leading-relaxed" style={{ color: safeColors.cardText }}>{activeItem.answer}</p>}
           </div>
         </div>
       </div>
@@ -606,7 +606,7 @@ const Faq: React.FC<FaqProps> = ({
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
+          <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-extrabold text-site-heading mb-4 font-header`} style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} font-body`} style={{ color: safeColors.description }}>
             {description}
           </p>

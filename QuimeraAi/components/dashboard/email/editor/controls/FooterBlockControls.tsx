@@ -34,8 +34,8 @@ const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { l
 );
 
 const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
-    <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+    <div className="flex min-w-0 items-center justify-between gap-3 mb-3">
+        <label className="min-w-0 flex-1 text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
         <button
             type="button"
             role="switch"
@@ -233,7 +233,6 @@ const FooterBlockControls: React.FC<FooterBlockControlsProps> = ({ block, active
 };
 
 export default FooterBlockControls;
-
 
 
 

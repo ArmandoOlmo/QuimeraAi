@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2, Zap, Sparkles, Wand2, RefreshCw
 import { useAuth } from '../../contexts/core/AuthContext';
 import { useAI } from '../../contexts/ai';
 import { useFiles } from '../../contexts/files';
+import { useSafeMedia } from '../../contexts/media';
 import { useProject } from '../../contexts/project';
 import { useToast } from '../../contexts/ToastContext';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +35,7 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     const { user } = useAuth();
     const { generateImage, enhancePrompt, hasApiKey, promptForKeySelection, handleApiError } = useAI();
     const { files, globalFiles, fetchGlobalFiles, adminAssets, fetchAdminAssets } = useFiles();
+    const mediaCtx = useSafeMedia();
     const { updateProjectThumbnail, activeProject } = useProject();
     const { success: showSuccess, error: showError } = useToast();
     const [isUploading, setIsUploading] = useState(false);
@@ -68,10 +70,14 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
             if (librarySource === 'global') {
                 fetchGlobalFiles();
             } else if (librarySource === 'admin') {
-                fetchAdminAssets();
+                if (mediaCtx) {
+                    mediaCtx.fetchMediaAssets();
+                } else {
+                    fetchAdminAssets();
+                }
             }
         }
-    }, [activeTab, librarySource, fetchGlobalFiles, fetchAdminAssets]);
+    }, [activeTab, librarySource, fetchGlobalFiles, fetchAdminAssets, mediaCtx]);
 
     // Reset image loaded state when preview URL changes
     useEffect(() => {
@@ -127,7 +133,15 @@ const ThumbnailEditor: React.FC<ThumbnailEditorProps> = ({ project, onClose, onU
     }, [project.theme?.globalColors, project.data?.hero?.colors, project.data?.header?.colors]);
 
     // Filter and search image files for library
-    const sourceFiles = librarySource === 'user' ? files : librarySource === 'admin' ? adminAssets : globalFiles;
+    const unifiedAdminAssets = mediaCtx
+        ? mediaCtx.mediaAssets.map(asset => ({
+            id: asset.id,
+            name: asset.name,
+            downloadURL: asset.downloadURL || asset.url,
+            type: asset.type || 'image/png',
+        }))
+        : adminAssets;
+    const sourceFiles = librarySource === 'user' ? files : librarySource === 'admin' ? unifiedAdminAssets : globalFiles;
     const imageFiles = useMemo(() => {
         let result = sourceFiles.filter(f => f.type.startsWith('image/'));
 
@@ -402,7 +416,10 @@ Return ONLY the prompt text, nothing else. Make it 1-2 sentences maximum.`;
             const url = await generateImage(thumbnailPrompt, {
                 aspectRatio: '16:9',
                 style: thumbnailStyle,
-                destination: 'user',
+                destination: 'admin',
+                adminCategory: 'template',
+                adminTags: ['template-thumbnail', 'ai-generated'],
+                adminDescription: `Thumbnail for template: ${project.name}`,
                 resolution: '2K',
                 referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
             });

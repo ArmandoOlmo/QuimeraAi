@@ -62,7 +62,7 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                     {onOpenMobileMenu && (
                         <button
                             onClick={onOpenMobileMenu}
-                            className="lg:hidden h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-md transition-colors"
+                            className="md:hidden h-9 w-9 flex items-center justify-center text-q-text-secondary hover:text-q-text hover:bg-q-surface-overlay/40 rounded-md transition-colors"
                             title={t('common.menu', 'Menú')}
                         >
                             <Menu className="w-5 h-5" />
@@ -144,12 +144,12 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
                         {saveState === 'idle' ? (
                             <>
                                 <Save className="w-4 h-4" />
-                                <span>{t('common.save', 'Guardar')}</span>
+                                <span className="hidden sm:inline">{t('common.save', 'Guardar')}</span>
                             </>
                         ) : (
                             <>
                                 <Check className="w-4 h-4" />
-                                <span>{t('editor.saved', 'Guardado')}</span>
+                                <span className="hidden sm:inline">{t('editor.saved', 'Guardado')}</span>
                             </>
                         )}
                     </button>
@@ -164,7 +164,6 @@ const EmailEditorHeader: React.FC<EmailEditorHeaderProps> = ({
 };
 
 export default EmailEditorHeader;
-
 
 
 

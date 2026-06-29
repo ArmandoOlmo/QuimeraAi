@@ -85,7 +85,9 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
     const [metaDescription, setMetaDescription] = useState(article?.seo?.metaDescription || '');
 
     // Editor State
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+        typeof window === 'undefined' ? true : window.matchMedia('(min-width: 768px)').matches
+    );
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -149,7 +151,7 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
         content: article?.content || '<p></p>',
         editorProps: {
             attributes: {
-                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[600px] px-8 py-6',
+                class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[calc(100dvh-14rem)] md:min-h-[600px] px-4 sm:px-8 py-4 sm:py-6',
             },
         },
         onUpdate: ({ editor }) => {
@@ -478,7 +480,7 @@ Text to format:
     };
 
     return (
-        <div className="flex h-full bg-q-bg text-foreground">
+        <div className="flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-foreground">
             {/* Main Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 <input
@@ -491,8 +493,8 @@ Text to format:
 
                 {/* Link Modal */}
                 {showLinkModal && (
-                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50">
-                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-96">
+                    <div className="fixed inset-0 bg-q-text/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-q-surface dark:bg-gray-800 rounded-xl shadow-2xl p-5 sm:p-6 w-full max-w-sm">
                             <h3 className="text-lg font-bold mb-4 text-q-text dark:text-gray-100">Editar Enlace</h3>
                             <input
                                 type="url"
@@ -503,14 +505,14 @@ Text to format:
                                 autoFocus
                                 onKeyDown={(e) => e.key === 'Enter' && applyLink()}
                             />
-                            <div className="flex justify-between">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <button
                                     onClick={removeLink}
                                     className="text-sm text-q-error hover:text-q-error font-medium"
                                 >
                                     Eliminar Enlace
                                 </button>
-                                <div className="flex gap-2">
+                                <div className="flex justify-end gap-2">
                                     <button
                                         onClick={() => setShowLinkModal(false)}
                                         className="px-4 py-2 bg-q-border dark:bg-gray-700 hover:bg-q-border dark:hover:bg-gray-600 rounded-lg text-q-text dark:text-gray-100"
@@ -530,28 +532,28 @@ Text to format:
                 )}
 
                 {/* Editor Toolbar - Just below the main header */}
-                <div className="h-14 border-b border-q-border bg-q-surface flex items-center justify-between px-6 shrink-0 shadow-sm">
-                    <div className="flex items-center gap-4 flex-1">
+                <div className="min-h-14 border-b border-q-border bg-q-surface flex items-center justify-between gap-2 px-3 py-2 shrink-0 shadow-sm md:h-14 md:px-6 md:py-0">
+                    <div className="flex min-w-0 flex-1 items-center gap-4">
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Título del artículo..."
-                            className="bg-transparent text-xl font-bold placeholder:text-q-text-muted/50 focus:outline-none flex-1 text-foreground"
+                            className="min-w-0 bg-transparent text-base font-bold placeholder:text-q-text-muted/50 focus:outline-none flex-1 text-foreground md:text-xl"
                         />
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-shrink-0 items-center gap-1.5 md:gap-3">
                         {lastSaved && (
-                            <span className="text-xs text-q-text-muted flex items-center gap-1">
+                            <span className="hidden text-xs text-q-text-muted lg:flex items-center gap-1">
                                 <Check size={12} className="text-q-success" />
                                 Guardado {lastSaved.toLocaleTimeString()}
                             </span>
                         )}
-                        <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
+                        <div className="hidden items-center bg-secondary rounded-lg p-1 text-xs font-medium sm:flex">
                             <button onClick={() => setStatus('draft')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'draft' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}>Borrador</button>
                             <button onClick={() => setStatus('published')} className={`px-3 py-1.5 rounded-md transition-all ${status === 'published' ? 'bg-q-success/20 text-q-success' : 'text-q-text-muted hover:text-foreground'}`}>Publicado</button>
                         </div>
-                        <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
-                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Guardar
+                        <button onClick={handleSave} disabled={isSaving} className="flex h-10 items-center gap-2 bg-primary text-primary-foreground px-3 md:px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-md">
+                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} <span className="hidden sm:inline">Guardar</span>
                         </button>
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-accent text-accent-foreground' : 'text-q-text-muted hover:bg-secondary'}`}>
                             <MoreVertical size={20} />
@@ -589,8 +591,25 @@ Text to format:
 
                     {/* Settings Sidebar (Right) */}
                     {isSidebarOpen && (
-                        <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto p-6 shrink-0 shadow-xl">
-                            <div className="mb-6">
+                        <div className="fixed inset-0 z-40 bg-q-text/40 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)} />
+                    )}
+                    {isSidebarOpen && (
+                        <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] min-w-0 overflow-y-auto rounded-t-2xl border-t border-q-border bg-q-surface p-4 shadow-2xl md:static md:z-auto md:max-h-none md:w-80 md:rounded-none md:border-t-0 md:border-l md:p-6 md:shrink-0">
+                            <div className="mb-4 flex items-center justify-between md:hidden">
+                                <div className="min-w-0">
+                                    <h3 className="truncate font-bold text-base text-foreground">Configuración</h3>
+                                    <p className="truncate text-xs text-q-text-muted">Configura metadata y apariencia del artículo.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="ml-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-q-text-muted hover:bg-secondary hover:text-foreground"
+                                    aria-label="Cerrar"
+                                >
+                                    <XIcon size={18} />
+                                </button>
+                            </div>
+                            <div className="mb-6 hidden md:block">
                                 <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Configuración</h3>
                                 <p className="text-xs text-q-text-muted">Configura metadata y apariencia del artículo.</p>
                             </div>
@@ -654,12 +673,12 @@ Text to format:
                                 </div>
 
                                 {/* Show Author Toggle */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <User size={14} className="text-q-text-muted" />
-                                        <span className="text-sm font-medium">Mostrar Autor</span>
+                                <div className="flex min-w-0 items-center justify-between gap-3 p-3 bg-secondary/30 border border-q-border rounded-lg">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <User size={14} className="flex-shrink-0 text-q-text-muted" />
+                                        <span className="min-w-0 flex-1 text-sm font-medium">Mostrar Autor</span>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                                    <label className="relative inline-flex flex-shrink-0 items-center cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={showAuthor}
@@ -671,12 +690,12 @@ Text to format:
                                 </div>
 
                                 {/* Show Date Toggle */}
-                                <div className="flex items-center justify-between p-3 bg-secondary/30 border border-q-border rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar size={14} className="text-q-text-muted" />
-                                        <span className="text-sm font-medium">Mostrar Fecha</span>
+                                <div className="flex min-w-0 items-center justify-between gap-3 p-3 bg-secondary/30 border border-q-border rounded-lg">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <Calendar size={14} className="flex-shrink-0 text-q-text-muted" />
+                                        <span className="min-w-0 flex-1 text-sm font-medium">Mostrar Fecha</span>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                                    <label className="relative inline-flex flex-shrink-0 items-center cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={showDate}
@@ -707,14 +726,14 @@ Text to format:
                                             </span>
                                         ))}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex min-w-0 gap-2">
                                         <input
                                             type="text"
                                             value={tagInput}
                                             onChange={(e) => setTagInput(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                             placeholder="Agregar tag..."
-                                            className="flex-1 bg-secondary/50 border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
+                                            className="min-w-0 flex-1 bg-secondary/50 border border-q-border rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground"
                                         />
                                         <button
                                             onClick={handleAddTag}
@@ -726,15 +745,15 @@ Text to format:
                                 </div>
 
                                 {/* Featured Toggle */}
-                                <div className="flex items-center justify-between p-4 bg-q-accent/5 border border-q-accent/20 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <Star className="text-q-accent" size={18} />
-                                        <div>
+                                <div className="flex min-w-0 items-center justify-between gap-3 p-4 bg-q-accent/5 border border-q-accent/20 rounded-lg">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <Star className="flex-shrink-0 text-q-accent" size={18} />
+                                        <div className="min-w-0">
                                             <p className="text-sm font-medium">Artículo Destacado</p>
                                             <p className="text-xs text-q-text-muted">Mostrar en homepage</p>
                                         </div>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
+                                    <label className="relative inline-flex flex-shrink-0 items-center cursor-pointer">
                                         <input
                                             type="checkbox"
                                             checked={featured}

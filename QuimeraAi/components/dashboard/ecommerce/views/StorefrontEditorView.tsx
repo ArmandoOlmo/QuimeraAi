@@ -65,6 +65,7 @@ import type { Category, Product } from '../../../../types/ecommerce';
 import type { StorefrontThemePresetId } from '../../../../types/storefrontTheme';
 import type { StorefrontSectionKind } from '../../../../types/storefrontRenderer';
 import ColorControl from '../../../ui/ColorControl';
+import MobileBottomSheet from '../../../ui/MobileBottomSheet';
 import TabbedControls from '../../../ui/TabbedControls';
 import {
     BorderRadiusSelector,
@@ -1062,6 +1063,7 @@ const StorefrontEditorView: React.FC = () => {
     const [isStructureExpanded, setIsStructureExpanded] = useState(true);
     const [isContentExpanded, setIsContentExpanded] = useState(true);
     const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
+    const [isMobileControlsOpen, setIsMobileControlsOpen] = useState(false);
     const sectionDragSensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: { distance: 6 },
@@ -1210,6 +1212,9 @@ const StorefrontEditorView: React.FC = () => {
         setSelectedSection(section);
         setSelectedStructurePanel(null);
         setIsControlsPanelOpen(true);
+        if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+            setIsMobileControlsOpen(true);
+        }
         setIsContentExpanded(true);
 
         if (scrollPreview) {
@@ -1743,6 +1748,9 @@ const StorefrontEditorView: React.FC = () => {
     const selectStructurePanel = (panel: StorefrontStructurePanel) => {
         setSelectedStructurePanel(panel);
         setIsControlsPanelOpen(true);
+        if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+            setIsMobileControlsOpen(true);
+        }
     };
 
     const activeEditorLabel = selectedStructurePanel === 'template'
@@ -2584,7 +2592,7 @@ const StorefrontEditorView: React.FC = () => {
     };
 
     return (
-        <div data-storefront-editor-shell className="-m-3 flex h-[calc(100vh-7rem)] min-h-[720px] flex-col overflow-hidden bg-q-bg sm:-m-6 lg:-m-8">
+        <div data-storefront-editor-shell className="-m-3 flex h-[calc(100dvh-7rem)] min-h-0 flex-col overflow-hidden bg-q-bg sm:-m-6 md:min-h-[720px] lg:-m-8">
             <header className="quimera-dashboard-header-bar h-14 flex-shrink-0 px-3 lg:px-4 flex items-center justify-between gap-3 z-20">
                 <div className="flex min-w-0 items-center gap-3">
                     <LayoutTemplate className="h-5 w-5 quimera-dashboard-header-icon" strokeWidth={2} />
@@ -2632,6 +2640,15 @@ const StorefrontEditorView: React.FC = () => {
                 </div>
 
                 <div className="ml-auto flex flex-shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsMobileControlsOpen(true)}
+                        className="flex h-9 w-9 items-center justify-center rounded-[var(--editor-control-radius)] text-q-text-muted transition-colors hover:bg-secondary/50 hover:text-foreground md:hidden"
+                        aria-label={t('ecommerce.storefrontEditor.openControls', 'Abrir controles')}
+                        title={t('ecommerce.storefrontEditor.openControls', 'Abrir controles')}
+                    >
+                        <SlidersHorizontal size={16} />
+                    </button>
                     <button
                         type="button"
                         onClick={refreshPreview}
@@ -2832,7 +2849,7 @@ const StorefrontEditorView: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => setIsControlsPanelOpen(prev => !prev)}
-                    className={`absolute top-1/2 z-30 -translate-y-1/2 overflow-hidden rounded-[var(--editor-control-radius)] border border-q-border bg-q-surface p-2 shadow-lg transition-all duration-300 hover:bg-accent ${
+                    className={`absolute top-1/2 z-30 hidden -translate-y-1/2 overflow-hidden rounded-[var(--editor-control-radius)] border border-q-border bg-q-surface p-2 shadow-lg transition-all duration-300 hover:bg-accent md:block ${
                         isControlsPanelOpen
                             ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]'
                             : 'right-0 rounded-r-none'
@@ -2842,7 +2859,7 @@ const StorefrontEditorView: React.FC = () => {
                     {isControlsPanelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
                 </button>
 
-                <aside data-editor-controls-surface="storefront" className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0'} editor-theme flex flex-shrink-0 flex-col overflow-hidden border-l border-q-border bg-q-bg transition-all duration-300`}>
+                <aside data-editor-controls-surface="storefront" className={`${isControlsPanelOpen ? 'w-80 lg:w-96' : 'w-0'} editor-theme hidden flex-shrink-0 flex-col overflow-hidden border-l border-q-border bg-q-bg transition-all duration-300 md:flex`}>
                     <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-q-border px-4">
                         <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-q-text">
                             <ActiveEditorIcon size={16} className="flex-shrink-0 text-q-accent" />
@@ -2856,6 +2873,51 @@ const StorefrontEditorView: React.FC = () => {
                     </div>
                 </aside>
             </main>
+
+            <MobileBottomSheet
+                isOpen={isMobileControlsOpen}
+                onClose={() => setIsMobileControlsOpen(false)}
+                title={activeEditorLabel}
+                subtitle={t('landingEditor.edit', 'Editar')}
+            >
+                <div className="flex max-h-[75vh] min-h-[520px] min-w-0 flex-col overflow-hidden">
+                    <div className="flex-shrink-0 border-b border-q-border p-3">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                            <p className="text-xs font-bold uppercase tracking-wider text-q-text-muted">
+                                {t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={applySectionPreset}
+                                className="flex h-8 w-8 items-center justify-center rounded-[var(--q-radius-md)] text-q-accent transition-colors hover:bg-structure-control-hover hover:text-q-text"
+                                title={t('ecommerce.storefrontEditor.showAllSections', 'Mostrar todos los componentes')}
+                            >
+                                <Plus size={15} />
+                            </button>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto pr-1">
+                            <button
+                                type="button"
+                                onClick={() => selectStructurePanel('template')}
+                                className={`mb-1 flex w-full items-center gap-2 rounded-[var(--q-radius-md)] border p-2.5 text-left transition-all ${
+                                    selectedStructurePanel === 'template'
+                                        ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                                        : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text'
+                                }`}
+                            >
+                                <LayoutTemplate size={16} className="flex-shrink-0" />
+                                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                                    {t('ecommerce.storefrontEditor.templateState', 'Estado')}
+                                </span>
+                            </button>
+                            {renderSortableSectionList('space-y-1')}
+                        </div>
+                    </div>
+                    <div data-editor-controls-surface="storefront-mobile" className="quimera-clean-controls min-h-0 flex-1 overflow-y-auto p-4">
+                        {renderActiveControls()}
+                    </div>
+                </div>
+            </MobileBottomSheet>
         </div>
     );
 };

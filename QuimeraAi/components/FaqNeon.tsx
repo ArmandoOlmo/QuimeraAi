@@ -48,7 +48,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                 <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
                     {headline && (
                         <h2 
-                            className="text-4xl md:text-5xl font-bold font-header heading-caps"
+                            className="break-words text-3xl font-bold font-header heading-caps sm:text-4xl md:text-5xl"
                             style={{ 
                                 color: colors.heading || '#ffffff',
                                 textTransform: 'var(--headings-transform, none)' as any,
@@ -60,7 +60,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                     )}
                     {subheadline && (
                         <p 
-                            className="text-lg md:text-xl font-body opacity-80"
+                            className="break-words text-base font-body opacity-80 md:text-xl"
                             style={{ 
                                 color: colors.text || '#a1a1aa' }}
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(subheadline) }}
@@ -107,11 +107,11 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                             return (
                                 <div key={idx} className="py-6 first:pt-0 last:pb-0">
                                     <button 
-                                        className="w-full flex items-center justify-between gap-4 text-left group font-button button-caps"
+                                        className="flex w-full min-w-0 items-center justify-between gap-4 text-left group font-button button-caps"
                                         onClick={() => setOpenIndex(isOpen ? null : idx)}
                                     >
                                         <span 
-                                            className="text-xl font-bold font-header transition-colors duration-300"
+                                            className="min-w-0 flex-1 break-words text-lg font-bold font-header transition-colors duration-300 sm:text-xl"
                                             style={{ 
                                                 color: isOpen ? neonColor : (colors.heading || '#ffffff'),
                                                 textShadow: isOpen && intensity > 0 ? `0 0 10px ${neonColor}80` : 'none'
@@ -120,7 +120,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                                             {faq.question}
                                         </span>
                                         <span 
-                                            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300"
+                                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300"
                                             style={{
                                                 backgroundColor: isOpen ? neonColor : 'rgba(255,255,255,0.05)',
                                                 color: isOpen ? '#000000' : (colors.heading || '#ffffff'),
@@ -141,7 +141,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                                         )}
                                     >
                                         <p 
-                                            className="text-base font-body leading-relaxed pr-12"
+                                            className="break-words pr-0 text-base font-body leading-relaxed sm:pr-12"
                                             style={{ 
                                                 color: colors.text || '#a1a1aa' }}
                                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(faq.answer) }}

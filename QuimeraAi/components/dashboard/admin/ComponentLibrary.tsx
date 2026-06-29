@@ -16,8 +16,8 @@ const Label: React.FC<{ children: React.ReactNode, htmlFor?: string }> = ({ chil
 );
 
 const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (checked: boolean) => void; }> = ({ label, checked, onChange }) => (
-    <div className={`flex items-center ${label ? 'justify-between' : 'justify-start'}`}>
-        {label && <Label>{label}</Label>}
+    <div className={`flex min-w-0 items-center gap-3 ${label ? 'justify-between' : 'justify-start'}`}>
+        {label && <label className="min-w-0 flex-1 text-sm font-medium text-q-text-secondary">{label}</label>}
         <button
             type="button"
             role="switch"

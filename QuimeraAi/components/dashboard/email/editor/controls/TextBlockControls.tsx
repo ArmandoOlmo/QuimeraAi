@@ -129,7 +129,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
             </label>
 
             {/* Mini Toolbar */}
-            <div className="flex flex-wrap items-center gap-0.5 bg-q-surface border border-q-border border-b-0 rounded-t-md px-1.5 py-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-0.5 bg-q-surface border border-q-border border-b-0 rounded-t-md px-1.5 py-1">
                 <ToolbarBtn
                     active={editor.isActive('bold')}
                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -224,7 +224,7 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
                     <Code size={14} />
                 </ToolbarBtn>
 
-                <div className="flex-1" />
+                <div className="min-w-2 flex-1" />
 
                 <ToolbarBtn
                     onClick={() => editor.chain().focus().undo().run()}
@@ -294,8 +294,8 @@ const EmailRichTextEditor: React.FC<EmailRichTextEditorProps> = ({ value, isHtml
 // =============================================================================
 
 const ToggleControl: React.FC<{ label: string; checked: boolean; onChange: (checked: boolean) => void }> = ({ label, checked, onChange }) => (
-    <div className="flex items-center justify-between mb-3">
-        <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
+    <div className="flex min-w-0 items-center justify-between gap-3 mb-3">
+        <label className="min-w-0 flex-1 text-xs font-bold text-q-text-secondary uppercase tracking-wider">{label}</label>
         <button
             type="button"
             role="switch"

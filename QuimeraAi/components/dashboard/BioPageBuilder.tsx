@@ -5671,7 +5671,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
     // ==========================================================================
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground">
+        <div className="flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-foreground">
             {/* Dashboard Sidebar */}
             <DashboardSidebar
                 isMobileOpen={isMobileMenuOpen}
@@ -6042,7 +6042,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                     />
 
                     {/* Modal Content */}
-                    <div className="relative w-full max-w-3xl bg-q-bg rounded-2xl shadow-2xl border border-q-border overflow-hidden max-h-[65vh] flex flex-col">
+                    <div className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-q-border bg-q-bg shadow-2xl sm:max-h-[65vh]">
                         {/* Header */}
                         <div className="flex items-center justify-between p-5 border-b border-q-border">
                             <h2 className="text-xl font-bold text-foreground">
@@ -6057,7 +6057,7 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
 
                         {/* Search Input */}
-                        <div className="p-5 border-b border-q-border">
+                        <div className="p-4 border-b border-q-border sm:p-5">
                             <div className="relative">
                                 <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-q-text-muted" />
                                 <input
@@ -6073,26 +6073,26 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                         </div>
 
                         {/* Main Content - Split Layout */}
-                        <div className="flex flex-1 overflow-hidden">
+                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden sm:flex-row">
                             {/* Categories Sidebar */}
-                            <nav className="w-48 border-r border-q-border p-3 overflow-y-auto flex-shrink-0">
+                            <nav className="flex w-full flex-shrink-0 gap-2 overflow-x-auto border-b border-q-border p-3 sm:w-48 sm:flex-col sm:overflow-y-auto sm:border-b-0 sm:border-r">
                                 {effectiveLinkCategories.map((category) => (
                                     <button
                                         key={category.id}
                                         onClick={() => setAddLinkCategory(category.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${addLinkCategory === category.id
+                                        className={`flex min-w-max items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all sm:w-full sm:min-w-0 ${addLinkCategory === category.id
                                             ? 'bg-muted text-foreground'
                                             : 'text-q-text-muted hover:text-foreground hover:bg-muted/50'
                                             }`}
                                     >
-                                        <category.icon size={18} />
-                                        {t(`bioPage.category.${category.id}`, category.label)}
+                                        <category.icon size={18} className="flex-shrink-0" />
+                                        <span className="truncate">{t(`bioPage.category.${category.id}`, category.label)}</span>
                                     </button>
                                 ))}
                             </nav>
 
                             {/* Right Content Area */}
-                            <div className="flex-1 overflow-y-auto p-5">
+                            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
 
                                 {/* Category Label */}
                                 <p className="text-sm font-medium text-q-text-muted mb-4">
@@ -6108,20 +6108,20 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                                         <button
                                             key={integration.id}
                                             onClick={() => addIntegrationLink(integration)}
-                                            className="w-full flex items-center gap-4 p-4 rounded-xl border border-q-border hover:border-muted-foreground hover:bg-muted/30 transition-all group"
+                                            className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-q-border p-3 transition-all hover:border-muted-foreground hover:bg-muted/30 sm:gap-4 sm:p-4"
                                         >
                                             {/* Icon */}
                                             <div
-                                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12"
                                                 style={{ backgroundColor: `${integration.color}20` }}
                                             >
                                                 <integration.icon size={24} style={{ color: integration.color }} />
                                             </div>
 
                                             {/* Info */}
-                                            <div className="flex-1 text-left">
-                                                <p className="font-semibold text-foreground">{integration.name}</p>
-                                                <p className="text-sm text-q-text-muted">{integration.description}</p>
+                                            <div className="min-w-0 flex-1 text-left">
+                                                <p className="truncate font-semibold text-foreground">{integration.name}</p>
+                                                <p className="line-clamp-2 text-sm text-q-text-muted">{integration.description}</p>
                                             </div>
 
                                             {/* Arrow */}

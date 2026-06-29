@@ -21,6 +21,7 @@ import EmailEditorHeader from './EmailEditorHeader';
 import EmailBlockTree from './EmailBlockTree';
 import EmailPreview from './EmailPreview';
 import EmailPropertiesPanel from './EmailPropertiesPanel';
+import MobileBottomSheet from '../../../ui/MobileBottomSheet';
 
 // =============================================================================
 // CONTEXT
@@ -105,6 +106,9 @@ const createDefaultDocument = (initial?: Partial<EmailDocument>): EmailDocument 
     };
 };
 
+const isMobileEditorViewport = () =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -138,6 +142,18 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
 
     // Properties panel visibility state
     const [isPropertiesPanelOpen, setIsPropertiesPanelOpen] = useState(true);
+    const [isMobilePropertiesOpen, setIsMobilePropertiesOpen] = useState(false);
+
+    const openMobilePropertiesIfNeeded = useCallback(() => {
+        if (!isMobileEditorViewport()) return;
+        setIsMobileMenuOpen(false);
+        setIsMobilePropertiesOpen(true);
+    }, []);
+
+    const handleSetSelectedBlockId = useCallback((id: string | null) => {
+        setSelectedBlockId(id);
+        if (id) openMobilePropertiesIfNeeded();
+    }, [openMobilePropertiesIfNeeded]);
 
     // ==========================================================================
     // BLOCK OPERATIONS
@@ -163,8 +179,9 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         });
 
         setSelectedBlockId(newBlock.id);
+        openMobilePropertiesIfNeeded();
         setIsDirty(true);
-    }, []);
+    }, [openMobilePropertiesIfNeeded]);
 
     const updateBlock = useCallback((id: string, updates: Partial<EmailBlock>) => {
         setDocument(prev => ({
@@ -269,7 +286,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
         document,
         setDocument,
         selectedBlockId,
-        setSelectedBlockId,
+        setSelectedBlockId: handleSetSelectedBlockId,
         previewDevice,
         setPreviewDevice,
         addBlock,
@@ -316,6 +333,16 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                             <EmailPreview />
                         </div>
 
+                        <button
+                            type="button"
+                            onClick={() => setIsMobilePropertiesOpen(true)}
+                            className="absolute bottom-4 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-[var(--editor-control-radius)] border border-q-border bg-q-surface text-q-text shadow-xl transition-colors hover:bg-q-surface-overlay md:hidden"
+                            title={t('editor.properties', 'Propiedades')}
+                            aria-label={t('editor.properties', 'Propiedades')}
+                        >
+                            <PanelRightOpen size={18} />
+                        </button>
+
                         {/* Toggle Properties Panel Button - Right aligned, same pattern as Controls.tsx */}
                         <button
                             onClick={() => setIsPropertiesPanelOpen(!isPropertiesPanelOpen)}
@@ -336,13 +363,33 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
                         </div>
                     </div>
                 </div>
+
+                <MobileBottomSheet
+                    isOpen={isMobileMenuOpen}
+                    onClose={() => setIsMobileMenuOpen(false)}
+                    title={t('email.blocks', 'Bloques')}
+                >
+                    <div className="h-[70vh] min-h-[420px] min-w-0 overflow-hidden">
+                        <EmailBlockTree />
+                    </div>
+                </MobileBottomSheet>
+
+                <MobileBottomSheet
+                    isOpen={isMobilePropertiesOpen}
+                    onClose={() => setIsMobilePropertiesOpen(false)}
+                    title={t('editor.properties', 'Propiedades')}
+                    subtitle={selectedBlockId ? t('email.selectedBlock', 'Bloque seleccionado') : t('email.document', 'Documento')}
+                >
+                    <div className="h-[70vh] min-h-[420px] min-w-0 overflow-hidden">
+                        <EmailPropertiesPanel />
+                    </div>
+                </MobileBottomSheet>
             </div>
         </EmailEditorContext.Provider>
     );
 };
 
 export default EmailEditor;
-
 
 
 

@@ -139,10 +139,10 @@ const ItemLink = ({
           onNavigate(item.linkUrl || '#');
         }
       }}
-      className="inline-flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-75"
+      className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-75"
       style={{ color }}
     >
-      <span>{item.linkText || 'View'}</span>
+      <span className="min-w-0 truncate">{item.linkText || 'View'}</span>
       <ArrowRight className="h-4 w-4" />
     </a>
   );
@@ -219,7 +219,10 @@ const Showcase: React.FC<ShowcaseProps> = ({
     backgroundColor: colors.background,
     color: colors.text,
   };
-  const gridTemplateColumns = `repeat(${Math.max(1, Math.min(gridColumns, 4))}, minmax(0, 1fr))`;
+  const gridColumnClass = gridColumns <= 2 ? 'lg:grid-cols-2' : gridColumns === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+  const itemImageHeight = `clamp(220px, 68vw, ${Math.max(220, imageHeight)}px)`;
+  const tallImageHeight = `clamp(300px, 82vw, ${Math.max(300, imageHeight + 160)}px)`;
+  const stripImageHeight = `clamp(320px, 88vw, ${Math.max(imageHeight + 180, 560)}px)`;
 
   const renderHeader = (align: 'left' | 'center' = 'center') => {
     if (!showSectionHeader || (!title && !description && !resolvedEyebrow)) return null;
@@ -232,14 +235,14 @@ const Showcase: React.FC<ShowcaseProps> = ({
         )}
         {title && (
           <h2
-            className={`${titleSizeClasses[titleFontSize]} font-header font-bold leading-tight`}
+            className={`${titleSizeClasses[titleFontSize]} break-words font-header font-bold leading-tight`}
             style={{ color: colors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, 0)' }}
           >
             {title}
           </h2>
         )}
         {description && (
-          <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 font-body leading-relaxed`} style={{ color: colors.description || colors.text }}>
+          <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-4 break-words font-body leading-relaxed`} style={{ color: colors.description || colors.text }}>
             {description}
           </p>
         )}
@@ -258,7 +261,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
               key={category}
               type="button"
               onClick={() => setActiveCategory(category)}
-              className="shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+              className="max-w-[78vw] shrink-0 truncate rounded-full border px-4 py-2 text-sm font-medium transition-colors"
               style={{
                 backgroundColor: active ? colors.pillBackground || colors.heading : 'transparent',
                 borderColor: active ? colors.pillBackground || colors.heading : colors.borderColor,
@@ -286,19 +289,19 @@ const Showcase: React.FC<ShowcaseProps> = ({
     <div className={`mx-auto max-w-7xl ${paddingXClasses[paddingX]}`}>
       {renderHeader('left')}
       {renderFilters(true)}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2" style={{ gridTemplateColumns: undefined }}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {items.map((item, index) => (
           <article
             key={`${item.title}-${index}`}
             className={`${getAnimationClass(animationType, enableCardAnimation)} group`}
             style={{ animationDelay: getAnimationDelay(index) }}
           >
-            <div className={`relative overflow-hidden ${radiusClass}`} style={{ backgroundColor: colors.cardBackground, height: imageHeight }}>
+            <div className={`relative overflow-hidden ${radiusClass}`} style={{ backgroundColor: colors.cardBackground, height: itemImageHeight }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
             </div>
-            <h3 className="mt-4 text-2xl font-bold font-header" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
+            <h3 className="mt-4 break-words text-xl font-bold font-header sm:text-2xl" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
             {renderMeta(item)}
-            {item.description && <p className="mt-3 max-w-xl font-body text-base leading-snug" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
+            {item.description && <p className="mt-3 max-w-xl break-words font-body text-base leading-snug" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
           </article>
         ))}
       </div>
@@ -311,18 +314,18 @@ const Showcase: React.FC<ShowcaseProps> = ({
         {renderFilters(true)}
         {renderHeader('left')}
       </div>
-      <div className="flex gap-8 overflow-x-auto pb-4">
+      <div className="showcase-curated-track flex flex-col gap-8 lg:flex-row lg:overflow-x-auto lg:pb-4">
         {items.map((item, index) => (
           <article
             key={`${item.title}-${index}`}
-            className={`${getAnimationClass(animationType, enableCardAnimation)} w-[min(380px,78vw)] shrink-0`}
+            className={`${getAnimationClass(animationType, enableCardAnimation)} w-full lg:w-[min(380px,78vw)] lg:shrink-0`}
             style={{ animationDelay: getAnimationDelay(index) }}
           >
-            <div className={`relative overflow-hidden ${radiusClass}`} style={{ height: imageHeight, backgroundColor: colors.cardBackground }}>
+            <div className={`relative overflow-hidden ${radiusClass}`} style={{ height: itemImageHeight, backgroundColor: colors.cardBackground }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="h-full w-full" priority={index === 0} />
             </div>
-            <h3 className="mt-4 text-xl font-semibold font-header" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
-            {item.description && <p className="mt-1 text-sm" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
+            <h3 className="mt-4 break-words text-xl font-semibold font-header" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
+            {item.description && <p className="mt-1 break-words text-sm" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
             {renderMeta(item)}
           </article>
         ))}
@@ -339,20 +342,20 @@ const Showcase: React.FC<ShowcaseProps> = ({
           return (
             <article
               key={`${item.title}-${index}`}
-              className={`${getAnimationClass(animationType, enableCardAnimation)} grid gap-5 md:grid-cols-[1.15fr_0.85fr] ${index % 2 ? 'md:grid-cols-[0.85fr_1.15fr]' : ''}`}
+              className={`${getAnimationClass(animationType, enableCardAnimation)} grid grid-cols-1 gap-5 lg:grid-cols-[1.15fr_0.85fr] ${index % 2 ? 'lg:grid-cols-[0.85fr_1.15fr]' : ''}`}
               style={{ animationDelay: getAnimationDelay(index) }}
             >
               <div
-                className={`relative overflow-hidden ${radiusClass} ${index % 2 ? 'md:order-2' : ''}`}
-                style={{ minHeight: tall ? imageHeight + 160 : imageHeight, backgroundColor: colors.cardBackground }}
+                className={`relative overflow-hidden ${radiusClass} ${index % 2 ? 'lg:order-2' : ''}`}
+                style={{ minHeight: tall ? tallImageHeight : itemImageHeight, backgroundColor: colors.cardBackground }}
               >
                 <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full" priority={index === 0} />
               </div>
               <div className={`flex min-h-[240px] flex-col justify-between border p-6 ${radiusClass}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground }}>
                 <div>
                   {item.eyebrow && <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.accent }}>{item.eyebrow}</p>}
-                  <h3 className="mt-4 text-3xl font-bold leading-none font-header" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
-                  {item.description && <p className="mt-5 text-base leading-relaxed" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
+                  <h3 className="mt-4 break-words text-2xl font-bold leading-tight font-header sm:text-3xl sm:leading-none" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
+                  {item.description && <p className="mt-5 break-words text-base leading-relaxed" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
                 </div>
                 <ItemLink item={item} color={colors.accent} onNavigate={onNavigate} />
               </div>
@@ -367,16 +370,16 @@ const Showcase: React.FC<ShowcaseProps> = ({
     <div className={`relative ${paddingXClasses[paddingX]}`}>
       <div className="mx-auto max-w-[1800px]">
         {renderHeader('left')}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {items.slice(0, 6).map((item, index) => (
             <article
               key={`${item.title}-${index}`}
               className={`${getAnimationClass(animationType, enableCardAnimation)} group relative overflow-hidden ${radiusClass}`}
-              style={{ animationDelay: getAnimationDelay(index), minHeight: Math.max(imageHeight + 180, 560), backgroundColor: colors.cardBackground }}
+              style={{ animationDelay: getAnimationDelay(index), minHeight: stripImageHeight, backgroundColor: colors.cardBackground }}
             >
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
               <div className="absolute inset-x-0 bottom-0 p-4" style={{ background: `linear-gradient(to top, ${colors.overlayStart || 'rgba(0,0,0,0.8)'}, transparent)` }}>
-                <h3 className="text-lg font-bold font-header" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
+                <h3 className="break-words text-lg font-bold font-header" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
                 {renderMeta(item)}
               </div>
             </article>
@@ -391,12 +394,12 @@ const Showcase: React.FC<ShowcaseProps> = ({
                 onNavigate(floatingCtaLink);
               }
             }}
-            className={`mt-6 inline-flex items-center gap-4 border p-3 shadow-xl ${radiusClass}`}
+            className={`mt-6 inline-flex max-w-full min-w-0 items-center gap-3 border p-3 shadow-xl sm:gap-4 ${radiusClass}`}
             style={{ backgroundColor: colors.pillBackground || colors.cardBackground, borderColor: colors.borderColor, color: colors.pillText || colors.heading }}
           >
-            {items[0] && <ShowcaseImage item={items[0]} className="h-16 w-24 rounded-md object-cover" imageObjectFit="cover" />}
-            <span className="font-semibold">{floatingCtaText}</span>
-            <ArrowRight className="h-4 w-4" />
+            {items[0] && <ShowcaseImage item={items[0]} className="h-14 w-20 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-24" imageObjectFit="cover" />}
+            <span className="min-w-0 truncate font-semibold">{floatingCtaText}</span>
+            <ArrowRight className="h-4 w-4 flex-shrink-0" />
           </a>
         )}
       </div>
@@ -425,12 +428,12 @@ const Showcase: React.FC<ShowcaseProps> = ({
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {visibleItems.map((item, index) => (
-              <article key={`${item.title}-${index}`} className={`group relative overflow-hidden ${radiusClass}`} style={{ minHeight: 420, backgroundColor: colors.cardBackground }}>
+              <article key={`${item.title}-${index}`} className={`group relative overflow-hidden ${radiusClass}`} style={{ minHeight: 'clamp(300px, 82vw, 420px)', backgroundColor: colors.cardBackground }}>
                 <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${colors.overlayStart || 'rgba(0,0,0,0.86)'}, ${colors.overlayEnd || 'rgba(0,0,0,0.08)'})` }} />
                 <div className="absolute inset-x-0 bottom-0 p-5 text-center">
-                  <h3 className="text-2xl font-bold leading-tight font-header" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
-                  {item.description && <p className="mt-3 text-sm" style={{ color: colors.cardText || '#e5e7eb' }}>{item.description}</p>}
+                  <h3 className="break-words text-xl font-bold leading-tight font-header sm:text-2xl" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
+                  {item.description && <p className="mt-3 break-words text-sm" style={{ color: colors.cardText || '#e5e7eb' }}>{item.description}</p>}
                   {renderMeta(item)}
                 </div>
               </article>
@@ -444,7 +447,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
   const renderMinimalIndex = () => (
     <div className={`mx-auto max-w-7xl ${paddingXClasses[paddingX]}`}>
       {renderFilters(true)}
-      <div className="grid min-h-[520px] grid-cols-1 items-end gap-10 md:grid-cols-5">
+      <div className="grid min-h-0 grid-cols-1 items-end gap-10 md:min-h-[520px] md:grid-cols-5">
         {items.slice(0, 5).map((item, index) => (
           <article key={`${item.title}-${index}`} className={`${getAnimationClass(animationType, enableCardAnimation)} space-y-5`} style={{ animationDelay: getAnimationDelay(index) }}>
             <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: colors.cardBackground }}>
@@ -460,14 +463,14 @@ const Showcase: React.FC<ShowcaseProps> = ({
   const renderCaseGridDark = () => (
     <div className={`mx-auto max-w-7xl ${paddingXClasses[paddingX]}`}>
       {renderFilters(true)}
-      <div className="grid grid-cols-1 gap-x-5 gap-y-12 md:grid-cols-2 lg:grid-cols-3" style={{ gridTemplateColumns }}>
+      <div className={`grid grid-cols-1 gap-x-5 gap-y-12 lg:grid-cols-2 ${gridColumnClass}`}>
         {items.map((item, index) => (
           <article key={`${item.title}-${index}`} className={getAnimationClass(animationType, enableCardAnimation)} style={{ animationDelay: getAnimationDelay(index) }}>
             <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: colors.cardBackground }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full" priority={index === 0} />
             </div>
-            <h3 className="mt-5 text-2xl font-bold font-header" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
-            {item.description && <p className="mt-3 text-lg font-semibold leading-snug" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
+            <h3 className="mt-5 break-words text-xl font-bold font-header sm:text-2xl" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
+            {item.description && <p className="mt-3 break-words text-base font-semibold leading-snug sm:text-lg" style={{ color: colors.cardText || colors.text }}>{item.description}</p>}
           </article>
         ))}
       </div>
