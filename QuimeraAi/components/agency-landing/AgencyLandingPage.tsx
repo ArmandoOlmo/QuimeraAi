@@ -37,6 +37,28 @@ import SectionBackground from '../ui/SectionBackground';
 import QuimeraLoader from '../ui/QuimeraLoader';
 import Products from '../Products';
 import Separator from '../Separator';
+import HeroQuimera from '../quimera/HeroQuimera';
+import FeaturesQuimera from '../quimera/FeaturesQuimera';
+import PricingQuimera from '../quimera/PricingQuimera';
+import TestimonialsQuimera from '../quimera/TestimonialsQuimera';
+import FaqQuimera from '../quimera/FaqQuimera';
+import CtaQuimera from '../quimera/CtaQuimera';
+import PlatformShowcaseQuimera from '../quimera/PlatformShowcaseQuimera';
+import AiCapabilitiesQuimera from '../quimera/AiCapabilitiesQuimera';
+import IndustrySolutionsQuimera from '../quimera/IndustrySolutionsQuimera';
+import AgencyWhiteLabelQuimera from '../quimera/AgencyWhiteLabelQuimera';
+import MetricsQuimera from '../quimera/MetricsQuimera';
+import WhatIsQuimeraSection from '../quimera/WhatIsQuimeraSection';
+import TemplatesPreviewQuimera from '../quimera/TemplatesPreviewQuimera';
+import AiWebStudioQuimera from '../quimera/AiWebStudioQuimera';
+import ContentManagerQuimera from '../quimera/ContentManagerQuimera';
+import ImageGeneratorQuimera from '../quimera/ImageGeneratorQuimera';
+import ChatbotWorkflowQuimera from '../quimera/ChatbotWorkflowQuimera';
+import ChatbotBuilderQuimera from '../quimera/ChatbotBuilderQuimera';
+import LeadsManagerQuimera from '../quimera/LeadsManagerQuimera';
+import AppointmentsQuimera from '../quimera/AppointmentsQuimera';
+import BioPageQuimera from '../quimera/BioPageQuimera';
+import EmailMarketingQuimera from '../quimera/EmailMarketingQuimera';
 import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData } from '../../types';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../../utils/fontLoader';
 import { useSafeAuth } from '../../contexts/core/AuthContext';
@@ -677,6 +699,7 @@ const AgencyLandingPageContent: React.FC = () => {
   const mergedFeaturesData = mergeComponentData('features');
   const mergedTestimonialsData = mergeComponentData('testimonials');
   const mergedSlideshowData = mergeComponentData('slideshow');
+  const mergedScreenshotCarouselData = mergeComponentData('screenshotCarousel');
   const mergedPricingData = mergeComponentData('pricing');
   const mergedFaqData = mergeComponentData('faq');
   const mergedLeadsData = mergeComponentData('leads');
@@ -693,6 +716,8 @@ const AgencyLandingPageContent: React.FC = () => {
   const mergedBannerData = mergeComponentData('banner');
   const mergedFooterData = mergeComponentData('footer');
   const mergedHeaderData = mergeComponentData('header');
+  const mergedHeroModernData = mergeComponentData('heroModern');
+  const mergedHeroGradientData = mergeComponentData('heroGradient');
   const mergedHeroSplitData = mergeComponentData('heroSplit');
   const mergedHeroGalleryData = mergeComponentData('heroGallery');
   const mergedHeroWaveData = mergeComponentData('heroWave');
@@ -798,6 +823,29 @@ const AgencyLandingPageContent: React.FC = () => {
     glassEffect: sectionData?.glassEffect,
   });
 
+  const renderQuimeraSection = (
+    componentKey: PageSection,
+    Component: React.ComponentType<any>,
+    extraProps: Record<string, any> = {},
+  ) => {
+    const sectionData = (data as any)?.[componentKey];
+    if (!sectionData) return null;
+    const glassEffect = componentKey === 'bentoShowcaseQuimera'
+      ? sectionData.glassEffect !== false
+      : sectionData.glassEffect;
+
+    return (
+      <SectionBackground
+        {...sectionBackgroundProps({
+          ...sectionData,
+          glassEffect,
+        })}
+      >
+        <Component {...sectionData} isPreviewMode={isEditorMode} {...extraProps} />
+      </SectionBackground>
+    );
+  };
+
   const componentsMap: Partial<Record<PageSection, React.ReactNode>> = {
     hero: (
       <SectionBackground {...sectionBackgroundProps(mergedHeroData)}>
@@ -812,6 +860,16 @@ const AgencyLandingPageContent: React.FC = () => {
         })()}
       </SectionBackground>
     ),
+    heroModern: mergedHeroModernData ? (
+      <SectionBackground {...sectionBackgroundProps(mergedHeroModernData)}>
+        <HeroModern {...mergedHeroModernData} borderRadius={mergedHeroModernData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
+    heroGradient: mergedHeroGradientData ? (
+      <SectionBackground {...sectionBackgroundProps(mergedHeroGradientData)}>
+        <HeroGradient {...mergedHeroGradientData} borderRadius={mergedHeroGradientData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} />
+      </SectionBackground>
+    ) : null,
     heroSplit: <SectionBackground {...sectionBackgroundProps(mergedHeroSplitData)}><HeroSplit {...mergedHeroSplitData} borderRadius={mergedHeroSplitData?.buttonBorderRadius || theme.buttonBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     heroGallery: mergedHeroGalleryData ? (
       <HeroGallery
@@ -837,6 +895,7 @@ const AgencyLandingPageContent: React.FC = () => {
     features: <SectionBackground backgroundImageUrl={mergedFeaturesData?.backgroundImageUrl} backgroundColor={mergedFeaturesData?.colors?.background} backgroundOverlayEnabled={mergedFeaturesData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFeaturesData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFeaturesData?.backgroundOverlayColor} backgroundPosition={mergedFeaturesData?.backgroundPosition}><Features {...mergedFeaturesData} borderRadius={mergedFeaturesData.borderRadius || theme.cardBorderRadius} onNavigate={handleLinkNavigation} /></SectionBackground>,
     testimonials: <SectionBackground backgroundImageUrl={mergedTestimonialsData?.backgroundImageUrl} backgroundColor={mergedTestimonialsData?.colors?.background} backgroundOverlayEnabled={mergedTestimonialsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedTestimonialsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedTestimonialsData?.backgroundOverlayColor} backgroundPosition={mergedTestimonialsData?.backgroundPosition}><Testimonials {...mergedTestimonialsData} borderRadius={mergedTestimonialsData.borderRadius || theme.cardBorderRadius} cardShadow={mergedTestimonialsData.cardShadow} borderStyle={mergedTestimonialsData.borderStyle} cardPadding={mergedTestimonialsData.cardPadding} testimonialsVariant={mergedTestimonialsData.testimonialsVariant} /></SectionBackground>,
     slideshow: <SectionBackground backgroundImageUrl={mergedSlideshowData?.backgroundImageUrl} backgroundColor={mergedSlideshowData?.colors?.background} backgroundOverlayEnabled={mergedSlideshowData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedSlideshowData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedSlideshowData?.backgroundOverlayColor} backgroundPosition={mergedSlideshowData?.backgroundPosition}><Slideshow {...mergedSlideshowData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
+    screenshotCarousel: <SectionBackground backgroundImageUrl={mergedScreenshotCarouselData?.backgroundImageUrl} backgroundColor={mergedScreenshotCarouselData?.colors?.background} backgroundOverlayEnabled={mergedScreenshotCarouselData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedScreenshotCarouselData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedScreenshotCarouselData?.backgroundOverlayColor} backgroundPosition={mergedScreenshotCarouselData?.backgroundPosition}><Slideshow {...mergedScreenshotCarouselData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     pricing: <SectionBackground backgroundImageUrl={mergedPricingData?.backgroundImageUrl} backgroundColor={mergedPricingData?.colors?.background} backgroundOverlayEnabled={mergedPricingData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedPricingData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedPricingData?.backgroundOverlayColor} backgroundPosition={mergedPricingData?.backgroundPosition}><Pricing {...mergedPricingData} cardBorderRadius={theme.cardBorderRadius} buttonBorderRadius={theme.buttonBorderRadius} /></SectionBackground>,
     faq: <SectionBackground backgroundImageUrl={mergedFaqData?.backgroundImageUrl} backgroundColor={mergedFaqData?.colors?.background} backgroundOverlayEnabled={mergedFaqData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedFaqData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedFaqData?.backgroundOverlayColor} backgroundPosition={mergedFaqData?.backgroundPosition}><Faq {...mergedFaqData} borderRadius={theme.cardBorderRadius} /></SectionBackground>,
     leads: <SectionBackground backgroundImageUrl={mergedLeadsData?.backgroundImageUrl} backgroundColor={mergedLeadsData?.colors?.background} backgroundOverlayEnabled={mergedLeadsData?.backgroundOverlayEnabled} backgroundOverlayOpacity={mergedLeadsData?.backgroundOverlayOpacity} backgroundOverlayColor={mergedLeadsData?.backgroundOverlayColor} backgroundPosition={mergedLeadsData?.backgroundPosition}><Leads {...mergedLeadsData} cardBorderRadius={mergedLeadsData.cardBorderRadius || theme.cardBorderRadius} inputBorderRadius={mergedLeadsData.inputBorderRadius || 'md'} buttonBorderRadius={mergedLeadsData.buttonBorderRadius || theme.buttonBorderRadius} /></SectionBackground>,
@@ -875,6 +934,31 @@ const AgencyLandingPageContent: React.FC = () => {
     header: null,
     typography: null,
     colors: null, // Global colors are managed via theme settings
+    heroQuimera: (data as any)?.heroQuimera ? <HeroQuimera {...(data as any).heroQuimera} isPreviewMode={isEditorMode} /> : null,
+    featuresQuimera: renderQuimeraSection('featuresQuimera', FeaturesQuimera),
+    pricingQuimera: renderQuimeraSection('pricingQuimera', PricingQuimera),
+    testimonialsQuimera: renderQuimeraSection('testimonialsQuimera', TestimonialsQuimera),
+    faqQuimera: renderQuimeraSection('faqQuimera', FaqQuimera),
+    ctaQuimera: renderQuimeraSection('ctaQuimera', CtaQuimera, { onNavigate: handleLinkNavigation }),
+    platformShowcaseQuimera: renderQuimeraSection('platformShowcaseQuimera', PlatformShowcaseQuimera),
+    bentoShowcaseQuimera: renderQuimeraSection('bentoShowcaseQuimera', FeaturesQuimera),
+    agentDemonstrationQuimera: renderQuimeraSection('agentDemonstrationQuimera', AiCapabilitiesQuimera),
+    aiCapabilitiesQuimera: renderQuimeraSection('aiCapabilitiesQuimera', AiCapabilitiesQuimera),
+    industrySolutionsQuimera: renderQuimeraSection('industrySolutionsQuimera', IndustrySolutionsQuimera),
+    agencyWhiteLabelQuimera: renderQuimeraSection('agencyWhiteLabelQuimera', AgencyWhiteLabelQuimera),
+    metricsQuimera: renderQuimeraSection('metricsQuimera', MetricsQuimera),
+    finalCtaQuimera: renderQuimeraSection('finalCtaQuimera', CtaQuimera, { onNavigate: handleLinkNavigation }),
+    whatIsQuimera: renderQuimeraSection('whatIsQuimera', WhatIsQuimeraSection),
+    templatesPreviewQuimera: renderQuimeraSection('templatesPreviewQuimera', TemplatesPreviewQuimera),
+    aiWebStudioQuimera: renderQuimeraSection('aiWebStudioQuimera', AiWebStudioQuimera),
+    contentManagerQuimera: renderQuimeraSection('contentManagerQuimera', ContentManagerQuimera),
+    imageGeneratorQuimera: renderQuimeraSection('imageGeneratorQuimera', ImageGeneratorQuimera),
+    chatbotWorkflowQuimera: renderQuimeraSection('chatbotWorkflowQuimera', ChatbotWorkflowQuimera),
+    chatbotBuilderQuimera: renderQuimeraSection('chatbotBuilderQuimera', ChatbotBuilderQuimera),
+    leadsManagerQuimera: renderQuimeraSection('leadsManagerQuimera', LeadsManagerQuimera),
+    appointmentsQuimera: renderQuimeraSection('appointmentsQuimera', AppointmentsQuimera),
+    bioPageQuimera: renderQuimeraSection('bioPageQuimera', BioPageQuimera),
+    emailMarketingQuimera: renderQuimeraSection('emailMarketingQuimera', EmailMarketingQuimera),
     separator1: mergedSeparator1Data ? <Separator data={mergedSeparator1Data} /> : null,
     separator2: mergedSeparator2Data ? <Separator data={mergedSeparator2Data} /> : null,
     separator3: mergedSeparator3Data ? <Separator data={mergedSeparator3Data} /> : null,

@@ -29,6 +29,27 @@ export const initialAgencyData = {
 
     data: {
         ...initialData.data,
+        colors: {
+          primary: '#6366f1',
+          secondary: '#8b5cf6',
+          accent: '#eab308',
+          background: '#020617',
+          surface: '#0f172a',
+          text: '#f8fafc',
+          textMuted: '#94a3b8',
+          heading: '#ffffff',
+          border: '#1e293b',
+          success: '#22c55e',
+          error: '#ef4444',
+        },
+        typography: {
+          headingFont: 'poppins',
+          bodyFont: 'inter',
+          buttonFont: 'poppins',
+          headingsCaps: false,
+          buttonsCaps: false,
+          navLinksCaps: false,
+        },
         header: {
           ...initialData.data.header,
           style: 'floating-glass',
@@ -154,6 +175,8 @@ export const initialAgencyData = {
     } as unknown as PageData,
 
     componentOrder: [
+        'colors',
+        'typography',
         'header',
         'hero',
         'services',

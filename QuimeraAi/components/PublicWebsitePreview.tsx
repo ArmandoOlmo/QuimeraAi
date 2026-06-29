@@ -135,6 +135,29 @@ const PricingLumina = lazy(() => import('./PricingLumina'));
 const TestimonialsLumina = lazy(() => import('./TestimonialsLumina'));
 const FaqLumina = lazy(() => import('./FaqLumina'));
 
+const HeroQuimera = lazy(() => import('./quimera/HeroQuimera'));
+const FeaturesQuimera = lazy(() => import('./quimera/FeaturesQuimera'));
+const PricingQuimera = lazy(() => import('./quimera/PricingQuimera'));
+const TestimonialsQuimera = lazy(() => import('./quimera/TestimonialsQuimera'));
+const FaqQuimera = lazy(() => import('./quimera/FaqQuimera'));
+const CtaQuimera = lazy(() => import('./quimera/CtaQuimera'));
+const PlatformShowcaseQuimera = lazy(() => import('./quimera/PlatformShowcaseQuimera'));
+const AiCapabilitiesQuimera = lazy(() => import('./quimera/AiCapabilitiesQuimera'));
+const IndustrySolutionsQuimera = lazy(() => import('./quimera/IndustrySolutionsQuimera'));
+const AgencyWhiteLabelQuimera = lazy(() => import('./quimera/AgencyWhiteLabelQuimera'));
+const MetricsQuimera = lazy(() => import('./quimera/MetricsQuimera'));
+const WhatIsQuimeraSection = lazy(() => import('./quimera/WhatIsQuimeraSection'));
+const TemplatesPreviewQuimera = lazy(() => import('./quimera/TemplatesPreviewQuimera'));
+const AiWebStudioQuimera = lazy(() => import('./quimera/AiWebStudioQuimera'));
+const ContentManagerQuimera = lazy(() => import('./quimera/ContentManagerQuimera'));
+const ImageGeneratorQuimera = lazy(() => import('./quimera/ImageGeneratorQuimera'));
+const ChatbotWorkflowQuimera = lazy(() => import('./quimera/ChatbotWorkflowQuimera'));
+const ChatbotBuilderQuimera = lazy(() => import('./quimera/ChatbotBuilderQuimera'));
+const LeadsManagerQuimera = lazy(() => import('./quimera/LeadsManagerQuimera'));
+const AppointmentsQuimera = lazy(() => import('./quimera/AppointmentsQuimera'));
+const BioPageQuimera = lazy(() => import('./quimera/BioPageQuimera'));
+const EmailMarketingQuimera = lazy(() => import('./quimera/EmailMarketingQuimera'));
+
 
 
 // Lazy load StorefrontApp for store views
@@ -1812,6 +1835,11 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     window.location.hash = `store/product/${productSlug}`;
   }, [isEcommerceServiceAvailable]);
 
+  // Get projectId for store/chatbot components early; hooks below need it before render guards.
+  // This works correctly for both preview URLs and custom domains.
+  const storeProjectId = project?.id || propProjectId || getIdsFromURL().projectId;
+  const storeUserId = project?.userId || propUserId || getIdsFromURL().userId;
+
   // Only fetch real estate properties if the project actually uses real estate sections
   const hasRealEstateSections = isRealEstateServiceAvailable && project?.componentOrder?.some((s: string) =>
     s === 'realEstateListings' || s === 'propertyDetail' || s === 'propertyDirectory'
@@ -2250,6 +2278,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
 
           return withBackground(<Hero {...compData} borderRadius={hbr} onNavigate={handleLinkNavigation} />);
         }
+      case 'heroModern':
+        return withBackground(<HeroModern {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />);
+      case 'heroGradient':
+        return withBackground(<HeroGradient {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />);
       case 'heroSplit':
         return withBackground(<HeroSplit {...compData} borderRadius={compData.buttonBorderRadius || buttonBorderRadius} onNavigate={handleLinkNavigation} />);
       case 'heroGallery':
@@ -2265,6 +2297,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       case 'testimonials':
         return withBackground(<Testimonials {...compData} borderRadius={compData.borderRadius || borderRadius} cardShadow={compData.cardShadow} borderStyle={compData.borderStyle} cardPadding={compData.cardPadding} testimonialsVariant={compData.testimonialsVariant} />);
       case 'slideshow':
+        return withBackground(<Slideshow {...compData} borderRadius={borderRadius} />);
+      case 'screenshotCarousel':
         return withBackground(<Slideshow {...compData} borderRadius={borderRadius} />);
       case 'pricing':
         return withBackground(<Pricing {...compData} cardBorderRadius={borderRadius} buttonBorderRadius={buttonBorderRadius} />);
@@ -2351,6 +2385,56 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
         return compData ? <LogoBanner {...compData} onNavigate={handleLinkNavigation} /> : null;
       case 'products':
         return withBackground(<Products {...compData} primaryColor={compData?.colors?.accent || theme?.globalColors?.primary || '#4f46e5'} />);
+
+      // Quimera suite sections
+      case 'heroQuimera':
+        return withBackground(<HeroQuimera {...compData} showDecoration={compData.showDecoration !== false} showParticles={compData.showParticles !== false} isPreviewMode={isEditorPreviewRoute} />);
+      case 'featuresQuimera':
+        return withBackground(<FeaturesQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'pricingQuimera':
+        return withBackground(<PricingQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'testimonialsQuimera':
+        return withBackground(<TestimonialsQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'faqQuimera':
+        return withBackground(<FaqQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'ctaQuimera':
+      case 'finalCtaQuimera':
+        return withBackground(<CtaQuimera {...compData} isPreviewMode={isEditorPreviewRoute} onNavigate={handleLinkNavigation} />);
+      case 'platformShowcaseQuimera':
+        return withBackground(<PlatformShowcaseQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'bentoShowcaseQuimera':
+        return withBackground(<FeaturesQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'agentDemonstrationQuimera':
+      case 'aiCapabilitiesQuimera':
+        return withBackground(<AiCapabilitiesQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'industrySolutionsQuimera':
+        return withBackground(<IndustrySolutionsQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'agencyWhiteLabelQuimera':
+        return withBackground(<AgencyWhiteLabelQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'metricsQuimera':
+        return withBackground(<MetricsQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'whatIsQuimera':
+        return withBackground(<WhatIsQuimeraSection {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'templatesPreviewQuimera':
+        return withBackground(<TemplatesPreviewQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'aiWebStudioQuimera':
+        return withBackground(<AiWebStudioQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'contentManagerQuimera':
+        return withBackground(<ContentManagerQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'imageGeneratorQuimera':
+        return withBackground(<ImageGeneratorQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'chatbotWorkflowQuimera':
+        return withBackground(<ChatbotWorkflowQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'chatbotBuilderQuimera':
+        return withBackground(<ChatbotBuilderQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'leadsManagerQuimera':
+        return withBackground(<LeadsManagerQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'appointmentsQuimera':
+        return withBackground(<AppointmentsQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'bioPageQuimera':
+        return withBackground(<BioPageQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
+      case 'emailMarketingQuimera':
+        return withBackground(<EmailMarketingQuimera {...compData} isPreviewMode={isEditorPreviewRoute} />);
       
       // Lumina sections
       case 'heroLumina':

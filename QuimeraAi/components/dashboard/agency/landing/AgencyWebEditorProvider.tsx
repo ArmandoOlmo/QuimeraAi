@@ -13,10 +13,59 @@ import { AgencyLandingConfig } from '../../../../types/agencyLanding';
 import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
 import { db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from '@/utils/compatData';
 import { supabase } from '../../../../supabase';
+import { getInitialDataForLandingComponent } from '../../../../utils/landingSectionDefaults';
 
 interface AgencyWebEditorProviderProps {
     children: ReactNode;
 }
+
+const AGENCY_STRUCTURE_ORDER: PageSection[] = ['colors', 'typography', 'header'];
+const AGENCY_FOOTER_SECTION: PageSection = 'footer';
+
+const createDefaultAgencySection = (type: PageSection, order: number): AgencyLandingConfig['sections'][number] => ({
+    id: type,
+    type,
+    order,
+    enabled: initialAgencyData.sectionVisibility[type] !== false,
+    data: (initialAgencyData.data as any)[type] || getInitialDataForLandingComponent(type),
+});
+
+const normalizeAgencyLandingSections = (sections?: AgencyLandingConfig['sections']): AgencyLandingConfig['sections'] => {
+    const source = sections?.length
+        ? [...sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        : (initialAgencyData.componentOrder as PageSection[]).map((type, index) => createDefaultAgencySection(type, index));
+
+    const byType = new Map<string, AgencyLandingConfig['sections'][number]>();
+    source.forEach((section, index) => {
+        if (!section?.type || byType.has(section.type)) return;
+        byType.set(section.type, {
+            ...section,
+            id: AGENCY_STRUCTURE_ORDER.includes(section.type as PageSection) || section.type === AGENCY_FOOTER_SECTION
+                ? section.type
+                : section.id || `${section.type}-${index}`,
+            order: section.order ?? index,
+            enabled: section.enabled !== false,
+            data: {
+                ...((initialAgencyData.data as any)[section.type] || getInitialDataForLandingComponent(section.type)),
+                ...(section.data || {}),
+            },
+        });
+    });
+
+    const normalized: AgencyLandingConfig['sections'] = [];
+    AGENCY_STRUCTURE_ORDER.forEach((type, index) => {
+        normalized.push(byType.get(type) || createDefaultAgencySection(type, index - AGENCY_STRUCTURE_ORDER.length));
+        byType.delete(type);
+    });
+
+    const footer = byType.get(AGENCY_FOOTER_SECTION);
+    byType.delete(AGENCY_FOOTER_SECTION);
+
+    normalized.push(...Array.from(byType.values()));
+    normalized.push(footer || createDefaultAgencySection(AGENCY_FOOTER_SECTION, normalized.length));
+
+    return normalized.map((section, index) => ({ ...section, order: index }));
+};
 
 export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = ({ children }) => {
     const parentProjectCtx = useSafeProject();
@@ -83,10 +132,12 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
                     const mappedOrder: PageSection[] = [];
                     const mappedVisibility: Record<any, boolean> = {};
 
-                    config.sections.forEach(sec => {
+                    const normalizedSections = normalizeAgencyLandingSections(config.sections);
+
+                    normalizedSections.forEach(sec => {
                         const defaultData = initialAgencyData.data[sec.type as keyof PageData] as any;
                         mappedData[sec.type] = {
-                            ...(defaultData || {}),
+                            ...(defaultData || getInitialDataForLandingComponent(sec.type)),
                             ...(sec.data || {})
                         };
                         mappedOrder.push(sec.type as PageSection);
@@ -132,24 +183,30 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         if (!tenantId || !data) return;
         try {
             // Re-map Web Editor data (PageData + componentOrder) back to AgencyLandingConfig sections array
-            const existingSections = rawConfig?.sections || [];
-            const newSections = componentOrder.map((sectionType, index) => {
-                const existing = existingSections.find(s => s.type === sectionType);
-                return {
-                    id: existing?.id || `${sectionType}-${Date.now()}`,
-                    type: sectionType,
-                    order: index,
-                    enabled: sectionVisibility[sectionType] !== false,
-                    data: (data as any)[sectionType] || {}
-                };
-            });
+                    const existingSections = normalizeAgencyLandingSections(rawConfig?.sections);
+                    const newSections = componentOrder.map((sectionType, index) => {
+                        const existing = existingSections.find(s => s.type === sectionType);
+                        return {
+                            id: existing?.id || (AGENCY_STRUCTURE_ORDER.includes(sectionType) || sectionType === AGENCY_FOOTER_SECTION ? sectionType : `${sectionType}-${Date.now()}`),
+                            type: sectionType,
+                            order: index,
+                            enabled: sectionVisibility[sectionType] !== false,
+                            data: (data as any)[sectionType] || {}
+                        };
+                    });
 
-            await saveAgencyLanding(tenantId, {
+            const nextConfig = {
                 // Keep everything else the same, update sections and theme
-                ...rawConfig,
+                ...(rawConfig || {}),
+                tenantId,
                 sections: newSections,
                 theme: theme as any
+            };
+
+            await saveAgencyLanding(tenantId, {
+                ...nextConfig,
             });
+            setRawConfig(nextConfig as AgencyLandingConfig);
 
             if (showToast) {
                 toast.success("Landing de Agencia guardado exitosamente");

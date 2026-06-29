@@ -23,6 +23,7 @@ import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { getInitialDataForLandingComponent } from '../../utils/landingSectionDefaults';
 import PageSettings from '../dashboard/PageSettings';
 import PageSelector from '../dashboard/PageSelector';
 import { PageTemplateId, PAGE_TEMPLATES } from '../../types/onboarding';
@@ -38,6 +39,7 @@ import {
   Settings, AlignJustify, MonitorPlay, Grid, HelpCircle, X, Palette,
   TrendingUp, MapIcon, ShoppingBag, Store, Check, Waves, Bell,
   FileText, Layers, UserPlus, PanelRightClose, PanelRightOpen, MessageSquare, Minus, Building2, CalendarCheck,
+  LayoutTemplate, MessageSquareCode, PaintBucket, Link as LinkIcon, BarChart3, Sparkles,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/usePublicProducts';
 import { resolveProjectBackedStoreIdentity } from '../../utils/ecommerce/storeIdentity';
@@ -96,6 +98,28 @@ import { renderCtaNeonControls } from './sections/renderCtaNeonControls';
 import { renderPortfolioNeonControls } from './sections/renderPortfolioNeonControls';
 import { renderPricingNeonControls } from './sections/renderPricingNeonControls';
 import { renderFaqNeonControls } from './sections/renderFaqNeonControls';
+import {
+  renderHeroQuimeraControls,
+  renderFeaturesQuimeraControls,
+  renderCtaQuimeraControls,
+  renderPricingQuimeraControls,
+  renderTestimonialsQuimeraControls,
+  renderFaqQuimeraControls,
+  renderMetricsQuimeraControls,
+  renderGenericQuimeraControls,
+  renderPlatformShowcaseQuimeraControls,
+  renderAiCapabilitiesQuimeraControls,
+  renderAgencyWhiteLabelQuimeraControls,
+  renderIndustrySolutionsQuimeraControls,
+  renderContentManagerQuimeraControls,
+  renderImageGeneratorQuimeraControls,
+  renderChatbotWorkflowQuimeraControls,
+  renderChatbotBuilderQuimeraControls,
+  renderLeadsManagerQuimeraControls,
+  renderAppointmentsQuimeraControls,
+  renderBioPageQuimeraControls,
+  renderEmailMarketingQuimeraControls,
+} from './landing/LandingQuimeraControls';
 import { normalizeEditorControlData } from './normalizeControlData';
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -406,9 +430,63 @@ const Controls: React.FC = () => {
     renderListSectionControls: (sk: string, il: string, fields: any[]) => _renderListSectionControls(deps, sk, il, fields),
   };
 
+  const getScopedSectionDeps = (section: PageSection): ControlsDeps & { allSections: Array<{ id: string; type: string }> } => ({
+    ...deps,
+    data: data?.[section] || {},
+    setNestedData: (path: string, value: any) => {
+      const normalizedPath = path.replace(/\?\./g, '.');
+      setNestedData(`${section}.${normalizedPath}`, value);
+    },
+    setAiAssistField: field => {
+      if (!field) {
+        setAiAssistField(null);
+        return;
+      }
+      const normalizedPath = field.path.replace(/\?\./g, '.');
+      setAiAssistField({ ...field, path: `${section}.${normalizedPath}` });
+    },
+    allSections: effectiveComponentOrder.map(sectionType => ({
+      id: sectionType,
+      type: sectionType,
+    })),
+  });
+
+  const getAliasSectionDeps = (section: PageSection, sourceKey: string): ControlsDeps => ({
+    ...deps,
+    data: {
+      ...(data || {}),
+      [sourceKey]: data?.[section] || {},
+    },
+    setNestedData: (path: string, value: any) => {
+      const normalizedPath = path.replace(/\?\./g, '.');
+      const mappedPath = normalizedPath === sourceKey || normalizedPath.startsWith(`${sourceKey}.`)
+        ? `${section}${normalizedPath.slice(sourceKey.length)}`
+        : normalizedPath;
+      setNestedData(mappedPath, value);
+    },
+    setAiAssistField: field => {
+      if (!field) {
+        setAiAssistField(null);
+        return;
+      }
+      const normalizedPath = field.path.replace(/\?\./g, '.');
+      const mappedPath = normalizedPath === sourceKey || normalizedPath.startsWith(`${sourceKey}.`)
+        ? `${section}${normalizedPath.slice(sourceKey.length)}`
+        : normalizedPath;
+      setAiAssistField({ ...field, path: mappedPath });
+    },
+  });
+
+  const renderScopedControls = (
+    section: PageSection,
+    renderer: (deps: ControlsDeps & { allSections?: Array<{ id: string; type: string }> }) => React.ReactNode,
+  ) => renderer(getScopedSectionDeps(section));
+
   // ─── Section config ───────────────────────────────────────────────────────
   const sectionConfig: Partial<Record<PageSection, { label: string; icon: React.ElementType; renderer: () => React.ReactNode }>> = {
     hero: { label: 'Hero Section', icon: Image, renderer: () => renderHeroControls(deps) },
+    heroModern: { label: 'Hero Modern', icon: MonitorPlay, renderer: () => renderHeroControlsWithTabs(getAliasSectionDeps('heroModern', 'hero')) },
+    heroGradient: { label: 'Hero Gradient', icon: MonitorPlay, renderer: () => renderHeroControlsWithTabs(getAliasSectionDeps('heroGradient', 'hero')) },
     heroSplit: { label: 'Hero Split', icon: Image, renderer: () => renderHeroSplitControls(deps) },
     heroGallery: { label: 'Hero Gallery', icon: Image, renderer: () => renderHeroGalleryControls(deps) },
     heroWave: { label: 'Hero Wave', icon: Waves, renderer: () => renderHeroWaveControls(deps) },
@@ -426,6 +504,7 @@ const Controls: React.FC = () => {
     newsletter: { label: 'Newsletter', icon: Send, renderer: () => renderNewsletterControlsWithTabs(deps) },
     cta: { label: 'Call to Action', icon: MessageCircle, renderer: () => renderCTAControlsWithTabs(deps) },
     slideshow: { label: 'Slideshow', icon: PlaySquare, renderer: () => renderSlideshowControls(deps) },
+    screenshotCarousel: { label: 'Screenshot Carousel', icon: PlaySquare, renderer: () => renderSlideshowControlsWithTabs(getAliasSectionDeps('screenshotCarousel', 'slideshow')) },
     video: { label: 'Video', icon: MonitorPlay, renderer: () => renderVideoControls(deps) },
     howItWorks: { label: 'How It Works', icon: Grid, renderer: () => renderHowItWorksControlsWithTabs(deps) },
     separator1: { label: 'Separador 1', icon: Minus, renderer: () => renderSeparatorControlsWithTabs(deps, 'separator1') },
@@ -473,6 +552,31 @@ const Controls: React.FC = () => {
     portfolioNeon: { label: 'Portfolio Neon', icon: Briefcase, renderer: () => renderPortfolioNeonControls(deps) },
     pricingNeon: { label: 'Pricing Neon', icon: DollarSign, renderer: () => renderPricingNeonControls(deps) },
     faqNeon: { label: 'FAQ Neon', icon: HelpCircle, renderer: () => renderFaqNeonControls(deps) },
+    heroQuimera: { label: 'Hero Quimera', icon: MonitorPlay, renderer: () => renderScopedControls('heroQuimera', renderHeroQuimeraControls) },
+    whatIsQuimera: { label: 'What is Quimera', icon: FileText, renderer: () => renderScopedControls('whatIsQuimera', renderGenericQuimeraControls) },
+    templatesPreviewQuimera: { label: 'Templates Preview', icon: LayoutTemplate, renderer: () => renderScopedControls('templatesPreviewQuimera', renderGenericQuimeraControls) },
+    aiWebStudioQuimera: { label: 'AI Web Studio', icon: MessageSquareCode, renderer: () => renderScopedControls('aiWebStudioQuimera', renderGenericQuimeraControls) },
+    contentManagerQuimera: { label: 'Content Manager', icon: FileText, renderer: () => renderScopedControls('contentManagerQuimera', renderContentManagerQuimeraControls) },
+    imageGeneratorQuimera: { label: 'Image Generator', icon: Image, renderer: () => renderScopedControls('imageGeneratorQuimera', renderImageGeneratorQuimeraControls) },
+    chatbotWorkflowQuimera: { label: 'Chatbot Workflow', icon: Layers, renderer: () => renderScopedControls('chatbotWorkflowQuimera', renderChatbotWorkflowQuimeraControls) },
+    chatbotBuilderQuimera: { label: 'Chatbot Builder', icon: PaintBucket, renderer: () => renderScopedControls('chatbotBuilderQuimera', renderChatbotBuilderQuimeraControls) },
+    leadsManagerQuimera: { label: 'Leads Manager', icon: Users, renderer: () => renderScopedControls('leadsManagerQuimera', renderLeadsManagerQuimeraControls) },
+    appointmentsQuimera: { label: 'Appointments', icon: CalendarCheck, renderer: () => renderScopedControls('appointmentsQuimera', renderAppointmentsQuimeraControls) },
+    bioPageQuimera: { label: 'Bio Page', icon: LinkIcon, renderer: () => renderScopedControls('bioPageQuimera', renderBioPageQuimeraControls) },
+    emailMarketingQuimera: { label: 'Email Marketing', icon: Send, renderer: () => renderScopedControls('emailMarketingQuimera', renderEmailMarketingQuimeraControls) },
+    featuresQuimera: { label: 'Features Quimera', icon: List, renderer: () => renderScopedControls('featuresQuimera', renderFeaturesQuimeraControls) },
+    platformShowcaseQuimera: { label: 'Platform Showcase', icon: Grid, renderer: () => renderScopedControls('platformShowcaseQuimera', renderPlatformShowcaseQuimeraControls) },
+    bentoShowcaseQuimera: { label: 'Bento Showcase', icon: Grid, renderer: () => renderScopedControls('bentoShowcaseQuimera', renderFeaturesQuimeraControls) },
+    agentDemonstrationQuimera: { label: 'Agent Demonstration', icon: MessageSquare, renderer: () => renderScopedControls('agentDemonstrationQuimera', renderAiCapabilitiesQuimeraControls) },
+    pricingQuimera: { label: 'Pricing Quimera', icon: DollarSign, renderer: () => renderScopedControls('pricingQuimera', renderPricingQuimeraControls) },
+    testimonialsQuimera: { label: 'Testimonials Quimera', icon: Star, renderer: () => renderScopedControls('testimonialsQuimera', renderTestimonialsQuimeraControls) },
+    faqQuimera: { label: 'FAQ Quimera', icon: HelpCircle, renderer: () => renderScopedControls('faqQuimera', renderFaqQuimeraControls) },
+    metricsQuimera: { label: 'Metrics Quimera', icon: BarChart3, renderer: () => renderScopedControls('metricsQuimera', renderMetricsQuimeraControls) },
+    aiCapabilitiesQuimera: { label: 'AI Capabilities', icon: Sparkles, renderer: () => renderScopedControls('aiCapabilitiesQuimera', renderAiCapabilitiesQuimeraControls) },
+    industrySolutionsQuimera: { label: 'Industry Solutions', icon: Building2, renderer: () => renderScopedControls('industrySolutionsQuimera', renderIndustrySolutionsQuimeraControls) },
+    agencyWhiteLabelQuimera: { label: 'Agency White Label', icon: Users, renderer: () => renderScopedControls('agencyWhiteLabelQuimera', renderAgencyWhiteLabelQuimeraControls) },
+    ctaQuimera: { label: 'CTA Quimera', icon: MessageCircle, renderer: () => renderScopedControls('ctaQuimera', renderCtaQuimeraControls) },
+    finalCtaQuimera: { label: 'Final CTA Quimera', icon: MessageCircle, renderer: () => renderScopedControls('finalCtaQuimera', renderCtaQuimeraControls) },
   };
 
   if (!data) return null;
@@ -504,7 +608,7 @@ const Controls: React.FC = () => {
     setEditorComponentOrder(nextComponentOrder as PageSection[]);
     const globalDefault = (componentStyles && componentStyles[section]) ? componentStyles[section] : {};
     const newDataSnapshot = safeClone(data);
-    const sectionDefaults = (initialData.data as any)[section] || {};
+    const sectionDefaults = (initialData.data as any)[section] || getInitialDataForLandingComponent(section);
     const existingData = newDataSnapshot[section] || {};
     newDataSnapshot[section] = { ...sectionDefaults, ...existingData, ...globalDefault,
       colors: { ...sectionDefaults?.colors, ...existingData?.colors, ...(globalDefault as any)?.colors },
@@ -579,6 +683,8 @@ const Controls: React.FC = () => {
 
     switch (activeSection) {
       case 'hero': return renderHeroControlsWithTabs(deps);
+      case 'heroModern': return renderHeroControlsWithTabs(getAliasSectionDeps('heroModern', 'hero'));
+      case 'heroGradient': return renderHeroControlsWithTabs(getAliasSectionDeps('heroGradient', 'hero'));
       case 'features': return renderFeaturesControlsWithTabs(deps);
       case 'testimonials': return renderTestimonialsControlsWithTabs(deps);
       case 'services': return renderServicesControlsWithTabs(deps);
@@ -601,6 +707,7 @@ const Controls: React.FC = () => {
       case 'banner': return renderBannerControlsWithTabs(deps);
       case 'pricing': return renderPricingControlsWithTabs(deps);
       case 'slideshow': return renderSlideshowControlsWithTabs(deps);
+      case 'screenshotCarousel': return renderSlideshowControlsWithTabs(getAliasSectionDeps('screenshotCarousel', 'slideshow'));
       case 'video': return renderVideoControlsWithTabs(deps);
       case 'header': return renderHeaderControlsWithTabs(deps);
       case 'footer': return renderFooterControlsWithTabs(deps);
@@ -642,6 +749,31 @@ const Controls: React.FC = () => {
       case 'portfolioNeon': return renderPortfolioNeonControls(deps);
       case 'pricingNeon': return renderPricingNeonControls(deps);
       case 'faqNeon': return renderFaqNeonControls(deps);
+      case 'heroQuimera': return renderScopedControls('heroQuimera', renderHeroQuimeraControls);
+      case 'featuresQuimera': return renderScopedControls('featuresQuimera', renderFeaturesQuimeraControls);
+      case 'ctaQuimera': return renderScopedControls('ctaQuimera', renderCtaQuimeraControls);
+      case 'pricingQuimera': return renderScopedControls('pricingQuimera', renderPricingQuimeraControls);
+      case 'testimonialsQuimera': return renderScopedControls('testimonialsQuimera', renderTestimonialsQuimeraControls);
+      case 'faqQuimera': return renderScopedControls('faqQuimera', renderFaqQuimeraControls);
+      case 'metricsQuimera': return renderScopedControls('metricsQuimera', renderMetricsQuimeraControls);
+      case 'platformShowcaseQuimera': return renderScopedControls('platformShowcaseQuimera', renderPlatformShowcaseQuimeraControls);
+      case 'bentoShowcaseQuimera': return renderScopedControls('bentoShowcaseQuimera', renderFeaturesQuimeraControls);
+      case 'agentDemonstrationQuimera': return renderScopedControls('agentDemonstrationQuimera', renderAiCapabilitiesQuimeraControls);
+      case 'aiCapabilitiesQuimera': return renderScopedControls('aiCapabilitiesQuimera', renderAiCapabilitiesQuimeraControls);
+      case 'agencyWhiteLabelQuimera': return renderScopedControls('agencyWhiteLabelQuimera', renderAgencyWhiteLabelQuimeraControls);
+      case 'industrySolutionsQuimera': return renderScopedControls('industrySolutionsQuimera', renderIndustrySolutionsQuimeraControls);
+      case 'finalCtaQuimera': return renderScopedControls('finalCtaQuimera', renderCtaQuimeraControls);
+      case 'whatIsQuimera': return renderScopedControls('whatIsQuimera', renderGenericQuimeraControls);
+      case 'templatesPreviewQuimera': return renderScopedControls('templatesPreviewQuimera', renderGenericQuimeraControls);
+      case 'aiWebStudioQuimera': return renderScopedControls('aiWebStudioQuimera', renderGenericQuimeraControls);
+      case 'contentManagerQuimera': return renderScopedControls('contentManagerQuimera', renderContentManagerQuimeraControls);
+      case 'imageGeneratorQuimera': return renderScopedControls('imageGeneratorQuimera', renderImageGeneratorQuimeraControls);
+      case 'chatbotWorkflowQuimera': return renderScopedControls('chatbotWorkflowQuimera', renderChatbotWorkflowQuimeraControls);
+      case 'chatbotBuilderQuimera': return renderScopedControls('chatbotBuilderQuimera', renderChatbotBuilderQuimeraControls);
+      case 'leadsManagerQuimera': return renderScopedControls('leadsManagerQuimera', renderLeadsManagerQuimeraControls);
+      case 'appointmentsQuimera': return renderScopedControls('appointmentsQuimera', renderAppointmentsQuimeraControls);
+      case 'bioPageQuimera': return renderScopedControls('bioPageQuimera', renderBioPageQuimeraControls);
+      case 'emailMarketingQuimera': return renderScopedControls('emailMarketingQuimera', renderEmailMarketingQuimeraControls);
       default: return config.renderer();
     }
   };

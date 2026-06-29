@@ -32,7 +32,6 @@ import {
   User
 } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
-import ImageCarousel from './ImageCarousel';
 import { useSafeAppContent } from '../contexts/appContent';
 import { isRetiredDesignSuiteSection } from '../data/retiredSuites';
 import { AppArticle, AppNavItem, DEFAULT_APP_NAVIGATION } from '../types/appContent';
@@ -54,6 +53,7 @@ const Features = lazy(() => import('./Features'));
 const Pricing = lazy(() => import('./Pricing'));
 const Testimonials = lazy(() => import('./Testimonials'));
 const Faq = lazy(() => import('./Faq'));
+const Slideshow = lazy(() => import('./Slideshow'));
 
 const HeroQuimera = lazy(() => import('./quimera/HeroQuimera'));
 const FeaturesQuimera = lazy(() => import('./quimera/FeaturesQuimera'));
@@ -814,6 +814,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         return renderSuiteSection(section, FeaturesQuimera);
       case 'agentDemonstrationQuimera':
         return renderSuiteSection(section, AiCapabilitiesQuimera);
+      case 'featuresQuimera':
+        return renderSuiteSection(section, FeaturesQuimera);
       case 'pricingQuimera':
         return renderSuiteSection(section, PricingQuimera);
       case 'testimonialsQuimera':
@@ -825,6 +827,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
       case 'industrySolutionsQuimera':
         return renderSuiteSection(section, IndustrySolutionsQuimera);
       case 'finalCtaQuimera':
+        return renderSuiteSection(section, CtaQuimera);
+      case 'ctaQuimera':
         return renderSuiteSection(section, CtaQuimera);
       case 'aiCapabilitiesQuimera':
         return renderSuiteSection(section, AiCapabilitiesQuimera);
@@ -894,6 +898,8 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
         return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroModern {...(section.data as any)} /></Suspense></section>;
       case 'heroGradient':
         return <section key={section.id} id={`section-${sectionType}`} data-section-id={section.id} className="relative w-full"><Suspense fallback={null}><HeroGradient {...(section.data as any)} /></Suspense></section>;
+      case 'screenshotCarousel':
+        return renderSuiteSection(section, Slideshow);
       case 'features':
         return renderSuiteSection(section, Features);
       case 'pricing':

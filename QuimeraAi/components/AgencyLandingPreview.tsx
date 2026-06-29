@@ -6,6 +6,7 @@ import { AlertTriangle } from 'lucide-react';
 import { AgencyLandingConfig } from '../types/agencyLanding';
 import { initialAgencyData } from './dashboard/agency/landing/initialAgencyData';
 import QuimeraLoader from './ui/QuimeraLoader';
+import { getInitialDataForLandingComponent } from '../utils/landingSectionDefaults';
 
 import { getAgencyLanding } from '../services/agencyLandingService';
 
@@ -26,6 +27,9 @@ const AgencyLandingPreview: React.FC = () => {
     const pathname = window.location.pathname;
     if (pathname.startsWith('/preview/agency/')) {
        return pathname.replace('/preview/agency/', '').split('/')[0];
+    }
+    if (pathname.startsWith('/agency-landing/')) {
+       return pathname.replace('/agency-landing/', '').split('/')[0];
     }
     return null;
   };
@@ -53,7 +57,7 @@ const AgencyLandingPreview: React.FC = () => {
             
             if (config.sections && config.sections.length > 0) {
               config.sections.forEach(sec => {
-                  const defaultData = initialAgencyData.data[sec.type as keyof PageData] as any;
+                  const defaultData = (initialAgencyData.data[sec.type as keyof PageData] as any) || getInitialDataForLandingComponent(sec.type);
                   mappedData[sec.type as keyof PageData] = {
                       ...(defaultData || {}),
                       ...(sec.data || {})
