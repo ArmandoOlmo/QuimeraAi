@@ -144,6 +144,20 @@ describe('Agency billing canonical contract', () => {
         expect(tenantContext).toContain('return rows.map(mapTenantRowToTenant)');
     });
 
+    it('hydrates the active agency client tenant with canonical relationship billing', () => {
+        const creditsUsageHook = read('hooks/useCreditsUsage.ts');
+
+        expect(tenantContext).toContain('async function fetchAgencyClientRelationship(clientTenantId: string');
+        expect(tenantContext).toContain(".eq('client_tenant_id', clientTenantId)");
+        expect(tenantContext).toContain('withAgencyClientEffectiveContext(mapTenantRowToTenant(tenantRow), parentTenant)');
+        expect(tenantContext).toContain('resolveTenantEffectivePlan(tenant, parentTenant)');
+
+        expect(creditsUsageHook).toContain('resolveTenantEffectivePlan(currentTenant)');
+        expect(creditsUsageHook).toContain("currentTenant?.type === 'agency_client'");
+        expect(creditsUsageHook).toContain("currentTenant?.billing?.mode !== 'direct'");
+        expect(creditsUsageHook).toContain('shouldUseTenantEffectivePlan');
+    });
+
     it('loads Agency Command Center clients from canonical agency relationships', () => {
         expect(agencyMetricsHook).toContain('async function fetchAgencyClientTenantRows');
         expect(agencyMetricsHook).toContain(".from('agency_clients')");

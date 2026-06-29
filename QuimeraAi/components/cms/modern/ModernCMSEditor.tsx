@@ -137,7 +137,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         onChange={(e) => setCategoryId(e.target.value)}
                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
                     >
-                        <option value="">{t('cms_editor.noCategory', t('cms.uncategorized'))}</option>
+                        <option value="">{t('cms_editor.noCategory', { defaultValue: t('cms.uncategorized') })}</option>
                         {categories.map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}

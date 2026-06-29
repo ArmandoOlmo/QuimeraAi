@@ -175,6 +175,8 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     updatedAt: p.updated_at,
                     publishedAt: p.published_at,
                     authorName: p.author_name || '',
+                    showAuthor: p.show_author ?? true,
+                    showDate: p.show_date ?? true,
                     isFeatured: p.is_featured || false
                 })));
             } catch (error) {
@@ -225,6 +227,8 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 status: post.status,
                 tags,
                 author_name: post.authorName,
+                show_author: post.showAuthor !== false,
+                show_date: post.showDate !== false,
                 is_featured: post.isFeatured,
                 published_at: post.status === 'published' ? (post.publishedAt || new Date().toISOString()) : null,
                 updated_at: new Date().toISOString()

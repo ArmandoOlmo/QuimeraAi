@@ -18,6 +18,7 @@ import {
     normalizePlanId,
     normalizePlanLimits,
 } from '../services/billing/planCatalog';
+import { resolveTenantEffectivePlan } from '../types/multiTenant';
 
 export interface CreditsUsageData {
     used: number;
@@ -78,7 +79,13 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 throw error;
             }
 
-            const subscriptionPlanKey = normalizePlanId(data?.plan_id || currentTenant?.subscriptionPlan || 'free') as SubscriptionPlanId;
+            const tenantEffectivePlanKey = normalizePlanId(resolveTenantEffectivePlan(currentTenant)) as SubscriptionPlanId;
+            const shouldUseTenantEffectivePlan =
+                currentTenant?.type === 'agency_client' &&
+                currentTenant?.billing?.mode !== 'direct';
+            const subscriptionPlanKey = shouldUseTenantEffectivePlan
+                ? tenantEffectivePlanKey
+                : normalizePlanId(data?.plan_id || tenantEffectivePlanKey || 'free') as SubscriptionPlanId;
             const planKey: SubscriptionPlanId = subscriptionPlanKey;
             const plan = SUBSCRIPTION_PLANS[planKey] || getCanonicalPlan(planKey);
             const status = isUnlimitedCreditsUser ? 'active' : data?.status || 'active';
@@ -125,7 +132,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits, isUnlimitedCreditsUser]);
+    }, [tenantId, currentTenant, isUnlimitedCreditsUser]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {
