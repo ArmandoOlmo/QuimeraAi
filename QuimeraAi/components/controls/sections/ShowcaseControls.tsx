@@ -84,8 +84,8 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
       />
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">Items</label>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <label className="min-w-0 flex-1 block text-xs font-bold text-q-text-secondary uppercase tracking-wider">Items</label>
           <button
             type="button"
             onClick={() => {
@@ -100,7 +100,7 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
                 },
               ]);
             }}
-            className="inline-flex items-center gap-1 rounded-md border border-q-accent/40 px-2 py-1 text-xs font-bold text-q-accent hover:bg-q-accent/10"
+            className="inline-flex flex-shrink-0 items-center gap-1 rounded-md border border-q-accent/40 px-2 py-1 text-xs font-bold text-q-accent hover:bg-q-accent/10"
           >
             <Plus size={13} />
             Add
@@ -109,12 +109,12 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
 
         {items.map((item: any, index: number) => (
           <div key={index} className="rounded-lg border border-q-border bg-q-bg p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-q-text-secondary">Item #{index + 1}</span>
+            <div className="flex min-w-0 items-center justify-between gap-3">
+              <span className="min-w-0 flex-1 truncate text-xs font-bold text-q-text-secondary">Item #{index + 1}</span>
               <button
                 type="button"
                 onClick={() => setNestedData('showcase.items', items.filter((_: any, itemIndex: number) => itemIndex !== index))}
-                className="text-q-text-secondary hover:text-red-400"
+                className="flex-shrink-0 text-q-text-secondary hover:text-red-400"
               >
                 <Trash2 size={14} />
               </button>
@@ -137,7 +137,7 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
               onChange={(value) => setNestedData(`showcase.items.${index}.description`, value)}
               rows={2}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Input
                 label="Category"
                 value={item.category || ''}
@@ -149,7 +149,7 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
                 onChange={(event) => setNestedData(`showcase.items.${index}.meta`, event.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <I18nInput
                 label="Link text"
                 value={item.linkText}

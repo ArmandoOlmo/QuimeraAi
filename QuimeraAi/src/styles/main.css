@@ -3549,10 +3549,31 @@ span.rounded-full.w-4 {
   .md\:grid-cols-2,
   .md\:grid-cols-3,
   .md\:grid-cols-4,
+  .md\:grid-cols-5,
   .lg\:grid-cols-2,
   .lg\:grid-cols-3,
-  .lg\:grid-cols-4 {
+  .lg\:grid-cols-4,
+  .lg\:grid-cols-5,
+  .lg\:grid-cols-6 {
     grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Arbitrary grid column templates (e.g. lg:grid-cols-[1fr_2fr]) */
+  [class*="lg:grid-cols-["],
+  [class*="md:grid-cols-["],
+  [class*="sm:grid-cols-["] {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Showcase curated row: stack vertically in mobile preview */
+  .showcase-curated-track {
+    flex-direction: column !important;
+    overflow-x: visible !important;
+  }
+
+  .showcase-curated-track > article {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* Force mobile widths */
@@ -3824,10 +3845,27 @@ span.rounded-full.w-4 {
 .preview-mobile .md\:grid-cols-2,
 .preview-mobile .md\:grid-cols-3,
 .preview-mobile .md\:grid-cols-4,
+.preview-mobile .md\:grid-cols-5,
 .preview-mobile .lg\:grid-cols-2,
 .preview-mobile .lg\:grid-cols-3,
-.preview-mobile .lg\:grid-cols-4 {
+.preview-mobile .lg\:grid-cols-4,
+.preview-mobile .lg\:grid-cols-5,
+.preview-mobile .lg\:grid-cols-6,
+.preview-mobile [class*="lg:grid-cols-["],
+.preview-mobile [class*="md:grid-cols-["],
+.preview-mobile [class*="sm:grid-cols-["] {
   grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+
+/* Showcase curated row: vertical stack in mobile preview */
+.preview-mobile .showcase-curated-track {
+  flex-direction: column !important;
+  overflow-x: visible !important;
+}
+
+.preview-mobile .showcase-curated-track > article {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* Force column direction */

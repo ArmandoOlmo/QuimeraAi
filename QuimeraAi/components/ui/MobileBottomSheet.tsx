@@ -135,7 +135,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             {/* Bottom Sheet */}
             <div
                 ref={sheetRef}
-                className="fixed inset-x-0 bottom-0 z-50 md:hidden"
+                className="fixed inset-x-0 bottom-0 z-50 min-w-0 md:hidden"
                 style={{
                     transform: isOpen ? `translateY(${dragOffset}px)` : 'translateY(100%)',
                     transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -145,7 +145,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                 onMouseLeave={handleMouseLeave}
             >
                 <div
-                    className="bg-q-surface rounded-t-[var(--editor-control-sheet-radius)] shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+                    className="bg-q-surface rounded-t-[var(--editor-control-sheet-radius)] shadow-2xl max-h-[85vh] min-w-0 flex flex-col overflow-hidden"
                     style={{
                         boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.25)',
                     }}
@@ -163,8 +163,8 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                     </div>
 
                     {/* Header */}
-                    <div className="flex-shrink-0 px-4 pb-3 border-b border-q-border flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 px-4 pb-3 border-b border-q-border flex min-w-0 items-center justify-between gap-2">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
                             <button
                                 onClick={onClose}
                                 className="p-1.5 -ml-1.5 rounded-lg text-q-text-muted hover:text-foreground hover:bg-secondary transition-colors"
@@ -172,10 +172,10 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                             >
                                 <ChevronLeft size={20} />
                             </button>
-                            <div>
-                                <h2 className="font-semibold text-base text-foreground">{title}</h2>
+                            <div className="min-w-0">
+                                <h2 className="truncate font-semibold text-base text-foreground">{title}</h2>
                                 {subtitle && (
-                                    <p className="text-xs text-q-text-muted">{subtitle}</p>
+                                    <p className="truncate text-xs text-q-text-muted">{subtitle}</p>
                                 )}
                             </div>
                         </div>

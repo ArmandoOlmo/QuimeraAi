@@ -74,7 +74,7 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
                                 data-editor-control-tab
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    flex-1 min-h-9 flex items-center justify-center gap-2 px-3 py-1.5 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
+                                    min-w-0 flex-1 min-h-9 flex items-center justify-center gap-1.5 px-2 min-[380px]:gap-2 min-[380px]:px-3 py-1.5 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
                                     ${isActive
                                         ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
                                         : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'
@@ -82,8 +82,8 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
                                 `}
                                 title={tab.label}
                             >
-                                <Icon size={15} strokeWidth={1.8} />
-                                <span>{tab.label}</span>
+                                <Icon size={15} strokeWidth={1.8} className="flex-shrink-0" />
+                                <span className="hidden min-w-0 truncate min-[380px]:inline">{tab.label}</span>
                             </button>
                         );
                     })}

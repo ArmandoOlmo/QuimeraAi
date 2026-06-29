@@ -62,10 +62,11 @@ interface ImagePickerProps {
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSelectAsset, storeId, defaultOpen = false, onClose, onRemove, destination: propDestination, adminCategory, hideUrlInput = true, generationContext = 'general', initialTab = 'library', portalContainer, contentId, contentType }) => {
     const { t } = useTranslation();
-    const { activeProjectId, activeProject } = useProject();
+    const { activeProjectId, activeProject, isEditingTemplate } = useProject();
 
     // Determine the actual destination.
-    const requestedDestination = propDestination || (activeProject?.status === 'Template' ? 'admin' : 'user');
+    const isTemplateEditingContext = isEditingTemplate || activeProject?.status === 'Template';
+    const requestedDestination = propDestination || (isTemplateEditingContext ? 'admin' : 'user');
     const destination: 'user' | 'admin' | 'global' = requestedDestination;
 
     const filesCtx = useSafeFiles();
@@ -83,10 +84,10 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
     const [activeTab, setActiveTab] = useState<'library' | 'generate' | 'products'>(initialTab);
 
     const mediaCtx = useSafeMedia();
-    const effectiveAdminCategory = adminCategory || (activeProject?.status === 'Template' ? 'template' : undefined);
+    const effectiveAdminCategory = adminCategory || (isTemplateEditingContext ? 'template' : undefined);
     const defaultCategory = effectiveAdminCategory || 'other';
     const [selectedAdminCategory, setSelectedAdminCategory] = useState<string>(defaultCategory);
-    const activeAdminCategoryFilter = adminCategory || (activeProject?.status === 'Template' ? selectedAdminCategory : undefined);
+    const activeAdminCategoryFilter = adminCategory || (isTemplateEditingContext ? selectedAdminCategory : undefined);
 
     useEffect(() => {
         if (effectiveAdminCategory) setSelectedAdminCategory(effectiveAdminCategory);

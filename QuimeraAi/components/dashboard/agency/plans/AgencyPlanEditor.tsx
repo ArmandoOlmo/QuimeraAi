@@ -221,21 +221,21 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-q-text/50 backdrop-blur-sm p-4">
-            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl">
+            <div className="bg-q-surface rounded-xl border border-q-border w-full max-w-3xl max-h-[92dvh] min-w-0 flex flex-col shadow-xl">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-q-border">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 p-4 sm:p-6 border-b border-q-border">
+                    <div className="flex min-w-0 items-center gap-3">
                         <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center"
+                            className="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center"
                             style={{ backgroundColor: `${formData.color || '#3b82f6'}20` }}
                         >
                             <Package className="w-5 h-5" style={{ color: formData.color || '#3b82f6' }} />
                         </div>
-                        <div>
-                            <h2 className="text-xl font-semibold text-foreground">
+                        <div className="min-w-0">
+                            <h2 className="truncate text-lg font-semibold text-foreground sm:text-xl">
                                 {isNewPlan ? 'Crear Nuevo Plan' : `Editar: ${plan?.name}`}
                             </h2>
-                            <p className="text-sm text-q-text-muted">
+                            <p className="truncate text-sm text-q-text-muted">
                                 {isNewPlan ? 'Define un plan de servicio para tus clientes' : 'Modifica la configuración del plan'}
                             </p>
                         </div>

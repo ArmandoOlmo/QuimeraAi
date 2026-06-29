@@ -159,24 +159,24 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
     };
 
     return (
-        <div className="flex flex-col h-screen bg-q-bg">
+        <div className="flex h-[100dvh] min-w-0 flex-col overflow-hidden bg-q-bg">
             {/* Header */}
- <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
-                <div className="flex items-center gap-4">
+ <header className="admin-dashboard-topbar quimera-dashboard-header-bar h-14 min-w-0 flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-4">
                     <HeaderBackButton onClick={onClose} label={t('common.back', 'Volver')} className="border-q-border/60 bg-q-surface/60 text-q-text-secondary hover:bg-q-surface-overlay/40 hover:text-q-text focus:ring-q-accent/25" />
-                    <div className="flex items-center gap-2">
-                        <Shield className="quimera-dashboard-header-icon" size={20} strokeWidth={2} />
-                        <h1 className="text-lg font-semibold text-q-text">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <Shield className="flex-shrink-0 quimera-dashboard-header-icon" size={20} strokeWidth={2} />
+                        <h1 className="truncate text-base font-semibold text-q-text sm:text-lg">
                             {t(`contentManagement.legal.${pageType}`, LEGAL_PAGE_LABELS[pageType])}
                         </h1>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-3">
                     {hasChanges && (
-                        <span className="text-xs text-q-warning font-medium">{t('contentManagement.legal.unsavedChanges', 'Cambios sin guardar')}</span>
+                        <span className="hidden text-xs text-q-warning font-medium md:inline">{t('contentManagement.legal.unsavedChanges', 'Cambios sin guardar')}</span>
                     )}
-                    <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-secondary rounded-lg p-1 text-xs font-medium">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
+                    <div className="hidden items-center bg-secondary rounded-lg p-1 text-xs font-medium sm:flex">
                         <button
                             onClick={() => setFormData(prev => ({ ...prev, language: 'es' }))}
                             className={`px-3 py-1.5 rounded-md transition-all ${formData.language === 'es' ? 'bg-q-bg shadow text-foreground' : 'text-q-text-muted hover:text-foreground'}`}
@@ -203,7 +203,7 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
             </header>
 
             {/* Content */}
-            <main className="flex-1 overflow-y-auto p-6 bg-[#f6f6f7] dark:bg-q-bg">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#f6f6f7] dark:bg-q-bg">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Basic Info */}
                     <div className="bg-q-surface border border-q-border rounded-xl p-6">
@@ -415,5 +415,4 @@ const LegalPageEditor: React.FC<LegalPageEditorProps> = ({ pageType, onClose }) 
 };
 
 export default LegalPageEditor;
-
 

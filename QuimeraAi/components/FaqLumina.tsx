@@ -87,12 +87,12 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                             >
                                 <button
                                     onClick={() => toggleFaq(idx)}
-                                    className="w-full text-left p-6 flex items-center justify-between focus:outline-none font-button button-caps"
+                                    className="flex w-full min-w-0 items-center justify-between gap-4 text-left p-4 focus:outline-none font-button button-caps sm:p-6"
                                 >
-                                    <LuminaTypography variant="heading-sm" className="font-header" customColor={colors?.heading}>
+                                    <LuminaTypography variant="heading-sm" className="min-w-0 flex-1 break-words font-header" customColor={colors?.heading}>
                                         {faq.question}
                                     </LuminaTypography>
-                                    <div className={`transform transition-transform duration-300 text-[#10B981] ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+                                    <div className={`flex-shrink-0 transform transition-transform duration-300 text-[#10B981] ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="6 9 12 15 18 9" />
                                         </svg>
@@ -102,7 +102,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                                 <div 
                                     className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                                 >
-                                    <div className="p-6 pt-0 border-t border-[#10B981]/10 mt-2 font-body">
+                                    <div className="p-4 pt-0 border-t border-[#10B981]/10 mt-2 font-body sm:p-6 sm:pt-0">
                                         <LuminaTypography variant="body-md" className="opacity-80 font-body leading-relaxed pt-4" customColor={colors?.text}>
                                             {faq.answer}
                                         </LuminaTypography>

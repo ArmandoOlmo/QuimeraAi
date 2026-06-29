@@ -52,11 +52,11 @@ export const I18nInput = ({ label, value, onChange, className, ...props }: Omit<
 
   return (
     <div className={`${controlFieldClass} ${className || ''}`}>
-      <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
+      <div className={`flex min-w-0 items-center gap-2 ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
         {label ? (
-          <label className={controlLabelClass.replace('mb-2', 'mb-0')}>{label}</label>
+          <label className={`${controlLabelClass.replace('mb-2', 'mb-0')} min-w-0 flex-1`}>{label}</label>
         ) : <div />}
-        <div className="flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
+        <div className="flex flex-shrink-0 bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
           <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>ES</button>
           <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>EN</button>
         </div>
@@ -84,11 +84,11 @@ export const I18nTextArea = ({ label, value, onChange, className, ...props }: Om
 
   return (
     <div className={`${controlFieldClass} ${className || ''}`}>
-      <div className={`flex items-center ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
+      <div className={`flex min-w-0 items-center gap-2 ${label ? 'justify-between mb-1.5' : 'justify-end mb-1'}`}>
         {label ? (
-          <label className={controlLabelClass.replace('mb-2', 'mb-0')}>{label}</label>
+          <label className={`${controlLabelClass.replace('mb-2', 'mb-0')} min-w-0 flex-1`}>{label}</label>
         ) : <div />}
-        <div className="flex bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
+        <div className="flex flex-shrink-0 bg-[var(--editor-control-surface-muted)] rounded-[var(--editor-control-radius-sm)] overflow-hidden border border-[var(--editor-control-border)]">
           <button type="button" onClick={() => setActiveLang('es')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'es' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>ES</button>
           <button type="button" onClick={() => setActiveLang('en')} className={`px-2 py-1 text-[10px] font-bold transition-colors ${activeLang === 'en' ? 'bg-q-accent text-q-text-on-accent' : 'text-q-text-secondary hover:bg-q-surface/80'}`}>EN</button>
         </div>
@@ -265,8 +265,8 @@ export const Select = ({ label, options, groups, value, onChange, className, noM
 };
 
 export const ToggleControl = ({ label, checked, onChange }: { label?: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-  <div data-editor-control-row className={`flex items-center ${label ? 'justify-between gap-3 rounded-[var(--editor-control-radius)] py-2 mb-1' : ''}`}>
-    {label && <label className={controlLabelClass.replace('block ', '').replace('mb-2', 'mb-0')}>{label}</label>}
+  <div data-editor-control-row className={`flex min-w-0 items-center ${label ? 'justify-between gap-3 rounded-[var(--editor-control-radius)] py-2 mb-1' : ''}`}>
+    {label && <label className={`${controlLabelClass.replace('block ', '').replace('mb-2', 'mb-0')} min-w-0 flex-1`}>{label}</label>}
     <button
       type="button"
       role="switch"

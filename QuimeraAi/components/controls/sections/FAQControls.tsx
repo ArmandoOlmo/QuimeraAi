@@ -72,7 +72,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
       {/* Spacing */}
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <PaddingSelector label={t('controls.vertical')} value={data.faq.paddingY || 'md'} onChange={(v) => setNestedData('faq.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.faq.paddingX || 'md'} onChange={(v) => setNestedData('faq.paddingX', v)} />
         </div>

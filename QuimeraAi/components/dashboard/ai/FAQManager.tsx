@@ -120,18 +120,18 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                             rows={4}
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                         <button
                             onClick={(editingId !== null || editingIndex !== null) ? handleUpdate : handleAdd}
                             disabled={!formData.question.trim() || !formData.answer.trim()}
-                            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="flex min-w-0 flex-1 items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Save size={16} />
                             {(editingId !== null || editingIndex !== null) ? t('aiAssistant.faq.update') : t('aiAssistant.faq.add')} FAQ
                         </button>
                         <button
                             onClick={handleCancel}
-                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                         >
                             <X size={16} />
                             {t('aiAssistant.faq.cancel')}
@@ -154,13 +154,13 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                             return (
                             <div
                                 key={faq.id || `${question}-${index}`}
-                                className="bg-q-surface border border-q-border rounded-lg p-4 hover:border-primary/50 transition-colors group"
+                                className="min-w-0 bg-q-surface border border-q-border rounded-lg p-4 hover:border-primary/50 transition-colors group"
                             >
-                                <div className="flex items-start justify-between gap-3 mb-2">
-                                    <h5 className="text-sm font-semibold text-foreground">
+                                <div className="flex min-w-0 items-start justify-between gap-3 mb-2">
+                                    <h5 className="min-w-0 flex-1 break-words text-sm font-semibold text-foreground">
                                         {question}
                                     </h5>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                    <div className="flex gap-1 opacity-100 transition-opacity flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100">
                                         <button
                                             onClick={() => handleEdit(faq, index)}
                                             className="p-1.5 rounded hover:bg-q-accent/10 dark:hover:bg-q-accent/12 text-q-accent dark:text-q-accent transition-colors"
@@ -177,7 +177,7 @@ const FAQManager: React.FC<FAQManagerProps> = ({ faqs, onFAQsChange }) => {
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-xs text-q-text-muted leading-relaxed">
+                                <p className="break-words text-xs text-q-text-muted leading-relaxed">
                                     {answer}
                                 </p>
                             </div>

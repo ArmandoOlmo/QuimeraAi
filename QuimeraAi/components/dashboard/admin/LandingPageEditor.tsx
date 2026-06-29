@@ -10,7 +10,7 @@ import {
     Menu as MenuIcon, Save, Eye, EyeOff, Settings, Layers, Plus,
     GripVertical, Trash2, ChevronDown, ChevronUp, Monitor,
     Smartphone, Loader2, Check, Type, Layout,
-    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText, LayoutTemplate, MessageSquareCode, Image as ImageIcon, Workflow, Globe, ExternalLink, Moon, Wand2, PaintBucket, Users, CalendarCheck, Link as LinkIcon, Send
+    Sparkles, X, RefreshCw, Palette, PanelRightClose, PanelRightOpen, FileText, LayoutTemplate, MessageSquareCode, Image as ImageIcon, Workflow, Globe, ExternalLink, Moon, Wand2, PaintBucket, Users, CalendarCheck, Link as LinkIcon, Send, SlidersHorizontal
 } from 'lucide-react';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { useUndoRedo, UndoableAction } from '../../../hooks/useUndoRedo';
@@ -38,6 +38,7 @@ import { CSS } from '@dnd-kit/utilities';
 import DashboardSidebar from '../DashboardSidebar';
 import LandingPageControls from './LandingPageControls';
 import Modal from '../../ui/Modal';
+import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import { GlobalColors } from '../../../types';
 import { isRetiredDesignSuiteSection } from '../../../data/retiredSuites';
 import { generateHeroWaveGradientColors, contrastText } from '../../ui/GlobalStylesControl';
@@ -58,6 +59,8 @@ interface LandingPageEditorProps {
 }
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
+const isMobileEditorViewport = () =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 const isContentSection = (section: LandingSection) =>
     section.type !== 'header' &&
     section.type !== 'footer' &&
@@ -267,6 +270,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
     const [isPreviewVisible, setIsPreviewVisible] = useState(true);
     const [isControlsPanelOpen, setIsControlsPanelOpen] = useState(true);
+    const [isMobileStructureOpen, setIsMobileStructureOpen] = useState(false);
+    const [isMobileControlsOpen, setIsMobileControlsOpen] = useState(false);
     const [showAddComponent, setShowAddComponent] = useState(false);
 
     // Group expansion state
@@ -340,14 +345,17 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 if (targetId === 'header') {
                     setSelectedStructureItem('navigation');
                     setSelectedSection(null);
+                    if (isMobileEditorViewport()) setIsMobileControlsOpen(true);
                 } else if (targetId === 'footer') {
                     setSelectedStructureItem('footerGlobal');
                     setSelectedSection(null);
+                    if (isMobileEditorViewport()) setIsMobileControlsOpen(true);
                 } else {
                     const section = sections.find(s => s.type === targetId || s.id === targetId || s.id.includes(targetId));
                     if (section) {
                         setSelectedSection(section.id);
                         setSelectedStructureItem(null);
+                        if (isMobileEditorViewport()) setIsMobileControlsOpen(true);
                     }
                 }
             }
@@ -1324,6 +1332,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const handleSectionSelect = useCallback((sectionId: string, _sectionType: string) => {
         setSelectedSection(sectionId);
         setSelectedStructureItem(null); // Clear structure selection
+        setIsMobileStructureOpen(false);
+        if (isMobileEditorViewport()) setIsMobileControlsOpen(true);
         scrollToSection(sectionId);
     }, [scrollToSection]);
 
@@ -1331,6 +1341,8 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
     const handleStructureSelect = useCallback((itemId: string) => {
         setSelectedStructureItem(itemId);
         setSelectedSection(null); // Clear section selection
+        setIsMobileStructureOpen(false);
+        if (isMobileEditorViewport()) setIsMobileControlsOpen(true);
 
         // Scroll to corresponding section if applicable
         const structureItem = STRUCTURE_ITEMS.find(i => i.id === itemId);
@@ -1341,14 +1353,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-q-bg">
+            <div className="flex h-[100dvh] items-center justify-center bg-q-bg">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-q-bg text-foreground overflow-hidden">
+        <div className="flex h-[100dvh] min-w-0 bg-q-bg text-foreground overflow-hidden">
             {/* Sidebar */}
             <DashboardSidebar isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
@@ -1362,6 +1374,14 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                             className="lg:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
                         >
                             <MenuIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setIsMobileStructureOpen(true)}
+                            className="md:hidden h-10 w-10 flex items-center justify-center text-q-text-muted hover:text-foreground hover:bg-secondary/80 rounded-xl transition-colors"
+                            title={t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}
+                            aria-label={t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}
+                        >
+                            <SlidersHorizontal className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Layout className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
@@ -1461,7 +1481,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                 {/* Main Content - Three Panel Layout */}
                 <main className="flex-1 flex overflow-hidden relative">
                     {/* Left Panel - Grouped Component List */}
-                    <div className="w-64 lg:w-72 border-r border-q-border bg-q-surface/50 flex flex-col overflow-hidden">
+                    <div className="hidden w-64 lg:w-72 border-r border-q-border bg-q-surface/50 md:flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-q-border flex items-center justify-between">
                             <h2 className="font-semibold text-sm">{t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}</h2>
                             <button
@@ -1609,7 +1629,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     {(currentStructureSection || currentSection) && (
                         <button
                             onClick={() => setIsControlsPanelOpen(!isControlsPanelOpen)}
-                            className={`absolute top-1/2 -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg ${isControlsPanelOpen
+                            className={`absolute top-1/2 hidden -translate-y-1/2 z-30 p-2 bg-q-surface border border-q-border shadow-lg hover:bg-accent transition-all duration-300 overflow-hidden rounded-lg md:block ${isControlsPanelOpen
                                 ? (isPreviewVisible ? 'right-[calc(20rem-18px)] lg:right-[calc(24rem-18px)]' : 'right-[calc(42rem-18px)]')
                                 : 'right-0 rounded-l-lg rounded-r-none'
                                 }`}
@@ -1621,7 +1641,7 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
 
                     {/* Right Panel - Component Controls - Only visible when a section is selected */}
                     {(currentStructureSection || currentSection) && (
-                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme border-l border-q-border bg-q-bg flex flex-col overflow-hidden transition-all duration-300`}>
+                        <div className={`${isControlsPanelOpen ? (isPreviewVisible ? 'w-80 lg:w-96' : 'flex-1 max-w-2xl mx-auto') : 'w-0 overflow-hidden'} editor-theme hidden border-l border-q-border bg-q-bg md:flex flex-col overflow-hidden transition-all duration-300`}>
                             {/* Structure Item Controls (Colores, Tipografía, etc.) */}
                             {currentStructureSection ? (
                                 <>
@@ -1671,6 +1691,142 @@ const LandingPageEditor: React.FC<LandingPageEditorProps> = ({ onBack }) => {
                     )}
                 </main>
             </div>
+
+            <MobileBottomSheet
+                isOpen={isMobileStructureOpen}
+                onClose={() => setIsMobileStructureOpen(false)}
+                title={t('landingEditor.pageStructure', 'ESTRUCTURA DE PÁGINA')}
+            >
+                <div className="flex max-h-[75vh] min-h-[520px] min-w-0 flex-col overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-q-border p-3">
+                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-muted">
+                            {t('landingEditor.componentsTitle', 'Componentes')}
+                        </p>
+                        <button
+                            onClick={() => setShowAddComponent(true)}
+                            className="h-8 w-8 flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-colors"
+                            title={t('landingEditor.addComponent', 'Añadir componente')}
+                        >
+                            <Plus size={16} />
+                        </button>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                        <div className="mb-4">
+                            <button
+                                onClick={() => setIsStructureExpanded(!isStructureExpanded)}
+                                className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-q-accent uppercase tracking-wider hover:bg-structure-control-hover hover:text-q-text rounded-[var(--q-radius-md)] transition-all"
+                            >
+                                <ChevronDown size={14} className={`transition-transform ${isStructureExpanded ? '' : '-rotate-90'}`} />
+                                <Layers size={14} />
+                                <span>{t('landingEditor.structure', 'ESTRUCTURA')}</span>
+                                <span className="text-q-text-muted">({STRUCTURE_ITEMS.length})</span>
+                            </button>
+
+                            {isStructureExpanded && (
+                                <div className="mt-1 space-y-0.5 pl-2">
+                                    {STRUCTURE_ITEMS.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => handleStructureSelect(item.id)}
+                                            className={`w-full flex items-center gap-2 p-2.5 rounded-[var(--q-radius-md)] cursor-pointer transition-all text-left border ${selectedStructureItem === item.id
+                                                ? 'border-q-accent bg-q-accent text-q-text-on-accent shadow-[var(--shadow-card)] dark:bg-q-accent/10 dark:text-q-accent dark:border-q-accent/30 dark:shadow-none black:bg-q-accent/10 black:text-q-accent black:border-q-accent/30 black:shadow-none'
+                                                : 'border-transparent hover:border-structure-control-border hover:bg-structure-control-hover hover:text-q-text'
+                                                }`}
+                                        >
+                                            {React.createElement(item.icon, {
+                                                size: 16,
+                                                className: selectedStructureItem === item.id
+                                                    ? 'text-q-text-on-accent dark:text-q-accent black:text-q-accent flex-shrink-0'
+                                                    : 'text-q-text-muted flex-shrink-0',
+                                            })}
+                                            <span className="min-w-0 flex-1 truncate text-sm font-medium">{t(`landingEditor.components.${item.id}`, item.id)}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <button
+                                onClick={() => setIsContentExpanded(!isContentExpanded)}
+                                className="w-full flex items-center gap-2 px-2 py-2 text-xs font-bold text-q-accent uppercase tracking-wider hover:bg-structure-control-hover hover:text-q-text rounded-[var(--q-radius-md)] transition-all"
+                            >
+                                <ChevronDown size={14} className={`transition-transform ${isContentExpanded ? '' : '-rotate-90'}`} />
+                                <FileText size={14} />
+                                <span>{t('landingEditor.content', 'CONTENIDO')}</span>
+                                <span className="text-q-text-muted">({sections.filter(isContentSection).length})</span>
+                            </button>
+
+                            {isContentExpanded && (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragStart={(e) => setActiveDragId(e.active.id as string)}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={sections.filter(isContentSection).map(s => s.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="mt-1 space-y-0.5 pl-2">
+                                            {sections.filter(isContentSection).map((section) => (
+                                                <SortableSectionItem
+                                                    key={section.id}
+                                                    section={section}
+                                                    isActive={selectedSection === section.id}
+                                                    onSelect={() => handleSectionSelect(section.id, section.type)}
+                                                    onToggleVisibility={() => toggleSection(section.id)}
+                                                    onDelete={() => deleteSection(section.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+
+                                    <DragOverlay>
+                                        {activeDragId && (
+                                            <DragOverlayItem
+                                                section={sections.find(s => s.id === activeDragId)!}
+                                            />
+                                        )}
+                                    </DragOverlay>
+                                </DndContext>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </MobileBottomSheet>
+
+            <MobileBottomSheet
+                isOpen={isMobileControlsOpen && Boolean(currentStructureSection || currentSection)}
+                onClose={() => setIsMobileControlsOpen(false)}
+                title={currentStructureSection ? currentStructureLabel : (currentSection ? t(`landingEditor.components.${currentSection.type}`, currentSection.type) : '')}
+                subtitle={currentStructureSection ? t('landingEditor.edit', 'Editar') : t('landingEditor.editSection', 'Editar sección')}
+            >
+                <div data-editor-controls-surface="template-mobile" className="quimera-clean-controls max-h-[75vh] min-h-[520px] min-w-0 overflow-y-auto p-4">
+                    {currentStructureSection ? (
+                        <LandingPageControls
+                            key={currentStructureSection.id}
+                            section={currentStructureSection}
+                            isStructureItem={true}
+                            structureItemId={selectedStructureItem || undefined}
+                            onUpdateSection={updateSectionData}
+                            onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                            allSections={sections}
+                            onApplyGlobalColors={applyGlobalColorsToAllSections}
+                            portalContainer={previewOverlayRef.current}
+                        />
+                    ) : currentSection ? (
+                        <LandingPageControls
+                            section={currentSection}
+                            onUpdateSection={updateSectionData}
+                            onRefreshPreview={() => setPreviewKey(prev => prev + 1)}
+                            allSections={sections}
+                            onApplyGlobalColors={applyGlobalColorsToAllSections}
+                            portalContainer={previewOverlayRef.current}
+                        />
+                    ) : null}
+                </div>
+            </MobileBottomSheet>
 
             {/* Add Component Modal */}
             {showAddComponent && (

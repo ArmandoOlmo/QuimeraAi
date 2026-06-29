@@ -32,8 +32,8 @@ const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 const ToggleControl: React.FC<{ label?: string; checked: boolean; onChange: (checked: boolean) => void; }> = ({ label, checked, onChange }) => (
-    <div className={`flex items-center ${label ? 'justify-between' : 'justify-start'}`}>
-        {label && <Label>{label}</Label>}
+    <div className={`flex min-w-0 items-center gap-3 ${label ? 'justify-between' : 'justify-start'}`}>
+        {label && <label className="min-w-0 flex-1 text-sm font-medium text-q-text-secondary">{label}</label>}
         <button
             type="button"
             role="switch"
@@ -550,7 +550,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <AlignJustify size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
@@ -585,11 +585,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <Palette size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Section Colors</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Background" value={s.colors?.background || '#0f172a'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Section Title" value={s.colors?.heading || '#F9FAFB'} onChange={v => handleColorChange('heading', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Section Description" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />
                     <ColorControl label="Accent" value={s.colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                 </div>
@@ -598,11 +598,11 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 {/* ========== CARD COLORS ========== */}
                 <h4 className="font-semibold text-q-text text-sm">Card Colors</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Card Background" value={s.colors?.cardBackground || '#1e293b'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Title" value={s.colors?.cardHeading || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Card Text" value={s.colors?.cardText || '#94a3b8'} onChange={v => handleColorChange('cardText', v)} />
                     <ColorControl label="Border Color" value={s.colors?.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
@@ -835,7 +835,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <AlignJustify size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
@@ -857,19 +857,19 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <Palette size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Colors</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<ColorControl label="Background" value={s.colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />}
                     {<ColorControl label="Body Text" value={s.colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<ColorControl label="Heading Color" value={s.colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />}
                     {<ColorControl label="Description Color" value={s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('description', v)} />}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<ColorControl label="Accent" value={s.colors?.accent || 'transparent'} onChange={v => handleColorChange('accent', v)} />}
                     {<ColorControl label="Border Color" value={s.colors?.borderColor || 'transparent'} onChange={v => handleColorChange('borderColor', v)} />}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {<ColorControl label="Card Background" value={s.colors?.cardBackground || '#1f2937'} onChange={v => handleColorChange('cardBackground', v)} />}
                     {<ColorControl label="Card Title Color" value={s.colors?.subtitleColor || s.colors?.description || '#94a3b8'} onChange={v => handleColorChange('subtitleColor', v)} />}
                 </div>
@@ -886,7 +886,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <AlignJustify size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
@@ -961,7 +961,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <AlignJustify size={16} className="text-q-accent" />
                     <h4 className="font-semibold text-q-text">Layout</h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
@@ -1069,12 +1069,12 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </AppSelect>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'lg'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FontSizeControl label="Title Size" value={s.titleFontSize || 'lg'} onChange={v => handleStyleChange('titleFontSize', v)} />
                     <FontSizeControl label="Description Size" value={s.descriptionFontSize || 'md'} onChange={v => handleStyleChange('descriptionFontSize', v)} />
                 </div>
@@ -1093,7 +1093,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 <div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
                         <Label>Image Height</Label>
                         <span className="text-sm font-medium text-q-text">{s.imageHeight || 340}px</span>
                     </div>
@@ -1119,7 +1119,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 <hr className="border-q-border/50" />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Background" value={colors.background || '#0f172a'} onChange={value => handleColorChange('background', value)} />
                     <ColorControl label="Heading" value={colors.heading || '#f8fafc'} onChange={value => handleColorChange('heading', value)} />
                     <ColorControl label="Text" value={colors.text || '#cbd5e1'} onChange={value => handleColorChange('text', value)} />
@@ -1180,7 +1180,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
@@ -1857,7 +1857,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
                 {usesHeaderPanelColors && (
                     <>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <ColorControl label="Surface" value={colors?.surface || colors?.background || '#ffffff'} onChange={v => handleColorChange('surface', v)} />
                             <ColorControl label="Surface Alt" value={colors?.surfaceAlt || colors?.surface || colors?.background || '#ffffff'} onChange={v => handleColorChange('surfaceAlt', v)} />
                         </div>
@@ -2386,7 +2386,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
                 {/* --- STANDARD CONTROLS --- */}
                 <h4 className="font-semibold text-q-text">Layout & Spacing</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
@@ -2394,31 +2394,31 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 <hr className="border-q-border/50" />
 
                 <h4 className="font-semibold text-q-text">Colors</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Background" value={colors?.background || '#000000'} onChange={v => handleColorChange('background', v)} />
                     <ColorControl label="Text" value={colors?.text || '#ffffff'} onChange={v => handleColorChange('text', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Heading" value={colors?.heading || '#ffffff'} onChange={v => handleColorChange('heading', v)} />
                     <ColorControl label="Description" value={colors?.description || '#cbd5e1'} onChange={v => handleColorChange('description', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Accent" value={colors?.accent || '#4f46e5'} onChange={v => handleColorChange('accent', v)} />
                     <ColorControl label="Border Color" value={colors?.borderColor || '#334155'} onChange={v => handleColorChange('borderColor', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Card Background" value={colors?.cardBackground || '#111827'} onChange={v => handleColorChange('cardBackground', v)} />
                     <ColorControl label="Card Title" value={colors?.cardHeading || colors?.text || '#ffffff'} onChange={v => handleColorChange('cardHeading', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Card Text" value={colors?.cardText || colors?.description || '#cbd5e1'} onChange={v => handleColorChange('cardText', v)} />
                     <ColorControl label="Panel" value={colors?.panelBackground || colors?.cardBackground || '#111827'} onChange={v => handleColorChange('panelBackground', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Active" value={colors?.activeBackground || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('activeBackground', v)} />
                     <ColorControl label="Active Text" value={colors?.activeText || colors?.heading || '#ffffff'} onChange={v => handleColorChange('activeText', v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ColorControl label="Icon Fill" value={colors?.iconBackground || colors?.accent || '#4f46e5'} onChange={v => handleColorChange('iconBackground', v)} />
                 </div>
 
@@ -2426,7 +2426,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 {gradientVariants.includes(currentVariant) && (
                     <div className="space-y-3 p-3 bg-q-surface-overlay/20 rounded-md animate-fade-in-up">
                         <h5 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider">Gradient Colors</h5>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <ColorControl label="Gradient Start" value={colors?.gradientStart || '#4f46e5'} onChange={v => handleColorChange('gradientStart', v)} />
                             <ColorControl label="Gradient End" value={colors?.gradientEnd || '#10b981'} onChange={v => handleColorChange('gradientEnd', v)} />
                         </div>

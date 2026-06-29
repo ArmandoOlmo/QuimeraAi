@@ -60,14 +60,14 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
             </div>
 
             <div className="bg-q-surface p-4 rounded-lg border border-q-border space-y-4">
-                <label className="block text-xs font-bold text-q-text-secondary uppercase flex items-center gap-2 mb-4">
-                    <MessageCircle size={14} /> {t('editor.controls.questionsList', 'Preguntas Frecuentes')}
+                <label className="flex min-w-0 items-center gap-2 text-xs font-bold text-q-text-secondary uppercase mb-4">
+                    <MessageCircle size={14} className="flex-shrink-0" /> <span className="min-w-0 truncate">{t('editor.controls.questionsList', 'Preguntas Frecuentes')}</span>
                 </label>
                 
                 {faqs.map((faq: any, index: number) => (
-                    <div key={index} className="bg-q-bg p-4 rounded-lg border border-q-border mb-4 space-y-3 relative">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-q-accent uppercase">Pregunta {index + 1}</span>
+                    <div key={index} className="min-w-0 bg-q-bg p-4 rounded-lg border border-q-border mb-4 space-y-3 relative">
+                        <div className="flex min-w-0 justify-between items-center gap-3 mb-2">
+                            <span className="min-w-0 flex-1 truncate text-xs font-bold text-q-accent uppercase">Pregunta {index + 1}</span>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -75,7 +75,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                                     newFaqs.splice(index, 1);
                                     setNestedData('faqNeon.faqs', newFaqs);
                                 }}
-                                className="text-red-400 hover:text-red-300 transition-colors"
+                                className="flex-shrink-0 text-red-400 hover:text-red-300 transition-colors"
                                 title={t('editor.controls.remove', 'Eliminar')}
                             >
                                 <Trash2 size={14} />
