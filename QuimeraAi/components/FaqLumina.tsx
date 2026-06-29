@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuminaBackground, LuminaPanel, LuminaTypography } from './ui/lumina';
 import { sanitizeHtml } from '../utils/sanitize';
+import { getCardPaddingStyle, type CardPaddingFields } from '../utils/cardPadding';
 
 import { LuminaAnimationConfig } from '../types/components';
 
@@ -10,7 +11,7 @@ export interface LuminaFaq {
     answer: string;
 }
 
-export interface FaqLuminaData {
+export interface FaqLuminaData extends CardPaddingFields {
     headline: string;
     subheadline?: string;
     faqs: LuminaFaq[];
@@ -31,7 +32,12 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
     faqs,
     glassEffect = true,
     luminaAnimation,
-    colors
+    colors,
+    cardPadding,
+    cardPaddingTop,
+    cardPaddingRight,
+    cardPaddingBottom,
+    cardPaddingLeft
 }) => {
     headline = headline || 'Frequently Asked Questions';
     subheadline = subheadline || 'Find answers to common questions about our platform.';
@@ -43,6 +49,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
     ];
     const { t } = useTranslation();
     const [openIndex, setOpenIndex] = useState<number | null>(0);
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
 
     const toggleFaq = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
@@ -88,6 +95,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                                 <button
                                     onClick={() => toggleFaq(idx)}
                                     className="flex w-full min-w-0 items-center justify-between gap-4 text-left p-4 focus:outline-none font-button button-caps sm:p-6"
+                                    style={cardPaddingStyle}
                                 >
                                     <LuminaTypography variant="heading-sm" className="min-w-0 flex-1 break-words font-header" customColor={colors?.heading}>
                                         {faq.question}
@@ -102,7 +110,7 @@ const FaqLumina: React.FC<FaqLuminaData> = ({
                                 <div 
                                     className={`transition-all duration-300 overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                                 >
-                                    <div className="p-4 pt-0 border-t border-[#10B981]/10 mt-2 font-body sm:p-6 sm:pt-0">
+                                    <div className="p-4 pt-0 border-t border-[#10B981]/10 mt-2 font-body sm:p-6 sm:pt-0" style={cardPaddingStyle}>
                                         <LuminaTypography variant="body-md" className="opacity-80 font-body leading-relaxed pt-4" customColor={colors?.text}>
                                             {faq.answer}
                                         </LuminaTypography>

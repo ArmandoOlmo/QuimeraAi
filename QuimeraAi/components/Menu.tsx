@@ -7,6 +7,7 @@ import { isPendingImage } from '../utils/imagePlaceholders';
 import { isLightColor, hexToRgba } from '../utils/colorUtils';
 import CornerGradient from './ui/CornerGradient';
 import { useDesignTokens } from '../hooks/useDesignTokens';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 import { 
     Star, Award, ChefHat,
     // Development & Technology
@@ -235,7 +236,8 @@ const ClassicMenuCard: React.FC<{
     index: number;
     animationType?: AnimationType;
     enableAnimation?: boolean;
-}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    cardPaddingStyle?: React.CSSProperties;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     const cardBg = colors?.cardBackground || 'rgba(30, 41, 59, 0.5)';
     const hasLightBackground = isBackgroundLight(cardBg);
@@ -278,7 +280,7 @@ const ClassicMenuCard: React.FC<{
             />
         </div>
         
-        <div className="p-6">
+        <div className="p-6" style={cardPaddingStyle}>
             <div className="flex justify-between items-start mb-3">
                 <h3 className="text-xl font-bold font-header flex-1" style={{ color: titleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
                     {item.name}
@@ -308,7 +310,7 @@ const ClassicMenuCard: React.FC<{
 // =============================================================================
 // VARIANT 2: MODERN GRID (Bento-style with side images)
 // =============================================================================
-const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; index: number }> = ({ item, colors, borderRadius, index }) => {
+const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; index: number; cardPaddingStyle?: React.CSSProperties }> = ({ item, colors, borderRadius, index, cardPaddingStyle }) => {
     const isWide = index % 3 === 0;
     const cardBg = colors?.cardBackground || 'rgba(30, 41, 59, 0.5)';
     
@@ -354,7 +356,7 @@ const ModernGridCard: React.FC<{ item: any; colors: any; borderRadius: string; i
                 </div>
                 
                 {/* Content Section */}
-                <div className={`p-6 flex flex-col justify-between ${isWide ? 'w-1/2' : 'w-full'}`}>
+                <div className={`p-6 flex flex-col justify-between ${isWide ? 'w-1/2' : 'w-full'}`} style={cardPaddingStyle}>
                     <div>
                         {item.category && (
                             <span 
@@ -403,7 +405,8 @@ const FullImageMenuCard: React.FC<{
     textAlignment?: 'left' | 'center' | 'right';
     animationType?: AnimationType;
     enableAnimation?: boolean;
-}> = ({ item, colors, borderRadius, index, textAlignment = 'center', animationType = 'fade-in-up', enableAnimation = true }) => {
+    cardPaddingStyle?: React.CSSProperties;
+}> = ({ item, colors, borderRadius, index, textAlignment = 'center', animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     
     const overlayTextColor = '#ffffff';
@@ -463,7 +466,7 @@ const FullImageMenuCard: React.FC<{
             )}
             
             {/* Content at Bottom */}
-            <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${alignmentClasses[textAlignment]} z-10`}>
+            <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${alignmentClasses[textAlignment]} z-10`} style={cardPaddingStyle}>
                 {/* Price */}
                 <span 
                     className="text-3xl font-black mb-2 font-header drop-shadow-lg" 
@@ -498,7 +501,8 @@ const ElegantListCard: React.FC<{
     index: number;
     animationType?: AnimationType;
     enableAnimation?: boolean;
-}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    cardPaddingStyle?: React.CSSProperties;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     const cardBg = colors?.cardBackground || 'transparent';
     
@@ -511,6 +515,7 @@ const ElegantListCard: React.FC<{
         <div 
             className={`group flex flex-col md:flex-row gap-6 p-6 border transition-all duration-300 hover:bg-white/5 ${borderRadius} ${animationClass}`}
             style={{ 
+                ...cardPaddingStyle,
                 borderColor: colors?.borderColor,
                 backgroundColor: cardBg,
                 animationDelay: getAnimationDelay(index, 0.08)
@@ -595,7 +600,8 @@ const TextOnlyMenuCard: React.FC<{
     index: number;
     animationType?: AnimationType;
     enableAnimation?: boolean;
-}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    cardPaddingStyle?: React.CSSProperties;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     const cardBg = colors?.cardBackground || 'transparent';
     
@@ -608,6 +614,7 @@ const TextOnlyMenuCard: React.FC<{
         <div 
             className={`group flex flex-col gap-4 p-6 border-b border-dashed transition-all duration-300 hover:bg-white/5 ${animationClass}`}
             style={{ 
+                ...cardPaddingStyle,
                 borderColor: hexToRgba(colors?.borderColor || '#ffffff', 0.2),
                 animationDelay: getAnimationDelay(index, 0.08)
             }}
@@ -669,7 +676,8 @@ const EditorialMosaicMenuCard: React.FC<{
     index: number;
     animationType?: AnimationType;
     enableAnimation?: boolean;
-}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true }) => {
+    cardPaddingStyle?: React.CSSProperties;
+}> = ({ item, colors, borderRadius, index, animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }) => {
     const animationClass = getAnimationClass(animationType, enableAnimation);
     const imageFirst = index % 2 === 0;
     const cardBg = colors?.cardBackground || '#ffffff';
@@ -699,6 +707,7 @@ const EditorialMosaicMenuCard: React.FC<{
         <div
             className={`border p-5 sm:p-6 ${borderRadius}`}
             style={{
+                ...cardPaddingStyle,
                 backgroundColor: cardBg,
                 borderColor,
                 aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
@@ -795,6 +804,11 @@ const Menu: React.FC<MenuProps> = ({
     cornerGradient,
     dataSource = 'manual',
     restaurantId,
+    cardPadding,
+    cardPaddingTop,
+    cardPaddingRight,
+    cardPaddingBottom,
+    cardPaddingLeft,
 }) => {
     // Get design tokens with primary color
     const { getColor } = useDesignTokens();
@@ -832,6 +846,7 @@ const Menu: React.FC<MenuProps> = ({
         cardTitleColor: colors?.cardTitleColor || '#ffffff',
         cardText: colors?.cardText || '#94a3b8',
     };
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
     
     return (
         <section 
@@ -881,6 +896,7 @@ const Menu: React.FC<MenuProps> = ({
                             index={index}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>
@@ -896,6 +912,7 @@ const Menu: React.FC<MenuProps> = ({
                             colors={menuColors} 
                             borderRadius={borderRadiusClasses[borderRadius]}
                             index={index}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>
@@ -913,6 +930,7 @@ const Menu: React.FC<MenuProps> = ({
                             index={index}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>
@@ -931,6 +949,7 @@ const Menu: React.FC<MenuProps> = ({
                             textAlignment={textAlignment}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>
@@ -954,6 +973,7 @@ const Menu: React.FC<MenuProps> = ({
                             index={index}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>
@@ -971,6 +991,7 @@ const Menu: React.FC<MenuProps> = ({
                             index={index}
                             animationType={animationType}
                             enableAnimation={enableCardAnimation}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>

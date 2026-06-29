@@ -7,6 +7,7 @@ import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import CornerGradient from './ui/CornerGradient';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 interface TestimonialCardProps {
   quote: string;
@@ -26,6 +27,7 @@ interface TestimonialCardProps {
   borderStyle: string;
   cardShadow: string;
   cardPadding: number;
+  cardPaddingStyle: React.CSSProperties;
   variant: TestimonialsVariant;
   // Animations
   animationType?: AnimationType;
@@ -115,6 +117,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   borderStyle,
   cardShadow,
   cardPadding,
+  cardPaddingStyle,
   variant,
   // Animations
   animationType = 'fade-in-up',
@@ -162,7 +165,7 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   const getCardStyle = () => {
     const baseStyle: React.CSSProperties = {
       animationDelay: delay,
-      padding: `${cardPadding}px`,
+      ...cardPaddingStyle,
       '--card-accent': `${accentColor}66`,
     } as React.CSSProperties;
 
@@ -305,7 +308,7 @@ const EditorialMosaicTestimonialCard: React.FC<{
     personTitle: string;
   };
   borderRadius: BorderRadiusSize;
-  cardPadding: number;
+  cardPaddingStyle: React.CSSProperties;
   animationType?: AnimationType;
   enableAnimation?: boolean;
 }> = ({
@@ -316,7 +319,7 @@ const EditorialMosaicTestimonialCard: React.FC<{
   index,
   colors,
   borderRadius,
-  cardPadding,
+  cardPaddingStyle,
   animationType = 'fade-in-up',
   enableAnimation = true,
 }) => {
@@ -348,7 +351,7 @@ const EditorialMosaicTestimonialCard: React.FC<{
       className={`overflow-hidden border ${borderRadiusClasses[borderRadius]}`}
       style={{
         aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
-        padding: cardPadding,
+        ...cardPaddingStyle,
         backgroundColor: colors.cardBackground,
         borderColor: colors.borderColor || 'transparent',
       }}
@@ -408,6 +411,10 @@ interface TestimonialsProps extends TestimonialsData {
   cardShadow?: string;
   borderStyle?: string;
   cardPadding?: number;
+  cardPaddingTop?: number;
+  cardPaddingRight?: number;
+  cardPaddingBottom?: number;
+  cardPaddingLeft?: number;
   animationType?: AnimationType;
   enableCardAnimation?: boolean;
   cornerGradient?: CornerGradientConfig;
@@ -425,6 +432,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   cardShadow = 'lg',
   borderStyle = 'solid',
   cardPadding = 32,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
   titleFontSize = 'md',
   descriptionFontSize = 'md',
   testimonialsVariant = 'classic',
@@ -453,6 +464,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
 
   // Use component cardBackground color (falls back to primary if not set)
   const cardBackground = actualColors.cardBackground;
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
   // Use user-selected colors directly - respect their choices
   const safeColors = useMemo(() => {
@@ -501,7 +513,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
                   personTitle: colors?.subtitleColor || colors?.description || '#5f5850',
                 }}
                 borderRadius={borderRadius}
-                cardPadding={cardPadding}
+                cardPaddingStyle={cardPaddingStyle}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
               />
@@ -543,6 +555,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
               borderStyle={borderStyle}
               cardShadow={cardShadow}
               cardPadding={cardPadding}
+              cardPaddingStyle={cardPaddingStyle}
               variant={testimonialsVariant}
               // Animations
               animationType={animationType}

@@ -7,6 +7,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { hexToRgba } from '../utils/colorUtils';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { normalizePricingVariant } from '../data/pricingVariants';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 import CornerGradient from './ui/CornerGradient';
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -101,6 +102,11 @@ const Pricing: React.FC<PricingProps> = ({
   glassEffect = false,
   cardsAlignment = 'center',
   backgroundImageUrl,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
 }) => {
   const { i18n } = useTranslation();
   const { getColor, colors: tokenColors } = useDesignTokens();
@@ -170,6 +176,7 @@ const Pricing: React.FC<PricingProps> = ({
   const cardRadius = borderRadiusClasses[cardBorderRadius] || borderRadiusClasses.xl;
   const buttonRadius = borderRadiusClasses[buttonBorderRadius] || borderRadiusClasses.xl;
   const sectionBaseClass = `${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]} relative overflow-hidden`;
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
   const animated = (index: number) => ({
     className: getAnimationClass(animationType, enableCardAnimation),
     style: { animationDelay: getAnimationDelay(index) },
@@ -228,6 +235,7 @@ const Pricing: React.FC<PricingProps> = ({
                   className={clsx('flex min-h-[520px] flex-col border p-8 backdrop-blur', cardRadius, animated(index).className)}
                   style={{
                     ...animated(index).style,
+                    ...cardPaddingStyle,
                     background: featured
                       ? `linear-gradient(180deg, ${hexToRgba(actualColors.gradientStart, 0.22)}, ${hexToRgba(actualColors.gradientStart, 0.46)} 72%, ${hexToRgba(actualColors.gradientEnd, 0.22)})`
                       : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
@@ -257,7 +265,7 @@ const Pricing: React.FC<PricingProps> = ({
             })}
           </div>
           {enterprise && (
-            <div className={clsx('mx-auto mt-5 flex max-w-7xl flex-col gap-5 border border-white/15 p-7 md:flex-row md:items-center md:justify-between', cardRadius)} style={{ backgroundColor: 'rgba(255,255,255,0.035)' }}>
+            <div className={clsx('mx-auto mt-5 flex max-w-7xl flex-col gap-5 border border-white/15 p-7 md:flex-row md:items-center md:justify-between', cardRadius)} style={{ ...cardPaddingStyle, backgroundColor: 'rgba(255,255,255,0.035)' }}>
               <div className="flex flex-col gap-2 md:flex-row md:items-center">
                 <strong className="text-lg text-white">{enterprise.name}</strong>
                 <span className="text-white/55">{enterprise.description || enterprise.price}</span>
@@ -296,11 +304,11 @@ const Pricing: React.FC<PricingProps> = ({
                     color: featured ? actualColors.featuredText : actualColors.cardText,
                   }}
                 >
-                  <div className="p-8" style={{ backgroundColor: featured ? hexToRgba('#ffffff', 0.08) : actualColors.cardBackground }}>
+                  <div className="p-8" style={{ ...cardPaddingStyle, backgroundColor: featured ? hexToRgba('#ffffff', 0.08) : actualColors.cardBackground }}>
                     <h3 className="font-header text-2xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.cardHeading }}>{tier.name}</h3>
                     {tier.description && <p className="mt-3 text-sm leading-6 opacity-70">{tier.description}</p>}
                   </div>
-                  <div className="flex flex-1 flex-col p-8">
+                  <div className="flex flex-1 flex-col p-8" style={cardPaddingStyle}>
                     <div className="mb-7">
                       <span className="font-header text-5xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.priceColor }}>{tier.price}</span>
                       <span className="ml-2 text-sm opacity-55">{tier.frequency}</span>
@@ -320,7 +328,7 @@ const Pricing: React.FC<PricingProps> = ({
             })}
           </div>
           {enterprise && (
-            <div className={clsx('mx-auto mt-8 grid max-w-6xl gap-6 border p-8 md:grid-cols-[1fr_auto]', cardRadius)} style={{ backgroundColor: actualColors.surfaceAlt, borderColor: actualColors.borderColor }}>
+            <div className={clsx('mx-auto mt-8 grid max-w-6xl gap-6 border p-8 md:grid-cols-[1fr_auto]', cardRadius)} style={{ ...cardPaddingStyle, backgroundColor: actualColors.surfaceAlt, borderColor: actualColors.borderColor }}>
               <div>
                 <h3 className="font-header text-2xl font-bold" style={{ color: actualColors.heading }}>{enterprise.name}</h3>
                 <p className="mt-2" style={{ color: actualColors.description }}>{enterprise.description || enterprise.price}</p>
@@ -348,8 +356,9 @@ const Pricing: React.FC<PricingProps> = ({
           {tiers.slice(0, 4).map((tier, index) => {
             const featured = tier.featured || index === 2;
             return (
-              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[700px] flex-col border-r px-6 py-5', animated(index).className)} style={{ ...animated(index).style, borderColor: actualColors.dividerColor }}>
+              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[700px] flex-col border-r px-6 py-5', animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, borderColor: actualColors.dividerColor }}>
                 <div className={clsx('mb-6 min-h-[170px] p-7', cardRadius)} style={{
+                  ...cardPaddingStyle,
                   background: featured
                     ? `radial-gradient(circle at 20% 15%, ${actualColors.gradientStart}, transparent 35%), radial-gradient(circle at 90% 70%, ${actualColors.gradientEnd}, transparent 45%), ${actualColors.cardBackground}`
                     : actualColors.surfaceAlt,
@@ -387,7 +396,7 @@ const Pricing: React.FC<PricingProps> = ({
           {tiers.slice(0, 3).map((tier, index) => {
             const featured = tier.featured || index === 1;
             return (
-              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[610px] flex-col border p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, borderColor: featured ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.16)' }}>
+              <div key={`${tier.name}-${index}`} className={clsx('flex min-h-[610px] flex-col border p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, borderColor: featured ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.16)' }}>
                 <div className="mb-7 flex items-start justify-between">
                   <h3 className="font-header text-2xl font-bold text-white">{tier.name}</h3>
                   {tier.badge && <span className="rounded bg-white px-2 py-1 text-xs font-bold text-black">{tier.badge}</span>}
@@ -416,7 +425,7 @@ const Pricing: React.FC<PricingProps> = ({
         <h2 className={`${titleSizeClasses[titleFontSize]} mb-12 max-w-4xl font-header font-light leading-tight text-white`}>{title}</h2>
         <div className="grid gap-8 md:grid-cols-2">
           {tiers.slice(0, 2).map((tier, index) => (
-            <div key={`${tier.name}-${index}`} className={clsx('p-10 md:p-10 lg:p-14', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: index === 0 ? '#000000' : hexToRgba('#000000', 0.2), color: '#ffffff' }}>
+            <div key={`${tier.name}-${index}`} className={clsx('p-10 md:p-10 lg:p-14', cardRadius, animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, backgroundColor: index === 0 ? '#000000' : hexToRgba('#000000', 0.2), color: '#ffffff' }}>
               <h3 className="mb-12 font-header text-3xl lg:mb-16">{tier.name}</h3>
               <div className="mb-16 flex flex-wrap items-end gap-3">
                 <span className="font-header text-7xl md:text-6xl lg:text-7xl xl:text-8xl">{tier.price}</span>
@@ -448,7 +457,7 @@ const Pricing: React.FC<PricingProps> = ({
         <Header align="left" dark />
         <div className="grid max-w-4xl gap-8 md:grid-cols-2">
           {tiers.slice(0, 2).map((tier, index) => (
-            <div key={`${tier.name}-${index}`} className={clsx('p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, backgroundColor: actualColors.cardBackground, color: actualColors.cardText }}>
+            <div key={`${tier.name}-${index}`} className={clsx('p-8', cardRadius, animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, backgroundColor: actualColors.cardBackground, color: actualColors.cardText }}>
               <div className={clsx('mb-8 aspect-[4/3] overflow-hidden bg-black/5', cardRadius)}>
                 {tier.imageUrl ? <img src={tier.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-[linear-gradient(135deg,#f4eadc,#c7b99f)]" />}
               </div>
@@ -474,7 +483,7 @@ const Pricing: React.FC<PricingProps> = ({
           {tiers.slice(0, 3).map((tier, index) => {
             const featured = tier.featured || index === 1;
             return (
-              <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[690px] flex-col border p-8', animated(index).className)} style={{ ...animated(index).style, backgroundColor: featured ? actualColors.featuredBackground : actualColors.cardBackground, borderColor: actualColors.borderColor, color: featured ? actualColors.featuredText : actualColors.cardText }}>
+              <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[690px] flex-col border p-8', animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, backgroundColor: featured ? actualColors.featuredBackground : actualColors.cardBackground, borderColor: actualColors.borderColor, color: featured ? actualColors.featuredText : actualColors.cardText }}>
                 <div className="absolute right-0 top-0 h-12 w-12 bg-[linear-gradient(135deg,transparent_50%,#7c3aed_50%)] opacity-90" />
                 <p className="mb-2 text-sm" style={{ color: featured ? actualColors.accent : actualColors.mutedText }}>{tier.eyebrow || tier.badge}</p>
                 <h3 className="font-header text-3xl font-bold" style={{ color: featured ? actualColors.featuredText : actualColors.cardHeading }}>{tier.name}</h3>
@@ -500,7 +509,7 @@ const Pricing: React.FC<PricingProps> = ({
     const individual = tiers.slice(0, 3);
     const team = tiers.slice(3, 5);
     const renderCard = (tier: RenderTier, index: number, wide = false) => (
-      <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[350px] flex-col border p-8', cardRadius, animated(index).className, wide && 'md:min-h-[300px]')} style={{ ...animated(index).style, backgroundColor: actualColors.cardBackground, borderColor: actualColors.borderColor, overflow: 'hidden' }}>
+      <div key={`${tier.name}-${index}`} className={clsx('relative flex min-h-[350px] flex-col border p-8', cardRadius, animated(index).className, wide && 'md:min-h-[300px]')} style={{ ...animated(index).style, ...cardPaddingStyle, backgroundColor: actualColors.cardBackground, borderColor: actualColors.borderColor, overflow: 'hidden' }}>
         {tier.featured && <div className="absolute inset-x-0 bottom-0 h-40 opacity-70" style={{ background: `radial-gradient(circle at 30% 100%, ${actualColors.gradientEnd}, transparent 42%), radial-gradient(circle at 80% 100%, ${actualColors.gradientStart}, transparent 48%)` }} />}
         <div className="relative z-10">
           <h3 className="font-header text-2xl" style={{ color: actualColors.cardHeading }}>{tier.name}</h3>
@@ -541,7 +550,7 @@ const Pricing: React.FC<PricingProps> = ({
         <Header />
         <div className={clsx('mx-auto max-w-5xl overflow-hidden border p-4', borderRadiusClasses['2xl'])} style={{ backgroundColor: actualColors.surfaceAlt, borderColor: actualColors.borderColor }}>
           {tiers.map((tier, index) => (
-            <div key={`${tier.name}-${index}`} className={clsx('grid gap-8 border bg-white p-8 md:grid-cols-[0.75fr_1.25fr]', index > 0 && '-mt-px', cardRadius, animated(index).className)} style={{ ...animated(index).style, borderColor: actualColors.borderColor }}>
+            <div key={`${tier.name}-${index}`} className={clsx('grid gap-8 border bg-white p-8 md:grid-cols-[0.75fr_1.25fr]', index > 0 && '-mt-px', cardRadius, animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, borderColor: actualColors.borderColor }}>
               <div className="flex flex-col">
                 <h3 className="font-header text-3xl font-bold" style={{ color: actualColors.cardHeading }}>{tier.name}</h3>
                 {tier.description && <p className="mt-3 text-sm leading-6" style={{ color: actualColors.description }}>{tier.description}</p>}
@@ -570,7 +579,7 @@ const Pricing: React.FC<PricingProps> = ({
           {tiers.slice(0, 3).map((tier, index) => {
             const accent = index === 0 ? actualColors.gradientEnd : index === 1 ? actualColors.gradientStart : actualColors.accent;
             return (
-              <div key={`${tier.name}-${index}`} className={clsx('border-b p-8', animated(index).className)} style={{ ...animated(index).style, backgroundColor: 'rgba(255,255,255,0.03)', borderColor: accent }}>
+              <div key={`${tier.name}-${index}`} className={clsx('border-b p-8', animated(index).className)} style={{ ...animated(index).style, ...cardPaddingStyle, backgroundColor: 'rgba(255,255,255,0.03)', borderColor: accent }}>
                 <div className="mb-8 flex items-center gap-3">
                   <Sparkles size={26} style={{ color: '#ffffff' }} />
                   <h3 className="font-header text-2xl font-bold text-white">{tier.name}</h3>

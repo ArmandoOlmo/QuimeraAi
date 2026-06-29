@@ -2,6 +2,7 @@
 import React from 'react';
 import { NewsletterData, PaddingSize, BorderRadiusSize, FontSize } from '../types';
 import { hexToRgba } from '../utils/colorUtils';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -49,11 +50,12 @@ interface NewsletterProps extends NewsletterData {
 }
 
 const Newsletter: React.FC<NewsletterProps> = ({
-  glassEffect, title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius = 'xl', buttonBorderRadius = 'xl', titleFontSize = 'md', descriptionFontSize = 'md', cardOpacity, showCardBorder }) => {
+  glassEffect, title, description, placeholderText, buttonText, paddingY, paddingX, colors, cardBorderRadius = 'xl', buttonBorderRadius = 'xl', titleFontSize = 'md', descriptionFontSize = 'md', cardOpacity, showCardBorder, cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }) => {
   // Use section colors for title/description - cardHeading/cardText are legacy fallbacks
   const headingColor = colors?.heading || colors?.cardHeading || '#ffffff';
   const textColor = colors?.text || colors?.cardText || '#ffffff';
   const placeholderColor = colors?.inputPlaceholder || '#6b7280';
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
   // DEBUG LOG
   console.log('[Newsletter Render]', { incomingColors: colors, headingColor, textColor });
@@ -68,7 +70,7 @@ const Newsletter: React.FC<NewsletterProps> = ({
         }
       `}} />
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className={`${showCardBorder !== false ? 'border border-white/10' : ''} p-8 md:p-12 text-center backdrop-blur-xl ${borderRadiusClasses[cardBorderRadius]}`} style={{ ...(showCardBorder !== false ? { borderColor: colors?.borderColor || 'rgba(255,255,255,0.1)' } : {}), backgroundColor: hexToRgba(colors?.cardBackground || 'rgba(79, 70, 229, 0.75)', (cardOpacity !== undefined ? cardOpacity : 100) / 100) }}>
+        <div className={`${showCardBorder !== false ? 'border border-white/10' : ''} p-8 md:p-12 text-center backdrop-blur-xl ${borderRadiusClasses[cardBorderRadius]}`} style={{ ...cardPaddingStyle, ...(showCardBorder !== false ? { borderColor: colors?.borderColor || 'rgba(255,255,255,0.1)' } : {}), backgroundColor: hexToRgba(colors?.cardBackground || 'rgba(79, 70, 229, 0.75)', (cardOpacity !== undefined ? cardOpacity : 100) / 100) }}>
           <h2 className={`${titleSizeClasses[titleFontSize]} font-extrabold text-site-heading mb-4 font-header`} style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h2>
           <p className={`${descriptionSizeClasses[descriptionFontSize]} max-w-2xl mx-auto mb-8 font-body`} style={{ color: textColor }}>{description}</p>
           <form onSubmit={(e) => e.preventDefault()} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-4">

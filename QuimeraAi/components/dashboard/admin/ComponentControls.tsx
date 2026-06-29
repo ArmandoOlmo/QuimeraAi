@@ -25,6 +25,7 @@ import { Type, Layout, AlignJustify, Settings, Image, Plus, Trash2, Wand2, Palet
 import ResponsiveConfigEditor from './ResponsiveConfigEditor';
 import AnimationConfigurator from './AnimationConfigurator';
 import AppSelect from '../../ui/AppSelect';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 
 // Simple re-usable controls from Controls.tsx
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -265,6 +266,13 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
 
     const currentResponsiveStyles = activeProject?.responsiveStyles?.[selectedComponentId] || {};
     const currentAnimation = (styles as any)?.animation as AnimationConfig | undefined;
+    const renderCardPaddingControl = (defaultValue = 32) => (
+        <CardPaddingControl
+            value={styles as any}
+            onChange={(key, value) => handleStyleChange(key, value)}
+            defaultValue={defaultValue}
+        />
+    );
 
     const handleAnimationUpdate = async (animationConfig: AnimationConfig) => {
         await updateComponentStyle(selectedComponentId, { animation: animationConfig }, isCustom);
@@ -567,6 +575,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     value={(s as any).borderRadius || 'xl'}
                     onChange={(v) => handleStyleChange('borderRadius', v)}
                 />
+                {renderCardPaddingControl(32)}
 
                 <hr className="border-q-border/50" />
 
@@ -814,18 +823,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                         </div>
                     )}
 
-                    <div>
-                        <div className="flex justify-between items-center">
-                            <Label>Card Padding</Label>
-                            <span className="text-sm font-medium text-q-text">{s.cardPadding || 32}px</span>
-                        </div>
-                        <input
-                            type="range" min="16" max="64" step="4"
-                            value={s.cardPadding || 32}
-                            onChange={e => handleStyleChange('cardPadding', parseInt(e.target.value, 10))}
-                            className="w-full h-2 bg-q-surface-overlay rounded-lg appearance-none cursor-pointer"
-                        />
-                    </div>
+                    {renderCardPaddingControl(32)}
                 </div>
 
                 <hr className="border-q-border/50" />
@@ -890,6 +888,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
+                {renderCardPaddingControl(32)}
 
                 <hr className="border-q-border/50" />
 
@@ -965,7 +964,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-
                 <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
@@ -1001,6 +999,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
     const renderStandardControls = () => {
         const s = styles as any;
         const isHeroComponent = String(baseComponent).startsWith('hero');
+        const usesCardPadding = ['portfolio', 'leads'].includes(String(baseComponent));
         return (
             <div className="space-y-4">
                 {isHeroComponent && renderBackgroundBlurControls()}
@@ -1014,6 +1013,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     {<PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />}
                     {<PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />}
                 </div>
+                {usesCardPadding && renderCardPaddingControl(String(baseComponent) === 'leads' ? 32 : 24)}
 
                 <hr className="border-q-border/50" />
 
@@ -1080,6 +1080,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                 </div>
 
                 <BorderRadiusControl label="Card Border Radius" value={s.borderRadius || 'lg'} onChange={v => handleStyleChange('borderRadius', v)} />
+                {renderCardPaddingControl(24)}
 
                 <div>
                     <Label>Columns</Label>
@@ -1190,6 +1191,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     value={s.cardBorderRadius || 'xl'}
                     onChange={(v) => handleStyleChange('cardBorderRadius', v)}
                 />
+                {renderCardPaddingControl(32)}
 
                 <hr className="border-q-border/50" />
 
@@ -1987,6 +1989,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
+                {renderCardPaddingControl(24)}
 
                 <hr className="border-q-border/50" />
 
@@ -2122,7 +2125,6 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
-
                 <hr className="border-q-border/50" />
 
                 {/* ========== TYPOGRAPHY ========== */}
@@ -2203,6 +2205,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
+                {renderCardPaddingControl(32)}
 
                 <hr className="border-q-border/50" />
 
@@ -2294,6 +2297,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
+                {renderCardPaddingControl(24)}
 
                 <hr className="border-q-border/50" />
 
@@ -2390,6 +2394,7 @@ const ComponentControls: React.FC<ComponentControlsProps> = ({ selectedComponent
                     <PaddingControl label="Vertical Padding" value={s.paddingY || 'md'} onChange={v => handleStyleChange('paddingY', v)} />
                     <PaddingControl label="Horizontal Padding" value={s.paddingX || 'md'} onChange={v => handleStyleChange('paddingX', v)} />
                 </div>
+                {renderCardPaddingControl(24)}
 
                 <hr className="border-q-border/50" />
 

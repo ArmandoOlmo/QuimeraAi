@@ -79,6 +79,7 @@ export const componentStyles: ComponentStyles = {
     animationType: 'fade-in-up',
     enableCardAnimation: true,
     borderRadius: 'xl',
+    cardPadding: 32,
     // Properties for image-overlay variant
     overlayTextAlignment: 'left',
     showSectionHeader: true,
@@ -125,6 +126,7 @@ export const componentStyles: ComponentStyles = {
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    cardPadding: 32,
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -148,6 +150,7 @@ export const componentStyles: ComponentStyles = {
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    cardPadding: 24,
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -229,6 +232,7 @@ export const componentStyles: ComponentStyles = {
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    cardPadding: 32,
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -271,6 +275,7 @@ export const componentStyles: ComponentStyles = {
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
+    cardPadding: 24,
     colors: {
       background: '#10b981', // SECONDARY color
       accent: '#4f46e5',
@@ -291,6 +296,7 @@ export const componentStyles: ComponentStyles = {
     descriptionFontSize: 'md',
     gridColumns: 3,
     imageHeight: 300,
+    cardPadding: 24,
     overlayTextAlignment: 'left',
     showSectionHeader: true,
     cornerGradient: {
@@ -319,6 +325,7 @@ export const componentStyles: ComponentStyles = {
     gridColumns: 4,
     imageHeight: 320,
     imageObjectFit: 'cover',
+    cardPadding: 24,
     showSectionHeader: true,
     showFilters: true,
     showMeta: true,
@@ -359,6 +366,7 @@ export const componentStyles: ComponentStyles = {
     descriptionFontSize: 'md',
     cardBorderRadius: 'xl',
     buttonBorderRadius: 'md',
+    cardPadding: 32,
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -389,6 +397,7 @@ export const componentStyles: ComponentStyles = {
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    cardPadding: 32,
     colors: {
       background: '#1e293b',
       accent: '#4f46e5',
@@ -429,6 +438,7 @@ export const componentStyles: ComponentStyles = {
     paddingX: 'md',
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
+    cardPadding: 24,
     cornerGradient: {
       enabled: false,
       position: 'top-left',
@@ -504,6 +514,7 @@ export const componentStyles: ComponentStyles = {
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
     borderRadius: 'xl',
+    cardPadding: 24,
     showCategories: true,
     showIcon: true,
     icon: 'utensils-crossed',
@@ -602,6 +613,7 @@ export const componentStyles: ComponentStyles = {
     showQuickView: false,
     showWishlist: false,
     style: 'modern',
+    cardPadding: 24,
     colors: {
       background: '#0f172a',
       text: '#94a3b8',

@@ -1,0 +1,282 @@
+{
+  "generatedAt": "2026-06-28T21:22:10.089Z",
+  "baseURL": "http://127.0.0.1:5175",
+  "results": [
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/login",
+      "name": "login",
+      "url": "http://127.0.0.1:5175/login",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-login.png"
+    },
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/dashboard",
+      "name": "dashboard-redirect",
+      "url": "http://127.0.0.1:5175/dashboard",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-dashboard-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/admin/landing-editor",
+      "name": "admin-landing-editor-redirect",
+      "url": "http://127.0.0.1:5175/admin/landing-editor",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-admin-landing-editor-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/biopage",
+      "name": "bio-page-builder-redirect",
+      "url": "http://127.0.0.1:5175/biopage",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-bio-page-builder-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/email",
+      "name": "email-editor-redirect",
+      "url": "http://127.0.0.1:5175/email",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-email-editor-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "iphone-se-ish",
+        "width": 375,
+        "height": 812
+      },
+      "route": "/ecommerce/storefront",
+      "name": "storefront-editor-redirect",
+      "url": "http://127.0.0.1:5175/ecommerce/storefront",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 375,
+        "documentScrollWidth": 375,
+        "bodyScrollWidth": 375,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "iphone-se-ish-storefront-editor-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/login",
+      "name": "login",
+      "url": "http://127.0.0.1:5175/login",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-login.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/dashboard",
+      "name": "dashboard-redirect",
+      "url": "http://127.0.0.1:5175/dashboard",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-dashboard-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/admin/landing-editor",
+      "name": "admin-landing-editor-redirect",
+      "url": "http://127.0.0.1:5175/admin/landing-editor",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-admin-landing-editor-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/biopage",
+      "name": "bio-page-builder-redirect",
+      "url": "http://127.0.0.1:5175/biopage",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-bio-page-builder-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/email",
+      "name": "email-editor-redirect",
+      "url": "http://127.0.0.1:5175/email",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-email-editor-redirect.png"
+    },
+    {
+      "viewport": {
+        "name": "large-mobile",
+        "width": 390,
+        "height": 844
+      },
+      "route": "/ecommerce/storefront",
+      "name": "storefront-editor-redirect",
+      "url": "http://127.0.0.1:5175/ecommerce/storefront",
+      "status": 200,
+      "finalUrl": "http://127.0.0.1:5175/login",
+      "metrics": {
+        "title": "Sign In | Quimera.ai",
+        "location": "/login",
+        "viewportWidth": 390,
+        "documentScrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "mainScrollWidth": null,
+        "horizontalOverflow": false,
+        "offenders": []
+      },
+      "screenshot": "large-mobile-storefront-editor-redirect.png"
+    }
+  ]
+}

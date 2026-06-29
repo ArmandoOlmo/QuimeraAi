@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 import ImagePicker from '../../ui/ImagePicker';
 import AnimationControls from '../../ui/AnimationControls';
 import TabbedControls from '../../ui/TabbedControls';
@@ -182,6 +183,7 @@ export const renderShowcaseControlsWithTabs = (deps: ControlsDeps) => {
         <SliderControl label="Image height" value={showcase.imageHeight || 340} onChange={(value) => setNestedData('showcase.imageHeight', value)} min={180} max={720} step={10} suffix="px" />
         <Select label="Image fit" value={showcase.imageObjectFit || 'cover'} onChange={(value) => setNestedData('showcase.imageObjectFit', value)} options={OBJECT_FIT_OPTIONS} />
         <BorderRadiusSelector label="Corners" value={showcase.borderRadius || 'lg'} onChange={(value) => setNestedData('showcase.borderRadius', value)} extended />
+        <CardPaddingControl value={showcase} onChange={(key, value) => setNestedData(`showcase.${key}`, value)} defaultValue={24} />
       </div>
 
       <div className="rounded-lg border border-q-border bg-q-surface/50 p-4 space-y-3">

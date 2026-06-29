@@ -6,6 +6,7 @@ import { sanitizeHtml } from '../utils/sanitize';
 import { getBorderRadiusClass } from '../utils/styleUtils';
 import { FaqNeonData } from '../types/components';
 import { ChevronDown } from 'lucide-react';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 export interface FaqNeonProps extends FaqNeonData {
     isPreviewMode?: boolean;
@@ -27,6 +28,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
     ];
 
     const colors = data.colors || {};
+    const cardPaddingStyle = getCardPaddingStyle(data, 24);
         
     // Box Shadow for Neon Glow
     const intensity = data.glowIntensity !== undefined ? data.glowIntensity : 50;
@@ -75,6 +77,7 @@ const FaqNeon: React.FC<FaqNeonProps> = (props) => {
                         data.glassEffect ? "backdrop-blur-xl" : ""
                     )}
                     style={{
+                        ...cardPaddingStyle,
                         backgroundColor: data.glassEffect 
                             ? `color-mix(in srgb, ${colors.cardBackground || '#141414'} 50%, transparent)` 
                             : (colors.cardBackground || '#141414'),

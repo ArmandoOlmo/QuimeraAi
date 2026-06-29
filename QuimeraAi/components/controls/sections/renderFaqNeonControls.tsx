@@ -7,6 +7,7 @@ import {
   ToggleControl, SliderControl, Input, TextArea, Select
 , I18nInput, I18nTextArea} from '../../ui/EditorControlPrimitives';
 import AIFormControl from '../../ui/AIFormControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 
 export const renderFaqNeonControls = (deps: ControlsDeps) => {
     const { data, setNestedData, setAiAssistField, t } = deps;
@@ -157,6 +158,7 @@ export const renderFaqNeonControls = (deps: ControlsDeps) => {
                     ]}
                   />
                 </div>
+                <CardPaddingControl value={sectionData} onChange={(key, value) => setNestedData(`faqNeon.${key}`, value)} defaultValue={24} />
             </div>
 
             {/* Effect Settings */}

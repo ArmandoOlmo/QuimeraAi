@@ -5,6 +5,7 @@
 import React, { useState, useRef } from 'react';
 
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
 import AIFormControl from '../../ui/AIFormControl';
@@ -146,17 +147,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
       <ColorControl label={t('editor.controls.testimonials.borderColor')} value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
 
-      <div className="mb-4">
-        <SliderControl
-          label={t('controls.cardPadding')}
-          value={data.testimonials.cardPadding || 32}
-          onChange={(v) => setNestedData('testimonials.cardPadding', v)}
-          min={16}
-          max={64}
-          step={4}
-          suffix="px"
-        />
-      </div>
+      <CardPaddingControl value={data.testimonials} onChange={(key, value) => setNestedData(`testimonials.${key}`, value)} defaultValue={32} />
 
       <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border space-y-2">
         <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider">{t('controls.spacing')}</label>
@@ -406,17 +397,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
 
         <ColorControl label={t('controls.borderColor')} value={data.testimonials.colors?.borderColor || '#374151'} onChange={(v) => setNestedData('testimonials.colors.borderColor', v)} />
 
-        <div className="mb-3">
-          <SliderControl
-            label={t('controls.cardPadding')}
-            value={data.testimonials.cardPadding || 32}
-            onChange={(v) => setNestedData('testimonials.cardPadding', v)}
-            min={16}
-            max={64}
-            step={4}
-            suffix="px"
-          />
-        </div>
+        <CardPaddingControl value={data.testimonials} onChange={(key, value) => setNestedData(`testimonials.${key}`, value)} defaultValue={32} />
       </div>
 
       {/* Spacing */}

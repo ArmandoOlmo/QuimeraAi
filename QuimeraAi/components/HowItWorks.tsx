@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -54,9 +55,10 @@ interface HowItWorksProps extends HowItWorksData {
 }
 
 const HowItWorks: React.FC<HowItWorksProps> = ({
-  glassEffect, title, description, steps, items = [], paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient }) => {
+  glassEffect, title, description, steps, items = [], paddingY, paddingX, colors, borderRadius, titleFontSize = 'md', descriptionFontSize = 'md', cornerGradient, cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }) => {
     const visibleItems = (items || []).slice(0, steps);
     const gridColsClass = steps === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
 
     return (
         <section id="how-it-works" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(colors?.background , 0.4) : colors?.background }}>
@@ -71,7 +73,7 @@ const HowItWorks: React.FC<HowItWorksProps> = ({
 
             <div className={`grid grid-cols-1 ${gridColsClass} gap-x-8 gap-y-12 relative`}>
                 {visibleItems.map((item, index) => (
-                    <div key={index} className="flex flex-col items-center text-center relative">
+                    <div key={index} className="flex flex-col items-center text-center relative" style={cardPaddingStyle}>
                         {/* Connecting line for desktop */}
                         {index < steps - 1 && (
                             <div

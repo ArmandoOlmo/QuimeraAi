@@ -8,6 +8,7 @@ import { isPendingImage } from '../utils/imagePlaceholders';
 import CornerGradient from './ui/CornerGradient';
 import { ArrowRight } from 'lucide-react';
 import { hexToRgba } from '../utils/colorUtils';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 interface PortfolioCardProps {
   imageUrl: string;
@@ -33,6 +34,7 @@ interface PortfolioCardProps {
   showCardGradient?: boolean;
   showCardBorder?: boolean;
   cardBorderWidth?: number;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -94,6 +96,7 @@ interface PortfolioOverlayCardProps {
   animationType?: AnimationType;
   enableAnimation?: boolean;
   onNavigate?: (href: string) => void;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
@@ -104,7 +107,8 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
   textAlignment,
   animationType = 'fade-in-up',
   enableAnimation = true,
-  onNavigate
+  onNavigate,
+  cardPaddingStyle
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const delay = getAnimationDelay(index);
@@ -138,7 +142,7 @@ const PortfolioOverlayCard: React.FC<PortfolioOverlayCardProps> = ({
       />
 
       {/* Text overlay - position based on alignment */}
-      <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`}>
+      <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`} style={cardPaddingStyle}>
         <h3
           className="text-xl md:text-2xl font-bold mb-2 font-header text-white drop-shadow-lg"
           style={{
@@ -193,7 +197,8 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   imageHeight = 400,
   showCardGradient = true,
   showCardBorder = true,
-  cardBorderWidth = 1
+  cardBorderWidth = 1,
+  cardPaddingStyle
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const isExternal = linkUrl?.startsWith('http');
@@ -233,7 +238,7 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
       )}
 
       {/* Content at Bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-10" style={cardPaddingStyle}>
         <h3 className="text-2xl font-bold mb-3 font-header line-clamp-2" style={{ color: cardTitleColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>
           {title}
         </h3>
@@ -319,7 +324,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
   cardBorderWidth = 1,
   cornerGradient,
   glassEffect,
-  onNavigate
+  onNavigate,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
 }) => {
   const { i18n } = useTranslation();
   
@@ -346,6 +356,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
     description: resolveText(item.description),
     linkText: resolveText(item.linkText)
   }));
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
 
   // Derive particle color from heading color or fallback
   const particleColor = colors?.heading || colors?.accent || 'rgba(255,255,255,0.5)';
@@ -409,6 +420,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
               animationType={animationType}
               enableAnimation={enableCardAnimation}
               onNavigate={onNavigate}
+              cardPaddingStyle={cardPaddingStyle}
             />
           ))}
         </div>
@@ -466,6 +478,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
               showCardGradient={showCardGradient}
               showCardBorder={showCardBorder}
               cardBorderWidth={cardBorderWidth}
+              cardPaddingStyle={cardPaddingStyle}
             />
           ))}
         </div>

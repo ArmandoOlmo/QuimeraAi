@@ -7,6 +7,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import { useTranslation } from 'react-i18next';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 const WIDGET_API_BASE_URL = (import.meta.env.VITE_WIDGET_API_BASE_URL || '/api/widget').replace(/\/$/, '');
 
@@ -79,6 +80,11 @@ const Leads: React.FC<LeadsProps> = ({
   titleFontSize = 'md',
   descriptionFontSize = 'md',
   cornerGradient,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
   projectId,
   ownerId
 }) => {
@@ -113,6 +119,7 @@ const Leads: React.FC<LeadsProps> = ({
     gradientStart: colors?.gradientStart || colors?.accent || '#4f46e5',
     gradientEnd: colors?.gradientEnd || '#10b981',
   };
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -235,7 +242,7 @@ const Leads: React.FC<LeadsProps> = ({
             </p>
           </div>
           <div className={`p-8 md:p-12 border relative ${borderRadiusClasses[cardBorderRadius]}`}
-            style={{ backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
+            style={{ ...cardPaddingStyle, backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
             {/* Success Overlay */}
             {submitStatus === 'success' && (
               <div className={`absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in ${borderRadiusClasses[cardBorderRadius]}`}>
@@ -381,6 +388,7 @@ const Leads: React.FC<LeadsProps> = ({
             {/* Left Side - Gradient Info */}
             <div className="relative p-12 md:p-16 flex flex-col justify-center text-white"
               style={{
+                ...cardPaddingStyle,
                 background: `linear-gradient(135deg, ${leadsColors.gradientStart} 0%, ${leadsColors.gradientEnd} 100%)`
               }}>
               <div className="relative z-10">
@@ -424,7 +432,7 @@ const Leads: React.FC<LeadsProps> = ({
 
             {/* Right Side - Form */}
             <div className="p-8 md:p-12 lg:p-16 relative"
-              style={{ backgroundColor: leadsColors.cardBackground }}>
+              style={{ ...cardPaddingStyle, backgroundColor: leadsColors.cardBackground }}>
               {/* Success Overlay */}
               {submitStatus === 'success' && (
                 <div className="absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in">
@@ -596,7 +604,7 @@ const Leads: React.FC<LeadsProps> = ({
 
           {/* Floating Glass Form */}
           <div className={`backdrop-blur-xl border p-8 md:p-12 shadow-2xl relative ${borderRadiusClasses[cardBorderRadius]}`}
-            style={{ backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
+            style={{ ...cardPaddingStyle, backgroundColor: leadsColors.cardBackground, borderColor: leadsColors.borderColor }}>
             {/* Success Overlay */}
             {submitStatus === 'success' && (
               <div className={`absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in ${borderRadiusClasses[cardBorderRadius]}`}>
@@ -776,7 +784,7 @@ const Leads: React.FC<LeadsProps> = ({
               style={{ borderColor: leadsColors.accent }}></div>
 
             {/* Form */}
-            <div className="p-8 md:p-16 relative" style={{ backgroundColor: leadsColors.cardBackground }}>
+            <div className="p-8 md:p-16 relative" style={{ ...cardPaddingStyle, backgroundColor: leadsColors.cardBackground }}>
               {/* Success Overlay */}
               {submitStatus === 'success' && (
                 <div className="absolute inset-0 bg-green-500/95 backdrop-blur-sm flex flex-col items-center justify-center z-10 animate-fade-in">

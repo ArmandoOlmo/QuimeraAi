@@ -9,6 +9,7 @@ import { ShoppingCart, Eye, Heart, Star, Filter, Search, ChevronLeft, ChevronRig
 import { ProductsProps, StorefrontProductItem, StyleType } from '../types/components';
 import type { ProductCardVariant } from '../types/productCard';
 import { createProductCardViewModel } from '../utils/productCard';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 import AppSelect from './ui/AppSelect';
 
 // Extended props to include colors
@@ -50,6 +51,11 @@ const Products: React.FC<ProductsWithColorsProps> = ({
     titleFontSize,
     descriptionFontSize,
     colors,
+    cardPadding,
+    cardPaddingTop,
+    cardPaddingRight,
+    cardPaddingBottom,
+    cardPaddingLeft,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -296,6 +302,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
     };
 
     const inputBg = getInputBackground();
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
 
     return (
         <section 
@@ -414,6 +421,7 @@ const Products: React.FC<ProductsWithColorsProps> = ({
                                 styles={styles}
                                 primaryColor={primaryColor}
                                 effectiveColors={effectiveColors}
+                                cardPaddingStyle={cardPaddingStyle}
                             />
                         ))}
                     </div>
@@ -515,6 +523,7 @@ interface ProductCardProps {
     onWishlistToggle: (productId: string) => void;
     styles: ReturnType<typeof Object>;
     primaryColor: string;
+    cardPaddingStyle: React.CSSProperties;
     effectiveColors: {
         accent: string;
         background?: string;
@@ -540,6 +549,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     styles,
     primaryColor,
     effectiveColors,
+    cardPaddingStyle,
 }) => {
     const card = createProductCardViewModel(product, {
         variant: cardStyle,
@@ -617,7 +627,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     </div>
 
                     {/* Content Overlay - Text on Image */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="absolute bottom-0 left-0 right-0 p-4" style={cardPaddingStyle}>
                         {product.category && (
                             <p className="text-xs uppercase tracking-wide mb-1 text-white/70">
                                 {product.category}
@@ -760,7 +770,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-4">
+            <div className="p-4" style={cardPaddingStyle}>
                 {product.category && (
                     <p 
                         className={`text-xs uppercase tracking-wide mb-1 ${styles.subtext}`}
