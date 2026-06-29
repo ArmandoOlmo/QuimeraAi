@@ -103,11 +103,12 @@ function mapTenantRowToTenant(tData: any): Tenant {
     const agencyRelationship = tData.agency_relationship || {};
     const agencyMetadata = parseTenantJsonField(agencyRelationship.metadata, {} as Record<string, any>);
     const parsedBilling = parseTenantJsonField(tData.billing, {} as Tenant['billing']);
+    const tenantType = tData.type === 'personal' ? 'individual' : tData.type;
     const agencyTenantId = agencyRelationship.agency_tenant_id || tData.owner_tenant_id || parsedBilling?.agencyTenantId;
     const agencyPlanId = agencyRelationship.agency_plan_id || parsedBilling?.agencyPlanId || agencyMetadata.agencyPlanId;
     const agencyBillingMode = agencyRelationship.billing_mode || parsedBilling?.mode || agencyMetadata.billingMode;
     const agencyEffectivePlanId = parsedBilling?.effectivePlanId || agencyMetadata.effectivePlanId;
-    const billing = tData.type === 'agency_client'
+    const billing = tenantType === 'agency_client'
         ? {
             ...parsedBilling,
             mode: (agencyBillingMode || 'included_in_parent') as TenantBilling['mode'],
@@ -120,7 +121,7 @@ function mapTenantRowToTenant(tData: any): Tenant {
         id: tData.id,
         name: tData.name,
         slug: tData.slug,
-        type: tData.type,
+        type: tenantType,
         ownerUserId: tData.owner_user_id,
         ownerTenantId: tData.owner_tenant_id,
         subscriptionPlan: tData.subscription_plan,
@@ -260,6 +261,32 @@ async function fetchAgencyClientRelationship(clientTenantId: string, agencyTenan
     return data || null;
 }
 
+async function hydrateTenantFromRow(tenantDoc: any): Promise<Tenant> {
+    let tenantRow = tenantDoc;
+    let parentTenant: Tenant | null = null;
+
+    if (tenantDoc.type === 'agency_client' || tenantDoc.owner_tenant_id) {
+        const parsedBilling = parseTenantJsonField(tenantDoc.billing, {} as TenantBilling);
+        const relationship = await fetchAgencyClientRelationship(
+            tenantDoc.id,
+            tenantDoc.owner_tenant_id || parsedBilling.agencyTenantId,
+        );
+        tenantRow = relationship ? { ...tenantDoc, agency_relationship: relationship } : tenantDoc;
+
+        const agencyTenantId = relationship?.agency_tenant_id || tenantDoc.owner_tenant_id || parsedBilling.agencyTenantId;
+        if (agencyTenantId) {
+            try {
+                const parentRow = await fetchTenantRowById(agencyTenantId);
+                parentTenant = parentRow ? mapTenantRowToTenant(parentRow) : null;
+            } catch (parentErr) {
+                console.warn('[TenantContext] Could not load parent agency tenant for agency_client effective plan', parentErr);
+            }
+        }
+    }
+
+    return withAgencyClientEffectiveContext(mapTenantRowToTenant(tenantRow), parentTenant);
+}
+
 // =============================================================================
 // PROVIDER
 // =============================================================================
@@ -318,31 +345,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             for (const row of snapshot || []) {
                 const tData = row.tenant;
                 if (tData) {
-                    const rawTenant = {
-                        id: tData.id,
-                        name: tData.name,
-                        slug: tData.slug,
-                        type: tData.type,
-                        ownerUserId: tData.owner_user_id,
-                        ownerTenantId: tData.owner_tenant_id,
-                        subscriptionPlan: tData.subscription_plan,
-                        status: tData.status,
-                        limits: typeof tData.limits === 'string' ? JSON.parse(tData.limits) : tData.limits,
-                        usage: typeof tData.usage === 'string' ? JSON.parse(tData.usage) : tData.usage,
-                        branding: typeof tData.branding === 'string' ? JSON.parse(tData.branding) : tData.branding,
-                        settings: typeof tData.settings === 'string' ? JSON.parse(tData.settings) : tData.settings,
-                        billing: typeof tData.billing === 'string' ? JSON.parse(tData.billing) : tData.billing,
-                        createdAt: tData.created_at,
-                        updatedAt: tData.updated_at
-                    };
-                    const tenant = {
-                        ...rawTenant,
-                        name: resolveProjectName(rawTenant.name),
-                        branding: rawTenant.branding ? {
-                            ...rawTenant.branding,
-                            companyName: rawTenant.branding.companyName ? resolveProjectName(rawTenant.branding.companyName) : resolveProjectName(rawTenant.name)
-                        } : undefined
-                    } as Tenant;
+                    const tenant = await hydrateTenantFromRow(tData);
                     memberships.push({
                         id: row.id,
                         tenantId: row.tenant_id,
@@ -382,29 +385,7 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 throw new Error('Workspace no encontrado');
             }
 
-            let tenantRow = tenantDoc;
-            let parentTenant: Tenant | null = null;
-
-            if (tenantDoc.type === 'agency_client' || tenantDoc.owner_tenant_id) {
-                const parsedBilling = parseTenantJsonField(tenantDoc.billing, {} as TenantBilling);
-                const relationship = await fetchAgencyClientRelationship(
-                    tenantId,
-                    tenantDoc.owner_tenant_id || parsedBilling.agencyTenantId,
-                );
-                tenantRow = relationship ? { ...tenantDoc, agency_relationship: relationship } : tenantDoc;
-
-                const agencyTenantId = relationship?.agency_tenant_id || tenantDoc.owner_tenant_id || parsedBilling.agencyTenantId;
-                if (agencyTenantId) {
-                    try {
-                        const parentRow = await fetchTenantRowById(agencyTenantId);
-                        parentTenant = parentRow ? mapTenantRowToTenant(parentRow) : null;
-                    } catch (parentErr) {
-                        console.warn('[TenantContext] Could not load parent agency tenant for agency_client effective plan', parentErr);
-                    }
-                }
-            }
-
-            const tenant = withAgencyClientEffectiveContext(mapTenantRowToTenant(tenantRow), parentTenant);
+            const tenant = await hydrateTenantFromRow(tenantDoc);
 
             setCurrentTenant(tenant);
 
@@ -471,6 +452,23 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
 
         if (error) throw error;
+
+        try {
+            await supabase
+                .from('tenants')
+                .update({ type: 'individual', subscription_plan: 'free', updated_at: new Date().toISOString() })
+                .eq('id', tenantId)
+                .in('type', ['personal', 'individual']);
+
+            await supabase
+                .from('tenant_members')
+                .update({ permissions: DEFAULT_PERMISSIONS.agency_owner })
+                .eq('tenant_id', tenantId)
+                .eq('user_id', authUser.id)
+                .eq('role', 'agency_owner');
+        } catch (normalizeErr) {
+            console.warn('[TenantContext] Personal workspace normalization skipped', normalizeErr);
+        }
 
         console.log('Personal workspace created/recovered via RPC:', tenantId);
         return tenantId;

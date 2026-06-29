@@ -87,12 +87,12 @@ export const DEFAULT_AGENCY_PLAN_FEATURES: AgencyPlanFeatures = {
     visualEditor: true,
     templates: true,
     cmsEnabled: true,
-    crmEnabled: false,
-    ecommerceEnabled: false,
-    emailMarketing: false,
+    crmEnabled: true,
+    ecommerceEnabled: true,
+    emailMarketing: true,
     chatbotEnabled: true,
-    customDomain: false,
-    removeBranding: false,
+    customDomain: true,
+    removeBranding: true,
     analyticsEnabled: true,
 };
 

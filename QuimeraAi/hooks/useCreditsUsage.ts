@@ -80,13 +80,19 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
             }
 
             const tenantEffectivePlanKey = normalizePlanId(resolveTenantEffectivePlan(currentTenant)) as SubscriptionPlanId;
+            const normalizedSubscriptionPlanKey = normalizePlanId(data?.plan_id || tenantEffectivePlanKey || 'free') as SubscriptionPlanId;
+            const hasSubscriptionPlanConflict = Boolean(data?.plan_id) && normalizedSubscriptionPlanKey !== tenantEffectivePlanKey;
             const shouldUseTenantEffectivePlan =
-                currentTenant?.type === 'agency_client' &&
-                currentTenant?.billing?.mode !== 'direct';
-            const subscriptionPlanKey = shouldUseTenantEffectivePlan
+                !data?.plan_id ||
+                hasSubscriptionPlanConflict ||
+                currentTenant?.type === 'agency' ||
+                (
+                    currentTenant?.type === 'agency_client' &&
+                    currentTenant?.billing?.mode !== 'direct'
+                );
+            const planKey: SubscriptionPlanId = shouldUseTenantEffectivePlan
                 ? tenantEffectivePlanKey
-                : normalizePlanId(data?.plan_id || tenantEffectivePlanKey || 'free') as SubscriptionPlanId;
-            const planKey: SubscriptionPlanId = subscriptionPlanKey;
+                : normalizedSubscriptionPlanKey;
             const plan = SUBSCRIPTION_PLANS[planKey] || getCanonicalPlan(planKey);
             const status = isUnlimitedCreditsUser ? 'active' : data?.status || 'active';
             

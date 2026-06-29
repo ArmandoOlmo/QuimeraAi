@@ -5,7 +5,7 @@ import {
   calculateCartSubtotal as calculateServerCartSubtotal,
   calculateCheckoutTotals as calculateServerCheckoutTotals,
 } from "../../../utils/ecommerce/ecommercePricingService.ts";
-import { CANONICAL_PLAN_IDS, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
+import { CANONICAL_PLAN_IDS, getCanonicalPlan, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 import { EdgeAccessError, requireServiceAccess } from "../_shared/access.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
@@ -77,6 +77,8 @@ const PUBLIC_ACTIONS = new Set([
 ]);
 
 const SERVICE_ROLE_ACTIONS = new Set([
+  "auditSubscriptionPlanCatalog",
+  "syncSubscriptionPlanCatalog",
   "syncStripeSubscription",
   "syncStripeSubscriptions",
 ]);
@@ -135,6 +137,14 @@ serve(async (req) => {
       case "syncStripeSubscription":
       case "syncStripeSubscriptions":
         result = await syncStripeSubscriptions(user?.id, isTrustedServerRequest, payload);
+        break;
+      case "auditSubscriptionPlanCatalog":
+        if (!isTrustedServerRequest) throw new Error("Service role required");
+        result = await auditSubscriptionPlanCatalog();
+        break;
+      case "syncSubscriptionPlanCatalog":
+        if (!isTrustedServerRequest) throw new Error("Service role required");
+        result = await syncSubscriptionPlanCatalog();
         break;
       case "createOrUpdatePlan":
         result = await createOrUpdatePlan(user.id, payload);
@@ -634,7 +644,7 @@ async function createOrUpdatePlan(userId: string, data: any) {
   const priceIdAnnually = await ensureRecurringPrice({
     productId,
     existingPriceId: plan.stripePriceIdAnnually,
-    unitAmount: Math.round(Number(plan.price.annually || 0) * 100),
+    unitAmount: yearlyPlanAmountCents(plan.price.annually),
     interval: "year",
     planId: plan.id,
   });
@@ -644,6 +654,247 @@ async function createOrUpdatePlan(userId: string, data: any) {
     productId,
     priceIdMonthly,
     priceIdAnnually,
+  };
+}
+
+function monthlyPlanAmountCents(value: unknown): number {
+  return Math.round(Number(value || 0) * 100);
+}
+
+function yearlyPlanAmountCents(monthlyAnnualRate: unknown): number {
+  return monthlyPlanAmountCents(Number(monthlyAnnualRate || 0) * 12);
+}
+
+function getPlanRowAmountCents(row: any, interval: "month" | "year"): number {
+  return interval === "year"
+    ? yearlyPlanAmountCents(row.price_annually)
+    : monthlyPlanAmountCents(row.price_monthly);
+}
+
+async function fetchCanonicalSubscriptionPlanRows() {
+  const { data, error } = await supabase
+    .from("subscription_plans")
+    .select("id,name,description,price_monthly,price_annually,stripe_product_id,stripe_price_id_monthly,stripe_price_id_annually,is_archived,is_featured,features")
+    .in("id", CANONICAL_PLAN_IDS as unknown as string[])
+    .order("price_monthly", { ascending: true });
+
+  if (error) throw error;
+  const rowsById = new Map<string, any>();
+  (data || []).forEach((row: any) => rowsById.set(row.id, row));
+  return rowsById;
+}
+
+async function auditStripeProduct(productId: string | null | undefined, planId: string, issues: string[]) {
+  if (!productId) {
+    return { id: null, active: false, exists: false };
+  }
+
+  try {
+    const product = await stripe.products.retrieve(productId) as any;
+    if (product.deleted) {
+      issues.push(`${planId}: Stripe product ${productId} is deleted`);
+      return { id: productId, active: false, exists: false, deleted: true };
+    }
+    if (!product.active) issues.push(`${planId}: Stripe product ${productId} is inactive`);
+    return {
+      id: product.id,
+      active: Boolean(product.active),
+      exists: true,
+      name: product.name || null,
+      planId: product.metadata?.planId || null,
+    };
+  } catch (error: any) {
+    issues.push(`${planId}: Stripe product ${productId} could not be retrieved (${error?.message || "unknown error"})`);
+    return { id: productId, active: false, exists: false };
+  }
+}
+
+async function auditStripePrice(params: {
+  priceId?: string | null;
+  planId: string;
+  interval: "month" | "year";
+  expectedUnitAmount: number;
+  issues: string[];
+}) {
+  if (params.expectedUnitAmount <= 0) {
+    return { id: params.priceId || null, expectedUnitAmount: params.expectedUnitAmount, skipped: true };
+  }
+  if (!params.priceId) {
+    params.issues.push(`${params.planId}: missing Stripe ${params.interval} price id`);
+    return { id: null, expectedUnitAmount: params.expectedUnitAmount, exists: false };
+  }
+
+  try {
+    const price = await stripe.prices.retrieve(params.priceId) as any;
+    if (!price.active) params.issues.push(`${params.planId}: Stripe ${params.interval} price ${params.priceId} is inactive`);
+    if (price.currency !== "usd") params.issues.push(`${params.planId}: Stripe ${params.interval} price ${params.priceId} currency is ${price.currency}`);
+    if (price.unit_amount !== params.expectedUnitAmount) {
+      params.issues.push(`${params.planId}: Stripe ${params.interval} price ${params.priceId} amount ${price.unit_amount} != expected ${params.expectedUnitAmount}`);
+    }
+    if (price.recurring?.interval !== params.interval) {
+      params.issues.push(`${params.planId}: Stripe ${params.interval} price ${params.priceId} interval is ${price.recurring?.interval || "none"}`);
+    }
+
+    return {
+      id: price.id,
+      active: Boolean(price.active),
+      exists: true,
+      currency: price.currency,
+      unitAmount: price.unit_amount,
+      expectedUnitAmount: params.expectedUnitAmount,
+      interval: price.recurring?.interval || null,
+    };
+  } catch (error: any) {
+    params.issues.push(`${params.planId}: Stripe ${params.interval} price ${params.priceId} could not be retrieved (${error?.message || "unknown error"})`);
+    return { id: params.priceId, expectedUnitAmount: params.expectedUnitAmount, exists: false };
+  }
+}
+
+async function auditSubscriptionPlanCatalog() {
+  const rowsById = await fetchCanonicalSubscriptionPlanRows();
+  const issues: string[] = [];
+  const plans = [];
+
+  for (const planId of CANONICAL_PLAN_IDS) {
+    const row = rowsById.get(planId);
+    if (!row) {
+      issues.push(`${planId}: missing in subscription_plans`);
+      plans.push({ planId, existsInSupabase: false });
+      continue;
+    }
+
+    const product = await auditStripeProduct(row.stripe_product_id, planId, issues);
+    const monthly = await auditStripePrice({
+      priceId: row.stripe_price_id_monthly,
+      planId,
+      interval: "month",
+      expectedUnitAmount: getPlanRowAmountCents(row, "month"),
+      issues,
+    });
+    const yearly = await auditStripePrice({
+      priceId: row.stripe_price_id_annually,
+      planId,
+      interval: "year",
+      expectedUnitAmount: getPlanRowAmountCents(row, "year"),
+      issues,
+    });
+
+    plans.push({
+      planId,
+      existsInSupabase: true,
+      archived: Boolean(row.is_archived),
+      priceMonthly: Number(row.price_monthly || 0),
+      priceAnnuallyMonthlyRate: Number(row.price_annually || 0),
+      expectedStripeMonthlyCents: getPlanRowAmountCents(row, "month"),
+      expectedStripeYearlyCents: getPlanRowAmountCents(row, "year"),
+      product,
+      monthly,
+      yearly,
+    });
+  }
+
+  return {
+    success: issues.length === 0,
+    checkedAt: nowIso(),
+    issueCount: issues.length,
+    issues,
+    plans,
+  };
+}
+
+async function syncSubscriptionPlanRowToStripe(row: any) {
+  const canonical = getCanonicalPlan(row.id as any);
+  const name = row.name || canonical.name;
+  const description = row.description || canonical.description;
+  const isArchived = Boolean(row.is_archived);
+  const featureList = Array.isArray(row.features)
+    ? row.features.join(",")
+    : Object.keys(row.features || {}).filter((key) => Boolean(row.features?.[key])).join(",");
+
+  let productId = row.stripe_product_id || "";
+  if (productId) {
+    try {
+      const product = await stripe.products.update(productId, {
+        name,
+        description: description || undefined,
+        active: !isArchived,
+        metadata: {
+          planId: row.id,
+          featured: String(Boolean(row.is_featured)),
+          features: featureList,
+        },
+      });
+      productId = product.id;
+    } catch (error: any) {
+      if (error?.code !== "resource_missing") throw error;
+      productId = "";
+    }
+  }
+
+  if (!productId) {
+    const product = await stripe.products.create({
+      name,
+      description: description || undefined,
+      active: !isArchived,
+      metadata: {
+        planId: row.id,
+        featured: String(Boolean(row.is_featured)),
+        features: featureList,
+      },
+    });
+    productId = product.id;
+  }
+
+  const priceIdMonthly = await ensureRecurringPrice({
+    productId,
+    existingPriceId: row.stripe_price_id_monthly || undefined,
+    unitAmount: getPlanRowAmountCents(row, "month"),
+    interval: "month",
+    planId: row.id,
+  });
+  const priceIdAnnually = await ensureRecurringPrice({
+    productId,
+    existingPriceId: row.stripe_price_id_annually || undefined,
+    unitAmount: getPlanRowAmountCents(row, "year"),
+    interval: "year",
+    planId: row.id,
+  });
+
+  const update: Record<string, unknown> = { stripe_product_id: productId };
+  if (priceIdMonthly) update.stripe_price_id_monthly = priceIdMonthly;
+  if (priceIdAnnually) update.stripe_price_id_annually = priceIdAnnually;
+
+  const { error } = await supabase
+    .from("subscription_plans")
+    .update(update)
+    .eq("id", row.id);
+  if (error) throw error;
+
+  return { planId: row.id, productId, priceIdMonthly, priceIdAnnually };
+}
+
+async function syncSubscriptionPlanCatalog() {
+  const before = await auditSubscriptionPlanCatalog();
+  const rowsById = await fetchCanonicalSubscriptionPlanRows();
+  const updated = [];
+
+  for (const planId of CANONICAL_PLAN_IDS) {
+    const row = rowsById.get(planId);
+    if (!row || Boolean(row.is_archived)) continue;
+    if (Number(row.price_monthly || 0) <= 0 && Number(row.price_annually || 0) <= 0) continue;
+    updated.push(await syncSubscriptionPlanRowToStripe(row));
+  }
+
+  const after = await auditSubscriptionPlanCatalog();
+  return {
+    success: after.success,
+    checkedAt: nowIso(),
+    updated,
+    beforeIssueCount: before.issueCount,
+    beforeIssues: before.issues,
+    afterIssueCount: after.issueCount,
+    afterIssues: after.issues,
+    plans: after.plans,
   };
 }
 
