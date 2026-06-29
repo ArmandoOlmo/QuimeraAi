@@ -8,6 +8,7 @@ import { useDesignTokens } from '../hooks/useDesignTokens';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 import { isPendingImage } from '../utils/imagePlaceholders';
 import { FaqVariant } from '../data/faqVariants';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 const paddingYClasses: Record<PaddingSize, string> = {
   none: 'py-0',
@@ -65,15 +66,17 @@ interface FaqItemProps {
   gradientEnd?: string;
   activeTextColor?: string;
   iconBackground?: string;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const FaqItemClassic: React.FC<FaqItemProps> = ({
-  question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor }) => {
+  question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderColor, cardPaddingStyle }) => {
   return (
     <div className="border-b backdrop-blur-lg" style={{ borderColor }}>
       <button
         onClick={onClick}
         className="flex w-full min-w-0 items-center justify-between gap-4 text-left py-6 transition-colors"
+        style={cardPaddingStyle}
         aria-expanded={isOpen}
       >
         <h3
@@ -94,7 +97,7 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="pb-6 pr-0 font-body sm:pr-8" style={{ color: textColor }}>
+          <p className="pb-6 pr-0 font-body sm:pr-8" style={{ color: textColor, paddingLeft: cardPaddingStyle?.paddingLeft, paddingRight: cardPaddingStyle?.paddingRight, paddingBottom: cardPaddingStyle?.paddingBottom }}>
             {answer}
           </p>
         </div>
@@ -103,7 +106,7 @@ const FaqItemClassic: React.FC<FaqItemProps> = ({
   );
 };
 
-const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, cardBackground, borderColor }) => {
+const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, cardBackground, borderColor, cardPaddingStyle }) => {
   return (
     <div
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-300 border backdrop-blur-xl`}
@@ -115,6 +118,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
       <button
         onClick={onClick}
         className="flex w-full min-w-0 items-center justify-between text-left p-4 transition-colors hover:opacity-90 sm:p-6"
+        style={cardPaddingStyle}
         aria-expanded={isOpen}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
@@ -136,7 +140,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
         className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <div className="px-4 pb-4 sm:px-6 sm:pb-6 sm:pl-[4.5rem]">
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6 sm:pl-[4.5rem]" style={cardPaddingStyle}>
             <p className="font-body" style={{ color: textColor }}>
               {answer}
             </p>
@@ -147,7 +151,7 @@ const FaqItemCards: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClic
   );
 };
 
-const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, gradientStart, gradientEnd, activeTextColor }) => {
+const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, gradientStart, gradientEnd, activeTextColor, cardPaddingStyle }) => {
   return (
     <div
       className={`mb-4 ${borderRadiusClasses[borderRadius]} overflow-hidden transition-all duration-500 relative group`}
@@ -167,6 +171,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
       <button
         onClick={onClick}
         className="relative z-10 flex w-full min-w-0 items-center justify-between gap-4 text-left p-4 sm:p-6"
+        style={cardPaddingStyle}
         aria-expanded={isOpen}
       >
         <h3
@@ -196,7 +201,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
         className={`grid overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <div className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="relative z-10 px-4 pb-4 sm:px-6 sm:pb-6" style={cardPaddingStyle}>
             <div
               className="pl-4 border-l-2"
               style={{ borderColor: accentColor }}
@@ -212,7 +217,7 @@ const FaqItemGradient: React.FC<FaqItemProps> = ({ question, answer, isOpen, onC
   );
 };
 
-const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, activeTextColor, iconBackground }) => {
+const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onClick, accentColor, textColor, headingColor, borderRadius, activeTextColor, iconBackground, cardPaddingStyle }) => {
   return (
     <div
       className={`mb-8 transition-all duration-300`}
@@ -220,6 +225,7 @@ const FaqItemMinimal: React.FC<FaqItemProps> = ({ question, answer, isOpen, onCl
       <button
         onClick={onClick}
         className="flex w-full min-w-0 items-start gap-4 text-left transition-all duration-300 sm:gap-6"
+        style={cardPaddingStyle}
         aria-expanded={isOpen}
       >
         <div
@@ -279,7 +285,12 @@ const Faq: React.FC<FaqProps> = ({
   borderRadius,
   titleFontSize = 'md',
   descriptionFontSize = 'md',
-  faqVariant = 'classic'
+  faqVariant = 'classic',
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft
 }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
@@ -301,6 +312,7 @@ const Faq: React.FC<FaqProps> = ({
 
   const title = resolveText(rawTitle);
   const description = resolveText(rawDescription);
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
   const items = (rawItems || []).map(item => ({
     ...item,
     question: resolveText(item.question),
@@ -367,6 +379,7 @@ const Faq: React.FC<FaqProps> = ({
       gradientEnd: safeColors.gradientEnd,
       activeTextColor: safeColors.activeText,
       iconBackground: safeColors.iconBackground,
+      cardPaddingStyle,
     };
 
     switch (faqVariant) {
@@ -397,6 +410,7 @@ const Faq: React.FC<FaqProps> = ({
           type="button"
           onClick={() => handleToggle(index)}
           className="flex w-full min-w-0 items-center justify-between gap-4 py-6 text-left transition-opacity hover:opacity-80 sm:gap-6"
+          style={cardPaddingStyle}
           aria-expanded={isOpen}
         >
           <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium leading-snug sm:text-xl" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>
@@ -411,7 +425,7 @@ const Faq: React.FC<FaqProps> = ({
         </button>
         <div className={`grid overflow-hidden transition-all duration-300 ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
           <div className="overflow-hidden">
-            <p className={`font-body leading-relaxed ${answerClassName}`} style={{ color: safeColors.cardText }}>
+            <p className={`font-body leading-relaxed ${answerClassName}`} style={{ color: safeColors.cardText, paddingLeft: cardPaddingStyle.paddingLeft, paddingRight: cardPaddingStyle.paddingRight, paddingBottom: cardPaddingStyle.paddingBottom }}>
               {item.answer}
             </p>
           </div>
@@ -458,7 +472,7 @@ const Faq: React.FC<FaqProps> = ({
           <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
           {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mx-auto mt-4 max-w-2xl font-body`} style={{ color: safeColors.description }}>{description}</p>}
         </div>
-        <div className={`mx-auto max-w-4xl overflow-hidden border ${borderRadiusClasses[borderRadius]}`} style={{ borderColor: safeColors.border, backgroundColor: safeColors.cardBackground }}>
+        <div className={`mx-auto max-w-4xl overflow-hidden border ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, borderColor: safeColors.border, backgroundColor: safeColors.cardBackground }}>
           {items.map((item, index) => (
             <div key={index} className="px-4 sm:px-7">
               {renderInlineAnswer(item, index, 'pb-8')}
@@ -472,7 +486,7 @@ const Faq: React.FC<FaqProps> = ({
   const renderDarkPanel = () => (
     <section id="faq" className={sectionClass} style={sectionStyle}>
       <div className={`container mx-auto ${paddingYClasses[paddingY]} ${paddingXClasses[paddingX]}`}>
-        <div className={`grid grid-cols-1 gap-10 border p-5 sm:p-8 md:p-14 lg:grid-cols-[0.9fr_1.1fr] ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.panelBackground, borderColor: safeColors.border }}>
+        <div className={`grid grid-cols-1 gap-10 border p-5 sm:p-8 md:p-14 lg:grid-cols-[0.9fr_1.1fr] ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, backgroundColor: safeColors.panelBackground, borderColor: safeColors.border }}>
           <div>
             <h2 className={`${titleSizeClasses[titleFontSize]} break-words font-header font-semibold leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>
             {description && <p className={`${descriptionSizeClasses[descriptionFontSize]} mt-5 max-w-md font-body`} style={{ color: safeColors.description }}>{description}</p>}
@@ -481,7 +495,7 @@ const Faq: React.FC<FaqProps> = ({
             {items.map((item, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={index} className={`border p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: isOpen ? safeColors.accent : safeColors.border }}>
+                <div key={index} className={`border p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, backgroundColor: safeColors.cardBackground, borderColor: isOpen ? safeColors.accent : safeColors.border }}>
                   <button type="button" onClick={() => handleToggle(index)} className="flex w-full min-w-0 items-start justify-between gap-4 text-left" aria-expanded={isOpen}>
                     <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium" style={{ color: isOpen ? safeColors.accent : safeColors.cardHeading }}>{item.question}</h3>
                     {isOpen ? <Minus className="h-5 w-5 shrink-0" style={{ color: safeColors.accent }} /> : <Plus className="h-5 w-5 shrink-0" style={{ color: safeColors.cardHeading }} />}
@@ -525,7 +539,7 @@ const Faq: React.FC<FaqProps> = ({
             {items.map((item, index) => {
               const isOpen = openIndex === index;
               return (
-                <div key={index} className={`p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isOpen ? safeColors.activeBackground : safeColors.cardBackground, borderColor: safeColors.border }}>
+                <div key={index} className={`p-4 sm:p-6 ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, backgroundColor: isOpen ? safeColors.activeBackground : safeColors.cardBackground, borderColor: safeColors.border }}>
                   <button type="button" onClick={() => handleToggle(index)} className="flex w-full min-w-0 items-center justify-between gap-3 text-left sm:gap-5" aria-expanded={isOpen}>
                     <h3 className="min-w-0 flex-1 break-words font-header text-lg font-medium sm:text-xl" style={{ color: isOpen ? safeColors.activeText : safeColors.cardHeading }}>{item.question}</h3>
                     <span className="flex-shrink-0" style={{ color: isOpen ? safeColors.activeText : safeColors.accent }}>{isOpen ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}</span>
@@ -550,14 +564,14 @@ const Faq: React.FC<FaqProps> = ({
               {items.map((item, index) => {
                 const isActive = activeIndex === index;
                 return (
-                  <button key={index} type="button" onClick={() => setOpenIndex(index)} className={`w-full break-words p-4 text-left sm:p-5 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: isActive ? safeColors.activeBackground : safeColors.cardBackground, color: isActive ? safeColors.activeText : safeColors.cardHeading }}>
+                  <button key={index} type="button" onClick={() => setOpenIndex(index)} className={`w-full break-words p-4 text-left sm:p-5 ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, backgroundColor: isActive ? safeColors.activeBackground : safeColors.cardBackground, color: isActive ? safeColors.activeText : safeColors.cardHeading }}>
                     {item.question}
                   </button>
                 );
               })}
             </div>
           </div>
-          <div className="p-6 lg:p-14" style={{ backgroundColor: safeColors.panelBackground }}>
+          <div className="p-6 lg:p-14" style={{ ...cardPaddingStyle, backgroundColor: safeColors.panelBackground }}>
             {activeItem && (
               <div className="max-w-xl">
                 <p className="font-body text-sm uppercase tracking-widest" style={{ color: safeColors.activeText }}>Answer</p>
@@ -582,7 +596,7 @@ const Faq: React.FC<FaqProps> = ({
               {items.map((item, index) => renderInlineAnswer(item, index))}
             </div>
           </div>
-          <div className={`border p-5 sm:p-8 ${borderRadiusClasses[borderRadius]}`} style={{ backgroundColor: safeColors.cardBackground, borderColor: safeColors.border }}>
+          <div className={`border p-5 sm:p-8 ${borderRadiusClasses[borderRadius]}`} style={{ ...cardPaddingStyle, backgroundColor: safeColors.cardBackground, borderColor: safeColors.border }}>
             {faqImageUrl && !isPendingImage(faqImageUrl) && (
               <img src={faqImageUrl} alt="" className={`mb-8 aspect-video w-full object-cover ${borderRadiusClasses[borderRadius]}`} />
             )}

@@ -9,6 +9,7 @@ import { hexToRgba, getNeonGlowStyles } from '../utils/colorUtils';
 import { ArrowRight, Check } from 'lucide-react';
 import FeaturesCinematicGym from './cinematic/FeaturesCinematicGym';
 import { getIconComponent } from './ui/IconSelector';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 interface FeatureCardProps {
   imageUrl: string;
@@ -28,6 +29,7 @@ interface FeatureCardProps {
   linkUrl?: string;
   linkText?: string;
   onNavigate?: (href: string) => void;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -209,7 +211,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   enableAnimation = true,
   linkUrl,
   linkText,
-  onNavigate
+  onNavigate,
+  cardPaddingStyle
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const isExternal = linkUrl?.startsWith('http');
@@ -236,7 +239,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
           key={imageUrl}
         />
       )}
-      <div className="p-8">
+      <div className="p-8" style={cardPaddingStyle}>
         <h3 className="text-2xl font-bold mb-3 font-header" style={{ color: headingColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{title}</h3>
         <p className="font-body opacity-90" style={{ color: textColor }}>{description}</p>
         {linkUrl && (
@@ -263,13 +266,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 };
 
 // --- NUEVO: Componente para la Tarjeta Moderna (Bento Style) ---
-const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate }: { feature: any, index: number, colors: any, borderRadius: string, onNavigate?: (href: string) => void }) => {
+const ModernFeatureCard = ({ feature, index, colors, borderRadius, onNavigate, cardPaddingStyle }: { feature: any, index: number, colors: any, borderRadius: string, onNavigate?: (href: string) => void, cardPaddingStyle?: React.CSSProperties }) => {
   // Patrón Bento: El 1º (0) y el 4º (3) ocupan 2 columnas
   const isWide = index === 0 || index === 3 || index === 6;
   const isExternal = feature.linkUrl?.startsWith('http');
 
   return (
-    <div className={`group relative overflow-hidden border p-8 transition-all duration-500 backdrop-blur-xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ borderColor: colors?.borderColor, backgroundColor: hexToRgba(colors?.cardBackground || '#1f2937', 0.35) }}>
+    <div className={`group relative overflow-hidden border p-8 transition-all duration-500 backdrop-blur-xl ${borderRadius} ${isWide ? 'md:col-span-2' : 'md:col-span-1'}`} style={{ ...cardPaddingStyle, borderColor: colors?.borderColor, backgroundColor: hexToRgba(colors?.cardBackground || '#1f2937', 0.35) }}>
       {/* Efecto Glow sutil */}
       <div
         className="absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full blur-[100px] transition-all duration-500"
@@ -338,6 +341,7 @@ interface ImageOverlayCardProps {
   animationType?: AnimationType;
   enableAnimation?: boolean;
   onNavigate?: (href: string) => void;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
@@ -349,7 +353,8 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
   textAlignment,
   animationType = 'fade-in-up',
   enableAnimation = true,
-  onNavigate
+  onNavigate,
+  cardPaddingStyle
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const delay = getAnimationDelay(index);
@@ -386,7 +391,7 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
       />
 
       {/* Text overlay - position based on alignment */}
-      <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`}>
+      <div className={`absolute bottom-0 left-0 right-0 p-6 flex flex-col ${textAlignmentClasses[textAlignment]}`} style={cardPaddingStyle}>
         <h3
           className="text-xl md:text-2xl font-bold mb-2 font-header drop-shadow-lg"
           style={{
@@ -428,7 +433,7 @@ const ImageOverlayCard: React.FC<ImageOverlayCardProps> = ({
 };
 
 // --- NUEVO: Componente para Bento Overlay Style ---
-const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering, onNavigate, imageHeight, imageObjectFit }: {
+const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering, onNavigate, imageHeight, imageObjectFit, cardPaddingStyle }: {
   feature: FeatureItem;
   index: number;
   colors: any;
@@ -437,6 +442,7 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
   onNavigate?: (href: string) => void;
   imageHeight: number;
   imageObjectFit: ObjectFit;
+  cardPaddingStyle?: React.CSSProperties;
 }) => {
   const isWide = index === 0 || index === 3 || index === 6;
   const isExternal = feature.linkUrl?.startsWith('http');
@@ -478,7 +484,7 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
       />
 
       {/* Text overlay at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-10 flex flex-col">
+      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-10 flex flex-col" style={cardPaddingStyle}>
         <h3
           className={`${isWide ? 'text-2xl md:text-3xl' : 'text-xl md:text-2xl'} font-bold mb-2 font-header drop-shadow-lg group-hover:translate-x-1 transition-transform duration-300`}
           style={{
@@ -519,7 +525,7 @@ const BentoOverlayCard = ({ feature, index, colors, borderRadius, showNumbering,
 };
 
 // --- NUEVO: Componente para Press Release Style ---
-const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, imageHeight, imageObjectFit, cardBorderSize = 0, cardBorderOpacity = 100 }: {
+const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, imageHeight, imageObjectFit, cardBorderSize = 0, cardBorderOpacity = 100, cardPaddingStyle }: {
   feature: FeatureItem;
   index: number;
   colors: any;
@@ -529,6 +535,7 @@ const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, im
   imageObjectFit: ObjectFit;
   cardBorderSize?: number;
   cardBorderOpacity?: number;
+  cardPaddingStyle?: React.CSSProperties;
 }) => {
   const isWide = index === 0 || index === 3 || index === 4;
   const isExternal = feature.linkUrl?.startsWith('http');
@@ -554,7 +561,7 @@ const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, im
       )}
 
       {/* Content overlay */}
-      <div className="absolute inset-0 p-8 md:p-10 flex flex-col justify-between z-10">
+      <div className="absolute inset-0 p-8 md:p-10 flex flex-col justify-between z-10" style={cardPaddingStyle}>
         <div className="flex flex-col mt-auto">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-80" style={{ color: colors?.cardText || '#000' }}>
             {feature.description?.substring(0, 25) || 'LATEST NEWS'}
@@ -596,7 +603,7 @@ const PressReleaseCard = ({ feature, index, colors, borderRadius, onNavigate, im
 };
 
 // --- Editorial Mosaic Style ---
-const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNavigate, imageObjectFit, animationType = 'fade-in-up', enableAnimation = true }: {
+const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNavigate, imageObjectFit, animationType = 'fade-in-up', enableAnimation = true, cardPaddingStyle }: {
   feature: FeatureItem;
   index: number;
   colors: any;
@@ -605,6 +612,7 @@ const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNa
   imageObjectFit: ObjectFit;
   animationType?: AnimationType;
   enableAnimation?: boolean;
+  cardPaddingStyle?: React.CSSProperties;
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
   const delay = getAnimationDelay(index, 0.08);
@@ -640,6 +648,7 @@ const EditorialMosaicFeatureCard = ({ feature, index, colors, borderRadius, onNa
     <div
       className={`border p-5 sm:p-6 ${borderRadius}`}
       style={{
+        ...cardPaddingStyle,
         aspectRatio: EDITORIAL_MOSAIC_INFO_ASPECT_RATIO,
         backgroundColor: cardBackground,
         borderColor,
@@ -745,7 +754,12 @@ const Features: React.FC<FeaturesProps> = ({
   cardBorderSize = 0,
   cardBorderOpacity = 100,
   onNavigate,
-  isPreview
+  isPreview,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft
 }) => {
   const { i18n } = useTranslation();
   
@@ -773,9 +787,10 @@ const Features: React.FC<FeaturesProps> = ({
       ? (item as any).bullets.map((bullet: any) => resolveText(bullet)).filter(Boolean)
       : undefined,
   }));
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
   if (featuresVariant === 'cinematic-gym') {
-    return <FeaturesCinematicGym {...{ title, description, items, paddingY, paddingX, colors, titleFontSize, descriptionFontSize, gridColumns, imageHeight, imageObjectFit, layoutAlignment, isPreview }} />;
+    return <FeaturesCinematicGym {...{ title, description, items, paddingY, paddingX, colors, titleFontSize, descriptionFontSize, gridColumns, imageHeight, imageObjectFit, layoutAlignment, isPreview, cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }} />;
   }
 
   // Get design tokens with fallback to component colors
@@ -859,7 +874,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {items.map((feature, index) => (
-              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                 <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
                 <div className="pt-4">
                   <h3 className="font-header text-lg font-semibold" style={{ color: safeColors.heading, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{feature.title}</h3>
@@ -886,7 +901,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClasses[gridColumns] || 'lg:grid-cols-3'} gap-5 md:gap-6`}>
             {items.map((feature, index) => (
-              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                 <FeatureImagePanel feature={feature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} borderColor={actualColors.borderColor} className={`${borderRadiusClasses[borderRadius]} border p-4`} />
                 <div className="pt-5">
                   <h3 className="font-header text-xl font-semibold" style={{ color: safeColors.heading }}>{feature.title}</h3>
@@ -925,7 +940,7 @@ const Features: React.FC<FeaturesProps> = ({
               const cardHeading = isPrimary ? actualColors.background || '#ffffff' : safeColors.cardHeading;
               const cardText = isPrimary ? hexToRgba(actualColors.background || '#ffffff', 0.78) : safeColors.cardText;
               return (
-                <article key={index} className={`flex min-h-[320px] flex-col justify-between border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: cardBg, borderColor: actualColors.borderColor || 'transparent' }}>
+                <article key={index} className={`flex min-h-[320px] flex-col justify-between border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index), backgroundColor: cardBg, borderColor: actualColors.borderColor || 'transparent' }}>
                   <FeatureIconMark icon={feature.icon} color={isPrimary ? actualColors.background || '#ffffff' : safeColors.heading} size={38} className="h-12 w-12" />
                   <div>
                     <p className="mb-5 font-body text-xs uppercase tracking-[0.18em]" style={{ color: cardText }}>{feature.eyebrow || `Strategy ${index + 1}`}</p>
@@ -956,7 +971,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
             {items.slice(0, 3).map((feature, index) => (
-              <article key={index} className={`group relative min-h-[520px] overflow-hidden border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: actualColors.cardBackground || '#f8fafc', borderColor: actualColors.borderColor || 'transparent' }}>
+              <article key={index} className={`group relative min-h-[520px] overflow-hidden border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index), backgroundColor: actualColors.cardBackground || '#f8fafc', borderColor: actualColors.borderColor || 'transparent' }}>
                 {!isPendingImage(feature.imageUrl) && (
                   <img src={feature.imageUrl} alt={feature.title} className={`absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105 ${objectFitClasses[imageObjectFit] || 'object-cover'}`} />
                 )}
@@ -986,7 +1001,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {items.map((feature, index) => (
-              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                 <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} borderColor={actualColors.borderColor} className={`${borderRadiusClasses[borderRadius]} border`} />
                 <h3 className="mt-5 font-header text-lg font-semibold" style={{ color: safeColors.heading }}>{feature.title}</h3>
                 <p className="mt-5 font-body text-sm leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
@@ -1007,7 +1022,7 @@ const Features: React.FC<FeaturesProps> = ({
           {title && <h2 className={`${titleSizeClasses[titleFontSize]} mx-auto mb-16 max-w-4xl text-center font-header font-normal leading-tight`} style={{ color: safeColors.heading }}>{title}</h2>}
           <div className={`grid grid-cols-1 gap-12 md:grid-cols-3`}>
             {items.slice(0, 3).map((feature, index) => (
-              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+              <article key={index} className={`${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                 <FeatureIconMark icon={feature.icon} color={safeColors.heading} size={64} className="mb-8 h-20 w-20" />
                 <h3 className="font-header text-2xl font-normal" style={{ color: safeColors.heading }}>{feature.title}</h3>
                 <p className="mt-5 font-body text-base leading-relaxed" style={{ color: safeColors.description }}>{feature.description}</p>
@@ -1032,7 +1047,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {items.map((feature, index) => (
-              <article key={index} className={`border-y py-6 ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.18) }}>
+              <article key={index} className={`border-y py-6 ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.18) }}>
                 <div className="relative">
                   <FeatureImagePanel feature={feature} aspectRatio="4 / 5" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
                   {feature.linkUrl && (
@@ -1067,7 +1082,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="space-y-8">
             {items.map((feature, index) => (
-              <article key={index} className={`grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.95fr)] md:items-center ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+              <article key={index} className={`grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,0.95fr)] md:items-center ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                 <FeatureImagePanel feature={feature} aspectRatio="21 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className={borderRadiusClasses[borderRadius]} />
                 <div className="border-l pl-8" style={{ borderColor: hexToRgba(actualColors.borderColor || actualColors.accent, 0.25) }}>
                   <FeatureIconMark icon={feature.icon} color={safeColors.heading} size={24} className="mb-8 h-8 w-8" />
@@ -1099,7 +1114,7 @@ const Features: React.FC<FeaturesProps> = ({
                 </div>
               );
               return (
-                <article key={index} className={`grid min-h-[360px] gap-8 ${index < 2 ? '' : 'lg:pt-16'} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index) }}>
+                <article key={index} className={`grid min-h-[360px] gap-8 ${index < 2 ? '' : 'lg:pt-16'} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
                   {imageFirst ? <>{copy}{media}</> : <>{media}{copy}</>}
                 </article>
               );
@@ -1127,7 +1142,7 @@ const Features: React.FC<FeaturesProps> = ({
               <FeatureImagePanel feature={heroFeature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className="rounded-none" />
               <div className="grid grid-cols-1 md:grid-cols-3">
                 {supportFeatures.map((feature, index) => (
-                  <article key={index} className="border-t p-7 md:border-l md:first:border-l-0" style={{ borderColor: hexToRgba(actualColors.borderColor || '#000000', 0.14), backgroundColor: index === 0 ? hexToRgba(actualColors.accent, 0.08) : 'transparent' }}>
+                  <article key={index} className="border-t p-7 md:border-l md:first:border-l-0" style={{ ...cardPaddingStyle, borderColor: hexToRgba(actualColors.borderColor || '#000000', 0.14), backgroundColor: index === 0 ? hexToRgba(actualColors.accent, 0.08) : 'transparent' }}>
                     <div className="mb-4 flex items-center gap-3">
                       <span className="h-2.5 w-2.5" style={{ backgroundColor: index === 0 ? actualColors.accent : hexToRgba(actualColors.accent, 0.65) }} />
                       <h3 className="font-header text-lg font-semibold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
@@ -1158,7 +1173,7 @@ const Features: React.FC<FeaturesProps> = ({
             {items.slice(0, 3).map((feature, index) => (
               <article key={index} className={`overflow-hidden border ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: actualColors.cardBackground || '#f8fafc', borderColor: actualColors.borderColor || 'transparent' }}>
                 <FeatureImagePanel feature={feature} aspectRatio="16 / 9" imageObjectFit={imageObjectFit} backgroundColor={actualColors.cardBackground} className="rounded-none" />
-                <div className="p-7">
+                <div className="p-7" style={cardPaddingStyle}>
                   <h3 className="font-header text-2xl font-bold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
                   <ul className="mt-6 space-y-3">
                     {getFeatureBullets(feature).map((bullet, bulletIndex) => (
@@ -1198,7 +1213,7 @@ const Features: React.FC<FeaturesProps> = ({
           )}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {items.slice(0, 6).map((feature, index) => (
-              <article key={index} className={`border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ animationDelay: getAnimationDelay(index), backgroundColor: hexToRgba(actualColors.cardBackground || '#27272a', 0.72), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.08) }}>
+              <article key={index} className={`border p-8 ${borderRadiusClasses[borderRadius]} ${getAnimationClass(animationType, enableCardAnimation)}`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index), backgroundColor: hexToRgba(actualColors.cardBackground || '#27272a', 0.72), borderColor: hexToRgba(actualColors.borderColor || '#ffffff', 0.08) }}>
                 <FeatureIconMark icon={feature.icon} color={actualColors.accent} size={28} className="mb-8 h-8 w-8" />
                 <h3 className="font-header text-xl font-semibold" style={{ color: safeColors.cardHeading }}>{feature.title}</h3>
                 <p className="mt-5 font-body text-base leading-relaxed" style={{ color: safeColors.cardText }}>{feature.description}</p>
@@ -1252,6 +1267,7 @@ const Features: React.FC<FeaturesProps> = ({
                 imageObjectFit={imageObjectFit}
                 animationType={animationType}
                 enableAnimation={enableCardAnimation}
+                cardPaddingStyle={cardPaddingStyle}
               />
             ))}
           </div>
@@ -1313,6 +1329,7 @@ const Features: React.FC<FeaturesProps> = ({
               animationType={animationType}
               enableAnimation={enableCardAnimation}
               onNavigate={onNavigate}
+              cardPaddingStyle={cardPaddingStyle}
             />
           ))}
         </div>
@@ -1362,6 +1379,7 @@ const Features: React.FC<FeaturesProps> = ({
                   onNavigate={onNavigate}
                   imageHeight={imageHeight}
                   imageObjectFit={imageObjectFit}
+                  cardPaddingStyle={cardPaddingStyle}
                 />
               ))}
             </div>
@@ -1433,6 +1451,7 @@ const Features: React.FC<FeaturesProps> = ({
                   `}
                   style={{
                     ...neonStyles,
+                    ...cardPaddingStyle,
                     animationDelay: getAnimationDelay(index)
                   }}
                 >
@@ -1558,6 +1577,7 @@ const Features: React.FC<FeaturesProps> = ({
                   imageObjectFit={imageObjectFit}
                   cardBorderSize={cardBorderSize}
                   cardBorderOpacity={cardBorderOpacity}
+                  cardPaddingStyle={cardPaddingStyle}
                 />
               ))}
             </div>
@@ -1597,6 +1617,7 @@ const Features: React.FC<FeaturesProps> = ({
                   colors={{ ...actualColors, heading: safeColors.cardHeading, text: safeColors.cardText }}
                   borderRadius={borderRadiusClasses[borderRadius]}
                   onNavigate={onNavigate}
+                  cardPaddingStyle={cardPaddingStyle}
                 />
               ))}
             </div>
@@ -1683,7 +1704,7 @@ const Features: React.FC<FeaturesProps> = ({
                     </div>
 
                     {/* Content */}
-                    <div className="relative z-20 p-6 md:p-8">
+                    <div className="relative z-20 p-6 md:p-8" style={cardPaddingStyle}>
                       {/* Número de feature */}
                       <span
                         className="inline-block text-xs font-bold uppercase tracking-widest mb-3 opacity-50"
@@ -1788,6 +1809,7 @@ const Features: React.FC<FeaturesProps> = ({
               linkUrl={feature.linkUrl}
               linkText={feature.linkText}
               onNavigate={onNavigate}
+              cardPaddingStyle={cardPaddingStyle}
             />
           ))}
         </div>

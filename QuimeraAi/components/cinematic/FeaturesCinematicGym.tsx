@@ -6,6 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useDesignTokens } from '../../hooks/useDesignTokens';
+import { getCardPaddingStyle } from '../../utils/cardPadding';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -49,7 +50,12 @@ const FeaturesCinematicGym: React.FC<FeaturesCinematicGymProps> = (props) => {
         colors,
         titleFontSize = 'md',
         layoutAlignment = 'left',
-        isPreview
+        isPreview,
+        cardPadding,
+        cardPaddingTop,
+        cardPaddingRight,
+        cardPaddingBottom,
+        cardPaddingLeft
     } = props;
 
     // The brutalist preset requires heavy, geometric/grotesk typography
@@ -73,6 +79,7 @@ const FeaturesCinematicGym: React.FC<FeaturesCinematicGymProps> = (props) => {
     const cardBgColor = getSafeColor(colors?.cardBackground, '#F5F3EE');
     const cardHeadingColor = getSafeColor((colors as any)?.cardHeading, headingColor);
     const cardTextColor = getSafeColor((colors as any)?.cardText, textColor);
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
     const sectionRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
@@ -207,7 +214,7 @@ const FeaturesCinematicGym: React.FC<FeaturesCinematicGymProps> = (props) => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2">
                                         {/* Content Area */}
-                                        <div className="p-8 md:p-12 flex flex-col justify-between min-h-[300px]">
+                                        <div className="p-8 md:p-12 flex flex-col justify-between min-h-[300px]" style={cardPaddingStyle}>
                                             <div>
                                                 {/* Number Index */}
                                                 <div

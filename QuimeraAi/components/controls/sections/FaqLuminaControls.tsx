@@ -8,6 +8,7 @@ import { ControlsDeps, BackgroundImageControl } from '../ControlsShared';
 import { renderLuminaAnimationControls } from './LuminaSharedControls';
 import { Type, HelpCircle, Plus, Trash2, Settings, Layers, RotateCcw } from 'lucide-react';
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 
 export const renderFaqLuminaControls = (deps: ControlsDeps) => {
   const { data, setNestedData, setAiAssistField, t } = deps;
@@ -114,6 +115,7 @@ export const renderFaqLuminaControls = (deps: ControlsDeps) => {
       </div>
 
       <BackgroundImageControl sectionKey="faqLumina" data={data} setNestedData={setNestedData} />
+      <CardPaddingControl value={data.faqLumina} onChange={(key, value) => setNestedData(`faqLumina.${key}`, value)} defaultValue={24} />
       
       {renderLuminaAnimationControls(data.faqLumina, (key, value) => setNestedData(`faqLumina.${key}`, value))}
       

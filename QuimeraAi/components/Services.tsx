@@ -32,6 +32,7 @@ import {
     // Other
     Zap, Award, Trophy, Rocket, Lightbulb, Sparkles, CircleDot, Hexagon, Layers
 } from 'lucide-react';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 const paddingYClasses: Record<PaddingSize, string> = {
     none: 'py-0',
@@ -206,6 +207,7 @@ interface ServiceCardProps {
     enableAnimation?: boolean;
     delay?: string;
     cardGlow?: any;
+    cardPaddingStyle?: React.CSSProperties;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
@@ -222,7 +224,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     animationType = 'fade-in-up',
     enableAnimation = true,
     delay = '0s',
-    cardGlow
+    cardGlow,
+    cardPaddingStyle
 }) => {
     const radiusClass = borderRadiusClasses[borderRadius];
     const animationClass = getAnimationClass(animationType, enableAnimation);
@@ -232,7 +235,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         return (
             <div
                 className={`p-8 text-center border border-white/10 hover:border-opacity-50 group ${radiusClass} ${animationClass} relative overflow-hidden card-hover-lift card-shine-sweep card-border-glow backdrop-blur-xl`}
-                style={{ backgroundColor: hexToRgba(cardBackground, 0.35), borderColor: borderColor, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}
+                style={{ ...cardPaddingStyle, backgroundColor: hexToRgba(cardBackground, 0.35), borderColor: borderColor, animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -264,6 +267,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                     borderLeft: `4px solid ${accentColor}`,
                     animationDelay: delay,
                     '--card-accent': `${accentColor}66`,
+                    ...cardPaddingStyle,
                 } as React.CSSProperties}
             >
                 {icon && (
@@ -284,7 +288,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     // VARIANT 3: MINIMAL LIST
     if (variant === 'minimal') {
         return (
-            <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep backdrop-blur-lg border border-white/10 ${radiusClass} ${animationClass}`} style={{ backgroundColor: hexToRgba(cardBackground, 0.25), animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
+            <div className={`group flex gap-6 p-6 card-hover-tilt card-shine-sweep backdrop-blur-lg border border-white/10 ${radiusClass} ${animationClass}`} style={{ ...cardPaddingStyle, backgroundColor: hexToRgba(cardBackground, 0.25), animationDelay: delay, '--card-accent': `${accentColor}66` } as React.CSSProperties}>
                 {icon && (
                     <div className="flex-shrink-0 mt-1">
                         <div className="w-12 h-12 flex items-center justify-center rounded-full card-icon-bounce" style={{ backgroundColor: hexToRgba(accentColor, 0.08), color: accentColor }}>
@@ -320,6 +324,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                 className={`relative flex flex-col p-8 md:p-10 text-center transform transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] ${animationClass} group h-full`}
                 style={{
                     ...neonStyles,
+                    ...cardPaddingStyle,
                     animationDelay: delay
                 }}
             >
@@ -379,11 +384,17 @@ const Services: React.FC<ServicesProps> = ({
     animationType = 'fade-in-up',
     enableCardAnimation = true,
     cardGlow,
-    cornerGradient
+    cornerGradient,
+    cardPadding,
+    cardPaddingTop,
+    cardPaddingRight,
+    cardPaddingBottom,
+    cardPaddingLeft
 }) => {
     // Get design tokens for primary color - use as fallback with 75% opacity
     const { colors: tokenColors } = useDesignTokens();
     const sectionBackground = colors?.background || hexToRgba(tokenColors.primary, 0.75);
+    const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 32);
 
     return (
         <section id="services" className={`w-full relative overflow-hidden ${glassEffect ? ' backdrop-blur-xl border-y border-white/10 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : ''}`} style={{ backgroundColor: glassEffect ? hexToRgba(sectionBackground , 0.4) : sectionBackground }}>
@@ -423,6 +434,7 @@ const Services: React.FC<ServicesProps> = ({
                             enableAnimation={enableCardAnimation}
                             delay={getAnimationDelay(index)}
                             cardGlow={cardGlow}
+                            cardPaddingStyle={cardPaddingStyle}
                         />
                     ))}
                 </div>

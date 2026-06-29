@@ -465,6 +465,7 @@ const pageData = {
     glassEffect: true,
     glowIntensity: 50,
     cardBorderRadius: '3xl',
+    cardPadding: 24,
     colors: {
         background: '#0a0a0a',
         heading: '#ffffff',
@@ -912,7 +913,8 @@ const pageData = {
         { question: 'Can I cancel my subscription at any time?', answer: 'Yes, you can cancel your subscription at any time. Your access will remain active until the end of your current billing period.' },
         { question: 'Do you offer a free trial?', answer: 'Yes, we offer a 14-day free trial on all our plans. No credit card required.' },
         { question: 'Is my data secure?', answer: 'Security is our top priority. We use industry-standard encryption and regularly audit our systems to ensure your data is safe.' }
-    ]
+    ],
+    cardPadding: 24
   },
   features: {
     featuresVariant: 'product-highlights',
@@ -998,6 +1000,7 @@ const pageData = {
     animationType: 'fade-in-up',
     enableCardAnimation: true,
     borderRadius: 'xl',
+    cardPadding: 32,
     colors: {
       background: '#0f172a',
       accent: '#4f46e5',
@@ -1142,6 +1145,7 @@ const pageData = {
     titleFontSize: 'md',
     descriptionFontSize: 'md',
     cardBorderRadius: 'xl',
+    cardPadding: 32,
     tiers: [
       {
         name: {
@@ -1251,6 +1255,7 @@ const pageData = {
           },
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     items: [
       {
         question: "What is your first common question?",
@@ -1309,6 +1314,7 @@ const pageData = {
     paddingX: 'md',
     cardBorderRadius: 'xl',
     buttonBorderRadius: 'md',
+    cardPadding: 32,
     titleFontSize: 'md',
     descriptionFontSize: 'md',
     colors: {
@@ -1343,6 +1349,7 @@ const pageData = {
         },
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 32,
     colors: {
       background: '#1e293b', // bg-dark-800
       accent: '#4f46e5',
@@ -1392,6 +1399,7 @@ const pageData = {
   portfolio: {
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     title: {
             es: "Our Work",
             en: "Our Work"
@@ -1522,6 +1530,7 @@ const pageData = {
     gridColumns: 4,
     imageHeight: 340,
     imageObjectFit: 'cover',
+    cardPadding: 24,
     showSectionHeader: true,
     showFilters: true,
     showMeta: true,
@@ -1551,6 +1560,7 @@ const pageData = {
     servicesVariant: 'cards',
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 32,
     title: {
             es: "Our Services",
             en: "Our Services"
@@ -1607,6 +1617,7 @@ const pageData = {
   team: {
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     title: {
             es: "Meet Our Team",
             en: "Meet Our Team"
@@ -1695,6 +1706,7 @@ const pageData = {
   howItWorks: {
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     title: {
             es: "How It Works",
             en: "How It Works"
@@ -1796,6 +1808,7 @@ const pageData = {
         },
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     items: [
       {
         name: {
@@ -2133,6 +2146,7 @@ const pageData = {
     style: 'modern',
     paddingY: 'lg',
     paddingX: 'md',
+    cardPadding: 24,
     titleFontSize: 'lg',
     descriptionFontSize: 'md',
     colors: {

@@ -5,6 +5,7 @@
 import React, { useState, useRef } from 'react';
 
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
 import AIFormControl from '../../ui/AIFormControl';
@@ -249,6 +250,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <PaddingSelector label={t('controls.vertical')} value={data?.menu?.paddingY || 'md'} onChange={(v) => setNestedData('menu.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data?.menu?.paddingX || 'md'} onChange={(v) => setNestedData('menu.paddingX', v)} />
         </div>
+        <CardPaddingControl value={data?.menu} onChange={(key, value) => setNestedData(`menu.${key}`, value)} defaultValue={24} />
       </div>
 
 

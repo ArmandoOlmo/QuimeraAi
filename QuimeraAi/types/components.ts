@@ -683,7 +683,7 @@ export interface PricingNeonData extends SectionBackgroundFields {
     };
 }
 
-export interface FaqNeonData extends SectionBackgroundFields {
+export interface FaqNeonData extends SectionBackgroundFields, CardPaddingFields {
     headline?: string;
     subheadline?: string;
     faqs?: {
@@ -729,7 +729,15 @@ export interface FeatureItem {
     linkText?: string;
 }
 
-export interface FeaturesData extends SectionBackgroundFields {
+export interface CardPaddingFields {
+    cardPadding?: number;
+    cardPaddingTop?: number;
+    cardPaddingRight?: number;
+    cardPaddingBottom?: number;
+    cardPaddingLeft?: number;
+}
+
+export interface FeaturesData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     featuresVariant?: 'classic' | 'modern' | 'bento-premium' | 'image-overlay' | 'bento-overlay' | 'cinematic-gym' | 'neon-glow' | 'press-release' | 'editorial-mosaic' | 'gallery-strip' | 'visual-proof-grid' | 'strategy-cards' | 'offer-showcase' | 'product-highlights' | 'icon-columns' | 'dark-showcase' | 'split-list' | 'app-showcase' | 'metrics-panel' | 'checklist-cards' | 'dark-capability-grid';
     sectionEyebrow?: string;
@@ -790,7 +798,7 @@ export interface TestimonialItem {
     imageUrl?: string;
 }
 
-export interface TestimonialsData extends SectionBackgroundFields {
+export interface TestimonialsData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     testimonialsVariant?: TestimonialsVariant;
     title: string;
@@ -805,7 +813,6 @@ export interface TestimonialsData extends SectionBackgroundFields {
     borderRadius?: BorderRadiusSize;
     cardShadow?: string;
     borderStyle?: string;
-    cardPadding?: number;
     animationType?: AnimationType;
     enableCardAnimation?: boolean;
     // Corner gradient overlay
@@ -886,7 +893,7 @@ export interface PricingTier {
     secondaryButtonLink?: string;
 }
 
-export interface PricingData extends SectionBackgroundFields {
+export interface PricingData extends SectionBackgroundFields, CardPaddingFields {
     cardsAlignment?: 'start' | 'center' | 'end';
     glassEffect?: boolean;
     pricingVariant?: PricingVariant;
@@ -942,7 +949,7 @@ export interface FaqItem {
     answer: string;
 }
 
-export interface FaqData extends SectionBackgroundFields {
+export interface FaqData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
@@ -978,7 +985,7 @@ export interface FaqData extends SectionBackgroundFields {
 // =============================================================================
 export type LeadsVariant = 'classic' | 'split-gradient' | 'floating-glass' | 'minimal-border';
 
-export interface LeadsData extends SectionBackgroundFields {
+export interface LeadsData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     leadsVariant?: LeadsVariant;
     title: string;
@@ -1063,7 +1070,7 @@ export interface AppointmentBookingData extends SectionBackgroundFields {
 // =============================================================================
 // NEWSLETTER
 // =============================================================================
-export interface NewsletterData extends SectionBackgroundFields {
+export interface NewsletterData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1142,7 +1149,7 @@ export interface PortfolioItem {
     linkText?: string;
 }
 
-export interface PortfolioData extends SectionBackgroundFields {
+export interface PortfolioData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     portfolioVariant?: 'classic' | 'image-overlay';
     title: string;
@@ -1204,7 +1211,7 @@ export interface ShowcaseItem {
     linkUrl?: string;
 }
 
-export interface ShowcaseData extends SectionBackgroundFields {
+export interface ShowcaseData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     showcaseVariant?: ShowcaseVariant;
     title: string;
@@ -1284,7 +1291,7 @@ export interface ServiceItem {
     icon: ServiceIcon;
 }
 
-export interface ServicesData extends SectionBackgroundFields {
+export interface ServicesData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     servicesVariant?: 'cards' | 'grid' | 'minimal' | 'neon-glow';
     title: string;
@@ -1318,7 +1325,7 @@ export interface TeamMember {
     linkType?: 'manual' | 'content';
 }
 
-export interface TeamData extends SectionBackgroundFields {
+export interface TeamData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     title: string;
     subtitle?: string;              // Alias for description
@@ -1369,7 +1376,7 @@ export interface HowItWorksItem {
     icon: HowItWorksIcon;
 }
 
-export interface HowItWorksData extends SectionBackgroundFields {
+export interface HowItWorksData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     title: string;
     description: string;
@@ -1580,7 +1587,7 @@ export interface MenuItem {
     isSpecial?: boolean;
 }
 
-export interface MenuData extends SectionBackgroundFields {
+export interface MenuData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     menuVariant?: MenuVariant;
     title: string;
@@ -1821,9 +1828,14 @@ export interface ProductsProps {
     paddingX?: PaddingSize;
     titleFontSize?: FontSize;
     descriptionFontSize?: FontSize;
+    cardPadding?: number;
+    cardPaddingTop?: number;
+    cardPaddingRight?: number;
+    cardPaddingBottom?: number;
+    cardPaddingLeft?: number;
 }
 
-export interface ProductsData extends SectionBackgroundFields {
+export interface ProductsData extends SectionBackgroundFields, CardPaddingFields {
     glassEffect?: boolean;
     title: string;
     subtitle: string;

@@ -7,6 +7,7 @@ import { isPendingImage } from '../utils/imagePlaceholders';
 import { useDesignTokens } from '../hooks/useDesignTokens';
 import CornerGradient from './ui/CornerGradient';
 import { hexToRgba } from '../utils/colorUtils';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 
 interface TeamMemberCardProps {
   imageUrl: string;
@@ -24,6 +25,7 @@ interface TeamMemberCardProps {
   photoBorderColor?: string;
   linkUrl?: string;
   onNavigate?: (href: string) => void;
+  cardPaddingStyle?: React.CSSProperties;
 }
 
 const paddingYClasses: Record<PaddingSize, string> = {
@@ -71,7 +73,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   enableAnimation = true,
   photoBorderColor,
   linkUrl,
-  onNavigate
+  onNavigate,
+  cardPaddingStyle
 }) => {
   const animationClass = getAnimationClass(animationType, enableAnimation);
 
@@ -99,7 +102,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   if (variant === 'classic') {
     return (
       <LinkWrapper>
-        <div className={`text-center ${animationClass}`} style={{ animationDelay: delay }}>
+        <div className={`text-center ${animationClass}`} style={{ ...cardPaddingStyle, animationDelay: delay }}>
           {isPendingImage(imageUrl) ? (
             <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
               <ImagePlaceholder aspectRatio="1:1" showGenerateButton={false} className="rounded-full" />
@@ -149,7 +152,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
               style={{ backgroundColor: accentColor }}
             />
           </div>
-          <div className="p-6 text-center">
+          <div className="p-6 text-center" style={cardPaddingStyle}>
             <h3 className="text-xl font-bold mb-2 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
             <p className="font-semibold font-body" style={{ color: roleColor }}>{role}</p>
           </div>
@@ -179,7 +182,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
               style={{ backgroundColor: accentColor }}
             />
           </div>
-          <div className="text-center">
+          <div className="text-center" style={cardPaddingStyle}>
             <h3 className="text-lg font-bold mb-1 font-header" style={{ color: nameColor, textTransform: 'var(--headings-transform, none)' as any, letterSpacing: 'var(--headings-spacing, normal)' }}>{name}</h3>
             <p
               className="text-sm font-medium font-body uppercase tracking-wider"
@@ -216,7 +219,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300" />
 
             {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
+            <div className="absolute inset-0 flex flex-col justify-end p-6 text-white" style={cardPaddingStyle}>
               {/* Role badge - always visible */}
               <div
                 className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3 self-start"
@@ -267,6 +270,11 @@ const Team: React.FC<TeamProps> = ({
   animationType = 'fade-in-up',
   enableCardAnimation = true,
   cornerGradient,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
   onNavigate
 }) => {
   // Get design tokens for secondary color (for photo border fallback)
@@ -274,6 +282,7 @@ const Team: React.FC<TeamProps> = ({
   const secondaryColor = tokenColors.secondary || '#10b981';
   // Use user-defined photo border color, or fall back to 50% of secondary color
   const photoBorderColor = (colors as any)?.photoBorderColor || hexToRgba(secondaryColor, 0.5);
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
 
   // Grid columns based on variant - mobile-first responsive
   const gridClasses = {
@@ -324,6 +333,7 @@ const Team: React.FC<TeamProps> = ({
               photoBorderColor={photoBorderColor}
               linkUrl={member.linkUrl}
               onNavigate={onNavigate}
+              cardPaddingStyle={cardPaddingStyle}
             />
           ))}
         </div>

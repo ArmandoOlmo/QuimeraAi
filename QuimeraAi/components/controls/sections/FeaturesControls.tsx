@@ -5,6 +5,7 @@
 import React, { useState, useRef } from 'react';
 
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
 import AIFormControl from '../../ui/AIFormControl';
@@ -233,6 +234,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <PaddingSelector label={t('editor.controls.common.vertical')} value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
           <PaddingSelector label={t('editor.controls.common.horizontal')} value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
         </div>
+        <CardPaddingControl value={data.features} onChange={(key, value) => setNestedData(`features.${key}`, value)} defaultValue={32} />
       </div>
 
       <label className="block text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('editor.controls.common.colors')}</label>
@@ -679,6 +681,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <PaddingSelector label={t('controls.vertical')} value={data.features.paddingY || 'md'} onChange={(v) => setNestedData('features.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.features.paddingX || 'md'} onChange={(v) => setNestedData('features.paddingX', v)} />
         </div>
+        <CardPaddingControl value={data.features} onChange={(key, value) => setNestedData(`features.${key}`, value)} defaultValue={32} />
       </div>
 
       {/* Colors */}

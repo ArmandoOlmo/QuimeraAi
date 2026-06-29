@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { getAnimationClass, getAnimationDelay } from '../utils/animations';
 import { isPendingImage } from '../utils/imagePlaceholders';
+import { getCardPaddingStyle } from '../utils/cardPadding';
 import ImagePlaceholder from './ui/ImagePlaceholder';
 
 interface ShowcaseProps extends ShowcaseData {
@@ -188,6 +189,11 @@ const Showcase: React.FC<ShowcaseProps> = ({
     overlayEnd: 'rgba(0,0,0,0.08)',
   },
   onNavigate,
+  cardPadding,
+  cardPaddingTop,
+  cardPaddingRight,
+  cardPaddingBottom,
+  cardPaddingLeft,
 }) => {
   const { i18n } = useTranslation();
   const resolveText = resolveTextFactory(i18n.language);
@@ -215,6 +221,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
     : allItems.filter(item => getItemCategory(item) === activeCategory || item.tags?.includes(activeCategory));
   const items = filteredItems.length ? filteredItems : allItems;
   const radiusClass = borderRadiusClasses[borderRadius] || 'rounded-lg';
+  const cardPaddingStyle = getCardPaddingStyle({ cardPadding, cardPaddingTop, cardPaddingRight, cardPaddingBottom, cardPaddingLeft }, 24);
   const sectionStyle: React.CSSProperties = {
     backgroundColor: colors.background,
     color: colors.text,
@@ -294,7 +301,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
           <article
             key={`${item.title}-${index}`}
             className={`${getAnimationClass(animationType, enableCardAnimation)} group`}
-            style={{ animationDelay: getAnimationDelay(index) }}
+            style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}
           >
             <div className={`relative overflow-hidden ${radiusClass}`} style={{ backgroundColor: colors.cardBackground, height: itemImageHeight }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
@@ -319,7 +326,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
           <article
             key={`${item.title}-${index}`}
             className={`${getAnimationClass(animationType, enableCardAnimation)} w-full lg:w-[min(380px,78vw)] lg:shrink-0`}
-            style={{ animationDelay: getAnimationDelay(index) }}
+            style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}
           >
             <div className={`relative overflow-hidden ${radiusClass}`} style={{ height: itemImageHeight, backgroundColor: colors.cardBackground }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="h-full w-full" priority={index === 0} />
@@ -351,7 +358,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
               >
                 <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full" priority={index === 0} />
               </div>
-              <div className={`flex min-h-[240px] flex-col justify-between border p-6 ${radiusClass}`} style={{ borderColor: colors.borderColor, backgroundColor: colors.cardBackground }}>
+              <div className={`flex min-h-[240px] flex-col justify-between border p-6 ${radiusClass}`} style={{ ...cardPaddingStyle, borderColor: colors.borderColor, backgroundColor: colors.cardBackground }}>
                 <div>
                   {item.eyebrow && <p className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.accent }}>{item.eyebrow}</p>}
                   <h3 className="mt-4 break-words text-2xl font-bold leading-tight font-header sm:text-3xl sm:leading-none" style={{ color: colors.cardHeading || colors.heading }}>{item.title}</h3>
@@ -378,7 +385,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
               style={{ animationDelay: getAnimationDelay(index), minHeight: stripImageHeight, backgroundColor: colors.cardBackground }}
             >
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
-              <div className="absolute inset-x-0 bottom-0 p-4" style={{ background: `linear-gradient(to top, ${colors.overlayStart || 'rgba(0,0,0,0.8)'}, transparent)` }}>
+              <div className="absolute inset-x-0 bottom-0 p-4" style={{ ...cardPaddingStyle, background: `linear-gradient(to top, ${colors.overlayStart || 'rgba(0,0,0,0.8)'}, transparent)` }}>
                 <h3 className="break-words text-lg font-bold font-header" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
                 {renderMeta(item)}
               </div>
@@ -395,7 +402,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
               }
             }}
             className={`mt-6 inline-flex max-w-full min-w-0 items-center gap-3 border p-3 shadow-xl sm:gap-4 ${radiusClass}`}
-            style={{ backgroundColor: colors.pillBackground || colors.cardBackground, borderColor: colors.borderColor, color: colors.pillText || colors.heading }}
+            style={{ ...cardPaddingStyle, backgroundColor: colors.pillBackground || colors.cardBackground, borderColor: colors.borderColor, color: colors.pillText || colors.heading }}
           >
             {items[0] && <ShowcaseImage item={items[0]} className="h-14 w-20 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-24" imageObjectFit="cover" />}
             <span className="min-w-0 truncate font-semibold">{floatingCtaText}</span>
@@ -431,7 +438,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
               <article key={`${item.title}-${index}`} className={`group relative overflow-hidden ${radiusClass}`} style={{ minHeight: 'clamp(300px, 82vw, 420px)', backgroundColor: colors.cardBackground }}>
                 <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full transition-transform duration-700 group-hover:scale-105" priority={index === 0} />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${colors.overlayStart || 'rgba(0,0,0,0.86)'}, ${colors.overlayEnd || 'rgba(0,0,0,0.08)'})` }} />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-center">
+                <div className="absolute inset-x-0 bottom-0 p-5 text-center" style={cardPaddingStyle}>
                   <h3 className="break-words text-xl font-bold leading-tight font-header sm:text-2xl" style={{ color: colors.cardHeading || '#ffffff' }}>{item.title}</h3>
                   {item.description && <p className="mt-3 break-words text-sm" style={{ color: colors.cardText || '#e5e7eb' }}>{item.description}</p>}
                   {renderMeta(item)}
@@ -449,7 +456,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
       {renderFilters(true)}
       <div className="grid min-h-0 grid-cols-1 items-end gap-10 md:min-h-[520px] md:grid-cols-5">
         {items.slice(0, 5).map((item, index) => (
-          <article key={`${item.title}-${index}`} className={`${getAnimationClass(animationType, enableCardAnimation)} space-y-5`} style={{ animationDelay: getAnimationDelay(index) }}>
+          <article key={`${item.title}-${index}`} className={`${getAnimationClass(animationType, enableCardAnimation)} space-y-5`} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
             <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: colors.cardBackground }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full" priority={index === 0} />
             </div>
@@ -465,7 +472,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
       {renderFilters(true)}
       <div className={`grid grid-cols-1 gap-x-5 gap-y-12 lg:grid-cols-2 ${gridColumnClass}`}>
         {items.map((item, index) => (
-          <article key={`${item.title}-${index}`} className={getAnimationClass(animationType, enableCardAnimation)} style={{ animationDelay: getAnimationDelay(index) }}>
+          <article key={`${item.title}-${index}`} className={getAnimationClass(animationType, enableCardAnimation)} style={{ ...cardPaddingStyle, animationDelay: getAnimationDelay(index) }}>
             <div className="relative overflow-hidden" style={{ aspectRatio: '1 / 1', backgroundColor: colors.cardBackground }}>
               <ShowcaseImage item={item} imageObjectFit={imageObjectFit} className="absolute inset-0 h-full w-full" priority={index === 0} />
             </div>
@@ -485,7 +492,7 @@ const Showcase: React.FC<ShowcaseProps> = ({
           {renderHeader('center')}
         </div>
         {featured && (
-          <div className="relative overflow-hidden px-5 py-8 md:px-16 md:py-14" style={{ backgroundColor: colors.cardBackground }}>
+          <div className="relative overflow-hidden px-5 py-8 md:px-16 md:py-14" style={{ ...cardPaddingStyle, backgroundColor: colors.cardBackground }}>
             <div className={`mx-auto max-w-6xl overflow-hidden border bg-white shadow-2xl ${radiusClass}`} style={{ borderColor: colors.borderColor }}>
               <ShowcaseImage item={featured} imageObjectFit={imageObjectFit} className="h-full w-full" priority />
             </div>

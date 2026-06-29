@@ -5,6 +5,7 @@
 import React, { useState, useRef } from 'react';
 
 import ColorControl from '../../ui/ColorControl';
+import CardPaddingControl from '../../ui/CardPaddingControl';
 import ImagePicker from '../../ui/ImagePicker';
 import IconSelector from '../../ui/IconSelector';
 import AIFormControl from '../../ui/AIFormControl';
@@ -76,6 +77,7 @@ const { data, setNestedData, setAiAssistField, t, activeProject, updateProjectFa
           <PaddingSelector label={t('controls.vertical')} value={data.faq.paddingY || 'md'} onChange={(v) => setNestedData('faq.paddingY', v)} />
           <PaddingSelector label={t('controls.horizontal')} value={data.faq.paddingX || 'md'} onChange={(v) => setNestedData('faq.paddingX', v)} />
         </div>
+        <CardPaddingControl value={data.faq} onChange={(key, value) => setNestedData(`faq.${key}`, value)} defaultValue={24} />
       </div>
 
       {/* Section Colors */}
