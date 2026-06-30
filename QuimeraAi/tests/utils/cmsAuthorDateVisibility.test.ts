@@ -21,6 +21,23 @@ describe('CMS author/date visibility persistence', () => {
         expect(cmsContext).toContain('show_date: showDate');
     });
 
+    it('refreshes CMS posts from Supabase instead of exposing a no-op reload', () => {
+        expect(cmsContext).toContain('const loadCMSPosts = useCallback(async () =>');
+        expect(cmsContext).toContain(".from('posts')");
+        expect(cmsContext).toContain(".contains('tags', [getProjectTag(activeProjectId)])");
+        expect(cmsContext).toContain('setCmsPosts((data || []).map(mapPostRow))');
+        expect(cmsContext).not.toContain('// Now handled by useEffect real-time channel');
+    });
+
+    it('hydrates the saved row back into CMS state after author/date changes persist', () => {
+        expect(cmsContext).toContain('if (post.id && UUID_RE.test(post.id))');
+        expect(cmsContext).toContain(".eq('tenant_id', currentTenantId)");
+        expect(cmsContext).toContain(".select('*')");
+        expect(cmsContext).toContain('savedPostRow = data');
+        expect(cmsContext).toContain('const normalizedPost = mapPostRow(savedPostRow)');
+        expect(cmsContext).toContain('setCmsPosts(prev =>');
+    });
+
     it('saves the modern editor author and date toggle in the CMSPost payload', () => {
         expect(modernEditor).toContain('post?.authorName || post?.author ||');
         expect(modernEditor).toContain('authorName: author');
