@@ -10,7 +10,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { Project, SitePage } from '../types/project';
-import { PageData, ThemeData, PageSection } from '../types';
+import { AiAssistantConfig, PageData, ThemeData, PageSection } from '../types';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import { deriveColorsFromPalette } from '../utils/colorUtils';
 import { initialData } from '../data/initialData';
@@ -29,6 +29,10 @@ import {
     isSectionServiceAvailable,
     type ServicePublicPredicate,
 } from '../utils/serviceAvailabilitySections';
+import {
+    isProjectAiAssistantConfigActive,
+    resolveProjectAiAssistantConfig,
+} from '../utils/chatbotEngine/projectAiAssistantConfig';
 
 // Import section components
 import Header from './Header';
@@ -71,6 +75,8 @@ import RestaurantReservation from './RestaurantReservation';
 import Banner from './Banner';
 import TopBar from './TopBar';
 import LogoBanner from './LogoBanner';
+import Products from './Products';
+import ChatbotWidget from './ChatbotWidget';
 import SignupFloat from './SignupFloat';
 import SectionBackground from './ui/SectionBackground';
 
@@ -237,6 +243,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
         return {
             ...baseData,
             hero: mergeComponentData('hero') || baseData.hero,
+            heroModern: mergeComponentData('heroModern') || (baseData as any).heroModern,
+            heroGradient: mergeComponentData('heroGradient') || (baseData as any).heroGradient,
             heroSplit: mergeComponentData('heroSplit') || baseData.heroSplit,
             heroGallery: mergeComponentData('heroGallery') || baseData.heroGallery,
             heroWave: mergeComponentData('heroWave') || baseData.heroWave,
@@ -292,6 +300,8 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             productBundle: mergeComponentData('productBundle') || baseData.productBundle,
             announcementBar: mergeComponentData('announcementBar') || baseData.announcementBar,
             cmsFeed: mergeComponentData('cmsFeed') || (baseData as any).cmsFeed,
+            products: mergeComponentData('products') || (baseData as any).products,
+            chatbot: mergeComponentData('chatbot') || (baseData as any).chatbot,
             realEstateListings: mergeComponentData('realEstateListings') || (baseData as any).realEstateListings,
             logoBanner: mergeComponentData('logoBanner') || (baseData as any).logoBanner,
             signupFloat: mergeComponentData('signupFloat') || (baseData as any).signupFloat,
@@ -309,6 +319,39 @@ const PageRenderer: React.FC<PageRendererProps> = ({
     const globalColors = theme.globalColors;
     const effectiveComponentStatus = buildServiceAwareComponentStatus(project.componentStatus, page.sections, canAccessService);
     const effectiveSectionVisibility = buildServiceAwareSectionVisibility(project.sectionVisibility, canAccessService);
+    const activeProjectChatbotConfig = useMemo(() => resolveProjectAiAssistantConfig({
+        ai_assistant_config: project.aiAssistantConfig || null,
+        data: {
+            ...(project.data || {}),
+            ...(page.sectionData || {}),
+            aiAssistantConfig: project.aiAssistantConfig,
+            businessBlueprint: project.businessBlueprint || (project.data as any)?.businessBlueprint,
+        },
+    }) as AiAssistantConfig | null, [page.sectionData, project.aiAssistantConfig, project.businessBlueprint, project.data]);
+    const shouldRenderChatbotWidget = Boolean(
+        activeProjectChatbotConfig &&
+        isProjectAiAssistantConfigActive(activeProjectChatbotConfig)
+    );
+    const pageChatbotEngineContext = useMemo(() => buildChatbotEngineSurfaceContext({
+        sourceSurface: 'website',
+        sourceModule: 'website-builder',
+        route: page.slug,
+        entityType: page.isHomePage ? 'website' : 'site_page',
+        entityId: page.id || project.id,
+        entitySlug: page.slug,
+        contextKeys: [
+            'website',
+            page.isHomePage ? 'home_page' : 'site_page',
+            ...page.sections.map(section => `section:${section}`),
+        ],
+        metadata: {
+            projectId: project.id,
+            ownerId: project.userId,
+            pageId: page.id,
+            pageSlug: page.slug,
+            sourceComponent: 'PageRenderer',
+        },
+    }), [page.id, page.isHomePage, page.sections, page.slug, project.id, project.userId]);
 
     // Path-based navigation handlers for SSR (real URLs, not hash)
     const handleNavigateToProduct = (slug: string) => {
@@ -1310,13 +1353,168 @@ const PageRenderer: React.FC<PageRendererProps> = ({
             case 'emailMarketingQuimera':
                 return renderQuimeraSection(key, (mergedData as any).emailMarketingQuimera, EmailMarketingQuimera);
 
-            // Non-renderable sections (settings, colors, typography)
+            case 'products': {
+                const productsData = (mergedData as any).products;
+                if (!productsData) return null;
+                const productItems = storefrontProducts.length > 0
+                    ? storefrontProducts
+                    : productsData.products || [];
+                return (
+                    <SectionBackground {...sectionBackgroundProps(productsData)}>
+                        <Products
+                            key={key}
+                            {...productsData}
+                            products={productItems as any}
+                            primaryColor={productsData.colors?.accent || globalColors?.primary || '#4f46e5'}
+                            storeUrl="/tienda/productos"
+                        />
+                    </SectionBackground>
+                );
+            }
+
+            case 'cmsFeed': {
+                const feedData = (mergedData as any).cmsFeed;
+                if (!feedData) return null;
+                const feedColors = feedData.colors || {};
+                const sourcePosts = ((project as any).cmsPosts || (project as any).posts || []) as any[];
+                const sourceCategories = ((project as any).cmsCategories || (project as any).categories || []) as any[];
+                const maxPosts = feedData.maxPosts || 6;
+                const categoryFilter = feedData.categoryFilter || 'all';
+                const showOnlyPublished = feedData.showOnlyPublished !== false;
+                const showFeaturedImage = feedData.showFeaturedImage !== false;
+                const showExcerpt = feedData.showExcerpt !== false;
+                const showReadMore = feedData.showReadMore !== false;
+                const readMoreText = feedData.readMoreText || 'Read More';
+                const viewAllText = feedData.viewAllText || '';
+                const viewAllLink = feedData.viewAllLink || '/blog';
+                const columns = feedData.columns || 3;
+                const filteredPosts = sourcePosts
+                    .filter(post => !showOnlyPublished || post.status === 'published')
+                    .filter(post => categoryFilter === 'all' || post.categoryId === categoryFilter)
+                    .slice(0, maxPosts);
+                const categoryName = (categoryId?: string) => {
+                    if (!categoryId) return '';
+                    const category = sourceCategories.find(item => item.id === categoryId);
+                    return category?.name || '';
+                };
+                const gridClass = columns === 1
+                    ? 'grid-cols-1'
+                    : columns === 2
+                        ? 'grid-cols-1 md:grid-cols-2'
+                        : columns === 4
+                            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+                            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+
+                return (
+                    <SectionBackground {...sectionBackgroundProps(feedData)}>
+                        <section
+                            key={key}
+                            id="cmsFeed"
+                            className="px-4 py-16 sm:px-6 lg:px-8"
+                            style={{ background: feedColors.background || 'transparent' }}
+                        >
+                            <div className="mx-auto max-w-7xl">
+                                {(feedData.title || feedData.description) && (
+                                    <div className="mx-auto mb-10 max-w-3xl text-center">
+                                        {feedData.title && (
+                                            <h2 className="mb-4 text-3xl font-bold md:text-4xl" style={{ color: feedColors.heading || globalColors?.heading }}>
+                                                {feedData.title}
+                                            </h2>
+                                        )}
+                                        {feedData.description && (
+                                            <p className="text-base md:text-lg" style={{ color: feedColors.text || globalColors?.text }}>
+                                                {feedData.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {filteredPosts.length === 0 ? (
+                                    <p className="py-10 text-center text-sm" style={{ color: feedColors.text || globalColors?.text }}>
+                                        No articles to display
+                                    </p>
+                                ) : (
+                                    <div className={`grid gap-6 ${gridClass}`}>
+                                        {filteredPosts.map(post => (
+                                            <article
+                                                key={post.id || post.slug}
+                                                className="group overflow-hidden border transition-transform duration-300 hover:-translate-y-1"
+                                                style={{
+                                                    borderRadius: 'var(--radius-card, 0.75rem)',
+                                                    background: feedColors.cardBackground || globalColors?.surface,
+                                                    borderColor: feedColors.cardBorder || globalColors?.border,
+                                                }}
+                                            >
+                                                {showFeaturedImage && post.featuredImage && (
+                                                    <img
+                                                        src={post.featuredImage}
+                                                        alt={post.title || ''}
+                                                        className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    />
+                                                )}
+                                                <div className="p-5">
+                                                    {categoryName(post.categoryId) && (
+                                                        <span
+                                                            className="mb-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+                                                            style={{
+                                                                background: feedColors.categoryBadgeBackground || globalColors?.primary,
+                                                                color: feedColors.categoryBadgeText || '#ffffff',
+                                                            }}
+                                                        >
+                                                            {categoryName(post.categoryId)}
+                                                        </span>
+                                                    )}
+                                                    <h3 className="mb-2 text-lg font-bold" style={{ color: feedColors.cardHeading || globalColors?.heading }}>
+                                                        {post.title}
+                                                    </h3>
+                                                    {showExcerpt && post.excerpt && (
+                                                        <p className="mb-4 line-clamp-3 text-sm" style={{ color: feedColors.cardExcerpt || globalColors?.text }}>
+                                                            {post.excerpt}
+                                                        </p>
+                                                    )}
+                                                    {showReadMore && post.slug && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleLinkNavigation(`/blog/${post.slug}`)}
+                                                            className="text-sm font-semibold"
+                                                            style={{ color: feedColors.buttonBackground || globalColors?.primary }}
+                                                        >
+                                                            {readMoreText}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {viewAllText && (
+                                    <div className="mt-10 text-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleLinkNavigation(viewAllLink)}
+                                            className="inline-flex px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                                            style={{
+                                                borderRadius: 'var(--radius-button, 0.5rem)',
+                                                background: feedColors.buttonBackground || globalColors?.primary,
+                                                color: feedColors.buttonText || '#ffffff',
+                                            }}
+                                        >
+                                            {viewAllText}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    </SectionBackground>
+                );
+            }
+
+            // Non-renderable flow sections (settings or floating/global widgets)
             case 'colors':
             case 'typography':
             case 'storeSettings':
             case 'chatbot':
-            case 'cmsFeed': // CMS Feed is rendered dynamically via LandingPage with useCMS()
-            case 'products': // Legacy products grid - use ProductGridSection instead
             case 'signupFloat': // Rendered as floating overlay outside section loop
                 return null;
 
@@ -1394,13 +1592,30 @@ const PageRenderer: React.FC<PageRendererProps> = ({
                 </React.Fragment>
             ))}
 
+            {!contentOnly && shouldRenderChatbotWidget && isSectionServiceAvailable('chatbot' as PageSection, canAccessService) && (
+                <ChatbotWidget
+                    isPreview={isPreview}
+                    standaloneConfig={activeProjectChatbotConfig || undefined}
+                    standaloneProject={{
+                        id: project.id,
+                        userId: project.userId || '',
+                        name: project.name || '',
+                        data: mergedData,
+                        theme,
+                        componentOrder: page.sections,
+                        sectionVisibility: effectiveSectionVisibility,
+                    }}
+                    chatbotEngineContext={pageChatbotEngineContext}
+                />
+            )}
+
             {/* Floating Sign-Up Overlay (rendered outside normal section flow) */}
             {!contentOnly && mergedData.signupFloat && page.sections.includes('signupFloat' as PageSection) && effectiveComponentStatus.signupFloat && effectiveSectionVisibility.signupFloat && (
                 <SignupFloat
                     {...mergedData.signupFloat}
                     projectId={project.id}
                     ownerId={project.userId}
-                    isPreviewMode={true}
+                    isPreviewMode={isPreview}
                 />
             )}
         </div>

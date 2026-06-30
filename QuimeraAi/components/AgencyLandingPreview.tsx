@@ -1,9 +1,8 @@
 import { resolveFontFamily } from "../utils/fontLoader";
 import React, { useState, useEffect } from 'react';
-import { db, doc, getDoc } from '@/utils/compatData';
-import { Project, PageData, ThemeData, PageSection, SitePage } from '../types';
+import { Project, PageData, ThemeData, PageSection } from '../types';
 import { AlertTriangle } from 'lucide-react';
-import { AgencyLandingConfig } from '../types/agencyLanding';
+import { AgencyLandingConfig, AgencyLandingSection } from '../types/agencyLanding';
 import { initialAgencyData } from './dashboard/agency/landing/initialAgencyData';
 import QuimeraLoader from './ui/QuimeraLoader';
 import { getInitialDataForLandingComponent } from '../utils/landingSectionDefaults';
@@ -12,6 +11,54 @@ import { getAgencyLanding } from '../services/agencyLandingService';
 
 
 import PageRenderer from './PageRenderer';
+
+const AGENCY_STRUCTURE_ORDER: PageSection[] = ['colors', 'typography', 'header'];
+const AGENCY_FOOTER_SECTION: PageSection = 'footer';
+
+const createDefaultAgencySection = (type: PageSection, order: number): AgencyLandingSection => ({
+  id: type,
+  type,
+  order,
+  enabled: initialAgencyData.sectionVisibility[type] !== false,
+  data: (initialAgencyData.data as any)[type] || getInitialDataForLandingComponent(type),
+});
+
+const normalizeAgencySections = (sections?: AgencyLandingConfig['sections']): AgencyLandingSection[] => {
+  const source = sections?.length
+    ? [...sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    : (initialAgencyData.componentOrder as PageSection[]).map((type, index) => createDefaultAgencySection(type, index));
+
+  const byType = new Map<string, AgencyLandingSection>();
+  source.forEach((section, index) => {
+    if (!section?.type || byType.has(section.type)) return;
+    byType.set(section.type, {
+      ...section,
+      id: AGENCY_STRUCTURE_ORDER.includes(section.type as PageSection) || section.type === AGENCY_FOOTER_SECTION
+        ? section.type
+        : section.id || `${section.type}-${index}`,
+      order: section.order ?? index,
+      enabled: section.enabled !== false,
+      data: {
+        ...((initialAgencyData.data as any)[section.type] || getInitialDataForLandingComponent(section.type)),
+        ...(section.data || {}),
+      },
+    });
+  });
+
+  const normalized: AgencyLandingSection[] = [];
+  AGENCY_STRUCTURE_ORDER.forEach((type, index) => {
+    normalized.push(byType.get(type) || createDefaultAgencySection(type, index));
+    byType.delete(type);
+  });
+
+  const footer = byType.get(AGENCY_FOOTER_SECTION);
+  byType.delete(AGENCY_FOOTER_SECTION);
+
+  normalized.push(...Array.from(byType.values()));
+  normalized.push(footer || createDefaultAgencySection(AGENCY_FOOTER_SECTION, normalized.length));
+
+  return normalized.map((section, index) => ({ ...section, order: index }));
+};
 
 const AgencyLandingPreview: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
@@ -53,38 +100,23 @@ const AgencyLandingPreview: React.FC = () => {
         let mappedVisibility: Record<string, boolean> = {};
         let theme: ThemeData = initialAgencyData.theme as ThemeData;
         
-        if (config) {
-            
-            if (config.sections && config.sections.length > 0) {
-              config.sections.forEach(sec => {
-                  const defaultData = (initialAgencyData.data[sec.type as keyof PageData] as any) || getInitialDataForLandingComponent(sec.type);
-                  mappedData[sec.type as keyof PageData] = {
-                      ...(defaultData || {}),
-                      ...(sec.data || {})
-                  } as any;
-                  mappedOrder.push(sec.type as PageSection);
-                  mappedVisibility[sec.type] = sec.enabled;
-              });
-            } else {
-              mappedData = initialAgencyData.data as Partial<PageData>;
-              mappedOrder = initialAgencyData.componentOrder as PageSection[];
-              mappedVisibility = initialAgencyData.sectionVisibility;
-            }
-            
-            if (config.theme) {
-                theme = config.theme as ThemeData;
-            }
-        } else {
-            console.log("No agency landing found, using default template");
-            mappedData = initialAgencyData.data as Partial<PageData>;
-            mappedOrder = initialAgencyData.componentOrder as PageSection[];
-            mappedVisibility = initialAgencyData.sectionVisibility;
+        const normalizedSections = normalizeAgencySections(config?.sections);
+        normalizedSections.forEach(sec => {
+          mappedData[sec.type as keyof PageData] = sec.data as any;
+          mappedOrder.push(sec.type as PageSection);
+          mappedVisibility[sec.type] = sec.enabled;
+        });
+
+        if (config?.theme) {
+          theme = config.theme as ThemeData;
+        } else if (!config) {
+          console.log("No agency landing found, using default template");
         }
         
         const mockProject: Project = {
-            id: 'agency-landing-mode',
+            id: tenantId,
             userId: '',
-            name: 'Agency Landing',
+            name: config?.branding?.logoText || 'Agency Landing',
             status: 'Draft',
             lastUpdated: new Date().toISOString(),
             createdAt: new Date().toISOString(),
@@ -95,6 +127,8 @@ const AgencyLandingPreview: React.FC = () => {
             sectionVisibility: mappedVisibility as Record<PageSection, boolean>,
             pages: [],
             activePageId: 'home',
+            aiAssistantConfig: (config as any)?.aiAssistantConfig,
+            businessBlueprint: (config as any)?.businessBlueprint,
         };
         
         setProject(mockProject);
@@ -175,7 +209,7 @@ const AgencyLandingPreview: React.FC = () => {
           sectionData: project.data,
         }}
         project={project}
-        contentOnly
+        isPreview={false}
       />
     </div>
   );
