@@ -21,4 +21,20 @@ describe('authenticated project provider guard', () => {
     expect(source).toContain('if (!projectContext)');
     expect(source).toContain('return <MinimalLoader />;');
   });
+
+  it('keeps AuthenticatedAppContent SEO setup safe outside ProjectProvider', () => {
+    const source = readFileSync(resolve(appRoot, 'hooks/useSEO.ts'), 'utf8');
+
+    expect(source).toContain("import { useSafeProject } from '../contexts/project';");
+    expect(source).toContain('const projectContext = useSafeProject();');
+    expect(source).not.toContain('useProject();');
+  });
+
+  it('keeps the root language provider free of react-i18next hooks', () => {
+    const source = readFileSync(resolve(appRoot, 'contexts/LanguageContext.tsx'), 'utf8');
+
+    expect(source).toContain("import i18n from '../i18n';");
+    expect(source).not.toContain('useTranslation');
+    expect(source).not.toContain("from 'react-i18next'");
+  });
 });

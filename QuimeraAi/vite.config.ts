@@ -1,6 +1,46 @@
 import path from 'path';
+import fs from 'fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+
+function ignoreStaleHotUpdates() {
+  let watcherReadyAt = Date.now();
+  const fileMtimes = new Map<string, number>();
+
+  return {
+    name: 'quimera-ignore-stale-hot-updates',
+    apply: 'serve' as const,
+    configureServer(server) {
+      server.watcher.on('ready', () => {
+        watcherReadyAt = Date.now();
+      });
+    },
+    handleHotUpdate(ctx) {
+      let mtimeMs: number;
+
+      try {
+        mtimeMs = fs.statSync(ctx.file).mtimeMs;
+      } catch {
+        return ctx.modules;
+      }
+
+      const previousMtime = fileMtimes.get(ctx.file);
+      fileMtimes.set(ctx.file, mtimeMs);
+
+      if (previousMtime !== undefined && Math.abs(previousMtime - mtimeMs) < 1) {
+        console.log(`[vite] ignored stale hot update ${path.relative(ctx.server.config.root, ctx.file)}`);
+        return [];
+      }
+
+      if (previousMtime === undefined && mtimeMs < watcherReadyAt - 2000) {
+        console.log(`[vite] ignored stale hot update ${path.relative(ctx.server.config.root, ctx.file)}`);
+        return [];
+      }
+
+      return ctx.modules;
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -24,6 +64,7 @@ export default defineConfig(({ mode }) => {
       host: true,
     },
     plugins: [
+      ignoreStaleHotUpdates(),
       react(),
       // PWA/Service Worker is intentionally disabled.
       // The previous Workbox build precached every JS/CSS chunk and took

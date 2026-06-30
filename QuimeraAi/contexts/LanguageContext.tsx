@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 export interface LanguageConfig {
     code: string;
@@ -44,7 +44,6 @@ const DEFAULT_LANGUAGES: LanguageConfig[] = [
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [languages, setLanguages] = useState<LanguageConfig[]>(DEFAULT_LANGUAGES);
     const [loading, setLoading] = useState(true);
-    const { i18n } = useTranslation();
 
     const fetchLanguages = async () => {
         try {

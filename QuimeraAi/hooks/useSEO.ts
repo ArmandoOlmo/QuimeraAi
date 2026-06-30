@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SEOConfig } from '../types';
-import { useProject } from '../contexts/project';
+import { useSafeProject } from '../contexts/project';
 
 interface UseSEOOptions {
   pageTitle?: string;
@@ -10,7 +10,10 @@ interface UseSEOOptions {
 }
 
 export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
-  const { data, brandIdentity, activeProject } = useProject();
+  const projectContext = useSafeProject();
+  const data = projectContext?.data ?? null;
+  const brandIdentity = projectContext?.brandIdentity;
+  const activeProject = projectContext?.activeProject ?? null;
   const seoConfig = activeProject?.seoConfig || null;
 
   return useMemo(() => {
@@ -88,4 +91,3 @@ export const useSEO = (options: UseSEOOptions = {}): SEOConfig => {
     return config;
   }, [data, brandIdentity, activeProject, seoConfig, options]);
 };
-
