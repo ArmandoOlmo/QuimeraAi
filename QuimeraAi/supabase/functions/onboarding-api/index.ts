@@ -14,6 +14,12 @@ type OnboardingAction =
   | "domains-remove"
   | "domains-verifyDNS"
   | "domains-checkSSL"
+  | "domains-searchSuggestions"
+  | "domains-checkAvailability"
+  | "domains-getPricing"
+  | "domains-createDomainCheckoutSession"
+  | "domains-purchase"
+  | "domains-checkDomainOrderStatus"
   | "sync-domain-mapping"
   | "syncDomainMapping";
 
@@ -75,6 +81,21 @@ serve(async (req) => {
         return jsonResponse(await addDomain(req, user.id, payload));
       case "domains-remove":
         return jsonResponse(await removeDomain(req, user.id, payload));
+      case "domains-searchSuggestions":
+        return jsonResponse(await searchDomainSuggestions(payload));
+      case "domains-checkAvailability":
+        return jsonResponse(await checkDomainAvailability(payload));
+      case "domains-getPricing":
+        return jsonResponse(await getDomainRegistrarPricing());
+      case "domains-createDomainCheckoutSession":
+      case "domains-purchase":
+        return jsonResponse(getDomainPurchaseUnavailableResponse());
+      case "domains-checkDomainOrderStatus":
+        return jsonResponse({
+          status: "failed",
+          domainName: String(payload.domainName || ""),
+          error: getDomainPurchaseUnavailableMessage(),
+        });
       case "domains-verifyDNS":
       case "domains-checkSSL":
       case "sync-domain-mapping":
@@ -2067,6 +2088,270 @@ async function respondClientApproval(req: Request, userId: string, payload: Reco
   };
 }
 
+type RegistrarLookup = {
+  name: string;
+  available: boolean;
+  price: number | null;
+  renewalPrice: number | null;
+  premium: boolean;
+  originalPrice?: number;
+};
+
+const DOMAIN_SEARCH_PRIORITY_TLDS = [".com", ".net", ".org", ".io", ".co"];
+const DOMAIN_SEARCH_SECONDARY_TLDS = [".app", ".dev", ".shop", ".store", ".online", ".site", ".tech", ".xyz"];
+const DOMAIN_SEARCH_PREFIXES = [""];
+const MAX_DOMAIN_LOOKUPS = 12;
+const MAX_DOMAIN_PRICE_LOOKUPS = 8;
+
+function getDomainPurchaseUnavailableMessage() {
+  return "Domain purchase checkout is disabled while the registrar order flow is migrated. Connect an existing domain instead.";
+}
+
+function getDomainPurchaseUnavailableResponse() {
+  return {
+    sessionId: "",
+    url: "",
+    orderId: "",
+    purchaseAvailable: false,
+    message: getDomainPurchaseUnavailableMessage(),
+  };
+}
+
+async function searchDomainSuggestions(payload: Record<string, unknown>) {
+  const keyword = cleanDomainKeyword(String(payload.keyword || ""));
+  if (!keyword) throw new Error("keyword is required");
+
+  const domainsToCheck = buildDomainSuggestions(keyword);
+  const lookups = await lookupRegistrarDomains(domainsToCheck);
+
+  return {
+    available: lookups.filter((domain) => domain.available),
+    unavailable: lookups
+      .filter((domain) => !domain.available)
+      .map((domain) => ({
+        name: domain.name,
+        available: false,
+        price: null,
+        premium: false,
+      })),
+    keyword,
+  };
+}
+
+async function checkDomainAvailability(payload: Record<string, unknown>) {
+  const requestedDomains = Array.isArray(payload.domains) ? payload.domains : [];
+  const domains = Array.from(new Set(
+    requestedDomains
+      .map((domain) => normalizeDomain(String(domain || "")))
+      .filter((domain) => {
+        try {
+          assertValidDomain(domain);
+          return true;
+        } catch {
+          return false;
+        }
+      }),
+  )).slice(0, MAX_DOMAIN_LOOKUPS);
+
+  if (domains.length === 0) {
+    throw new Error("domains array is required");
+  }
+
+  const lookups = await lookupRegistrarDomains(domains);
+  return {
+    results: lookups.map((domain) => ({
+      domainName: domain.name,
+      purchasable: domain.available,
+      purchasePrice: domain.price ?? undefined,
+      renewalPrice: domain.renewalPrice ?? undefined,
+      premium: domain.premium,
+      originalPrice: domain.originalPrice,
+    })),
+  };
+}
+
+async function getDomainRegistrarPricing() {
+  const sampleDomains = DOMAIN_SEARCH_PRIORITY_TLDS
+    .concat([".app", ".dev"])
+    .map((tld) => `quimera-domain-price-check${tld}`);
+
+  const pricing = await Promise.all(sampleDomains.map(async (domain) => {
+    const tld = "." + domain.split(".").slice(1).join(".");
+    const priceData = await getVercelRegistrarPrice(domain);
+    return {
+      tld,
+      registrationPrice: readRegistrarPrice(priceData, "purchasePrice"),
+      renewalPrice: readRegistrarPrice(priceData, "renewalPrice"),
+    };
+  }));
+
+  return { pricing };
+}
+
+function cleanDomainKeyword(keyword: string) {
+  return keyword
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+function buildDomainSuggestions(keyword: string) {
+  const domains: string[] = [];
+  const tlds = [...DOMAIN_SEARCH_PRIORITY_TLDS, ...DOMAIN_SEARCH_SECONDARY_TLDS];
+
+  for (const prefix of DOMAIN_SEARCH_PREFIXES) {
+    for (const tld of tlds) {
+      const label = `${prefix}${keyword}`;
+      const domain = `${label}${tld}`;
+      if (label.length <= 63 && !domains.includes(domain)) {
+        domains.push(domain);
+      }
+      if (domains.length >= MAX_DOMAIN_LOOKUPS) return domains;
+    }
+  }
+
+  return domains;
+}
+
+async function lookupRegistrarDomains(domains: string[]): Promise<RegistrarLookup[]> {
+  const uniqueDomains = Array.from(new Set(domains.map((domain) => normalizeDomain(domain)))).slice(0, MAX_DOMAIN_LOOKUPS);
+  let availabilityByDomain = await getVercelRegistrarBulkAvailability(uniqueDomains);
+
+  if (!availabilityByDomain) {
+    const fallbackAvailability = await Promise.all(uniqueDomains.map(async (domain) => ({
+      domain,
+      available: await getVercelRegistrarAvailability(domain),
+    })));
+    availabilityByDomain = new Map(fallbackAvailability.map((item) => [item.domain, item.available]));
+  }
+
+  const domainsForPricing = uniqueDomains
+    .filter((domain) => availabilityByDomain?.get(domain) === true)
+    .slice(0, MAX_DOMAIN_PRICE_LOOKUPS);
+  const prices = await Promise.all(domainsForPricing.map(async (domain) => ({
+    domain,
+    data: await getVercelRegistrarPrice(domain),
+  })));
+  const priceByDomain = new Map(prices.map((item) => [item.domain, item.data]));
+
+  return uniqueDomains.map((domain) => {
+    const available = availabilityByDomain?.get(domain) === true;
+    const priceData = available ? priceByDomain.get(domain) || null : null;
+    const price = readRegistrarPrice(priceData, "purchasePrice");
+    const renewalPrice = readRegistrarPrice(priceData, "renewalPrice");
+
+    return {
+      name: domain,
+      available,
+      price,
+      renewalPrice,
+      premium: Boolean((priceData as any)?.premium),
+      ...(price !== null ? { originalPrice: price } : {}),
+    };
+  });
+}
+
+async function lookupRegistrarDomain(domain: string): Promise<RegistrarLookup> {
+  const availability = await getVercelRegistrarAvailability(domain);
+  const available = availability === true;
+  const priceData = available ? await getVercelRegistrarPrice(domain) : null;
+  const price = readRegistrarPrice(priceData, "purchasePrice");
+  const renewalPrice = readRegistrarPrice(priceData, "renewalPrice");
+
+  return {
+    name: domain,
+    available,
+    price,
+    renewalPrice,
+    premium: Boolean((priceData as any)?.premium),
+    ...(price !== null ? { originalPrice: price } : {}),
+  };
+}
+
+async function getVercelRegistrarBulkAvailability(domains: string[]): Promise<Map<string, boolean> | null> {
+  const response = await vercelFetch("/v1/registrar/domains/availability", {
+    method: "POST",
+    body: JSON.stringify({ domains }),
+  });
+  const data = await readJson(response);
+
+  if (!response.ok) {
+    if (response.status === 400) return null;
+    const message = data?.message || data?.error?.message || response.statusText;
+    throw new Error(`Vercel could not check domain availability: ${message}`);
+  }
+
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return new Map(results.map((item: Record<string, unknown>) => [
+    normalizeDomain(String(item.domain || item.name || "")),
+    item.available === true || item.available === "true",
+  ]));
+}
+
+async function getVercelRegistrarAvailability(domain: string): Promise<boolean> {
+  const response = await vercelFetch(`/v1/registrar/domains/${encodeURIComponent(domain)}/availability`, {
+    method: "GET",
+  });
+  const data = await readJson(response);
+
+  if (!response.ok) {
+    const message = data?.message || data?.error?.message || response.statusText;
+    if (response.status === 400 || response.status === 404) return false;
+    throw new Error(`Vercel could not check ${domain}: ${message}`);
+  }
+
+  return data?.available === true || data?.available === "true";
+}
+
+async function getVercelRegistrarPrice(domain: string): Promise<Record<string, unknown> | null> {
+  const response = await vercelFetch(`/v1/registrar/domains/${encodeURIComponent(domain)}/price?years=1`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return await readJson(response);
+}
+
+function readRegistrarPrice(data: unknown, key: "purchasePrice" | "renewalPrice") {
+  const value = (data as any)?.[key];
+  const candidates = [
+    value,
+    value?.value,
+    value?.amount,
+    value?.price,
+    value?.usd,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = parsePriceNumber(candidate);
+    if (parsed !== null) return parsed;
+  }
+
+  return null;
+}
+
+function parsePriceNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return normalizeRegistrarAmount(value);
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(parsed) ? normalizeRegistrarAmount(parsed) : null;
+  }
+  return null;
+}
+
+function normalizeRegistrarAmount(value: number) {
+  const amount = value > 100 ? value / 100 : value;
+  return Math.round(amount * 100) / 100;
+}
+
 async function addDomain(req: Request, userId: string, payload: Record<string, unknown>) {
   const domain = normalizeDomain(String(payload.domain || ""));
   const projectId = String(payload.projectId || "");
@@ -2563,6 +2848,8 @@ async function vercelFetch(path: string, init: RequestInit) {
   const url = new URL(`https://api.vercel.com${path}`);
   const teamId = Deno.env.get("VERCEL_TEAM_ID");
   const slug = Deno.env.get("VERCEL_TEAM_SLUG");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort("Vercel request timed out"), 3500);
 
   if (teamId) {
     url.searchParams.set("teamId", teamId);
@@ -2570,14 +2857,19 @@ async function vercelFetch(path: string, init: RequestInit) {
     url.searchParams.set("slug", slug);
   }
 
-  return fetch(url.toString(), {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-  });
+  try {
+    return await fetch(url.toString(), {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...(init.headers || {}),
+      },
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function getDomainConfig(domain: string): Promise<Record<string, unknown> | null> {

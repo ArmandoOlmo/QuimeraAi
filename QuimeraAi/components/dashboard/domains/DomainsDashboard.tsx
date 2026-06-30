@@ -675,6 +675,8 @@ const DomainCard: React.FC<{ domain: Domain }> = ({ domain }) => {
     );
 };
 
+const DOMAIN_PURCHASE_ENABLED = false;
+
 // --- DOMAIN SEARCH & BUY COMPONENT ---
 const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { t } = useTranslation();
@@ -788,7 +790,7 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setResults([]);
 
         try {
-            // Use Name.com API via server-side API route
+            // Use the server-side registrar integration.
             const { searchDomains } = await import('../../../services/nameComService');
             const searchResults = await searchDomains(query.trim());
 
@@ -844,6 +846,11 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     };
 
     const handleBuy = async (domainName: string, price: number) => {
+        if (!DOMAIN_PURCHASE_ENABLED) {
+            setError(t('domainsDashboard.purchaseUnavailableMessage'));
+            return;
+        }
+
         if (!user) {
             alert(t('domainsDashboard.loginRequired'));
             return;
@@ -860,6 +867,8 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             // Redirect to Stripe Checkout
             if (result.url) {
                 window.location.href = result.url;
+            } else if (result.message) {
+                setError(result.message);
             } else {
                 setError(t('domainsDashboard.checkoutError'));
             }
@@ -1061,11 +1070,13 @@ const DomainSearch: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                         )}
                                         <button
                                             onClick={() => res.price && handleBuy(res.name, res.price)}
-                                            disabled={isPurchasing !== null}
-                                            className="bg-q-success hover:bg-q-success text-white font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 min-w-[90px]"
+                                            disabled={isPurchasing !== null || !DOMAIN_PURCHASE_ENABLED}
+                                            className="bg-q-success hover:bg-q-success text-white font-bold py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[90px]"
                                         >
                                             {isPurchasing === res.name ? (
                                                 <Loader2 size={16} className="animate-spin mx-auto" />
+                                            ) : !DOMAIN_PURCHASE_ENABLED ? (
+                                                t('domainsDashboard.purchaseUnavailable')
                                             ) : (
                                                 t('domainsDashboard.buy')
                                             )}
@@ -1307,7 +1318,7 @@ const DomainsDashboard: React.FC = () => {
                             className="flex items-center gap-1.5 h-9 px-2 sm:px-3 rounded-lg text-sm font-medium transition-all sm:bg-secondary/50 sm:border sm:border-q-border/40 text-q-text-muted hover:text-foreground hover:bg-secondary"
                         >
                             {!customDomainsAllowed && <Crown className="w-4 h-4 text-q-accent" />}
-                            <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.buyDomain')}</span>
+                            <ShoppingCart className="w-4 h-4" /> <span className="hidden sm:inline">{t('domainsDashboard.findDomain')}</span>
                         </button>
                         <HeaderBackButton onClick={() => navigate(ROUTES.DASHBOARD)} />
                     </div>

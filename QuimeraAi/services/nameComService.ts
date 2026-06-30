@@ -1,8 +1,7 @@
 /**
  * Name.com Service
  * 
- * Client-side service for interacting with Name.com domain registration
- * via Vercel API routes (for security - API keys stay on server).
+ * Client-side service for domain registrar checks through the onboarding Edge Function.
  */
 
 
@@ -44,6 +43,43 @@ export interface TLDPricing {
 // FUNCTIONS
 // =============================================================================
 
+async function getFunctionErrorMessage(error: unknown): Promise<string> {
+    const fallbackMessage = error instanceof Error ? error.message : 'Domain request failed';
+    const errorMessages = [
+        fallbackMessage,
+        (error as { cause?: { message?: string } })?.cause?.message,
+        (error as { cause?: { name?: string } })?.cause?.name,
+    ].filter(Boolean).join(' ');
+    const response = (error as { context?: Response })?.context;
+
+    if (/Supabase request timed out|TimeoutError/i.test(errorMessages)) {
+        return 'Domain search timed out while contacting the registrar. Please try again.';
+    }
+
+    if (/Supabase temporarily unavailable|SupabaseUnavailableError/i.test(errorMessages)) {
+        return 'Supabase temporarily paused requests after repeated network failures. Please wait a few seconds and try again.';
+    }
+
+    if (response && typeof response.clone === 'function') {
+        try {
+            const body = await response.clone().json();
+            const message = body?.error || body?.message || body?.data?.error;
+            if (message) return String(message);
+        } catch {
+            // Fall through to text/fallback parsing.
+        }
+
+        try {
+            const text = await response.clone().text();
+            if (text) return text;
+        } catch {
+            // Fall through to fallback message.
+        }
+    }
+
+    return fallbackMessage;
+}
+
 /**
  * Search for available domains based on a keyword
  */
@@ -54,7 +90,7 @@ export async function searchDomains(keyword: string): Promise<DomainSearchResult
             body: { action: 'domains-searchSuggestions', keyword }
         });
         
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -81,7 +117,7 @@ export async function checkAvailability(domains: string[]): Promise<{
             body: { action: 'domains-checkAvailability', domains }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -115,7 +151,7 @@ export async function purchaseDomain(
             body: { action: 'domains-purchase', domainName, years, contactInfo }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -138,6 +174,8 @@ export interface DomainCheckoutResult {
     sessionId: string;
     url: string;
     orderId: string;
+    purchaseAvailable?: boolean;
+    message?: string;
 }
 
 export interface DomainOrderStatus {
@@ -173,7 +211,7 @@ export async function createDomainCheckout(
             }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -192,7 +230,7 @@ export async function checkDomainOrderStatus(orderId: string): Promise<DomainOrd
             body: { action: 'domains-checkDomainOrderStatus', orderId }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         return result.data?.data || result.data;
 
     } catch (error: any) {
@@ -211,7 +249,7 @@ export async function getDomainPricing(): Promise<TLDPricing[]> {
             body: { action: 'domains-getPricing' }
         });
 
-        if (result.error) throw result.error;
+        if (result.error) throw new Error(await getFunctionErrorMessage(result.error), { cause: result.error });
         const data = result.data?.data || result.data;
         return data.pricing;
 
@@ -245,10 +283,6 @@ export function getTLD(domain: string): string {
     const parts = domain.split('.');
     return parts.length > 1 ? `.${parts.slice(1).join('.')}` : '';
 }
-
-
-
-
 
 
 
