@@ -1101,9 +1101,12 @@ const StorefrontEditorView: React.FC = () => {
 
     const previewStorefrontTheme = getStorefrontTheme();
     const availableSections = STOREFRONT_SECTION_KINDS.filter(kind => !sections.includes(kind));
-    const storefrontUrl = `/store/${storeId}`;
-    const previewSessionKey = `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${storeId}`;
-    const previewUrl = `${storefrontUrl}?preview=storefront-editor&editorSession=${encodeURIComponent(previewSessionKey)}`;
+    const canRenderPreview = Boolean(storeId && project);
+    const storefrontUrl = storeId ? `/store/${storeId}` : '#';
+    const previewSessionKey = storeId ? `${STOREFRONT_EDITOR_PREVIEW_SESSION_PREFIX}${storeId}` : '';
+    const previewUrl = canRenderPreview
+        ? `${storefrontUrl}?preview=storefront-editor&editorSession=${encodeURIComponent(previewSessionKey)}`
+        : '';
     const selectedSectionSettings = {
         ...storefrontSectionRegistry[selectedSection].defaultSettings,
         ...toSettingsRecord(sectionSettings[selectedSection]),
@@ -1172,6 +1175,7 @@ const StorefrontEditorView: React.FC = () => {
 
     const scrollPreviewSectionIntoView = useCallback((section: StorefrontSectionKind) => {
         if (typeof window === 'undefined') return;
+        if (!previewSessionKey || !storeId) return;
 
         previewFrameRef.current?.contentWindow?.postMessage({
             type: STOREFRONT_EDITOR_SELECT_SECTION,
@@ -1332,6 +1336,7 @@ const StorefrontEditorView: React.FC = () => {
 
     const postPreviewPayload = useCallback((payload = previewPayloadRef.current) => {
         if (!payload || typeof window === 'undefined') return;
+        if (!previewSessionKey || !storeId) return;
 
         previewFrameRef.current?.contentWindow?.postMessage({
             type: STOREFRONT_EDITOR_PREVIEW_UPDATE,
@@ -1342,7 +1347,7 @@ const StorefrontEditorView: React.FC = () => {
     }, [previewSessionKey, storeId]);
 
     useEffect(() => {
-        if (!storeId || !project) return;
+        if (!storeId || !project || !previewSessionKey) return;
 
         try {
             const nextPayload = JSON.stringify(previewProjectData);
@@ -1358,6 +1363,7 @@ const StorefrontEditorView: React.FC = () => {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (!previewSessionKey) return;
 
         const handlePreviewSectionClick = (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
@@ -2831,18 +2837,25 @@ const StorefrontEditorView: React.FC = () => {
                             </div>
                             <div className="w-14" />
                         </div>
-                        <iframe
-                            ref={previewFrameRef}
-                            title={t('ecommerce.storefrontEditor.previewTitle', 'Vista previa de tienda online')}
-                            src={previewUrl}
-                            onLoad={() => {
-                                postPreviewPayload();
-                                schedulePreviewSectionScroll(selectedSection);
-                            }}
-                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                            scrolling="yes"
-                            className="h-full min-h-0 flex-1 border-0 bg-q-surface"
-                        />
+                        {canRenderPreview && previewUrl ? (
+                            <iframe
+                                ref={previewFrameRef}
+                                title={t('ecommerce.storefrontEditor.previewTitle', 'Vista previa de tienda online')}
+                                src={previewUrl}
+                                onLoad={() => {
+                                    postPreviewPayload();
+                                    schedulePreviewSectionScroll(selectedSection);
+                                }}
+                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                                scrolling="yes"
+                                className="h-full min-h-0 flex-1 border-0 bg-q-surface"
+                            />
+                        ) : (
+                            <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-q-surface px-6 text-center text-sm text-q-text-muted">
+                                <Loader2 size={22} className="animate-spin text-q-primary" />
+                                <p>{t('ecommerce.storefrontEditor.preparingPreview', 'Preparando preview de tienda...')}</p>
+                            </div>
+                        )}
                     </div>
                 </section>
 

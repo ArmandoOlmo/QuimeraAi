@@ -689,6 +689,80 @@ html.black .quimera-ai-launcher {
   border-color: rgba(255, 255, 255, 0.13);
 }
 
+.quimera-ai-launcher-tab {
+  position: absolute;
+  top: 1px;
+  right: calc(1rem + 10px);
+  z-index: 72;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem 0.7rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--q-text-on-accent);
+  border: none;
+  border-radius: 0.7rem 0.7rem 0 0;
+  background: linear-gradient(
+    135deg,
+    var(--quimera-status-icon-from) 0%,
+    var(--quimera-status-icon-to) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 -4px 14px rgba(var(--q-accent-rgb), 0.22);
+  cursor: pointer;
+  transform: translateY(-100%);
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.quimera-ai-launcher-tab-icon {
+  color: var(--q-text-on-accent);
+  transition: transform 0.2s ease;
+}
+
+/* Bridge that visually fuses the tab base into the modal top edge.
+   Matches the modal contour line thickness (1px). */
+.quimera-ai-launcher-tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--quimera-status-icon-to);
+}
+
+.quimera-ai-launcher-tab:hover {
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 -6px 20px rgba(var(--q-accent-rgb), 0.3);
+  transform: translateY(-100%) translateY(-2px);
+}
+
+.quimera-ai-launcher-tab:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--q-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .quimera-ai-launcher-tab {
+    right: calc(1.25rem + 10px);
+    padding: 0.55rem 1.05rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+.quimera-ai-launcher-with-tab {
+  overflow: visible;
+}
+
 @keyframes quimeraAiLauncherEnter {
   0% {
     opacity: 0;

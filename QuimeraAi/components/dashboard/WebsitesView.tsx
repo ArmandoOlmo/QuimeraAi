@@ -150,6 +150,17 @@ const WebsitesView: React.FC<WebsitesViewProps> = ({ filters }) => {
                     onSortOrderChange={setSortOrder}
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
+                    trailingAction={
+                        <button
+                            type="button"
+                            onClick={() => setIsOnboardingOpen(true)}
+                            className="quimera-guide-cta inline-flex h-9 items-center gap-1.5 !rounded-lg px-3 text-sm font-semibold whitespace-nowrap shadow-sm transition-transform hover:scale-[1.02]"
+                            aria-label={t('dashboard.createWebsite', 'Crear Sitio Web')}
+                        >
+                            <Plus size={16} aria-hidden="true" />
+                            <span className="hidden sm:inline">{t('dashboard.createWebsite', 'Crear Sitio Web')}</span>
+                        </button>
+                    }
                 />
 
                 {/* Project Cards */}

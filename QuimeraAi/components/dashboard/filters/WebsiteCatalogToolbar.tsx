@@ -22,6 +22,8 @@ export interface WebsiteCatalogToolbarProps {
     viewMode: ViewMode;
     onViewModeChange: (mode: ViewMode) => void;
     leading?: React.ReactNode;
+    /** Optional action rendered to the right of the sort/view controls (e.g. a "Create" button) */
+    trailingAction?: React.ReactNode;
     className?: string;
     countLabelKey?: string;
     countLabelDefault?: string;
@@ -45,6 +47,7 @@ const WebsiteCatalogToolbar: React.FC<WebsiteCatalogToolbarProps> = ({
     viewMode,
     onViewModeChange,
     leading,
+    trailingAction,
     className,
     countLabelKey,
     countLabelDefault,
@@ -62,15 +65,18 @@ const WebsiteCatalogToolbar: React.FC<WebsiteCatalogToolbarProps> = ({
             />
         }
         trailing={
-            <SortViewControls
-                viewMode={viewMode}
-                onViewModeChange={onViewModeChange}
-                sortVariant="cycle"
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSortByChange={onSortByChange}
-                onSortOrderChange={onSortOrderChange}
-            />
+            <div className="flex items-center gap-2 shrink-0">
+                <SortViewControls
+                    viewMode={viewMode}
+                    onViewModeChange={onViewModeChange}
+                    sortVariant="cycle"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSortByChange={onSortByChange}
+                    onSortOrderChange={onSortOrderChange}
+                />
+                {trailingAction}
+            </div>
         }
         footer={
             <CatalogToolbarFooter

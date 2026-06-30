@@ -25,7 +25,7 @@ import { resolveAssistantServiceIdForModule } from '../../services/globalAssista
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
 import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
-import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, Bot, Calendar, Link2, LayoutTemplate, Store, Wallet, Utensils, Building2 } from 'lucide-react';
+import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, Bot, Calendar, Link2, LayoutTemplate, Store, Wallet, Utensils, Building2, FilePlus } from 'lucide-react';
 import { AppButton } from '../ui/system';
 
 interface DashboardWelcomeProps {
@@ -238,6 +238,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         navigate(ROUTES.SETTINGS_SUBSCRIPTION);
     };
 
+    const handleNewProjectClick = () => {
+        setIsOnboardingOpen(true);
+    };
+
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return t('dashboard.goodMorning');
@@ -374,10 +378,20 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     {t('dashboard.heroSubtitlePart3')}
                 </motion.p>
 
-                <form
-                    onSubmit={handlePromptSubmit}
-                    className="quimera-ai-launcher quimera-ai-launcher-enter relative z-[70] mx-auto mt-2 mb-6 w-full max-w-3xl lg:mt-4 lg:mb-10"
-                >
+                <div className="relative z-[70] mx-auto mt-2 mb-6 w-full max-w-3xl pt-9 lg:mt-4 lg:mb-10">
+                    <form
+                        onSubmit={handlePromptSubmit}
+                        className="quimera-ai-launcher quimera-ai-launcher-with-tab quimera-ai-launcher-enter relative"
+                    >
+                        <button
+                            type="button"
+                            onClick={handleNewProjectClick}
+                            className="quimera-ai-launcher-tab group"
+                            aria-label={t('dashboard.newProject', 'Nuevo Proyecto')}
+                        >
+                            <FilePlus className="quimera-ai-launcher-tab-icon size-3.5 shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
+                            <span>{t('dashboard.newProject', 'Nuevo Proyecto')}</span>
+                        </button>
                     <label className="sr-only" htmlFor="dashboard-ai-prompt">
                         {t('dashboard.assistantInputLabel', 'Escribe tu solicitud')}
                     </label>
@@ -506,7 +520,8 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                             </span>
                         </div>
                     )}
-                </form>
+                    </form>
+                </div>
 
                 {/* Status Cards */}
                 <motion.div className="relative z-0" variants={dashboardItemVariants}>

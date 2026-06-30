@@ -2079,6 +2079,7 @@ const GlobalAiAssistant: React.FC = () => {
                     seo: ROUTES.SEO,
                     finance: ROUTES.FINANCE,
                     ecommerce: ROUTES.ECOMMERCE,
+                    storefront: `${ROUTES.ECOMMERCE}/storefront`,
                     email: ROUTES.EMAIL,
                     templates: ROUTES.TEMPLATES,
                     assets: ROUTES.ASSETS,
@@ -2105,7 +2106,7 @@ const GlobalAiAssistant: React.FC = () => {
                     }
                 }
 
-                setViewRef.current(newView);
+                setViewRef.current(newView === 'storefront' ? 'ecommerce' : newView);
                 const projectInfo = activeProjectRef.current ? ` (Project: ${activeProjectRef.current.name})` : '';
                 const result = { result: `Navigated to ${newView}.${projectInfo}` };
                 console.log(`[Tool Result] ${name}`, result);
@@ -4246,7 +4247,7 @@ const GlobalAiAssistant: React.FC = () => {
 
         const targetViews: Record<string, { view: View; route: string; adminView?: AdminView }> = {
             media: { view: 'assets', route: ROUTES.ASSETS },
-            storefront: { view: 'ecommerce', route: ROUTES.ECOMMERCE },
+            storefront: { view: 'ecommerce', route: `${ROUTES.ECOMMERCE}/storefront` },
             leads: { view: 'leads', route: ROUTES.LEADS },
             email: { view: 'email', route: ROUTES.EMAIL },
             ecommerce: { view: 'ecommerce', route: ROUTES.ECOMMERCE },

@@ -4,7 +4,7 @@
  * Cada proyecto tiene su propia tienda de ecommerce
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ShoppingBag,
@@ -175,6 +175,12 @@ const getEcommerceViewPath = (view: EcommerceView): string => (
     view === 'overview' ? ROUTES.ECOMMERCE : `${ROUTES.ECOMMERCE}/${view}`
 );
 
+interface EcommerceViewSyncOptions {
+    updateRoute?: boolean;
+    emit?: boolean;
+    deferUntilRoute?: boolean;
+}
+
 const getInitialEcommerceView = (): EcommerceView => {
     const requestedView = resolveEcommerceViewFromPath(window.location.pathname);
     if (requestedView) return requestedView;
@@ -241,13 +247,35 @@ const EcommerceDashboard: React.FC = () => {
         initializeStore
     } = useEcommerceStore(userId || '', storeId);
 
+    const syncActiveView = useCallback((view: EcommerceView, options: EcommerceViewSyncOptions = {}) => {
+        if (!VALID_ECOMMERCE_VIEWS.includes(view)) return;
+
+        const {
+            updateRoute = false,
+            emit = true,
+            deferUntilRoute = true,
+        } = options;
+        const nextPath = getEcommerceViewPath(view);
+
+        localStorage.setItem('ecommerceActiveView', view);
+
+        if (updateRoute && path !== nextPath) {
+            navigate(nextPath);
+            if (deferUntilRoute) return;
+        }
+
+        setActiveView(currentView => currentView === view ? currentView : view);
+
+        if (emit) {
+            window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: view }));
+        }
+    }, [navigate, path]);
+
     // Escuchar cambios de vista
     useEffect(() => {
         const handleViewChange = (event: CustomEvent<string>) => {
             const newView = event.detail as EcommerceView;
-            if (VALID_ECOMMERCE_VIEWS.includes(newView)) {
-                setActiveView(newView);
-            }
+            syncActiveView(newView, { updateRoute: true, emit: false });
         };
 
         window.addEventListener('ecommerceViewChange', handleViewChange as EventListener);
@@ -255,16 +283,32 @@ const EcommerceDashboard: React.FC = () => {
         return () => {
             window.removeEventListener('ecommerceViewChange', handleViewChange as EventListener);
         };
-    }, []);
+    }, [syncActiveView]);
 
     useEffect(() => {
         const requestedView = resolveEcommerceViewFromPath(path);
-        if (!requestedView || requestedView === activeView) return;
+        if (!requestedView) {
+            const savedView = localStorage.getItem('ecommerceActiveView') as EcommerceView | null;
+            if (activeView === 'storefront' && savedView === 'storefront') {
+                navigate(getEcommerceViewPath('storefront'));
+                return;
+            }
 
-        setActiveView(requestedView);
-        localStorage.setItem('ecommerceActiveView', requestedView);
-        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: requestedView }));
-    }, [activeView, path]);
+            if (activeView === 'storefront') {
+                setActiveView('overview');
+                localStorage.setItem('ecommerceActiveView', 'overview');
+                window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: 'overview' }));
+            }
+            return;
+        }
+
+        if (requestedView === activeView) {
+            localStorage.setItem('ecommerceActiveView', requestedView);
+            return;
+        }
+
+        syncActiveView(requestedView, { updateRoute: false });
+    }, [activeView, path, syncActiveView]);
 
     // Sincronizar proyecto seleccionado con proyecto activo (always sync when activeProjectId changes)
     useEffect(() => {
@@ -276,16 +320,7 @@ const EcommerceDashboard: React.FC = () => {
     const [showDemoSeeder, setShowDemoSeeder] = useState(false);
 
     const handleViewChange = (view: EcommerceView) => {
-        if (!VALID_ECOMMERCE_VIEWS.includes(view)) return;
-
-        setActiveView(view);
-        localStorage.setItem('ecommerceActiveView', view);
-        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: view }));
-
-        const nextPath = getEcommerceViewPath(view);
-        if (path !== nextPath) {
-            navigate(nextPath);
-        }
+        syncActiveView(view, { updateRoute: true });
     };
 
     const handleProjectSelect = (projectId: string) => {

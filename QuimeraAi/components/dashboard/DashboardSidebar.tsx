@@ -527,8 +527,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
       if (item.subView) {
         localStorage.setItem('ecommerceActiveView', item.subView);
         setActiveEcommerceSubView(item.subView);
-        // Disparar un evento para notificar al dashboard
-        window.dispatchEvent(new CustomEvent('ecommerceViewChange', { detail: item.subView }));
       }
       // Navigate using router
       navigate(item.route);
