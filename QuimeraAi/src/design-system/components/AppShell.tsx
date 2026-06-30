@@ -10,7 +10,7 @@ export const AppShell = React.forwardRef<HTMLDivElement, AppShellProps>(function
   return (
     <div
       ref={ref}
-      className={cn('flex h-screen bg-q-bg text-q-text', className)}
+      className={cn('flex h-[100dvh] min-w-0 overflow-hidden bg-q-bg text-q-text', className)}
       {...props}
     />
   );
@@ -58,7 +58,7 @@ export const AppShellContent = React.forwardRef<HTMLElement, AppShellContentProp
   return (
     <main
       ref={ref}
-      className={cn('flex-1 overflow-y-auto scroll-smooth', className)}
+      className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scroll-smooth', className)}
       {...props}
     />
   );

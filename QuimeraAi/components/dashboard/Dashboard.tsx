@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
                     id="main-content"
                     className={
                         isDashboard
-                            ? 'quimera-dashboard-home-bg'
+                            ? 'quimera-dashboard-home-bg quimera-dashboard-mobile-lock'
                             : 'p-3 sm:p-6 lg:p-8'
                     }
                     role="main"
@@ -167,8 +167,8 @@ const Dashboard: React.FC = () => {
                                     <motion.div
                                         aria-hidden="true"
                                         className="pointer-events-none absolute inset-x-0 -top-6 z-0 h-40 rounded-[var(--q-radius-2xl)] bg-gradient-to-r from-transparent via-white/18 to-transparent blur-2xl dark:via-white/10"
-                                        initial={{ opacity: 0.55, x: '-18%', y: -20 }}
-                                        animate={{ opacity: 0, x: '18%', y: 10 }}
+                                        initial={{ opacity: 0.55, y: -20 }}
+                                        animate={{ opacity: 0, y: 10 }}
                                         transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
                                     />
                                 )}
