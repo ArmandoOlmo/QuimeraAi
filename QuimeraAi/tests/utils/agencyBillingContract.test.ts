@@ -118,6 +118,32 @@ describe('Agency billing canonical contract', () => {
         expect(tenantContext).toContain("onConflict: 'agency_tenant_id,client_tenant_id'");
     });
 
+    it('keeps owner and agency real workspaces ahead of auto-created free personal workspaces', () => {
+        expect(tenantContext).toContain('function fetchActiveProjectCountsByTenantIds');
+        expect(tenantContext).toContain(".from('projects')");
+        expect(tenantContext).toContain(".select('tenant_id,is_deleted')");
+        expect(tenantContext).toContain('function sortTenantMemberships');
+        expect(tenantContext).toContain('function isShadowPersonalWorkspace');
+        expect(tenantContext).toContain('function isPrimaryOwnedWorkspace');
+        expect(tenantContext).toContain('function hideShadowPersonalWorkspaces');
+        expect(tenantContext).toContain('const TENANT_TYPE_PRIORITY');
+        expect(tenantContext).toContain('agency: 0');
+        expect(tenantContext).toContain('agency_starter: 2');
+        expect(tenantContext).toContain("planId === 'free'");
+        expect(tenantContext).toContain('projectCount === 0');
+        expect(tenantContext).toContain("planId === 'individual'");
+        expect(tenantContext).toContain('getTenantProjectCount(tenant) > 0');
+        expect(tenantContext).toContain('const projectCounts = await fetchActiveProjectCountsByTenantIds');
+        expect(tenantContext).toContain('activeProjectCount');
+        expect(tenantContext).toContain('const visibleMemberships = hideShadowPersonalWorkspaces(hydratedMemberships, userId)');
+        expect(tenantContext).toContain('const orderedMemberships = sortTenantMemberships(visibleMemberships)');
+        expect(tenantContext).toContain('setUserTenants(orderedMemberships)');
+        expect(tenantContext).toContain('function shouldUseSavedTenant');
+        expect(tenantContext).toContain('ACTIVE_TENANT_MANUAL_KEY');
+        expect(tenantContext).toContain('localStorage.setItem(ACTIVE_TENANT_KEY, tenantId)');
+        expect(tenantContext).toContain("localStorage.setItem(ACTIVE_TENANT_MANUAL_KEY, 'true')");
+    });
+
     it('keeps Super Admin tenant edits from assigning Agency Engine plans to agency_client subscriptionPlan', () => {
         expect(adminContext).toContain('function normalizeAdminTenantUpdatePlan');
         expect(adminContext).toContain("type === 'agency'");

@@ -1,7 +1,16 @@
 .git
+.env
+.env.local
+.env.*.local
+*.env
+*.local
 node_modules
 QuimeraAi/node_modules
 QuimeraAi/dist
+QuimeraAi/.env
+QuimeraAi/.env.local
+QuimeraAi/.env.*.local
+QuimeraAi/*.local
 QuimeraAi/playwright-report
 QuimeraAi/test-results
 QuimeraAi/coverage

@@ -29,6 +29,7 @@ import { useAuth } from '../core/AuthContext';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import {
     getCanonicalPlanFeatures,
+    isAgencyPlan,
     normalizePlanId,
     normalizePlanLimits,
 } from '../../services/billing/planCatalog';
@@ -79,6 +80,109 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined);
 // =============================================================================
 
 const ACTIVE_TENANT_KEY = 'quimera_active_tenant_id';
+const ACTIVE_TENANT_MANUAL_KEY = 'quimera_active_tenant_manual';
+
+const TENANT_TYPE_PRIORITY: Record<string, number> = {
+    agency: 0,
+    agency_client: 1,
+    individual: 3,
+    personal: 3,
+};
+
+const PLAN_PRIORITY: Record<string, number> = {
+    agency_scale: 0,
+    agency_pro: 1,
+    agency_starter: 2,
+    enterprise: 3,
+    individual: 4,
+    free: 5,
+};
+
+function getTenantProjectCount(tenant: Tenant | undefined): number {
+    const usage = tenant?.usage as Record<string, unknown> | undefined;
+    const projectCount = Number(usage?.projectCount || 0);
+    const activeProjectCount = Number(usage?.activeProjectCount || 0);
+    return Math.max(projectCount, activeProjectCount, 0);
+}
+
+function getTenantSelectionPriority(membership: TenantMembership): number {
+    const tenant = membership.tenant;
+    const typePriority = TENANT_TYPE_PRIORITY[String(tenant?.type || '')] ?? 2;
+    const planPriority = PLAN_PRIORITY[normalizePlanId(tenant?.subscriptionPlan || 'free')] ?? 6;
+    const statusPenalty = tenant?.status === 'active' || tenant?.status === 'trial' ? 0 : 20;
+    return statusPenalty + (typePriority * 10) + planPriority;
+}
+
+function sortTenantMemberships(memberships: TenantMembership[]): TenantMembership[] {
+    return [...memberships].sort((a, b) => {
+        const priorityDiff = getTenantSelectionPriority(a) - getTenantSelectionPriority(b);
+        if (priorityDiff !== 0) return priorityDiff;
+
+        const projectDiff = getTenantProjectCount(b.tenant) - getTenantProjectCount(a.tenant);
+        if (projectDiff !== 0) return projectDiff;
+
+        const joinedA = a.joinedAt ? new Date(a.joinedAt).getTime() : Number.MAX_SAFE_INTEGER;
+        const joinedB = b.joinedAt ? new Date(b.joinedAt).getTime() : Number.MAX_SAFE_INTEGER;
+        if (joinedA !== joinedB) return joinedA - joinedB;
+
+        return (a.tenant?.name || '').localeCompare(b.tenant?.name || '');
+    });
+}
+
+function isShadowPersonalWorkspace(membership: TenantMembership, userId: string): boolean {
+    const tenant = membership.tenant;
+    if (!tenant) return false;
+
+    const tenantType = String(tenant.type || '');
+    const planId = normalizePlanId(tenant.subscriptionPlan || 'free');
+    const projectCount = getTenantProjectCount(tenant);
+
+    return tenant.ownerUserId === userId &&
+        (tenantType === 'individual' || tenantType === 'personal') &&
+        planId === 'free' &&
+        projectCount === 0;
+}
+
+function isPrimaryOwnedWorkspace(membership: TenantMembership, userId: string): boolean {
+    const tenant = membership.tenant;
+    if (!tenant || tenant.ownerUserId !== userId) return false;
+    if (!['active', 'trial'].includes(tenant.status || '')) return false;
+
+    const tenantType = String(tenant.type || '');
+    const planId = normalizePlanId(tenant.subscriptionPlan || 'free');
+
+    return tenantType === 'agency' ||
+        isAgencyPlan(planId) ||
+        planId === 'enterprise' ||
+        planId === 'individual' ||
+        getTenantProjectCount(tenant) > 0;
+}
+
+function hideShadowPersonalWorkspaces(memberships: TenantMembership[], userId: string): TenantMembership[] {
+    const hasPrimaryWorkspace = memberships.some(membership =>
+        isPrimaryOwnedWorkspace(membership, userId) &&
+        !isShadowPersonalWorkspace(membership, userId)
+    );
+
+    if (!hasPrimaryWorkspace) return memberships;
+
+    const visibleMemberships = memberships.filter(membership =>
+        !isShadowPersonalWorkspace(membership, userId)
+    );
+
+    return visibleMemberships.length > 0 ? visibleMemberships : memberships;
+}
+
+function shouldUseSavedTenant(savedMembership: TenantMembership | undefined, preferredMembership: TenantMembership | undefined): boolean {
+    if (!savedMembership) return false;
+    if (!preferredMembership || savedMembership.tenantId === preferredMembership.tenantId) return true;
+
+    const wasExplicitlySelected = typeof localStorage !== 'undefined' &&
+        localStorage.getItem(ACTIVE_TENANT_MANUAL_KEY) === 'true';
+    if (wasExplicitlySelected) return true;
+
+    return getTenantSelectionPriority(savedMembership) <= getTenantSelectionPriority(preferredMembership);
+}
 
 function isMissingAgencyEngineTable(error: unknown): boolean {
     const err = error as { code?: string; message?: string } | null;
@@ -153,6 +257,31 @@ async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
     }
 
     return rows;
+}
+
+async function fetchActiveProjectCountsByTenantIds(tenantIds: string[]): Promise<Map<string, number>> {
+    const uniqueIds = Array.from(new Set(tenantIds.filter(Boolean)));
+    const counts = new Map<string, number>();
+
+    for (let i = 0; i < uniqueIds.length; i += 50) {
+        const chunk = uniqueIds.slice(i, i + 50);
+        const { data, error } = await supabase
+            .from('projects')
+            .select('tenant_id,is_deleted')
+            .in('tenant_id', chunk);
+
+        if (error) {
+            console.warn('[TenantContext] Could not hydrate project counts for tenant selection:', error);
+            continue;
+        }
+
+        (data || []).forEach(row => {
+            if (!row.tenant_id || row.is_deleted === true) return;
+            counts.set(row.tenant_id, (counts.get(row.tenant_id) || 0) + 1);
+        });
+    }
+
+    return counts;
 }
 
 async function fetchAgencyClientTenantRows(agencyTenantId: string): Promise<any[]> {
@@ -291,8 +420,36 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
 
-            setUserTenants(memberships);
-            return memberships;
+            const projectCounts = await fetchActiveProjectCountsByTenantIds(memberships.map(membership => membership.tenantId));
+            const hydratedMemberships = memberships.map(membership => {
+                const activeProjectCount = projectCounts.get(membership.tenantId);
+                if (!membership.tenant || activeProjectCount === undefined) return membership;
+
+                const currentUsage = membership.tenant.usage || {
+                    projectCount: 0,
+                    userCount: 1,
+                    storageUsedGB: 0,
+                    aiCreditsUsed: 0,
+                    subClientCount: 0,
+                };
+
+                return {
+                    ...membership,
+                    tenant: {
+                        ...membership.tenant,
+                        usage: {
+                            ...currentUsage,
+                            activeProjectCount,
+                            projectCount: Math.max(Number(currentUsage.projectCount || 0), activeProjectCount),
+                        },
+                    },
+                };
+            }) as TenantMembership[];
+
+            const visibleMemberships = hideShadowPersonalWorkspaces(hydratedMemberships, userId);
+            const orderedMemberships = sortTenantMemberships(visibleMemberships);
+            setUserTenants(orderedMemberships);
+            return orderedMemberships;
         } catch (err) {
             console.error('Error loading user tenants:', err);
             setError('Error cargando workspaces');
@@ -464,10 +621,15 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 let tenantToLoad: string | null = null;
 
                 if (savedTenantId) {
-                    // Verify user still has access
-                    const hasAccess = memberships.some(m => m.tenantId === savedTenantId);
-                    if (hasAccess) {
+                    // Verify user still has access and do not let stale auto-selected
+                    // personal/free workspaces shadow a real owner/agency workspace.
+                    const savedMembership = memberships.find(m => m.tenantId === savedTenantId);
+                    const preferredMembership = memberships[0];
+                    if (shouldUseSavedTenant(savedMembership, preferredMembership)) {
                         tenantToLoad = savedTenantId;
+                    } else {
+                        localStorage.removeItem(ACTIVE_TENANT_KEY);
+                        localStorage.removeItem(ACTIVE_TENANT_MANUAL_KEY);
                     }
                 }
 
@@ -503,6 +665,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         setIsLoadingTenant(true);
         await loadTenant(tenantId);
+        localStorage.setItem(ACTIVE_TENANT_KEY, tenantId);
+        localStorage.setItem(ACTIVE_TENANT_MANUAL_KEY, 'true');
         setIsLoadingTenant(false);
     }, [userTenants, loadTenant]);
 
