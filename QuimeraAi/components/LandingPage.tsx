@@ -1641,6 +1641,9 @@ const LandingPageContent: React.FC = () => {
       const renderCard = (post: any, idx?: number) => {
         const categoryName = post.categoryId ? resolvedCategory(post.categoryId) : '';
         const dateStr = new Date(post.publishedAt || post.createdAt).toLocaleDateString();
+        const authorLabel = post.author || post.authorName || '';
+        const postShowAuthor = showAuthor && post.showAuthor !== false;
+        const postShowDate = showDate && post.showDate !== false;
 
         // Classic: Image top, text below
         if (cardStyle === 'classic') return (
@@ -1655,8 +1658,8 @@ const LandingPageContent: React.FC = () => {
               <h3 className="font-bold text-lg mb-2 group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
               {showExcerpt && <p className="line-clamp-2 mb-3" style={{ color: colors.cardExcerpt || '#94a3b8', fontSize: '0.875rem' }}>{post.excerpt}</p>}
               <div className="flex items-center gap-3 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
-                {showAuthor && post.author && <span>{post.author}</span>}
-                {showDate && <span>{dateStr}</span>}
+                {postShowAuthor && authorLabel && <span>{authorLabel}</span>}
+                {postShowDate && <span>{dateStr}</span>}
               </div>
               {showReadMore && <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
             </div>
@@ -1677,8 +1680,8 @@ const LandingPageContent: React.FC = () => {
               <h3 className="font-bold text-xl mb-2 drop-shadow-lg group-hover:opacity-90 transition-opacity" style={{ color: '#ffffff' }}>{post.title}</h3>
               {showExcerpt && <p className="line-clamp-2 mb-3 drop-shadow" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem' }}>{post.excerpt}</p>}
               <div className="flex items-center gap-3 text-xs drop-shadow" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                {showAuthor && post.author && <span>{post.author}</span>}
-                {showDate && <span>{dateStr}</span>}
+                {postShowAuthor && authorLabel && <span>{authorLabel}</span>}
+                {postShowDate && <span>{dateStr}</span>}
               </div>
               {showReadMore && <span className="inline-block mt-3 text-sm font-semibold" style={{ color: colors.categoryBadgeBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
             </div>
@@ -1698,8 +1701,8 @@ const LandingPageContent: React.FC = () => {
               <h3 className="font-bold text-sm mb-1 truncate group-hover:opacity-80 transition-opacity" style={{ color: colors.cardHeading || '#f8fafc' }}>{post.title}</h3>
               {showExcerpt && <p className="line-clamp-1 text-xs" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
               <div className="flex items-center gap-2 mt-1 text-[10px]" style={{ color: colors.cardText || '#cbd5e1' }}>
-                {showAuthor && post.author && <span>{post.author}</span>}
-                {showDate && <span>{dateStr}</span>}
+                {postShowAuthor && authorLabel && <span>{authorLabel}</span>}
+                {postShowDate && <span>{dateStr}</span>}
               </div>
             </div>
           </div>
@@ -1718,8 +1721,8 @@ const LandingPageContent: React.FC = () => {
               {showCategoryBadge && categoryName && <span className="inline-block w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full mb-2" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
               <h3 className="font-bold text-base mb-1 drop-shadow-lg group-hover:opacity-90 transition-opacity line-clamp-2" style={{ color: '#ffffff' }}>{post.title}</h3>
               <div className="flex items-center gap-2 text-[10px] drop-shadow" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                {showAuthor && post.author && <span>{post.author}</span>}
-                {showDate && <span>{dateStr}</span>}
+                {postShowAuthor && authorLabel && <span>{authorLabel}</span>}
+                {postShowDate && <span>{dateStr}</span>}
               </div>
             </div>
           </div>
@@ -1737,13 +1740,13 @@ const LandingPageContent: React.FC = () => {
               <div className="flex items-center gap-3 mb-3">
                 {showCategoryBadge && categoryName && <span className="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full" style={{ background: colors.categoryBadgeBackground || '#4f46e5', color: colors.categoryBadgeText || '#fff' }}>{categoryName}</span>}
                 <div className="flex items-center gap-2 text-xs" style={{ color: colors.cardText || '#cbd5e1' }}>
-                  {showDate && <span>{dateStr}</span>}
+                  {postShowDate && <span>{dateStr}</span>}
                 </div>
               </div>
               <h3 className="font-extrabold text-2xl mb-3 group-hover:opacity-80 transition-opacity leading-tight" style={{ color: colors.cardHeading || '#f8fafc', fontFamily: 'var(--font-header)' }}>{post.title}</h3>
               {showExcerpt && <p className="line-clamp-3 mb-4 leading-relaxed" style={{ color: colors.cardExcerpt || '#94a3b8' }}>{post.excerpt}</p>}
               <div className="flex items-center justify-between">
-                {showAuthor && post.author && <span className="text-sm font-medium" style={{ color: colors.cardText || '#cbd5e1' }}>{post.author}</span>}
+                {postShowAuthor && authorLabel && <span className="text-sm font-medium" style={{ color: colors.cardText || '#cbd5e1' }}>{authorLabel}</span>}
                 {showReadMore && <span className="text-sm font-bold" style={{ color: colors.buttonBackground || '#4f46e5' }}>{readMoreText} \u2192</span>}
               </div>
             </div>

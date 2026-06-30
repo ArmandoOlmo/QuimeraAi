@@ -137,7 +137,7 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         onChange={(e) => setCategoryId(e.target.value)}
                         className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground cursor-pointer"
                     >
-                        <option value="">{t('cms_editor.noCategory', t('cms.uncategorized'))}</option>
+                        <option value="">{t('cms_editor.noCategory', { defaultValue: t('cms.uncategorized') })}</option>
                         {categories.map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
@@ -366,7 +366,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [featuredImage, setFeaturedImage] = useState(post?.featuredImage || '');
     const [seoTitle, setSeoTitle] = useState(post?.seoTitle || '');
     const [seoDescription, setSeoDescription] = useState(post?.seoDescription || '');
-    const [author, setAuthor] = useState(post?.author || '');
+    const [author, setAuthor] = useState(post?.authorName || post?.author || '');
     const [showAuthor, setShowAuthor] = useState(post?.showAuthor !== false);
     const [showDate, setShowDate] = useState(post?.showDate !== false);
     const [publishedAt, setPublishedAt] = useState(post?.publishedAt || '');
@@ -376,6 +376,7 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const [podcastVideoUrl, setPodcastVideoUrl] = useState(post?.podcastVideoUrl || '');
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [persistedPostId, setPersistedPostId] = useState(post?.id || '');
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Right sidebar (settings)
@@ -403,6 +404,8 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const audioFileInputRef = useRef<HTMLInputElement>(null);
     const videoFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const persistedPostIdRef = useRef(post?.id || '');
+    const saveInFlightRef = useRef<Promise<string> | null>(null);
 
     // AI Vision State
     const [showVisionModal, setShowVisionModal] = useState(false);
@@ -492,6 +495,12 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             setSlug(title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
         }
     }, [title]);
+
+    useEffect(() => {
+        const nextPostId = post?.id || '';
+        persistedPostIdRef.current = nextPostId;
+        setPersistedPostId(nextPostId);
+    }, [post?.id]);
 
     // Cleanup
     useEffect(() => {
@@ -714,6 +723,11 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             return;
         }
 
+        if (saveInFlightRef.current) {
+            if (isAutoSave) return;
+            await saveInFlightRef.current.catch(() => '');
+        }
+
         let finalSlug = slug.trim();
         if (!finalSlug) {
             finalSlug = title;
@@ -721,11 +735,13 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
         finalSlug = finalSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
         setIsSaving(true);
+        let currentSavePromise: Promise<string> | null = null;
         try {
             const currentContent = editor?.getHTML() || '';
+            const stablePostId = persistedPostIdRef.current || persistedPostId || post?.id || '';
 
             const postData: CMSPost = {
-                id: post?.id || '',
+                id: stablePostId,
                 title,
                 slug: finalSlug,
                 content: currentContent,
@@ -736,8 +752,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 seoDescription,
                 authorId: post?.authorId || '',
                 author,
-                showAuthor,
-                showDate,
+                authorName: author,
+                showAuthor: showAuthor === true,
+                showDate: showDate === true,
                 ...(publishedAt ? { publishedAt } : {}),
                 categoryId,
                 podcastAudioUrl: podcastAudioUrl || '',
@@ -746,7 +763,19 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 updatedAt: new Date().toISOString(),
             };
             console.log('[ModernCMSEditor] Saving post data:', { categoryId: postData.categoryId, title: postData.title, id: postData.id });
-            await saveCMSPost(postData);
+            currentSavePromise = saveCMSPost(postData).then((savedPostId) => {
+                if (savedPostId) {
+                    persistedPostIdRef.current = savedPostId;
+                    setPersistedPostId(savedPostId);
+                }
+                return savedPostId;
+            });
+            saveInFlightRef.current = currentSavePromise;
+            const savedPostId = await currentSavePromise;
+            if (savedPostId) {
+                persistedPostIdRef.current = savedPostId;
+                setPersistedPostId(savedPostId);
+            }
             setLastSaved(new Date());
 
             if (!isAutoSave) {
@@ -760,6 +789,9 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
                 setTimeout(() => setSaveError(null), 5000);
             }
         } finally {
+            if (saveInFlightRef.current === currentSavePromise) {
+                saveInFlightRef.current = null;
+            }
             setIsSaving(false);
         }
     };
