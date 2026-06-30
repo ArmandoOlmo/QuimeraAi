@@ -120,6 +120,13 @@ export async function runProductionReadinessProbe(input = {}) {
     pattern: /^sk_(test|live)_/,
     patternEvidence: 'expected Stripe secret key prefix',
   });
+  requireValue('STRIPE_WEBHOOK_SECRET', {
+    minLength: 20,
+    pattern: /^whsec_/,
+    patternEvidence: 'expected Stripe webhook signing secret prefix',
+  });
+  requireValue('STRIPE_SYNC_SECRET', { minLength: 24 });
+  validateStripePublishableKey(add, readEnv(env, 'VITE_STRIPE_PUBLISHABLE_KEY'));
   const googleClientId = readEnv(env, 'GOOGLE_CALENDAR_CLIENT_ID') || readEnv(env, 'VITE_GOOGLE_CLIENT_ID');
   validateGoogleConfig(env, add, googleClientId, cronSecret);
 
@@ -216,6 +223,30 @@ function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey) {
   } else {
     add({ name: 'SENDGRID_API_KEY', status: 'pass', evidence: `present; length ${sendGridApiKey.length}` });
   }
+}
+
+function validateStripePublishableKey(add, publishableKey) {
+  if (!publishableKey) {
+    add({
+      name: 'VITE_STRIPE_PUBLISHABLE_KEY',
+      status: 'warn',
+      severity: 'warning',
+      evidence: 'missing global fallback; checkout can still use per-store stripe_publishable_key',
+    });
+    return;
+  }
+
+  if (PLACEHOLDER_PATTERN.test(publishableKey)) {
+    add({ name: 'VITE_STRIPE_PUBLISHABLE_KEY', status: 'fail', severity: 'critical', evidence: 'placeholder-like value' });
+    return;
+  }
+
+  if (!/^pk_(test|live)_/.test(publishableKey)) {
+    add({ name: 'VITE_STRIPE_PUBLISHABLE_KEY', status: 'fail', severity: 'critical', evidence: 'expected Stripe publishable key prefix' });
+    return;
+  }
+
+  add({ name: 'VITE_STRIPE_PUBLISHABLE_KEY', status: 'pass', evidence: `present; length ${publishableKey.length}` });
 }
 
 function validateGoogleConfig(env, add, googleClientId, cronSecret) {

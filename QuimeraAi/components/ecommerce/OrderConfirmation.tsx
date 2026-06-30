@@ -17,10 +17,10 @@ import {
     Loader2,
     AlertCircle,
 } from 'lucide-react';
-import { doc, getDoc, collection, query, where, getDocs } from '@/utils/compatData';
-import { db } from '@/utils/compatData';
 import { supabase } from '../../supabase';
 import { Order, StoreSettings, StoredTimestamp } from '../../types/ecommerce';
+import { mapStoreSettingsFromDB } from '../../utils/ecommerceMappers';
+import { resolveProjectBackedStoreIdentity } from '../../utils/ecommerce/storeIdentity';
 import { timestampToDate } from '../../utils/timestampUtils';
 
 // Props for direct order display
@@ -48,6 +48,57 @@ type OrderConfirmationProps = OrderConfirmationDirectProps | OrderConfirmationFe
 function isDirectProps(props: OrderConfirmationProps): props is OrderConfirmationDirectProps {
     return 'order' in props;
 }
+
+type ConfirmationDbRecord = Record<string, any>;
+
+const isConfirmationUuid = (value: string | null | undefined): boolean => (
+    Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+);
+
+const loadConfirmationStoreSettings = async (storeId: string): Promise<StoreSettings | null> => {
+    let projectRow: ConfirmationDbRecord | null = null;
+    if (isConfirmationUuid(storeId)) {
+        const { data, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', storeId)
+            .maybeSingle();
+
+        if (error) throw error;
+        projectRow = data;
+    }
+
+    let publicStoreRow: ConfirmationDbRecord | null = null;
+    if (!projectRow) {
+        const { data, error } = await supabase
+            .from('public_stores')
+            .select('*')
+            .eq('id', storeId)
+            .maybeSingle();
+
+        if (error) throw error;
+        publicStoreRow = data;
+    }
+
+    const identity = resolveProjectBackedStoreIdentity({
+        storeId,
+        projectId: projectRow?.id,
+        publicStoreId: publicStoreRow?.id,
+        project: projectRow,
+        publicStore: publicStoreRow,
+    });
+    const settingsProjectId = identity.projectId || identity.engineStoreId || storeId;
+    if (!isConfirmationUuid(settingsProjectId)) return null;
+
+    const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('project_id', settingsProjectId)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data ? mapStoreSettingsFromDB(data) : null;
+};
 
 // Inner component for displaying order
 const OrderConfirmationDisplay: React.FC<{
@@ -379,22 +430,10 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                     new URLSearchParams(window.location.search).get('token') ||
                     undefined;
 
-                // Get store owner ID from public_stores
-                const publicStoreRef = doc(db, 'public_stores', storeId);
-                const publicStoreDoc = await getDoc(publicStoreRef);
-
-                if (!publicStoreDoc.exists()) {
-                    setError('Tienda no encontrada');
-                    setIsLoading(false);
-                    return;
-                }
-
-                // Get store settings from public collection
-                const settingsRef = doc(db, `public_stores/${storeId}/settings/store`);
-                const settingsDoc = await getDoc(settingsRef);
-                if (settingsDoc.exists()) {
-                    setStoreSettings(settingsDoc.data() as StoreSettings);
-                }
+                const settingsPromise = loadConfirmationStoreSettings(storeId).catch((settingsError) => {
+                    console.warn('Could not load store settings for order confirmation:', settingsError);
+                    return null;
+                });
 
                 // Get order securely from backend
                 const result = await supabase.functions.invoke('stripe-api', {
@@ -414,6 +453,11 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = (props) => {
                     orderData.createdAt = {
                         seconds: Math.floor(new Date(orderData.createdAt).getTime() / 1000)
                     };
+                }
+
+                const nextStoreSettings = await settingsPromise;
+                if (nextStoreSettings) {
+                    setStoreSettings(nextStoreSettings);
                 }
 
                 setOrder(orderData as Order);

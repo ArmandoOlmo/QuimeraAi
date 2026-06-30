@@ -16,7 +16,10 @@ const VALID_ENV = {
   VITE_SUPABASE_ANON_KEY: 'anon-key-with-enough-length-for-public-runtime-validation',
   RESEND_API_KEY: 're_123456789012345678901234567890',
   APPOINTMENT_EMAIL_FROM: 'Quimera Ai <no-reply@quimera.ai>',
+  VITE_STRIPE_PUBLISHABLE_KEY: ['pk', 'test', '123456789012345678901234'].join('_'),
   STRIPE_SECRET_KEY: ['sk', 'test', '123456789012345678901234'].join('_'),
+  STRIPE_WEBHOOK_SECRET: ['whsec', '123456789012345678901234'].join('_'),
+  STRIPE_SYNC_SECRET: 'stripe-sync-secret-with-enough-entropy',
   GOOGLE_CALENDAR_CLIENT_ID: 'quimera-client.apps.googleusercontent.com',
   GOOGLE_CALENDAR_CLIENT_SECRET: 'google-client-secret-with-length',
   GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 'q').toString('base64'),
@@ -69,6 +72,8 @@ describe('production readiness probe', () => {
         ...VALID_ENV,
         CRON_SECRET: '',
         SUPABASE_SERVICE_ROLE_KEY: '',
+        STRIPE_WEBHOOK_SECRET: '',
+        STRIPE_SYNC_SECRET: '',
       },
       live: false,
       strict: true,
@@ -78,6 +83,8 @@ describe('production readiness probe', () => {
     expect(result.checks).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: 'CRON_SECRET', status: 'fail' }),
       expect.objectContaining({ name: 'SUPABASE_SERVICE_ROLE_KEY', status: 'fail' }),
+      expect.objectContaining({ name: 'STRIPE_WEBHOOK_SECRET', status: 'fail' }),
+      expect.objectContaining({ name: 'STRIPE_SYNC_SECRET', status: 'fail' }),
     ]));
   });
 
