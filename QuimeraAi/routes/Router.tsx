@@ -317,7 +317,7 @@ const Router: React.FC<RouterProps> = ({
     return <LoadingScreen />;
   }
 
-  if (routeNeedsScopedServiceAccess && isLoadingScopedRouteAccess) {
+  if (routeNeedsScopedServiceAccess && isLoadingScopedRouteAccess && !shouldPreserveEcommerceSubroute) {
     return <LoadingScreen />;
   }
 
