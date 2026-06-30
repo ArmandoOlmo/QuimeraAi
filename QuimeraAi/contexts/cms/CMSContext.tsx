@@ -5,7 +5,7 @@
  * Los menús se guardan dentro del documento del proyecto (project.menus)
  */
 
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { CMSPost, CMSCategory, Menu } from '../../types';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
@@ -78,6 +78,11 @@ const withProjectTag = (tags: string[] | undefined, projectId: string): string[]
     return Array.from(new Set([...(tags || []).filter(tag => !tag.startsWith('project:')), projectTag]));
 };
 
+const normalizePostSlug = (slug: string | undefined, title: string | undefined): string => {
+    const source = slug?.trim() || title?.trim() || `post-${Date.now()}`;
+    return source.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 
 export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -91,6 +96,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // CMS State
     const [cmsPosts, setCmsPosts] = useState<CMSPost[]>([]);
     const [isLoadingCMS, setIsLoadingCMS] = useState(false);
+    const pendingPostSavesRef = useRef<Map<string, Promise<string>>>(new Map());
 
     // Menus State - Load from active project
     const [menus, setMenus] = useState<Menu[]>([]);
@@ -201,12 +207,14 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
     }, [user, currentTenantId, activeProjectId, loadCMSPosts]);
 
-    const saveCMSPost = async (post: CMSPost): Promise<string> => {
+    const persistCMSPost = async (post: CMSPost): Promise<string> => {
         if (!user || !currentTenantId || !activeProjectId) return '';
 
         try {
             const userId = user?.id || (user as any)?.uid;
             const tags = withProjectTag(post.tags, activeProjectId);
+            const projectTag = getProjectTag(activeProjectId);
+            const normalizedSlug = normalizePostSlug(post.slug, post.title);
             const authorName = post.authorName || post.author || '';
             const showAuthor = post.showAuthor !== false;
             const showDate = post.showDate !== false;
@@ -215,7 +223,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 tenant_id: currentTenantId,
                 user_id: userId,
                 title: post.title,
-                slug: post.slug,
+                slug: normalizedSlug,
                 content: post.content,
                 excerpt: post.excerpt,
                 featured_image: getUsableImageUrl(post.featuredImage) || null,
@@ -244,13 +252,37 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (error) throw error;
                 savedPostRow = data;
             } else {
-                const { data, error } = await supabase
+                const { data: existingPost, error: existingError } = await supabase
                     .from('posts')
-                    .insert([{ ...postData, created_at: new Date().toISOString() }])
                     .select('*')
-                    .single();
-                if (error) throw error;
-                savedPostRow = data;
+                    .eq('tenant_id', currentTenantId)
+                    .eq('slug', normalizedSlug)
+                    .contains('tags', [projectTag])
+                    .order('created_at', { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (existingError) throw existingError;
+
+                if (existingPost?.id) {
+                    const { data, error } = await supabase
+                        .from('posts')
+                        .update(postData)
+                        .eq('id', existingPost.id)
+                        .eq('tenant_id', currentTenantId)
+                        .select('*')
+                        .single();
+                    if (error) throw error;
+                    savedPostRow = data;
+                } else {
+                    const { data, error } = await supabase
+                        .from('posts')
+                        .insert([{ ...postData, created_at: new Date().toISOString() }])
+                        .select('*')
+                        .single();
+                    if (error) throw error;
+                    savedPostRow = data;
+                }
             }
 
             if (savedPostRow) {
@@ -270,6 +302,28 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
             console.error("Error saving post:", error);
             throw error;
+        }
+    };
+
+    const saveCMSPost = async (post: CMSPost): Promise<string> => {
+        const saveKey = `${currentTenantId || 'no-tenant'}:${activeProjectId || 'no-project'}:${normalizePostSlug(post.slug, post.title)}`;
+        const pendingSave = pendingPostSavesRef.current.get(saveKey);
+
+        if (!post.id && pendingSave) {
+            return pendingSave;
+        }
+
+        const savePromise = persistCMSPost(post);
+        if (!post.id) {
+            pendingPostSavesRef.current.set(saveKey, savePromise);
+        }
+
+        try {
+            return await savePromise;
+        } finally {
+            if (pendingPostSavesRef.current.get(saveKey) === savePromise) {
+                pendingPostSavesRef.current.delete(saveKey);
+            }
         }
     };
 

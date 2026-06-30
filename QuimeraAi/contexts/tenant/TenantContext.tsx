@@ -118,6 +118,35 @@ function sortTenantMemberships(memberships: TenantMembership[]): TenantMembershi
     });
 }
 
+function isShadowPersonalWorkspace(membership: TenantMembership, userId: string): boolean {
+    const tenant = membership.tenant;
+    if (!tenant) return false;
+
+    const planId = normalizePlanId(tenant.subscriptionPlan || 'free');
+    const projectCount = Number(tenant.usage?.projectCount || 0);
+
+    return tenant.ownerUserId === userId &&
+        (tenant.type === 'individual' || tenant.type === 'personal') &&
+        planId === 'free' &&
+        projectCount === 0;
+}
+
+function hideShadowPersonalWorkspaces(memberships: TenantMembership[], userId: string): TenantMembership[] {
+    const hasActiveAgencyWorkspace = memberships.some(membership =>
+        membership.tenant?.ownerUserId === userId &&
+        membership.tenant?.type === 'agency' &&
+        ['active', 'trial'].includes(membership.tenant?.status || '')
+    );
+
+    if (!hasActiveAgencyWorkspace) return memberships;
+
+    const visibleMemberships = memberships.filter(membership =>
+        !isShadowPersonalWorkspace(membership, userId)
+    );
+
+    return visibleMemberships.length > 0 ? visibleMemberships : memberships;
+}
+
 function shouldUseSavedTenant(savedMembership: TenantMembership | undefined, preferredMembership: TenantMembership | undefined): boolean {
     if (!savedMembership) return false;
     if (!preferredMembership || savedMembership.tenantId === preferredMembership.tenantId) return true;
@@ -407,7 +436,8 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
 
-            const orderedMemberships = sortTenantMemberships(memberships);
+            const visibleMemberships = hideShadowPersonalWorkspaces(memberships, userId);
+            const orderedMemberships = sortTenantMemberships(visibleMemberships);
             setUserTenants(orderedMemberships);
             return orderedMemberships;
         } catch (err) {

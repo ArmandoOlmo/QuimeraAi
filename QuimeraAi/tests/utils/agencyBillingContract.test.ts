@@ -120,10 +120,16 @@ describe('Agency billing canonical contract', () => {
 
     it('keeps agency workspaces ahead of auto-created free personal workspaces', () => {
         expect(tenantContext).toContain('function sortTenantMemberships');
+        expect(tenantContext).toContain('function isShadowPersonalWorkspace');
+        expect(tenantContext).toContain('function hideShadowPersonalWorkspaces');
         expect(tenantContext).toContain('const TENANT_TYPE_PRIORITY');
         expect(tenantContext).toContain('agency: 0');
         expect(tenantContext).toContain('agency_starter: 2');
-        expect(tenantContext).toContain('const orderedMemberships = sortTenantMemberships(memberships)');
+        expect(tenantContext).toContain("planId === 'free'");
+        expect(tenantContext).toContain('projectCount === 0');
+        expect(tenantContext).toContain("membership.tenant?.type === 'agency'");
+        expect(tenantContext).toContain('const visibleMemberships = hideShadowPersonalWorkspaces(memberships, userId)');
+        expect(tenantContext).toContain('const orderedMemberships = sortTenantMemberships(visibleMemberships)');
         expect(tenantContext).toContain('setUserTenants(orderedMemberships)');
         expect(tenantContext).toContain('function shouldUseSavedTenant');
         expect(tenantContext).toContain('ACTIVE_TENANT_MANUAL_KEY');
