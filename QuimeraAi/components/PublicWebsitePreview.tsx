@@ -19,7 +19,7 @@ import { initialData } from '../data/initialData';
 import { DynamicData, PublicProduct, PublicCategory } from '../utils/metaGenerator';
 import AdPixelsInjector from './AdPixelsInjector';
 import { getPreviewPrefetch } from '../utils/previewPrefetch';
-import { mapSupabasePostToCMSPost } from '../utils/cmsPostMapper';
+import { dedupeSupabasePostRowsBySlug, mapSupabasePostToCMSPost } from '../utils/cmsPostMapper';
 import { getSafeImageUrl, isLegacyStorageUrl } from '../utils/imageUrlHelper';
 import { getBootBackgroundColor } from '../utils/bootBackground';
 import SectionBackground from './ui/SectionBackground';
@@ -577,7 +577,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           if (prefetched.project) {
             projectData = replaceBrokenSupabaseStorageUrls(prefetched.project) as Project;
             if (prefetched.posts.length > 0) {
-              setCmsPosts(prefetched.posts.map(post => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
+              setCmsPosts(dedupeSupabasePostRowsBySlug(prefetched.posts).map(post => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
             }
             if (prefetched.menus.length > 0) setMenus(prefetched.menus as Menu[]);
             if (prefetched.categories && prefetched.categories.length > 0) {
@@ -649,7 +649,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
           const ssrPosts = ssrData.posts || (projectData as any).posts;
           if (ssrPosts && Array.isArray(ssrPosts)) {
             console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from SSR data:', ssrPosts.length, ssrPosts.map((p: any) => p.slug));
-            setCmsPosts(ssrPosts.map((post: any) => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
+            setCmsPosts(dedupeSupabasePostRowsBySlug(ssrPosts).map((post: any) => mapSupabasePostToCMSPost(post, resolvedProjectId || undefined)));
           } else {
             console.log('[PublicWebsitePreview] ⚠️ No CMS posts in SSR data, will need to load from Supabase');
             // Don't return yet - we need to load posts from Supabase
@@ -668,7 +668,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                 .order('published_at', { ascending: false });
 
               if (!error && data && data.length > 0) {
-                const posts = data.map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
+                const posts = dedupeSupabasePostRowsBySlug(data).map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
                 console.log('[PublicWebsitePreview] ✅ Loaded CMS posts from Supabase (SSR fallback):', posts.length, posts.map((p: any) => p.slug));
                 setCmsPosts(posts);
               } else {
@@ -736,7 +736,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             }
 
             if (!postsResult.error && postsResult.data && postsResult.data.length > 0) {
-              const posts = postsResult.data.map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
+              const posts = dedupeSupabasePostRowsBySlug(postsResult.data).map(d => mapSupabasePostToCMSPost(d, resolvedProjectId || undefined));
               setCmsPosts(posts);
             }
           } catch (publicErr) {
@@ -871,6 +871,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
               .eq('slug', slug)
               .eq('status', 'published')
               .contains('tags', [`project:${project.id}`])
+              .order('published_at', { ascending: false })
+              .limit(1)
               .maybeSingle();
 
             if (!postError && postRow) {
@@ -1273,6 +1275,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             .eq('slug', slug)
             .eq('status', 'published')
             .contains('tags', [`project:${project.id}`])
+            .order('published_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
           if (!postError && postRow) {

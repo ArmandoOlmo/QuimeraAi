@@ -14,7 +14,11 @@ import { useSafeTenant } from '../tenant';
 import { resolveProjectName } from '../../utils/resolveProjectName';
 import { getUsableImageUrl } from '../../utils/imageUrl';
 import { resolveProjectMenus } from '../../utils/mapSupabaseProject';
-import { mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
+import {
+    dedupeSupabasePostRowsBySlug,
+    mapSupabasePostToCMSPost,
+    pickCanonicalSupabasePostRow,
+} from '../../utils/cmsPostMapper';
 
 interface CMSContextType {
     // CMS Posts (scoped to active project)
@@ -126,7 +130,7 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             if (error) throw error;
 
-            setCmsPosts((data || []).map(mapPostRow));
+            setCmsPosts(dedupeSupabasePostRowsBySlug(data || []).map(mapPostRow));
         } catch (error) {
             console.error("Error fetching CMS posts:", error);
             throw error;
@@ -251,29 +255,39 @@ export const CMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     .single();
                 if (error) throw error;
                 savedPostRow = data;
+
+                const { data: syncedDuplicates, error: duplicateSyncError } = await supabase
+                    .from('posts')
+                    .update(postData)
+                    .eq('tenant_id', currentTenantId)
+                    .eq('slug', normalizedSlug)
+                    .contains('tags', [projectTag])
+                    .neq('id', savedPostRow.id)
+                    .select('*');
+
+                if (duplicateSyncError) throw duplicateSyncError;
+                savedPostRow = pickCanonicalSupabasePostRow([savedPostRow, ...(syncedDuplicates || [])]) || savedPostRow;
             } else {
-                const { data: existingPost, error: existingError } = await supabase
+                const { data: existingPosts, error: existingError } = await supabase
                     .from('posts')
                     .select('*')
                     .eq('tenant_id', currentTenantId)
                     .eq('slug', normalizedSlug)
                     .contains('tags', [projectTag])
-                    .order('created_at', { ascending: true })
-                    .limit(1)
-                    .maybeSingle();
+                    .order('updated_at', { ascending: false });
 
                 if (existingError) throw existingError;
 
-                if (existingPost?.id) {
+                if (existingPosts && existingPosts.length > 0) {
                     const { data, error } = await supabase
                         .from('posts')
                         .update(postData)
-                        .eq('id', existingPost.id)
                         .eq('tenant_id', currentTenantId)
-                        .select('*')
-                        .single();
+                        .eq('slug', normalizedSlug)
+                        .contains('tags', [projectTag])
+                        .select('*');
                     if (error) throw error;
-                    savedPostRow = data;
+                    savedPostRow = pickCanonicalSupabasePostRow(data || existingPosts);
                 } else {
                     const { data, error } = await supabase
                         .from('posts')

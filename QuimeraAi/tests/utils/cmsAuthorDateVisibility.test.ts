@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
+import {
+    dedupeSupabasePostRowsBySlug,
+    mapSupabasePostToCMSPost,
+} from '../../utils/cmsPostMapper';
 
 const rootDir = process.cwd();
 const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
@@ -26,7 +29,7 @@ describe('CMS author/date visibility persistence', () => {
         expect(cmsContext).toContain('const loadCMSPosts = useCallback(async () =>');
         expect(cmsContext).toContain(".from('posts')");
         expect(cmsContext).toContain(".contains('tags', [getProjectTag(activeProjectId)])");
-        expect(cmsContext).toContain('setCmsPosts((data || []).map(mapPostRow))');
+        expect(cmsContext).toContain('setCmsPosts(dedupeSupabasePostRowsBySlug(data || []).map(mapPostRow))');
         expect(cmsContext).not.toContain('// Now handled by useEffect real-time channel');
     });
 
@@ -35,6 +38,9 @@ describe('CMS author/date visibility persistence', () => {
         expect(cmsContext).toContain(".eq('tenant_id', currentTenantId)");
         expect(cmsContext).toContain(".select('*')");
         expect(cmsContext).toContain('savedPostRow = data');
+        expect(cmsContext).toContain('const { data: syncedDuplicates, error: duplicateSyncError }');
+        expect(cmsContext).toContain(".neq('id', savedPostRow.id)");
+        expect(cmsContext).toContain('pickCanonicalSupabasePostRow([savedPostRow, ...(syncedDuplicates || [])])');
         expect(cmsContext).toContain('const normalizedPost = mapPostRow(savedPostRow)');
         expect(cmsContext).toContain('setCmsPosts(prev =>');
     });
@@ -45,9 +51,10 @@ describe('CMS author/date visibility persistence', () => {
         expect(cmsContext).toContain("const projectTag = getProjectTag(activeProjectId)");
         expect(cmsContext).toContain(".eq('slug', normalizedSlug)");
         expect(cmsContext).toContain(".contains('tags', [projectTag])");
-        expect(cmsContext).toContain('.maybeSingle()');
-        expect(cmsContext).toContain('if (existingPost?.id)');
-        expect(cmsContext).toContain('.eq(\'id\', existingPost.id)');
+        expect(cmsContext).toContain("const { data: existingPosts, error: existingError }");
+        expect(cmsContext).toContain(".order('updated_at', { ascending: false })");
+        expect(cmsContext).toContain('if (existingPosts && existingPosts.length > 0)');
+        expect(cmsContext).toContain('savedPostRow = pickCanonicalSupabasePostRow(data || existingPosts)');
         expect(cmsContext).toContain('pendingPostSavesRef.current.set(saveKey, savePromise)');
     });
 
@@ -106,6 +113,28 @@ describe('CMS author/date visibility persistence', () => {
         expect(post.showDate).toBe(false);
         expect(post.author).toBe('Author');
         expect(post.authorName).toBe('Author');
+    });
+
+    it('keeps the newest row when duplicate Supabase rows share a CMS slug', () => {
+        const rows = dedupeSupabasePostRowsBySlug([
+            {
+                id: 'old',
+                slug: 'same-post',
+                updated_at: '2026-06-29T00:00:00.000Z',
+                show_author: false,
+                show_date: false,
+            },
+            {
+                id: 'new',
+                slug: 'same-post',
+                updated_at: '2026-06-30T00:00:00.000Z',
+                show_author: true,
+                show_date: true,
+            },
+        ]);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].id).toBe('new');
     });
 
     it('adds idempotent default-on columns for existing posts', () => {

@@ -7,7 +7,7 @@ import { CMSPost, Menu } from '../../types';
 import { supabase } from '../../supabase';
 import type { User } from '@/utils/compatData'; // keep using User interface
 import { getUsableImageUrl } from '../../utils/imageUrl';
-import { mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
+import { dedupeSupabasePostRowsBySlug, mapSupabasePostToCMSPost } from '../../utils/cmsPostMapper';
 
 interface UseEditorCMSParams {
     user: User | null;
@@ -62,7 +62,7 @@ export const useEditorCMS = ({ user, activeProjectId }: UseEditorCMSParams) => {
 
                 if (error) throw error;
 
-                const postsData = (data || []).map(p => ({
+                const postsData = dedupeSupabasePostRowsBySlug(data || []).map(p => ({
                     ...mapSupabasePostToCMSPost(p, activeProjectId),
                     featuredImage: getUsableImageUrl(p.featured_image),
                 })) as CMSPost[];
