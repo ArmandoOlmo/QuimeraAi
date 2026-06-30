@@ -240,9 +240,6 @@ const EcommerceDashboard: React.FC = () => {
 
     // Inicializar la tienda del Ecommerce Engine usando la identidad canónica.
     const {
-        store,
-        isLoading: storeLoading,
-        isInitialized: storeInitialized,
         error: storeError,
         initializeStore
     } = useEcommerceStore(userId || '', storeId);
@@ -481,13 +478,16 @@ const EcommerceDashboard: React.FC = () => {
         );
     }
 
-    // Loading store
-    if (storeLoading || ecommerceLoading) {
+    // The Ecommerce Engine store is project-backed, so once store_settings marks
+    // the project initialized the editor can render with the canonical project id.
+    // The secondary store lookup should not cover the editor with a full-screen
+    // loader during slow realtime/project refresh cycles.
+    if (ecommerceLoading) {
         return <QuimeraLoader fullScreen size="md" text={t('ecommerce.initializingStore', 'Inicializando tienda...')} />;
     }
 
     // Error state
-    if (storeError) {
+    if (storeError && !storeId && !effectiveProjectId) {
         return (
             <div className="min-h-screen bg-q-bg flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-6">
