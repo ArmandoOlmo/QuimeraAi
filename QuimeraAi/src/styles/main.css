@@ -763,6 +763,19 @@ html.black .quimera-ai-launcher {
   overflow: visible;
 }
 
+/* Full contour line around the modal, colored to match the tab.
+   Drawn as a colored border on an inset overlay so it follows the
+   modal's rounded corners on all sides. */
+.quimera-ai-launcher-with-tab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 71;
+  border-radius: inherit;
+  border: 2px solid var(--quimera-status-icon-to);
+}
+
 @keyframes quimeraAiLauncherEnter {
   0% {
     opacity: 0;
