@@ -1881,6 +1881,10 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     () => Boolean(activePage?.sections?.includes('appointmentBooking')),
     [activePage],
   );
+  // Get projectId for store/chatbot components - use the loaded project's ID
+  // This works correctly for both preview URLs and custom domains.
+  const storeProjectId = project?.id || propProjectId || getIdsFromURL().projectId;
+  const storeUserId = project?.userId || propUserId || getIdsFromURL().userId;
   const websiteChatbotEngineContext = useMemo(() => {
     const route = typeof window !== 'undefined' ? getLogicalPath(window.location.pathname) : undefined;
     const isRealtyProperty = Boolean(currentPropertyForChatbot);
@@ -2122,11 +2126,6 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     productBundle: mergeComponentData('productBundle'),
     announcementBar: mergeComponentData('announcementBar'),
   };
-
-  // Get projectId for store components - use the loaded project's ID
-  // This works correctly for both preview URLs and custom domains
-  const storeProjectId = project?.id || propProjectId || getIdsFromURL().projectId;
-  const storeUserId = project?.userId || propUserId || getIdsFromURL().userId;
 
   /**
    * Verifica si un componente de ecommerce debe mostrarse en el landing page público
