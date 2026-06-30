@@ -64,7 +64,7 @@ import {
   resolveRealtyDetailPath,
   resolveRealtyDirectoryRoute,
 } from '../utils/realtyWebsiteRoutes';
-import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData } from '../types';
+import { PageSection, FontFamily, CMSPost, CMSCategory, FooterData, ThemeData, AiAssistantConfig } from '../types';
 import type { PlatformServiceId } from '../types/serviceAvailability';
 import { fontStacks, loadGoogleFonts, loadGoogleFontsSync, resolveFontFamily } from '../utils/fontLoader';
 import { initialData } from '../data/initialData';
@@ -114,6 +114,10 @@ import { sanitizeI18nObject } from '../utils/sanitizeData';
 import { useTranslation } from 'react-i18next';
 import { normalizeStorefrontHrefForWebsiteContext } from '../utils/storefrontRouter';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
+import {
+  isProjectAiAssistantConfigActive,
+  resolveProjectAiAssistantConfig,
+} from '../utils/chatbotEngine/projectAiAssistantConfig';
 import {
   buildServiceAwareComponentStatus,
   buildServiceAwareSectionVisibility,
@@ -231,6 +235,18 @@ const LandingPageContent: React.FC = () => {
       isPublicServiceAvailable,
     )
   ), [componentStatus, isPublicServiceAvailable, rawEffectiveComponentOrder, serviceFilteredPages]);
+  const activeProjectChatbotConfig = useMemo(() => resolveProjectAiAssistantConfig({
+    ai_assistant_config: activeProject?.aiAssistantConfig || null,
+    data: {
+      ...(data || {}),
+      aiAssistantConfig: activeProject?.aiAssistantConfig,
+      businessBlueprint: (activeProject as any)?.businessBlueprint || (data as any)?.businessBlueprint,
+    },
+  }) as AiAssistantConfig | null, [activeProject?.aiAssistantConfig, (activeProject as any)?.businessBlueprint, data]);
+  const shouldRenderChatbotWidget = Boolean(
+    activeProjectChatbotConfig &&
+    isProjectAiAssistantConfigActive(activeProjectChatbotConfig)
+  );
 
   // Inject font variables into :root for Tailwind to use
   useEffect(() => {
@@ -2359,8 +2375,12 @@ const LandingPageContent: React.FC = () => {
       )}
 
       {/* Chatbot Widget - Renders independently outside component order */}
-      {isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && effectiveComponentStatus.chatbot && effectiveSectionVisibility.chatbot && (
-        <ChatbotWidget isPreview={isEditorMode} chatbotEngineContext={landingChatbotEngineContext} />
+      {shouldRenderChatbotWidget && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && (
+        <ChatbotWidget
+          isPreview={isEditorMode}
+          standaloneConfig={activeProjectChatbotConfig}
+          chatbotEngineContext={landingChatbotEngineContext}
+        />
       )}
 
       {/* SignupFloat - Floating overlay rendered outside section flow */}

@@ -61,8 +61,8 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
         const { data: sessionData } = await supabase.auth.getSession();
         const canLoadDraftData = Boolean(sessionData.session);
         const projectSelect = canLoadDraftData
-            ? 'id, tenant_id, user_id, name, published_data, data'
-            : 'id, tenant_id, user_id, name, published_data';
+            ? 'id, tenant_id, user_id, name, published_data, data, ai_assistant_config'
+            : 'id, tenant_id, user_id, name, published_data, ai_assistant_config';
 
         // Fire requests in parallel: project + posts + tenant branding
         const projectResult = await supabase
@@ -126,6 +126,7 @@ async function doFetch(): Promise<PrefetchedPreviewData> {
                 userId: row.user_id,
                 name: (row.name as string | undefined) || (sourceData as Record<string, unknown>).name,
                 ...(sourceData as Record<string, unknown>),
+                aiAssistantConfig: (sourceData as Record<string, unknown>).aiAssistantConfig || row.ai_assistant_config || null,
             };
             menus = resolveProjectMenus(projectData);
             categories = project.categories && Array.isArray(project.categories) ? project.categories : [];

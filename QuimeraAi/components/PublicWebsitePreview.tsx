@@ -34,6 +34,10 @@ import {
 } from '../utils/realtyWebsiteRoutes';
 import { buildChatbotEngineSurfaceContext } from '../utils/chatbotEngine/surfaceContext';
 import {
+  isProjectAiAssistantConfigActive,
+  resolveProjectAiAssistantConfig,
+} from '../utils/chatbotEngine/projectAiAssistantConfig';
+import {
   buildServiceAwareComponentStatus,
   buildServiceAwareSectionVisibility,
   filterServiceAvailablePages,
@@ -700,8 +704,8 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
             const { data: sessionData } = await supabase.auth.getSession();
             const canLoadDraftData = isEditorPreviewRoute && Boolean(sessionData.session);
             const projectSelect = canLoadDraftData
-              ? 'id, tenant_id, user_id, name, published_data, data'
-              : 'id, tenant_id, user_id, name, published_data';
+              ? 'id, tenant_id, user_id, name, published_data, data, ai_assistant_config'
+              : 'id, tenant_id, user_id, name, published_data, ai_assistant_config';
             const projectResult = await supabase
               .from('projects')
               .select(projectSelect)
@@ -732,6 +736,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
                   userId: row.user_id,
                   name: row.name || rawData.name,
                   ...rawData,
+                  aiAssistantConfig: rawData.aiAssistantConfig || row.ai_assistant_config || null,
                 } as Project;
                 projectData = replaceBrokenSupabaseStorageUrls(projectData);
                 console.log('[PublicWebsitePreview] ✅ Loaded from Supabase:', {
@@ -1939,6 +1944,19 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     storeProjectId,
   ]);
 
+  const resolvedStandaloneChatbotConfig = useMemo(() => {
+    if (!project) return null;
+
+    return resolveProjectAiAssistantConfig({
+      ai_assistant_config: project.aiAssistantConfig || null,
+      data: {
+        ...(project.data || {}),
+        aiAssistantConfig: project.aiAssistantConfig,
+        businessBlueprint: (project as any).businessBlueprint || (project.data as any)?.businessBlueprint,
+      },
+    }) as AiAssistantConfig | null;
+  }, [project]);
+
   // Loading state — invisible placeholder, SSR skeleton already provides the visual loading
   if (loading) {
     const bgColor = getBootBackgroundColor();
@@ -2589,7 +2607,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       theme: 'light'
     }
   };
-  const baseStandaloneChatbotConfig = project.aiAssistantConfig || fallbackChatbotConfig;
+  const baseStandaloneChatbotConfig = resolvedStandaloneChatbotConfig || (legacyStandaloneChatbotData ? fallbackChatbotConfig : null);
   const propertyChatbotContext = currentPropertyForChatbot ? [
     'Current visitor context: the user is viewing a real estate property detail page.',
     `Property title: ${currentPropertyForChatbot.title}`,
@@ -2604,13 +2622,17 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
     `Description: ${currentPropertyForChatbot.description}`,
     'When asked about this property, answer using this context. For financing or investment questions, explain estimates clearly and invite the visitor to request official guidance from the realtor.',
   ].join('\n') : '';
-  const enrichedStandaloneChatbotConfig = propertyChatbotContext ? {
+  const enrichedStandaloneChatbotConfig = baseStandaloneChatbotConfig && propertyChatbotContext ? {
     ...baseStandaloneChatbotConfig,
     specialInstructions: [
       (baseStandaloneChatbotConfig as any).specialInstructions,
       propertyChatbotContext,
     ].filter(Boolean).join('\n\n'),
   } : baseStandaloneChatbotConfig;
+  const shouldRenderChatbotWidget = Boolean(
+    enrichedStandaloneChatbotConfig &&
+    isProjectAiAssistantConfigActive(enrichedStandaloneChatbotConfig)
+  );
 
   return (
     <div
@@ -2784,7 +2806,7 @@ const PublicWebsitePreview: React.FC<PublicWebsitePreviewProps> = ({ projectId: 
       )}
 
       {/* Chatbot Widget - rendered outside store views; StorefrontApp owns storefront/checkout chat context */}
-      {!isStoreViewActive && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && effectiveComponentStatus.chatbot !== false && effectiveSectionVisibility.chatbot !== false && (
+      {!isStoreViewActive && shouldRenderChatbotWidget && isSectionServiceAvailable('chatbot' as PageSection, isPublicServiceAvailable) && (
         <ChatbotWidget
           isPreview={false}
           hidePoweredBy={hasWhiteLabelBranding}

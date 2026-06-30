@@ -16,6 +16,11 @@ function nonEmptyRecord(value: unknown): Record<string, any> | null {
     return Object.keys(record).length > 0 ? record : null;
 }
 
+export function isProjectAiAssistantConfigActive(config: unknown): boolean {
+    const record = nonEmptyRecord(config);
+    return Boolean(record && record.isActive !== false);
+}
+
 function stringValue(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
 }
