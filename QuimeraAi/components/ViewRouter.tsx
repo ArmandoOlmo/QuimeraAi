@@ -12,6 +12,7 @@ import { useSafeTenant } from '../contexts/tenant/TenantContext';
 import { useServiceAccess } from '../hooks/useServiceAccess';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
+import { shouldPreserveScopedAccessDeniedRoute } from '../routes/accessGuards';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -139,7 +140,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
     const tenantContext = useSafeTenant();
     const agencyLogoUrl = tenantContext?.currentTenant?.branding?.logoUrl;
     const serviceAccess = useServiceAccess();
-    const { route, replace } = useRouter();
+    const { path, route, replace } = useRouter();
 
     const routeAccess = React.useMemo(() => {
         const moduleId = route?.moduleId || VIEW_MODULE_MAP[view];
@@ -184,13 +185,17 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
 
         return serviceAccess.resolveAccess(input);
     }, [routeAccess, serviceAccess]);
+    const shouldPreserveEcommerceSubroute = shouldPreserveScopedAccessDeniedRoute({
+        path,
+        isAuthenticated: true,
+    });
 
     React.useEffect(() => {
         if (serviceAccess.isLoading) return;
-        if (routeAccess && accessDecision && !accessDecision.allowed) {
+        if (routeAccess && accessDecision && !accessDecision.allowed && !shouldPreserveEcommerceSubroute) {
             replace(ROUTES.DASHBOARD);
         }
-    }, [routeAccess, accessDecision?.allowed, serviceAccess.isLoading, replace]);
+    }, [routeAccess, accessDecision?.allowed, shouldPreserveEcommerceSubroute, serviceAccess.isLoading, replace]);
 
     // SuperAdmin View
     if (view === 'superadmin' && hasAdminAccess(userDocument?.role)) {
@@ -201,7 +206,7 @@ const ViewRouter: React.FC<ViewRouterProps> = ({
         );
     }
 
-    if (routeAccess && !serviceAccess.isLoading && accessDecision && !accessDecision.allowed) {
+    if (routeAccess && !serviceAccess.isLoading && accessDecision && !accessDecision.allowed && !shouldPreserveEcommerceSubroute) {
         return <ViewLoading logoUrl={agencyLogoUrl} />;
     }
 

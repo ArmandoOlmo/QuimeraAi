@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, Suspense } from 'react';
 import { useRouter } from '../hooks/useRouter';
 import { useRouteSEO } from '../hooks/useRouteSEO';
 import { ROUTES, hasRouteAccess } from './config';
+import { shouldPreserveScopedAccessDeniedRoute } from './accessGuards';
 import { View, AdminView } from '../types/ui';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useStorefrontCart } from '../components/ecommerce/context';
@@ -209,6 +210,9 @@ const Router: React.FC<RouterProps> = ({
     });
   }, [resolveRouteServiceAccess, route, routeNeedsScopedServiceAccess]);
   const isScopedRouteAccessAllowed = !routeAccessDecision || routeAccessDecision.allowed;
+  const shouldPreserveEcommerceSubroute = Boolean(
+    shouldPreserveScopedAccessDeniedRoute({ path, isAuthenticated })
+  );
 
   // =========================================================================
   // REDIRECTS
@@ -227,7 +231,7 @@ const Router: React.FC<RouterProps> = ({
 
     if (routeNeedsScopedServiceAccess && isLoadingScopedRouteAccess) return;
 
-    if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed) {
+    if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed && !shouldPreserveEcommerceSubroute) {
       replace(isAuthenticated ? ROUTES.DASHBOARD : ROUTES.LANDING);
       return;
     }
@@ -283,6 +287,7 @@ const Router: React.FC<RouterProps> = ({
     routeNeedsScopedServiceAccess,
     isLoadingScopedRouteAccess,
     isScopedRouteAccessAllowed,
+    shouldPreserveEcommerceSubroute,
     isAuthenticated,
     isEmailVerified,
     isPublicRoute,
@@ -316,7 +321,7 @@ const Router: React.FC<RouterProps> = ({
     return <LoadingScreen />;
   }
 
-  if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed) {
+  if (routeNeedsScopedServiceAccess && !isScopedRouteAccessAllowed && !shouldPreserveEcommerceSubroute) {
     return <LoadingScreen />;
   }
 
