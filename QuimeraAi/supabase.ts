@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabaseFetchTimeoutMs = Number(import.meta.env.VITE_SUPABASE_FETCH_TIMEOUT_MS || 9000);
+const nodeEnv = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>;
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || nodeEnv.SUPABASE_URL || nodeEnv.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || nodeEnv.SUPABASE_ANON_KEY || nodeEnv.VITE_SUPABASE_ANON_KEY || '';
+const supabaseFetchTimeoutMs = Number(import.meta.env.VITE_SUPABASE_FETCH_TIMEOUT_MS || nodeEnv.VITE_SUPABASE_FETCH_TIMEOUT_MS || 9000);
 const SUPABASE_AUTH_STORAGE_KEY = 'sb-elfcrnhffuvntlfuvumd-auth-token';
 const LEGACY_AUTH_STORAGE_KEYS = ['sb-auth-auth-token'];
 const CIRCUIT_FAILURE_THRESHOLD = 4;
