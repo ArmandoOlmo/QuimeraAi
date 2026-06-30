@@ -40,9 +40,20 @@ describe('CMS author/date visibility persistence', () => {
 
     it('saves the modern editor author and date toggle in the CMSPost payload', () => {
         expect(modernEditor).toContain('post?.authorName || post?.author ||');
+        expect(modernEditor).toContain("const [persistedPostId, setPersistedPostId] = useState(post?.id || '')");
+        expect(modernEditor).toContain("const persistedPostIdRef = useRef(post?.id || '')");
+        expect(modernEditor).toContain('const saveInFlightRef = useRef<Promise<string> | null>(null)');
+        expect(modernEditor).toContain('if (saveInFlightRef.current)');
+        expect(modernEditor).toContain('if (isAutoSave) return');
+        expect(modernEditor).toContain("await saveInFlightRef.current.catch(() => '')");
+        expect(modernEditor).toContain('const stablePostId = persistedPostIdRef.current || persistedPostId || post?.id ||');
+        expect(modernEditor).toContain('id: stablePostId');
         expect(modernEditor).toContain('authorName: author');
         expect(modernEditor).toContain('showAuthor: showAuthor === true');
         expect(modernEditor).toContain('showDate: showDate === true');
+        expect(modernEditor).toContain('currentSavePromise = saveCMSPost(postData).then');
+        expect(modernEditor).toContain('saveInFlightRef.current = currentSavePromise');
+        expect(modernEditor).toContain('setPersistedPostId(savedPostId)');
     });
 
     it('normalizes Supabase rows before public website rendering', () => {
