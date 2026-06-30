@@ -1,0 +1,1 @@
+import{j as s}from"./index-CNmI7SR7.js";const e=({filters:e,trailing:a,leading:m,footer:i,className:l=""})=>s.jsxs("div",{className:`mb-4 md:mb-6 space-y-3 md:space-y-4 ${l}`,children:[s.jsxs("div",{className:"flex flex-wrap items-center gap-2 md:gap-3",children:[m,e,a&&s.jsxs(s.Fragment,{children:[s.jsx("div",{className:"flex-1 min-w-[1rem]"}),a]})]}),i]});export{e as C};

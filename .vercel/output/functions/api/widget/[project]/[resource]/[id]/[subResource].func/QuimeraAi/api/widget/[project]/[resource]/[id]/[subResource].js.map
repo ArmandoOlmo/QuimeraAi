@@ -1,0 +1,1 @@
+{"version":3,"file":"[subResource].ts","sources":["/Users/armandoolmo/Desktop/quimera-production-workspace/quimera-owner-shadow-release/QuimeraAi/api/widget/[project]/[resource]/[id]/[subResource].ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,MAAM,mCAAmC,CAAC","sourcesContent":["export { default } from '../../../../_lib/widgetHandler.js';\n"]}

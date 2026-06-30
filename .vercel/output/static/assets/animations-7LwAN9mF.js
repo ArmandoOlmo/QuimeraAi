@@ -1,0 +1,1 @@
+const n={none:"","fade-in":"animate-fade-in","fade-in-up":"animate-fade-in-up","fade-in-down":"animate-fade-in-down","slide-up":"animate-slide-up","slide-down":"animate-slide-down","scale-in":"animate-scale-in","bounce-in":"animate-bounce-in"},a=(a="fade-in-up",e=!0)=>e?n[a]:"",e=(n,a=.2)=>(n+1)*a+"s";export{a,e as g};

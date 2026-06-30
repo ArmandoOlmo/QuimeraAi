@@ -1,0 +1,1 @@
+function e(e){if(null==e)return 0;if("number"==typeof e)return e>1e12?Math.floor(e/1e3):e;if(e instanceof Date)return Math.floor(e.getTime()/1e3);if("string"==typeof e){const t=Date.parse(e);return Number.isNaN(t)?0:Math.floor(t/1e3)}return e.seconds}function t(t){return new Date(1e3*e(t))}export{e as g,t};

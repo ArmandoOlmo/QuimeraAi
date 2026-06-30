@@ -1,0 +1,71 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "^(?:/((?!api/).*))$",
+      "dest": "/",
+      "check": true
+    },
+    {
+      "src": "^/api/widget/([^/]+)/([^/]+)/([^/]+)/([^/]+)$",
+      "dest": "/api/widget/[project]/[resource]/[id]/[subResource]?project=$1&resource=$2&id=$3&subResource=$4",
+      "check": true
+    },
+    {
+      "src": "^/api/widget/([^/]+)/([^/]+)/([^/]+)$",
+      "dest": "/api/widget/[project]/[resource]/[id]?project=$1&resource=$2&id=$3",
+      "check": true
+    },
+    {
+      "src": "^/api/widget/([^/]+)(/|/index|/index\\.ts)?$",
+      "dest": "/api/widget/[project]/index?project=$1",
+      "check": true
+    },
+    {
+      "src": "^/api/widget/([^/]+)/([^/]+)$",
+      "dest": "/api/widget/[project]/[resource]?project=$1&resource=$2",
+      "check": true
+    },
+    {
+      "src": "^/api(/.*)?$",
+      "status": 404
+    },
+    {
+      "handle": "error"
+    },
+    {
+      "status": 404,
+      "src": "^(?!/api).*$",
+      "dest": "/404.html"
+    },
+    {
+      "handle": "miss"
+    },
+    {
+      "src": "^/api/(.+)(?:\\.(?:ts))$",
+      "dest": "/api/$1",
+      "check": true
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/mcp/jobs/run",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/appointments/jobs/run",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/appointments/google/jobs/run",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/email/jobs/run",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

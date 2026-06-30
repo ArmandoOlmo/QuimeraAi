@@ -1,0 +1,1 @@
+const n=new Set(["heroLumina","featuresLumina","ctaLumina","portfolioLumina","pricingLumina","testimonialsLumina","faqLumina","heroNeon","testimonialsNeon","featuresNeon","ctaNeon","portfolioNeon","pricingNeon","faqNeon"]);function o(o){return n.has(o)}export{o as i};

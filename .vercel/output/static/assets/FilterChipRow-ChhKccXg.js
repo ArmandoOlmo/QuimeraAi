@@ -1,0 +1,1 @@
+import{j as o}from"./index-CNmI7SR7.js";import{F as e}from"./FilterChip-BATHKMYm.js";function i({options:i,value:a,onChange:c,className:l=""}){return o.jsx("div",{className:`flex flex-wrap items-center gap-2 md:gap-3 ${l}`,children:i.map(i=>o.jsx(e,{label:i.label,active:a===i.id,count:i.count,onClick:()=>c(i.id),color:i.color,icon:i.icon},i.id))})}export{i as F};

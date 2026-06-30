@@ -1,0 +1,1 @@
+import{r as e}from"./index-CNmI7SR7.js";const t=(t,n)=>{e.useEffect(()=>{const e=e=>{const o=null==t?void 0:t.current;o&&!o.contains(e.target)&&n(e)};return document.addEventListener("mousedown",e),document.addEventListener("touchstart",e),()=>{document.removeEventListener("mousedown",e),document.removeEventListener("touchstart",e)}},[t,n])};export{t as u};

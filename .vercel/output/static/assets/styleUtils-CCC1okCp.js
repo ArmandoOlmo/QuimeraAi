@@ -1,0 +1,1 @@
+const e=e=>{switch(e){case"none":return"rounded-none";case"sm":return"rounded-sm";case"md":return"rounded-md";case"lg":return"rounded-lg";case"xl":return"rounded-xl";case"2xl":return"rounded-2xl";case"3xl":default:return"rounded-3xl";case"full":return"rounded-full"}};export{e as g};

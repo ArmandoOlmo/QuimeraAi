@@ -1,0 +1,1 @@
+{"version":3,"file":"index.ts","sources":["/Users/armandoolmo/Desktop/quimera-production-workspace/quimera-owner-shadow-release/QuimeraAi/api/widget/[project]/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,MAAM,6BAA6B,CAAC","sourcesContent":["export { default } from '../../_lib/widgetHandler.js';\n"]}
