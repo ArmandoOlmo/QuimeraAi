@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { shouldCountSupabaseFetchFailure } from './utils/supabaseFetchGuards';
 
 const nodeEnv = (typeof process !== 'undefined' ? process.env : {}) as Record<string, string | undefined>;
 
@@ -57,19 +58,6 @@ function markSupabaseFetchFailure() {
   }
 }
 
-function isNetworkFailure(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-
-  const candidate = error as { name?: string; message?: string };
-  return (
-    candidate.name === 'AbortError' ||
-    candidate.name === 'TimeoutError' ||
-    candidate.name === 'SupabaseUnavailableError' ||
-    candidate.message === 'Failed to fetch' ||
-    candidate.message?.includes('NetworkError') === true
-  );
-}
-
 function createSupabaseFetch(): typeof fetch {
   return async (input, init) => {
     const now = Date.now();
@@ -81,11 +69,18 @@ function createSupabaseFetch(): typeof fetch {
 
     const controller = new AbortController();
     const upstreamSignal = init?.signal;
-    const timeout = setTimeout(() => controller.abort(), supabaseFetchTimeoutMs);
-    const abortFromUpstream = () => controller.abort();
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      const timeoutError = typeof DOMException !== 'undefined'
+        ? new DOMException('Supabase request timed out', 'TimeoutError')
+        : Object.assign(new Error('Supabase request timed out'), { name: 'TimeoutError' });
+      controller.abort(timeoutError);
+    }, supabaseFetchTimeoutMs);
+    const abortFromUpstream = () => controller.abort(upstreamSignal?.reason);
 
     if (upstreamSignal?.aborted) {
-      controller.abort();
+      controller.abort(upstreamSignal.reason);
     } else {
       upstreamSignal?.addEventListener('abort', abortFromUpstream, { once: true });
     }
@@ -96,7 +91,7 @@ function createSupabaseFetch(): typeof fetch {
         signal: controller.signal,
       });
 
-      if (response.status >= 500) {
+      if (shouldCountSupabaseFetchFailure(null, { status: response.status })) {
         markSupabaseFetchFailure();
       } else {
         markSupabaseFetchSuccess();
@@ -104,7 +99,10 @@ function createSupabaseFetch(): typeof fetch {
 
       return response;
     } catch (error) {
-      if (isNetworkFailure(error)) {
+      if (shouldCountSupabaseFetchFailure(error, {
+        timedOut,
+        abortedByUpstream: Boolean(upstreamSignal?.aborted && !timedOut),
+      })) {
         markSupabaseFetchFailure();
       }
       throw error;
