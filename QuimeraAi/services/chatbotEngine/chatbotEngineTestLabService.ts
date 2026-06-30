@@ -6,19 +6,19 @@ import type {
     ChatbotSurface,
     ChatbotTestScenarioBlueprint,
 } from '../../types/businessBlueprint';
-import { supabase } from '../../supabase';
-import { evaluateChatbotAction } from '../../utils/chatbotEngine/actionRegistry';
+import { supabase } from '../../supabase.js';
+import { evaluateChatbotAction } from '../../utils/chatbotEngine/actionRegistry.js';
 import {
     buildChatbotEngineSurfaceDeploymentManifest,
     type ChatbotEngineDeploymentSurfaceId,
     type ChatbotEngineDeploymentReadinessStatus,
-} from '../../utils/chatbotEngine/surfaceDeploymentManifest';
-import { recordChatbotEngineEvent } from './chatbotEngineEventService';
+} from '../../utils/chatbotEngine/surfaceDeploymentManifest.js';
+import { recordChatbotEngineEvent } from './chatbotEngineEventService.js';
 import {
     getChatbotConfig,
     updateChatbotConfig,
     updateChatbotTestScenarioInBlueprint,
-} from './chatbotEngineConfigurationService';
+} from './chatbotEngineConfigurationService.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 

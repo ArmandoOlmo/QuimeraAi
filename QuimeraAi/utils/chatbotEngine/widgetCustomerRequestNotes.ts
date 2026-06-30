@@ -4,7 +4,7 @@ import {
     type ChatbotCustomerRequestContact,
     type ChatbotCustomerRequestIntent,
     type ChatbotCustomerRequestMessage,
-} from './customerRequestNotes';
+} from './customerRequestNotes.js';
 
 export interface BuildWidgetCustomerRequestNotesInput {
     body: Record<string, unknown>;

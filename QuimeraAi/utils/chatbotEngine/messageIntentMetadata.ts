@@ -3,11 +3,11 @@ import {
     buildChatbotEngineSurfaceContext,
     type ChatbotEngineSurfaceContext,
     type ChatbotEngineSurfaceContextInput,
-} from './surfaceContext';
+} from './surfaceContext.js';
 import {
     classifyChatbotMessageIntent,
     type ChatbotMessageIntentAnalysis,
-} from './intentClassifier';
+} from './intentClassifier.js';
 
 type ChatbotMessageRole = 'user' | 'model';
 

@@ -14,7 +14,7 @@ import type {
     SnapshotMetadata,
     SnapshotSource,
 } from '../../types/versionHistory';
-import { shouldProtectFromRegeneration as shouldProtectBlueprintModule } from './adapters';
+import { shouldProtectFromRegeneration as shouldProtectBlueprintModule } from './adapters.js';
 
 export const BLUEPRINT_VERSION_HISTORY_KEY = 'versionHistory';
 export const BLUEPRINT_SNAPSHOT_LIMIT = 50;

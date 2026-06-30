@@ -5,12 +5,12 @@ import type {
     ChatbotKnowledgeSourceBlueprint,
 } from '../../types/businessBlueprint';
 import type { Project } from '../../types/project';
-import { migrateBusinessBlueprint } from '../businessBlueprint';
+import { migrateBusinessBlueprint } from '../businessBlueprint/adapters.js';
 import {
     buildChatbotEngineSurfaceDeploymentManifest,
     type ChatbotEngineDeploymentSurfaceId,
     type ChatbotEngineDeploymentSurfaceStatus,
-} from './surfaceDeploymentManifest';
+} from './surfaceDeploymentManifest.js';
 
 export type ChatbotEngineReadinessStatus = 'ready' | 'review' | 'blocked';
 

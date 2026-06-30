@@ -5,7 +5,7 @@ import type {
     ChatbotSurface,
 } from '../../types/businessBlueprint';
 import type { Project } from '../../types/project';
-import { resolveProjectChatbotBlueprint } from './blueprintDashboard';
+import { resolveProjectChatbotBlueprint } from './blueprintDashboard.js';
 
 export type ChatbotSurfaceDeploymentKey = keyof Pick<
     ChatbotChannelBlueprint,

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '../../supabase';
+import { supabase } from '../../supabase.js';
 import type {
     BusinessBlueprint,
     ChatbotActionBlueprint,
@@ -16,12 +16,12 @@ import type {
     ChatbotSurfaceChannelBlueprint,
     ChatbotTestScenarioBlueprint,
 } from '../../types/businessBlueprint';
-import { migrateBusinessBlueprint } from '../../utils/businessBlueprint';
+import { migrateBusinessBlueprint } from '../../utils/businessBlueprint/adapters.js';
 import {
     appendBlueprintSnapshot,
     createBlueprintSnapshot,
-} from '../../utils/businessBlueprint/versionHistory';
-import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from './chatbotEngineEventService';
+} from '../../utils/businessBlueprint/versionHistory.js';
+import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from './chatbotEngineEventService.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type ChatbotTestScenarioStatus = ChatbotTestScenarioBlueprint['status'];

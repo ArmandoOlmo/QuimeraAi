@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '../../supabase';
-import { recordChatbotEngineEvent } from './chatbotEngineEventService';
+import { supabase } from '../../supabase.js';
+import { recordChatbotEngineEvent } from './chatbotEngineEventService.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 

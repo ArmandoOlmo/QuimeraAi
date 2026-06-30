@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '../../supabase';
+import { supabase } from '../../supabase.js';
 import type {
     BusinessBlueprint,
     BlueprintReadiness,
@@ -17,7 +17,7 @@ import {
     evaluateChatbotAction,
     type ChatbotEngineActorType,
     type ChatbotEngineAuditEvent,
-} from '../../utils/chatbotEngine/actionRegistry';
+} from '../../utils/chatbotEngine/actionRegistry.js';
 import {
     addProjectChatbotKnowledgeSource,
     disableAction,
@@ -33,11 +33,11 @@ import {
     type ChatbotEngineKnowledgeConfigurationResult,
     type ChatbotEngineSurfaceConfigurationResult,
     type ChatbotSurfaceDeploymentKey,
-} from '../chatbotEngine/chatbotEngineConfigurationService';
+} from '../chatbotEngine/chatbotEngineConfigurationService.js';
 import {
     getChatbotEngineRuntimeSnapshot,
-} from '../chatbotEngine/chatbotEngineDashboardService';
-import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from '../chatbotEngine/chatbotEngineEventService';
+} from '../chatbotEngine/chatbotEngineDashboardService.js';
+import { recordChatbotEngineEvent, type ChatbotEngineEventResult } from '../chatbotEngine/chatbotEngineEventService.js';
 import {
     checkChatbotEcommerceOrderStatus,
     createChatbotLead,
@@ -60,23 +60,23 @@ import {
     updateChatbotLead,
     type ChatbotHumanHandoffInput,
     type ChatbotEngineRuntimeScope,
-} from '../chatbotEngine/chatbotEngineRuntimeActionService';
+} from '../chatbotEngine/chatbotEngineRuntimeActionService.js';
 import {
     createAppointmentFromChat,
     getAvailableAppointmentSlots,
-} from '../appointments/appointmentEngineService';
+} from '../appointments/appointmentEngineService.js';
 import {
     runChatbotTestScenarioInBlueprint,
     runProjectChatbotTestLab,
-} from '../chatbotEngine/chatbotEngineTestLabService';
+} from '../chatbotEngine/chatbotEngineTestLabService.js';
 import {
     buildChatbotMessageIntentMetadata,
     type ChatbotMessageIntentMetadataResult,
-} from '../../utils/chatbotEngine/messageIntentMetadata';
+} from '../../utils/chatbotEngine/messageIntentMetadata.js';
 import type {
     ChatbotEngineSurfaceContext,
     ChatbotEngineSurfaceContextInput,
-} from '../../utils/chatbotEngine/surfaceContext';
+} from '../../utils/chatbotEngine/surfaceContext.js';
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>;
 type ConversationStatus = 'active' | 'closed' | 'pending' | 'escalated';
