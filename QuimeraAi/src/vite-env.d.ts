@@ -6,6 +6,7 @@ interface ImportMetaEnv {
     readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
     readonly VITE_SUPABASE_URL: string;
     readonly VITE_SUPABASE_ANON_KEY: string;
+    readonly VITE_SUPABASE_FETCH_TIMEOUT_MS?: string;
     readonly VITE_AI_PROXY_URL?: string;
     readonly VITE_VIDEO_PROXY_URL?: string;
     readonly VITE_MCP_API_BASE_URL?: string;
@@ -21,7 +22,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
     readonly env: ImportMetaEnv;
 }
-
 
 
 

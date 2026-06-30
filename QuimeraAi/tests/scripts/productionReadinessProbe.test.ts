@@ -1,5 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { runProductionReadinessProbe } from '../../scripts/production-readiness-probe.mjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const VALID_ENV = {
   CRON_SECRET: 'cron-secret-with-enough-entropy-123456',
@@ -20,6 +25,15 @@ const VALID_ENV = {
 };
 
 describe('production readiness probe', () => {
+  it('keeps browser Supabase env references statically replaceable by Vite', () => {
+    const source = readFileSync(resolve(__dirname, '../../supabase.ts'), 'utf8');
+
+    expect(source).toContain('import.meta.env.VITE_SUPABASE_URL');
+    expect(source).toContain('import.meta.env.VITE_SUPABASE_ANON_KEY');
+    expect(source).not.toContain("getRuntimeEnv('VITE_SUPABASE_URL')");
+    expect(source).not.toContain("getRuntimeEnv('VITE_SUPABASE_ANON_KEY')");
+  });
+
   it('passes live read-only checks with valid production-shaped env', async () => {
     const fetchImpl = vi.fn(async (url: URL | string) => ({
       status: 200,
