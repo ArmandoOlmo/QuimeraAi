@@ -5,9 +5,14 @@ import {
   sendPaymentFailedTransactionalEmail,
 } from "../_shared/ecommerce-transactional-emails.ts";
 import {
+  buildAgencyBillingEventInsert,
+  buildAgencyBillingEventStatusUpdate,
   buildAgencyUsageLedgerInsert,
+  buildStripeWebhookStatusUpdate,
   extractAgencyBillingEventRefs,
   isAgencyClientBillingMetadata,
+  isDuplicateStripeWebhookEventStatus,
+  isUniqueConstraintViolation,
 } from "../_shared/agency-stripe-billing.ts";
 import { CANONICAL_PLAN_IDS, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 
@@ -176,8 +181,7 @@ async function registerPaymentEvent(event: Stripe.Event) {
     .maybeSingle();
   if (existingError) throw existingError;
   if (existing) {
-    const status = String(existing.status || "");
-    return { duplicate: status === "processing" || status === "processed", row: existing };
+    return { duplicate: isDuplicateStripeWebhookEventStatus(existing.status), row: existing };
   }
 
   const { data, error } = await supabase
@@ -198,8 +202,7 @@ async function registerPaymentEvent(event: Stripe.Event) {
     .single();
 
   if (error) {
-    const duplicate = error.code === "23505" || /duplicate|unique/i.test(error.message || "");
-    if (duplicate) {
+    if (isUniqueConstraintViolation(error)) {
       const { data: raced, error: racedError } = await supabase
         .from("store_payment_events")
         .select("*")
@@ -208,8 +211,7 @@ async function registerPaymentEvent(event: Stripe.Event) {
         .maybeSingle();
       if (racedError) throw racedError;
       if (!raced) throw error;
-      const status = String(raced?.status || "");
-      return { duplicate: status === "processing" || status === "processed", row: raced };
+      return { duplicate: isDuplicateStripeWebhookEventStatus(raced?.status), row: raced };
     }
     throw error;
   }
@@ -232,8 +234,7 @@ async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplic
     throw existingError;
   }
   if (existing) {
-    const status = String(existing.status || "");
-    return { duplicate: status === "processing" || status === "processed", row: existing };
+    return { duplicate: isDuplicateStripeWebhookEventStatus(existing.status), row: existing };
   }
 
   let paymentLinkId: string | null = null;
@@ -247,30 +248,18 @@ async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplic
     paymentLinkId = paymentLink?.id || null;
   }
 
+  const eventInsert = buildAgencyBillingEventInsert(event, paymentLinkId);
+  if (!eventInsert) return null;
+
   const { data, error } = await supabase
     .from("agency_billing_events")
-    .insert({
-      provider: "stripe",
-      event_id: event.id,
-      event_type: event.type,
-      agency_tenant_id: refs.agencyTenantId,
-      client_tenant_id: refs.clientTenantId,
-      payment_link_id: paymentLinkId,
-      payment_link_token: refs.paymentLinkToken,
-      stripe_customer_id: refs.customerId,
-      stripe_subscription_id: refs.subscriptionId,
-      stripe_invoice_id: refs.invoiceId,
-      stripe_checkout_session_id: refs.checkoutSessionId,
-      status: "received",
-      payload: event as any,
-    })
+    .insert(eventInsert)
     .select("*")
     .single();
 
   if (error) {
     if (isMissingTableError(error)) return null;
-    const duplicate = error.code === "23505" || /duplicate|unique/i.test(error.message || "");
-    if (duplicate) {
+    if (isUniqueConstraintViolation(error)) {
       const { data: raced, error: racedError } = await supabase
         .from("agency_billing_events")
         .select("*")
@@ -279,8 +268,7 @@ async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplic
         .maybeSingle();
       if (racedError) throw racedError;
       if (!raced) throw error;
-      const status = String(raced?.status || "");
-      return { duplicate: status === "processing" || status === "processed", row: raced };
+      return { duplicate: isDuplicateStripeWebhookEventStatus(raced?.status), row: raced };
     }
     throw error;
   }
@@ -293,13 +281,7 @@ async function updatePaymentEventStatus(
   status: "processing" | "processed" | "failed",
   options: { processingError?: string; processedAt?: boolean } = {},
 ) {
-  const update: Record<string, unknown> = {
-    status,
-    processing_error: options.processingError || null,
-  };
-  if (options.processedAt || status === "failed") {
-    update.processed_at = new Date().toISOString();
-  }
+  const update = buildStripeWebhookStatusUpdate(status, options);
 
   const { error } = await supabase
     .from("store_payment_events")
@@ -313,14 +295,7 @@ async function updateAgencyBillingEventStatus(
   status: "processing" | "processed" | "failed",
   options: { processingError?: string; processedAt?: boolean } = {},
 ) {
-  const update: Record<string, unknown> = {
-    status,
-    processing_error: options.processingError || null,
-    updated_at: new Date().toISOString(),
-  };
-  if (options.processedAt || status === "failed") {
-    update.processed_at = new Date().toISOString();
-  }
+  const update = buildAgencyBillingEventStatusUpdate(status, options);
 
   const { error } = await supabase
     .from("agency_billing_events")
@@ -614,7 +589,7 @@ async function recordAgencyUsageLedger(params: {
 
   if (!error) return;
   if (isMissingTableError(error)) return;
-  if (error.code === "23505" || /duplicate|unique/i.test(error.message || "")) return;
+  if (isUniqueConstraintViolation(error)) return;
   throw error;
 }
 

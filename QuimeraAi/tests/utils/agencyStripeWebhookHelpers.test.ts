@@ -1,14 +1,73 @@
 import { describe, expect, it } from 'vitest';
+import Stripe from 'stripe';
 import {
+  buildAgencyBillingEventInsert,
+  buildAgencyBillingEventStatusUpdate,
   buildAgencyUsageLedgerInsert,
+  buildStripeWebhookStatusUpdate,
   extractAgencyBillingEventRefs,
   isAgencyClientBillingMetadata,
+  isDuplicateStripeWebhookEventStatus,
+  isUniqueConstraintViolation,
 } from '../../supabase/functions/_shared/agency-stripe-billing.ts';
 
 const agencyTenantId = '11111111-1111-4111-8111-111111111111';
 const clientTenantId = '22222222-2222-4222-8222-222222222222';
 
 describe('Agency Stripe webhook helpers', () => {
+  it('verifies a signed Stripe invoice fixture before mapping it into an Agency billing event row', () => {
+    const stripe = new Stripe('sk_test_agency_webhook_fixture', { apiVersion: '2023-10-16' });
+    const secret = 'whsec_agency_fixture_secret';
+    const payload = JSON.stringify({
+      id: 'evt_signed_agency_invoice',
+      object: 'event',
+      api_version: '2023-10-16',
+      created: 1782925000,
+      livemode: false,
+      pending_webhooks: 1,
+      request: { id: null, idempotency_key: null },
+      type: 'invoice.paid',
+      data: {
+        object: {
+          object: 'invoice',
+          id: 'in_signed_agency',
+          customer: 'cus_signed_agency',
+          subscription: 'sub_signed_agency',
+          lines: {
+            data: [{
+              metadata: {
+                source: 'agency-engine',
+                billingFlow: 'agency_client_payment_link',
+                agencyTenantId,
+                clientTenantId,
+                paymentLinkToken: 'plink_signed',
+              },
+            }],
+          },
+        },
+      },
+    });
+    const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
+    const event = stripe.webhooks.constructEvent(payload, signature, secret);
+
+    const row = buildAgencyBillingEventInsert(event as any, 'payment-link-row-id');
+
+    expect(row).toMatchObject({
+      provider: 'stripe',
+      event_id: 'evt_signed_agency_invoice',
+      event_type: 'invoice.paid',
+      agency_tenant_id: agencyTenantId,
+      client_tenant_id: clientTenantId,
+      payment_link_id: 'payment-link-row-id',
+      payment_link_token: 'plink_signed',
+      stripe_customer_id: 'cus_signed_agency',
+      stripe_subscription_id: 'sub_signed_agency',
+      stripe_invoice_id: 'in_signed_agency',
+      status: 'received',
+    });
+    expect(() => stripe.webhooks.constructEvent(payload, 't=1782925000,v1=bad', secret)).toThrow();
+  });
+
   it('extracts Agency billing refs from invoice line metadata without accepting invalid tenant IDs', () => {
     const refs = extractAgencyBillingEventRefs({
       data: {
@@ -75,6 +134,57 @@ describe('Agency Stripe webhook helpers', () => {
       agencyTenantId,
       clientTenantId,
     })).toBe(true);
+  });
+
+  it('does not build Agency billing event rows for platform billing events', () => {
+    expect(buildAgencyBillingEventInsert({
+      id: 'evt_platform_subscription',
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          object: 'subscription',
+          id: 'sub_platform',
+          customer: 'cus_platform',
+          metadata: {
+            source: 'platform-billing',
+            tenantId: clientTenantId,
+            planId: 'agency_pro',
+          },
+        },
+      },
+    })).toBeNull();
+  });
+
+  it('treats only in-flight or processed Stripe events as webhook duplicates', () => {
+    expect(isDuplicateStripeWebhookEventStatus('processing')).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('processed')).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('received')).toBe(false);
+    expect(isDuplicateStripeWebhookEventStatus('failed')).toBe(false);
+    expect(isDuplicateStripeWebhookEventStatus(null)).toBe(false);
+  });
+
+  it('classifies database uniqueness errors without swallowing unrelated failures', () => {
+    expect(isUniqueConstraintViolation({ code: '23505', message: 'duplicate key value violates unique constraint' })).toBe(true);
+    expect(isUniqueConstraintViolation({ code: 'PGRST204', message: 'duplicate event id' })).toBe(true);
+    expect(isUniqueConstraintViolation({ code: '42501', message: 'permission denied' })).toBe(false);
+    expect(isUniqueConstraintViolation(null)).toBe(false);
+  });
+
+  it('builds deterministic status update payloads for store and Agency webhook events', () => {
+    const now = new Date('2026-07-01T15:30:00.000Z');
+
+    expect(buildStripeWebhookStatusUpdate('processed', { processedAt: true }, now)).toEqual({
+      status: 'processed',
+      processing_error: null,
+      processed_at: '2026-07-01T15:30:00.000Z',
+    });
+
+    expect(buildAgencyBillingEventStatusUpdate('failed', { processingError: 'boom' }, now)).toEqual({
+      status: 'failed',
+      processing_error: 'boom',
+      processed_at: '2026-07-01T15:30:00.000Z',
+      updated_at: '2026-07-01T15:30:00.000Z',
+    });
   });
 
   it('builds deterministic ledger rows for active Agency client subscriptions', () => {

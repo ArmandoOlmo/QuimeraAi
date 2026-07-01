@@ -14,6 +14,7 @@ describe('Agency production readiness contract', () => {
     const agencyRlsNegativeProbe = read('scripts/agency-rls-negative-probe.mjs');
     const packageJson = read('package.json');
     const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
+    const agencyWebhookService = read('services/agency/agencyWebhookService.ts');
 
     it('hardens platform subscription plan RLS without mixing Agency service plans into platform billing', () => {
         expect(migration).toContain('drop policy if exists "Authenticated users can manage subscription plans"');
@@ -58,11 +59,14 @@ describe('Agency production readiness contract', () => {
         expect(stripeWebhook).toContain('.from("agency_usage_ledger")');
         expect(stripeWebhook).toContain('agency_service_plans');
         expect(stripeWebhook).toContain('buildAgencyUsageLedgerInsert(params, plan)');
-        expect(agencyStripeBillingHelper).toContain('export function extractAgencyBillingEventRefs');
-        expect(agencyStripeBillingHelper).toContain('export function buildAgencyUsageLedgerInsert');
-        expect(agencyStripeBillingHelper).toContain('stripe:agency-client-subscription');
-        expect(agencyStripeBillingHelper).toContain('unit_cost: unitCost');
-        expect(agencyStripeBillingHelper).toContain('unit_price: unitPrice');
+        expect(agencyStripeBillingHelper).toContain('services/agency/agencyWebhookService');
+        expect(agencyWebhookService).toContain('export function extractAgencyBillingEventRefs');
+        expect(agencyWebhookService).toContain('export function buildAgencyBillingEventInsert');
+        expect(agencyWebhookService).toContain('export function buildAgencyUsageLedgerInsert');
+        expect(agencyWebhookService).toContain('export function isDuplicateStripeWebhookEventStatus');
+        expect(agencyWebhookService).toContain('stripe:agency-client-subscription');
+        expect(agencyWebhookService).toContain('unit_cost: unitCost');
+        expect(agencyWebhookService).toContain('unit_price: unitPrice');
         expect(fs.existsSync(path.join(rootDir, 'tests/utils/agencyStripeWebhookHelpers.test.ts'))).toBe(true);
     });
 

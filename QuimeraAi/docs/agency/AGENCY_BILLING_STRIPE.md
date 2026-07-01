@@ -10,6 +10,12 @@
 6. `stripe-webhook` verifies the Stripe signature, registers the event in `store_payment_events`, registers Agency events in `agency_billing_events`, and reconciles client billing state.
 7. Successful Agency subscription activation writes `agency_usage_ledger` with revenue, base cost, markup, and margin.
 
+## Canonical Services
+
+- `services/agency/agencyWebhookService.ts` owns pure Agency webhook decisions: metadata extraction, Agency event insert payloads, duplicate status classification, uniqueness error detection, status update payloads, and ledger rows.
+- `supabase/functions/_shared/agency-stripe-billing.ts` re-exports the service for Supabase Edge compatibility.
+- `supabase/functions/stripe-webhook/index.ts` stays responsible for Stripe signature verification, database writes, and side effects.
+
 ## Idempotency
 
 - Stripe webhook idempotency is keyed by `event.id`.
