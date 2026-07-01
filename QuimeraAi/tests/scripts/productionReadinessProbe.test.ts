@@ -96,6 +96,37 @@ describe('production readiness probe', () => {
     ]));
   });
 
+  it('fails live readiness when Agency production contract columns are missing', async () => {
+    const fetchImpl = vi.fn(async (_url: URL | string, init?: RequestInit) => {
+      const url = String(_url);
+      const authorization = String((init?.headers as Record<string, string> | undefined)?.Authorization || '');
+      if (authorization.includes(VALID_ENV.VITE_SUPABASE_ANON_KEY)) {
+        return { status: 401, json: async () => ({ code: '42501' }) };
+      }
+      if (url.includes('agency_usage_ledger') && url.includes('source_module')) {
+        return { status: 400, json: async () => ({ code: 'PGRST204' }) };
+      }
+      return { status: 200, json: async () => ({}) };
+    });
+
+    const result = await runProductionReadinessProbe({
+      env: VALID_ENV,
+      fetchImpl,
+      live: true,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: 'agency-supabase-schema',
+        status: 'fail',
+        evidence: expect.stringContaining('missing contract columns: agency_usage_ledger'),
+      }),
+      expect.objectContaining({ name: 'agency-rls-negative-anon', status: 'pass' }),
+    ]));
+  });
+
   it('fails when required server-only secrets are missing', async () => {
     const result = await runProductionReadinessProbe({
       env: {
@@ -169,6 +200,28 @@ describe('production readiness probe', () => {
     ]));
   });
 
+  it('reports partially configured optional Cloudflare env from Vercel Production names', async () => {
+    const result = await runProductionReadinessProbe({
+      env: {
+        ...VALID_ENV,
+        VERCEL_PRODUCTION_ENV_NAMES: 'CLOUDFLARE_ACCOUNT_ID',
+      },
+      live: false,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.summary.warnings).toBe(1);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'CLOUDFLARE_API_TOKEN', status: 'warn' }),
+      expect.objectContaining({
+        name: 'CLOUDFLARE_ACCOUNT_ID',
+        status: 'pass',
+        evidence: expect.stringContaining('configured in Vercel Production'),
+      }),
+    ]));
+  });
+
   it('accepts SendGrid as the configured email provider without Resend', async () => {
     const envWithoutResend: Partial<typeof VALID_ENV> = { ...VALID_ENV };
     delete envWithoutResend.RESEND_API_KEY;
@@ -202,6 +255,57 @@ describe('production readiness probe', () => {
     expect(result.ok).toBe(false);
     expect(result.checks).toEqual(expect.arrayContaining([
       expect.objectContaining({ name: 'GOOGLE_CALENDAR_REDIRECT_URI:origin', status: 'fail' }),
+    ]));
+  });
+
+  it('accepts Vercel Production env names when sensitive values are not downloadable locally', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      status: 401,
+      json: async () => ({ code: '42501' }),
+    }));
+
+    const result = await runProductionReadinessProbe({
+      env: {
+        SUPABASE_URL: VALID_ENV.SUPABASE_URL,
+        VITE_SUPABASE_URL: VALID_ENV.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: VALID_ENV.VITE_SUPABASE_ANON_KEY,
+        VERCEL_PRODUCTION_ENV_NAMES: [
+          'CRON_SECRET',
+          'APP_BASE_URL',
+          'VITE_PUBLIC_APP_URL',
+          'SUPABASE_SERVICE_ROLE_KEY',
+          'RESEND_API_KEY',
+          'APPOINTMENT_EMAIL_FROM',
+          'VITE_STRIPE_PUBLISHABLE_KEY',
+          'STRIPE_SECRET_KEY',
+          'STRIPE_WEBHOOK_SECRET',
+          'STRIPE_SYNC_SECRET',
+          'GOOGLE_CALENDAR_CLIENT_ID',
+          'GOOGLE_CALENDAR_CLIENT_SECRET',
+          'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY',
+          'GOOGLE_CALENDAR_REDIRECT_URI',
+          'GOOGLE_CALENDAR_WEBHOOK_URL',
+        ].join(','),
+      },
+      fetchImpl,
+      live: true,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: 'CRON_SECRET',
+        status: 'pass',
+        evidence: expect.stringContaining('configured in Vercel Production'),
+      }),
+      expect.objectContaining({ name: 'APP_BASE_URL:url', status: 'skip' }),
+      expect.objectContaining({ name: 'RESEND_API_KEY', status: 'pass' }),
+      expect.objectContaining({ name: 'STRIPE_SECRET_KEY', status: 'pass' }),
+      expect.objectContaining({ name: 'resend-api-readonly', status: 'skip' }),
+      expect.objectContaining({ name: 'stripe-account-readonly', status: 'skip' }),
+      expect.objectContaining({ name: 'agency-supabase-schema', status: 'skip' }),
+      expect.objectContaining({ name: 'agency-rls-negative-anon', status: 'pass' }),
     ]));
   });
 

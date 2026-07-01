@@ -89,19 +89,27 @@ export function GeneratePaymentLink({
         setError(null);
 
         try {
-            const result = await supabase.functions.invoke('stripe-api', {
-                body: {
-                    action: 'agencyBilling-createClientPaymentLink',
+            const { data: sessionData } = await supabase.auth.getSession();
+            const accessToken = sessionData.session?.access_token;
+            if (!accessToken) throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
+
+            const response = await fetch('/api/agency/payment-links/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
                     clientTenantId,
                     planId: selectedPlan.id,
                     customPrice: useCustomPrice && customPrice
                         ? parseFloat(customPrice)
                         : undefined,
-                }
+                }),
             });
-            if (result.error) throw result.error;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data?.error || 'Error al generar el link de pago');
 
-            const data = result.data?.data || result.data;
             setGeneratedLink(data.paymentUrl);
             setExpiresAt(data.expiresAt);
         } catch (err: any) {

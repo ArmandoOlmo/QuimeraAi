@@ -13,7 +13,17 @@ import {
   isAgencyClientBillingMetadata,
   isDuplicateStripeWebhookEventStatus,
   isUniqueConstraintViolation,
+  normalizeAgencyClientBillingStatus,
+  resolveAgencyPaymentLinkStatus,
+  resolveAgencyRelationshipBillingStatus,
+  resolveAgencyRelationshipOnboardingStatus,
+  resolveAgencyTenantBillingStatus,
 } from "../_shared/agency-stripe-billing.ts";
+import {
+  buildAgencyPaymentFailedActivity,
+  buildAgencyPaymentReceivedActivity,
+  buildAgencySubscriptionCancelledActivity,
+} from "../../../services/agency/agencyActivityService.ts";
 import { CANONICAL_PLAN_IDS, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
@@ -560,9 +570,7 @@ async function syncAgencyClientSubscription(
     paymentMethodDetails,
     status: options.deleted
       ? "cancelled"
-      : subscription.status === "trialing"
-        ? "trial"
-        : subscription.status,
+      : normalizeAgencyClientBillingStatus(subscription.status),
     currentPeriodStart: iso(subscription.current_period_start),
     currentPeriodEnd: iso(subscription.current_period_end),
   });
@@ -622,6 +630,8 @@ async function markAgencyPaymentLinkCompleted(params: {
   currentPeriodEnd?: string | null;
 }) {
   if (!params.tenantId) return;
+  const normalizedBillingStatus = normalizeAgencyClientBillingStatus(params.status);
+  const paymentLinkStatus = resolveAgencyPaymentLinkStatus(normalizedBillingStatus);
 
   const { data: tenant, error: tenantError } = await supabase
     .from("tenants")
@@ -632,7 +642,7 @@ async function markAgencyPaymentLinkCompleted(params: {
   if (!tenant) return;
 
   const effectivePlanId = normalizePlanId(params.effectivePlanId || tenant.billing?.effectivePlanId || tenant.subscription_plan || "individual");
-  const status = params.status || "active";
+  const status = normalizedBillingStatus || "active";
   const billingMode = params.billingMode || "direct";
   const resolvedAgencyTenantId = params.agencyTenantId || tenant.billing?.agencyTenantId || null;
   const billing = {
@@ -660,28 +670,38 @@ async function markAgencyPaymentLinkCompleted(params: {
     .from("tenants")
     .update({
       subscription_plan: effectivePlanId,
-      status: ["active", "trial", "trialing", "past_due", "incomplete"].includes(status) ? "active" : "expired",
+      status: resolveAgencyTenantBillingStatus(status),
       billing,
       updated_at: new Date().toISOString(),
     })
     .eq("id", params.tenantId);
 
   let shouldRecordPaymentActivity = false;
+  let shouldRecordPaymentFailureActivity = false;
+  let shouldRecordSubscriptionCancelledActivity = false;
   if (params.paymentLinkToken) {
     const { data: existingLink, error: existingLinkError } = await supabase
       .from("agency_client_payment_links")
-      .select("status")
+      .select("status,completed_at,metadata")
       .eq("token", params.paymentLinkToken)
       .maybeSingle();
     if (existingLinkError && !isMissingTableError(existingLinkError)) throw existingLinkError;
 
-    const linkStatus = status === "cancelled" ? "cancelled" : "completed";
+    const linkStatus = paymentLinkStatus;
     shouldRecordPaymentActivity = linkStatus === "completed" && existingLink?.status !== "completed";
+    shouldRecordPaymentFailureActivity = ["past_due", "failed"].includes(linkStatus) && existingLink?.status !== linkStatus;
+    shouldRecordSubscriptionCancelledActivity = linkStatus === "cancelled" && existingLink?.status !== "cancelled";
     const linkUpdate: Record<string, unknown> = {
       status: linkStatus,
-      completed_at: linkStatus === "completed" ? new Date().toISOString() : null,
+      completed_at: linkStatus === "completed" ? existingLink?.completed_at || new Date().toISOString() : existingLink?.completed_at || null,
       stripe_customer_id: params.stripeCustomerId || null,
       stripe_subscription_id: params.stripeSubscriptionId || null,
+      metadata: {
+        ...(existingLink?.metadata || {}),
+        stripeBillingStatus: status,
+        paymentLinkStatus: linkStatus,
+        lastStripeWebhookAt: new Date().toISOString(),
+      },
       updated_at: new Date().toISOString(),
     };
     if (params.stripeCheckoutSessionId) {
@@ -696,7 +716,7 @@ async function markAgencyPaymentLinkCompleted(params: {
   }
 
   if (resolvedAgencyTenantId) {
-    await recordAgencyUsageLedger({
+      await recordAgencyUsageLedger({
       agencyTenantId: resolvedAgencyTenantId,
       clientTenantId: params.tenantId,
       agencyPlanId: billing.agencyPlanId,
@@ -715,34 +735,55 @@ async function markAgencyPaymentLinkCompleted(params: {
       .upsert({
         agency_tenant_id: resolvedAgencyTenantId,
         client_tenant_id: params.tenantId,
+        status: resolveAgencyRelationshipBillingStatus(status),
         agency_plan_id: params.agencyPlanId || null,
         billing_mode: billingMode,
-        onboarding_status: "active",
+        onboarding_status: resolveAgencyRelationshipOnboardingStatus(status),
         metadata: {
           source: "stripe-webhook",
           paymentLinkToken: params.paymentLinkToken || null,
           stripeSubscriptionId: params.stripeSubscriptionId || null,
           lastBillingStatus: status,
+          paymentLinkStatus,
         },
         updated_at: new Date().toISOString(),
       }, { onConflict: "agency_tenant_id,client_tenant_id" });
     if (relationshipError && !isMissingTableError(relationshipError)) throw relationshipError;
 
     if (shouldRecordPaymentActivity) {
-      const { error: activityError } = await supabase.from("agency_activity").insert({
-        agency_tenant_id: resolvedAgencyTenantId,
-        client_tenant_id: params.tenantId,
-        type: "payment_received",
-        title: "Client subscription activated",
-        description: "Client completed agency service checkout.",
-        metadata: {
-          agencyPlanId: params.agencyPlanId || null,
-          stripeCheckoutSessionId: params.stripeCheckoutSessionId || null,
-          stripeSubscriptionId: params.stripeSubscriptionId || null,
-          source: "stripe-webhook",
-        },
-        created_at: new Date().toISOString(),
-      });
+      const { error: activityError } = await supabase.from("agency_activity").insert(buildAgencyPaymentReceivedActivity({
+        agencyTenantId: resolvedAgencyTenantId,
+        clientTenantId: params.tenantId,
+        agencyPlanId: params.agencyPlanId || null,
+        stripeCheckoutSessionId: params.stripeCheckoutSessionId || null,
+        stripeSubscriptionId: params.stripeSubscriptionId || null,
+        source: "stripe-webhook",
+      }));
+      if (activityError && !isMissingTableError(activityError)) throw activityError;
+    }
+
+    if (shouldRecordPaymentFailureActivity) {
+      const { error: activityError } = await supabase.from("agency_activity").insert(buildAgencyPaymentFailedActivity({
+        agencyTenantId: resolvedAgencyTenantId,
+        clientTenantId: params.tenantId,
+        agencyPlanId: params.agencyPlanId || null,
+        stripeCheckoutSessionId: params.stripeCheckoutSessionId || null,
+        stripeSubscriptionId: params.stripeSubscriptionId || null,
+        billingStatus: status,
+        source: "stripe-webhook",
+      }));
+      if (activityError && !isMissingTableError(activityError)) throw activityError;
+    }
+
+    if (shouldRecordSubscriptionCancelledActivity) {
+      const { error: activityError } = await supabase.from("agency_activity").insert(buildAgencySubscriptionCancelledActivity({
+        agencyTenantId: resolvedAgencyTenantId,
+        clientTenantId: params.tenantId,
+        agencyPlanId: params.agencyPlanId || null,
+        stripeCheckoutSessionId: params.stripeCheckoutSessionId || null,
+        stripeSubscriptionId: params.stripeSubscriptionId || null,
+        source: "stripe-webhook",
+      }));
       if (activityError && !isMissingTableError(activityError)) throw activityError;
     }
   }

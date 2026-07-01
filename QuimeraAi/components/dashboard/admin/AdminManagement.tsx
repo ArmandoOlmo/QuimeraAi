@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../contexts/core/AuthContext';
 import { useAdmin } from '../../../contexts/admin';
 import { UserRole, UserDocument } from '../../../types';
-import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isOwner } from '../../../constants/roles';
+import { ROLE_LABELS, ROLE_COLORS, ROLE_DESCRIPTIONS, isAdminRole, isOwner, isSuperAdminRole } from '../../../constants/roles';
 import AdminProfileView from './AdminProfileView';
 import {
     Users, Plus, Crown, Shield, UserCog,
@@ -51,7 +51,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
 
     // Filtrar solo administradores (no usuarios comunes)
     const admins = allUsers.filter(u =>
-        ['owner', 'superadmin', 'admin', 'manager'].includes(u.role || 'user') || isOwner(u.email)
+        isAdminRole(u.role) || isOwner(u.email)
     );
 
     const getRoleIcon = (role: string) => {
@@ -165,7 +165,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                 <Shield size={20} className="text-q-accent" />
                             </div>
                             <p className="text-2xl font-bold text-q-text mt-2">
-                                {admins.filter(a => a.role === 'superadmin').length}
+                                {admins.filter(a => isSuperAdminRole(a.role)).length}
                             </p>
                         </div>
                         <div className="bg-q-surface border border-q-border rounded-lg p-4">
@@ -212,7 +212,7 @@ const AdminManagement: React.FC<AdminManagementProps> = ({ onBack }) => {
                                 const isAdminOwner = isOwner(admin.email);
                                 const canEdit = userPermissions.canManageRoles &&
                                     !isAdminOwner &&
-                                    (isUserOwner || admin.role !== 'superadmin');
+                                    (isUserOwner || !isSuperAdminRole(admin.role));
 
                                 return (
                                     <div

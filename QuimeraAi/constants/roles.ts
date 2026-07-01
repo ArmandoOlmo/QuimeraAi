@@ -161,9 +161,30 @@ export const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
     },
 };
 
+export const normalizeRoleKey = (role: string = 'user'): string => {
+    const raw = String(role || 'user').trim().toLowerCase();
+    const compact = raw.replace(/[\s_-]+/g, '');
+    if (compact === 'owner') return 'owner';
+    if (compact === 'superadmin') return 'superadmin';
+    return raw || 'user';
+};
+
+export const isPlatformOwnerRole = (role?: string | null): boolean => {
+    const normalized = normalizeRoleKey(role || 'user');
+    return normalized === 'owner' || normalized === 'superadmin';
+};
+
+export const isAdminRole = (role?: string | null): boolean => {
+    return ['owner', 'superadmin', 'admin', 'manager'].includes(normalizeRoleKey(role || 'user'));
+};
+
+export const isSuperAdminRole = (role?: string | null): boolean => {
+    return normalizeRoleKey(role || 'user') === 'superadmin';
+};
+
 // Helper para obtener permisos
 export const getPermissions = (role: string = 'user'): RolePermissions => {
-    return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.user;
+    return ROLE_PERMISSIONS[normalizeRoleKey(role)] || ROLE_PERMISSIONS.user;
 };
 
 // Helper para verificar si es owner

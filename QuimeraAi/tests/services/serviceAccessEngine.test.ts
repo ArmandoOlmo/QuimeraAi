@@ -7,12 +7,14 @@ import {
     CANONICAL_PLAN_IDS,
     formatPlanLimit,
     getCanonicalPlanLimits,
+    getPlatformUnlimitedPlan,
     isFinitePlanLimit,
     isInvalidSubscriptionPlanId,
     isLegacyPlan,
     isPlatformUnlimitedUser,
     normalizePlanId,
     normalizePlanLimits,
+    resolvePlanIdForPlatformRole,
 } from '../../services/billing/planCatalog';
 import {
     resolveTenantEffectiveLimits,
@@ -23,6 +25,13 @@ import {
     normalizeTenantSubscriptionPlanForType,
     type Tenant,
 } from '../../types/multiTenant';
+import {
+    getPermissions,
+    isAdminRole,
+    isPlatformOwnerRole,
+    isSuperAdminRole,
+    normalizeRoleKey,
+} from '../../constants/roles';
 
 const baseInput = {
     userId: 'user_1',
@@ -50,9 +59,41 @@ describe('Service Access Engine', () => {
     it('only treats owner and superadmin as platform-unlimited users', () => {
         expect(isPlatformUnlimitedUser('owner')).toBe(true);
         expect(isPlatformUnlimitedUser('superadmin')).toBe(true);
+        expect(isPlatformUnlimitedUser('super_admin')).toBe(true);
+        expect(isPlatformUnlimitedUser('super-admin')).toBe(true);
+        expect(isPlatformUnlimitedUser('super admin')).toBe(true);
         for (const role of ['admin', 'manager', 'agency_owner', 'agency_admin', 'agency_member', 'client', 'enterprise']) {
             expect(isPlatformUnlimitedUser(role), role).toBe(false);
         }
+    });
+
+    it('resolves platform Owner and Super Admin display plans to unlimited instead of free', () => {
+        for (const role of ['owner', 'superadmin', 'super_admin', 'super-admin', 'super admin']) {
+            expect(resolvePlanIdForPlatformRole('free', role), role).toBe('enterprise');
+            expect(getPlatformUnlimitedPlan(role), role).toMatchObject({
+                id: 'enterprise',
+                name: 'Ilimitado',
+                price: { monthly: 0, annually: 0 },
+                limits: expect.objectContaining({ hardLimit: false }),
+            });
+        }
+
+        expect(resolvePlanIdForPlatformRole('free', 'agency_owner')).toBe('free');
+        expect(getPlatformUnlimitedPlan('agency_owner')).toBeNull();
+    });
+
+    it('normalizes platform role aliases across admin permission helpers', () => {
+        for (const role of ['superadmin', 'super_admin', 'super-admin', 'super admin']) {
+            expect(normalizeRoleKey(role), role).toBe('superadmin');
+            expect(isPlatformOwnerRole(role), role).toBe(true);
+            expect(isSuperAdminRole(role), role).toBe(true);
+            expect(isAdminRole(role), role).toBe(true);
+            expect(getPermissions(role).canViewTenants, role).toBe(true);
+            expect(getPermissions(role).canEditBilling, role).toBe(true);
+        }
+
+        expect(normalizeRoleKey('agency_owner')).toBe('agency_owner');
+        expect(isPlatformOwnerRole('agency_owner')).toBe(false);
     });
 
     it('does not format invalid commercial limits as unlimited for normal users', () => {
@@ -60,6 +101,7 @@ describe('Service Access Engine', () => {
         expect(formatPlanLimit(Number.POSITIVE_INFINITY)).toBe('No disponible');
         expect(formatPlanLimit(null)).toBe('No disponible');
         expect(formatPlanLimit(-1, { role: 'owner', showUnlimitedForPlatformUser: true })).toBe('Ilimitado');
+        expect(formatPlanLimit(-1, { role: 'super_admin', showUnlimitedForPlatformUser: true })).toBe('Ilimitado');
     });
 
     it('sanitizes invalid DB limits to finite canonical fallbacks', () => {
@@ -120,8 +162,8 @@ describe('Service Access Engine', () => {
         });
     });
 
-    it('blocks not_public and development services for owner and superadmin too', () => {
-        for (const role of ['owner', 'superadmin']) {
+    it('lets owner and superadmin bypass not_public and development service gates', () => {
+        for (const role of ['owner', 'superadmin', 'super_admin']) {
             expect(resolveServiceAccess({
                 ...baseInput,
                 userRole: role,
@@ -133,8 +175,9 @@ describe('Service Access Engine', () => {
                 aiOperation: 'image_generation',
                 aiCreditsUsage: { creditsIncluded: 0, creditsUsed: 0, creditsRemaining: 0 },
             })).toMatchObject({
-                allowed: false,
-                reasonCode: 'service_in_development',
+                allowed: true,
+                adminOverride: true,
+                reasonCode: role === 'owner' ? 'owner_override' : 'superadmin_override',
             });
 
             expect(resolveServiceAccess({
@@ -144,8 +187,9 @@ describe('Service Access Engine', () => {
                 serviceId: 'emailMarketing',
                 serviceAvailability: { emailMarketing: { status: 'not_public' } },
             })).toMatchObject({
-                allowed: false,
-                reasonCode: 'service_not_public',
+                allowed: true,
+                adminOverride: true,
+                reasonCode: role === 'owner' ? 'owner_override' : 'superadmin_override',
             });
         }
     });
@@ -166,6 +210,26 @@ describe('Service Access Engine', () => {
                 allowed: true,
                 adminOverride: true,
                 reasonCode: role === 'owner' ? 'owner_override' : 'superadmin_override',
+            });
+        }
+    });
+
+    it('normalizes Super Admin role aliases before applying unlimited platform access', () => {
+        for (const role of ['super_admin', 'super-admin', 'super admin']) {
+            expect(resolveServiceAccess({
+                ...baseInput,
+                userRole: role,
+                planId: 'free',
+                serviceId: 'ecommerce',
+                featureKey: 'ecommerceEnabled',
+                serviceAvailability: { ecommerce: { status: 'public' } },
+                requestedUsage: { resource: 'projects', amount: 100, used: 100 },
+                aiOperation: 'image_generation',
+                aiCreditsUsage: { creditsIncluded: 0, creditsUsed: 0, creditsRemaining: 0 },
+            })).toMatchObject({
+                allowed: true,
+                adminOverride: true,
+                reasonCode: 'superadmin_override',
             });
         }
     });

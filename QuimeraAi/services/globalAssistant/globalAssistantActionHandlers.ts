@@ -55,6 +55,7 @@ import {
     getAgencyEngineOperatingSystemManifest,
     getModuleRegistryItem,
 } from '../../registry/moduleRegistry';
+import { buildAgencyReportGeneratedActivity } from '../agency/agencyActivityService';
 
 type SupabaseClientLike = {
     from: (table: string) => any;
@@ -902,32 +903,39 @@ const createAgencyReportHandler = (deps: GlobalAssistantActionHandlerDependencie
             created_at: now,
         });
         const reportId = readString(asRecord(reportRow).id);
-        const activityRow = await insertRow(client, 'agency_activity', {
-            agency_tenant_id: agencyTenantId,
-            client_tenant_id: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
-            type: 'report_generated',
+        const activityRow = await insertRow(client, 'agency_activity', buildAgencyReportGeneratedActivity({
+            agencyTenantId,
+            clientTenantId: selectedClientIds.length === 1 ? selectedClientIds[0] : null,
+            reportId: reportId || null,
+            template: reportType,
             title: 'Agency report generated',
-            description: aiSummary,
+            generatedBy: action.userId || context?.actor.userId || null,
+            summary: {
+                totalClients: selectedClients.length,
+                totalRevenue: totalMonthlyRevenue,
+                totalOrders: 0,
+                totalMrr: totalMonthlyRevenue,
+                moduleReadiness: {
+                    moduleReadinessRate: moduleReadiness.moduleReadinessRate,
+                    activeModuleSlots: moduleReadiness.activeModuleSlots,
+                    totalModuleSlots: moduleReadiness.totalModuleSlots,
+                    clientsWithAgencyOperatingSystem: moduleReadiness.clientsWithAgencyOperatingSystem,
+                },
+            },
+            aiSummary,
+            reportStatus,
+            publishToClientPortal: canPublishToClientPortal,
             metadata: {
                 source: 'global-assistant',
                 actionId: action.id,
                 taskId: action.taskId || null,
-                reportId: reportId || null,
                 reportType,
                 selectedClientIds,
                 periodStart,
                 periodEnd,
-                reportStatus,
-                clientPortalVisible: canPublishToClientPortal,
                 portalPublicationStatus,
-                moduleReadinessRate: moduleReadiness.moduleReadinessRate,
-                activeModuleSlots: moduleReadiness.activeModuleSlots,
-                totalModuleSlots: moduleReadiness.totalModuleSlots,
-                clientsWithAgencyOperatingSystem: moduleReadiness.clientsWithAgencyOperatingSystem,
             },
-            created_by: action.userId || context?.actor.userId || null,
-            created_at: now,
-        });
+        }, new Date(now)));
 
         return {
             afterSnapshot: {

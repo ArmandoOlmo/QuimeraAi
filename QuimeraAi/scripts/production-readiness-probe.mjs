@@ -55,6 +55,11 @@ export async function runProductionReadinessProbe(input = {}) {
     const value = readEnv(env, name);
     const minLength = Number(config.minLength || 1);
     if (!value) {
+      if (hasVercelProductionEnv(name)) {
+        add({ name, status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+        return '';
+      }
+
       add({ name, status: 'fail', severity: 'critical', evidence: 'missing' });
       return '';
     }
@@ -77,7 +82,12 @@ export async function runProductionReadinessProbe(input = {}) {
   const requireUrl = (name, config = {}) => {
     const value = requireValue(name, { minLength: config.minLength || 8 });
     const parsed = parseUrl(value);
-    if (!value) return '';
+    if (!value) {
+      if (hasVercelProductionEnv(name)) {
+        add({ name: `${name}:url`, status: 'skip', severity: 'info', evidence: 'value not available to local probe' });
+      }
+      return '';
+    }
     if (!parsed) {
       add({ name: `${name}:url`, status: 'fail', severity: 'critical', evidence: 'not a valid URL' });
       return value;
@@ -103,7 +113,9 @@ export async function runProductionReadinessProbe(input = {}) {
   const supabaseProjectRef = readEnv(env, 'SUPABASE_PROJECT_REF') || inferSupabaseProjectRef(supabaseUrl);
   const supabaseAccessToken = readEnv(env, 'SUPABASE_ACCESS_TOKEN');
   const supabaseEdgeSecretNames = parseNameSet(readEnv(env, 'SUPABASE_EDGE_SECRET_NAMES'));
+  const vercelProductionEnvNames = parseNameSet(readEnv(env, 'VERCEL_PRODUCTION_ENV_NAMES'));
   const canLiveCheckSupabaseEdgeSecrets = Boolean(supabaseAccessToken && supabaseProjectRef && options.live);
+  const hasVercelProductionEnv = (name) => vercelProductionEnvNames.has(name);
   const cronSecret = requireValue('CRON_SECRET', { minLength: 24 });
   const appBaseUrl = requireUrl('APP_BASE_URL', { httpsOnly: true, expectedOrigin: PRODUCTION_ORIGIN });
   const publicAppUrl = requireUrl('VITE_PUBLIC_APP_URL', { httpsOnly: true, expectedOrigin: PRODUCTION_ORIGIN });
@@ -112,10 +124,12 @@ export async function runProductionReadinessProbe(input = {}) {
   const anonKey = requireValue('VITE_SUPABASE_ANON_KEY', { minLength: 40 });
   const resendApiKey = readEnv(env, 'RESEND_API_KEY');
   const sendGridApiKey = readEnv(env, 'SENDGRID_API_KEY');
-  validateEmailProviderConfig(add, resendApiKey, sendGridApiKey);
+  validateEmailProviderConfig(add, resendApiKey, sendGridApiKey, hasVercelProductionEnv);
   const appointmentFrom = readEnv(env, 'APPOINTMENT_EMAIL_FROM') || readEnv(env, 'RESEND_FROM_EMAIL');
   if (appointmentFrom) {
     add({ name: 'APPOINTMENT_EMAIL_FROM_OR_RESEND_FROM_EMAIL', status: 'pass', evidence: 'present' });
+  } else if (hasVercelProductionEnv('APPOINTMENT_EMAIL_FROM') || hasVercelProductionEnv('RESEND_FROM_EMAIL')) {
+    add({ name: 'APPOINTMENT_EMAIL_FROM_OR_RESEND_FROM_EMAIL', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
   } else {
     add({ name: 'APPOINTMENT_EMAIL_FROM_OR_RESEND_FROM_EMAIL', status: 'fail', severity: 'critical', evidence: 'missing' });
   }
@@ -130,11 +144,13 @@ export async function runProductionReadinessProbe(input = {}) {
     patternEvidence: 'expected Stripe webhook signing secret prefix',
   });
   requireRuntimeOrEdgeSecret('STRIPE_SYNC_SECRET', { minLength: 24 });
-  validateStripePublishableKey(add, readEnv(env, 'VITE_STRIPE_PUBLISHABLE_KEY'));
+  validateStripePublishableKey(add, readEnv(env, 'VITE_STRIPE_PUBLISHABLE_KEY'), hasVercelProductionEnv);
   const googleClientId = readEnv(env, 'GOOGLE_CALENDAR_CLIENT_ID') || readEnv(env, 'VITE_GOOGLE_CLIENT_ID');
-  validateGoogleConfig(env, add, googleClientId, cronSecret);
+  validateGoogleConfig(env, add, googleClientId, cronSecret, hasVercelProductionEnv);
 
-  if (!supabaseUrl) {
+  if (!supabaseUrl && (hasVercelProductionEnv('SUPABASE_URL') || hasVercelProductionEnv('VITE_SUPABASE_URL'))) {
+    add({ name: 'SUPABASE_URL_OR_VITE_SUPABASE_URL', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+  } else if (!supabaseUrl) {
     add({ name: 'SUPABASE_URL_OR_VITE_SUPABASE_URL', status: 'fail', severity: 'critical', evidence: 'missing' });
   } else if (!parseUrl(supabaseUrl)) {
     add({ name: 'SUPABASE_URL_OR_VITE_SUPABASE_URL', status: 'fail', severity: 'critical', evidence: 'not a valid URL' });
@@ -148,7 +164,7 @@ export async function runProductionReadinessProbe(input = {}) {
 
   const cloudflareToken = readEnv(env, 'CLOUDFLARE_API_TOKEN');
   const cloudflareAccountId = readEnv(env, 'CLOUDFLARE_ACCOUNT_ID');
-  validateCloudflareShape(add, cloudflareToken, cloudflareAccountId, options.requireCloudflare);
+  validateCloudflareShape(add, cloudflareToken, cloudflareAccountId, options.requireCloudflare, hasVercelProductionEnv);
 
   if (options.live) {
     if (!fetchImpl) {
@@ -202,6 +218,11 @@ export async function runProductionReadinessProbe(input = {}) {
       return runtimeValue;
     }
 
+    if (hasVercelProductionEnv(name)) {
+      add({ name, status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+      return '';
+    }
+
     if (supabaseEdgeSecretNames.has(name)) {
       add({ name, status: 'pass', evidence: 'configured in Supabase Edge secrets list' });
       return '';
@@ -217,8 +238,22 @@ export async function runProductionReadinessProbe(input = {}) {
   }
 }
 
-function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey) {
+function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey, hasVercelProductionEnv = () => false) {
   if (!resendApiKey && !sendGridApiKey) {
+    if (hasVercelProductionEnv('RESEND_API_KEY')) {
+      add({ name: 'EMAIL_PROVIDER_API_KEY', status: 'pass', evidence: 'Resend configured in Vercel Production; value not available to local probe' });
+      add({ name: 'RESEND_API_KEY', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+      add({ name: 'SENDGRID_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured; Resend provider is available' });
+      return;
+    }
+
+    if (hasVercelProductionEnv('SENDGRID_API_KEY')) {
+      add({ name: 'EMAIL_PROVIDER_API_KEY', status: 'pass', evidence: 'SendGrid configured in Vercel Production; value not available to local probe' });
+      add({ name: 'RESEND_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured; SendGrid provider is available' });
+      add({ name: 'SENDGRID_API_KEY', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+      return;
+    }
+
     add({ name: 'EMAIL_PROVIDER_API_KEY', status: 'fail', severity: 'critical', evidence: 'missing RESEND_API_KEY or SENDGRID_API_KEY' });
     add({ name: 'RESEND_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured' });
     add({ name: 'SENDGRID_API_KEY', status: 'skip', severity: 'info', evidence: 'not configured' });
@@ -254,8 +289,13 @@ function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey) {
   }
 }
 
-function validateStripePublishableKey(add, publishableKey) {
+function validateStripePublishableKey(add, publishableKey, hasVercelProductionEnv = () => false) {
   if (!publishableKey) {
+    if (hasVercelProductionEnv('VITE_STRIPE_PUBLISHABLE_KEY')) {
+      add({ name: 'VITE_STRIPE_PUBLISHABLE_KEY', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+      return;
+    }
+
     add({
       name: 'VITE_STRIPE_PUBLISHABLE_KEY',
       status: 'warn',
@@ -278,9 +318,13 @@ function validateStripePublishableKey(add, publishableKey) {
   add({ name: 'VITE_STRIPE_PUBLISHABLE_KEY', status: 'pass', evidence: `present; length ${publishableKey.length}` });
 }
 
-function validateGoogleConfig(env, add, googleClientId, cronSecret) {
+function validateGoogleConfig(env, add, googleClientId, cronSecret, hasVercelProductionEnv = () => false) {
   if (!googleClientId) {
-    add({ name: 'GOOGLE_CALENDAR_CLIENT_ID_OR_VITE_GOOGLE_CLIENT_ID', status: 'fail', severity: 'critical', evidence: 'missing' });
+    if (hasVercelProductionEnv('GOOGLE_CALENDAR_CLIENT_ID') || hasVercelProductionEnv('VITE_GOOGLE_CLIENT_ID')) {
+      add({ name: 'GOOGLE_CALENDAR_CLIENT_ID_OR_VITE_GOOGLE_CLIENT_ID', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({ name: 'GOOGLE_CALENDAR_CLIENT_ID_OR_VITE_GOOGLE_CLIENT_ID', status: 'fail', severity: 'critical', evidence: 'missing' });
+    }
   } else if (!/\.apps\.googleusercontent\.com$/.test(googleClientId)) {
     add({ name: 'GOOGLE_CALENDAR_CLIENT_ID_OR_VITE_GOOGLE_CLIENT_ID', status: 'fail', severity: 'critical', evidence: 'unexpected client id shape' });
   } else {
@@ -289,7 +333,11 @@ function validateGoogleConfig(env, add, googleClientId, cronSecret) {
 
   const clientSecret = readEnv(env, 'GOOGLE_CALENDAR_CLIENT_SECRET');
   if (!clientSecret) {
-    add({ name: 'GOOGLE_CALENDAR_CLIENT_SECRET', status: 'fail', severity: 'critical', evidence: 'missing' });
+    if (hasVercelProductionEnv('GOOGLE_CALENDAR_CLIENT_SECRET')) {
+      add({ name: 'GOOGLE_CALENDAR_CLIENT_SECRET', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({ name: 'GOOGLE_CALENDAR_CLIENT_SECRET', status: 'fail', severity: 'critical', evidence: 'missing' });
+    }
   } else if (clientSecret.length < 20 || PLACEHOLDER_PATTERN.test(clientSecret)) {
     add({ name: 'GOOGLE_CALENDAR_CLIENT_SECRET', status: 'fail', severity: 'critical', evidence: 'unexpected secret shape' });
   } else {
@@ -298,7 +346,11 @@ function validateGoogleConfig(env, add, googleClientId, cronSecret) {
 
   const encryptionKey = readEnv(env, 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY');
   if (!encryptionKey) {
-    add({ name: 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY', status: 'fail', severity: 'critical', evidence: 'missing' });
+    if (hasVercelProductionEnv('GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY')) {
+      add({ name: 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({ name: 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY', status: 'fail', severity: 'critical', evidence: 'missing' });
+    }
   } else if (!isStrongGoogleEncryptionKey(encryptionKey)) {
     add({
       name: 'GOOGLE_CALENDAR_TOKEN_ENCRYPTION_KEY',
@@ -311,19 +363,23 @@ function validateGoogleConfig(env, add, googleClientId, cronSecret) {
   }
 
   const stateSecret = readEnv(env, 'GOOGLE_CALENDAR_OAUTH_STATE_SECRET') || cronSecret;
-  if (stateSecret) {
+  if (stateSecret || hasVercelProductionEnv('GOOGLE_CALENDAR_OAUTH_STATE_SECRET') || hasVercelProductionEnv('CRON_SECRET')) {
     add({ name: 'GOOGLE_CALENDAR_OAUTH_STATE_SECRET_OR_CRON_SECRET', status: 'pass', evidence: 'present' });
   } else {
     add({ name: 'GOOGLE_CALENDAR_OAUTH_STATE_SECRET_OR_CRON_SECRET', status: 'fail', severity: 'critical', evidence: 'missing' });
   }
 
-  validateUrlValue(add, 'GOOGLE_CALENDAR_REDIRECT_URI', readEnv(env, 'GOOGLE_CALENDAR_REDIRECT_URI'), '/api/appointments/google/oauth/callback');
-  validateUrlValue(add, 'GOOGLE_CALENDAR_WEBHOOK_URL', readEnv(env, 'GOOGLE_CALENDAR_WEBHOOK_URL'), '/api/appointments/google/webhook');
+  validateUrlValue(add, 'GOOGLE_CALENDAR_REDIRECT_URI', readEnv(env, 'GOOGLE_CALENDAR_REDIRECT_URI'), '/api/appointments/google/oauth/callback', PRODUCTION_ORIGIN, hasVercelProductionEnv);
+  validateUrlValue(add, 'GOOGLE_CALENDAR_WEBHOOK_URL', readEnv(env, 'GOOGLE_CALENDAR_WEBHOOK_URL'), '/api/appointments/google/webhook', PRODUCTION_ORIGIN, hasVercelProductionEnv);
 }
 
-function validateUrlValue(add, name, value, expectedPath, expectedOrigin = PRODUCTION_ORIGIN) {
+function validateUrlValue(add, name, value, expectedPath, expectedOrigin = PRODUCTION_ORIGIN, hasVercelProductionEnv = () => false) {
   if (!value) {
-    add({ name, status: 'fail', severity: 'critical', evidence: 'missing' });
+    if (hasVercelProductionEnv(name)) {
+      add({ name, status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({ name, status: 'fail', severity: 'critical', evidence: 'missing' });
+    }
     return;
   }
   const parsed = parseUrl(value);
@@ -346,20 +402,27 @@ function validateUrlValue(add, name, value, expectedPath, expectedOrigin = PRODU
   add({ name, status: 'pass', evidence: `valid URL; origin ${parsed.origin}; path ${parsed.pathname}` });
 }
 
-function validateCloudflareShape(add, token, accountId, requireCloudflare) {
-  if (!token && !accountId && !requireCloudflare) {
+function validateCloudflareShape(add, token, accountId, requireCloudflare, hasVercelProductionEnv = () => false) {
+  const hasConfiguredCloudflareToken = hasVercelProductionEnv('CLOUDFLARE_API_TOKEN');
+  const hasConfiguredCloudflareAccountId = hasVercelProductionEnv('CLOUDFLARE_ACCOUNT_ID');
+
+  if (!token && !accountId && !requireCloudflare && !hasConfiguredCloudflareToken && !hasConfiguredCloudflareAccountId) {
     add({ name: 'CLOUDFLARE_API_TOKEN', status: 'skip', severity: 'info', evidence: 'not configured; browser token exposure remains disabled' });
     add({ name: 'CLOUDFLARE_ACCOUNT_ID', status: 'skip', severity: 'info', evidence: 'not configured; browser token exposure remains disabled' });
     return;
   }
 
   if (!token) {
-    add({
-      name: 'CLOUDFLARE_API_TOKEN',
-      status: requireCloudflare ? 'fail' : 'warn',
-      severity: requireCloudflare ? 'critical' : 'warning',
-      evidence: 'missing',
-    });
+    if (hasConfiguredCloudflareToken) {
+      add({ name: 'CLOUDFLARE_API_TOKEN', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({
+        name: 'CLOUDFLARE_API_TOKEN',
+        status: requireCloudflare ? 'fail' : 'warn',
+        severity: requireCloudflare ? 'critical' : 'warning',
+        evidence: 'missing',
+      });
+    }
   } else if (token.length < 20 || PLACEHOLDER_PATTERN.test(token)) {
     add({ name: 'CLOUDFLARE_API_TOKEN', status: 'fail', severity: 'critical', evidence: 'unexpected token shape' });
   } else {
@@ -367,12 +430,16 @@ function validateCloudflareShape(add, token, accountId, requireCloudflare) {
   }
 
   if (!accountId) {
-    add({
-      name: 'CLOUDFLARE_ACCOUNT_ID',
-      status: requireCloudflare ? 'fail' : 'warn',
-      severity: requireCloudflare ? 'critical' : 'warning',
-      evidence: 'missing',
-    });
+    if (hasConfiguredCloudflareAccountId) {
+      add({ name: 'CLOUDFLARE_ACCOUNT_ID', status: 'pass', evidence: 'configured in Vercel Production; value not available to local probe' });
+    } else {
+      add({
+        name: 'CLOUDFLARE_ACCOUNT_ID',
+        status: requireCloudflare ? 'fail' : 'warn',
+        severity: requireCloudflare ? 'critical' : 'warning',
+        evidence: 'missing',
+      });
+    }
   } else if (!/^[a-f0-9]{32}$/i.test(accountId)) {
     add({ name: 'CLOUDFLARE_ACCOUNT_ID', status: 'fail', severity: 'critical', evidence: 'unexpected account id shape' });
   } else {
@@ -414,8 +481,48 @@ async function checkAgencySupabaseSchema({ add, fetchImpl, timeoutMs, supabaseUr
     'agency_snapshot_applications',
     'subscription_plans',
   ];
+  const requiredColumnChecks = [
+    {
+      table: 'agency_usage_ledger',
+      columns: [
+        'id',
+        'source_module',
+        'usage_type',
+        'unit_cost',
+        'platform_cost',
+        'client_price',
+        'agency_markup_type',
+        'agency_markup_value',
+        'margin_amount',
+        'idempotency_key',
+        'source_entity_type',
+        'source_entity_id',
+      ],
+    },
+    {
+      table: 'agency_billing_events',
+      columns: [
+        'id',
+        'provider',
+        'event_id',
+        'provider_event_id',
+        'idempotency_key',
+        'stripe_checkout_session_id',
+        'stripe_subscription_id',
+        'processed_at',
+      ],
+    },
+    {
+      table: 'agency_snapshot_versions',
+      columns: ['id', 'payload', 'included_modules', 'readiness', 'checksum'],
+    },
+    {
+      table: 'agency_snapshot_applications',
+      columns: ['id', 'preview', 'applied_changes', 'error', 'completed_at', 'idempotency_key'],
+    },
+  ];
 
-  const results = await Promise.all(requiredTables.map(async (table) => {
+  const tableResults = await Promise.all(requiredTables.map(async (table) => {
     const endpoint = new URL(`/rest/v1/${table}`, supabaseUrl);
     endpoint.searchParams.set('select', 'id');
     endpoint.searchParams.set('limit', '0');
@@ -428,18 +535,44 @@ async function checkAgencySupabaseSchema({ add, fetchImpl, timeoutMs, supabaseUr
     }, timeoutMs);
     return { table, response };
   }));
+  const columnResults = await Promise.all(requiredColumnChecks.map(async (check) => {
+    const endpoint = new URL(`/rest/v1/${check.table}`, supabaseUrl);
+    endpoint.searchParams.set('select', check.columns.join(','));
+    endpoint.searchParams.set('limit', '0');
+    const response = await safeFetch(fetchImpl, endpoint, {
+      method: 'GET',
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    }, timeoutMs);
+    return { ...check, response };
+  }));
 
-  const failed = results.filter(({ response }) => !response.ok || response.status >= 400);
-  if (failed.length === 0) {
-    add({ name: 'agency-supabase-schema', status: 'pass', evidence: `${requiredTables.length} Agency tables reachable with service role` });
+  const failedTables = tableResults.filter(({ response }) => !response.ok || response.status >= 400);
+  const failedColumns = columnResults.filter(({ response }) => !response.ok || response.status >= 400);
+  if (failedTables.length === 0 && failedColumns.length === 0) {
+    add({
+      name: 'agency-supabase-schema',
+      status: 'pass',
+      evidence: `${requiredTables.length} Agency tables and ${requiredColumnChecks.length} production column contracts reachable with service role`,
+    });
     return;
+  }
+
+  const evidenceParts = [];
+  if (failedTables.length > 0) {
+    evidenceParts.push(`unreachable tables: ${failedTables.map(({ table }) => table).join(', ')}`);
+  }
+  if (failedColumns.length > 0) {
+    evidenceParts.push(`missing contract columns: ${failedColumns.map(({ table, columns }) => `${table}(${columns.join(',')})`).join(', ')}`);
   }
 
   add({
     name: 'agency-supabase-schema',
     status: 'fail',
     severity: 'critical',
-    evidence: `unreachable tables: ${failed.map(({ table }) => table).join(', ')}`,
+    evidence: evidenceParts.join('; '),
   });
 }
 

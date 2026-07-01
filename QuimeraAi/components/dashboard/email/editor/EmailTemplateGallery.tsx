@@ -48,8 +48,11 @@ const EmailTemplateGallery: React.FC<EmailTemplateGalleryProps> = ({
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
     // Service availability: hide ecommerce templates when service is off
-    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
-    const canAccessEcommerce = !isLoadingServiceAvailability && isServicePublic('ecommerce');
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServiceAvailability,
+    } = useServiceAvailability();
+    const canAccessEcommerce = !isLoadingServiceAvailability && canAccessConfiguredService('ecommerce');
 
     // Filter templates (also exclude ecommerce templates if service is off)
     const filteredTemplates = emailTemplates.filter(template => {
@@ -209,7 +212,6 @@ const EmailTemplateGallery: React.FC<EmailTemplateGalleryProps> = ({
 };
 
 export default EmailTemplateGallery;
-
 
 
 

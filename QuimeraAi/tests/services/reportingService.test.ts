@@ -16,6 +16,7 @@ import {
     buildAgencyReportAISummary,
     calculateAgencyModuleReadiness,
     calculateAgencyReportSummary,
+    isMissingAgencyReportingTable,
     readCanonicalOrderTotal,
     readClientMonthlyRecurringRevenue,
 } from '../../services/reportingService';
@@ -192,10 +193,19 @@ describe('ReportingService canonical helpers', () => {
         expect(buildAgencyReportAISummary(reportData)).toContain('$99');
         expect(buildAgencyReportAISummary(reportData)).toContain('Agency OS readiness');
     });
+
+    it('only treats real missing Agency reporting tables as legacy fallback candidates', () => {
+        expect(isMissingAgencyReportingTable({ code: '42P01', message: 'relation does not exist' }, 'agency_clients')).toBe(true);
+        expect(isMissingAgencyReportingTable({ code: 'PGRST205', message: 'Could not find the table agency_clients' }, 'agency_clients')).toBe(true);
+        expect(isMissingAgencyReportingTable({ message: 'Could not find the table agency_clients in the schema cache' }, 'agency_clients')).toBe(true);
+        expect(isMissingAgencyReportingTable({ code: '42501', message: 'permission denied for table agency_clients' }, 'agency_clients')).toBe(false);
+        expect(isMissingAgencyReportingTable({ message: 'permission denied for table agency_service_plans' }, 'agency_service_plans')).toBe(false);
+    });
 });
 
 describe('Agency reporting canonical contract', () => {
     const reportingService = read('services/reportingService.ts');
+    const agencyActivityService = read('services/agency/agencyActivityService.ts');
     const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
     const pdfGenerator = read('services/pdfGenerator.ts');
     const architectureDoc = read('docs/AGENCY_ENGINE_ARCHITECTURE.md');
@@ -213,6 +223,11 @@ describe('Agency reporting canonical contract', () => {
         expect(reportingService).toContain(".select('client_tenant_id')");
         expect(reportingService).toContain(".eq('agency_tenant_id', agencyTenantId)");
         expect(reportingService).toContain(".eq('owner_tenant_id', agencyTenantId)");
+        expect(reportingService).toContain('isMissingAgencyReportingTable(error,');
+        expect(reportingService).not.toContain("message.includes('agency_clients')");
+        expect(reportingService).not.toContain("return null;");
+        expect(reportingService).toContain('throw relationshipError');
+        expect(reportingService).toContain('throw plansError');
     });
 
     it('persists generated agency reports and activity snapshots', () => {
@@ -224,11 +239,12 @@ describe('Agency reporting canonical contract', () => {
         expect(reportingService).toContain("status: reportStatus");
         expect(reportingService).toContain("portalPublicationStatus");
         expect(reportingService).toContain(".from('agency_activity')");
-        expect(reportingService).toContain("type: 'report_generated'");
-        expect(reportingService).toContain('clientPortalVisible');
+        expect(reportingService).toContain('buildAgencyReportGeneratedActivity');
+        expect(agencyActivityService).toContain("type: 'report_generated'");
+        expect(agencyActivityService).toContain('clientPortalVisible');
         expect(reportingService).toContain('metadata.agencyOperatingSystem');
-        expect(reportingService).toContain('moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate');
-        expect(reportingService).toContain('activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots');
+        expect(agencyActivityService).toContain('moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate');
+        expect(agencyActivityService).toContain('activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots');
         expect(reportsGenerator).toContain('reportingService.generateAgencyReport');
         expect(reportsGenerator).toContain('persistenceStatus');
         expect(reportsGenerator).toContain('publishToClientPortal: canPublishToClientPortal && publishToClientPortal');

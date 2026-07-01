@@ -9,6 +9,11 @@ import {
   isAgencyClientBillingMetadata,
   isDuplicateStripeWebhookEventStatus,
   isUniqueConstraintViolation,
+  normalizeAgencyClientBillingStatus,
+  resolveAgencyPaymentLinkStatus,
+  resolveAgencyRelationshipBillingStatus,
+  resolveAgencyRelationshipOnboardingStatus,
+  resolveAgencyTenantBillingStatus,
 } from '../../supabase/functions/_shared/agency-stripe-billing.ts';
 
 const agencyTenantId = '11111111-1111-4111-8111-111111111111';
@@ -55,6 +60,8 @@ describe('Agency Stripe webhook helpers', () => {
     expect(row).toMatchObject({
       provider: 'stripe',
       event_id: 'evt_signed_agency_invoice',
+      provider_event_id: 'evt_signed_agency_invoice',
+      idempotency_key: 'stripe:evt_signed_agency_invoice',
       event_type: 'invoice.paid',
       agency_tenant_id: agencyTenantId,
       client_tenant_id: clientTenantId,
@@ -217,10 +224,14 @@ describe('Agency Stripe webhook helpers', () => {
       client_tenant_id: clientTenantId,
       agency_plan_id: 'plan-growth',
       source: 'stripe-webhook',
+      source_module: 'stripe',
       usage_type: 'subscription',
       usage_quantity: 1,
       unit_price: 250,
+      client_price: 250,
       unit_cost: 100,
+      agency_markup_type: 'percentage',
+      agency_markup_value: 150,
       currency: 'usd',
       billing_status: 'active',
       billing_period_start: '2026-07-01',
@@ -230,6 +241,8 @@ describe('Agency Stripe webhook helpers', () => {
       stripe_subscription_id: 'sub_agency_123',
       stripe_checkout_session_id: 'cs_agency_123',
       idempotency_key: 'stripe:agency-client-subscription:sub_agency_123:2026-08-01T00:00:00.000Z',
+      source_entity_type: 'stripe_subscription',
+      source_entity_id: 'sub_agency_123',
       metadata: {
         agencyPlanName: 'Growth',
         paymentLinkToken: 'plink_123',
@@ -260,5 +273,26 @@ describe('Agency Stripe webhook helpers', () => {
       status: 'active',
       stripeSubscriptionId: 'sub_agency_123',
     }, { price: 200, base_cost: 75 })).toBeNull();
+  });
+
+  it('maps Stripe subscription failures without marking Agency payment links as completed', () => {
+    expect(normalizeAgencyClientBillingStatus('trialing')).toBe('trial');
+    expect(normalizeAgencyClientBillingStatus('canceled')).toBe('cancelled');
+    expect(normalizeAgencyClientBillingStatus('incomplete_expired')).toBe('failed');
+
+    expect(resolveAgencyPaymentLinkStatus('active')).toBe('completed');
+    expect(resolveAgencyPaymentLinkStatus('trialing')).toBe('completed');
+    expect(resolveAgencyPaymentLinkStatus('past_due')).toBe('past_due');
+    expect(resolveAgencyPaymentLinkStatus('incomplete')).toBe('past_due');
+    expect(resolveAgencyPaymentLinkStatus('unpaid')).toBe('past_due');
+    expect(resolveAgencyPaymentLinkStatus('incomplete_expired')).toBe('failed');
+    expect(resolveAgencyPaymentLinkStatus('canceled')).toBe('cancelled');
+
+    expect(resolveAgencyRelationshipBillingStatus('past_due')).toBe('past_due');
+    expect(resolveAgencyRelationshipBillingStatus('incomplete_expired')).toBe('suspended');
+    expect(resolveAgencyRelationshipOnboardingStatus('past_due')).toBe('payment_pending');
+    expect(resolveAgencyRelationshipOnboardingStatus('active')).toBe('paid');
+    expect(resolveAgencyTenantBillingStatus('past_due')).toBe('past_due');
+    expect(resolveAgencyTenantBillingStatus('incomplete_expired')).toBe('expired');
   });
 });

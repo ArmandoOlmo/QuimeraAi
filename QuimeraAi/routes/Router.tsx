@@ -186,6 +186,7 @@ const Router: React.FC<RouterProps> = ({
   }, [route, userRole, isAuthenticated, isEmailVerified]);
 
   const routeRequiresService = Boolean(route?.requiredService);
+  const shouldBlockRouteServiceAvailability = routeRequiresService && !isPublicRoute;
   const isRouteServiceAvailable = useMemo(() => (
     !route?.requiredService || isServicePublic(route.requiredService)
   ), [isServicePublic, route?.requiredService]);
@@ -309,11 +310,11 @@ const Router: React.FC<RouterProps> = ({
     return <LoadingScreen />;
   }
 
-  if (routeRequiresService && isLoadingServiceAvailability) {
+  if (shouldBlockRouteServiceAvailability && isLoadingServiceAvailability) {
     return <LoadingScreen />;
   }
 
-  if (routeRequiresService && !isRouteServiceAvailable) {
+  if (shouldBlockRouteServiceAvailability && !isRouteServiceAvailable) {
     return <LoadingScreen />;
   }
 

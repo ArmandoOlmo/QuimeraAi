@@ -15,6 +15,7 @@ import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import AdminViewLayout from './admin/AdminViewLayout';
 import HeaderBackButton from '../ui/HeaderBackButton';
+import { normalizeRoleKey } from '../../constants/roles';
 
 // Lazy-loaded admin panels — each loads on-demand (~905KB → ~30KB initial)
 const AdminManagement = React.lazy(() => import('./admin/AdminManagement'));
@@ -235,7 +236,7 @@ const SuperAdminDashboard = () => {
     const [viewMode, setViewMode] = useState<ViewMode>('compact');
 
     // Get user role (default to empty string if not set)
-    const userRole = userDocument?.role || '';
+    const userRole = normalizeRoleKey(userDocument?.role || '');
 
     // Navigate back to admin main
     const handleBack = () => {

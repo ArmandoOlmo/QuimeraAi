@@ -75,17 +75,18 @@ describe('agencyUsageLedgerService', () => {
             {
                 usage_quantity: 3,
                 unit_price: 50,
+                client_price: 60,
                 unit_cost: 10,
             },
         ]);
 
         expect(summary).toEqual({
             ledgerEntryCount: 2,
-            ledgerRevenue: 370,
+            ledgerRevenue: 400,
             baseCost: 110,
-            markup: 260,
-            margin: 260,
-            marginPercentage: 70.3,
+            markup: 290,
+            margin: 290,
+            marginPercentage: 72.5,
         });
     });
 

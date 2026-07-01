@@ -21,12 +21,12 @@ interface NoCreditsGlobalBannerProps {
 const NoCreditsGlobalBanner: React.FC<NoCreditsGlobalBannerProps> = ({ className = '' }) => {
     const { t } = useTranslation();
     const { usage, isLoading } = useCreditsUsage();
-    const { userDocument } = useAuth();
+    const { userDocument, isUserOwner } = useAuth();
     const upgradeContext = useSafeUpgrade();
     const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
     // Check role hierarchy
-    const userRole = userDocument?.role;
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const isOwner = isPlatformUnlimitedUser(userRole);
 
     // Don't show for owner/superadmin platform bypass or while loading.

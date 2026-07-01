@@ -174,14 +174,17 @@ const Controls: React.FC = () => {
   const { menus, categories } = useCMS();
   const [showPageSettings, setShowPageSettings] = useState<string | null>(null);
   const { componentStatus: rawComponentStatus, componentStyles } = useAdmin();
-  const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+  const {
+    canAccessService: canAccessConfiguredService,
+    isLoading: isLoadingServiceAvailability,
+  } = useServiceAvailability();
   const { hasAccess: hasPlanAccess, isLoading: isLoadingPlanAccess } = usePlanAccess();
 
   const isComponentServiceAvailable = (section: PageSection): boolean => {
     const registryItem = getRegistryItem(section);
     if (!registryItem?.requiredService) return true;
     return canAccessRegistryItem(registryItem, {
-      canAccessService: serviceId => !isLoadingServiceAvailability && isServicePublic(serviceId),
+      canAccessService: serviceId => !isLoadingServiceAvailability && canAccessConfiguredService(serviceId),
       hasPlanFeature: feature => !isLoadingPlanAccess && hasPlanAccess(feature),
     });
   };
@@ -209,7 +212,7 @@ const Controls: React.FC = () => {
     componentOrder,
     rawComponentStatus,
     isLoadingServiceAvailability,
-    isServicePublic,
+    canAccessConfiguredService,
     isLoadingPlanAccess,
     hasPlanAccess,
   ]);

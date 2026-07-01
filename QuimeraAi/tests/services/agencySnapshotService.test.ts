@@ -65,6 +65,9 @@ function versionRow(payload = buildAgencySnapshotPayload(sourceProject(), '2026-
         version: 1,
         label: 'Initial',
         data: payload,
+        payload,
+        included_modules: payload.includedModules,
+        readiness: payload.readiness,
         checksum: buildAgencySnapshotChecksum(payload),
         metadata: { includedModules: payload.includedModules },
     };
@@ -108,6 +111,7 @@ describe('AgencySnapshotService helpers', () => {
         const payload = buildAgencySnapshotPayload(sourceProject(), '2026-07-01T12:00:00.000Z');
         expect(buildAgencySnapshotChecksum(payload)).toBe(buildAgencySnapshotChecksum({ ...payload }));
         expect(readAgencySnapshotVersionPayload(versionRow(payload))).toBe(payload);
+        expect(readAgencySnapshotVersionPayload({ ...versionRow(payload), data: {}, payload })).toBe(payload);
         expect(readAgencySnapshotVersionPayload({ ...versionRow(payload), data: { payload } })).toBe(payload);
     });
 
@@ -196,6 +200,8 @@ describe('AgencySnapshotService helpers', () => {
             target_project_id: 'project-target-1',
             status: 'pending',
             applied_by: 'user-1',
+            preview,
+            applied_changes: [],
         });
         expect(row.idempotency_key).toContain('agency-snapshot:agency-tenant-1:snapshot-1');
         expect(row.metadata).toMatchObject({

@@ -72,6 +72,8 @@ describe('Agency Client Portal operating surface contract', () => {
         expect(agencyApprovalService).toContain('export const AGENCY_APPROVAL_SELECT');
         expect(agencyApprovalService).toContain(".from('agency_client_approvals')");
         expect(agencyApprovalService).toContain(".select(AGENCY_APPROVAL_SELECT)");
+        expect(agencyApprovalService).toContain("fetch('/api/agency/approvals/respond'");
+        expect(agencyApprovalService).toContain('client.auth?.getSession');
         expect(agencyApprovalService).toContain("client.functions.invoke('onboarding-api'");
         expect(agencyApprovalService).toContain("action: 'respondClientApproval'");
     });

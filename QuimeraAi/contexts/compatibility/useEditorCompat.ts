@@ -29,6 +29,7 @@ import { useAdmin } from '../admin';
 import { useDomains } from '../domains';
 import { useSafeAI } from '../ai';
 import { AiAssistantConfig } from '../../types';
+import { isPlatformOwnerRole } from '../../constants/roles';
 
 const fallbackAiAssistantConfig: AiAssistantConfig = {
     agentName: 'Quimera Bot',
@@ -113,7 +114,7 @@ export const useEditorCompat = () => {
         setVerificationEmail: auth.setVerificationEmail,
         userPermissions: auth.userPermissions,
         canPerform: auth.canPerform,
-        isUserOwner: auth.userDocument?.role === 'owner' || auth.userDocument?.role === 'superadmin' || auth.isUserOwner,
+        isUserOwner: isPlatformOwnerRole(auth.userDocument?.role) || auth.isUserOwner,
 
         // UI
         isSidebarOpen: ui.isSidebarOpen,
@@ -302,7 +303,6 @@ export const useEditorCompat = () => {
         setSidebarOrder: () => {},
     };
 };
-
 
 
 

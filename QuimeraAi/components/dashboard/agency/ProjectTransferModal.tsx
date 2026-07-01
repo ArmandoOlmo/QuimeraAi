@@ -88,17 +88,25 @@ export function ProjectTransferModal({
 
         try {
             const { supabase } = await import('../../../supabase');
-            const result = await supabase.functions.invoke('onboarding-api', {
-                body: {
-                    action: 'transferProject',
+            const { data: sessionData } = await supabase.auth.getSession();
+            const accessToken = sessionData.session?.access_token;
+            if (!accessToken) throw new Error(t('agency.sessionExpired', 'Tu sesión expiró. Inicia sesión nuevamente.'));
+
+            const apiResponse = await fetch('/api/agency/projects/transfer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
                     projectId: project.id,
                     sourceTenantId: currentTenant.id,
                     targetClientTenantId: selectedClientId,
-                }
+                }),
             });
 
-            if (result.error) throw result.error;
-            const response = result.data?.data || result.data;
+            const response = await apiResponse.json();
+            if (!apiResponse.ok) throw new Error(response?.error || t('agency.transferError', 'Error al transferir el proyecto'));
 
             if (response.success) {
                 setTransferResult({

@@ -41,7 +41,7 @@ import {
     PlanLimits,
     SubscriptionPlanId,
 } from '../../../types/subscription';
-import { formatPlanLimit } from '../../../services/billing/planCatalog';
+import { formatPlanLimit, getPlatformUnlimitedPlan } from '../../../services/billing/planCatalog';
 import { settingsPanelClass } from './SettingsStatCard';
 
 // Plan icons mapping
@@ -122,6 +122,7 @@ const SubscriptionSettings: React.FC = () => {
     const tenantContext = useTenant();
     const { currentTenant } = tenantContext;
     const { usage, isLoading: isLoadingUsage, refresh } = useCreditsUsage();
+    const platformCreditRole = isUserOwner ? 'owner' : userDocument?.role;
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
     const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
@@ -173,7 +174,10 @@ const SubscriptionSettings: React.FC = () => {
 
     // Get current plan from usage or default to free
     const currentPlanId: SubscriptionPlanId = usage?.planId || 'free';
-    const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const baseCurrentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const currentPlan = usage?.isUnlimited
+        ? getPlatformUnlimitedPlan(platformCreditRole) || baseCurrentPlan
+        : baseCurrentPlan;
     const IconComponent = PLAN_ICONS[currentPlanId] || Sparkles;
     const PlanIcon = IconComponent || (() => <div className="w-7 h-7 bg-muted rounded-full" />);
     const currentGradient = PLAN_GRADIENTS[currentPlanId] || PLAN_GRADIENTS.free;

@@ -116,10 +116,13 @@ export function extractAgencyBillingEventRefs(event: { data: { object: any } }):
 export function buildAgencyBillingEventInsert(event: { id: string; type: string; data: { object: any } }, paymentLinkId: string | null = null) {
   const refs = extractAgencyBillingEventRefs(event);
   if (!refs.isAgencyBilling) return null;
+  const idempotencyKey = `stripe:${event.id}`;
 
   return {
     provider: "stripe",
     event_id: event.id,
+    provider_event_id: event.id,
+    idempotency_key: idempotencyKey,
     event_type: event.type,
     agency_tenant_id: refs.agencyTenantId,
     client_tenant_id: refs.clientTenantId,
@@ -181,6 +184,50 @@ export function buildAgencyBillingEventStatusUpdate(
   };
 }
 
+export function normalizeAgencyClientBillingStatus(status?: string | null) {
+  const normalized = String(status || "active").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (normalized === "trialing") return "trial";
+  if (normalized === "canceled") return "cancelled";
+  if (normalized === "payment_failed") return "past_due";
+  if (normalized === "incomplete_expired") return "failed";
+  return normalized || "active";
+}
+
+export function resolveAgencyPaymentLinkStatus(status?: string | null) {
+  const normalized = normalizeAgencyClientBillingStatus(status);
+  if (["active", "trial"].includes(normalized)) return "completed";
+  if (["past_due", "unpaid", "incomplete"].includes(normalized)) return "past_due";
+  if (["failed", "incomplete_expired"].includes(normalized)) return "failed";
+  if (normalized === "cancelled") return "cancelled";
+  return "pending";
+}
+
+export function resolveAgencyRelationshipBillingStatus(status?: string | null) {
+  const paymentLinkStatus = resolveAgencyPaymentLinkStatus(status);
+  if (paymentLinkStatus === "completed") return "active";
+  if (paymentLinkStatus === "past_due") return "past_due";
+  if (paymentLinkStatus === "failed") return "suspended";
+  if (paymentLinkStatus === "cancelled") return "cancelled";
+  return "active";
+}
+
+export function resolveAgencyRelationshipOnboardingStatus(status?: string | null) {
+  const paymentLinkStatus = resolveAgencyPaymentLinkStatus(status);
+  if (paymentLinkStatus === "completed") return "paid";
+  if (paymentLinkStatus === "past_due" || paymentLinkStatus === "failed") return "payment_pending";
+  if (paymentLinkStatus === "cancelled") return "cancelled";
+  return "payment_pending";
+}
+
+export function resolveAgencyTenantBillingStatus(status?: string | null) {
+  const paymentLinkStatus = resolveAgencyPaymentLinkStatus(status);
+  if (paymentLinkStatus === "completed") return "active";
+  if (paymentLinkStatus === "past_due") return "past_due";
+  if (paymentLinkStatus === "failed") return "expired";
+  if (paymentLinkStatus === "cancelled") return "expired";
+  return "active";
+}
+
 export function isRecordableAgencyLedgerStatus(status?: string | null) {
   return ["active", "trial", "trialing"].includes(String(status || ""));
 }
@@ -196,6 +243,9 @@ export function buildAgencyUsageLedgerInsert(
   const unitPrice = readPositiveAmount(params.monthlyPrice, plan?.price);
   const unitCost = readPositiveAmount(plan?.base_cost);
   if (unitPrice <= 0 && unitCost <= 0) return null;
+  const markupPercentage = unitCost > 0
+    ? Math.round(((unitPrice - unitCost) / unitCost) * 10000) / 100
+    : 0;
 
   const periodKey = params.currentPeriodEnd ||
     params.stripeSubscriptionId ||
@@ -207,16 +257,27 @@ export function buildAgencyUsageLedgerInsert(
     params.paymentLinkToken ||
     params.clientTenantId;
   const idempotencyKey = `stripe:agency-client-subscription:${sourceKey}:${periodKey}`;
+  const sourceEntityType = params.stripeSubscriptionId
+    ? "stripe_subscription"
+    : params.stripeCheckoutSessionId
+      ? "stripe_checkout_session"
+      : params.paymentLinkToken
+        ? "agency_payment_link"
+        : null;
 
   return {
     agency_tenant_id: params.agencyTenantId,
     client_tenant_id: params.clientTenantId,
     agency_plan_id: plan?.id || null,
     source: "stripe-webhook",
+    source_module: "stripe",
     usage_type: "subscription",
     usage_quantity: 1,
     unit_cost: unitCost,
     unit_price: unitPrice,
+    client_price: unitPrice,
+    agency_markup_type: "percentage",
+    agency_markup_value: Math.max(0, markupPercentage),
     currency: "usd",
     billing_status: params.status || "active",
     billing_period_start: dateOnly(params.currentPeriodStart),
@@ -226,6 +287,8 @@ export function buildAgencyUsageLedgerInsert(
     stripe_subscription_id: params.stripeSubscriptionId || null,
     stripe_checkout_session_id: params.stripeCheckoutSessionId || null,
     idempotency_key: idempotencyKey,
+    source_entity_type: sourceEntityType,
+    source_entity_id: params.stripeSubscriptionId || params.stripeCheckoutSessionId || params.paymentLinkToken || null,
     metadata: {
       agencyPlanName: params.agencyPlanName || plan?.name || null,
       paymentLinkToken: params.paymentLinkToken || null,

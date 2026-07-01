@@ -14,9 +14,11 @@ import {
 } from '../types/subscription';
 import {
     getCanonicalPlan,
+    getPlatformUnlimitedPlan,
     isPlatformUnlimitedUser,
     normalizePlanId,
     normalizePlanLimits,
+    resolvePlanIdForPlatformRole,
 } from '../services/billing/planCatalog';
 import { isTransientSupabaseAvailabilityError } from '../utils/supabaseFetchGuards';
 
@@ -100,7 +102,7 @@ const loadSubscriptionUsageRow = async (
 };
 
 export function useCreditsUsage(): UseCreditsUsageReturn {
-    const { loadingAuth, userDocument } = useAuth();
+    const { loadingAuth, userDocument, isUserOwner } = useAuth();
     const tenantContext = useSafeTenant();
     const [usage, setUsage] = useState<CreditsUsageData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -111,7 +113,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
     const currentTenant = tenantContext?.currentTenant;
     const tenantId = currentTenant?.id;
     const isLoadingTenant = tenantContext?.isLoadingTenant ?? false;
-    const userRole = userDocument?.role;
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const isUnlimitedCreditsUser = isPlatformUnlimitedUser(userRole);
 
     useEffect(() => {
@@ -135,24 +137,52 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
 
         try {
             setError(null);
+
+            if (isUnlimitedCreditsUser) {
+                const planKey = resolvePlanIdForPlatformRole(currentTenant?.subscriptionPlan || 'free', userRole) as SubscriptionPlanId;
+                const plan = getPlatformUnlimitedPlan(userRole) || getCanonicalPlan(planKey);
+
+                if (canCommit()) {
+                    setUsage({
+                        used: 0,
+                        limit: Number.POSITIVE_INFINITY,
+                        remaining: Number.POSITIVE_INFINITY,
+                        percentage: 0,
+                        plan: plan.name,
+                        planId: planKey,
+                        status: 'active',
+                        billingCycle: undefined,
+                        currentPeriodEnd: null,
+                        stripeCustomerId: null,
+                        stripeSubscriptionId: null,
+                        color: getUsageColor(0),
+                        isNearLimit: false,
+                        hasExceededLimit: false,
+                        requiresPayment: false,
+                        isUnlimited: true,
+                    });
+                }
+                return;
+            }
+
             const data = await loadSubscriptionUsageRow(tenantId, options.force === true);
 
             const subscriptionPlanKey = normalizePlanId(data?.plan_id || currentTenant?.subscriptionPlan || 'free') as SubscriptionPlanId;
-            const planKey: SubscriptionPlanId = subscriptionPlanKey;
-            const plan = SUBSCRIPTION_PLANS[planKey] || getCanonicalPlan(planKey);
+            const planKey = resolvePlanIdForPlatformRole(subscriptionPlanKey, userRole) as SubscriptionPlanId;
+            const plan = getPlatformUnlimitedPlan(userRole) || SUBSCRIPTION_PLANS[planKey] || getCanonicalPlan(planKey);
             const status = isUnlimitedCreditsUser ? 'active' : data?.status || 'active';
             
             const aiUsage = data?.ai_credits_usage as any;
             const used = Number(aiUsage?.creditsUsed ?? aiUsage?.total_used ?? 0);
-            const safeLimits = normalizePlanLimits(currentTenant?.limits || plan.limits, planKey);
+            const safeLimits = normalizePlanLimits(isUnlimitedCreditsUser ? plan.limits : currentTenant?.limits || plan.limits, planKey);
             const tenantLimit = Number(safeLimits.maxAiCredits);
             const fallbackLimit = tenantLimit > 0 ? tenantLimit : plan.limits.maxAiCredits ?? 0;
             const limit = isUnlimitedCreditsUser
-                ? fallbackLimit
+                ? Number.POSITIVE_INFINITY
                 : Number(aiUsage?.creditsIncluded ?? fallbackLimit);
             
             const remaining = isUnlimitedCreditsUser
-                ? limit
+                ? Number.POSITIVE_INFINITY
                 : Number.isFinite(Number(aiUsage?.creditsRemaining))
                 ? Number(aiUsage.creditsRemaining)
                 : Math.max(0, limit - used);
@@ -194,7 +224,7 @@ export function useCreditsUsage(): UseCreditsUsageReturn {
                 setIsLoading(false);
             }
         }
-    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits, isUnlimitedCreditsUser]);
+    }, [tenantId, currentTenant?.subscriptionPlan, currentTenant?.limits, isUnlimitedCreditsUser, userRole]);
 
     // Cargar al montar y cuando cambie el tenant
     useEffect(() => {

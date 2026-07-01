@@ -24,12 +24,20 @@ import {
 } from '../types/subscription';
 import { initializeCreditsUsage, handlePlanChange } from './aiCreditsService';
 import { isFinitePlanLimit, isPlatformUnlimitedUser } from './billing/planCatalog';
+import { isOwner } from '../constants/roles';
 
 // =============================================================================
 // CONSTANTS
 // =============================================================================
 
 const TRIAL_DAYS = 7;  // Cambiado de 14 a 7 días de trial
+
+function isCurrentSessionPlatformUnlimited(session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'], userRow?: { role?: string | null } | null): boolean {
+    return isPlatformUnlimitedUser(userRow?.role) ||
+        isPlatformUnlimitedUser(session?.user?.app_metadata?.role as string | undefined) ||
+        session?.user?.app_metadata?.isOwner === true ||
+        isOwner(session?.user?.email || '');
+}
 
 // =============================================================================
 // SUBSCRIPTION MANAGEMENT
@@ -249,7 +257,7 @@ export async function hasFeature(
     const { data: userRow } = session?.user?.id
         ? await supabase.from('users').select('role').eq('id', session.user.id).maybeSingle()
         : { data: null };
-    if (isPlatformUnlimitedUser(userRow?.role)) return true;
+    if (isCurrentSessionPlatformUnlimited(session, userRow)) return true;
 
     try {
         const subscription = await getTenantSubscription(tenantId);
@@ -302,7 +310,7 @@ export async function hasReachedLimit(
     const { data: userRow } = session?.user?.id
         ? await supabase.from('users').select('role').eq('id', session.user.id).maybeSingle()
         : { data: null };
-    if (isPlatformUnlimitedUser(userRow?.role)) return false;
+    if (isCurrentSessionPlatformUnlimited(session, userRow)) return false;
 
     const maxLimit = await getLimit(tenantId, limit);
     if (!isFinitePlanLimit(maxLimit)) return true;
@@ -552,7 +560,6 @@ export function getUpgradeHighlight(currentPlanId: SubscriptionPlanId): string[]
 
     return highlights[currentPlanId] || [];
 }
-
 
 
 

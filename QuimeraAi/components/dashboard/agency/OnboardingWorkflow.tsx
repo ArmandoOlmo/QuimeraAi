@@ -184,40 +184,48 @@ export function OnboardingWorkflow({
         'Creando workspace del cliente...'
       );
 
-      const result = await supabase.functions.invoke('onboarding-api', {
-        body: {
-            action: 'autoProvision',
-            agencyTenantId: currentTenant.id,
-            businessName: data.businessName,
-            industry: data.industry,
-            contactEmail: data.contactEmail,
-            contactPhone: data.contactPhone,
-            projectTemplate: data.projectTemplate,
-            enabledFeatures: data.enabledFeatures,
-            initialUsers: data.initialUsers,
-            logoUrl,
-            primaryColor: data.primaryColor,
-            secondaryColor: data.secondaryColor,
-            monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
-            selectedPlanId: data.selectedPlanId,
-            selectedPlanName: data.selectedPlanName,
-            setupBilling: data.setupBilling,
-            aiStudioMode: data.aiStudioMode,
-            generateWebsite: data.generateWebsite,
-            generateStorefront: data.generateStorefront,
-            generateEcommerce: data.generateEcommerce,
-            generateChatbot: data.generateChatbot,
-            generateEmailFlows: data.generateEmailFlows,
-            generateAppointments: data.generateAppointments,
-            generateRestaurantModule: data.generateRestaurantModule,
-            generateRealtyModule: data.generateRealtyModule,
-            generateBioPage: data.generateBioPage,
-            generateMediaAssets: data.generateMediaAssets,
-        }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Tu sesión expiró. Inicia sesión nuevamente.');
+
+      const apiResponse = await fetch('/api/agency/clients/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          agencyTenantId: currentTenant.id,
+          businessName: data.businessName,
+          industry: data.industry,
+          contactEmail: data.contactEmail,
+          contactPhone: data.contactPhone,
+          projectTemplate: data.projectTemplate,
+          enabledFeatures: data.enabledFeatures,
+          initialUsers: data.initialUsers,
+          logoUrl,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          monthlyPrice: data.setupBilling ? data.monthlyPrice : undefined,
+          selectedPlanId: data.selectedPlanId,
+          selectedPlanName: data.selectedPlanName,
+          setupBilling: data.setupBilling,
+          aiStudioMode: data.aiStudioMode,
+          generateWebsite: data.generateWebsite,
+          generateStorefront: data.generateStorefront,
+          generateEcommerce: data.generateEcommerce,
+          generateChatbot: data.generateChatbot,
+          generateEmailFlows: data.generateEmailFlows,
+          generateAppointments: data.generateAppointments,
+          generateRestaurantModule: data.generateRestaurantModule,
+          generateRealtyModule: data.generateRealtyModule,
+          generateBioPage: data.generateBioPage,
+          generateMediaAssets: data.generateMediaAssets,
+        }),
       });
 
-      if (result.error) throw result.error;
-      const response = result.data?.data || result.data;
+      const response = await apiResponse.json();
+      if (!apiResponse.ok) throw new Error(response?.error || 'Failed to provision client');
 
       if (!response.success) {
         throw new Error('Failed to provision client');

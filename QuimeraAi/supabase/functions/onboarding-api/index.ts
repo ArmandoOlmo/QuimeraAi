@@ -4,6 +4,11 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { analyzeWebsiteUrl } from "../_shared/analyzeWebsite.ts";
 import { EdgeAccessError, requireServiceAccess } from "../_shared/access.ts";
 import { getCanonicalPlanLimits, normalizePlanId } from "../../../services/billing/planCatalog.ts";
+import {
+  buildAgencyApprovalRespondedActivity,
+  buildAgencyClientCreatedActivity,
+  buildAgencyProjectTransferredActivity,
+} from "../../../services/agency/agencyActivityService.ts";
 
 type OnboardingAction =
   | "autoProvision"
@@ -1569,26 +1574,21 @@ async function autoProvisionAgencyClient(req: Request, userId: string, payload: 
     if (invitesError) throw invitesError;
   }
 
-  await supabase.from("agency_activity").insert({
-    agency_tenant_id: agencyTenantId,
-    client_tenant_id: tenant.id,
-    project_id: project.id,
-    type: "client_created",
-    title: `Cliente creado: ${businessName}`,
-    description: `Agency Engine provisionó ${businessName} con ${modules.length} módulos en draft.`,
-    metadata: {
-      selectedPlanId: agencyPlan?.id || selectedPlanId,
-      selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
-      effectivePlanId,
-      billingMode,
-      modules,
-      agencyOperatingSystem,
-      invitesSent: invites.length,
-      source: "onboarding-api",
-    },
-    created_by: userId,
-    created_at: now,
-  });
+  await supabase.from("agency_activity").insert(buildAgencyClientCreatedActivity({
+    agencyTenantId,
+    clientTenantId: tenant.id,
+    projectId: project.id,
+    businessName,
+    selectedPlanId: agencyPlan?.id || selectedPlanId,
+    selectedPlanName: agencyPlan?.name || payload.selectedPlanName || null,
+    effectivePlanId,
+    billingMode,
+    modules,
+    agencyOperatingSystem,
+    invitesSent: invites.length,
+    createdBy: userId,
+    source: "onboarding-api",
+  }, new Date(now)));
 
   await supabase
     .from("tenants")
@@ -1942,13 +1942,13 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
     })
     .eq("id", targetClientTenantId);
 
-  const { error: activityError } = await supabase.from("agency_activity").insert({
-    agency_tenant_id: agencyTenantId,
-    client_tenant_id: targetClientTenantId,
-    project_id: createdProject.id,
-    type: "project_transferred",
-    title: `Proyecto transferido: ${projectName}`,
-    description: `Agency Engine transfirió ${projectName} a ${clientTenant.name || "cliente"} como borrador.`,
+  const { error: activityError } = await supabase.from("agency_activity").insert(buildAgencyProjectTransferredActivity({
+    agencyTenantId,
+    clientTenantId: targetClientTenantId,
+    projectId: createdProject.id,
+    projectName,
+    clientName: clientTenant.name || "cliente",
+    transferredBy: userId,
     metadata: {
       ...transferMetadata,
       modulesCopied,
@@ -1957,9 +1957,7 @@ async function transferAgencyProject(req: Request, userId: string, payload: Reco
       sourceProjectName: sourceProject.name,
       targetProjectName: projectName,
     },
-    created_by: userId,
-    created_at: now,
-  });
+  }, new Date(now)));
   if (activityError && !isMissingTableError(activityError)) throw activityError;
 
   return {
@@ -2056,28 +2054,18 @@ async function respondClientApproval(req: Request, userId: string, payload: Reco
 
   if (updateError) throw updateError;
 
-  const decisionLabel = decision === "approved"
-    ? "aprobó"
-    : decision === "rejected"
-      ? "rechazó"
-      : "pidió cambios en";
-
-  const { error: activityError } = await supabase.from("agency_activity").insert({
-    agency_tenant_id: updated.agency_tenant_id,
-    client_tenant_id: updated.client_tenant_id,
-    project_id: updated.project_id,
-    type: "approval_responded",
-    title: `Respuesta de aprobación: ${updated.title}`,
-    description: `${clientTenant?.name || "El cliente"} ${decisionLabel} ${updated.title}.`,
-    metadata: {
-      approvalId,
-      decision,
-      responseNote,
-      source: "client-portal",
-    },
-    created_by: userId,
-    created_at: now,
-  });
+  const { error: activityError } = await supabase.from("agency_activity").insert(buildAgencyApprovalRespondedActivity({
+    agencyTenantId: updated.agency_tenant_id,
+    clientTenantId: updated.client_tenant_id,
+    projectId: updated.project_id,
+    approvalId,
+    approvalTitle: updated.title,
+    decision,
+    responseNote,
+    clientName: clientTenant?.name || "El cliente",
+    respondedBy: userId,
+    source: "client-portal",
+  }, new Date(now)));
   if (activityError && !isMissingTableError(activityError)) throw activityError;
 
   return {

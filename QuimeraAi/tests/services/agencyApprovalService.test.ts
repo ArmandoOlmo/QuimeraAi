@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
     AGENCY_APPROVAL_SELECT,
     buildClientApprovalResponsePayload,
@@ -42,6 +42,10 @@ function createListClient(rows: any[], error: any = null) {
 }
 
 describe('agencyApprovalService', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('maps approval rows with safe defaults and parsed metadata', () => {
         expect(parseAgencyApprovalMetadata('{bad json')).toEqual({});
         expect(parseAgencyApprovalMetadata({ source: 'portal' })).toEqual({ source: 'portal' });
@@ -121,5 +125,40 @@ describe('agencyApprovalService', () => {
                 responseNote: 'Ok',
             },
         });
+    });
+
+    it('uses the Vercel Agency approval route when a browser session token is available', async () => {
+        const invoke = vi.fn();
+        const fetchSpy = vi.fn(async () => new Response(JSON.stringify({
+            success: true,
+            status: 'change_requested',
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        vi.stubGlobal('fetch', fetchSpy);
+        const client = {
+            auth: {
+                getSession: vi.fn(async () => ({
+                    data: { session: { access_token: 'client_token' } },
+                })),
+            },
+            functions: { invoke },
+        };
+
+        await expect(respondClientPortalApproval(client, 'approval-1', 'change_requested', 'Needs edits')).resolves.toMatchObject({
+            success: true,
+            status: 'change_requested',
+        });
+
+        expect(fetchSpy).toHaveBeenCalledWith('/api/agency/approvals/respond', expect.objectContaining({
+            method: 'POST',
+            headers: expect.objectContaining({
+                Authorization: 'Bearer client_token',
+            }),
+            body: JSON.stringify({
+                approvalId: 'approval-1',
+                decision: 'change_requested',
+                responseNote: 'Needs edits',
+            }),
+        }));
+        expect(invoke).not.toHaveBeenCalled();
     });
 });

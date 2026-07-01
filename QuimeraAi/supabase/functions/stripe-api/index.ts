@@ -3100,15 +3100,11 @@ async function createClientPaymentLink(req: Request, userId: string, data: any) 
       },
     });
 
-  if (canonicalError && !isMissingTableError(canonicalError)) throw canonicalError;
-
-  const agencyBilling = context.agencyTenant?.billing || {};
   if (canonicalError) {
-    const paymentLinks = Array.isArray(agencyBilling.paymentLinks) ? agencyBilling.paymentLinks : [];
-    await supabase.from("tenants").update({
-      billing: { ...agencyBilling, paymentLinks: [...paymentLinks, link] },
-      updated_at: nowIso(),
-    }).eq("id", context.agencyTenantId);
+    if (isMissingTableError(canonicalError)) {
+      throw new Error("Canonical agency_client_payment_links table is required for agency client billing");
+    }
+    throw canonicalError;
   }
 
   await supabase.from("tenants").update({
@@ -3154,7 +3150,12 @@ async function findPaymentLink(token: string) {
     .eq("token", token)
     .maybeSingle();
 
-  if (canonicalError && !isMissingTableError(canonicalError)) throw canonicalError;
+  if (canonicalError) {
+    if (isMissingTableError(canonicalError)) {
+      throw new Error("Canonical agency_client_payment_links table is required for agency client billing");
+    }
+    throw canonicalError;
+  }
   if (canonicalLink) {
     const { data: agency, error: agencyError } = await supabase
       .from("tenants")
@@ -3163,18 +3164,7 @@ async function findPaymentLink(token: string) {
       .maybeSingle();
     if (agencyError) throw agencyError;
     if (!agency) throw new Error("Agency tenant not found");
-    return { agency, link: normalizePaymentLinkRecord(canonicalLink), source: "canonical" as const };
-  }
-
-  const { data: tenants, error } = await supabase
-    .from("tenants")
-    .select("id,name,email,branding,billing")
-    .not("billing", "is", null);
-  if (error) throw error;
-
-  for (const tenant of tenants || []) {
-    const link = (tenant.billing?.paymentLinks || []).find((item: any) => item.token === token);
-    if (link) return { agency: tenant, link: normalizePaymentLinkRecord(link), source: "legacy" as const };
+    return { agency, link: normalizePaymentLinkRecord(canonicalLink) };
   }
   throw new Error("Payment link not found");
 }
@@ -3202,7 +3192,7 @@ async function getPaymentLinkInfo(data: any) {
 async function confirmClientPayment(data: any) {
   const { token, successUrl, cancelUrl } = data;
   if (!token) throw new Error("token is required");
-  const { agency, link, source } = await findPaymentLink(token);
+  const { agency, link } = await findPaymentLink(token);
   if (link.status !== "pending") throw new Error("Payment link is not pending");
   if (new Date(link.expiresAt).getTime() < Date.now()) throw new Error("Payment link has expired");
 
@@ -3295,39 +3285,24 @@ async function confirmClientPayment(data: any) {
     subscription_data: { metadata },
   });
 
-  if (source === "canonical") {
-    const { error: linkUpdateError } = await supabase.from("agency_client_payment_links").update({
-      checkout_started_at: nowIso(),
-      stripe_customer_id: customer.id,
-      stripe_product_id: product.id,
-      stripe_price_id: price.id,
-      stripe_checkout_session_id: session.id,
-      metadata: {
-        ...(link.metadata || {}),
-        checkoutSessionUrlCreated: true,
-        checkoutSessionCreatedAt: nowIso(),
-      },
-      updated_at: nowIso(),
-    }).eq("token", token);
-    if (linkUpdateError && !isMissingTableError(linkUpdateError)) throw linkUpdateError;
-  } else {
-    const agencyBilling = agency.billing || {};
-    const paymentLinks = (agencyBilling.paymentLinks || []).map((item: any) =>
-      item.token === token
-        ? {
-          ...item,
-          stripeCustomerId: customer.id,
-          stripeProductId: product.id,
-          stripePriceId: price.id,
-          stripeCheckoutSessionId: session.id,
-          checkoutStartedAt: nowIso(),
-        }
-        : item
-    );
-    await supabase.from("tenants").update({
-      billing: { ...agencyBilling, paymentLinks },
-      updated_at: nowIso(),
-    }).eq("id", agency.id);
+  const { error: linkUpdateError } = await supabase.from("agency_client_payment_links").update({
+    checkout_started_at: nowIso(),
+    stripe_customer_id: customer.id,
+    stripe_product_id: product.id,
+    stripe_price_id: price.id,
+    stripe_checkout_session_id: session.id,
+    metadata: {
+      ...(link.metadata || {}),
+      checkoutSessionUrlCreated: true,
+      checkoutSessionCreatedAt: nowIso(),
+    },
+    updated_at: nowIso(),
+  }).eq("token", token);
+  if (linkUpdateError) {
+    if (isMissingTableError(linkUpdateError)) {
+      throw new Error("Canonical agency_client_payment_links table is required for agency client billing");
+    }
+    throw linkUpdateError;
   }
 
   await supabase.from("tenants").update({

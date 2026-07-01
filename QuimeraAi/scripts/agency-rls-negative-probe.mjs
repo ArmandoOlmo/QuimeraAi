@@ -98,13 +98,77 @@ on conflict (token) do update
 set status = excluded.status,
     expires_at = excluded.expires_at;
 
-insert into public.agency_usage_ledger (agency_tenant_id, client_tenant_id, agency_plan_id, source, usage_type, usage_quantity, unit_cost, unit_price, billing_status, idempotency_key)
-values ('${agencyTenantId}', '${clientTenantId}', '${agencyPlanId}', 'rls-probe', 'subscription', 1, 75, 200, 'active', 'agency-rls-probe-ledger');
+insert into public.agency_usage_ledger (
+  agency_tenant_id,
+  client_tenant_id,
+  agency_plan_id,
+  source,
+  source_module,
+  usage_type,
+  usage_quantity,
+  unit_cost,
+  unit_price,
+  client_price,
+  agency_markup_type,
+  agency_markup_value,
+  billing_status,
+  provider,
+  provider_event_id,
+  stripe_subscription_id,
+  idempotency_key,
+  source_entity_type,
+  source_entity_id
+)
+values (
+  '${agencyTenantId}',
+  '${clientTenantId}',
+  '${agencyPlanId}',
+  'rls-probe',
+  'stripe',
+  'subscription',
+  1,
+  75,
+  200,
+  200,
+  'percentage',
+  166.6667,
+  'active',
+  'stripe',
+  'sub_agency_rls_probe',
+  'sub_agency_rls_probe',
+  'agency-rls-probe-ledger',
+  'stripe_subscription',
+  'sub_agency_rls_probe'
+);
 
-insert into public.agency_billing_events (provider, event_id, event_type, agency_tenant_id, client_tenant_id, payment_link_token, status, payload)
-values ('stripe', 'evt_agency_rls_probe', 'invoice.paid', '${agencyTenantId}', '${clientTenantId}', 'agency-rls-probe-own-link', 'processed', '{"probe":true}'::jsonb)
+insert into public.agency_billing_events (
+  provider,
+  event_id,
+  provider_event_id,
+  idempotency_key,
+  event_type,
+  agency_tenant_id,
+  client_tenant_id,
+  payment_link_token,
+  status,
+  payload
+)
+values (
+  'stripe',
+  'evt_agency_rls_probe',
+  'evt_agency_rls_probe',
+  'stripe:evt_agency_rls_probe',
+  'invoice.paid',
+  '${agencyTenantId}',
+  '${clientTenantId}',
+  'agency-rls-probe-own-link',
+  'processed',
+  '{"probe":true}'::jsonb
+)
 on conflict (provider, event_id) do update
-set status = excluded.status,
+set provider_event_id = excluded.provider_event_id,
+    idempotency_key = excluded.idempotency_key,
+    status = excluded.status,
     payload = excluded.payload;
 
 set local role authenticated;

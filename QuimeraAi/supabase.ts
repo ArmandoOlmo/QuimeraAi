@@ -127,3 +127,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: SUPABASE_AUTH_STORAGE_KEY,
   },
 });
+
+(globalThis as any).__QUIMERA_SUPABASE_CLIENT__ = supabase;

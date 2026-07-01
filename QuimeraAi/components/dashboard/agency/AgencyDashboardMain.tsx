@@ -221,7 +221,7 @@ const AgencyDashboardMain: React.FC = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <main id="main-content" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <main id="main-content" className="flex-1 min-h-0 min-w-0 overflow-hidden">
                     {/* Landing Editor - Full width without container restrictions */}
                     {activeTab === 'landing' && !loadingClients && (
                         <div className="flex h-full min-h-0 w-full min-w-0">

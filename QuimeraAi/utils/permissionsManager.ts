@@ -1,4 +1,5 @@
 import { ComponentPermissions, CustomComponent } from '../types';
+import { isPlatformUnlimitedUser } from '../services/billing/planCatalog';
 
 /**
  * Permissions Manager
@@ -11,7 +12,7 @@ export type PermissionLevel = 'none' | 'view' | 'edit' | 'admin';
  * Check if user role has admin/owner privileges
  */
 function hasAdminPrivileges(userRole: string): boolean {
-    return userRole === 'owner' || userRole === 'superadmin';
+    return isPlatformUnlimitedUser(userRole);
 }
 
 /**
@@ -303,4 +304,3 @@ export function mergePermissions(
         isPublic: override.isPublic ?? base.isPublic
     };
 }
-

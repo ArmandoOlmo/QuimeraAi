@@ -7,7 +7,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ConfirmationModal from '../../../ui/ConfirmationModal';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../../contexts/tenant/TenantContext';
-import { useAuth } from '../../../../contexts/core/AuthContext';
 import {
     Plus,
     Package,
@@ -32,10 +31,12 @@ import {
 import {
     getAgencyPlans,
     getAgencyPlanStats,
-    archiveAgencyPlan,
-    restoreAgencyPlan,
-    deleteAgencyPlan,
 } from '../../../../services/agencyPlansService';
+import {
+    archiveAgencyPlanThroughApi,
+    deleteAgencyPlanThroughApi,
+    restoreAgencyPlanThroughApi,
+} from '../../../../services/agency/agencyPlanMutationApiClient';
 import {
     AgencyPlan,
     AgencyPlanStats,
@@ -58,7 +59,6 @@ import {
 export function AgencyPlanManager() {
     const { t } = useTranslation();
     const { currentTenant } = useTenant();
-    const { user } = useAuth();
 
     // State
     const [plans, setPlans] = useState<AgencyPlan[]>([]);
@@ -135,7 +135,7 @@ export function AgencyPlanManager() {
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setProcessingPlanId(plan.id);
-                const result = await archiveAgencyPlan(plan.id, user?.id);
+                const result = await archiveAgencyPlanThroughApi(plan.tenantId, plan.id);
                 setProcessingPlanId(null);
 
                 if (result.success) {
@@ -149,7 +149,7 @@ export function AgencyPlanManager() {
 
     const handleRestorePlan = async (plan: AgencyPlan) => {
         setProcessingPlanId(plan.id);
-        const result = await restoreAgencyPlan(plan.id, user?.id);
+        const result = await restoreAgencyPlanThroughApi(plan.tenantId, plan.id);
         setProcessingPlanId(null);
 
         if (result.success) {
@@ -168,7 +168,7 @@ export function AgencyPlanManager() {
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 setProcessingPlanId(plan.id);
-                const result = await deleteAgencyPlan(plan.id);
+                const result = await deleteAgencyPlanThroughApi(plan.tenantId, plan.id);
                 setProcessingPlanId(null);
 
                 if (result.success) {

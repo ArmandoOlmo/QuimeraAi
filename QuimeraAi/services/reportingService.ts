@@ -13,6 +13,7 @@ import type {
     ReportTemplate,
     AgencyReportModuleReadiness,
 } from '../types/reports';
+import { buildAgencyReportGeneratedActivity } from './agency/agencyActivityService';
 
 type JsonRecord = Record<string, any>;
 
@@ -155,13 +156,21 @@ function readAgencyOperatingSystemStats(value: unknown) {
     };
 }
 
-function isMissingAgencyRelationshipTable(error: unknown): boolean {
+export function isMissingAgencyReportingTable(error: unknown, tableName: string): boolean {
     const err = error as { code?: string; message?: string } | null;
     const message = String(err?.message || '').toLowerCase();
+    const normalizedTableName = tableName.toLowerCase();
     return err?.code === '42P01' ||
         err?.code === 'PGRST205' ||
-        message.includes('agency_clients') ||
-        message.includes('could not find the table');
+        (message.includes('could not find the table') && message.includes(normalizedTableName));
+}
+
+function isMissingAgencyRelationshipTable(error: unknown): boolean {
+    return isMissingAgencyReportingTable(error, 'agency_clients');
+}
+
+function isMissingAgencyServicePlansTable(error: unknown): boolean {
+    return isMissingAgencyReportingTable(error, 'agency_service_plans');
 }
 
 async function fetchTenantRowsByIds(clientIds: string[]): Promise<any[]> {
@@ -389,11 +398,7 @@ export class ReportingService {
             includeRecommendations?: boolean;
         } = {}
     ): Promise<AggregatedReportData> {
-        const clientsData = await fetchAgencyClientTenantRows(agencyTenantId, clientIds).catch(error => {
-            console.error('[ReportingService] Error fetching clients:', error);
-            return null;
-        });
-        if (!clientsData) return this.getEmptyReport(dateRange, clientIds, metrics);
+        const clientsData = await fetchAgencyClientTenantRows(agencyTenantId, clientIds);
 
         const clients: Tenant[] = (clientsData || []).map(doc => ({
             id: doc.id,
@@ -512,8 +517,12 @@ export class ReportingService {
             .eq('agency_tenant_id', agencyTenantId)
             .in('client_tenant_id', clientIds);
 
-        if (error || !data?.length) {
-            if (error) console.warn('[ReportingService] Error fetching agency relationships:', error);
+        if (error) {
+            if (isMissingAgencyRelationshipTable(error)) return relationships;
+            throw error;
+        }
+
+        if (!data?.length) {
             return relationships;
         }
 
@@ -528,8 +537,10 @@ export class ReportingService {
                 .select('id,name')
                 .in('id', planIds);
 
-            if (plansError) {
+            if (plansError && isMissingAgencyServicePlansTable(plansError)) {
                 console.warn('[ReportingService] Error fetching agency service plans:', plansError);
+            } else if (plansError) {
+                throw plansError;
             } else {
                 (plans || []).forEach(plan => {
                     if (plan.id) planNames.set(plan.id, plan.name || plan.id);
@@ -668,31 +679,20 @@ export class ReportingService {
         reportStatus: 'draft' | 'sent' | 'published';
         publishToClientPortal: boolean;
     }) {
+        const row = buildAgencyReportGeneratedActivity({
+            agencyTenantId: input.agencyTenantId,
+            clientTenantId: input.clientTenantId,
+            reportId: input.reportId || null,
+            template: input.template,
+            generatedBy: input.generatedBy || null,
+            summary: input.summary,
+            aiSummary: input.aiSummary,
+            reportStatus: input.reportStatus,
+            publishToClientPortal: input.publishToClientPortal,
+        });
         const { error } = await supabase
             .from('agency_activity')
-            .insert({
-                agency_tenant_id: input.agencyTenantId,
-                client_tenant_id: input.clientTenantId,
-                type: 'report_generated',
-                title: 'Reporte Agency Engine generado',
-                description: input.aiSummary,
-                metadata: {
-                    reportId: input.reportId,
-                    template: input.template,
-                    totalClients: input.summary.totalClients,
-                    totalRevenue: input.summary.totalRevenue,
-                    totalOrders: input.summary.totalOrders,
-                    totalMrr: input.summary.totalMrr,
-                    reportStatus: input.reportStatus,
-                    clientPortalVisible: input.publishToClientPortal && input.reportStatus !== 'draft',
-                    portalPublicationStatus: input.publishToClientPortal ? input.reportStatus : 'not_requested',
-                    moduleReadinessRate: input.summary.moduleReadiness.moduleReadinessRate,
-                    activeModuleSlots: input.summary.moduleReadiness.activeModuleSlots,
-                    totalModuleSlots: input.summary.moduleReadiness.totalModuleSlots,
-                    clientsWithAgencyOperatingSystem: input.summary.moduleReadiness.clientsWithAgencyOperatingSystem,
-                },
-                created_by: input.generatedBy,
-            });
+            .insert(row);
 
         if (error) {
             console.warn('[ReportingService] Error logging report activity:', error);

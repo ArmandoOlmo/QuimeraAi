@@ -352,6 +352,18 @@ export function ClientBillingManager() {
                 label: 'Pago Fallido',
                 icon: XCircle,
             },
+            past_due: {
+                bg: 'bg-q-error/10 dark:bg-q-error/12',
+                text: 'text-q-error dark:text-q-error',
+                label: 'Pago vencido',
+                icon: AlertCircle,
+            },
+            incomplete: {
+                bg: 'bg-q-accent/10 dark:bg-q-accent/12',
+                text: 'text-q-accent dark:text-q-accent',
+                label: 'Pago pendiente',
+                icon: AlertCircle,
+            },
             cancelling: {
                 bg: 'bg-q-accent/10 dark:bg-q-accent/12',
                 text: 'text-q-accent dark:text-q-accent',

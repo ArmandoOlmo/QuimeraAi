@@ -61,7 +61,10 @@ export function useGlobalCommandPalette() {
     const loadProject = projectContext?.loadProject;
     const { setView, setAdminView } = useUI();
     const tenantContext = useSafeTenant();
-    const { isServicePublic, isLoading: isLoadingServices } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServices,
+    } = useServiceAvailability();
     const router = useRouter();
     const canAccessOwnerMode = Boolean(
         canAccessSuperAdmin
@@ -106,7 +109,7 @@ export function useGlobalCommandPalette() {
                 projects: Array.isArray(projects) ? projects : [],
                 activeProjectId,
                 canAccessAdmin: canAccessOwnerMode,
-                canAccessService: serviceId => !isLoadingServices && isServicePublic(serviceId),
+                canAccessService: serviceId => !isLoadingServices && canAccessConfiguredService(serviceId),
             });
         } catch (error) {
             console.error('[GlobalCommandPalette] Failed to build command items:', error);
@@ -118,7 +121,7 @@ export function useGlobalCommandPalette() {
                 canAccessService: () => false,
             });
         }
-    }, [activeProjectId, canAccessOwnerMode, isLoadingServices, isServicePublic, projects, query]);
+    }, [activeProjectId, canAccessConfiguredService, canAccessOwnerMode, isLoadingServices, projects, query]);
 
     useEffect(() => {
         setSelectedIndex(0);

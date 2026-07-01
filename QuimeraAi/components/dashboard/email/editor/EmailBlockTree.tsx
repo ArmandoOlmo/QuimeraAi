@@ -268,8 +268,11 @@ const EmailBlockTree: React.FC = () => {
     const [activeId, setActiveId] = useState<string | null>(null);
 
     // Service availability: hide products block when ecommerce service is off
-    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
-    const canAccessEcommerce = !isLoadingServiceAvailability && isServicePublic('ecommerce');
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServiceAvailability,
+    } = useServiceAvailability();
+    const canAccessEcommerce = !isLoadingServiceAvailability && canAccessConfiguredService('ecommerce');
 
     // Ecommerce block types to hide when service is disabled
     const ECOMMERCE_BLOCK_TYPES: Set<EmailBlockType> = new Set(['products']);
@@ -463,7 +466,6 @@ const EmailBlockTree: React.FC = () => {
 };
 
 export default EmailBlockTree;
-
 
 
 

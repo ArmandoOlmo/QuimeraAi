@@ -13,7 +13,7 @@ as $$
     select 1
     from public.users u
     where u.id = auth.uid()
-      and coalesce(u.role, 'user') in ('owner', 'superadmin')
+      and translate(lower(coalesce(u.role, 'user')), ' _-', '') in ('owner', 'superadmin')
   );
 $$;
 

@@ -5,15 +5,16 @@ import type {
     AssistantPermissionCheck,
     GlobalAssistantMode,
 } from '../../types/globalAssistant';
+import { normalizeRoleKey } from '../../constants/roles';
 
 export const ADMIN_ASSISTANT_MODES: GlobalAssistantMode[] = ['owner', 'super_admin', 'system'];
-export const ADMIN_ROLES = new Set(['owner', 'superadmin', 'super_admin', 'admin']);
+export const ADMIN_ROLES = new Set(['owner', 'superadmin', 'admin']);
 
 export const isAdminMode = (mode?: GlobalAssistantMode | null): boolean =>
     Boolean(mode && ADMIN_ASSISTANT_MODES.includes(mode));
 
 export const isAdminRole = (role?: string | null): boolean =>
-    Boolean(role && ADMIN_ROLES.has(role));
+    Boolean(role && ADMIN_ROLES.has(normalizeRoleKey(role)));
 
 export const canUseAdminMode = (context: Pick<AssistantContextSnapshot, 'actor'>): boolean =>
     isAdminMode(context.actor.mode) || context.actor.isOwner === true || context.actor.isSuperAdmin === true || isAdminRole(context.actor.role);

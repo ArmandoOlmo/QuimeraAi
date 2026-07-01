@@ -107,7 +107,7 @@ export function usePlanFeatures(): PlanFeaturesData {
 
     return {
         planId,
-        planName: planData.name,
+        planName: usage?.isUnlimited && usage.plan ? usage.plan : planData.name,
         features: planData.features,
         limits: planData.limits,
         isLoading: isLoadingCredits || (plansContext?.isLoading ?? false),
@@ -120,13 +120,13 @@ export function usePlanFeatures(): PlanFeaturesData {
  * Usa el PlansContext para datos en tiempo real
  */
 export function usePlanAccess(): PlanAccessData {
-    const { userDocument, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth, isUserOwner } = useAuth();
     const { usage, isLoading: isLoadingCredits } = useCreditsUsage();
     const plansContext = useSafePlans();
 
     const planId = normalizePlanId(usage?.planId || 'free') as SubscriptionPlanId;
     // Owner and superadmin are the only platform-wide bypass roles.
-    const userRole = userDocument?.role;
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const isOwner = isPlatformUnlimitedUser(userRole);
 
     // Get plan data from context or fallback
@@ -179,7 +179,7 @@ export function usePlanAccess(): PlanAccessData {
 
     return {
         planId,
-        planName: planData.name,
+        planName: usage?.isUnlimited && usage.plan ? usage.plan : planData.name,
         features: planData.features,
         limits: planData.limits,
         hasAccess,

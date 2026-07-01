@@ -19,8 +19,10 @@ export interface AgencyFinanceClient {
 }
 
 export interface AgencyUsageLedgerRow {
+    source_module?: string | null;
     usage_quantity?: unknown;
     unit_price?: unknown;
+    client_price?: unknown;
     unit_cost?: unknown;
     revenue_amount?: unknown;
     platform_cost?: unknown;
@@ -36,8 +38,10 @@ export interface AgencyServicePlanCostRow {
 }
 
 export const AGENCY_USAGE_LEDGER_FINANCE_SELECT = [
+    'source_module',
     'usage_quantity',
     'unit_price',
+    'client_price',
     'unit_cost',
     'revenue_amount',
     'platform_cost',
@@ -115,7 +119,7 @@ export function summarizeAgencyUsageLedgerRows(rows: AgencyUsageLedgerRow[]): Pi
 
     rows.forEach(row => {
         const quantity = readFiniteMoney(row.usage_quantity) || 1;
-        const unitPrice = readFiniteMoney(row.unit_price);
+        const unitPrice = readFiniteMoney(row.client_price) || readFiniteMoney(row.unit_price);
         const unitCost = readFiniteMoney(row.unit_cost);
         const revenue = readFiniteMoney(row.revenue_amount) || quantity * unitPrice;
         const cost = readFiniteMoney(row.platform_cost) || quantity * unitCost;

@@ -458,7 +458,7 @@ interface ProjectContextType {
 export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, userDocument, loadingAuth } = useAuth();
+    const { user, userDocument, loadingAuth, isUserOwner } = useAuth();
     const tenantContext = useSafeTenant();
     const upgradeContext = useSafeUpgrade();
     const adminContext = useSafeAdmin();
@@ -468,6 +468,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Get project limits from tenant
     const maxProjects = tenantContext?.currentTenant?.limits?.maxProjects || 1;
+    const hasPlatformUnlimitedLimits = isUserOwner || isPlatformUnlimitedUser(userDocument?.role);
 
     // Project State
     const [projects, setProjects] = useState<Project[]>([]);
@@ -1611,7 +1612,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const currentProjectCount = userProjects.length;
 
         // Owner and Super Admin are the only roles that bypass resource limits.
-        const isOwner = isPlatformUnlimitedUser(userDocument?.role);
+        const isOwner = hasPlatformUnlimitedLimits;
         if (loadingAuth) return; // Wait for auth to be sure
         const projectLimit = isFinitePlanLimit(maxProjects) ? maxProjects : 0;
         if (!isOwner && currentProjectCount >= projectLimit) {
@@ -1844,7 +1845,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         const currentProjectCount = userProjects.length;
 
         // Owner and Super Admin are the only roles that bypass resource limits.
-        const isOwner = isPlatformUnlimitedUser(userDocument?.role);
+        const isOwner = hasPlatformUnlimitedLimits;
         // Note: loadingAuth guard removed - by the time a user is on the dashboard, auth is loaded
         const projectLimit = isFinitePlanLimit(maxProjects) ? maxProjects : 0;
         if (!isOwner && currentProjectCount >= projectLimit) {

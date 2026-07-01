@@ -38,6 +38,7 @@ describe('Agency billing canonical contract', () => {
         expect(stripeApi).toContain('.from("agency_client_payment_links")');
         expect(stripeApi).toContain('.from("agency_service_plans")');
         expect(stripeApi).toContain('Canonical agency_service_plans table is required for agency client billing');
+        expect(stripeApi).toContain('Canonical agency_client_payment_links table is required for agency client billing');
         expect(stripeApi).toContain('Agency client payment links require a canonical agency service plan');
         expect(stripeApi).toContain('stripe.checkout.sessions.create');
         expect(stripeApi).toContain('mode: "subscription"');
@@ -48,8 +49,10 @@ describe('Agency billing canonical contract', () => {
         expect(stripeApi).not.toContain('token and paymentMethodId are required');
         expect(stripeApi).not.toContain('const fallbackPlan = agencyPlan');
         expect(stripeApi).not.toContain('fallbackPlan?.price');
+        expect(stripeApi).not.toContain('tenant.billing?.paymentLinks');
+        expect(stripeApi).not.toContain('billing: { ...agencyBilling, paymentLinks');
 
-        expect(checkoutPage).toContain("action: 'agencyBilling-confirmClientPayment'");
+        expect(checkoutPage).toContain("fetch('/api/agency/payment-links/start-checkout'");
         expect(checkoutPage).toContain('window.location.assign(data.url)');
         expect(checkoutPage).not.toContain('CardElement');
         expect(checkoutPage).not.toContain('paymentMethodId');

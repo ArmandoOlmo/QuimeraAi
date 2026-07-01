@@ -127,7 +127,8 @@ function getImageCreditOperation(options?: {
 }
 
 export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, currentTenant } = useAuth();
+    const { user, currentTenant, userDocument, isUserOwner } = useAuth();
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
 
     // API Key State
     const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -572,7 +573,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 throw new Error('No se pudo validar el tenant para consumir créditos de video.');
             }
 
-            const creditCheck = await canPerformOperation(tenantId, creditOperation, videoCredits);
+            const creditCheck = await canPerformOperation(tenantId, creditOperation, videoCredits, userRole);
             if (!creditCheck.hasCredits) {
                 throw new Error(creditCheck.message || `No hay suficientes créditos para generar este video. Necesitas ${creditCheck.creditsRequired} créditos.`);
             }
@@ -614,6 +615,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                     projectId: options.projectId,
                     model: options.model,
                     customCredits: videoCredits,
+                    userRole,
                     description: `Generación de video (${options.model})`,
                     metadata: {
                         destination,
@@ -907,6 +909,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                                         projectId: options?.projectId,
                                         model: options?.model || 'gemini-2.5-flash',
                                         customCredits: imageCredits,
+                                        userRole,
                                         description: `Generación de imagen (${options?.model || 'gemini-2.5-flash'})`,
                                         metadata: {
                                             destination,

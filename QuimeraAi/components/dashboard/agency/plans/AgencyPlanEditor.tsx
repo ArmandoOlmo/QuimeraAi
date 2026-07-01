@@ -6,7 +6,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../../contexts/tenant/TenantContext';
-import { useAuth } from '../../../../contexts/core/AuthContext';
 import {
     X,
     Save,
@@ -24,7 +23,7 @@ import {
     TrendingUp,
     Info,
 } from 'lucide-react';
-import { saveAgencyPlan } from '../../../../services/agencyPlansService';
+import { saveAgencyPlanThroughApi } from '../../../../services/agency/agencyPlanMutationApiClient';
 import {
     AgencyPlan,
     AgencyPlanLimits,
@@ -146,7 +145,6 @@ const FeatureToggle: React.FC<{
 export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEditorProps) {
     const { t } = useTranslation();
     const { currentTenant } = useTenant();
-    const { user } = useAuth();
 
     const [activeTab, setActiveTab] = useState<TabId>('general');
     const [isLoading, setIsLoading] = useState(false);
@@ -207,7 +205,7 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
         setErrors([]);
 
         try {
-            const result = await saveAgencyPlan(formData, user?.id);
+            const result = await saveAgencyPlanThroughApi(formData);
             if (result.success) {
                 onSave();
             } else {

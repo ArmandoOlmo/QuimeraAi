@@ -1,4 +1,4 @@
-import { supabase } from '../../supabase';
+import { buildAgencySnapshotAppliedActivity } from './agencyActivityService';
 
 type JsonRecord = Record<string, any>;
 type SupabaseClientLike = {
@@ -7,6 +7,14 @@ type SupabaseClientLike = {
         getUser?: () => Promise<{ data?: { user?: { id?: string | null } | null } | null }>;
     };
 };
+
+function getDefaultSupabaseClient(): SupabaseClientLike {
+    const client = (globalThis as any).__QUIMERA_SUPABASE_CLIENT__;
+    if (!client) {
+        throw new Error('Supabase client is not initialized for Agency snapshots');
+    }
+    return client as SupabaseClientLike;
+}
 
 export type AgencySnapshotType =
     | 'project_template'
@@ -92,6 +100,8 @@ export interface AgencySnapshotRow {
     visibility?: string | null;
     status?: AgencySnapshotStatus | string | null;
     source_project_id?: string | null;
+    industry?: string | null;
+    version?: number | null;
     tags?: unknown;
     metadata?: unknown;
     created_at?: string | null;
@@ -104,6 +114,9 @@ export interface AgencySnapshotVersionRow {
     version: number;
     label?: string | null;
     data?: unknown;
+    payload?: unknown;
+    included_modules?: unknown;
+    readiness?: unknown;
     checksum?: string | null;
     metadata?: unknown;
 }
@@ -145,6 +158,7 @@ export interface CreateAgencySnapshotFromProjectInput {
     sourceProjectId: string;
     name: string;
     description?: string | null;
+    industry?: string | null;
     snapshotType?: AgencySnapshotType;
     status?: AgencySnapshotStatus;
     tags?: string[];
@@ -337,6 +351,10 @@ export function buildAgencySnapshotPayload(
 }
 
 export function readAgencySnapshotVersionPayload(version: AgencySnapshotVersionRow): AgencySnapshotPayload {
+    const explicitPayload = asRecord(version.payload);
+    if (explicitPayload.schemaVersion === 1 && explicitPayload.source === 'agency_snapshot_service') {
+        return explicitPayload as AgencySnapshotPayload;
+    }
     const data = asRecord(version.data);
     const payload = asRecord(data.payload);
     const candidate = payload.schemaVersion === 1 ? payload : data;
@@ -614,6 +632,8 @@ export function buildAgencySnapshotApplicationInsert(input: {
             noRuntimeActivated: true,
             requiresClientApproval: true,
         },
+        preview: input.preview,
+        applied_changes: [],
     };
 }
 
@@ -623,12 +643,16 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 }
 
 export class AgencySnapshotService {
-    constructor(private readonly client: SupabaseClientLike = supabase as unknown as SupabaseClientLike) {}
+    constructor(private readonly injectedClient?: SupabaseClientLike) {}
+
+    private get client(): SupabaseClientLike {
+        return this.injectedClient || getDefaultSupabaseClient();
+    }
 
     async listSnapshots(agencyTenantId: string): Promise<AgencySnapshotRow[]> {
         const { data, error } = await this.client
             .from('agency_snapshots')
-            .select('id,agency_tenant_id,name,description,snapshot_type,visibility,status,source_project_id,tags,metadata,created_at,updated_at')
+            .select('id,agency_tenant_id,name,description,snapshot_type,visibility,status,source_project_id,industry,version,tags,metadata,created_at,updated_at')
             .eq('agency_tenant_id', agencyTenantId)
             .order('updated_at', { ascending: false });
 
@@ -660,6 +684,8 @@ export class AgencySnapshotService {
                 snapshot_type: input.snapshotType || 'project_template',
                 status: input.status || 'draft',
                 source_project_id: project.id,
+                industry: input.industry || payload.businessBlueprint?.industry || payload.project.data.industry || null,
+                version: 1,
                 tags: input.tags || [],
                 metadata: {
                     source: 'agency_snapshot_service',
@@ -670,7 +696,7 @@ export class AgencySnapshotService {
                 created_by: createdBy,
                 updated_by: createdBy,
             })
-            .select('id,agency_tenant_id,name,description,snapshot_type,status,source_project_id,metadata')
+            .select('id,agency_tenant_id,name,description,snapshot_type,status,source_project_id,industry,version,metadata')
             .single();
 
         if (snapshotError) throw snapshotError;
@@ -682,6 +708,9 @@ export class AgencySnapshotService {
                 version: 1,
                 label: input.versionLabel || 'Initial snapshot',
                 data: payload,
+                payload,
+                included_modules: payload.includedModules,
+                readiness: payload.readiness,
                 checksum,
                 metadata: {
                     source: 'agency_snapshot_service',
@@ -691,7 +720,7 @@ export class AgencySnapshotService {
                 },
                 created_by: createdBy,
             })
-            .select('id,snapshot_id,version,label,data,checksum,metadata')
+            .select('id,snapshot_id,version,label,data,payload,included_modules,readiness,checksum,metadata')
             .single();
 
         if (versionError) throw versionError;
@@ -776,6 +805,8 @@ export class AgencySnapshotService {
             .update({
                 status: 'applied',
                 applied_at: appliedAt,
+                completed_at: appliedAt,
+                applied_changes: preview.changes,
                 metadata: {
                     ...insertRow.metadata,
                     appliedAt,
@@ -814,7 +845,7 @@ export class AgencySnapshotService {
     private async fetchSnapshot(agencyTenantId: string, snapshotId: string): Promise<AgencySnapshotRow> {
         const { data, error } = await this.client
             .from('agency_snapshots')
-            .select('id,agency_tenant_id,name,description,snapshot_type,status,source_project_id,metadata')
+            .select('id,agency_tenant_id,name,description,snapshot_type,status,source_project_id,industry,version,metadata')
             .eq('id', snapshotId)
             .eq('agency_tenant_id', agencyTenantId)
             .single();
@@ -826,7 +857,7 @@ export class AgencySnapshotService {
     private async fetchSnapshotVersion(snapshotId: string, snapshotVersionId?: string | null): Promise<AgencySnapshotVersionRow> {
         let query = this.client
             .from('agency_snapshot_versions')
-            .select('id,snapshot_id,version,label,data,checksum,metadata')
+            .select('id,snapshot_id,version,label,data,payload,included_modules,readiness,checksum,metadata')
             .eq('snapshot_id', snapshotId);
 
         if (snapshotVersionId) {
@@ -887,6 +918,7 @@ export class AgencySnapshotService {
             .update({
                 status: 'failed',
                 error_message: message,
+                error: message,
                 updated_at: failedAt,
             })
             .eq('id', applicationId);
@@ -902,27 +934,10 @@ export class AgencySnapshotService {
         appliedBy: string | null;
         includedModules: string[];
     }) {
+        const row = buildAgencySnapshotAppliedActivity(input);
         const { error } = await this.client
             .from('agency_activity')
-            .insert({
-                agency_tenant_id: input.agencyTenantId,
-                client_tenant_id: input.clientTenantId,
-                project_id: input.targetProjectId,
-                type: 'snapshot_applied',
-                title: 'Agency Snapshot aplicado',
-                description: 'Snapshot aplicado en modo borrador; runtime publico no activado.',
-                metadata: {
-                    source: 'agency_snapshot_service',
-                    applicationId: input.applicationId,
-                    snapshotId: input.snapshotId,
-                    snapshotVersionId: input.snapshotVersionId,
-                    includedModules: input.includedModules,
-                    noAutoPublish: true,
-                    noRuntimeActivated: true,
-                    requiresClientApproval: true,
-                },
-                created_by: input.appliedBy,
-            });
+            .insert(row);
         if (error) {
             console.warn('[AgencySnapshotService] Error logging snapshot activity:', error);
         }

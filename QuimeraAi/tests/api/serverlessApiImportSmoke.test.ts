@@ -36,6 +36,12 @@ const CRON_ROUTES = [
     method: 'GET',
     load: () => import('../../api/ops/readiness.ts'),
   },
+  {
+    name: 'Agency readiness probe',
+    source: 'api/agency/readiness.ts',
+    method: 'GET',
+    load: () => import('../../api/agency/readiness.ts'),
+  },
 ] as const;
 
 const SERVERLESS_SERVICE_IMPORTS = [
@@ -54,6 +60,79 @@ const SERVERLESS_SERVICE_IMPORTS = [
   {
     name: 'appointmentEmailDeliveryService',
     load: () => import('../../services/appointments/serverless/appointmentEmailDeliveryService.ts'),
+  },
+] as const;
+
+const AGENCY_API_ROUTES = [
+  {
+    name: 'Agency client create',
+    source: 'api/agency/clients/create.ts',
+    load: () => import('../../api/agency/clients/create.ts'),
+  },
+  {
+    name: 'Agency project transfer',
+    source: 'api/agency/projects/transfer.ts',
+    load: () => import('../../api/agency/projects/transfer.ts'),
+  },
+  {
+    name: 'Agency approval response',
+    source: 'api/agency/approvals/respond.ts',
+    load: () => import('../../api/agency/approvals/respond.ts'),
+  },
+  {
+    name: 'Agency service plan save',
+    source: 'api/agency/plans/save.ts',
+    load: () => import('../../api/agency/plans/save.ts'),
+  },
+  {
+    name: 'Agency service plan archive',
+    source: 'api/agency/plans/archive.ts',
+    load: () => import('../../api/agency/plans/archive.ts'),
+  },
+  {
+    name: 'Agency service plan restore',
+    source: 'api/agency/plans/restore.ts',
+    load: () => import('../../api/agency/plans/restore.ts'),
+  },
+  {
+    name: 'Agency service plan delete',
+    source: 'api/agency/plans/delete.ts',
+    load: () => import('../../api/agency/plans/delete.ts'),
+  },
+  {
+    name: 'Agency payment link create',
+    source: 'api/agency/payment-links/create.ts',
+    load: () => import('../../api/agency/payment-links/create.ts'),
+  },
+  {
+    name: 'Agency payment link info',
+    source: 'api/agency/payment-links/info.ts',
+    load: () => import('../../api/agency/payment-links/info.ts'),
+  },
+  {
+    name: 'Agency payment link checkout',
+    source: 'api/agency/payment-links/start-checkout.ts',
+    load: () => import('../../api/agency/payment-links/start-checkout.ts'),
+  },
+  {
+    name: 'Agency snapshot create',
+    source: 'api/agency/snapshots/create.ts',
+    load: () => import('../../api/agency/snapshots/create.ts'),
+  },
+  {
+    name: 'Agency snapshot preview',
+    source: 'api/agency/snapshots/apply-preview.ts',
+    load: () => import('../../api/agency/snapshots/apply-preview.ts'),
+  },
+  {
+    name: 'Agency snapshot apply',
+    source: 'api/agency/snapshots/apply.ts',
+    load: () => import('../../api/agency/snapshots/apply.ts'),
+  },
+  {
+    name: 'Agency Stripe webhook',
+    source: 'api/agency/stripe/webhook.ts',
+    load: () => import('../../api/agency/stripe/webhook.ts'),
   },
 ] as const;
 
@@ -113,6 +192,10 @@ describe('serverless cron API import smoke', () => {
     await expect(load()).resolves.toBeTruthy();
   });
 
+  it.each(AGENCY_API_ROUTES)('imports $name without requiring production secrets', async ({ load }) => {
+    await expect(load()).resolves.toBeTruthy();
+  });
+
   it.each(CRON_ROUTES)('returns 401 for $name when CRON_SECRET is set but token is invalid', async ({ load, method }) => {
     process.env.CRON_SECRET = 'test-cron-secret';
     const handler = await loadHandler(load);
@@ -136,7 +219,10 @@ describe('serverless cron API import smoke', () => {
   });
 
   it('keeps the Vercel cron runtime graph free of runtime .ts import specifiers', () => {
-    const violations = collectRuntimeTsImportViolations(CRON_ROUTES.map(route => route.source));
+    const violations = collectRuntimeTsImportViolations([
+      ...CRON_ROUTES.map(route => route.source),
+      ...AGENCY_API_ROUTES.map(route => route.source),
+    ]);
 
     expect(violations).toEqual([]);
   });

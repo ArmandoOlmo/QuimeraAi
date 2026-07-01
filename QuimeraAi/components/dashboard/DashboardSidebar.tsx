@@ -91,7 +91,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
   const { usage: creditsUsage, isLoading: isLoadingCredits } = useCreditsUsage();
 
   // Check role first (most reliable), then email-based owner check as fallback
-  const userRole = userDocument?.role;
+  const userRole = isUserOwner ? 'owner' : userDocument?.role;
   const isOwner = isPlatformUnlimitedUser(userRole);
   const hasUnlimitedCredits = creditsUsage?.isUnlimited || isOwner;
 

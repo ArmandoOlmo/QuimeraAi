@@ -86,6 +86,7 @@ import type {
 } from '../../types/globalAssistant';
 import { PLATFORM_SERVICES, type PlatformServiceId } from '../../types/serviceAvailability';
 import type { AdminView, View } from '../../types/ui';
+import { isPlatformOwnerRole } from '../../constants/roles';
 // ... existing imports ...
 
 // --- Types ---
@@ -1205,11 +1206,15 @@ const GlobalAiAssistant: React.FC = () => {
     const { cmsPosts, saveCMSPost, deleteCMSPost } = useCMS();
     const { aiAssistantConfig, saveAiAssistantConfig, generateImage } = useAI();
     const { domains, addDomain, deleteDomain, verifyDomain } = useDomains();
-    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isServicePublic,
+        isLoading: isLoadingServiceAvailability,
+    } = useServiceAvailability();
     const activeServiceIds = isLoadingServiceAvailability
         ? []
         : PLATFORM_SERVICES
-            .filter(service => isServicePublic(service.id))
+            .filter(service => canAccessConfiguredService(service.id))
             .map(service => service.id);
 
     // Global kill switch (Super Admin)
@@ -2175,8 +2180,8 @@ const GlobalAiAssistant: React.FC = () => {
             }
             else if (name === 'navigate_admin') {
                 const adminViewName = args['adminViewName'] as any;
-                if (userDocumentRef.current?.role !== 'superadmin') {
-                    const result = { error: "Unauthorized: Only Super Admins can access admin panels." };
+                if (!isPlatformOwnerRole(userDocumentRef.current?.role)) {
+                    const result = { error: "Unauthorized: Only Owner or Super Admin can access admin panels." };
                     console.log(`[Tool Result] ${name}`, result);
                     return result;
                 }
@@ -2700,8 +2705,8 @@ const GlobalAiAssistant: React.FC = () => {
             }
             else if (name === 'update_global_seo') {
                 const role = userDocumentRef.current?.role;
-                if (role !== 'superadmin' && role !== 'owner') {
-                    return { error: "Unauthorized: Only Super Admins can update global SEO." };
+                if (!isPlatformOwnerRole(role)) {
+                    return { error: "Unauthorized: Only Owner or Super Admin can update global SEO." };
                 }
                 const payload = { ...args, updated_at: new Date().toISOString() };
                 await supabase.from('global_settings').upsert({ id: 'seo', ...payload });

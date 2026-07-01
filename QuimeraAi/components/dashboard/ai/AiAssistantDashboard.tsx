@@ -28,12 +28,14 @@ import SocialChannelsSettings from './SocialChannelsSettings';
 import VoiceSettings from './VoiceSettings';
 import SocialChatInbox from './SocialChatInbox';
 import ChatbotEngineDashboard from './ChatbotEngineDashboard';
+import ChatCoreWebsiteContentGenerator from './ChatCoreWebsiteContentGenerator';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import PreviewOverlayCard from '../PreviewOverlayCard';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 import { normalizeChatAppearanceConfig } from '../../../utils/chatThemes';
+import { normalizeRoleKey } from '../../../constants/roles';
 
 type Tab = 'overview' | 'engine' | 'knowledge' | 'personality' | 'voice' | 'leadCapture' | 'customization' | 'socialChannels' | 'socialInbox' | 'settings';
 
@@ -73,7 +75,7 @@ const AiAssistantDashboard: React.FC = () => {
     const isSavingRef = useRef(false);
 
     const canManageChatbotEngine = useMemo(() => {
-        const userRole = String(userDocument?.role || '').toLowerCase();
+        const userRole = normalizeRoleKey(userDocument?.role || '');
         const tenantRole = String(
             tenantContext?.currentMembership?.role
             || tenantContext?.currentRole
@@ -679,6 +681,16 @@ const AiAssistantDashboard: React.FC = () => {
             case 'knowledge':
                 return (
                     <div className="space-y-6 animate-fade-in-up">
+                        <ChatCoreWebsiteContentGenerator
+                            project={activeProject}
+                            config={formData}
+                            userId={user?.id}
+                            onApplyConfig={(nextConfig) => {
+                                const normalizedConfig = normalizeAiAssistantDashboardConfig(nextConfig);
+                                setFormData(normalizedConfig);
+                                setAiAssistantConfig(normalizedConfig);
+                            }}
+                        />
                         <div className="space-y-4">
                             <label className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wider">
                                 <Building2 size={18} className="text-primary" />

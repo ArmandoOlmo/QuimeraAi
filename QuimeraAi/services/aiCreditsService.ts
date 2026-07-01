@@ -21,6 +21,7 @@ import {
 import {
     normalizePlanId,
     normalizePlanLimits,
+    isPlatformUnlimitedUser,
 } from './billing/planCatalog';
 
 export function getCreditCost(operation: AiCreditOperation): number {
@@ -141,19 +142,29 @@ async function consumeCreditsServerSide(params: {
     }
 
     if (!data?.success) {
+        const creditsRemaining = data?.adminOverride === true
+            ? Number.POSITIVE_INFINITY
+            : Number(data?.creditsRemaining || 0);
         return {
             success: false,
             creditsUsed: 0,
-            creditsRemaining: Number(data?.creditsRemaining || 0),
+            creditsRemaining,
             error: data?.error || 'Error al consumir créditos. Por favor intenta de nuevo.',
         };
     }
+
+    const creditsRemaining = data?.adminOverride === true
+        ? Number.POSITIVE_INFINITY
+        : Number(data.creditsRemaining || 0);
+    const creditsUsed = data?.adminOverride === true
+        ? 0
+        : Number(data.creditsUsed || params.creditsUsed);
 
     if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('quimera:credits-updated', {
             detail: {
                 tenantId: params.tenantId,
-                creditsRemaining: Number(data.creditsRemaining || 0),
+                creditsRemaining,
                 transactionId: data.transactionId,
             },
         }));
@@ -161,8 +172,8 @@ async function consumeCreditsServerSide(params: {
 
     return {
         success: true,
-        creditsUsed: Number(data.creditsUsed || params.creditsUsed),
-        creditsRemaining: Number(data.creditsRemaining || 0),
+        creditsUsed,
+        creditsRemaining,
         transactionId: data.transactionId,
     };
 }
@@ -242,9 +253,20 @@ export async function consumeCredits(
 
 export async function checkCreditsAvailable(
     tenantId: string,
-    creditsRequired: number
+    creditsRequired: number,
+    userRole?: string | null
 ): Promise<CreditCheckResult> {
     try {
+        if (isPlatformUnlimitedUser(userRole)) {
+            return {
+                hasCredits: true,
+                creditsRequired,
+                creditsAvailable: Number.POSITIVE_INFINITY,
+                wouldExceedLimit: false,
+                message: 'Créditos omitidos por rol interno de plataforma',
+            };
+        }
+
         const context = await getTenantCreditContext(tenantId);
         const usage = context.usage;
 
@@ -310,10 +332,11 @@ export async function checkCreditsAvailable(
 export async function canPerformOperation(
     tenantId: string,
     operation: AiCreditOperation,
-    customCredits?: number
+    customCredits?: number,
+    userRole?: string | null
 ): Promise<CreditCheckResult> {
     const creditsRequired = customCredits ?? AI_CREDIT_COSTS[operation];
-    return checkCreditsAvailable(tenantId, creditsRequired);
+    return checkCreditsAvailable(tenantId, creditsRequired, userRole);
 }
 
 // =============================================================================
@@ -905,6 +928,7 @@ export async function consumeCreditsWithPoolDetection(
         tokensInput?: number;
         tokensOutput?: number;
         customCredits?: number;
+        userRole?: string;
         metadata?: Record<string, any>;
     }
 ): Promise<{

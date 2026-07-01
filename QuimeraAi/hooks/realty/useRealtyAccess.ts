@@ -7,6 +7,7 @@ import { useServiceAvailability } from '../useServiceAvailability';
 import { supabase } from '../../supabase';
 import type { RealtyModuleFlags, RealtyPermissionKey } from '../../types/realty';
 import { DEFAULT_REALTY_FLAGS } from '../../utils/realty';
+import { isAdminRole } from '../../constants/roles';
 
 interface ModuleAccessRow {
     enabled: boolean;
@@ -18,13 +19,16 @@ export const useRealtyAccess = () => {
     const { activeProjectId } = useProject();
     const tenantContext = useSafeTenant();
     const { hasAccess: hasPlanFeature, isLoading: isLoadingPlan } = usePlanAccess();
-    const { isServicePublic, isLoading: isLoadingService } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingService,
+    } = useServiceAvailability();
     const [projectModule, setProjectModule] = useState<ModuleAccessRow | null>(null);
     const [isLoadingModule, setIsLoadingModule] = useState(false);
 
     const permissions = tenantContext?.currentMembership?.permissions as Record<string, any> | undefined;
     const role = userDocument?.role;
-    const isAdmin = isUserOwner || role === 'owner' || role === 'superadmin' || role === 'admin' || role === 'manager' || tenantContext?.currentRole === 'agency_owner' || tenantContext?.currentRole === 'agency_admin';
+    const isAdmin = isUserOwner || isAdminRole(role) || tenantContext?.currentRole === 'agency_owner' || tenantContext?.currentRole === 'agency_admin';
     const enabledTenantFeatures = tenantContext?.currentTenant?.settings?.enabledFeatures;
     const tenantSettingsAllows = !Array.isArray(enabledTenantFeatures) || enabledTenantFeatures.includes('realEstate') || isAdmin;
 
@@ -80,7 +84,7 @@ export const useRealtyAccess = () => {
     }, [isAdmin, permissions]);
 
     const planAllows = hasPlanFeature('realEstateModule');
-    const serviceAllows = !isLoadingService && isServicePublic('realEstate');
+    const serviceAllows = !isLoadingService && canAccessConfiguredService('realEstate');
     const moduleAllows = flags.real_estate_enabled;
     const canView = planAllows && serviceAllows && tenantSettingsAllows && moduleAllows && hasPermission('real_estate.view');
 

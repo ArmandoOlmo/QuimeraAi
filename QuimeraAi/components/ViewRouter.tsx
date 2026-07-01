@@ -13,6 +13,7 @@ import { useServiceAccess } from '../hooks/useServiceAccess';
 import { useRouter } from '../hooks/useRouter';
 import { ROUTES } from '../routes/config';
 import { shouldPreserveScopedAccessDeniedRoute } from '../routes/accessGuards';
+import { isAdminRole } from '../constants/roles';
 
 // Core components - imported synchronously (always needed)
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -75,7 +76,7 @@ interface ViewRouterProps {
  * Determina si el usuario tiene permisos para acceder a SuperAdmin
  */
 const hasAdminAccess = (role?: string): boolean => {
-    return ['owner', 'superadmin', 'admin', 'manager'].includes(role || '');
+    return isAdminRole(role);
 };
 
 /**

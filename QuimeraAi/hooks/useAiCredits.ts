@@ -33,7 +33,7 @@ import {
     getUsageColor,
     calculateCreditsUsagePercentage,
 } from '../types/subscription';
-import { isPlatformUnlimitedUser } from '../services/billing/planCatalog';
+import { getPlatformUnlimitedPlan, isPlatformUnlimitedUser } from '../services/billing/planCatalog';
 
 // =============================================================================
 // TYPES
@@ -105,9 +105,9 @@ export interface UseAiCreditsResult {
 
 export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     const { tenantId, userId, autoRefresh = true, refreshInterval = 60000 } = options;
-    const { userDocument, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth, isUserOwner } = useAuth();
     // Check role first (most reliable), then email-based owner check as fallback
-    const userRole = userDocument?.role;
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const isOwner = isPlatformUnlimitedUser(userRole);
 
     // State
@@ -130,7 +130,7 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
             ]);
 
             setUsage(usageData);
-            setCurrentPlan(planData);
+            setCurrentPlan(getPlatformUnlimitedPlan(userRole) || planData);
 
         } catch (err) {
             console.error('Error loading AI credits data:', err);
@@ -138,7 +138,7 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         } finally {
             setIsLoading(false);
         }
-    }, [tenantId]);
+    }, [tenantId, userRole]);
 
     // Cargar al montar y cuando cambia tenantId
     useEffect(() => {
@@ -154,14 +154,15 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
     }, [autoRefresh, refreshInterval, loadData, tenantId]);
 
     // Valores calculados
-    const creditsRemaining = usage?.creditsRemaining ?? 0;
+    const creditsRemaining = isOwner ? Number.POSITIVE_INFINITY : usage?.creditsRemaining ?? 0;
     const creditsUsed = usage?.creditsUsed ?? 0;
-    const creditsIncluded = usage?.creditsIncluded ?? 0;
+    const creditsIncluded = isOwner ? Number.POSITIVE_INFINITY : usage?.creditsIncluded ?? 0;
 
     const usagePercentage = useMemo(() => {
+        if (isOwner) return 0;
         if (!usage) return 0;
         return calculateCreditsUsagePercentage(creditsUsed, creditsIncluded);
-    }, [usage, creditsUsed, creditsIncluded]);
+    }, [isOwner, usage, creditsUsed, creditsIncluded]);
 
     const usageColor = useMemo(() => getUsageColor(usagePercentage), [usagePercentage]);
 
@@ -206,7 +207,7 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
         }
 
         return result;
-    }, [tenantId, userId, loadData]);
+    }, [tenantId, userId, userRole, loadData]);
 
     // Verificar credits disponibles
     const handleCheckCredits = useCallback(async (
@@ -222,8 +223,8 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
             };
         }
 
-        return canPerformOperation(tenantId, operation);
-    }, [tenantId]);
+        return canPerformOperation(tenantId, operation, undefined, userRole);
+    }, [tenantId, userRole]);
 
     // Puede realizar operación
     const handleCanPerformOperation = useCallback(async (
@@ -260,6 +261,9 @@ export function useAiCredits(options: UseAiCreditsOptions): UseAiCreditsResult {
 
     // Formatear credits
     const formatCredits = useCallback((credits: number): string => {
+        if (!Number.isFinite(credits)) {
+            return '∞';
+        }
         if (credits >= 1000) {
             return `${(credits / 1000).toFixed(1)}K`;
         }
@@ -316,10 +320,17 @@ export function useCanPerformAiOperation(
     tenantId: string,
     operation: AiCreditOperation
 ): { canPerform: boolean; isChecking: boolean; creditCost: number } {
+    const { userDocument, loadingAuth, isUserOwner } = useAuth();
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const [canPerform, setCanPerform] = useState(true);
     const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
+        if (loadingAuth) {
+            setIsChecking(true);
+            return;
+        }
+
         if (!tenantId) {
             setIsChecking(false);
             return;
@@ -327,13 +338,13 @@ export function useCanPerformAiOperation(
 
         const check = async () => {
             setIsChecking(true);
-            const result = await canPerformOperation(tenantId, operation);
+            const result = await canPerformOperation(tenantId, operation, undefined, userRole);
             setCanPerform(result.hasCredits);
             setIsChecking(false);
         };
 
         check();
-    }, [tenantId, operation]);
+    }, [tenantId, operation, userRole, loadingAuth]);
 
     return {
         canPerform,
@@ -351,6 +362,9 @@ export function useCreditsProgress(tenantId: string): {
     label: string;
     isLoading: boolean;
 } {
+    const { userDocument, loadingAuth, isUserOwner } = useAuth();
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
+    const isUnlimitedCreditsUser = isPlatformUnlimitedUser(userRole);
     const [data, setData] = useState({
         percentage: 0,
         color: '#10b981',
@@ -360,6 +374,17 @@ export function useCreditsProgress(tenantId: string): {
 
     useEffect(() => {
         if (!tenantId) return;
+        if (loadingAuth) return;
+
+        if (isUnlimitedCreditsUser) {
+            setData({
+                percentage: 0,
+                color: '#a855f7',
+                label: '∞',
+                isLoading: false,
+            });
+            return;
+        }
 
         const load = async () => {
             const usage = await getCreditsUsage(tenantId);
@@ -387,9 +412,12 @@ export function useCreditsProgress(tenantId: string): {
         };
 
         load();
-    }, [tenantId]);
+    }, [tenantId, loadingAuth, isUnlimitedCreditsUser]);
 
-    return data;
+    return {
+        ...data,
+        isLoading: data.isLoading || loadingAuth,
+    };
 }
 
 /**
@@ -408,6 +436,8 @@ export function useConsumeWithConfirmation(
     cancel: () => void;
     isConsuming: boolean;
 } {
+    const { userDocument, isUserOwner } = useAuth();
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const [pendingOperation, setPendingOperation] = useState<AiCreditOperation | null>(null);
     const [pendingOptions, setPendingOptions] = useState<any>(null);
     const [isConsuming, setIsConsuming] = useState(false);
@@ -427,22 +457,28 @@ export function useConsumeWithConfirmation(
 
         // Consumir directamente
         setIsConsuming(true);
-        const result = await consumeCredits(tenantId, userId, operation, restOptions);
+        const result = await consumeCredits(tenantId, userId, operation, {
+            ...restOptions,
+            userRole: restOptions.userRole || userRole,
+        });
         setIsConsuming(false);
 
         return result;
-    }, [tenantId, userId]);
+    }, [tenantId, userId, userRole]);
 
     const confirm = useCallback(async () => {
         if (!pendingOperation) return;
 
         setIsConsuming(true);
-        await consumeCredits(tenantId, userId, pendingOperation, pendingOptions);
+        await consumeCredits(tenantId, userId, pendingOperation, {
+            ...pendingOptions,
+            userRole: pendingOptions?.userRole || userRole,
+        });
         setIsConsuming(false);
 
         setPendingOperation(null);
         setPendingOptions(null);
-    }, [tenantId, userId, pendingOperation, pendingOptions]);
+    }, [tenantId, userId, pendingOperation, pendingOptions, userRole]);
 
     const cancel = useCallback(() => {
         setPendingOperation(null);
@@ -459,8 +495,4 @@ export function useConsumeWithConfirmation(
 }
 
 export default useAiCredits;
-
-
-
-
 

@@ -13,6 +13,7 @@ import { usePersistedBoolean } from '../../hooks/usePersistedState';
 import { useAppLogo } from '../../hooks/useAppLogo';
 import { useRouter } from '../../hooks/useRouter';
 import { ROUTES } from '../../routes/config';
+import { getPlatformUnlimitedPlan } from '../../services/billing/planCatalog';
 import {
     buildDashboardAssistantEntryMetadata,
     createGlobalAssistantEntryPayload,
@@ -39,7 +40,7 @@ interface DashboardWelcomeProps {
  */
 const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCount }) => {
     const { t } = useTranslation();
-    const { userDocument, canAccessSuperAdmin } = useAuth();
+    const { userDocument, canAccessSuperAdmin, isUserOwner } = useAuth();
     const { setIsOnboardingOpen, setOnboardingMode } = useUI();
     const { activeProjectId, activeProject } = useProject();
     const tenantContext = useSafeTenant();
@@ -48,7 +49,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const { usage } = useCreditsUsage();
     const { logoUrl: appLogoUrl } = useAppLogo();
     const { navigate } = useRouter();
-    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServiceAvailability,
+    } = useServiceAvailability();
     const shouldReduceMotion = useReducedMotion();
 
     const [upgradeMinimized, setUpgradeMinimized] = usePersistedBoolean('quimera_upgrade_minimized', false);
@@ -59,7 +63,8 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
     const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
     const toggleUpgradeMinimized = () => setUpgradeMinimized((prev) => !prev);
-    const userRole = String(userDocument?.role || '').toLowerCase();
+    const platformCreditRole = isUserOwner ? 'owner' : userDocument?.role;
+    const userRole = String(platformCreditRole || '').toLowerCase();
     const tenantRole = String(tenantContext?.currentMembership?.role || '').toLowerCase();
     const canUseAdminQuickActions = canAccessSuperAdmin
         || userRole === 'owner'
@@ -69,7 +74,10 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
 
     // Determine next plan for upgrade button
     const currentPlanId = usage?.planId || 'free';
-    const currentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const baseCurrentPlan = getPlan(currentPlanId) || SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.free;
+    const currentPlan = usage?.isUnlimited
+        ? getPlatformUnlimitedPlan(platformCreditRole) || baseCurrentPlan
+        : baseCurrentPlan;
     const nextPlan = useMemo(() => {
         const currentIndex = plansArray.findIndex((p) => p.id === currentPlanId);
         if (currentIndex !== -1 && currentIndex < plansArray.length - 1) {
@@ -83,8 +91,8 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         hasProjects: allUserProjectsCount > 0,
         hasActiveProject: Boolean(activeProjectId),
         canUseAdminMode: canUseAdminQuickActions,
-        canAccessService: serviceId => !isLoadingServiceAvailability && isServicePublic(serviceId),
-    }), [activeProjectId, allUserProjectsCount, canUseAdminQuickActions, isLoadingServiceAvailability, isServicePublic]);
+        canAccessService: serviceId => !isLoadingServiceAvailability && canAccessConfiguredService(serviceId),
+    }), [activeProjectId, allUserProjectsCount, canAccessConfiguredService, canUseAdminQuickActions, isLoadingServiceAvailability]);
     const selectedQuickAction = quickActions.find(action => action.id === selectedQuickActionId) || null;
     const hoveredQuickAction = quickActions.find(action => action.id === hoveredQuickActionId) || null;
     const visibleModeAction = hoveredQuickAction || selectedQuickAction;
@@ -133,7 +141,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
         const request = rawRequest;
         const route = routeDashboardAssistantEntry(request);
         const routeServiceId = resolveAssistantServiceIdForModule(route.activeModule);
-        const routeServiceAvailable = !routeServiceId || (!isLoadingServiceAvailability && isServicePublic(routeServiceId));
+        const routeServiceAvailable = !routeServiceId || (!isLoadingServiceAvailability && canAccessConfiguredService(routeServiceId));
         const metadataActiveModule = routeServiceAvailable
             ? selectedQuickAction?.module || route.activeModule
             : selectedQuickAction?.module || null;

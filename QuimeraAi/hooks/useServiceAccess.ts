@@ -21,6 +21,25 @@ import {
     type ServiceAccessInput,
 } from '../services/access/serviceAccessEngine';
 
+const ACTIVE_BILLING_STATUSES = new Set(['active', 'trial', 'trialing']);
+
+function readTenantBillingStatus(tenant: any): string | undefined {
+    const billing = tenant?.billing && typeof tenant.billing === 'object' ? tenant.billing : null;
+    const status = billing?.subscriptionStatus || billing?.status;
+    return typeof status === 'string' && status.trim() ? status.trim() : undefined;
+}
+
+function resolveAccessSubscriptionStatus(params: {
+    creditsStatus?: string;
+    billingStatus?: string;
+    tenantStatus?: string;
+}): string | undefined {
+    const candidates = [params.creditsStatus, params.billingStatus, params.tenantStatus]
+        .map(status => typeof status === 'string' ? status.trim() : '')
+        .filter(Boolean);
+    return candidates.find(status => !ACTIVE_BILLING_STATUSES.has(status)) || candidates[0];
+}
+
 export interface UseServiceAccessResult {
     isLoading: boolean;
     resolveAccess: (input: Omit<ServiceAccessInput, 'userId' | 'userRole' | 'tenantId'>) => ServiceAccessDecision;
@@ -29,7 +48,7 @@ export interface UseServiceAccessResult {
 }
 
 export function useServiceAccess(): UseServiceAccessResult {
-    const { user, userDocument, loadingAuth } = useAuth();
+    const { user, userDocument, loadingAuth, isUserOwner } = useAuth();
     const tenantContext = useSafeTenant();
     const plansContext = useSafePlans();
     const credits = useCreditsUsage();
@@ -50,13 +69,21 @@ export function useServiceAccess(): UseServiceAccessResult {
         normalizePlanLimits(plan?.limits || resolveTenantEffectiveLimits(currentTenant), effectivePlanId)
     ), [currentTenant, effectivePlanId, plan?.limits]);
 
+    const billingStatus = readTenantBillingStatus(currentTenant);
+    const accessSubscriptionStatus = resolveAccessSubscriptionStatus({
+        creditsStatus: credits.usage?.status,
+        billingStatus,
+        tenantStatus: currentTenant?.status,
+    });
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
+
     const baseInput = useMemo<ServiceAccessInput>(() => ({
         userId: user?.id,
-        userRole: userDocument?.role,
+        userRole,
         tenantId: currentTenant?.id,
         tenantStatus: currentTenant?.status,
         planId: effectivePlanId,
-        subscriptionStatus: credits.usage?.status || currentTenant?.status,
+        subscriptionStatus: accessSubscriptionStatus,
         serviceAvailability: serviceAvailability.availability?.services,
         planFeatures,
         planLimits,
@@ -69,12 +96,14 @@ export function useServiceAccess(): UseServiceAccessResult {
         } : undefined,
     }), [
         user?.id,
-        userDocument?.role,
+        userRole,
         currentTenant?.id,
         currentTenant?.status,
         currentTenant?.usage,
         effectivePlanId,
         credits.usage,
+        billingStatus,
+        accessSubscriptionStatus,
         serviceAvailability.availability?.services,
         planFeatures,
         planLimits,
@@ -112,4 +141,3 @@ export function useServiceAccess(): UseServiceAccessResult {
 }
 
 export default useServiceAccess;
-

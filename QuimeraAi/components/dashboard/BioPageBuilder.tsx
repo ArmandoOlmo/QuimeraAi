@@ -1809,10 +1809,13 @@ const BioPageBuilder: React.FC = () => {
         qrBranding: true,
     });
 
-    const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServiceAvailability,
+    } = useServiceAvailability();
     const canAccessService = useCallback((serviceId?: PlatformServiceId | null): boolean => (
-        !serviceId || (!isLoadingServiceAvailability && isServicePublic(serviceId))
-    ), [isLoadingServiceAvailability, isServicePublic]);
+        !serviceId || (!isLoadingServiceAvailability && canAccessConfiguredService(serviceId))
+    ), [canAccessConfiguredService, isLoadingServiceAvailability]);
     const canAccessEcommerce = canAccessService('ecommerce');
     const canAccessCrm = canAccessService('crm');
     const canAccessAppointments = canAccessService('appointments');

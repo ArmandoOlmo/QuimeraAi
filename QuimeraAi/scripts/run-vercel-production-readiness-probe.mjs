@@ -31,6 +31,11 @@ try {
     process.exitCode = typeof pullResult.status === 'number' ? pullResult.status : 1;
   } else {
     const productionEnv = parseEnvFile(envFile);
+    const vercelProductionEnvNames = readVercelProductionEnvNames(tempRoot);
+    if (vercelProductionEnvNames && !productionEnv.VERCEL_PRODUCTION_ENV_NAMES) {
+      productionEnv.VERCEL_PRODUCTION_ENV_NAMES = vercelProductionEnvNames;
+    }
+
     const supabaseEdgeSecretNames = readSupabaseEdgeSecretNames(appRoot);
     if (supabaseEdgeSecretNames && !productionEnv.SUPABASE_EDGE_SECRET_NAMES) {
       productionEnv.SUPABASE_EDGE_SECRET_NAMES = supabaseEdgeSecretNames;
@@ -75,6 +80,32 @@ function parseEnvFile(filePath) {
   }
 
   return parsed;
+}
+
+function readVercelProductionEnvNames(cwd) {
+  const result = spawnSync('vercel', ['env', 'ls', 'production'], {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: process.env,
+  });
+
+  if (result.status !== 0 || !result.stdout) return '';
+
+  return parseVercelEnvListOutput(result.stdout).join(',');
+}
+
+function parseVercelEnvListOutput(output) {
+  const names = [];
+
+  for (const rawLine of String(output || '').split(/\r?\n/)) {
+    const firstToken = rawLine.trim().split(/\s+/)[0];
+    if (/^[A-Z][A-Z0-9_]*$/.test(firstToken)) {
+      names.push(firstToken);
+    }
+  }
+
+  return [...new Set(names)];
 }
 
 function readSupabaseEdgeSecretNames(cwd) {

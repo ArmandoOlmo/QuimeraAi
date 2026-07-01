@@ -73,6 +73,15 @@ describe('route config', () => {
         });
     });
 
+    it('does not block public service-backed routes on service availability loading', () => {
+        const routerSource = readFileSync(resolve(process.cwd(), 'routes/Router.tsx'), 'utf8');
+
+        expect(routerSource).toContain('const shouldBlockRouteServiceAvailability = routeRequiresService && !isPublicRoute');
+        expect(routerSource).toContain('if (shouldBlockRouteServiceAvailability && isLoadingServiceAvailability)');
+        expect(routerSource).toContain('if (shouldBlockRouteServiceAvailability && !isRouteServiceAvailable)');
+        expect(routerSource).not.toContain('if (routeRequiresService && isLoadingServiceAvailability) {\n    return <LoadingScreen />;');
+    });
+
     it('registers AI Content Production Studio public and admin surfaces with route guards', () => {
         const studioRoute = getRouteConfig(ROUTES.CONTENT_STUDIO);
         const adminRoute = getRouteConfig(ROUTES.ADMIN_CONTENT_FACTORY);

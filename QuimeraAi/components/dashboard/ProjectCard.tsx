@@ -14,6 +14,7 @@ import Modal from '../ui/Modal';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import ProjectThumbnailFallback from './ProjectThumbnailFallback';
 import { cardMotionHover, createCardMotionVariants } from '../../utils/cardMotion';
+import { isPlatformOwnerRole } from '../../constants/roles';
 
 interface ProjectCardProps {
   project: Project;
@@ -76,7 +77,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const canDeleteTemplate = () => {
     if (!isTemplate) return true; // Users can always delete their own projects
     const userRole = userDocument?.role || '';
-    return ['owner', 'superadmin'].includes(userRole);
+    return isPlatformOwnerRole(userRole);
   };
 
   // Close menu when clicking outside

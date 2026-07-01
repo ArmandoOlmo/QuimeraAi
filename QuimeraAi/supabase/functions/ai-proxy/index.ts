@@ -283,6 +283,16 @@ async function handleCreditsConsume(payload: Record<string, unknown>, authUserId
         return jsonResponse({ error: 'Could not create credits transaction' }, { status: 500 });
     }
 
+    if (adminOverride) {
+        return jsonResponse({
+            success: true,
+            transactionId: transaction.id,
+            creditsUsed: 0,
+            creditsRemaining: null,
+            adminOverride: true,
+        });
+    }
+
     if (currentUsage && !adminOverride) {
         const now = Date.now();
         const today = new Date().toISOString().split('T')[0];

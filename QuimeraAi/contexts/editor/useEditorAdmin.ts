@@ -7,7 +7,7 @@ import {
     UserDocument, UserRole, Tenant, TenantStatus, TenantLimits,
     LLMPrompt, AdminView
 } from '../../types';
-import { isOwner, determineRole } from '../../constants/roles';
+import { isAdminRole, isOwner, isSuperAdminRole, determineRole } from '../../constants/roles';
 import { defaultPrompts, type DefaultPrompt } from '../../data/defaultPrompts';
 import { supabase } from '../../supabase';
 import type { User } from '@/utils/compatData';
@@ -28,7 +28,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
 
     // Helper for admin check
     const isAdmin = (): boolean => {
-        return ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
+        return isAdminRole(userDocument?.role);
     };
 
     // ─── User Management ───
@@ -57,7 +57,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
             throw new Error('No se puede cambiar el rol del Owner');
         }
 
-        if ((newRole === 'superadmin' || targetUser.role === 'superadmin') && !isUserOwner) {
+        if ((isSuperAdminRole(newRole) || isSuperAdminRole(targetUser.role)) && !isUserOwner) {
             throw new Error('Solo el Owner puede gestionar Super Admins');
         }
 
@@ -85,7 +85,7 @@ export const useEditorAdmin = ({ user, userDocument, setUserDocument, isUserOwne
     };
 
     const createAdmin = async (email: string, name: string, role: UserRole) => {
-        if (role === 'superadmin' && !isUserOwner) {
+        if (isSuperAdminRole(role) && !isUserOwner) {
             throw new Error('Solo el Owner puede crear Super Admins');
         }
         if (role === 'owner') {

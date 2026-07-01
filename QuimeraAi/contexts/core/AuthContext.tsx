@@ -10,7 +10,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signInWithGoogle as signInWithGoogleProvider } from '../../utils/googleAuth';
 import { toCompatUser, type User as CompatUser } from '../../utils/compatData';
 import { UserDocument, UserRole, RolePermissions, IndividualRole, AgencyRole } from '../../types';
-import { getPermissions, isOwner, determineRole } from '../../constants/roles';
+import { determineRole, getPermissions, isAdminRole, isOwner, isPlatformOwnerRole } from '../../constants/roles';
 
 interface AuthContextType {
     // User State
@@ -129,15 +129,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
                     if (runId !== authChangeRunId) return;
 
-                    setUserDocument({ ...finalUserDoc, id: supabaseUser.id });
-                    const effectiveRole = determineRole(supabaseUser.email!, finalUserDoc.role || 'user');
+                    const claimRole = supabaseUser.app_metadata?.isOwner === true
+                        ? 'owner'
+                        : typeof supabaseUser.app_metadata?.role === 'string'
+                        ? supabaseUser.app_metadata.role
+                        : undefined;
+                    const effectiveRole = determineRole(
+                        supabaseUser.email!,
+                        isPlatformOwnerRole(claimRole) ? claimRole : finalUserDoc.role || claimRole || 'user',
+                    );
+                    setUserDocument({ ...finalUserDoc, role: effectiveRole as any, id: supabaseUser.id });
                     console.log('[AuthProvider] User doc loaded. role:', finalUserDoc.role, 'effectiveRole:', effectiveRole, 'tenantId:', finalUserDoc.tenantId);
                     setUserPermissions(getPermissions(effectiveRole));
 
                     // In Supabase, custom claims are usually stored in app_metadata
-                    if (supabaseUser.app_metadata?.isOwner === true) {
-                        setIsOwnerFromClaims(true);
-                    }
+                    setIsOwnerFromClaims(supabaseUser.app_metadata?.isOwner === true);
                 } catch (error) {
                     console.error('Error fetching user document:', error);
                     
@@ -146,20 +152,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         setIsOwnerFromClaims(true);
                         fallbackRole = 'owner';
                     } else if (typeof supabaseUser.app_metadata?.role === 'string') {
+                        setIsOwnerFromClaims(false);
                         fallbackRole = supabaseUser.app_metadata.role;
+                    } else {
+                        setIsOwnerFromClaims(false);
                     }
 
+                    const effectiveRole = determineRole(supabaseUser.email!, fallbackRole || 'user');
                     const fallbackDoc: UserDocument = {
                         id: supabaseUser.id,
                         name: supabaseUser.user_metadata?.full_name || 'User',
                         email: supabaseUser.email || '',
                         photoURL: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || '',
-                        role: fallbackRole as any,
+                        role: effectiveRole as any,
                     };
                     if (runId !== authChangeRunId) return;
 
                     setUserDocument(fallbackDoc);
-                    const effectiveRole = determineRole(supabaseUser.email!, fallbackRole || 'user');
                     setUserPermissions(getPermissions(effectiveRole));
                 }
             } else {
@@ -167,6 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
                 setUserDocument(null);
                 setUserPermissions(getPermissions('user'));
+                setIsOwnerFromClaims(false);
             }
 
             clearTimeout(timeout);
@@ -202,10 +212,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     // isUserOwner: App Metadata (primary) OR email check (fallback) OR Supabase role
-    const isUserOwner = isOwnerFromClaims || isOwner(user?.email || '') || userDocument?.role === 'owner';
+    const isUserOwner = isOwnerFromClaims || isOwner(user?.email || '') || isPlatformOwnerRole(userDocument?.role);
     const currentTenant = userDocument?.tenantId || null;
     const currentTenantRole = userDocument?.tenantRole || null;
-    const canAccessSuperAdmin = isUserOwner || ['owner', 'superadmin', 'admin', 'manager'].includes(userDocument?.role || '');
+    const canAccessSuperAdmin = isUserOwner || isAdminRole(userDocument?.role);
 
     // Functions
     const canPerform = (permission: keyof RolePermissions): boolean => {
@@ -278,9 +288,6 @@ export const useAuth = (): AuthContextType => {
 export const useSafeAuth = (): AuthContextType | null => {
     return useContext(AuthContext) || null;
 };
-
-
-
 
 
 

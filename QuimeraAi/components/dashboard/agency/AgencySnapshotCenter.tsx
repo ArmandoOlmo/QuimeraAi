@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useServiceAccess } from '../../../hooks/useServiceAccess';
+import { supabase } from '../../../supabase';
 import type { Project } from '../../../types';
 import {
     agencySnapshotService,
+    type AgencySnapshotApplyResult,
     type AgencySnapshotApplicationPreview,
     type AgencySnapshotRow,
 } from '../../../services/agency/agencySnapshotService';
@@ -40,6 +42,37 @@ function formatSnapshotDate(value?: string | null) {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime())) return '';
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+async function postAgencySnapshotApi<T>(path: string, payload: Record<string, unknown>): Promise<T> {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error('Tu sesion expiro. Inicia sesion de nuevo.');
+
+    const response = await fetch(path, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+    const text = await response.text();
+    let body: unknown = {};
+    if (text) {
+        try {
+            body = JSON.parse(text);
+        } catch {
+            body = { error: text };
+        }
+    }
+    if (!response.ok) {
+        const message = body && typeof body === 'object' && 'error' in body
+            ? String((body as { error?: unknown }).error || '')
+            : '';
+        throw new Error(message || `Agency snapshot API failed with ${response.status}`);
+    }
+    return body as T;
 }
 
 export function AgencySnapshotCenter({ projects, onSnapshotApplied }: AgencySnapshotCenterProps) {
@@ -124,7 +157,7 @@ export function AgencySnapshotCenter({ projects, onSnapshotApplied }: AgencySnap
         setError(null);
         setSuccess(null);
         try {
-            const result = await agencySnapshotService.createSnapshotFromProject({
+            const result = await postAgencySnapshotApi<{ snapshot: AgencySnapshotRow }>('/api/agency/snapshots/create', {
                 agencyTenantId,
                 sourceProjectId: selectedSourceProject.id,
                 name: snapshotName.trim() || `${selectedSourceProject.name} Snapshot`,
@@ -150,7 +183,7 @@ export function AgencySnapshotCenter({ projects, onSnapshotApplied }: AgencySnap
         setError(null);
         setSuccess(null);
         try {
-            const nextPreview = await agencySnapshotService.previewSnapshotApplication({
+            const nextPreview = await postAgencySnapshotApi<AgencySnapshotApplicationPreview>('/api/agency/snapshots/apply-preview', {
                 agencyTenantId,
                 snapshotId: selectedSnapshot.id,
                 targetProjectId: selectedTargetProject.id,
@@ -169,7 +202,7 @@ export function AgencySnapshotCenter({ projects, onSnapshotApplied }: AgencySnap
         setError(null);
         setSuccess(null);
         try {
-            const result = await agencySnapshotService.applySnapshot({
+            const result = await postAgencySnapshotApi<AgencySnapshotApplyResult>('/api/agency/snapshots/apply', {
                 agencyTenantId,
                 snapshotId: selectedSnapshot.id,
                 targetProjectId: selectedTargetProject.id,

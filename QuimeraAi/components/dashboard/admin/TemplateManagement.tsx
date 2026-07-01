@@ -33,6 +33,7 @@ import {
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { Project } from '../../../types';
 import ThumbnailEditor from '../../ui/ThumbnailEditor';
+import { isPlatformOwnerRole } from '../../../constants/roles';
 import ConfirmationModal from '../../ui/ConfirmationModal';
 import TemplateEditorModal from './TemplateEditorModal';
 import { INDUSTRIES, INDUSTRY_CATEGORIES } from '../../../data/industries';
@@ -138,7 +139,7 @@ const TemplateManagement: React.FC<TemplateManagementProps> = ({ onBack }) => {
     // Check if user can delete templates (only owner and superadmin)
     const canDeleteTemplates = () => {
         const userRole = userDocument?.role || '';
-        return ['owner', 'superadmin'].includes(userRole);
+        return isPlatformOwnerRole(userRole);
     };
 
     // Get unique categories from templates

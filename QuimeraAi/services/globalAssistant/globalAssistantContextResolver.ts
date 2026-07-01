@@ -5,6 +5,7 @@ import type {
     GlobalAssistantMode,
 } from '../../types/globalAssistant';
 import type { Project } from '../../types/project';
+import { isSuperAdminRole, normalizeRoleKey } from '../../constants/roles';
 
 const nowIso = () => new Date().toISOString();
 
@@ -79,12 +80,12 @@ export function resolveModuleFromRoute(route?: string | null): AssistantModuleTa
 
 export function resolveCurrentAssistantContext(input: ResolveAssistantContextInput): AssistantContextSnapshot {
     const activeProject = input.activeProject || null;
-    const role = input.role || null;
+    const role = input.role ? normalizeRoleKey(input.role) : null;
     const isOwnerRole = role === 'owner';
-    const isSuperAdminRole = role === 'superadmin' || role === 'super_admin';
-    const mode = input.mode || (isOwnerRole ? 'owner' : isSuperAdminRole ? 'super_admin' : 'user');
+    const hasSuperAdminRole = isSuperAdminRole(role);
+    const mode = input.mode || (isOwnerRole ? 'owner' : hasSuperAdminRole ? 'super_admin' : 'user');
     const isOwner = isOwnerRole || mode === 'owner';
-    const isSuperAdmin = isSuperAdminRole || mode === 'super_admin';
+    const isSuperAdmin = hasSuperAdminRole || mode === 'super_admin';
     const activeModule = input.activeModule || resolveModuleFromRoute(input.activeRoute);
     const admin: AssistantAdminContext = {
         enabled: mode === 'owner' || mode === 'super_admin' || activeModule === 'admin',

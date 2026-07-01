@@ -18,14 +18,15 @@ describe('Agency Snapshot Center contract', () => {
         expect(agencyProjects).toContain('onSnapshotApplied={refreshProjects}');
     });
 
-    it('routes all Snapshot Center mutations through the canonical service', () => {
+    it('routes Snapshot Center reads through the canonical service and writes through Vercel APIs', () => {
         expect(snapshotCenter).toContain("import {");
         expect(snapshotCenter).toContain("agencySnapshotService,");
         expect(snapshotCenter).toContain("../../../services/agency/agencySnapshotService");
         expect(snapshotCenter).toContain('agencySnapshotService.listSnapshots');
-        expect(snapshotCenter).toContain('agencySnapshotService.createSnapshotFromProject');
-        expect(snapshotCenter).toContain('agencySnapshotService.previewSnapshotApplication');
-        expect(snapshotCenter).toContain('agencySnapshotService.applySnapshot');
+        expect(snapshotCenter).toContain("'/api/agency/snapshots/create'");
+        expect(snapshotCenter).toContain("'/api/agency/snapshots/apply-preview'");
+        expect(snapshotCenter).toContain("'/api/agency/snapshots/apply'");
+        expect(snapshotCenter).toContain('supabase.auth.getSession()');
         expect(snapshotCenter).not.toContain(".from('agency_snapshots')");
         expect(snapshotCenter).not.toContain(".from('agency_snapshot_applications')");
     });

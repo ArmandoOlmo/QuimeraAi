@@ -121,11 +121,40 @@ describe('Agency service plans', () => {
 
     it('keeps the plan editor wired to editable base cost and base-cost markup', () => {
         const editor = read('components/dashboard/agency/plans/AgencyPlanEditor.tsx');
+        const manager = read('components/dashboard/agency/plans/AgencyPlanManager.tsx');
         const service = read('services/agencyPlansService.ts');
+        const apiClient = read('services/agency/agencyPlanMutationApiClient.ts');
 
         expect(editor).toContain('currentBaseCost');
         expect(editor).toContain("updateField('baseCost'");
         expect(editor).toContain('calculateMarkup(formData.price || 0, currentBaseCost)');
+        expect(editor).toContain('saveAgencyPlanThroughApi');
+        expect(manager).toContain('archiveAgencyPlanThroughApi');
+        expect(manager).toContain('restoreAgencyPlanThroughApi');
+        expect(manager).toContain('deleteAgencyPlanThroughApi');
+        expect(apiClient).toContain("'/api/agency/plans/save'");
+        expect(apiClient).toContain("'/api/agency/plans/archive'");
+        expect(apiClient).toContain("'/api/agency/plans/restore'");
+        expect(apiClient).toContain("'/api/agency/plans/delete'");
         expect(service).toContain('base_cost: baseCost');
+    });
+
+    it('exposes protected Vercel routes for canonical Agency service-plan mutations', () => {
+        const planRouteLib = read('api/agency/plans/_lib.ts');
+        const saveRoute = read('api/agency/plans/save.ts');
+        const archiveRoute = read('api/agency/plans/archive.ts');
+        const restoreRoute = read('api/agency/plans/restore.ts');
+        const deleteRoute = read('api/agency/plans/delete.ts');
+
+        expect(planRouteLib).toContain('requireAgencyPlanAccess');
+        expect(planRouteLib).toContain("moduleId: 'agency-service-plans'");
+        expect(planRouteLib).toContain("requiredPermission: 'canManageBilling'");
+        expect(planRouteLib).toContain("from(AGENCY_SERVICE_PLANS_TABLE)");
+        expect(planRouteLib).toContain("from(AGENCY_CLIENTS_TABLE)");
+        expect(planRouteLib).toContain('price must be greater than or equal to baseCost');
+        expect(saveRoute).toContain('saveAgencyServicePlan');
+        expect(archiveRoute).toContain('archiveAgencyServicePlan');
+        expect(restoreRoute).toContain('restoreAgencyServicePlan');
+        expect(deleteRoute).toContain('deleteAgencyServicePlan');
     });
 });

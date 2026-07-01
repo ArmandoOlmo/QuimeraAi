@@ -7,7 +7,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import './AgencyCheckoutPage.css';
-import { supabase } from '../../supabase';
 import {
     CheckCircle,
     Shield,
@@ -28,7 +27,7 @@ import {
 // ============================================================================
 
 interface PaymentLinkInfo {
-    status: 'pending' | 'completed' | 'expired' | 'cancelled';
+    status: 'pending' | 'completed' | 'past_due' | 'failed' | 'expired' | 'cancelled';
     clientName: string;
     planName: string;
     monthlyPrice: number;
@@ -85,17 +84,18 @@ function CardForm({ token, info, onSuccess }: CardFormProps) {
 
         try {
             const origin = window.location.origin;
-            const result = await supabase.functions.invoke('stripe-api', {
-                body: {
-                    action: 'agencyBilling-confirmClientPayment',
+            const response = await fetch('/api/agency/payment-links/start-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     token,
                     successUrl: `${origin}/pay/${token}?checkout=success`,
                     cancelUrl: `${origin}/pay/${token}?checkout=cancelled`,
-                }
+                }),
             });
+            const data = await response.json();
 
-            if (result.error) throw result.error;
-            const data = result.data?.data || result.data;
+            if (!response.ok) throw new Error(data?.error || 'Error al procesar el pago');
 
             if (data?.url) {
                 window.location.assign(data.url);
@@ -233,11 +233,10 @@ export default function AgencyCheckoutPage({ token }: AgencyCheckoutPageProps) {
     const loadPaymentLink = async () => {
         try {
             setLoading(true);
-            const result = await supabase.functions.invoke('stripe-api', {
-                body: { action: 'agencyBilling-getPaymentLinkInfo', token }
-            });
-            if (result.error) throw result.error;
-            setInfo((result.data?.data || result.data) as PaymentLinkInfo);
+            const response = await fetch(`/api/agency/payment-links/info?token=${encodeURIComponent(token)}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data?.error || 'Payment link could not be loaded');
+            setInfo(data as PaymentLinkInfo);
         } catch (err: any) {
             console.error('Error loading payment link:', err);
             setError('Este link de pago no es válido o ha expirado.');
@@ -304,6 +303,18 @@ export default function AgencyCheckoutPage({ token }: AgencyCheckoutPageProps) {
                                 <CheckCircle size={48} style={{ color: '#22c55e' }} />
                                 <h2>Pago ya completado</h2>
                                 <p>Este link de pago ya fue utilizado. Tu suscripción está activa.</p>
+                            </>
+                        ) : info.status === 'past_due' || info.status === 'failed' ? (
+                            <>
+                                <XCircle size={48} style={{ color: '#ef4444' }} />
+                                <h2>{info.status === 'past_due' ? 'Pago pendiente' : 'Pago fallido'}</h2>
+                                <p>
+                                    Stripe no confirmó el pago de esta suscripción. Contacta a{' '}
+                                    <a href={`mailto:${info.agencySupportEmail}`} style={{ color: info.agencyPrimaryColor }}>
+                                        {info.agencyName}
+                                    </a>{' '}
+                                    para revisar el método de pago o recibir un nuevo link.
+                                </p>
                             </>
                         ) : (
                             <>

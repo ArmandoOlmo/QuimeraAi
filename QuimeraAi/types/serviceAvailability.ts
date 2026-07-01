@@ -1,3 +1,5 @@
+import { isPlatformUnlimitedUser } from '../services/billing/planCatalog';
+
 /**
  * Service Availability Types
  * Sistema de control global de disponibilidad de servicios de la plataforma
@@ -153,8 +155,9 @@ export function getStatusLabel(status: ServiceStatus): string {
  */
 export function canRoleAccessService(
     status: ServiceStatus,
-    _userRole: string
+    userRole: string
 ): boolean {
+    if (isPlatformUnlimitedUser(userRole)) return true;
     return status === 'public';
 }
 

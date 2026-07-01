@@ -53,7 +53,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
     const [auditLog, setAuditLog] = useState<ServiceAuditEntry[]>([]);
     const [isLoadingAuditLog, setIsLoadingAuditLog] = useState(false);
 
-    const userRole = userDocument?.role || 'user';
+    const userRole = authContext?.isUserOwner ? 'owner' : userDocument?.role || 'user';
 
     // =========================================================================
     // LOAD AVAILABILITY (one-shot fetch — no realtime needed for admin config)
@@ -120,7 +120,7 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
 
     // Load audit log on mount (only for super admins who have read access)
     useEffect(() => {
-        if (userRole === 'owner' || userRole === 'superadmin') {
+        if (canRoleAccessService('development', userRole)) {
             refreshAuditLog();
         }
     }, [refreshAuditLog, userRole]);
@@ -276,23 +276,23 @@ export function useServiceAvailability(): UseServiceAvailabilityReturn {
  * Uso: const canAccessCMS = useCanAccessService('cms');
  */
 export function useCanAccessService(serviceId: PlatformServiceId): boolean {
-    const { isServicePublic, isLoading } = useServiceAvailability();
+    const { canAccessService, isLoading } = useServiceAvailability();
 
     if (isLoading) return false;
 
-    return isServicePublic(serviceId);
+    return canAccessService(serviceId);
 }
 
 /**
  * Hook para obtener todos los servicios que el usuario puede acceder
  */
 export function useAccessibleServices(): PlatformServiceId[] {
-    const { isServicePublic, isLoading } = useServiceAvailability();
+    const { canAccessService, isLoading } = useServiceAvailability();
 
     return useMemo(() => {
         if (isLoading) {
             return [];
         }
-        return PLATFORM_SERVICES.filter(s => isServicePublic(s.id)).map(s => s.id);
-    }, [isLoading, isServicePublic]);
+        return PLATFORM_SERVICES.filter(s => canAccessService(s.id)).map(s => s.id);
+    }, [canAccessService, isLoading]);
 }

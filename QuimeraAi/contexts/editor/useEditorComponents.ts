@@ -9,6 +9,7 @@ import {
 } from '../../types';
 import { componentStyles as defaultComponentStyles } from '../../data/componentStyles';
 import { supabase } from '../../supabase';
+import { isAdminRole } from '../../constants/roles';
 import type { User } from '@supabase/supabase-js';
 
 interface UseEditorComponentsParams {
@@ -89,7 +90,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
     // ─── Component Style Management ───
 
     const updateComponentStyle = async (componentId: string, newStyles: any, isCustom: boolean) => {
-        if (!['superadmin', 'admin', 'manager', 'owner'].includes(userRole)) {
+        if (!isAdminRole(userRole)) {
             return;
         }
 
@@ -229,7 +230,7 @@ export const useEditorComponents = ({ user, userRole }: UseEditorComponentsParam
     };
 
     const renameCustomComponent = async (componentId: string, newName: string): Promise<void> => {
-        if (!['owner', 'superadmin', 'admin', 'manager'].includes(userRole)) {
+        if (!isAdminRole(userRole)) {
             throw new Error("Only administrators and managers can rename components.");
         }
         if (!newName.trim()) throw new Error("Component name cannot be empty.");

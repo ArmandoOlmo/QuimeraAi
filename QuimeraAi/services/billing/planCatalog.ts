@@ -300,10 +300,15 @@ const PLAN_META: Record<CanonicalPlanId, Pick<SubscriptionPlan, 'name' | 'descri
 
 export const COMMERCIAL_PLAN_IDS = CANONICAL_PLAN_IDS.filter(id => id !== 'free');
 export const AGENCY_PLAN_IDS = ['agency_starter', 'agency_pro', 'agency_scale'] as const;
+export const PLATFORM_UNLIMITED_PLAN_ID: CanonicalPlanId = 'enterprise';
 
 export function isPlatformUnlimitedUser(role?: string | null): boolean {
-    const normalized = String(role || '').trim().toLowerCase();
+    const normalized = String(role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
     return normalized === 'owner' || normalized === 'superadmin';
+}
+
+export function resolvePlanIdForPlatformRole(planId?: string | null, role?: string | null): CanonicalPlanId {
+    return isPlatformUnlimitedUser(role) ? PLATFORM_UNLIMITED_PLAN_ID : normalizePlanId(planId);
 }
 
 export function isLegacyPlan(planId?: string | null): boolean {
@@ -398,6 +403,22 @@ export function getCanonicalPlan(planId?: string | null): SubscriptionPlan {
         isAgencyPlan: isAgencyPlan(id),
         projectCost: limits.projectCost,
         hasSharedCreditsPool: isAgencyPlan(id),
+    };
+}
+
+export function getPlatformUnlimitedPlan(role?: string | null): SubscriptionPlan | null {
+    if (!isPlatformUnlimitedUser(role)) return null;
+
+    const plan = getCanonicalPlan(PLATFORM_UNLIMITED_PLAN_ID);
+    return {
+        ...plan,
+        name: 'Ilimitado',
+        description: 'Acceso interno de plataforma sin limites de plan.',
+        price: { monthly: 0, annually: 0 },
+        limits: {
+            ...plan.limits,
+            hardLimit: false,
+        },
     };
 }
 

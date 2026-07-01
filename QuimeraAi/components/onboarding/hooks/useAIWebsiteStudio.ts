@@ -979,12 +979,15 @@ export function useAIWebsiteStudio() {
     const { t, i18n } = useTranslation();
     const currentTenantId = tenantContext?.currentTenant?.id || null;
     const planAccess = usePlanAccess();
-    const { isServicePublic, isLoading: isLoadingServices } = useServiceAvailability();
+    const {
+        canAccessService: canAccessConfiguredService,
+        isLoading: isLoadingServices,
+    } = useServiceAvailability();
 
     const accessContext = useMemo<ComponentAccessContext>(() => ({
-        canAccessService: (serviceId) => !isLoadingServices && isServicePublic(serviceId),
+        canAccessService: (serviceId) => !isLoadingServices && canAccessConfiguredService(serviceId),
         hasPlanFeature: (feature) => !planAccess.isLoading && planAccess.hasAccess(feature),
-    }), [isLoadingServices, isServicePublic, planAccess.hasAccess, planAccess.isLoading]);
+    }), [canAccessConfiguredService, isLoadingServices, planAccess.hasAccess, planAccess.isLoading]);
 
     const accessibleComponentRegistry = useMemo(
         () => getAccessibleComponentRegistry(accessContext),

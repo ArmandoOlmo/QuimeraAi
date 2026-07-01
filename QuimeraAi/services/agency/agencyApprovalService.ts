@@ -126,8 +126,32 @@ export async function respondClientPortalApproval(
     decision: PortalApprovalDecision,
     responseNote?: string,
 ) {
+    const payload = buildClientApprovalResponsePayload(approvalId, decision, responseNote);
+    const sessionResult = typeof client.auth?.getSession === 'function'
+        ? await client.auth.getSession()
+        : null;
+    const accessToken = sessionResult?.data?.session?.access_token;
+
+    if (accessToken && typeof fetch === 'function') {
+        const response = await fetch('/api/agency/approvals/respond', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+                approvalId: payload.approvalId,
+                decision: payload.decision,
+                responseNote: payload.responseNote,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Failed to respond to approval');
+        return data;
+    }
+
     const { data, error } = await client.functions.invoke('onboarding-api', {
-        body: buildClientApprovalResponsePayload(approvalId, decision, responseNote),
+        body: payload,
     });
 
     if (error) throw error;

@@ -69,6 +69,46 @@ function fromTable(supabase: SupabaseClient, table: string) {
   return supabase.from(table as never) as any;
 }
 
+function normalizeRole(role: unknown): string {
+  const normalized = String(role || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  if (normalized === "owner") return "owner";
+  if (normalized === "superadmin") return "superadmin";
+  return String(role || "user").trim().toLowerCase() || "user";
+}
+
+function isPlatformOwnerRole(role: unknown): boolean {
+  const normalized = normalizeRole(role);
+  return normalized === "owner" || normalized === "superadmin";
+}
+
+function isConfiguredOwnerEmail(email: unknown): boolean {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const configuredEmails = [
+    Deno.env.get("OWNER_EMAIL"),
+    Deno.env.get("VITE_OWNER_EMAIL"),
+  ]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(/[,\s]+/))
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  return Boolean(normalizedEmail && configuredEmails.includes(normalizedEmail));
+}
+
+function resolveEdgeUserRole(authUser: Record<string, any>, userRow?: Record<string, any> | null): string {
+  const claimRole = authUser?.app_metadata?.isOwner === true
+    ? "owner"
+    : authUser?.app_metadata?.role;
+
+  if (isPlatformOwnerRole(claimRole)) return normalizeRole(claimRole);
+  if (isPlatformOwnerRole(userRow?.role)) return normalizeRole(userRow?.role);
+  if (authUser?.app_metadata?.isOwner === true || isConfiguredOwnerEmail(userRow?.email || authUser?.email)) {
+    return "owner";
+  }
+
+  return normalizeRole(userRow?.role || claimRole || "user");
+}
+
 async function getJwtUser(req: Request, supabase: SupabaseClient) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -136,7 +176,7 @@ export async function requireServiceAccess(req: Request, options: EdgeAccessOpti
   ]);
 
   const tenantId = options.tenantId || String(projectContext?.tenant_id || "");
-  const userRole = String(userRow?.role || authUser.app_metadata?.role || "user").trim().toLowerCase();
+  const userRole = resolveEdgeUserRole(authUser as Record<string, any>, userRow);
 
   const [{ data: tenant }, { data: membership }, { data: subscription }, { data: serviceSettings }] = await Promise.all([
     tenantId
@@ -151,7 +191,7 @@ export async function requireServiceAccess(req: Request, options: EdgeAccessOpti
     fromTable(supabase, "settings").select("config").eq("id", "serviceAvailability").maybeSingle(),
   ]);
 
-  const isPlatformRole = userRole === "owner" || userRole === "superadmin";
+  const isPlatformRole = isPlatformOwnerRole(userRole);
   const isTenantOwner = Boolean(tenant?.owner_user_id && tenant.owner_user_id === authUser.id);
   const isProjectOwner = Boolean(projectContext?.user_id && projectContext.user_id === authUser.id);
 

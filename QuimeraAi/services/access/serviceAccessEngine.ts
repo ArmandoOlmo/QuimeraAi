@@ -231,14 +231,6 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
         return blocked('not_authenticated', 'Debes iniciar sesión para acceder a este recurso');
     }
 
-    if (serviceStatus === 'not_public') {
-        return blocked('service_not_public', 'Este servicio no está público', { requiredService });
-    }
-
-    if (serviceStatus === 'development') {
-        return blocked('service_in_development', 'Este servicio está en desarrollo', { requiredService });
-    }
-
     if (isPlatformUnlimitedUser(role)) {
         return allowed(normalizedRole === 'owner' ? 'owner_override' : 'superadmin_override', 'Acceso permitido por rol interno de plataforma', {
             adminOverride: true,
@@ -246,6 +238,14 @@ export function resolveServiceAccess(input: ServiceAccessInput): ServiceAccessDe
             requiredFeature: requiredFeature ? String(requiredFeature) : undefined,
             requiredPermission,
         });
+    }
+
+    if (serviceStatus === 'not_public') {
+        return blocked('service_not_public', 'Este servicio no está público', { requiredService });
+    }
+
+    if (serviceStatus === 'development') {
+        return blocked('service_in_development', 'Este servicio está en desarrollo', { requiredService });
     }
 
     if (!input.tenantId && (input.moduleId || input.serviceId || input.featureKey || input.requestedUsage || input.aiOperation)) {

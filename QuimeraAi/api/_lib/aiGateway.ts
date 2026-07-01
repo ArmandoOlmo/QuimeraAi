@@ -131,6 +131,45 @@ const CREDIT_COSTS: Record<string, number> = {
   image_generation_ultra: 8,
 };
 
+function isPlatformUnlimitedRole(role?: string | null): boolean {
+  const normalized = String(role || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+  return normalized === 'owner' || normalized === 'superadmin';
+}
+
+function isConfiguredOwnerEmail(email?: string | null): boolean {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const configuredEmails = [
+    process.env.OWNER_EMAIL,
+    process.env.VITE_OWNER_EMAIL,
+  ]
+    .filter(Boolean)
+    .flatMap((value) => String(value).split(/[,\s]+/))
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  return Boolean(normalizedEmail && configuredEmails.includes(normalizedEmail));
+}
+
+async function isPlatformUnlimitedActor(
+  supabase: SupabaseClient,
+  auth: McpAuthContext,
+): Promise<boolean> {
+  if (!auth.userId) return false;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('role, email')
+    .eq('id', auth.userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('[aiGateway] could not resolve user role for internal credit override', error);
+    return false;
+  }
+
+  return isPlatformUnlimitedRole(data?.role) || isConfiguredOwnerEmail(data?.email);
+}
+
 export interface AiGatewayInput {
   tenantId: string;
   projectId?: string;
@@ -367,7 +406,10 @@ async function checkCredits(
   supabase: SupabaseClient,
   tenantId: string,
   requiredCredits: number,
+  adminOverride = false,
 ): Promise<void> {
+  if (adminOverride) return;
+
   const { data, error } = await supabase
     .from('subscriptions')
     .select('ai_credits_usage')
@@ -396,12 +438,14 @@ async function consumeCredits(
   creditsUsed: number,
   usage: AiGatewayResult['usage'],
   traceId: string,
+  adminOverride = false,
 ): Promise<void> {
+  const chargedCredits = adminOverride ? 0 : creditsUsed;
   await supabase.from('ai_credits_transactions').insert({
     tenant_id: input.tenantId,
     user_id: auth.userId || null,
     operation,
-    credits_used: creditsUsed,
+    credits_used: chargedCredits,
     description: `MCP ${input.purpose}`,
     metadata: {
       project_id: input.projectId,
@@ -413,8 +457,12 @@ async function consumeCredits(
       trace_id: traceId,
       agent_id: input.agentId || auth.agentId,
       source_tool: input.metadata?.sourceTool,
+      admin_override: adminOverride,
+      estimated_credits: adminOverride ? creditsUsed : undefined,
     },
   });
+
+  if (adminOverride) return;
 
   const { data } = await supabase
     .from('subscriptions')
@@ -619,7 +667,8 @@ export async function generateContent(
   };
 
   try {
-    await checkCredits(supabase, input.tenantId, creditsUsed);
+    const adminOverride = await isPlatformUnlimitedActor(supabase, auth);
+    await checkCredits(supabase, input.tenantId, creditsUsed, adminOverride);
     const response = await callAiProxy({
       projectId: input.projectId || `mcp-${input.tenantId}`,
       userId: auth.userId || auth.agentId,
@@ -635,10 +684,10 @@ export async function generateContent(
     const content = mode === 'prompt' ? text : parseJsonOrText(text);
     if (Array.isArray(content?.warnings)) warnings.push(...content.warnings);
 
-    await consumeCredits(supabase, auth, input, operation, creditsUsed, usage, traceId);
+    await consumeCredits(supabase, auth, input, operation, creditsUsed, usage, traceId, adminOverride);
     await logApiCall(supabase, auth, input, usage, startTime, true, traceId);
 
-    return { status: 'success', content, usage, creditsUsed, warnings, traceId };
+    return { status: 'success', content, usage, creditsUsed: adminOverride ? 0 : creditsUsed, warnings, traceId };
   } catch (error: any) {
     await logApiCall(supabase, auth, input, usage, startTime, false, traceId, error.message);
     throw error;
@@ -667,7 +716,8 @@ export async function generateImage(
   };
 
   try {
-    await checkCredits(supabase, input.tenantId, creditsUsed);
+    const adminOverride = await isPlatformUnlimitedActor(supabase, auth);
+    await checkCredits(supabase, input.tenantId, creditsUsed, adminOverride);
 
     const response = await callAiProxy({
       projectId: input.projectId || `image-gen-${input.tenantId}`,
@@ -712,7 +762,7 @@ export async function generateImage(
       traceId,
     );
 
-    await consumeCredits(supabase, auth, input, operation, creditsUsed, usage, traceId);
+    await consumeCredits(supabase, auth, input, operation, creditsUsed, usage, traceId, adminOverride);
     await logApiCall(supabase, auth, input, usage, startTime, true, traceId);
 
     return {
@@ -725,7 +775,7 @@ export async function generateImage(
         url: saved.url,
       },
       usage,
-      creditsUsed,
+      creditsUsed: adminOverride ? 0 : creditsUsed,
       warnings,
       traceId,
     };

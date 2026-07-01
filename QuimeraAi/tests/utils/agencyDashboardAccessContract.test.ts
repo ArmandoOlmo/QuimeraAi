@@ -136,6 +136,7 @@ describe('Agency dashboard Service Access contract', () => {
         expect(projectTransferModal).toContain('const canTransferProjects = !serviceAccess.isLoading && projectTransferAccess.allowed');
         expect(projectTransferModal).toContain('if (!canTransferProjects) {');
         expect(projectTransferModal).toContain('projectTransferAccess.message');
+        expect(projectTransferModal).toContain("fetch('/api/agency/projects/transfer'");
         expect(projectTransferModal).toContain('disabled={!canTransferProjects || isTransferring || transferResult?.success}');
         expect(projectTransferModal).toContain('disabled={!canTransferProjects || !selectedClientId || isTransferring}');
     });
@@ -155,7 +156,7 @@ describe('Agency dashboard Service Access contract', () => {
         expect(onboardingWorkflow).toContain('if (!canProvisionAgencyClients) {');
         expect(onboardingWorkflow).toContain('disabled={!canProvisionAgencyClients}');
         expect(onboardingWorkflow).toContain('disabledReason={provisioningDisabledReason}');
-        expect(onboardingWorkflow).toContain("supabase.functions.invoke('onboarding-api'");
+        expect(onboardingWorkflow).toContain("fetch('/api/agency/clients/create'");
     });
 
     it('centralizes Agency dashboard scrolling inside the content viewport', () => {

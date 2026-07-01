@@ -200,9 +200,9 @@ export const AiCreditsUsage: React.FC<AiCreditsUsageProps> = ({
 
     // Use global upgrade context if available
     const upgradeContext = useSafeUpgrade();
-    const { userDocument, loadingAuth } = useAuth();
+    const { userDocument, loadingAuth, isUserOwner } = useAuth();
     // Check role first (most reliable), then email-based owner check as fallback
-    const userRole = userDocument?.role;
+    const userRole = isUserOwner ? 'owner' : userDocument?.role;
     const isOwner = isPlatformUnlimitedUser(userRole);
 
     const [usageByOperation, setUsageByOperation] = useState<Record<string, { count: number; credits: number }>>({});
@@ -609,7 +609,6 @@ export const InlineCreditIndicator: React.FC<InlineCreditIndicatorProps> = ({
 export default AiCreditsUsage;
 
 export { PurchaseCreditsModal };
-
 
 
 

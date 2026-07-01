@@ -12,6 +12,7 @@ describe('Portal client reports contract', () => {
     const dashboard = read('components/portal/PortalDashboard.tsx');
     const exportsFile = read('components/portal/index.ts');
     const reportingService = read('services/reportingService.ts');
+    const agencyActivityService = read('services/agency/agencyActivityService.ts');
     const reportsGenerator = read('components/dashboard/agency/ReportsGenerator.tsx');
     const activityDisplay = read('components/dashboard/agency/agencyActivityDisplay.ts');
     const activityFeed = read('components/dashboard/agency/ClientActivityFeed.tsx');
@@ -61,7 +62,7 @@ describe('Portal client reports contract', () => {
         expect(reportingService).toContain("const reportStatus = canPublishToClientPortal ? 'sent' : 'draft'");
         expect(reportingService).toContain("clientPortal: {");
         expect(reportingService).toContain("visible: options.publishToClientPortal === true && Boolean(clientTenantId) && ['sent', 'published'].includes(reportStatus)");
-        expect(reportingService).toContain("clientPortalVisible: input.publishToClientPortal && input.reportStatus !== 'draft'");
+        expect(agencyActivityService).toContain("clientPortalVisible: input.publishToClientPortal && input.reportStatus !== 'draft'");
 
         expect(reportsGenerator).toContain("dashboard.agency.reports.publishToPortal");
         expect(reportsGenerator).toContain('publishToClientPortal: canPublishToClientPortal && publishToClientPortal');
