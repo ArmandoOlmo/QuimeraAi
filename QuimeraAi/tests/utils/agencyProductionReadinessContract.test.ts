@@ -66,6 +66,8 @@ describe('Agency production readiness contract', () => {
         expect(agencyWebhookService).toContain('export function buildAgencyBillingEventInsert');
         expect(agencyWebhookService).toContain('export function buildAgencyUsageLedgerInsert');
         expect(agencyWebhookService).toContain('export function isDuplicateStripeWebhookEventStatus');
+        expect(agencyWebhookService).toContain('STRIPE_WEBHOOK_PROCESSING_RETRY_AFTER_MS');
+        expect(stripeWebhook).toContain('existing.updated_at || existing.created_at');
         expect(agencyWebhookService).toContain('stripe:agency-client-subscription');
         expect(agencyWebhookService).toContain('unit_cost: unitCost');
         expect(agencyWebhookService).toContain('unit_price: unitPrice');

@@ -3,7 +3,8 @@ export const AGENCY_CLIENT_BILLING_FLOWS = new Set([
   "agency_client_managed_billing",
 ]);
 
-export const STRIPE_WEBHOOK_FINAL_STATUSES = new Set(["processing", "processed"]);
+export const STRIPE_WEBHOOK_PROCESSING_RETRY_AFTER_MS = 10 * 60 * 1000;
+export const STRIPE_WEBHOOK_FINAL_STATUSES = new Set(["processed", "ignored"]);
 
 export interface AgencyBillingEventRefs {
   isAgencyBilling: boolean;
@@ -133,8 +134,20 @@ export function buildAgencyBillingEventInsert(event: { id: string; type: string;
   };
 }
 
-export function isDuplicateStripeWebhookEventStatus(status?: string | null) {
-  return STRIPE_WEBHOOK_FINAL_STATUSES.has(String(status || ""));
+export function isDuplicateStripeWebhookEventStatus(
+  status?: string | null,
+  lastStatusAt?: string | null,
+  now = new Date(),
+) {
+  const normalizedStatus = String(status || "");
+  if (STRIPE_WEBHOOK_FINAL_STATUSES.has(normalizedStatus)) return true;
+  if (normalizedStatus !== "processing") return false;
+  if (!lastStatusAt) return true;
+
+  const parsedLastStatusAt = new Date(lastStatusAt).getTime();
+  if (!Number.isFinite(parsedLastStatusAt)) return true;
+
+  return now.getTime() - parsedLastStatusAt < STRIPE_WEBHOOK_PROCESSING_RETRY_AFTER_MS;
 }
 
 export function isUniqueConstraintViolation(error?: { code?: string | null; message?: string | null } | null) {

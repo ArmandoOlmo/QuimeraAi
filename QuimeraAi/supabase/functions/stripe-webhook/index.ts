@@ -181,7 +181,10 @@ async function registerPaymentEvent(event: Stripe.Event) {
     .maybeSingle();
   if (existingError) throw existingError;
   if (existing) {
-    return { duplicate: isDuplicateStripeWebhookEventStatus(existing.status), row: existing };
+    return {
+      duplicate: isDuplicateStripeWebhookEventStatus(existing.status, existing.updated_at || existing.created_at),
+      row: existing,
+    };
   }
 
   const { data, error } = await supabase
@@ -211,7 +214,10 @@ async function registerPaymentEvent(event: Stripe.Event) {
         .maybeSingle();
       if (racedError) throw racedError;
       if (!raced) throw error;
-      return { duplicate: isDuplicateStripeWebhookEventStatus(raced?.status), row: raced };
+      return {
+        duplicate: isDuplicateStripeWebhookEventStatus(raced?.status, raced?.updated_at || raced?.created_at),
+        row: raced,
+      };
     }
     throw error;
   }
@@ -234,7 +240,10 @@ async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplic
     throw existingError;
   }
   if (existing) {
-    return { duplicate: isDuplicateStripeWebhookEventStatus(existing.status), row: existing };
+    return {
+      duplicate: isDuplicateStripeWebhookEventStatus(existing.status, existing.updated_at || existing.created_at),
+      row: existing,
+    };
   }
 
   let paymentLinkId: string | null = null;
@@ -268,7 +277,10 @@ async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplic
         .maybeSingle();
       if (racedError) throw racedError;
       if (!raced) throw error;
-      return { duplicate: isDuplicateStripeWebhookEventStatus(raced?.status), row: raced };
+      return {
+        duplicate: isDuplicateStripeWebhookEventStatus(raced?.status, raced?.updated_at || raced?.created_at),
+        row: raced,
+      };
     }
     throw error;
   }

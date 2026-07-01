@@ -155,9 +155,14 @@ describe('Agency Stripe webhook helpers', () => {
     })).toBeNull();
   });
 
-  it('treats only in-flight or processed Stripe events as webhook duplicates', () => {
-    expect(isDuplicateStripeWebhookEventStatus('processing')).toBe(true);
+  it('dedupes processed webhooks and only holds recent in-flight Stripe events', () => {
+    const now = new Date('2026-07-01T15:30:00.000Z');
+
     expect(isDuplicateStripeWebhookEventStatus('processed')).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('ignored')).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('processing')).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('processing', '2026-07-01T15:25:00.000Z', now)).toBe(true);
+    expect(isDuplicateStripeWebhookEventStatus('processing', '2026-07-01T15:19:59.000Z', now)).toBe(false);
     expect(isDuplicateStripeWebhookEventStatus('received')).toBe(false);
     expect(isDuplicateStripeWebhookEventStatus('failed')).toBe(false);
     expect(isDuplicateStripeWebhookEventStatus(null)).toBe(false);
