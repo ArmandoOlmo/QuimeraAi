@@ -1222,7 +1222,7 @@ const GlobalAiAssistant: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([{ role: 'model', text: globalAssistantConfig.greeting }]);
     const [isThinking, setIsThinking] = useState(false);
     const [isExecutingCommands, setIsExecutingCommands] = useState(false);
-    const [isMinimized, setIsMinimized] = useState(false); // New state for minimize mode
+    const [isMinimized, setIsMinimized] = useState(true);
     const [pendingOperatingLayerTask, setPendingOperatingLayerTask] = useState<PendingOperatingLayerTask | null>(null);
 
     // Auto-minimize on mobile for specific routes (e.g., biopage)
