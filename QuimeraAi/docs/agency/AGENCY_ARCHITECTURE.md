@@ -35,6 +35,7 @@ Agency Engine is the agency operating layer for Quimera.ai. It uses the existing
 
 - `services/agency/agencyApprovalService.ts`: Client Portal approval mapping, safe list queries, and response payloads routed to `onboarding-api`.
 - `services/agency/agencySnapshotService.ts`: snapshot payload creation, preview, application audit rows, and draft-only project updates.
+- `services/agency/agencyUsageLedgerService.ts`: Agency finance summaries from raw usage ledger rows, service-plan fallback estimates, operational billing counts, and past-due client detection.
 - `services/agency/agencyWebhookService.ts`: shared Stripe webhook mapping, Agency billing event rows, idempotency helpers, and usage ledger insert payloads.
 
 ## Roles

@@ -7,6 +7,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import type { Tenant, TenantUsage, TenantStatus } from '../types/multiTenant';
 import { resolveProjectName } from '../utils/resolveProjectName';
+import {
+    fetchAgencyFinanceMetrics,
+    getEmptyAgencyFinanceMetrics,
+    readClientMrr,
+    type AgencyFinancialMetrics,
+} from '../services/agency/agencyUsageLedgerService';
 
 // =============================================================================
 // TYPES
@@ -46,18 +52,7 @@ export interface AggregatedMetrics {
     agencyOperatingSystem: AgencyOperatingSystemMetrics;
 }
 
-export interface AgencyFinancialMetrics {
-    ledgerRevenue: number;
-    baseCost: number;
-    markup: number;
-    margin: number;
-    marginPercentage: number;
-    ledgerEntryCount: number;
-    openPaymentLinks: number;
-    pendingApprovals: number;
-    pastDueClients: number;
-    billingEventCount: number;
-}
+export type { AgencyFinancialMetrics } from '../services/agency/agencyUsageLedgerService';
 
 export interface AgencyOperatingSystemMetrics {
     clientsWithOperatingSystem: number;
@@ -251,49 +246,6 @@ function readOrderTotal(order: any): number {
     }
 
     return fallback;
-}
-
-function readClientMrr(client: Tenant): number {
-    const values = [
-        client.billing?.mrr,
-        client.billing?.monthlyPrice,
-        client.billingInfo?.mrr,
-    ];
-
-    for (const value of values) {
-        const amount = Number(value);
-        if (Number.isFinite(amount) && amount > 0) return amount;
-    }
-
-    return 0;
-}
-
-function getEmptyAgencyFinanceMetrics(): AgencyFinancialMetrics {
-    return {
-        ledgerRevenue: 0,
-        baseCost: 0,
-        markup: 0,
-        margin: 0,
-        marginPercentage: 0,
-        ledgerEntryCount: 0,
-        openPaymentLinks: 0,
-        pendingApprovals: 0,
-        pastDueClients: 0,
-        billingEventCount: 0,
-    };
-}
-
-function isMissingAgencyProductionTable(error: unknown): boolean {
-    const err = error as { code?: string; message?: string } | null;
-    const message = String(err?.message || '').toLowerCase();
-    return err?.code === '42P01' ||
-        err?.code === 'PGRST205' ||
-        message.includes('could not find the table') ||
-        message.includes('does not exist');
-}
-
-function calculateMarginPercentage(revenue: number, margin: number): number {
-    return revenue > 0 ? Math.round((margin / revenue) * 1000) / 10 : 0;
 }
 
 function readStringArray(value: unknown): string[] {
@@ -688,90 +640,8 @@ export function useAgencyMetrics(agencyTenantId: string) {
         let isMounted = true;
 
         const fetchAgencyFinance = async () => {
-            const finance = getEmptyAgencyFinanceMetrics();
-            finance.pastDueClients = subClients.filter(client => {
-                const status = String(client.billing?.subscriptionStatus || client.billing?.status || '').toLowerCase();
-                return status === 'past_due' || status === 'unpaid' || status === 'payment_failed';
-            }).length;
-
             try {
-                const { data: ledgerRows, error: ledgerError } = await supabase
-                    .from('agency_usage_ledger')
-                    .select('usage_quantity,revenue_amount,platform_cost,margin_amount,billing_status')
-                    .eq('agency_tenant_id', agencyTenantId);
-
-                if (ledgerError && !isMissingAgencyProductionTable(ledgerError)) {
-                    throw ledgerError;
-                }
-
-                if (!ledgerError && ledgerRows?.length) {
-                    ledgerRows.forEach((row: any) => {
-                        finance.ledgerEntryCount += 1;
-                        finance.ledgerRevenue += Number(row.revenue_amount || 0);
-                        finance.baseCost += Number(row.platform_cost || 0);
-                        finance.margin += Number(row.margin_amount || 0);
-                    });
-                    finance.markup = finance.margin;
-                } else if (subClients.length > 0) {
-                    const planIds = Array.from(new Set(
-                        subClients
-                            .map(client => client.agencyPlanId)
-                            .filter(Boolean) as string[]
-                    ));
-                    const plansById = new Map<string, { price: number; baseCost: number }>();
-
-                    if (planIds.length > 0) {
-                        const { data: planRows, error: plansError } = await supabase
-                            .from('agency_service_plans')
-                            .select('id,price,base_cost')
-                            .in('id', planIds);
-
-                        if (plansError && !isMissingAgencyProductionTable(plansError)) {
-                            throw plansError;
-                        }
-
-                        (planRows || []).forEach((row: any) => {
-                            plansById.set(row.id, {
-                                price: Number(row.price || 0),
-                                baseCost: Number(row.base_cost || 0),
-                            });
-                        });
-                    }
-
-                    subClients.forEach(client => {
-                        const plan = client.agencyPlanId ? plansById.get(client.agencyPlanId) : undefined;
-                        const revenue = readClientMrr(client) || Number(plan?.price || 0);
-                        const baseCost = Number(plan?.baseCost || 0);
-                        finance.ledgerRevenue += revenue;
-                        finance.baseCost += baseCost;
-                    });
-                    finance.margin = finance.ledgerRevenue - finance.baseCost;
-                    finance.markup = finance.margin;
-                }
-
-                const { count: openPaymentLinks, error: paymentLinksError } = await supabase
-                    .from('agency_client_payment_links')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('agency_tenant_id', agencyTenantId)
-                    .eq('status', 'pending');
-                if (paymentLinksError && !isMissingAgencyProductionTable(paymentLinksError)) throw paymentLinksError;
-                finance.openPaymentLinks = openPaymentLinks || 0;
-
-                const { count: pendingApprovals, error: approvalsError } = await supabase
-                    .from('agency_client_approvals')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('agency_tenant_id', agencyTenantId)
-                    .eq('status', 'pending');
-                if (approvalsError && !isMissingAgencyProductionTable(approvalsError)) throw approvalsError;
-                finance.pendingApprovals = pendingApprovals || 0;
-
-                const { count: billingEventCount, error: billingEventsError } = await supabase
-                    .from('agency_billing_events')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('agency_tenant_id', agencyTenantId);
-                if (billingEventsError && !isMissingAgencyProductionTable(billingEventsError)) throw billingEventsError;
-                finance.billingEventCount = billingEventCount || 0;
-                finance.marginPercentage = calculateMarginPercentage(finance.ledgerRevenue, finance.margin);
+                const finance = await fetchAgencyFinanceMetrics(supabase, agencyTenantId, subClients);
 
                 if (isMounted) {
                     setAggregatedMetrics(prev => ({

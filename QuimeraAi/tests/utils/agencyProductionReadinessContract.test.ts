@@ -16,6 +16,7 @@ describe('Agency production readiness contract', () => {
     const packageJson = read('package.json');
     const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
     const agencyWebhookService = read('services/agency/agencyWebhookService.ts');
+    const agencyUsageLedgerService = read('services/agency/agencyUsageLedgerService.ts');
 
     it('hardens platform subscription plan RLS without mixing Agency service plans into platform billing', () => {
         expect(migration).toContain('drop policy if exists "Authenticated users can manage subscription plans"');
@@ -72,12 +73,18 @@ describe('Agency production readiness contract', () => {
     });
 
     it('surfaces production Agency margin controls without reading client billing cost data', () => {
-        expect(agencyMetricsHook).toContain('export interface AgencyFinancialMetrics');
-        expect(agencyMetricsHook).toContain(".from('agency_usage_ledger')");
-        expect(agencyMetricsHook).toContain(".from('agency_client_payment_links')");
-        expect(agencyMetricsHook).toContain(".from('agency_client_approvals')");
-        expect(agencyMetricsHook).toContain(".from('agency_billing_events')");
-        expect(agencyMetricsHook).toContain('calculateMarginPercentage');
+        expect(agencyMetricsHook).toContain('export type { AgencyFinancialMetrics }');
+        expect(agencyMetricsHook).toContain("from '../services/agency/agencyUsageLedgerService'");
+        expect(agencyMetricsHook).toContain('fetchAgencyFinanceMetrics(supabase, agencyTenantId, subClients)');
+        expect(agencyMetricsHook).not.toContain(".from('agency_usage_ledger')");
+        expect(agencyUsageLedgerService).toContain('AGENCY_USAGE_LEDGER_FINANCE_SELECT');
+        expect(agencyUsageLedgerService).toContain(".from('agency_usage_ledger')");
+        expect(agencyUsageLedgerService).toContain(".from('agency_client_payment_links')");
+        expect(agencyUsageLedgerService).toContain(".from('agency_client_approvals')");
+        expect(agencyUsageLedgerService).toContain(".from('agency_billing_events')");
+        expect(agencyUsageLedgerService).toContain('calculateMarginPercentage');
+        expect(agencyUsageLedgerService).not.toContain("err?.code === '42501'");
+        expect(agencyUsageLedgerService).not.toContain("code === '42501'");
         expect(agencyOverview).toContain('agencyFinance.baseCost');
         expect(agencyOverview).toContain('agencyFinance.margin');
         expect(agencyOverview).toContain('agencyFinance.pendingApprovals');
