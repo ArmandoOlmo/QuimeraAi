@@ -8,6 +8,7 @@ const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relati
 describe('Agency provisioning BusinessBlueprint contract', () => {
     const onboardingApi = read('supabase/functions/onboarding-api/index.ts');
     const onboardingWorkflow = read('components/dashboard/agency/OnboardingWorkflow.tsx');
+    const platformAssetUpload = read('utils/platformAssetUpload.ts');
 
     it('maps agency AI generation flags to canonical client modules', () => {
         expect(onboardingApi).toContain('const AGENCY_ENGINE_FOUNDATION_MODULES = [');
@@ -131,11 +132,14 @@ describe('Agency provisioning BusinessBlueprint contract', () => {
     });
 
     it('uploads agency client logos to Supabase Storage and sends logoUrl to the blueprint', () => {
-        expect(onboardingWorkflow).toContain("const CLIENT_LOGO_BUCKET = 'platform-assets'");
-        expect(onboardingWorkflow).toContain('uploadClientLogoToStorage(supabase, currentTenant.id, data.logo)');
-        expect(onboardingWorkflow).toContain('.storage');
-        expect(onboardingWorkflow).toContain('.upload(storagePath, file');
-        expect(onboardingWorkflow).toContain('.getPublicUrl(storagePath)');
+        expect(onboardingWorkflow).toContain("import { uploadPlatformAsset } from '../../../utils/platformAssetUpload'");
+        expect(onboardingWorkflow).toContain('uploadClientLogoToStorage(currentTenant.id, data.logo)');
+        expect(onboardingWorkflow).toContain('buildClientLogoStoragePath(agencyTenantId, file.name)');
+        expect(onboardingWorkflow).toContain('uploadPlatformAsset(storagePath, file');
+        expect(platformAssetUpload).toContain("const PLATFORM_ASSETS_BUCKET = 'platform-assets'");
+        expect(platformAssetUpload).toContain('/api/storage/platform-assets/signed-upload');
+        expect(platformAssetUpload).toContain('.storage');
+        expect(platformAssetUpload).toContain('.uploadToSignedUrl(signed.path, signed.token, fileBody');
         expect(onboardingWorkflow).toContain('logoUrl,');
         expect(onboardingWorkflow).not.toContain('https://example.com/logo.png');
         expect(onboardingWorkflow).not.toContain('simulate');

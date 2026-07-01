@@ -28,8 +28,14 @@ Agency Engine is the agency operating layer for Quimera.ai. It uses the existing
 
 - Browser UI reads and writes only through RLS-protected tables and Supabase Edge functions.
 - Stripe secret operations run only in Supabase Edge functions.
-- Client approvals are handled by `onboarding-api`, not direct portal table updates.
+- Client approval reads are centralized in `services/agency/agencyApprovalService.ts` with an explicit safe column list. Approval responses are handled by `onboarding-api`, not direct portal table updates.
 - Reports are generated from real tenant, project, store order, usage, and Agency relationship data.
+
+## Canonical Services
+
+- `services/agency/agencyApprovalService.ts`: Client Portal approval mapping, safe list queries, and response payloads routed to `onboarding-api`.
+- `services/agency/agencySnapshotService.ts`: snapshot payload creation, preview, application audit rows, and draft-only project updates.
+- `services/agency/agencyWebhookService.ts`: shared Stripe webhook mapping, Agency billing event rows, idempotency helpers, and usage ledger insert payloads.
 
 ## Roles
 

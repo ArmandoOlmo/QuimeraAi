@@ -17,6 +17,8 @@ function getNestedValue(source: Record<string, unknown>, keyPath: string): unkno
 describe('Agency Client Portal operating surface contract', () => {
     const dashboard = read('components/dashboard/agency/AgencyDashboardMain.tsx');
     const clientPortalSettings = read('components/dashboard/agency/AgencyClientPortalSettings.tsx');
+    const portalApprovalsHook = read('hooks/usePortalApprovals.ts');
+    const agencyApprovalService = read('services/agency/agencyApprovalService.ts');
     const routes = read('routes/config.ts');
     const manifest = getAgencyEngineOperatingSystemManifest();
 
@@ -58,6 +60,20 @@ describe('Agency Client Portal operating surface contract', () => {
         expect(clientPortalSettings).toContain('Transferred websites, storefronts, modules, and delivery status.');
         expect(clientPortalSettings).toContain('Shared performance reports, AI summaries, recommendations, and exports.');
         expect(clientPortalSettings).toContain('Plan, invoices, payment links, and agency-managed billing visibility.');
+    });
+
+    it('routes Client Portal approvals through the canonical Agency approval service', () => {
+        expect(portalApprovalsHook).toContain('../services/agency/agencyApprovalService');
+        expect(portalApprovalsHook).toContain('listClientPortalApprovals(supabase, clientTenantId');
+        expect(portalApprovalsHook).toContain('respondClientPortalApproval(supabase, approvalId, decision, responseNote)');
+        expect(portalApprovalsHook).not.toContain(".from('agency_client_approvals')");
+        expect(portalApprovalsHook).not.toContain(".select('*')");
+
+        expect(agencyApprovalService).toContain('export const AGENCY_APPROVAL_SELECT');
+        expect(agencyApprovalService).toContain(".from('agency_client_approvals')");
+        expect(agencyApprovalService).toContain(".select(AGENCY_APPROVAL_SELECT)");
+        expect(agencyApprovalService).toContain("client.functions.invoke('onboarding-api'");
+        expect(agencyApprovalService).toContain("action: 'respondClientApproval'");
     });
 
     it('ships Client Portal and canonical Agency tab labels through locale files', () => {
