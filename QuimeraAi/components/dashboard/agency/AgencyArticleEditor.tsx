@@ -28,10 +28,11 @@ import { useToast } from '../../../contexts/ToastContext';
 import { useFiles } from '../../../contexts/files';
 import { AgencyArticle, AgencyArticleCategory } from '../../../types/agencyContent';
 import {
-    ArrowLeft, Save, Globe, Type, Loader2, Sparkles,
+    ArrowLeft, Save, Globe, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
-    Star, Tag, User
+    Star, Tag, User, Settings, FileText
 } from 'lucide-react';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 
 import EditorMenuBar from '../../cms/modern/EditorMenuBar';
 import EditorBubbleMenu from '../../cms/modern/EditorBubbleMenu';
@@ -83,6 +84,15 @@ const ModernAgencyArticleEditor: React.FC<ModernAgencyArticleEditorProps> = ({ a
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
     const [metaDescription, setMetaDescription] = useState(article?.seo?.metaDescription || '');
+
+    // Collapsible settings sections (default all open)
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        general: true,
+        content: true,
+        author: true,
+        tags: true,
+        seo: true,
+    });
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
@@ -609,12 +619,22 @@ Text to format:
                                     <XIcon size={18} />
                                 </button>
                             </div>
-                            <div className="mb-6 hidden md:block">
-                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> Configuración</h3>
-                                <p className="text-xs text-q-text-muted">Configura metadata y apariencia del artículo.</p>
+                            <div className="mb-4 hidden md:block">
+                                <CollapsiblePanelHeader
+                                    title="Configuración"
+                                    onExpandAll={expandAll}
+                                    onCollapseAll={collapseAll}
+                                />
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-3">
+                                <CollapsibleSection
+                                    title="Configuración"
+                                    icon={<Settings size={14} />}
+                                    isOpen={openSections.general}
+                                    onToggle={() => toggle('general')}
+                                >
+                                    <div className="space-y-4">
                                 {/* URL Slug */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">URL Slug</label>
@@ -635,6 +655,16 @@ Text to format:
                                     </AppSelect>
                                 </div>
 
+                                    </div>
+                                </CollapsibleSection>
+
+                                <CollapsibleSection
+                                    title="Contenido"
+                                    icon={<FileText size={14} />}
+                                    isOpen={openSections.content}
+                                    onToggle={() => toggle('content')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">Imagen Destacada</label>
@@ -655,6 +685,16 @@ Text to format:
                                     <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Resumen corto para listados..." />
                                 </div>
 
+                                    </div>
+                                </CollapsibleSection>
+
+                                <CollapsibleSection
+                                    title="Autor y Fecha"
+                                    icon={<User size={14} />}
+                                    isOpen={openSections.author}
+                                    onToggle={() => toggle('author')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Author */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">Autor</label>
@@ -706,6 +746,16 @@ Text to format:
                                     </label>
                                 </div>
 
+                                    </div>
+                                </CollapsibleSection>
+
+                                <CollapsibleSection
+                                    title="Etiquetas y Destacado"
+                                    icon={<Tag size={14} />}
+                                    isOpen={openSections.tags}
+                                    onToggle={() => toggle('tags')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Tags */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">Tags</label>
@@ -764,10 +814,17 @@ Text to format:
                                     </label>
                                 </div>
 
+                                    </div>
+                                </CollapsibleSection>
+
                                 {/* SEO Section */}
-                                <div className="pt-6 border-t border-q-border">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
+                                <CollapsibleSection
+                                    title="SEO"
+                                    icon={<Globe size={14} />}
+                                    isOpen={openSections.seo}
+                                    onToggle={() => toggle('seo')}
+                                >
+                                    <div className="mb-3 flex justify-end">
                                         <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> Auto-Gen</button>
                                     </div>
 
@@ -784,7 +841,7 @@ Text to format:
                                             </p>
                                         </div>
                                     </div>
-                                </div>
+                                </CollapsibleSection>
                             </div>
                         </aside>
                     )}

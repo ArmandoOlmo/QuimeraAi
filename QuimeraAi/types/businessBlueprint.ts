@@ -7,6 +7,7 @@ import type {
     StorefrontTemplateCompatibility,
     StorefrontThemePresetId,
 } from './storefrontTheme';
+import type { MediaBlueprint as ContentProductionMediaBlueprint } from './mediaBlueprint';
 import type {
     WebsiteEcommerceBlockSettings,
     WebsiteEcommerceBlockSource,
@@ -722,10 +723,8 @@ export interface EmailMarketingBlueprint extends BlueprintModuleState {
     logEvents: IntegrationEventType[];
 }
 
-export interface MediaBlueprint extends BlueprintModuleState {
-    imageNeeds: string[];
-    videoNeeds: string[];
-    brandAssetNeeds: string[];
+export interface MediaBlueprint extends BlueprintModuleState, Omit<ContentProductionMediaBlueprint, 'enabled' | 'status' | 'readiness' | 'sourceMap'> {
+    sourceMap?: BlueprintSourceMap;
 }
 
 export type BioPageRouteStrategy = 'bio_slug' | 'project_subroute' | 'custom_domain';

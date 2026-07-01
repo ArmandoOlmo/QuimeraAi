@@ -3102,6 +3102,21 @@
     "updateSubdomain": "Mettre à jour",
     "setSubdomain": "Configurer"
   },
+  "contentStudio": {
+    "title": "Studio de Contenu",
+    "selectProject": "Sélectionner un Projet",
+    "selectProjectDescription": "Choisissez un projet pour créer des campagnes de contenu IA pour votre entreprise.",
+    "searchProjects": "Rechercher des projets...",
+    "noProjectsFound": "Aucun projet trouvé",
+    "noProjectsYet": "Vous n'avez pas encore de projets",
+    "tryDifferentSearch": "Essayez d'autres termes de recherche",
+    "createFirstProject": "Créez votre premier projet pour commencer à produire du contenu",
+    "openProject": "Ouvrir Studio de Contenu",
+    "newCampaign": "Nouvelle campagne",
+    "draft": "Brouillon",
+    "savedAt": "Enregistré {{time}}",
+    "manualSave": "Enregistrement manuel"
+  },
   "versionHistory": {
     "title": "Historique des versions",
     "nav": "Historique des versions",

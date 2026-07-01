@@ -9,7 +9,7 @@ import {
     ArrowRight, Menu, MessageSquare, PackageSearch, Palette,
     Languages, Search, FileText, FolderOpen,
     Navigation, Star, Settings, Grid3x3, List, X, Sparkles, Zap, Newspaper, Layout,
-    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail, ServerCog, Workflow
+    Loader2, DollarSign, Globe, UserPlus, CalendarDays, Mail, ServerCog, Workflow, Factory
 } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 import MobileSearchModal from '../ui/MobileSearchModal';
@@ -48,6 +48,7 @@ const AdminLeadsDashboard = React.lazy(() => import('./admin/AdminLeadsDashboard
 const AdminAppointmentsDashboard = React.lazy(() => import('./admin/AdminAppointmentsDashboard'));
 const AdminEmailHub = React.lazy(() => import('./admin/AdminEmailHub'));
 const AdminRealtyEngineControl = React.lazy(() => import('./admin/AdminRealtyEngineControl'));
+const ContentFactoryAdmin = React.lazy(() => import('./admin/ContentFactoryAdmin'));
 
 const NEW_BADGE_WINDOW_DAYS = 30;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -265,6 +266,7 @@ const SuperAdminDashboard = () => {
         { id: 'components', title: t('superadmin.componentsTitle'), description: t('superadmin.componentsDesc'), icon: <Puzzle size={24} />, category: 'content', route: ROUTES.ADMIN_COMPONENTS, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'content', title: t('superadmin.contentManagement'), description: t('superadmin.contentManagementDesc'), icon: <FileText size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'admin-assets', title: t('superadmin.imageLibrary', 'Librería de Imágenes'), description: t('superadmin.adminAssetsDesc', 'Biblioteca completa de imágenes de administración, templates y generaciones IA'), icon: <FolderOpen size={24} />, category: 'content', route: ROUTES.ADMIN_ASSETS, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin', 'admin'] },
+        { id: 'content-factory', title: t('superadmin.contentFactory', 'Content Factory Admin'), description: t('superadmin.contentFactoryDesc', 'Presets, prompt blocks, provider routing, safety, jobs, and publishing for Content Studio.'), icon: <Factory size={24} />, category: 'content', route: ROUTES.ADMIN_CONTENT_FACTORY, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-navigation', title: t('superadmin.landingNavigation'), description: t('superadmin.landingNavigationDesc'), icon: <Navigation size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_NAVIGATION, allowedRoles: ['owner', 'superadmin', 'admin'] },
         { id: 'landing-editor', title: t('superadmin.landingEditor', 'Editor Landing Page'), description: t('superadmin.landingEditorDesc', 'Editar componentes de la landing page con vista previa en tiempo real'), icon: <Layout size={24} />, category: 'content', route: ROUTES.ADMIN_LANDING_EDITOR, newSince: RECENT_FEATURE_RELEASE_DATE, allowedRoles: ['owner', 'superadmin'] },
 
@@ -296,6 +298,7 @@ const SuperAdminDashboard = () => {
     const adminFeatures = useMemo(() => {
         return allAdminFeatures.filter(feature => feature.allowedRoles.includes(userRole));
     }, [userRole, t]);
+    const canAccessContentFactoryAdmin = adminFeatures.some(feature => feature.id === 'content-factory');
 
     const categories = useMemo(() => {
         const categoryMap = new Map<string, number>();
@@ -324,7 +327,7 @@ const SuperAdminDashboard = () => {
     }, [adminFeatures, selectedCategory, searchQuery]);
 
     const priorityFeatures = useMemo(() => {
-        const priorityIds = ['tenants', 'subscriptions', 'finances', 'admin-email', 'content', 'service-availability'];
+        const priorityIds = ['tenants', 'subscriptions', 'finances', 'content-factory', 'admin-email', 'content', 'service-availability'];
         const priority = priorityIds
             .map(id => adminFeatures.find(feature => feature.id === id))
             .filter((feature): feature is AdminFeature => Boolean(feature));
@@ -370,6 +373,10 @@ const SuperAdminDashboard = () => {
             case 'components': return <ComponentsDashboard onBack={handleBack} />;
             case 'images': return <MediaManagerView onBack={handleBack} />;
             case 'admin-assets': return <MediaManagerView onBack={handleBack} />;
+            case 'content-factory': {
+                if (!canAccessContentFactoryAdmin) return null;
+                return <ContentFactoryAdmin onBack={handleBack} />;
+            }
             case 'mcp': return <AdminMcpManager onBack={handleBack} />;
             case 'global-assistant': return <GlobalAssistantSettings onBack={handleBack} />;
             case 'global-seo': return <GlobalSEOSettings onBack={handleBack} />;

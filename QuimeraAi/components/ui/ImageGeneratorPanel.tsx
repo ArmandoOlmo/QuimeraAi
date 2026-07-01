@@ -20,6 +20,7 @@ import { IMAGE_REFERENCE_CATEGORY_COLORS } from '../../types/visualIdentity';
 import type { ImageReferenceCategory } from '../../types/visualIdentity';
 import AddToVisualKitModal from './AddToVisualKitModal';
 import AppSelect from './AppSelect';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from './CollapsibleSection';
 import {
     MEDIA_GENERATOR_LAUNCH_EVENT,
     consumeMediaGeneratorLaunchRequest,
@@ -678,6 +679,14 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
         setReferenceImages([]);
     };
 
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        reference: true,
+        aspectRatio: true,
+        resolution: true,
+        style: true,
+        advanced: false,
+    });
+
     return (
         <div className={`bg-q-bg text-q-text font-sans flex flex-col h-full overflow-hidden ${className}`}>
             <style>{`
@@ -945,18 +954,21 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
 
                 {/* Sidebar Configuration */}
                 <aside className="w-full md:w-[360px] border-t md:border-t-0 md:border-l border-q-border/70 quimera-media-side-panel flex flex-col shrink-0 overflow-hidden relative z-40 flex-1 md:flex-none">
-                    <div className="flex items-center justify-between p-4 border-b border-q-border/70">
-                        <h3 className="text-q-text font-bold text-sm">{t('editor.configuration', { defaultValue: 'Configuration' })}</h3>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                        <CollapsiblePanelHeader
+                            title={t('editor.configuration', { defaultValue: 'Configuration' })}
+                            onExpandAll={expandAll}
+                            onCollapseAll={collapseAll}
+                        />
                         {/* Reference Images */}
-                        <div className="space-y-4">
+                        <CollapsibleSection
+                            title="Reference Image"
+                            icon={<ImageIcon size={14} />}
+                            isOpen={openSections.reference}
+                            onToggle={() => toggle('reference')}
+                            badge={<span className="text-xs text-q-text-secondary">{referenceImages.length}/14</span>}
+                        >
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Reference Image</label>
-                                    <span className="text-xs text-q-text-secondary">{referenceImages.length}/14</span>
-                                </div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -1019,14 +1031,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Aspect Ratio */}
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Aspect Ratio</label>
-                                <span className="text-xs text-q-accent font-mono font-bold">{aspectRatio}</span>
-                            </div>
+                        <CollapsibleSection
+                            title="Aspect Ratio"
+                            icon={<RectangleHorizontal size={14} />}
+                            isOpen={openSections.aspectRatio}
+                            onToggle={() => toggle('aspectRatio')}
+                            badge={<span className="text-xs text-q-accent font-mono font-bold">{aspectRatio}</span>}
+                        >
                             <div className="relative">
                                 {(() => {
                                     const selectedRatio = ASPECT_RATIOS.find(ratio => ratio.value === aspectRatio) || ASPECT_RATIOS[0];
@@ -1065,14 +1079,16 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Resolution */}
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Resolution</label>
-                                <span className="text-xs text-q-accent font-mono font-bold">{resolution}</span>
-                            </div>
+                        <CollapsibleSection
+                            title="Resolution"
+                            icon={<Monitor size={14} />}
+                            isOpen={openSections.resolution}
+                            onToggle={() => toggle('resolution')}
+                            badge={<span className="text-xs text-q-accent font-mono font-bold">{resolution}</span>}
+                        >
                             <div className="relative">
                                 {(() => {
                                     const selectedResolution = RESOLUTIONS.find(res => res.value === resolution) || RESOLUTIONS[1];
@@ -1111,13 +1127,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Style Presets */}
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-q-text-secondary uppercase tracking-wide">Style</label>
-                            </div>
+                        <CollapsibleSection
+                            title="Style"
+                            icon={<Palette size={14} />}
+                            isOpen={openSections.style}
+                            onToggle={() => toggle('style')}
+                        >
                             <div className="relative">
                                 <AppSelect
                                     value={style}
@@ -1130,18 +1148,15 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                 </AppSelect>
                                 <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-q-text-secondary pointer-events-none" />
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Advanced Collapsible */}
-                        <div className="pt-2 border-t border-dashed border-q-border/70">
-                            <details className="group">
-                                <summary className="flex items-center justify-between cursor-pointer list-none text-q-text font-medium text-sm py-2">
-                                    <span className="flex items-center gap-2">
-                                        <Settings2 size={16} className="text-q-text-secondary shrink-0" aria-hidden />
-                                        {t('editor.advancedSettings', { defaultValue: 'Advanced Settings' })}
-                                    </span>
-                                    <ChevronDown size={16} className="shrink-0 text-q-text-secondary transition-transform group-open:rotate-180" aria-hidden />
-                                </summary>
+                        <CollapsibleSection
+                            title={t('editor.advancedSettings', { defaultValue: 'Advanced Settings' })}
+                            icon={<Settings2 size={14} />}
+                            isOpen={openSections.advanced}
+                            onToggle={() => toggle('advanced')}
+                        >
                                 <div className="pt-4 space-y-5">
                                     {/* Thinking Level (Gemini models only) */}
                                     {selectedModel.startsWith('gemini-') && (
@@ -1218,8 +1233,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     </div>
 
                                 </div>
-                            </details>
-                        </div>
+                        </CollapsibleSection>
                     </div>
                 </aside>
             </div>

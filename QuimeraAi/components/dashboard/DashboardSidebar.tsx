@@ -278,6 +278,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isMobileOpen, onClo
     { id: 'leads', icon: Users, label: t('leads.title'), view: 'leads', route: ROUTES.LEADS, requiredFeature: 'crmEnabled', upgradeTrigger: 'generic', serviceId: 'crm', moduleId: 'crm-leads' },
     { id: 'email', icon: Mail, label: t('email.title', 'Email'), view: 'email', route: ROUTES.EMAIL, requiredFeature: 'emailMarketing', upgradeTrigger: 'generic', serviceId: 'emailMarketing', moduleId: 'email-marketing' },
     { id: 'assets', icon: Zap, label: t('sidebar.images', 'Imágenes'), view: 'assets', route: ROUTES.ASSETS, serviceId: 'aiFeatures', moduleId: 'media-assets' }, // AI Features
+    { id: 'content-studio', icon: Sparkles, label: t('contentStudio.title', 'Content Studio'), view: 'content-studio', route: ROUTES.CONTENT_STUDIO, requiredFeature: 'aiImageGeneration', upgradeTrigger: 'generic', serviceId: 'aiFeatures', moduleId: 'contentStudio' },
     { id: 'finance', icon: DollarSign, label: t('editor.finance'), view: 'finance', route: ROUTES.FINANCE, serviceId: 'finance', moduleId: 'finance' },
     { id: 'appointments', icon: Calendar, label: t('appointments.title'), view: 'appointments', route: ROUTES.APPOINTMENTS, serviceId: 'appointments', moduleId: 'appointments-engine' },
     { id: 'restaurants', icon: Utensils, label: t('restaurants.title', 'Restaurants'), view: 'restaurants', route: ROUTES.RESTAURANTS, upgradeTrigger: 'generic', serviceId: 'restaurants', moduleId: 'restaurant-engine' },

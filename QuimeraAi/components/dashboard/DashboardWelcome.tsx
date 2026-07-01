@@ -378,7 +378,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     {t('dashboard.heroSubtitlePart3')}
                 </motion.p>
 
-                <div className="relative z-[70] mx-auto mt-2 mb-6 w-full max-w-3xl pt-9 lg:mt-4 lg:mb-10">
+                <div className="relative z-[70] mx-auto mt-2 mb-6 w-full max-w-3xl pt-7 lg:mt-4 lg:mb-10">
                     <form
                         onSubmit={handlePromptSubmit}
                         className="quimera-ai-launcher quimera-ai-launcher-with-tab quimera-ai-launcher-enter relative"

@@ -143,10 +143,12 @@ const AgencyDashboardMain: React.FC = () => {
 
     return (
         <div className={agencyShellClass}>
-            {/* Sidebar */}
+            {/* Sidebar - collapse in the landing editor so the preview gets full width */}
             <DashboardSidebar
+                key={activeTab === 'landing' ? 'sidebar-editor' : 'sidebar-default'}
                 isMobileOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
+                defaultCollapsed={activeTab === 'landing'}
             />
 
             {/* Main Content */}

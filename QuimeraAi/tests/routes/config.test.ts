@@ -73,6 +73,41 @@ describe('route config', () => {
         });
     });
 
+    it('registers AI Content Production Studio public and admin surfaces with route guards', () => {
+        const studioRoute = getRouteConfig(ROUTES.CONTENT_STUDIO);
+        const adminRoute = getRouteConfig(ROUTES.ADMIN_CONTENT_FACTORY);
+
+        expect(studioRoute).toMatchObject({
+            path: ROUTES.CONTENT_STUDIO,
+            view: 'content-studio',
+            type: 'private',
+            requiresAuth: true,
+            requiresEmailVerified: true,
+            requiredService: 'aiFeatures',
+            requiredFeature: 'aiImageGeneration',
+            moduleId: 'contentStudio',
+        });
+        expect(hasRouteAccess(studioRoute!, undefined, false, true)).toBe(false);
+        expect(hasRouteAccess(studioRoute!, 'client', true, false)).toBe(false);
+        expect(hasRouteAccess(studioRoute!, 'client', true, true)).toBe(true);
+
+        expect(adminRoute).toMatchObject({
+            path: ROUTES.ADMIN_CONTENT_FACTORY,
+            view: 'superadmin',
+            adminView: 'content-factory',
+            type: 'admin',
+            requiresAuth: true,
+            requiresEmailVerified: true,
+            roles: ['owner', 'superadmin', 'admin'],
+            requiredService: 'aiFeatures',
+            requiredFeature: 'aiImageGeneration',
+            moduleId: 'contentFactoryAdmin',
+        });
+        expect(hasRouteAccess(adminRoute!, 'manager', true, true)).toBe(false);
+        expect(hasRouteAccess(adminRoute!, 'admin', true, true)).toBe(true);
+        expect(hasRouteAccess(adminRoute!, 'superadmin', true, true)).toBe(true);
+    });
+
     it('keeps service-backed visible routes tied to a registry module', () => {
         const missingModuleIds = routeConfigs
             .filter(route => route.showInNav && route.requiredService)

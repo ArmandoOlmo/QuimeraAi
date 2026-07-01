@@ -113,6 +113,7 @@ import { buildChatbotEngineSurfaceContext } from '../../utils/chatbotEngine/surf
 import { hexToRgba } from '../../utils/colorUtils';
 import { useServiceAvailability } from '../../hooks/useServiceAvailability';
 import AppSelect from '../ui/AppSelect';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
 import { supabase } from '../../supabase';
 import {
     generateBioPageQrCode,
@@ -1794,6 +1795,19 @@ const BioPageBuilder: React.FC = () => {
     const { navigate } = useRouter();
     const { user } = useAuth();
     const filesContext = useSafeFiles();
+
+    const {
+        openSections: settingsSections,
+        toggle: toggleSettingsSection,
+        expandAll: expandSettingsSections,
+        collapseAll: collapseSettingsSections,
+    } = useCollapsibleSections({
+        integrationReadiness: true,
+        publicRoute: true,
+        utm: true,
+        seo: true,
+        qrBranding: true,
+    });
 
     const { isServicePublic, isLoading: isLoadingServiceAvailability } = useServiceAvailability();
     const canAccessService = useCallback((serviceId?: PlatformServiceId | null): boolean => (
@@ -4480,16 +4494,11 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
         const visibleItems = items.filter(item => canAccessService(item.serviceId));
 
         return (
-            <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
-                            {t('bioPage.integrationReadiness', 'Integration readiness')}
-                        </p>
-                        <p className="text-xs text-q-text-muted">
-                            {t('bioPage.integrationReadinessDesc', 'Checks connected Quimera modules before public launch.')}
-                        </p>
-                    </div>
+                    <p className="text-xs text-q-text-muted">
+                        {t('bioPage.integrationReadinessDesc', 'Checks connected Quimera modules before public launch.')}
+                    </p>
                     {isLoadingIntegrationReadiness && <Loader2 size={16} className="animate-spin text-q-text-muted" />}
                 </div>
 
@@ -4545,13 +4554,27 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
 
         return (
             <div className="space-y-4">
-                {renderIntegrationReadinessPanel()}
+                <CollapsiblePanelHeader
+                    title={t('bioPage.settings', 'Settings')}
+                    onExpandAll={expandSettingsSections}
+                    onCollapseAll={collapseSettingsSections}
+                />
 
-                <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-3">
+                <CollapsibleSection
+                    title={t('bioPage.integrationReadiness', 'Integration readiness')}
+                    isOpen={settingsSections.integrationReadiness}
+                    onToggle={() => toggleSettingsSection('integrationReadiness')}
+                >
+                    {renderIntegrationReadinessPanel()}
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                    title={t('bioPage.publicRoute', 'Public route')}
+                    isOpen={settingsSections.publicRoute}
+                    onToggle={() => toggleSettingsSection('publicRoute')}
+                >
+                    <div className="space-y-3">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
-                            {t('bioPage.publicRoute', 'Public route')}
-                        </p>
                         <p className="text-xs text-q-text-muted">
                             {t('bioPage.publicRouteDesc', 'Set a short, shareable slug for this Bio Page.')}
                         </p>
@@ -4601,13 +4624,16 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             )}
                         </div>
                     </div>
-                </div>
+                    </div>
+                </CollapsibleSection>
 
-                <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
+                <CollapsibleSection
+                    title={t('bioPage.utmSettings', 'UTM settings')}
+                    isOpen={settingsSections.utm}
+                    onToggle={() => toggleSettingsSection('utm')}
+                >
+                    <div className="space-y-4">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
-                            {t('bioPage.utmSettings', 'UTM settings')}
-                        </p>
                         <p className="text-xs text-q-text-muted">
                             {t('bioPage.utmSettingsDesc', 'Configure campaign attribution for shared URLs and printed QR traffic.')}
                         </p>
@@ -4693,13 +4719,16 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             <span className="font-semibold text-foreground">{t('bioPage.qrUrlPreview', 'QR URL')}:</span> {qrCampaignUrl}
                         </p>
                     </div>
-                </div>
+                    </div>
+                </CollapsibleSection>
 
-                <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
+                <CollapsibleSection
+                    title={t('bioPage.seoSettings', 'SEO settings')}
+                    isOpen={settingsSections.seo}
+                    onToggle={() => toggleSettingsSection('seo')}
+                >
+                    <div className="space-y-4">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
-                            {t('bioPage.seoSettings', 'SEO settings')}
-                        </p>
                         <p className="text-xs text-q-text-muted">
                             {t('bioPage.seoSettingsDesc', 'Control search previews, social cards, canonical URL, and indexing.')}
                         </p>
@@ -4794,13 +4823,16 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             </span>
                         </label>
                     </div>
-                </div>
+                    </div>
+                </CollapsibleSection>
 
-                <div className="rounded-xl border border-q-border/50 bg-q-surface/50 p-4 space-y-4">
+                <CollapsibleSection
+                    title={t('bioPage.qrBranding', 'QR branding')}
+                    isOpen={settingsSections.qrBranding}
+                    onToggle={() => toggleSettingsSection('qrBranding')}
+                >
+                    <div className="space-y-4">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-q-text-secondary">
-                            {t('bioPage.qrBranding', 'QR branding')}
-                        </p>
                         <p className="text-xs text-q-text-muted">
                             {t('bioPage.qrBrandingDesc', 'Brand the downloadable QR code used in campaigns and print materials.')}
                         </p>
@@ -4844,7 +4876,8 @@ Return ONLY the improved bio text in ${currentLang}, nothing else. No quotes, no
                             </button>
                         )}
                     </div>
-                </div>
+                    </div>
+                </CollapsibleSection>
             </div>
         );
     };

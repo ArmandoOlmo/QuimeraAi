@@ -47,6 +47,7 @@ import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
 import AppSelect from '../../ui/AppSelect';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 
 type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
@@ -102,14 +103,32 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
     categoryId, setCategoryId, categories,
     podcastAudioUrl, setPodcastAudioUrl, isUploadingAudio, onAudioFileUpload, onTriggerAudioUpload, onAudioFileDrop,
     podcastVideoUrl, setPodcastVideoUrl, isUploadingVideo, uploadProgress, onTriggerVideoUpload, onVideoFileDrop
-}) => (
-    <>
-        <div className="mb-6">
-            <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('cms_editor.postSettings')}</h3>
-            <p className="text-xs text-q-text-muted">{t('cms_editor.metaDescription')}</p>
-        </div>
+}) => {
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        postSettings: true,
+        podcastAudio: true,
+        articleVideo: true,
+        authorDate: true,
+        seo: true,
+    });
 
-        <div className="space-y-6">
+    return (
+    <>
+        <CollapsiblePanelHeader
+            title={t('cms_editor.settings', { defaultValue: 'Settings' })}
+            onExpandAll={expandAll}
+            onCollapseAll={collapseAll}
+        />
+
+        <div className="space-y-3">
+            <CollapsibleSection
+                title={t('cms_editor.postSettings')}
+                icon={<Type size={14} />}
+                isOpen={openSections.postSettings}
+                onToggle={() => toggle('postSettings')}
+            >
+                <div className="space-y-6">
+                    <p className="text-xs text-q-text-muted">{t('cms_editor.metaDescription')}</p>
             <div>
                 <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('cms_editor.urlSlug')}</label>
                 <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
@@ -144,10 +163,16 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                     </AppSelect>
                 </div>
             )}
+                </div>
+            </CollapsibleSection>
 
             {/* Podcast Audio */}
-            <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><Headphones size={16} className="mr-2 text-primary" /> {t('cms_editor.podcastAudio', { defaultValue: 'Podcast Audio' })}</h4>
+            <CollapsibleSection
+                title={t('cms_editor.podcastAudio', { defaultValue: 'Podcast Audio' })}
+                icon={<Headphones size={14} />}
+                isOpen={openSections.podcastAudio}
+                onToggle={() => toggle('podcastAudio')}
+            >
                 {podcastAudioUrl ? (
                     <div className="space-y-3">
                         <audio controls className="w-full rounded-lg" style={{ height: '40px' }}>
@@ -197,11 +222,15 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         </div>
                     </div>
                 )}
-            </div>
+            </CollapsibleSection>
 
             {/* Podcast Video */}
-            <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><VideoIcon size={16} className="mr-2 text-primary" /> {t('cms_editor.articleVideo', { defaultValue: 'Article Video' })}</h4>
+            <CollapsibleSection
+                title={t('cms_editor.articleVideo', { defaultValue: 'Article Video' })}
+                icon={<VideoIcon size={14} />}
+                isOpen={openSections.articleVideo}
+                onToggle={() => toggle('articleVideo')}
+            >
                 {podcastVideoUrl ? (
                     <div className="space-y-3">
                         {(() => {
@@ -268,11 +297,15 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         </div>
                     </div>
                 )}
-            </div>
+            </CollapsibleSection>
 
             {/* Author & Date Controls */}
-            <div className="pt-6 border-t border-q-border">
-                <h4 className="font-bold text-sm flex items-center mb-4"><User size={16} className="mr-2" /> {t('cms_editor.authorDate', { defaultValue: 'Author & Date' })}</h4>
+            <CollapsibleSection
+                title={t('cms_editor.authorDate', { defaultValue: 'Author & Date' })}
+                icon={<User size={14} />}
+                isOpen={openSections.authorDate}
+                onToggle={() => toggle('authorDate')}
+            >
                 <div className="space-y-4">
                     {/* Author Name */}
                     <div>
@@ -325,15 +358,19 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         </label>
                     </div>
                 </div>
-            </div>
+            </CollapsibleSection>
 
-            <div className="pt-6 border-t border-q-border">
-                <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('cms_editor.seoSettings')}</h4>
-                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
-                </div>
-
+            {/* SEO Settings */}
+            <CollapsibleSection
+                title={t('cms_editor.seoSettings')}
+                icon={<Globe size={14} />}
+                isOpen={openSections.seo}
+                onToggle={() => toggle('seo')}
+            >
                 <div className="space-y-4">
+                    <div className="flex justify-end">
+                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('cms_editor.autoGen')}</button>
+                    </div>
                     <div>
                         <label className="block text-xs font-medium text-q-text-muted mb-1">{t('cms_editor.seoTitle')}</label>
                         <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder={t('cms_editor.seoTitlePlaceholder')} />
@@ -343,10 +380,11 @@ const SettingsSidebarContent: React.FC<SettingsSidebarContentProps> = ({
                         <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('cms_editor.seoDescPlaceholder')} />
                     </div>
                 </div>
-            </div>
+            </CollapsibleSection>
         </div>
     </>
-);
+    );
+};
 
 const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
     const { t } = useTranslation();

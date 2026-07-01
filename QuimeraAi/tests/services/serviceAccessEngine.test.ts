@@ -357,6 +357,48 @@ describe('Service Access Engine', () => {
         });
     });
 
+    it('gates Content Studio by the registry minimum plan while using AI features availability', () => {
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'free',
+            moduleId: 'contentStudio',
+            serviceId: 'aiFeatures',
+            featureKey: 'aiImageGeneration',
+        })).toMatchObject({
+            allowed: false,
+            reasonCode: 'plan_feature_missing',
+            currentPlan: 'free',
+            minimumPlan: 'individual',
+            upgradeRequired: true,
+        });
+
+        expect(resolveServiceAccess({
+            ...baseInput,
+            planId: 'individual',
+            moduleId: 'contentStudio',
+            serviceId: 'aiFeatures',
+            featureKey: 'aiImageGeneration',
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'allowed',
+            requiredService: 'aiFeatures',
+            requiredFeature: 'aiImageGeneration',
+        });
+
+        expect(resolveServiceAccess({
+            ...baseInput,
+            userRole: 'superadmin',
+            planId: 'free',
+            moduleId: 'contentStudio',
+            serviceId: 'aiFeatures',
+            featureKey: 'aiImageGeneration',
+        })).toMatchObject({
+            allowed: true,
+            reasonCode: 'superadmin_override',
+            adminOverride: true,
+        });
+    });
+
     it('resolves agency_client tenants to a valid finite effective plan', () => {
         const parent = {
             subscriptionPlan: 'agency_pro',

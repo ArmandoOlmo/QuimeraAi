@@ -62,12 +62,11 @@ import {
     AlertCircle,
     Check,
     MoreVertical,
-    ChevronDown,
-    ChevronUp,
     Menu,
     Type,
     Languages,
 } from 'lucide-react';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 
 import DashboardSidebar from '../DashboardSidebar';
 import HeaderBackButton from '../../ui/HeaderBackButton';
@@ -160,8 +159,8 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    // Collapsible sidebar sections
-    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    // Collapsible sidebar sections (shared system, preserves default-open behavior)
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections<string>({
         config: true,
         targeting: false,
         translation: false,
@@ -171,11 +170,6 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
     const contentImageInputRef = useRef<HTMLInputElement>(null);
     const videoFileInputRef = useRef<HTMLInputElement>(null);
     const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Toggle sidebar section
-    const toggleSection = (section: string) => {
-        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-    };
 
     // TipTap Editor — with ALL CMS extensions
     const editor = useEditor({
@@ -696,32 +690,20 @@ Text to format:
     const ROLES = ['user', 'admin', 'superadmin', 'manager'];
     const PLANS = ['free', 'starter', 'pro', 'enterprise'];
 
-    // --- Sidebar Section component (uses stable external component) ---
+    // --- Sidebar Section (shared CollapsibleSection) ---
     const renderSidebarSection = (
         id: string, sectionTitle: string, icon: React.ReactNode,
-        children: React.ReactNode, accentColor?: string
-    ) => {
-        const isExpanded = expandedSections[id] !== false;
-        return (
-            <div className="border-b border-q-border last:border-b-0">
-                <button
-                    onClick={() => toggleSection(id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-q-bg/50 transition-colors"
-                >
-                    <div className="flex min-w-0 items-center gap-2">
-                        <span className={`flex-shrink-0 ${accentColor || 'text-q-accent'}`}>{icon}</span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-bold text-q-text">{sectionTitle}</span>
-                    </div>
-                    {isExpanded ? (
-                        <ChevronUp size={14} className="text-q-text-secondary" />
-                    ) : (
-                        <ChevronDown size={14} className="text-q-text-secondary" />
-                    )}
-                </button>
-                {isExpanded && <div className="px-4 pb-4 space-y-4">{children}</div>}
-            </div>
-        );
-    };
+        children: React.ReactNode, _accentColor?: string
+    ) => (
+        <CollapsibleSection
+            title={sectionTitle}
+            icon={icon}
+            isOpen={openSections[id] !== false}
+            onToggle={() => toggle(id)}
+        >
+            <div className="space-y-4">{children}</div>
+        </CollapsibleSection>
+    );
 
     return (
         <>
@@ -922,8 +904,16 @@ Text to format:
                                     <XIcon size={18} />
                                 </button>
                             </div>
+                            <div className="space-y-3 p-4 md:p-6">
+                                <div className="hidden md:block">
+                                    <CollapsiblePanelHeader
+                                        title={t('superadmin.news.tabSettings', 'Configuración')}
+                                        onExpandAll={expandAll}
+                                        onCollapseAll={collapseAll}
+                                    />
+                                </div>
                             {/* ── Configuration Section ── */}
-                            {renderSidebarSection('config', t('superadmin.news.tabSettings', 'Configuración'), <Type size={16} />, <>
+                            {renderSidebarSection('config', t('superadmin.news.tabSettings', 'Configuración'), <Type size={14} />, <>
                                 {/* Featured Image — uses ImagePicker like CMS */}
                                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -1199,7 +1189,7 @@ Text to format:
                             </>)}
 
                             {/* ── Targeting Section ── */}
-                            {renderSidebarSection('targeting', t('superadmin.news.tabTargeting', 'Audiencia'), <Target size={16} />, <>
+                            {renderSidebarSection('targeting', t('superadmin.news.tabTargeting', 'Audiencia'), <Target size={14} />, <>
                                 {/* Target Type */}
                                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -1292,7 +1282,7 @@ Text to format:
                             </>, 'text-q-accent')}
 
                             {/* ── Translation Section ── */}
-                            {renderSidebarSection('translation', t('superadmin.news.translateNews'), <Languages size={16} />, <>
+                            {renderSidebarSection('translation', t('superadmin.news.translateNews'), <Languages size={14} />, <>
                                 {/* Language Selector */}
                                 <div className="bg-q-surface/50 p-4 rounded-lg border border-q-border">
                                     <label className="block text-xs font-bold text-q-text-secondary uppercase mb-3 flex items-center gap-2">
@@ -1419,7 +1409,7 @@ Text to format:
                             </>, 'text-q-accent')}
 
                             {/* ── Preview Section ── */}
-                            {renderSidebarSection('preview', t('superadmin.news.preview', 'Vista previa'), <Eye size={16} />, <>
+                            {renderSidebarSection('preview', t('superadmin.news.preview', 'Vista previa'), <Eye size={14} />, <>
                                 <div className="bg-q-bg border border-q-border rounded-lg overflow-hidden">
                                     {imageUrl ? (
                                         <img
@@ -1453,6 +1443,7 @@ Text to format:
                                     </div>
                                 </div>
                             </>, 'text-q-success')}
+                            </div>
                         </aside>
                     )}
                 </div>

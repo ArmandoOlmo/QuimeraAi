@@ -2544,6 +2544,21 @@
       }
     }
   },
+  "contentStudio": {
+    "title": "Estúdio de Conteúdo",
+    "selectProject": "Selecionar um Projeto",
+    "selectProjectDescription": "Escolha um projeto para criar campanhas de conteúdo com IA para o seu negócio.",
+    "searchProjects": "Buscar projetos...",
+    "noProjectsFound": "Nenhum projeto encontrado",
+    "noProjectsYet": "Você ainda não tem projetos",
+    "tryDifferentSearch": "Tente outros termos de busca",
+    "createFirstProject": "Crie seu primeiro projeto para começar a produzir conteúdo",
+    "openProject": "Abrir Estúdio de Conteúdo",
+    "newCampaign": "Nova campanha",
+    "draft": "Rascunho",
+    "savedAt": "Salvo {{time}}",
+    "manualSave": "Salvamento manual"
+  },
   "versionHistory": {
     "title": "Historico de Versoes",
     "nav": "Historico de Versoes",

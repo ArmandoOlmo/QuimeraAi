@@ -31,6 +31,7 @@ import StudioActionBar from '../studio/StudioActionBar';
 import StudioGenerationOverlay from '../studio/StudioGenerationOverlay';
 import StudioSummaryPanel from '../studio/StudioSummaryPanel';
 import { getAiStudioSummary, getAiStudioSummaryCopy, type StudioUXSummary } from '../../utils/studioUX';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -471,6 +472,15 @@ const BriefPanel: React.FC<{
     const [isDragging, setIsDragging] = useState(false);
     const [showComponentPicker, setShowComponentPicker] = useState(false);
     const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        business: true,
+        services: true,
+        contact: true,
+        colors: true,
+        typography: true,
+        components: true,
+        referenceImages: true,
+    });
 
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -519,9 +529,15 @@ const BriefPanel: React.FC<{
                 missingReviewLabel={t('aiWebsiteStudio.briefPanel.reviewLater')}
             />
 
+            <CollapsiblePanelHeader
+                title={t('aiWebsiteStudio.briefPanel.title')}
+                onExpandAll={expandAll}
+                onCollapseAll={collapseAll}
+            />
+
             {/* Business Info */}
             {(businessRows.length > 0 || brief.description) && (
-                <InspectorSection title={t('aiWebsiteStudio.briefPanel.business')} icon={<Building2 size={13} />}>
+                <CollapsibleSection title={t('aiWebsiteStudio.briefPanel.business')} icon={<Building2 size={14} />} isOpen={openSections.business} onToggle={() => toggle('business')}>
                     <div className="space-y-1.5">
                         {businessRows.map(row => (
                             <BriefCompactField key={row.label} label={row.label} value={row.value} />
@@ -532,12 +548,12 @@ const BriefPanel: React.FC<{
                             {brief.description}
                         </p>
                     )}
-                </InspectorSection>
+                </CollapsibleSection>
             )}
 
             {/* Services */}
             {brief.services.length > 0 && (
-                <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={13} />}>
+                <CollapsibleSection title={`${t('aiWebsiteStudio.briefPanel.services')} (${brief.services.length})`} icon={<Zap size={14} />} isOpen={openSections.services} onToggle={() => toggle('services')}>
                     <div className="flex flex-wrap gap-1.5">
                         {brief.services.map((s, i) => (
                             <span key={i} className="rounded-md border border-q-border/60 bg-q-surface/45 px-2 py-1 text-[10px] font-medium text-q-text-secondary">
@@ -545,22 +561,22 @@ const BriefPanel: React.FC<{
                             </span>
                         ))}
                     </div>
-                </InspectorSection>
+                </CollapsibleSection>
             )}
 
             {/* Contact */}
             {contactRows.length > 0 && (
-                <InspectorSection title={t('aiWebsiteStudio.briefPanel.contact')} icon={<Phone size={13} />}>
+                <CollapsibleSection title={t('aiWebsiteStudio.briefPanel.contact')} icon={<Phone size={14} />} isOpen={openSections.contact} onToggle={() => toggle('contact')}>
                     <div className="space-y-1.5">
                         {contactRows.map(row => (
                             <BriefCompactField key={row.label} label={row.label} value={row.value} />
                         ))}
                     </div>
-                </InspectorSection>
+                </CollapsibleSection>
             )}
 
             {/* Color Palette */}
-            <InspectorSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={13} />}>
+            <CollapsibleSection title={t('aiWebsiteStudio.briefPanel.colors')} icon={<Palette size={14} />} isOpen={openSections.colors} onToggle={() => toggle('colors')}>
                 <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-3">
                     {COLOR_KEYS.map(key => (
                         <ColorTokenControl
@@ -571,10 +587,10 @@ const BriefPanel: React.FC<{
                         />
                     ))}
                 </div>
-            </InspectorSection>
+            </CollapsibleSection>
 
             {/* Typography */}
-            <InspectorSection title={t('aiWebsiteStudio.briefPanel.typography')} icon={<Type size={13} />}>
+            <CollapsibleSection title={t('aiWebsiteStudio.briefPanel.typography')} icon={<Type size={14} />} isOpen={openSections.typography} onToggle={() => toggle('typography')}>
                 <div className="space-y-2">
                     {(['header', 'body', 'button'] as const).map(key => (
                         <div key={key} className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
@@ -591,10 +607,10 @@ const BriefPanel: React.FC<{
                         </div>
                     ))}
                 </div>
-            </InspectorSection>
+            </CollapsibleSection>
 
             {/* Components — Uniform compact chips */}
-            <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={13} />}>
+            <CollapsibleSection title={`${t('aiWebsiteStudio.briefPanel.components')} (${brief.suggestedComponents.length})`} icon={<LayoutTemplate size={14} />} isOpen={openSections.components} onToggle={() => toggle('components')}>
                 <div className="flex flex-wrap gap-[3px]">
                     <SortableComponentChips
                         items={brief.suggestedComponents}
@@ -624,10 +640,10 @@ const BriefPanel: React.FC<{
                         )}
                     </div>
                 </div>
-            </InspectorSection>
+            </CollapsibleSection>
 
             {/* Reference Images */}
-            <InspectorSection title={`${t('aiWebsiteStudio.briefPanel.referenceImages')} (${referenceImages.length}/14)`} icon={<Image size={13} />}>
+            <CollapsibleSection title={`${t('aiWebsiteStudio.briefPanel.referenceImages')} (${referenceImages.length}/14)`} icon={<Image size={14} />} isOpen={openSections.referenceImages} onToggle={() => toggle('referenceImages')}>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -703,22 +719,12 @@ const BriefPanel: React.FC<{
                         ))}
                     </div>
                 )}
-            </InspectorSection>
+            </CollapsibleSection>
         </div>
     );
 };
 
 // ── Brief sub-components ────────────────────────────────────────────────────
-
-const InspectorSection: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-    <section className="rounded-lg border border-q-border/75 bg-q-bg/70 p-3">
-        <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-q-text-secondary">
-            {icon}
-            <span>{title}</span>
-        </div>
-        {children}
-    </section>
-);
 
 const ColorTokenControl: React.FC<{ label: string; value: string; onChange: (value: string) => void }> = ({ label, value, onChange }) => (
     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-q-border/70 bg-q-surface/40 px-2 py-2">

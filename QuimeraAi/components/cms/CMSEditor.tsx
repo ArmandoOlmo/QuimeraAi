@@ -31,6 +31,7 @@ import ImagePicker from '../ui/ImagePicker';
 import { logApiCall } from '../../services/apiLoggingService';
 import HeaderBackButton from '../ui/HeaderBackButton';
 import ColorControl from '../ui/ColorControl';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
 
 interface CMSEditorProps {
     post: CMSPost | null;
@@ -69,6 +70,10 @@ const CMSEditor: React.FC<CMSEditorProps> = ({ post, onClose }) => {
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        postSettings: true,
+        seo: true,
+    });
     const [isSaving, setIsSaving] = useState(false);
     const [isAiWorking, setIsAiWorking] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -828,34 +833,48 @@ IMPORTANT FORMATTING RULES:
                 {/* --- Settings Sidebar --- */}
                 {isSidebarOpen && (
                     <aside className="w-80 bg-q-surface border-l border-q-border overflow-y-auto p-6 shrink-0 z-20 shadow-xl custom-scrollbar">
-                        <div className="mb-6">
-                            <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('postEditor.postSettings')}</h3>
-                            <p className="text-xs text-q-text-muted">{t('postEditor.configureMetadata')}</p>
-                        </div>
+                        <CollapsiblePanelHeader
+                            title={t('postEditor.settings', { defaultValue: 'Settings' })}
+                            onExpandAll={expandAll}
+                            onCollapseAll={collapseAll}
+                        />
 
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.urlSlug')}</label>
-                                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
-                            </div>
+                        <div className="space-y-3">
+                            <CollapsibleSection
+                                title={t('postEditor.postSettings')}
+                                icon={<Type size={14} />}
+                                isOpen={openSections.postSettings}
+                                onToggle={() => toggle('postSettings')}
+                            >
+                                <div className="space-y-6">
+                                    <p className="text-xs text-q-text-muted">{t('postEditor.configureMetadata')}</p>
+                                    <div>
+                                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.urlSlug')}</label>
+                                        <input value={slug} onChange={(e) => setSlug(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" />
+                                    </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.featuredImage')}</label>
-                                <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} contentId={post?.id || ''} contentType="post" />
-                            </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.featuredImage')}</label>
+                                        <ImagePicker label="" value={featuredImage} onChange={setFeaturedImage} hideUrlInput={true} contentId={post?.id || ''} contentType="post" />
+                                    </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.excerpt')}</label>
-                                <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
-                            </div>
-
-                            <div className="pt-6 border-t border-q-border">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> {t('postEditor.seoSettings')}</h4>
-                                    <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
+                                    <div>
+                                        <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('postEditor.excerpt')}</label>
+                                        <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Short summary for listings..." />
+                                    </div>
                                 </div>
+                            </CollapsibleSection>
 
+                            <CollapsibleSection
+                                title={t('postEditor.seoSettings')}
+                                icon={<Globe size={14} />}
+                                isOpen={openSections.seo}
+                                onToggle={() => toggle('seo')}
+                            >
                                 <div className="space-y-4">
+                                    <div className="flex justify-end">
+                                        <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('postEditor.autoGenerate')}</button>
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-medium text-q-text-muted mb-1">{t('postEditor.seoTitle')}</label>
                                         <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none text-foreground" placeholder="Max 60 characters" />
@@ -865,7 +884,7 @@ IMPORTANT FORMATTING RULES:
                                         <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder="Max 160 characters" />
                                     </div>
                                 </div>
-                            </div>
+                            </CollapsibleSection>
                         </div>
                     </aside>
                 )}

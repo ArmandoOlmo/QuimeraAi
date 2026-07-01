@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Loader2, Wand2, Download, ChevronDown, CheckCircle2, Zap,
     Sparkles, Film, Upload, X, Volume2, VolumeX, Settings2,
-    Square, RectangleHorizontal, RectangleVertical, Monitor, Maximize2
+    Square, RectangleHorizontal, RectangleVertical, Monitor, Maximize2,
+    Image as ImageIcon
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAI } from '../../contexts/ai';
@@ -22,6 +23,7 @@ import {
     consumeMediaGeneratorLaunchRequest,
     readMediaGeneratorLaunchEvent,
 } from '../../utils/mediaGeneratorLaunch';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
 
 export interface VideoGenerationSectionProps {
     destination: 'user' | 'global' | 'admin';
@@ -88,7 +90,6 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
     const [referenceImages, setReferenceImages] = useState<string[]>([]);
     const [negativePrompt, setNegativePrompt] = useState('');
     const [passthroughValues, setPassthroughValues] = useState<Record<string, unknown>>({});
-    const [showAdvanced, setShowAdvanced] = useState(false);
     const [isReferenceDragging, setIsReferenceDragging] = useState(false);
     const referenceInputRef = useRef<HTMLInputElement>(null);
 
@@ -245,7 +246,6 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
 
         setNegativePrompt('');
         setPassthroughValues({});
-        setShowAdvanced(false);
     }, [capabilities, selectedModelId]);
 
     useEffect(() => {
@@ -460,14 +460,30 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
 
     const selectedComingSoon = capabilities?.comingSoon || (capabilities && !capabilities.available);
 
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        model: true,
+        output: true,
+        frames: true,
+        advanced: false,
+    });
+
     return (
         <div className={`flex flex-col h-full overflow-hidden bg-q-bg text-q-text ${className}`}>
             <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
                 {/* Controls sidebar */}
-                <aside className="order-2 md:order-2 w-full md:w-[360px] shrink-0 border-t md:border-t-0 md:border-l border-q-border/70 overflow-y-auto p-4 space-y-5 quimera-media-side-panel">
+                <aside className="order-2 md:order-2 w-full md:w-[360px] shrink-0 border-t md:border-t-0 md:border-l border-q-border/70 overflow-y-auto p-4 space-y-3 quimera-media-side-panel">
+                    <CollapsiblePanelHeader
+                        title={t('editor.configuration', { defaultValue: 'Configuration' })}
+                        onExpandAll={expandAll}
+                        onCollapseAll={collapseAll}
+                    />
                     {/* Model selector */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-q-text-secondary uppercase">{t('mediaGeneration.model', { defaultValue: 'Model' })}</label>
+                    <CollapsibleSection
+                        title={t('mediaGeneration.model', { defaultValue: 'Model' })}
+                        icon={<Film size={14} />}
+                        isOpen={openSections.model}
+                        onToggle={() => toggle('model')}
+                    >
                         <div className="relative">
                             <button
                                 type="button"
@@ -550,8 +566,15 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                                 </>
                             )}
                         </div>
-                    </div>
+                    </CollapsibleSection>
 
+                    <CollapsibleSection
+                        title={t('mediaGeneration.outputSettings', { defaultValue: 'Output' })}
+                        icon={<Monitor size={14} />}
+                        isOpen={openSections.output}
+                        onToggle={() => toggle('output')}
+                    >
+                        <div className="space-y-4">
                     {capabilities?.supported_durations && capabilities.supported_durations.length > 0 && (
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-q-text-secondary uppercase">{t('mediaGeneration.duration', { defaultValue: 'Duration' })}</label>
@@ -730,7 +753,17 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                             />
                         </div>
                     )}
+                        </div>
+                    </CollapsibleSection>
 
+                    {(capabilities?.supports_frame_images !== false || capabilities?.supports_input_references) && (
+                    <CollapsibleSection
+                        title={t('mediaGeneration.framesAndReferences', { defaultValue: 'Frames & References' })}
+                        icon={<ImageIcon size={14} />}
+                        isOpen={openSections.frames}
+                        onToggle={() => toggle('frames')}
+                    >
+                        <div className="space-y-4">
                     {capabilities?.supports_frame_images !== false && (
                         <FrameImagePicker
                             startFrame={startFrame}
@@ -819,18 +852,16 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                             )}
                         </div>
                     )}
+                        </div>
+                    </CollapsibleSection>
+                    )}
 
-                    <button
-                        type="button"
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="flex items-center gap-2 text-xs text-q-text-secondary hover:text-q-text"
+                    <CollapsibleSection
+                        title={t('mediaGeneration.advanced', { defaultValue: 'Advanced' })}
+                        icon={<Settings2 size={14} />}
+                        isOpen={openSections.advanced}
+                        onToggle={() => toggle('advanced')}
                     >
-                        <Settings2 size={14} />
-                        {t('mediaGeneration.advanced', { defaultValue: 'Advanced' })}
-                        <ChevronDown size={12} className={showAdvanced ? 'rotate-180' : ''} />
-                    </button>
-
-                    {showAdvanced && (
                         <DynamicPassthroughControls
                             allowedParameters={capabilities?.allowed_passthrough_parameters}
                             values={passthroughValues}
@@ -838,7 +869,7 @@ const VideoGenerationSection: React.FC<VideoGenerationSectionProps> = ({
                             negativePrompt={negativePrompt}
                             onNegativePromptChange={setNegativePrompt}
                         />
-                    )}
+                    </CollapsibleSection>
                 </aside>
 
                 {/* Main area */}

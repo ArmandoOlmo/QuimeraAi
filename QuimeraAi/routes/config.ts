@@ -107,6 +107,12 @@ const AI_FEATURES_ROUTE_GATE = {
   moduleId: 'media-assets',
 };
 
+const CONTENT_STUDIO_ROUTE_GATE = {
+  requiredService: 'aiFeatures' as const,
+  requiredFeature: 'aiImageGeneration' as const,
+  moduleId: 'contentStudio',
+};
+
 const TEMPLATES_ROUTE_GATE = {
   requiredService: 'templates' as const,
   requiredFeature: 'templates' as const,
@@ -225,6 +231,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   WEBSITES: '/websites',
   ASSETS: '/assets',
+  CONTENT_STUDIO: '/content-studio',
   TEMPLATES: '/templates',
   VERSION_HISTORY: '/version-history',
   PROJECT_VERSION_HISTORY: '/dashboard/project/:projectId/version-history',
@@ -291,6 +298,7 @@ export const ROUTES = {
   ADMIN_COMPONENTS: '/admin/components',
   ADMIN_IMAGES: '/admin/images',
   ADMIN_ASSETS: '/admin/assets',
+  ADMIN_CONTENT_FACTORY: '/admin/content-factory',
   ADMIN_MCP: '/admin/mcp',
   ADMIN_GLOBAL_ASSISTANT: '/admin/global-assistant',
   ADMIN_DESIGN_TOKENS: '/admin/design-tokens',
@@ -537,6 +545,17 @@ export const routeConfigs: RouteConfig[] = [
     ...AI_FEATURES_ROUTE_GATE,
     showInNav: true,
     icon: 'Image',
+  },
+  {
+    path: ROUTES.CONTENT_STUDIO,
+    view: 'content-studio',
+    type: 'private',
+    title: 'Content Studio',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    ...CONTENT_STUDIO_ROUTE_GATE,
+    showInNav: true,
+    icon: 'Sparkles',
   },
   {
     path: ROUTES.TEMPLATES,
@@ -1116,6 +1135,20 @@ export const routeConfigs: RouteConfig[] = [
     requiresAuth: true,
     requiresEmailVerified: true,
     roles: ['owner', 'superadmin', 'admin'],
+    parent: ROUTES.SUPERADMIN,
+  },
+  {
+    path: ROUTES.ADMIN_CONTENT_FACTORY,
+    view: 'superadmin',
+    adminView: 'content-factory',
+    type: 'admin',
+    title: 'Content Factory Admin',
+    requiresAuth: true,
+    requiresEmailVerified: true,
+    roles: ['owner', 'superadmin', 'admin'],
+    requiredService: CONTENT_STUDIO_ROUTE_GATE.requiredService,
+    requiredFeature: CONTENT_STUDIO_ROUTE_GATE.requiredFeature,
+    moduleId: 'contentFactoryAdmin',
     parent: ROUTES.SUPERADMIN,
   },
   {

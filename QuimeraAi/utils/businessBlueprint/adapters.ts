@@ -37,6 +37,10 @@ import {
     createRestaurantBlueprintFromWebsitePlan,
     normalizeRestaurantBlueprint,
 } from './restaurantBlueprint.js';
+import {
+    CONTENT_STUDIO_BLUEPRINT_VERSION,
+    CONTENT_STUDIO_SCHEMA_VERSION,
+} from '../contentStudio/catalog.js';
 
 export interface BusinessBlueprintAdapterOptions {
     projectId?: string;
@@ -1612,9 +1616,44 @@ function createEmailMarketingBlueprint(plan: WebsitePlan, now: string): EmailMar
 }
 
 function createMediaBlueprint(plan: WebsitePlan, now: string): MediaBlueprint {
+    const generatedImageNeeds = plan.assetPlan.filter(asset => asset.source === 'generate').map(asset => asset.targetPath);
+
     return {
         ...createBlueprintModuleState(now),
-        imageNeeds: plan.assetPlan.filter(asset => asset.source === 'generate').map(asset => asset.targetPath),
+        blueprintVersion: CONTENT_STUDIO_BLUEPRINT_VERSION,
+        schemaVersion: CONTENT_STUDIO_SCHEMA_VERSION,
+        status: 'generated',
+        source: 'ai-studio',
+        generatedAt: now,
+        lastSyncedAt: now,
+        enabled: true,
+        publicStudioEnabled: true,
+        adminFactoryEnabled: false,
+        brandContext: {
+            businessName: plan.businessProfile.businessName,
+            industry: plan.businessProfile.industry,
+            brandVoice: plan.brandProfile.visualStyle,
+            colors: plan.brandProfile.colors as Record<string, string>,
+            fonts: plan.brandProfile.fonts,
+            logoUrl: plan.brandProfile.logoUrl,
+            source: 'websitePlan',
+        },
+        defaultFormats: ['1:1', '4:5', '9:16'],
+        defaultPlatforms: ['instagram', 'website'],
+        campaigns: [],
+        assets: [],
+        jobs: [],
+        presets: [],
+        sourceMap: {
+            businessProfile: 'websitePlan.businessProfile',
+            brandProfile: 'websitePlan.brandProfile',
+            generatedPrompt: 'websitePlan.assetPlan',
+        },
+        editableState: {
+            generatedByAI: true,
+            editedByUser: false,
+        },
+        imageNeeds: generatedImageNeeds,
         videoNeeds: [],
         brandAssetNeeds: plan.brandProfile.logoUrl ? [] : ['logo'],
     };

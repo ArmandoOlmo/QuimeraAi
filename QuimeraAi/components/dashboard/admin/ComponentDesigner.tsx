@@ -10,7 +10,8 @@ import ComponentPermissionsEditor from './ComponentPermissionsEditor';
 import ComponentDocumentationEditor from './ComponentDocumentationEditor';
 import { useAdmin } from '../../../contexts/admin';
 import { generateComponentThumbnail, createPlaceholderThumbnail } from '../../../utils/thumbnailGenerator';
-import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Grid, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin } from 'lucide-react';
+import { Image, List, Wrench, Star, Users, Megaphone, GalleryHorizontal, Tag, HelpCircle, Briefcase, Grid, Mail, FilePenLine, Video, Puzzle, Type, Plus, Menu, Settings, X, Save, Loader2, Clock, Camera, Sparkles, Shield, BookOpen, AlignJustify, Edit2, Check, MessageCircle, MapPin, SlidersHorizontal } from 'lucide-react';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 
 interface ComponentDesignerProps {
     previewDevice: PreviewDevice;
@@ -47,9 +48,12 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
     const [selectedComponentId, setSelectedComponentId] = useState<string>('header');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
-    const [showVariants, setShowVariants] = useState(false);
-    const [showPermissions, setShowPermissions] = useState(false);
-    const [showDocumentation, setShowDocumentation] = useState(false);
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        properties: true,
+        variants: true,
+        permissions: true,
+        documentation: true,
+    });
     const [activeMobilePanel, setActiveMobilePanel] = useState<'none' | 'nav' | 'props'>('none');
     const [isSaving, setIsSaving] = useState(false);
     const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
@@ -271,9 +275,8 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                 ${activeMobilePanel === 'props' ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'}
             `}>
                 <div className="p-4 border-b border-q-border flex-shrink-0">
-                    <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-q-text-secondary">Properties</h3>
-                        <button onClick={() => setActiveMobilePanel('none')} className="xl:hidden p-1 rounded-md hover:bg-q-surface-overlay">
+                    <div className="flex justify-end items-center mb-3 xl:hidden">
+                        <button onClick={() => setActiveMobilePanel('none')} className="p-1 rounded-md hover:bg-q-surface-overlay">
                             <X size={18} />
                         </button>
                     </div>
@@ -364,87 +367,53 @@ const ComponentDesigner: React.FC<ComponentDesignerProps> = ({ previewDevice, pr
                         </button>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
-                    <ComponentControls selectedComponentId={selectedComponentId} />
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <CollapsiblePanelHeader title="Properties" onExpandAll={expandAll} onCollapseAll={collapseAll} />
+
+                    <CollapsibleSection title="Controls" icon={<SlidersHorizontal size={14} />} isOpen={openSections.properties} onToggle={() => toggle('properties')}>
+                        <ComponentControls selectedComponentId={selectedComponentId} />
+                    </CollapsibleSection>
 
                     {/* Variants Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-q-border mt-4">
-                            <button
-                                onClick={() => setShowVariants(!showVariants)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
-                            >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
-                                    <Sparkles className="w-4 h-4" />
-                                    Variants {selectedComponent.variants && `(${selectedComponent.variants.length})`}
-                                </div>
-                                <span className={`transition-transform ${showVariants ? 'rotate-180' : ''}`}>▼</span>
-                            </button>
-                            {showVariants && (
-                                <div className="p-4 bg-q-bg">
-                                    <VariantsManager
-                                        component={selectedComponent}
-                                        onUpdateVariants={async (variants, activeVariant) => {
-                                            await updateComponentVariants(selectedComponent.id, variants, activeVariant);
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <CollapsibleSection
+                            title="Variants"
+                            icon={<Sparkles size={14} />}
+                            isOpen={openSections.variants}
+                            onToggle={() => toggle('variants')}
+                            badge={selectedComponent.variants ? <span className="text-[10px] font-semibold text-q-text-muted">{selectedComponent.variants.length}</span> : undefined}
+                        >
+                            <VariantsManager
+                                component={selectedComponent}
+                                onUpdateVariants={async (variants, activeVariant) => {
+                                    await updateComponentVariants(selectedComponent.id, variants, activeVariant);
+                                }}
+                            />
+                        </CollapsibleSection>
                     )}
 
                     {/* Permissions Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-q-border">
-                            <button
-                                onClick={() => setShowPermissions(!showPermissions)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
-                            >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
-                                    <Shield className="w-4 h-4" />
-                                    Permissions
-                                </div>
-                                <span className={`transition-transform ${showPermissions ? 'rotate-180' : ''}`}>▼</span>
-                            </button>
-                            {showPermissions && (
-                                <div className="p-4 bg-q-bg">
-                                    <ComponentPermissionsEditor
-                                        component={selectedComponent}
-                                        onUpdate={async (permissions: ComponentPermissions) => {
-                                            // Update component permissions
-                                            await updateComponentStyle(selectedComponent.id, { permissions }, true);
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <CollapsibleSection title="Permissions" icon={<Shield size={14} />} isOpen={openSections.permissions} onToggle={() => toggle('permissions')}>
+                            <ComponentPermissionsEditor
+                                component={selectedComponent}
+                                onUpdate={async (permissions: ComponentPermissions) => {
+                                    await updateComponentStyle(selectedComponent.id, { permissions }, true);
+                                }}
+                            />
+                        </CollapsibleSection>
                     )}
 
                     {/* Documentation Section (for custom components only) */}
                     {selectedComponent && (
-                        <div className="border-t border-q-border">
-                            <button
-                                onClick={() => setShowDocumentation(!showDocumentation)}
-                                className="w-full px-4 py-3 flex items-center justify-between hover:bg-q-surface-overlay/30 transition-colors"
-                            >
-                                <div className="flex items-center gap-2 text-sm font-semibold text-q-text">
-                                    <BookOpen className="w-4 h-4" />
-                                    Documentation
-                                </div>
-                                <span className={`transition-transform ${showDocumentation ? 'rotate-180' : ''}`}>▼</span>
-                            </button>
-                            {showDocumentation && (
-                                <div className="p-4 bg-q-bg">
-                                    <ComponentDocumentationEditor
-                                        component={selectedComponent}
-                                        onUpdate={async (documentation: ComponentDocumentation) => {
-                                            // Update component documentation
-                                            await updateComponentStyle(selectedComponent.id, { documentation }, true);
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <CollapsibleSection title="Documentation" icon={<BookOpen size={14} />} isOpen={openSections.documentation} onToggle={() => toggle('documentation')}>
+                            <ComponentDocumentationEditor
+                                component={selectedComponent}
+                                onUpdate={async (documentation: ComponentDocumentation) => {
+                                    await updateComponentStyle(selectedComponent.id, { documentation }, true);
+                                }}
+                            />
+                        </CollapsibleSection>
                     )}
                 </div>
             </aside>

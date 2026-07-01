@@ -19,9 +19,10 @@ import {
     X, Sparkles, Send, Mic, MicOff, Loader2,
     ArrowRight, CheckCircle, FileText, Settings2,
     Volume2, VolumeX, RefreshCcw, PhoneOff,
-    ChevronDown, Zap, AlertTriangle
+    ChevronDown, Zap, AlertTriangle, Users, BarChart3
 } from 'lucide-react';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
 import { LiveServerMessage, Modality } from '@google/genai';
 import { getGoogleGenAI } from '../../utils/genAiClient';
 import {
@@ -356,6 +357,14 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
     // --------------- Context State ---------------
     const [projectContext, setProjectContext] = useState<ProjectContentContext | null>(null);
     const [showSettings, setShowSettings] = useState(false);
+
+    // --------------- Content Plan Collapsible Sections ---------------
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        format: true,
+        audienceTone: true,
+        models: true,
+        stats: true,
+    });
 
     // --------------- Refs ---------------
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -1171,112 +1180,125 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                     </div>
 
                     {/* ===== RIGHT: CONTENT PLAN PANEL ===== */}
-                    <div className="w-72 border-l border-q-border bg-q-surface/30 p-4 overflow-y-auto hidden lg:flex flex-col gap-4 custom-scrollbar">
+                    <div className="w-72 border-l border-q-border bg-q-surface/30 p-4 overflow-y-auto hidden lg:flex flex-col gap-3 custom-scrollbar">
 
-                        {/* Content Parameters */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-1">
-                                <FileText className="w-4 h-4 text-q-accent" />
-                                <h3 className="text-sm font-bold text-q-text">
-                                    {language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
-                                </h3>
-                            </div>
+                        <CollapsiblePanelHeader
+                            title={language === 'es' ? 'Plan de Contenido' : 'Content Plan'}
+                            icon={<FileText size={15} className="text-q-accent" />}
+                            onExpandAll={expandAll}
+                            onCollapseAll={collapseAll}
+                        />
 
-                            {/* Content Type */}
-                            <div>
-                                <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Tipo' : 'Type'}
-                                </label>
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {CONTENT_TYPE_OPTIONS.map((ct) => (
+                        {/* Format: Type + Language */}
+                        <CollapsibleSection
+                            title={language === 'es' ? 'Formato' : 'Format'}
+                            icon={<FileText size={14} />}
+                            isOpen={openSections.format}
+                            onToggle={() => toggle('format')}
+                        >
+                            <div className="space-y-4">
+                                {/* Content Type */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                        {language === 'es' ? 'Tipo' : 'Type'}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {CONTENT_TYPE_OPTIONS.map((ct) => (
+                                            <button
+                                                key={ct.value}
+                                                onClick={() => setContentType(ct.value)}
+                                                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${contentType === ct.value
+                                                    ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                    : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
+                                                    }`}
+                                            >
+                                                {ct.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Language */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                        {language === 'es' ? 'Idioma' : 'Language'}
+                                    </label>
+                                    <div className="flex gap-1.5">
                                         <button
-                                            key={ct.value}
-                                            onClick={() => setContentType(ct.value)}
-                                            className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${contentType === ct.value
+                                            onClick={() => setLanguage('es')}
+                                            className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es'
                                                 ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
                                                 : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
-                                            {ct.label}
+                                            🇪🇸 Español
                                         </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Language */}
-                            <div>
-                                <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Idioma' : 'Language'}
-                                </label>
-                                <div className="flex gap-1.5">
-                                    <button
-                                        onClick={() => setLanguage('es')}
-                                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'es'
-                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
-                                            }`}
-                                    >
-                                        🇪🇸 Español
-                                    </button>
-                                    <button
-                                        onClick={() => setLanguage('en')}
-                                        className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en'
-                                            ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
-                                            : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
-                                            }`}
-                                    >
-                                        🇺🇸 English
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Audience */}
-                            <div>
-                                <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Audiencia' : 'Audience'}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={audience}
-                                    onChange={(e) => setAudience(e.target.value)}
-                                    placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'}
-                                    className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50"
-                                />
-                            </div>
-
-                            {/* Tone */}
-                            <div>
-                                <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
-                                    {language === 'es' ? 'Tono' : 'Tone'}
-                                </label>
-                                <div className="grid grid-cols-2 gap-1.5">
-                                    {TONE_OPTIONS.map((t) => (
                                         <button
-                                            key={t}
-                                            onClick={() => setTone(t)}
-                                            className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t
+                                            onClick={() => setLanguage('en')}
+                                            className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${language === 'en'
                                                 ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
                                                 : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
                                                 }`}
                                         >
-                                            {t}
+                                            🇺🇸 English
                                         </button>
-                                    ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
-                        {/* Divider */}
-                        <div className="border-t border-q-border/50" />
+                        {/* Audience & Tone */}
+                        <CollapsibleSection
+                            title={language === 'es' ? 'Audiencia y Tono' : 'Audience & Tone'}
+                            icon={<Users size={14} />}
+                            isOpen={openSections.audienceTone}
+                            onToggle={() => toggle('audienceTone')}
+                        >
+                            <div className="space-y-4">
+                                {/* Audience */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                        {language === 'es' ? 'Audiencia' : 'Audience'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={audience}
+                                        onChange={(e) => setAudience(e.target.value)}
+                                        placeholder={language === 'es' ? 'Emprendedores, Devs...' : 'Entrepreneurs, Devs...'}
+                                        className="w-full px-3 py-2 bg-q-bg border border-q-border rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-q-accent/50 text-q-text placeholder:text-q-text-secondary/50"
+                                    />
+                                </div>
 
-                        {/* Model Info */}
-                        <div className="bg-q-bg/50 rounded-xl p-3 space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-q-accent" />
-                                <span className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider">
-                                    {language === 'es' ? 'Modelos' : 'Models'}
-                                </span>
+                                {/* Tone */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-q-text-secondary uppercase tracking-wider mb-1.5 block">
+                                        {language === 'es' ? 'Tono' : 'Tone'}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {TONE_OPTIONS.map((t) => (
+                                            <button
+                                                key={t}
+                                                onClick={() => setTone(t)}
+                                                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${tone === t
+                                                    ? 'bg-q-accent/20 text-q-accent border border-q-accent/30'
+                                                    : 'bg-q-bg/50 text-q-text-secondary border border-q-border/50 hover:border-q-accent/30'
+                                                    }`}
+                                            >
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
+                        </CollapsibleSection>
+
+                        {/* Models */}
+                        <CollapsibleSection
+                            title={language === 'es' ? 'Modelos' : 'Models'}
+                            icon={<Zap size={14} />}
+                            isOpen={openSections.models}
+                            onToggle={() => toggle('models')}
+                        >
                             <div className="space-y-1.5 text-[11px]">
                                 <div className="flex items-center justify-between">
                                     <span className="text-q-text-secondary">💬 Chat:</span>
@@ -1291,25 +1313,32 @@ const CMSContentStudio: React.FC<CMSContentStudioProps> = ({ onClose, onPostCrea
                                     <span className="font-mono text-q-success">lite + high</span>
                                 </div>
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Conversation Stats */}
-                        <div className="bg-q-bg/50 rounded-xl p-3 space-y-1.5 text-[11px]">
-                            <div className="flex items-center justify-between">
-                                <span className="text-q-text-secondary">
-                                    {language === 'es' ? 'Mensajes:' : 'Messages:'}
-                                </span>
-                                <span className="font-mono text-q-text">{messages.length}</span>
+                        <CollapsibleSection
+                            title={language === 'es' ? 'Estadísticas' : 'Stats'}
+                            icon={<BarChart3 size={14} />}
+                            isOpen={openSections.stats}
+                            onToggle={() => toggle('stats')}
+                        >
+                            <div className="space-y-1.5 text-[11px]">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-q-text-secondary">
+                                        {language === 'es' ? 'Mensajes:' : 'Messages:'}
+                                    </span>
+                                    <span className="font-mono text-q-text">{messages.length}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-q-text-secondary">
+                                        {language === 'es' ? 'Contexto:' : 'Context:'}
+                                    </span>
+                                    <span className="font-mono text-q-text">
+                                        {historyRef.current.reduce((acc, m) => acc + m.text.length, 0).toLocaleString()} chars
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-q-text-secondary">
-                                    {language === 'es' ? 'Contexto:' : 'Context:'}
-                                </span>
-                                <span className="font-mono text-q-text">
-                                    {historyRef.current.reduce((acc, m) => acc + m.text.length, 0).toLocaleString()} chars
-                                </span>
-                            </div>
-                        </div>
+                        </CollapsibleSection>
 
                         {/* Generate Button */}
                         <div className="mt-auto pt-2">

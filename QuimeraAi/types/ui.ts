@@ -37,8 +37,8 @@ export type FontFamily =
     'red-hat-display' | 'sora' | 'space-grotesk' | 'space-mono' | 'syne' |
     'ubuntu' | 'unbounded' | 'urbanist' | 'work-sans';
 
-export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'restaurants' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub' | 'real-estate' | 'version-history';
-export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'mcp' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode' | 'news' | 'landing-editor' | 'service-availability' | 'subdomains' | 'realty-engine' | 'finances' | 'admin-leads' | 'admin-appointments' | 'admin-email';
+export type View = 'editor' | 'dashboard' | 'websites' | 'superadmin' | 'assets' | 'content-studio' | 'cms' | 'navigation' | 'ai-assistant' | 'leads' | 'domains' | 'seo' | 'finance' | 'templates' | 'appointments' | 'ecommerce' | 'restaurants' | 'email' | 'settings' | 'agency' | 'biopage' | 'blog-hub' | 'real-estate' | 'version-history';
+export type AdminView = 'main' | 'admins' | 'tenants' | 'languages' | 'prompts' | 'chatbot-prompts' | 'stats' | 'subscriptions' | 'templates' | 'components' | 'images' | 'admin-assets' | 'content-factory' | 'mcp' | 'global-assistant' | 'landing-chatbot' | 'design-tokens' | 'analytics' | 'global-seo' | 'app-info' | 'content' | 'landing-navigation' | 'global-tracking-pixels' | 'changelog' | 'execution-mode' | 'news' | 'landing-editor' | 'service-availability' | 'subdomains' | 'realty-engine' | 'finances' | 'admin-leads' | 'admin-appointments' | 'admin-email';
 
 // Page Section Types
 export type PageSection =

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileText, Palette, Settings } from 'lucide-react';
 import { resolveProjectName } from '../../utils/resolveProjectName';
+import { CollapsibleSection, useCollapsibleSections } from './CollapsibleSection';
 
 interface TabbedControlsProps {
     contentTab?: React.ReactNode;
@@ -11,11 +12,11 @@ interface TabbedControlsProps {
     contentControls?: React.ReactNode;
 }
 
-type TabType = 'content' | 'style' | 'advanced';
-type ControlTab = {
-    id: TabType;
+type SectionType = 'content' | 'style' | 'advanced';
+type ControlSection = {
+    id: SectionType;
     label: string;
-    icon: React.ElementType;
+    icon: React.ReactNode;
     content: React.ReactNode;
 };
 
@@ -28,72 +29,49 @@ const TabbedControls: React.FC<TabbedControlsProps> = ({
     const resolvedContentTab = contentTab ?? contentControls ?? null;
     const resolvedStyleTab = styleTab ?? null;
     const { t, i18n } = useTranslation();
-    const [activeTab, setActiveTab] = useState<TabType>('content');
     const resolveLabel = (text: unknown) => resolveProjectName(text, i18n.language);
 
-    const tabs: ControlTab[] = [
-        { id: 'content' as TabType, label: resolveLabel(t('controls.contentTab')), icon: FileText, content: resolvedContentTab },
-        { id: 'style' as TabType, label: resolveLabel(t('controls.styleTab')), icon: Palette, content: resolvedStyleTab },
-    ].filter(tab => tab.content !== null && tab.content !== undefined && tab.content !== false);
+    // Content & Style open by default, Advanced collapsed to economize space.
+    const { openSections, toggle } = useCollapsibleSections<SectionType>({
+        content: true,
+        style: true,
+        advanced: false,
+    });
+
+    const sections: ControlSection[] = [
+        { id: 'content', label: resolveLabel(t('controls.contentTab')), icon: <FileText size={14} />, content: resolvedContentTab },
+        { id: 'style', label: resolveLabel(t('controls.styleTab')), icon: <Palette size={14} />, content: resolvedStyleTab },
+    ].filter(section => section.content !== null && section.content !== undefined && section.content !== false);
 
     if (advancedTab) {
-        tabs.push({ id: 'advanced' as TabType, label: resolveLabel(t('controls.advanced')), icon: Settings, content: advancedTab });
+        sections.push({ id: 'advanced', label: resolveLabel(t('controls.advanced')), icon: <Settings size={14} />, content: advancedTab });
     }
 
-    const activeTabExists = tabs.some(tab => tab.id === activeTab);
-    const currentTab = activeTabExists ? activeTab : tabs[0]?.id;
-    const currentContent = tabs.find(tab => tab.id === currentTab)?.content;
-    const tabIds = tabs.map(tab => tab.id).join('|');
+    if (!sections.length) return null;
 
-    useEffect(() => {
-        if (tabs.length > 0 && !tabs.some(tab => tab.id === activeTab)) {
-            setActiveTab(tabs[0].id);
-        }
-    }, [activeTab, tabIds]);
-
-    if (!tabs.length) return null;
+    // A single section has nothing to collapse against — render it directly (matches the
+    // old behavior where the tab bar only appeared when there was more than one tab).
+    if (sections.length === 1) {
+        return (
+            <div data-editor-tabs-shell data-editor-tab-panel>
+                {sections[0].content}
+            </div>
+        );
+    }
 
     return (
-        <div data-editor-tabs-shell className="space-y-3">
-            {/* Tab Selector */}
-            {tabs.length > 1 && (
-                <div
-                    data-editor-control-tabs
-                    role="tablist"
-                    className="flex gap-1 bg-[var(--editor-control-surface-muted)] backdrop-blur-md p-1 rounded-[var(--editor-control-radius)] border border-[var(--editor-control-border)] sticky top-0 z-10"
+        <div data-editor-tabs-shell className="space-y-2.5">
+            {sections.map(section => (
+                <CollapsibleSection
+                    key={section.id}
+                    title={section.label}
+                    icon={section.icon}
+                    isOpen={openSections[section.id]}
+                    onToggle={() => toggle(section.id)}
                 >
-                    {tabs.map(tab => {
-                        const Icon = tab.icon;
-                        const isActive = currentTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                role="tab"
-                                aria-selected={isActive}
-                                data-editor-control-tab
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`
-                                    min-w-0 flex-1 min-h-9 flex items-center justify-center gap-1.5 px-2 min-[380px]:gap-2 min-[380px]:px-3 py-1.5 rounded-[var(--editor-control-radius-sm)] text-xs font-bold transition-all
-                                    ${isActive
-                                        ? 'bg-q-surface text-q-accent shadow-sm ring-1 ring-[var(--editor-control-border)]'
-                                        : 'text-q-text-secondary hover:text-q-text hover:bg-q-surface/70'
-                                    }
-                                `}
-                                title={tab.label}
-                            >
-                                <Icon size={15} strokeWidth={1.8} className="flex-shrink-0" />
-                                <span className="hidden min-w-0 truncate min-[380px]:inline">{tab.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Tab Content */}
-            <div data-editor-tab-panel>
-                {currentContent}
-            </div>
+                    <div data-editor-tab-panel>{section.content}</div>
+                </CollapsibleSection>
+            ))}
         </div>
     );
 };

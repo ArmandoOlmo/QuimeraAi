@@ -62,6 +62,8 @@ export interface ModuleRegistryItem {
     requiredFeature?: keyof PlanFeatures;
     requiredService?: PlatformServiceId;
     requiredPermission?: string;
+    surface?: 'user' | 'admin' | 'internal';
+    requiredRole?: string;
     gatingReason?: string;
     implementationStatus?: 'production' | 'beta' | 'development' | 'planned';
     planGate?: {
@@ -493,6 +495,60 @@ export const quimeraModuleRegistry: ModuleRegistryItem[] = [
         compatibleIndustries: ['all'],
         editableBy: ['media-ai', 'ai-studio', 'website-builder'],
         writesTo: ['media', 'websiteBuilder', 'bioPage'],
+        upgradeTrigger: 'generic',
+    },
+    {
+        id: 'contentStudio',
+        label: 'AI Content Production Studio',
+        moduleKind: 'integration',
+        ownerSystem: 'media-ai',
+        canonicalSystem: 'media',
+        view: 'content-studio',
+        route: '/content-studio',
+        surface: 'user',
+        description: 'Tenant-facing visual AI content production studio for briefs, strategy, scripts, editable storyboards, asset plans, timelines, readiness, and export packages.',
+        requiredPlan: 'individual',
+        requiredService: 'aiFeatures',
+        requiredFeature: 'aiImageGeneration',
+        gatingReason: 'Requires AI features availability, image generation plan access, and an Individual plan or higher.',
+        compatibleIndustries: ['all'],
+        editableBy: ['media-ai', 'ai-studio', 'website-builder', 'storefront-builder', 'global-assistant'],
+        readsFrom: [
+            'businessBlueprint',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'designSystem',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'analytics',
+        ],
+        writesTo: ['businessBlueprint', 'media', 'websiteBuilder', 'storefrontBuilder', 'emailMarketing', 'bioPage', 'analytics'],
+        upgradeTrigger: 'generic',
+    },
+    {
+        id: 'contentFactoryAdmin',
+        label: 'Content Factory Admin',
+        moduleKind: 'integration',
+        ownerSystem: 'media-ai',
+        canonicalSystem: 'media',
+        route: '/admin/content-factory',
+        surface: 'admin',
+        requiredRole: 'admin',
+        description: 'Super Admin surface for Content Studio presets, prompt blocks, provider routing, safety policies, usage rules, publishing, and audit readiness.',
+        requiredPlan: 'individual',
+        requiredService: 'aiFeatures',
+        requiredFeature: 'aiImageGeneration',
+        gatingReason: 'Requires internal admin role plus AI features availability for provider and preset management.',
+        compatibleIndustries: ['all'],
+        editableBy: ['media-ai', 'ai-studio', 'global-assistant'],
+        readsFrom: ['businessBlueprint', 'media', 'analytics'],
+        writesTo: ['media', 'analytics'],
         upgradeTrigger: 'generic',
     },
     {

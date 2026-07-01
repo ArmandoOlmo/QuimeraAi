@@ -44,6 +44,7 @@ const deriveInitialViewState = (): { view: View; adminView: AdminView } => {
         '/restaurants': 'restaurants',
         '/email': 'email',
         '/assets': 'assets',
+        '/content-studio': 'content-studio',
         '/templates': 'templates',
         '/version-history': 'version-history',
         '/settings': 'settings',

@@ -6,6 +6,7 @@
 
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { Project, PageData, ThemeData, PageSection, BrandIdentity, SitePage, SEOConfig } from '../../types';
+import type { MediaBlueprint } from '../../types/businessBlueprint';
 import { initialData } from '../../data/initialData';
 import { createDefaultPages, createPageFromTemplate } from '../../data/defaultPages';
 import { PageTemplateId } from '../../types/onboarding';
@@ -426,6 +427,8 @@ interface ProjectContextType {
     updateProjectFavicon: (projectId: string, file: File) => Promise<void>;
     /** Update aiAssistantConfig in‑memory only (prevents auto‑save overwrite) */
     updateProjectAiConfig: (projectId: string, config: any) => void;
+    /** Persist mediaBlueprint into projects.data without touching canonical business data. */
+    updateProjectMediaBlueprint: (projectId: string, mediaBlueprint: MediaBlueprint) => Promise<void>;
     /** Persist SEO config to Supabase and sync local project state */
     updateProjectSeoConfig: (projectId: string, config: SEOConfig) => Promise<void>;
 
@@ -2384,6 +2387,96 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
         ));
     }, []);
 
+    const updateProjectMediaBlueprint = useCallback(async (projectId: string, mediaBlueprint: MediaBlueprint) => {
+        if (!user) throw new Error('User not authenticated');
+
+        const now = new Date().toISOString();
+        const project = projectsRef.current.find(p => p.id === projectId);
+
+        const { data: row, error: fetchError } = await supabase
+            .from('projects')
+            .select('data')
+            .eq('id', projectId)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        const currentProjectData = isPlainRecord(row?.data)
+            ? row.data as Record<string, unknown>
+            : isPlainRecord(project?.data)
+                ? project?.data as unknown as Record<string, unknown>
+                : {};
+        const nestedPageData = isPlainRecord((currentProjectData as any).data)
+            ? (currentProjectData as any).data as Record<string, unknown>
+            : null;
+        const currentBlueprint = (
+            isPlainRecord((currentProjectData as any).businessBlueprint)
+                ? (currentProjectData as any).businessBlueprint
+                : nestedPageData && isPlainRecord((nestedPageData as any).businessBlueprint)
+                    ? (nestedPageData as any).businessBlueprint
+                    : resolveProjectBusinessBlueprint(project)
+        ) as Project['businessBlueprint'] | undefined;
+        const nextBusinessBlueprint = currentBlueprint
+            ? {
+                ...currentBlueprint,
+                mediaBlueprint,
+                updatedAt: now,
+                lastSyncedAt: now,
+            }
+            : undefined;
+        const nextNestedPageData = nestedPageData
+            ? {
+                ...nestedPageData,
+                mediaBlueprint,
+                ...(nextBusinessBlueprint && (nestedPageData as any).businessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+            }
+            : null;
+        const nextProjectData = removeUndefinedValues(sanitizeForStorage({
+            ...currentProjectData,
+            mediaBlueprint,
+            ...(nextBusinessBlueprint ? { businessBlueprint: nextBusinessBlueprint } : {}),
+            ...(nextNestedPageData ? { data: nextNestedPageData } : {}),
+        })) as Record<string, unknown>;
+        const manualCheckpoint = createSnapshotBeforeManualSave(currentProjectData, {
+            projectId,
+            scope: 'module',
+            moduleKey: 'mediaBlueprint',
+            now,
+            metadata: {
+                tenantId: currentTenantId || null,
+                userId: user.id,
+                createdBy: user.id,
+                actionType: 'content_studio_media_blueprint_save',
+                module: 'media',
+                source: 'content-studio',
+                projectName: project?.name,
+                summary: 'Captured mediaBlueprint before Content Studio updated it.',
+            },
+            nextProjectData,
+        });
+        const dataToPersist = manualCheckpoint.skipped ? nextProjectData : manualCheckpoint.nextProjectData;
+
+        const { error } = await supabase
+            .from('projects')
+            .update({
+                data: dataToPersist,
+                last_updated: now,
+            })
+            .eq('id', projectId);
+
+        if (error) throw error;
+
+        setProjects(prev => prev.map(p => {
+            if (p.id !== projectId) return p;
+            return {
+                ...p,
+                data: dataToPersist as unknown as PageData,
+                businessBlueprint: (nextBusinessBlueprint || p.businessBlueprint) as Project['businessBlueprint'],
+                lastUpdated: now,
+            } as Project;
+        }));
+    }, [currentTenantId, user]);
+
     const updateProjectSeoConfig = useCallback(async (projectId: string, config: SEOConfig) => {
         const { error } = await supabase
             .from('projects')
@@ -2460,6 +2553,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         // In-memory AI config update (prevents auto-save overwrite)
         updateProjectAiConfig,
+        updateProjectMediaBlueprint,
         updateProjectSeoConfig,
 
         // Refresh

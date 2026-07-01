@@ -31,11 +31,12 @@ import { useUI } from '../../../contexts/core/UIContext';
 import { AppArticle, AppArticleCategory, HelpCenterCategory, HELP_CENTER_CATEGORIES } from '../../../types/appContent';
 import { PreviewDevice } from '../../../types';
 import {
-    Save, Globe, Type, Loader2, Sparkles,
+    Save, Globe, Loader2, Sparkles,
     MoreVertical, Calendar, Check, X as XIcon, Link as LinkIcon,
     Star, Tag, User, Shield, LayoutDashboard, Monitor, Smartphone,
-    Languages, ExternalLink, Image as ImageIcon, Upload, Search, Grid, Trash2, Replace, Zap
+    Languages, ExternalLink, Image as ImageIcon, Upload, Search, Grid, Trash2, Replace, Zap, Settings
 } from 'lucide-react';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import { BRAND_ASSETS } from '../../../constants/brandAssets';
 
@@ -109,6 +110,16 @@ const ModernAppArticleEditor: React.FC<ModernAppArticleEditorProps> = ({ article
     // SEO
     const [metaTitle, setMetaTitle] = useState(article?.seo?.metaTitle || '');
     const [metaDescription, setMetaDescription] = useState(article?.seo?.metaDescription || '');
+
+    // Collapsible settings sections (default all open)
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        general: true,
+        content: true,
+        author: true,
+        tags: true,
+        seo: true,
+        translation: true,
+    });
 
     // Editor State
     const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
@@ -1096,12 +1107,22 @@ Text to format:
                                     <XIcon size={18} />
                                 </button>
                             </div>
-                            <div className="mb-6 hidden md:block">
-                                <h3 className="font-bold text-lg mb-1 flex items-center"><Type className="mr-2 text-primary" /> {t('common.configuration', 'Configuración')}</h3>
-                                <p className="text-xs text-q-text-muted">{t('contentManagement.editor.configDescription', 'Configura metadata y apariencia del artículo.')}</p>
+                            <div className="mb-4 hidden md:block">
+                                <CollapsiblePanelHeader
+                                    title={t('common.configuration', 'Configuración')}
+                                    onExpandAll={expandAll}
+                                    onCollapseAll={collapseAll}
+                                />
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-3">
+                                <CollapsibleSection
+                                    title={t('common.configuration', 'Configuración')}
+                                    icon={<Settings size={14} />}
+                                    isOpen={openSections.general}
+                                    onToggle={() => toggle('general')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Language */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.filters.language', 'Idioma')}</label>
@@ -1161,7 +1182,16 @@ Text to format:
                                         </p>
                                     </div>
                                 )}
+                                    </div>
+                                </CollapsibleSection>
 
+                                <CollapsibleSection
+                                    title="Contenido"
+                                    icon={<ImageIcon size={14} />}
+                                    isOpen={openSections.content}
+                                    onToggle={() => toggle('content')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Featured Image */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.featuredImage', 'Imagen Destacada')}</label>
@@ -1173,7 +1203,16 @@ Text to format:
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.excerpt', 'Extracto')}</label>
                                     <textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={4} className="w-full bg-secondary/50 border border-q-border rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-primary outline-none resize-none text-foreground" placeholder={t('contentManagement.editor.excerptPlaceholder', 'Resumen corto para listados...')} />
                                 </div>
+                                    </div>
+                                </CollapsibleSection>
 
+                                <CollapsibleSection
+                                    title="Autor y Fecha"
+                                    icon={<User size={14} />}
+                                    isOpen={openSections.author}
+                                    onToggle={() => toggle('author')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Author */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.author', 'Autor')}</label>
@@ -1285,7 +1324,16 @@ Text to format:
                                         <div className="w-11 h-6 bg-q-border peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-q-border after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-q-surface after:border-q-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
                                     </label>
                                 </div>
+                                    </div>
+                                </CollapsibleSection>
 
+                                <CollapsibleSection
+                                    title="Etiquetas y Destacado"
+                                    icon={<Tag size={14} />}
+                                    isOpen={openSections.tags}
+                                    onToggle={() => toggle('tags')}
+                                >
+                                    <div className="space-y-4">
                                 {/* Tags */}
                                 <div>
                                     <label className="block text-xs font-bold text-q-text-muted uppercase mb-2">{t('contentManagement.editor.tags', 'Etiquetas')}</label>
@@ -1344,10 +1392,17 @@ Text to format:
                                     </label>
                                 </div>
 
+                                    </div>
+                                </CollapsibleSection>
+
                                 {/* SEO Section */}
-                                <div className="pt-6 border-t border-q-border">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h4 className="font-bold text-sm flex items-center"><Globe size={16} className="mr-2" /> SEO</h4>
+                                <CollapsibleSection
+                                    title="SEO"
+                                    icon={<Globe size={14} />}
+                                    isOpen={openSections.seo}
+                                    onToggle={() => toggle('seo')}
+                                >
+                                    <div className="mb-3 flex justify-end">
                                         <button onClick={generateSEO} disabled={isAiWorking} className="text-xs font-bold text-q-accent hover:text-q-accent flex items-center"><Sparkles size={12} className="mr-1" /> {t('contentManagement.editor.autoGen', 'Auto-Gen')}</button>
                                     </div>
 
@@ -1364,14 +1419,15 @@ Text to format:
                                             </p>
                                         </div>
                                     </div>
-                                </div>
+                                </CollapsibleSection>
 
                                 {/* Translation Section */}
-                                <div className="pt-6 border-t border-q-border">
-                                    <h4 className="font-bold text-sm flex items-center mb-4">
-                                        <Languages size={16} className="mr-2 text-q-accent" />
-                                        {language === 'es' ? 'Traducción' : 'Translation'}
-                                    </h4>
+                                <CollapsibleSection
+                                    title={language === 'es' ? 'Traducción' : 'Translation'}
+                                    icon={<Languages size={14} />}
+                                    isOpen={openSections.translation}
+                                    onToggle={() => toggle('translation')}
+                                >
 
                                     {/* Translation Status Badge */}
                                     {article?.translationStatus && (
@@ -1469,7 +1525,7 @@ Text to format:
                                                 : `✅ Translation in ${getLanguageName(targetLang)} already exists`}
                                         </p>
                                     )}
-                                </div>
+                                </CollapsibleSection>
                             </div>
                         </aside>
                     )}

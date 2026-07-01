@@ -363,4 +363,70 @@ describe('moduleRegistry', () => {
             'analytics',
         ]));
     });
+
+    it('registers Content Studio and Content Factory Admin as media blueprint surfaces', () => {
+        const contentStudio = getModuleRegistryItem('contentStudio');
+        const contentFactoryAdmin = getModuleRegistryItem('contentFactoryAdmin');
+        const mediaRelated = getModulesByCanonicalSystem('media').map(item => item.id);
+
+        expect(contentStudio).toMatchObject({
+            canonicalSystem: 'media',
+            ownerSystem: 'media-ai',
+            view: 'content-studio',
+            route: '/content-studio',
+            surface: 'user',
+            requiredPlan: 'individual',
+            requiredService: 'aiFeatures',
+            requiredFeature: 'aiImageGeneration',
+        });
+        expect(contentStudio?.readsFrom).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'ecommerce',
+            'crm',
+            'emailMarketing',
+            'chatbot',
+            'appointments',
+            'restaurants',
+            'realEstate',
+            'bioPage',
+            'analytics',
+        ]));
+        expect(contentStudio?.writesTo).toEqual(expect.arrayContaining([
+            'businessBlueprint',
+            'media',
+            'websiteBuilder',
+            'storefrontBuilder',
+            'emailMarketing',
+            'bioPage',
+            'analytics',
+        ]));
+
+        expect(contentFactoryAdmin).toMatchObject({
+            canonicalSystem: 'media',
+            ownerSystem: 'media-ai',
+            route: '/admin/content-factory',
+            surface: 'admin',
+            requiredRole: 'admin',
+            requiredPlan: 'individual',
+            requiredService: 'aiFeatures',
+            requiredFeature: 'aiImageGeneration',
+        });
+        expect(mediaRelated).toEqual(expect.arrayContaining([
+            'media-assets',
+            'contentStudio',
+            'contentFactoryAdmin',
+        ]));
+        expect(canAccessModuleRegistryItem(contentStudio!, {
+            currentPlan: 'free',
+            canAccessService: service => service === 'aiFeatures',
+            hasPlanFeature: feature => feature === 'aiImageGeneration',
+        })).toBe(false);
+        expect(canAccessModuleRegistryItem(contentStudio!, {
+            currentPlan: 'individual',
+            canAccessService: service => service === 'aiFeatures',
+            hasPlanFeature: feature => feature === 'aiImageGeneration',
+        })).toBe(true);
+    });
 });

@@ -16874,6 +16874,21 @@
     "createFirstProject": "Crea tu primer proyecto para generar imágenes",
     "generateImages": "Generar Imágenes"
   },
+  "contentStudio": {
+    "title": "Estudio de Contenido",
+    "selectProject": "Selecciona un Proyecto",
+    "selectProjectDescription": "Elige un proyecto para crear campañas de contenido con IA para tu negocio.",
+    "searchProjects": "Buscar proyectos...",
+    "noProjectsFound": "No se encontraron proyectos",
+    "noProjectsYet": "No tienes proyectos aún",
+    "tryDifferentSearch": "Intenta con otros términos de búsqueda",
+    "createFirstProject": "Crea tu primer proyecto para empezar a producir contenido",
+    "openProject": "Abrir Estudio de Contenido",
+    "newCampaign": "Nueva campaña",
+    "draft": "Borrador",
+    "savedAt": "Guardado {{time}}",
+    "manualSave": "Guardado manual"
+  },
   "ai": {
     "generated": "Contenido generado por IA"
   },

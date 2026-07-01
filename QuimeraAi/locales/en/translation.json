@@ -16860,6 +16860,21 @@
     "createFirstProject": "Create your first project to generate images",
     "generateImages": "Generate Images"
   },
+  "contentStudio": {
+    "title": "Content Studio",
+    "selectProject": "Select a Project",
+    "selectProjectDescription": "Choose a project to create AI content campaigns for your business.",
+    "searchProjects": "Search projects...",
+    "noProjectsFound": "No projects found",
+    "noProjectsYet": "You don't have any projects yet",
+    "tryDifferentSearch": "Try different search terms",
+    "createFirstProject": "Create your first project to start producing content",
+    "openProject": "Open Content Studio",
+    "newCampaign": "New campaign",
+    "draft": "Draft",
+    "savedAt": "Saved {{time}}",
+    "manualSave": "Manual save"
+  },
   "ai": {
     "generated": "AI Generated Content"
   },

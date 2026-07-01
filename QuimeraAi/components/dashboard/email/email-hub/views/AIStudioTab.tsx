@@ -7,10 +7,11 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
     Sparkles, Send, Users, Zap, Loader2, CheckCircle, RefreshCcw,
-    Mic, PhoneOff, Volume2,
+    Mic, PhoneOff, Volume2, Lightbulb,
 } from 'lucide-react';
 import type { DisplayMessage, AICreatedItem } from '../types';
 import { MODEL_TEXT, MODEL_VOICE } from '../types';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../../../ui/CollapsibleSection';
 
 interface AIStudioTabProps {
     // Chat
@@ -46,6 +47,11 @@ const AIStudioTab: React.FC<AIStudioTabProps> = ({
     aiCreateCampaign, aiCreateAudience, aiCreateAutomation,
 }) => {
     const { t } = useTranslation();
+    const { openSections, toggle, expandAll, collapseAll } = useCollapsibleSections({
+        quickActions: true,
+        session: true,
+        suggestions: true,
+    });
     return (
     <div className="bg-q-surface border border-q-border rounded-2xl shadow-xl flex flex-col" style={{ height: 'calc(100vh - 170px)' }}>
         {/* Header */}
@@ -109,8 +115,8 @@ const AIStudioTab: React.FC<AIStudioTabProps> = ({
 
             {/* Right Action Panel */}
             <div className="w-72 border-l border-q-border bg-q-surface/30 p-4 overflow-y-auto hidden lg:flex flex-col gap-4 custom-scrollbar">
-                <div>
-                    <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-3">{t('aiEmailStudio.quickActions')}</h4>
+                <CollapsiblePanelHeader title={t('aiEmailStudio.title')} onExpandAll={expandAll} onCollapseAll={collapseAll} />
+                <CollapsibleSection title={t('aiEmailStudio.quickActions')} icon={<Zap size={14} />} isOpen={openSections.quickActions} onToggle={() => toggle('quickActions')}>
                     <div className="space-y-2">
                         <button onClick={aiCreateCampaign} disabled={!!aiCreating || aiMessages.length < 3} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm bg-q-accent/10 text-q-accent border border-q-accent/20 rounded-xl hover:bg-q-accent/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                             {aiCreating === 'campaign' ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
@@ -126,25 +132,23 @@ const AIStudioTab: React.FC<AIStudioTabProps> = ({
                         </button>
                     </div>
                     {aiMessages.length < 3 && (<p className="text-[10px] text-q-text-secondary mt-2 text-center">{t('aiEmailStudio.firstConverse')}</p>)}
-                </div>
+                </CollapsibleSection>
                 {aiCreatedItems.length > 0 && (
-                    <div>
-                        <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('aiEmailStudio.session')}</h4>
+                    <CollapsibleSection title={t('aiEmailStudio.session')} icon={<CheckCircle size={14} />} isOpen={openSections.session} onToggle={() => toggle('session')}>
                         <div className="bg-q-success/5 border border-q-success/15 rounded-xl p-3">
                             <div className="flex items-center gap-2 text-q-success text-sm font-medium mb-1"><CheckCircle size={14} /> {t('aiEmailStudio.resourcesCreatedCount', { count: aiCreatedItems.length })}</div>
                             <div className="space-y-1 mt-2">{aiCreatedItems.map((item, i) => (<div key={i} className="text-[10px] text-q-text-secondary flex items-center gap-1.5"><span>{item.type === 'campaign' ? '📧' : item.type === 'audience' ? '👥' : '⚡'}</span><span className="truncate">{item.name}</span></div>))}</div>
                         </div>
-                    </div>
+                    </CollapsibleSection>
                 )}
-                <div className="mt-auto">
-                    <h4 className="text-xs font-bold text-q-text-secondary uppercase tracking-wider mb-2">{t('aiEmailStudio.suggestions')}</h4>
+                <CollapsibleSection className="mt-auto" title={t('aiEmailStudio.suggestions')} icon={<Lightbulb size={14} />} isOpen={openSections.suggestions} onToggle={() => toggle('suggestions')}>
                     <div className="space-y-1.5 text-[10px] text-q-text-secondary">
                         <p>{t('aiEmailStudio.sugg1')}</p>
                         <p>{t('aiEmailStudio.sugg2')}</p>
                         <p>{t('aiEmailStudio.sugg3')}</p>
                         <p>{t('aiEmailStudio.sugg4')}</p>
                     </div>
-                </div>
+                </CollapsibleSection>
             </div>
         </div>
     </div>

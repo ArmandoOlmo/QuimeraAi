@@ -47,6 +47,7 @@ const EcommerceDashboard = lazy(() => import('./dashboard/ecommerce/EcommerceDas
 const RestaurantsDashboard = lazy(() => import('./dashboard/restaurants/RestaurantsDashboard'));
 const EmailDashboard = lazy(() => import('./dashboard/email/EmailDashboard'));
 const AssetsDashboard = lazy(() => import('./dashboard/assets/AssetsDashboard'));
+const ContentStudioDashboard = lazy(() => import('./dashboard/content-studio/ContentStudioDashboard'));
 const SettingsPage = lazy(() => import('./dashboard/settings/SettingsPage'));
 const AgencyDashboard = lazy(() => import('./dashboard/agency/AgencyDashboardMain'));
 const BioPageBuilder = lazy(() => import('./dashboard/BioPageBuilder'));
@@ -94,6 +95,7 @@ const VIEW_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentT
     'restaurants': RestaurantsDashboard,
     'email': EmailDashboard,
     'assets': AssetsDashboard,
+    'content-studio': ContentStudioDashboard,
     'templates': UserTemplates,
     'settings': SettingsPage,
     'agency': AgencyDashboard,
@@ -116,6 +118,7 @@ const VIEW_MODULE_MAP: Partial<Record<View, string>> = {
     'real-estate': 'real-estate-engine',
     restaurants: 'restaurant-engine',
     assets: 'media-assets',
+    'content-studio': 'contentStudio',
     templates: 'templates-library',
     biopage: 'bio-page-engine',
     'blog-hub': 'cms-engine',

@@ -34,16 +34,72 @@ import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 import { WebsiteCatalogToolbar } from '../filters';
 import { useProjectCatalogFilters } from '../../../hooks/useProjectCatalogFilters';
 
+type ProjectSelectorVariant = 'assets' | 'contentStudio';
+
+const VARIANT_COPY = {
+    assets: {
+        headerIcon: Zap,
+        emptyIcon: ImageIcon,
+        cardActionIcon: Zap,
+        titleKey: 'editor.imageGenerator',
+        titleDefault: 'Generador de Imágenes',
+        selectProjectKey: 'assets.selectProject',
+        selectProjectDefault: 'Selecciona un Proyecto',
+        selectProjectDescriptionKey: 'assets.selectProjectDescription',
+        selectProjectDescriptionDefault: 'Las imágenes generadas se guardarán en la biblioteca del proyecto seleccionado.',
+        searchProjectsKey: 'assets.searchProjects',
+        searchProjectsDefault: 'Buscar proyectos...',
+        noProjectsFoundKey: 'assets.noProjectsFound',
+        noProjectsFoundDefault: 'No se encontraron proyectos',
+        noProjectsYetKey: 'assets.noProjectsYet',
+        noProjectsYetDefault: 'No tienes proyectos aún',
+        tryDifferentSearchKey: 'assets.tryDifferentSearch',
+        tryDifferentSearchDefault: 'Intenta con otros términos de búsqueda',
+        createFirstProjectKey: 'assets.createFirstProject',
+        createFirstProjectDefault: 'Crea tu primer proyecto para generar imágenes',
+        cardActionKey: 'assets.generateImages',
+        cardActionDefault: 'Generar Imágenes',
+    },
+    contentStudio: {
+        headerIcon: Sparkles,
+        emptyIcon: Sparkles,
+        cardActionIcon: Sparkles,
+        titleKey: 'contentStudio.title',
+        titleDefault: 'Content Studio',
+        selectProjectKey: 'contentStudio.selectProject',
+        selectProjectDefault: 'Select a Project',
+        selectProjectDescriptionKey: 'contentStudio.selectProjectDescription',
+        selectProjectDescriptionDefault: 'Choose a project to create AI content campaigns for your business.',
+        searchProjectsKey: 'contentStudio.searchProjects',
+        searchProjectsDefault: 'Search projects...',
+        noProjectsFoundKey: 'contentStudio.noProjectsFound',
+        noProjectsFoundDefault: 'No projects found',
+        noProjectsYetKey: 'contentStudio.noProjectsYet',
+        noProjectsYetDefault: "You don't have any projects yet",
+        tryDifferentSearchKey: 'contentStudio.tryDifferentSearch',
+        tryDifferentSearchDefault: 'Try different search terms',
+        createFirstProjectKey: 'contentStudio.createFirstProject',
+        createFirstProjectDefault: 'Create your first project to start producing content',
+        cardActionKey: 'contentStudio.openProject',
+        cardActionDefault: 'Open Content Studio',
+    },
+} as const;
+
 interface ProjectSelectorPageProps {
     onProjectSelect: (projectId: string) => void;
     onBack?: () => void;
+    variant?: ProjectSelectorVariant;
 }
 
 const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
     onProjectSelect,
     onBack,
+    variant = 'assets',
 }) => {
     const { t } = useTranslation();
+    const copy = VARIANT_COPY[variant];
+    const HeaderIcon = copy.headerIcon;
+    const EmptyIcon = copy.emptyIcon;
     const { setIsOnboardingOpen, setView } = useUI();
     const { projects, isLoadingProjects } = useProject();
 
@@ -100,9 +156,9 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <Menu className="w-5 h-5" />
                         </button>
                         <div className="flex items-center gap-2">
-                            <Zap className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
+                            <HeaderIcon className="w-5 h-5 quimera-dashboard-header-icon" strokeWidth={2} />
                             <h1 className="text-lg font-semibold text-foreground">
-                                {t('editor.imageGenerator', 'Generador de Imágenes')}
+                                {t(copy.titleKey, copy.titleDefault)}
                             </h1>
                         </div>
                     </div>
@@ -126,7 +182,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
                     onClose={() => setIsSearchOpen(false)}
-                    placeholder={t('assets.searchProjects', 'Buscar proyectos...')}
+                    placeholder={t(copy.searchProjectsKey, copy.searchProjectsDefault)}
                 />
 
                 {/* Main Content */}
@@ -137,10 +193,10 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                                 <div>
                                     <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                                        {t('assets.selectProject', 'Selecciona un Proyecto')}
+                                        {t(copy.selectProjectKey, copy.selectProjectDefault)}
                                     </h2>
                                     <p className="text-q-text-muted">
-                                        {t('assets.selectProjectDescription', 'Las imágenes generadas se guardarán en la biblioteca del proyecto seleccionado.')}
+                                        {t(copy.selectProjectDescriptionKey, copy.selectProjectDescriptionDefault)}
                                     </p>
                                 </div>
                                 <button
@@ -231,17 +287,17 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                 {searchQuery ? (
                                     <Search className="mx-auto mb-6 text-q-text-muted" size={48} strokeWidth={1.5} />
                                 ) : (
-                                    <ImageIcon className="mx-auto mb-6 text-q-text-muted" size={48} strokeWidth={1.5} />
+                                    <EmptyIcon className="mx-auto mb-6 text-q-text-muted" size={48} strokeWidth={1.5} />
                                 )}
                                 <h3 className="text-xl font-bold text-foreground mb-2">
                                     {searchQuery
-                                        ? t('assets.noProjectsFound', 'No se encontraron proyectos')
-                                        : t('assets.noProjectsYet', 'No tienes proyectos aún')}
+                                        ? t(copy.noProjectsFoundKey, copy.noProjectsFoundDefault)
+                                        : t(copy.noProjectsYetKey, copy.noProjectsYetDefault)}
                                 </h3>
                                 <p className="text-q-text-muted mb-6 max-w-md mx-auto">
                                     {searchQuery
-                                        ? t('assets.tryDifferentSearch', 'Intenta con otros términos de búsqueda')
-                                        : t('assets.createFirstProject', 'Crea tu primer proyecto para generar imágenes')}
+                                        ? t(copy.tryDifferentSearchKey, copy.tryDifferentSearchDefault)
+                                        : t(copy.createFirstProjectKey, copy.createFirstProjectDefault)}
                                 </p>
                                 {!searchQuery && (
                                     <button
@@ -261,6 +317,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         project={project}
                                         onSelect={() => onProjectSelect(project.id)}
                                         formatDate={formatDate}
+                                        copy={copy}
                                     />
                                 ))}
                             </div>
@@ -272,6 +329,7 @@ const ProjectSelectorPage: React.FC<ProjectSelectorPageProps> = ({
                                         project={project}
                                         onSelect={() => onProjectSelect(project.id)}
                                         formatDate={formatDate}
+                                        copy={copy}
                                     />
                                 ))}
                             </div>
@@ -288,10 +346,12 @@ interface ProjectCardProps {
     project: Project;
     onSelect: () => void;
     formatDate: (date: string) => string;
+    copy: (typeof VARIANT_COPY)[ProjectSelectorVariant];
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate, copy }) => {
     const { t } = useTranslation();
+    const CardActionIcon = copy.cardActionIcon;
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
     return (
@@ -329,8 +389,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
                     <span className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                        <Zap size={16} />
-                        {t('assets.generateImages', 'Generar Imágenes')}
+                        <CardActionIcon size={16} />
+                        {t(copy.cardActionKey, copy.cardActionDefault)}
                     </span>
                 </div>
             </div>
@@ -354,9 +414,10 @@ interface ProjectListItemProps {
     project: Project;
     onSelect: () => void;
     formatDate: (date: string) => string;
+    copy: (typeof VARIANT_COPY)[ProjectSelectorVariant];
 }
 
-const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate }) => {
+const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, formatDate, copy }) => {
     const { t } = useTranslation();
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
 
@@ -407,7 +468,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
             {/* Action */}
             <div className="flex items-center gap-2 quimera-status-card-link transition-colors">
                 <span className="text-sm font-medium hidden md:block">
-                    {t('assets.generateImages', 'Generar Imágenes')}
+                    {t(copy.cardActionKey, copy.cardActionDefault)}
                 </span>
                 <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </div>

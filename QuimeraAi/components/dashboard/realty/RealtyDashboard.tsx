@@ -44,6 +44,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import ImagePicker from '../../ui/ImagePicker';
 import DashboardSelect from '../../ui/DashboardSelect';
+import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
 import RealtyEngineControlPanel from './RealtyEngineControlPanel';
 import RealtyModuleSettingsPanel from './RealtyModuleSettingsPanel';
 import RealtyWorkspaceOverview from './RealtyWorkspaceOverview';
@@ -314,6 +315,11 @@ const RealtyDashboard: React.FC = () => {
         projectId: activeProjectId,
         tenantId: currentTenantId,
         userId: user?.id || null,
+    });
+
+    const { openSections: editorPanelSections, toggle: toggleEditorPanel, expandAll: expandEditorPanel, collapseAll: collapseEditorPanel } = useCollapsibleSections({
+        checklist: true,
+        actions: true,
     });
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -2020,6 +2026,7 @@ const RealtyDashboard: React.FC = () => {
                     </div>
 
                     <aside className="space-y-5 xl:sticky xl:top-4 xl:self-start">
+                        <CollapsiblePanelHeader title={t('realty.editor.propertyEditor')} onExpandAll={expandEditorPanel} onCollapseAll={collapseEditorPanel} />
                         <div className="overflow-hidden rounded-xl border border-q-border bg-q-surface">
                             <div className="aspect-[4/3] bg-q-surface-overlay">
                                 {primaryImage ? (
@@ -2114,7 +2121,13 @@ const RealtyDashboard: React.FC = () => {
                             </PropertyEditorSection>
                         )}
 
-                        <PropertyEditorSection icon={ListChecks} eyebrow={t('realty.editor.publicationChecklist')} title={t('realty.score.title')} compact>
+                        <CollapsibleSection
+                            title={t('realty.score.title')}
+                            icon={<ListChecks size={14} />}
+                            isOpen={editorPanelSections.checklist}
+                            onToggle={() => toggleEditorPanel('checklist')}
+                            badge={<span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${getScoreToneClass(editingScore)}`}>{editingScore.score}%</span>}
+                        >
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <p className="text-sm font-bold text-q-text">{t(`realty.score.grade.${editingScore.grade}`)}</p>
@@ -2140,7 +2153,15 @@ const RealtyDashboard: React.FC = () => {
                                     </ul>
                                 </div>
                             )}
-                            <div className="mt-4 grid gap-2">
+                        </CollapsibleSection>
+
+                        <CollapsibleSection
+                            title={t('realty.ai.title')}
+                            icon={<Wand2 size={14} />}
+                            isOpen={editorPanelSections.actions}
+                            onToggle={() => toggleEditorPanel('actions')}
+                        >
+                            <div className="grid gap-2">
                                 <Button type="button" size="sm" variant="secondary" disabled={!savedEditingProperty || isGeneratingAi} onClick={() => savedEditingProperty && fixPropertyWithAi(savedEditingProperty)}>
                                     <Wand2 size={15} />{t('realty.ai.fixWithAi')}
                                 </Button>
@@ -2151,7 +2172,7 @@ const RealtyDashboard: React.FC = () => {
                                     <Check size={15} />{t('realty.ai.applyToProperty')}
                                 </Button>
                             </div>
-                        </PropertyEditorSection>
+                        </CollapsibleSection>
                     </aside>
                 </div>
 
