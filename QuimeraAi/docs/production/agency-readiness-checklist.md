@@ -33,7 +33,9 @@
 ## Verification
 
 - Run focused tests:
-  - `npm run test:run -- tests/utils/agencyProductionReadinessContract.test.ts tests/utils/agencyBillingContract.test.ts tests/scripts/productionReadinessProbe.test.ts`
+  - `npm run test:run -- tests/utils/agencyProductionReadinessContract.test.ts tests/utils/agencyBillingContract.test.ts tests/utils/agencyStripeWebhookHelpers.test.ts tests/scripts/productionReadinessProbe.test.ts`
+- Run authenticated RLS negative probe against the linked Supabase project:
+  - `npm run readiness:agency-rls-negative`
 - Run app build:
   - `npm run build`
 - Run readiness probe with production env:

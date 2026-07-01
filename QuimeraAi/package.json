@@ -21,6 +21,7 @@
     "type-check:serverless-api": "tsc --noEmit --pretty false --skipLibCheck --allowImportingTsExtensions true services/email/serverless/emailProviderService.ts services/email/serverless/emailOutboxProcessor.ts services/email/serverless/emailCrossModuleDispatcher.ts services/appointments/serverless/appointmentEmailDeliveryService.ts api/email/jobs/run.ts api/appointments/jobs/run.ts api/appointments/google/jobs/run.ts api/mcp/jobs/run.ts api/ops/readiness.ts",
     "readiness:probe": "node scripts/production-readiness-probe.mjs",
     "readiness:probe:production": "node scripts/run-vercel-production-readiness-probe.mjs",
+    "readiness:agency-rls-negative": "node scripts/agency-rls-negative-probe.mjs",
     "ds:audit": "tsx scripts/audit-design-system.ts",
     "lint": "echo 'Linting...' && exit 0",
     "deploy": "vercel deploy --prod",

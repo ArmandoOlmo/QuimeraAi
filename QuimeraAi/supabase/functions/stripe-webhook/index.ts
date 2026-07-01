@@ -1,10 +1,14 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "npm:stripe@^14.0.0";
 import {
   sendPaidOrderTransactionalEmails,
   sendPaymentFailedTransactionalEmail,
 } from "../_shared/ecommerce-transactional-emails.ts";
+import {
+  buildAgencyUsageLedgerInsert,
+  extractAgencyBillingEventRefs,
+  isAgencyClientBillingMetadata,
+} from "../_shared/agency-stripe-billing.ts";
 import { CANONICAL_PLAN_IDS, getCanonicalPlanLimits, isLegacyPlan, normalizePlanId } from "../../../services/billing/planCatalog.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
@@ -15,10 +19,6 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const DEFAULT_FROM_EMAIL = Deno.env.get("EMAIL_FROM") || "Quimera Ai <no-reply@quimera.ai>";
-const AGENCY_CLIENT_BILLING_FLOWS = new Set([
-  "agency_client_payment_link",
-  "agency_client_managed_billing",
-]);
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -32,7 +32,7 @@ function getFallbackPlanCreditLimit(planId?: string | null): number | null {
   return getCanonicalPlanLimits(normalizePlanId(planId)).maxAiCredits;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
   }
@@ -139,20 +139,6 @@ function iso(timestamp?: number | null): string | null {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
 }
 
-function dateOnly(value?: string | null): string | null {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isFinite(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : null;
-}
-
-function readPositiveAmount(...values: unknown[]): number {
-  for (const value of values) {
-    const amount = Number(value);
-    if (Number.isFinite(amount) && amount > 0) return amount;
-  }
-  return 0;
-}
-
 function isUuid(value?: string | null) {
   return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
 }
@@ -177,46 +163,6 @@ function extractPaymentEventRefs(event: Stripe.Event) {
     orderId: metadata.orderId || metadata.order_id || null,
     storeId: metadata.storeId || metadata.store_id || null,
     projectId: isUuid(metadata.projectId || metadata.project_id) ? metadata.projectId || metadata.project_id : null,
-  };
-}
-
-function readStripeObjectId(value: unknown): string | null {
-  if (!value) return null;
-  if (typeof value === "string") return value;
-  if (typeof value === "object" && value && "id" in value) {
-    return String((value as { id?: unknown }).id || "") || null;
-  }
-  return null;
-}
-
-function extractAgencyBillingEventRefs(event: Stripe.Event) {
-  const object = event.data.object as any;
-  const metadata = {
-    ...(object?.metadata || {}),
-    ...(object?.subscription_details?.metadata || {}),
-    ...(object?.lines?.data?.[0]?.metadata || {}),
-  };
-  const checkoutSessionId = object?.object === "checkout.session"
-    ? object.id
-    : readStripeObjectId(object?.checkout_session) || metadata.checkoutSessionId || metadata.checkout_session_id || null;
-  const subscriptionId = object?.object === "subscription"
-    ? object.id
-    : readStripeObjectId(object?.subscription) || metadata.stripeSubscriptionId || metadata.subscriptionId || null;
-  const invoiceId = object?.object === "invoice"
-    ? object.id
-    : readStripeObjectId(object?.invoice) || metadata.stripeInvoiceId || metadata.invoiceId || null;
-  const customerId = readStripeObjectId(object?.customer) || metadata.stripeCustomerId || metadata.customerId || null;
-
-  return {
-    isAgencyBilling: isAgencyClientBillingMetadata(metadata),
-    metadata,
-    agencyTenantId: isUuid(metadata.agencyTenantId) ? metadata.agencyTenantId : null,
-    clientTenantId: isUuid(metadata.clientTenantId || metadata.tenantId) ? metadata.clientTenantId || metadata.tenantId : null,
-    paymentLinkToken: metadata.paymentLinkToken || null,
-    checkoutSessionId,
-    subscriptionId,
-    invoiceId,
-    customerId,
   };
 }
 
@@ -402,12 +348,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   if (session.metadata?.type === "credit_package" || session.metadata?.type === "ai_credits") {
     await addPurchasedCredits(session);
   }
-}
-
-function isAgencyClientBillingMetadata(metadata?: Stripe.Metadata | null) {
-  if (metadata?.source !== "agency-engine") return false;
-  if (metadata.billingFlow && AGENCY_CLIENT_BILLING_FLOWS.has(metadata.billingFlow)) return true;
-  return Boolean(metadata.agencyTenantId && (metadata.clientTenantId || metadata.tenantId));
 }
 
 function resolveAgencyClientBillingMode(billingFlow?: string | null, paymentLinkToken?: string | null) {
@@ -641,10 +581,6 @@ async function syncAgencyClientSubscription(
   });
 }
 
-function isRecordableAgencyLedgerStatus(status?: string | null) {
-  return ["active", "trial", "trialing"].includes(String(status || ""));
-}
-
 async function recordAgencyUsageLedger(params: {
   agencyTenantId?: string | null;
   clientTenantId?: string | null;
@@ -658,9 +594,6 @@ async function recordAgencyUsageLedger(params: {
   stripeSubscriptionId?: string | null;
   paymentLinkToken?: string | null;
 }) {
-  if (!params.agencyTenantId || !params.clientTenantId) return;
-  if (!isRecordableAgencyLedgerStatus(params.status)) return;
-
   let plan: any = null;
   if (params.agencyPlanId) {
     const { data, error } = await supabase
@@ -672,48 +605,12 @@ async function recordAgencyUsageLedger(params: {
     plan = data || null;
   }
 
-  const unitPrice = readPositiveAmount(params.monthlyPrice, plan?.price);
-  const unitCost = readPositiveAmount(plan?.base_cost);
-  if (unitPrice <= 0 && unitCost <= 0) return;
-
-  const periodKey = params.currentPeriodEnd ||
-    params.stripeSubscriptionId ||
-    params.stripeCheckoutSessionId ||
-    params.paymentLinkToken ||
-    new Date().toISOString().slice(0, 10);
-  const sourceKey = params.stripeSubscriptionId ||
-    params.stripeCheckoutSessionId ||
-    params.paymentLinkToken ||
-    params.clientTenantId;
-  const idempotencyKey = `stripe:agency-client-subscription:${sourceKey}:${periodKey}`;
+  const ledgerInsert = buildAgencyUsageLedgerInsert(params, plan);
+  if (!ledgerInsert) return;
 
   const { error } = await supabase
     .from("agency_usage_ledger")
-    .insert({
-      agency_tenant_id: params.agencyTenantId,
-      client_tenant_id: params.clientTenantId,
-      agency_plan_id: plan?.id || null,
-      source: "stripe-webhook",
-      usage_type: "subscription",
-      usage_quantity: 1,
-      unit_cost: unitCost,
-      unit_price: unitPrice,
-      currency: "usd",
-      billing_status: params.status || "active",
-      billing_period_start: dateOnly(params.currentPeriodStart),
-      billing_period_end: dateOnly(params.currentPeriodEnd),
-      provider: "stripe",
-      provider_event_id: params.stripeSubscriptionId || params.stripeCheckoutSessionId || params.paymentLinkToken || null,
-      stripe_subscription_id: params.stripeSubscriptionId || null,
-      stripe_checkout_session_id: params.stripeCheckoutSessionId || null,
-      idempotency_key: idempotencyKey,
-      metadata: {
-        agencyPlanName: params.agencyPlanName || plan?.name || null,
-        paymentLinkToken: params.paymentLinkToken || null,
-        status: params.status || null,
-        source: "stripe-webhook",
-      },
-    });
+    .insert(ledgerInsert);
 
   if (!error) return;
   if (isMissingTableError(error)) return;

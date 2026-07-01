@@ -11,6 +11,8 @@ describe('Agency production readiness contract', () => {
     const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
     const agencyOverview = read('components/dashboard/agency/AgencyOverview.tsx');
     const readinessProbe = read('scripts/production-readiness-probe.mjs');
+    const packageJson = read('package.json');
+    const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
 
     it('hardens platform subscription plan RLS without mixing Agency service plans into platform billing', () => {
         expect(migration).toContain('drop policy if exists "Authenticated users can manage subscription plans"');
@@ -53,10 +55,14 @@ describe('Agency production readiness contract', () => {
         expect(stripeWebhook).toContain('updateAgencyBillingEventStatus');
         expect(stripeWebhook).toContain('recordAgencyUsageLedger');
         expect(stripeWebhook).toContain('.from("agency_usage_ledger")');
-        expect(stripeWebhook).toContain('stripe:agency-client-subscription');
         expect(stripeWebhook).toContain('agency_service_plans');
-        expect(stripeWebhook).toContain('unit_cost: unitCost');
-        expect(stripeWebhook).toContain('unit_price: unitPrice');
+        expect(stripeWebhook).toContain('buildAgencyUsageLedgerInsert(params, plan)');
+        expect(agencyStripeBillingHelper).toContain('export function extractAgencyBillingEventRefs');
+        expect(agencyStripeBillingHelper).toContain('export function buildAgencyUsageLedgerInsert');
+        expect(agencyStripeBillingHelper).toContain('stripe:agency-client-subscription');
+        expect(agencyStripeBillingHelper).toContain('unit_cost: unitCost');
+        expect(agencyStripeBillingHelper).toContain('unit_price: unitPrice');
+        expect(fs.existsSync(path.join(rootDir, 'tests/utils/agencyStripeWebhookHelpers.test.ts'))).toBe(true);
     });
 
     it('surfaces production Agency margin controls without reading client billing cost data', () => {
@@ -82,6 +88,8 @@ describe('Agency production readiness contract', () => {
         expect(readinessProbe).toContain('checkAgencyRlsNegative(input)');
         expect(readinessProbe).toContain('agency-rls-negative-anon');
         expect(readinessProbe).toContain('anonymous Agency billing probes denied with 42501');
+        expect(packageJson).toContain('readiness:agency-rls-negative');
+        expect(fs.existsSync(path.join(rootDir, 'scripts/agency-rls-negative-probe.mjs'))).toBe(true);
     });
 
     it('keeps remote Supabase migration history compatible with the source checkout', () => {

@@ -9,6 +9,7 @@ describe('Agency billing canonical contract', () => {
     const migration = read('supabase/migrations/20260627071535_canonical_agency_engine.sql');
     const stripeApi = read('supabase/functions/stripe-api/index.ts');
     const stripeWebhook = read('supabase/functions/stripe-webhook/index.ts');
+    const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
     const checkoutPage = read('components/checkout/AgencyCheckoutPage.tsx');
     const tenantContext = read('contexts/tenant/TenantContext.tsx');
     const adminContext = read('contexts/admin/AdminContext.tsx');
@@ -69,9 +70,9 @@ describe('Agency billing canonical contract', () => {
         expect(stripeApi).toContain('clientTenantId');
         expect(stripeApi).toContain('subscription_data: { metadata }');
 
-        expect(stripeWebhook).toContain('AGENCY_CLIENT_BILLING_FLOWS');
+        expect(agencyStripeBillingHelper).toContain('AGENCY_CLIENT_BILLING_FLOWS');
         expect(stripeWebhook).toContain('resolveAgencyClientBillingMode');
-        expect(stripeWebhook).toContain('agency_client_managed_billing');
+        expect(agencyStripeBillingHelper).toContain('agency_client_managed_billing');
         expect(stripeWebhook).toContain('billing_mode: billingMode');
         expect(stripeWebhook).toContain('mode: billingMode');
     });
