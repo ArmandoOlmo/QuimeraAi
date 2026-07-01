@@ -11,6 +11,7 @@ describe('Agency production readiness contract', () => {
     const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
     const agencyOverview = read('components/dashboard/agency/AgencyOverview.tsx');
     const readinessProbe = read('scripts/production-readiness-probe.mjs');
+    const vercelReadinessRunner = read('scripts/run-vercel-production-readiness-probe.mjs');
     const agencyRlsNegativeProbe = read('scripts/agency-rls-negative-probe.mjs');
     const packageJson = read('package.json');
     const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
@@ -103,6 +104,14 @@ describe('Agency production readiness contract', () => {
         expect(agencyRlsNegativeProbe).toContain('own_internal_note_rows');
         expect(agencyRlsNegativeProbe).toContain('other_client_reports');
         expect(agencyRlsNegativeProbe).toContain('own_payment_link_rows');
+    });
+
+    it('loads production Vercel env and Supabase Edge secret names for live readiness checks', () => {
+        expect(vercelReadinessRunner).toContain("'pull'");
+        expect(vercelReadinessRunner).toContain("'.env.production.local'");
+        expect(vercelReadinessRunner).toContain('parseEnvFile(envFile)');
+        expect(vercelReadinessRunner).toContain('readSupabaseEdgeSecretNames(appRoot)');
+        expect(vercelReadinessRunner).toContain('SUPABASE_EDGE_SECRET_NAMES');
     });
 
     it('keeps remote Supabase migration history compatible with the source checkout', () => {

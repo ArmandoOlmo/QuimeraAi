@@ -65,11 +65,11 @@ For local/operator checks with Vercel env injection:
 npm run readiness:probe:production -- --json
 ```
 
-This npm command runs `vercel env run` from a temporary linked directory so
-local `.env` files cannot create false positives. If it reports every sensitive
-value as missing while Vercel env names are present, treat that as a CLI
-redaction/injection limitation and use the protected runtime endpoint for final
-evidence.
+This npm command pulls Vercel production env into a temporary linked directory,
+adds Supabase Edge secret names when the Supabase CLI can list them, and avoids
+local `.env` false positives. If it reports sensitive Vercel values as missing
+while `vercel env ls production` shows those names, treat that as a CLI
+redaction limitation and use the protected runtime endpoint for final evidence.
 
 Latest controlled-readiness evidence, 2026-06-27:
 
