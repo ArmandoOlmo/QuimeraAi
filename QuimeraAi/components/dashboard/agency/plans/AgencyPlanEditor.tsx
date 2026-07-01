@@ -173,7 +173,8 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
     const isNewPlan = !plan;
 
     // Calculate markup preview
-    const markup = calculateMarkup(formData.price || 0, QUIMERA_PROJECT_COST);
+    const currentBaseCost = Number.isFinite(formData.baseCost) ? Number(formData.baseCost) : QUIMERA_PROJECT_COST;
+    const markup = calculateMarkup(formData.price || 0, currentBaseCost);
 
     // Update handlers
     const updateField = <K extends keyof AgencyPlan>(field: K, value: AgencyPlan[K]) => {
@@ -366,11 +367,20 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-q-text-muted mb-1.5">
-                                            Tu Costo (Quimera)
+                                        <label className="block text-sm font-medium text-foreground mb-1.5">
+                                            Costo base *
                                         </label>
-                                        <div className="px-4 py-2 bg-muted rounded-lg text-foreground font-medium">
-                                            ${QUIMERA_PROJECT_COST}/mes
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-q-text-muted">$</span>
+                                            <input
+                                                type="number"
+                                                value={formData.baseCost ?? QUIMERA_PROJECT_COST}
+                                                onChange={(e) => updateField('baseCost', parseFloat(e.target.value) || 0)}
+                                                min={0}
+                                                step={1}
+                                                className="w-full pl-8 pr-16 py-2 bg-q-bg border border-q-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-q-text-muted text-sm">/mes</span>
                                         </div>
                                     </div>
 
@@ -392,8 +402,8 @@ export function AgencyPlanEditor({ isOpen, onClose, plan, onSave }: AgencyPlanEd
                                 <div className="flex items-start gap-2 p-3 bg-q-accent/10 dark:bg-q-accent/12 rounded-lg border border-q-accent/25 dark:border-q-accent/30">
                                     <Info className="w-4 h-4 text-q-accent dark:text-q-accent flex-shrink-0 mt-0.5" />
                                     <p className="text-sm text-q-accent dark:text-q-accent">
-                                        El costo de ${QUIMERA_PROJECT_COST}/mes es lo que Quimera te cobra por cada proyecto activo.
-                                        La diferencia es tu ganancia neta por cliente.
+                                        El costo base representa tu costo interno mensual por cliente.
+                                        La diferencia entre precio y costo base es tu margen antes de otros costos.
                                     </p>
                                 </div>
                             </div>

@@ -1,5 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+    calculateMarkup,
     DEFAULT_AGENCY_PLAN_LIMITS,
     isFiniteAgencyLimit,
     sanitizeAgencyPlanLimits,
@@ -7,6 +10,9 @@ import {
     type AgencyPlan,
 } from '../../types/agencyPlans';
 import { isMissingCanonicalAgencyPlanTableError } from '../../services/agencyPlansService';
+
+const rootDir = process.cwd();
+const read = (relativePath: string) => fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
 
 const basePlan = {
     id: 'plan_test',
@@ -78,6 +84,24 @@ describe('Agency service plans', () => {
         expect(isFiniteAgencyLimit(Number.POSITIVE_INFINITY)).toBe(false);
     });
 
+    it('calculates markup from the configured base cost instead of the default project cost', () => {
+        expect(calculateMarkup(150, 50)).toEqual({
+            markup: 100,
+            markupPercentage: 200,
+        });
+    });
+
+    it('rejects service plans priced below their configured base cost', () => {
+        const result = validateAgencyPlan({
+            ...basePlan,
+            price: 80,
+            baseCost: 99,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.errors).toContain('El precio mínimo debe ser $99 (costo base del plan)');
+    });
+
     it('does not treat canonical table permission failures as legacy-table fallback', () => {
         expect(isMissingCanonicalAgencyPlanTableError({
             code: 'PGRST205',
@@ -93,5 +117,15 @@ describe('Agency service plans', () => {
             code: '42501',
             message: 'permission denied for table agency_service_plans',
         })).toBe(false);
+    });
+
+    it('keeps the plan editor wired to editable base cost and base-cost markup', () => {
+        const editor = read('components/dashboard/agency/plans/AgencyPlanEditor.tsx');
+        const service = read('services/agencyPlansService.ts');
+
+        expect(editor).toContain('currentBaseCost');
+        expect(editor).toContain("updateField('baseCost'");
+        expect(editor).toContain('calculateMarkup(formData.price || 0, currentBaseCost)');
+        expect(service).toContain('base_cost: baseCost');
     });
 });

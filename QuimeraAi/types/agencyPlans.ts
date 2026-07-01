@@ -256,12 +256,13 @@ export function validateAgencyPlan(plan: Partial<AgencyPlan>): AgencyPlanValidat
         errors.push('El precio debe ser un número positivo y finito');
     }
     
-    if (plan.price !== undefined && plan.price < QUIMERA_PROJECT_COST) {
-        errors.push(`El precio mínimo debe ser $${QUIMERA_PROJECT_COST} (costo base de Quimera)`);
-    }
-
     if (plan.baseCost !== undefined && (!Number.isFinite(plan.baseCost) || plan.baseCost < 0)) {
         errors.push('El costo base debe ser un número positivo y finito');
+    }
+
+    const baseCost = plan.baseCost ?? QUIMERA_PROJECT_COST;
+    if (plan.price !== undefined && Number.isFinite(plan.price) && Number.isFinite(baseCost) && plan.price < baseCost) {
+        errors.push(`El precio mínimo debe ser $${baseCost} (costo base del plan)`);
     }
     
     if (plan.limits) {
