@@ -23,7 +23,6 @@ import {
 } from '../../services/globalAssistant/globalAssistantEntryBridge';
 import { resolveAssistantServiceIdForModule } from '../../services/globalAssistant/globalAssistantServiceAvailability';
 import { SUBSCRIPTION_PLANS } from '../../types/subscription';
-import DashboardStatusCards from './DashboardStatusCards';
 import { dashboardContainerVariants, dashboardItemVariants } from './dashboardMotion';
 import { ArrowUp, Crown, ChevronUp, ChevronDown, AlertTriangle, Mic, Sparkles, Globe2, Image, Video, Mail, ShoppingBag, Users, Bot, Calendar, Link2, LayoutTemplate, Store, Wallet, Utensils, Building2, FilePlus } from 'lucide-react';
 import { AppButton } from '../ui/system';
@@ -522,11 +521,6 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ allUserProjectsCoun
                     )}
                     </form>
                 </div>
-
-                {/* Status Cards */}
-                <motion.div className="relative z-0" variants={dashboardItemVariants}>
-                    <DashboardStatusCards />
-                </motion.div>
             </div>
         </motion.section>
     );
