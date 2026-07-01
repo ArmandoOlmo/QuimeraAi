@@ -3050,7 +3050,12 @@ async function createClientPaymentLink(req: Request, userId: string, data: any) 
   }
 
   const monthlyPrice = Number(customPrice ?? agencyPlan.price ?? 0);
-  if (monthlyPrice <= 0) throw new Error("A valid monthly price is required");
+  if (!Number.isFinite(monthlyPrice) || monthlyPrice <= 0) throw new Error("A valid monthly price is required");
+
+  const baseCost = Number(agencyPlan.base_cost ?? 0);
+  if (Number.isFinite(baseCost) && baseCost > 0 && monthlyPrice < baseCost) {
+    throw new Error(`Agency client payment links require a monthly price at or above the service plan base cost (${baseCost})`);
+  }
 
   const token = randomToken("pay_");
   const expiresAt = new Date(Date.now() + AGENCY_PAYMENT_LINK_TTL_MS).toISOString();

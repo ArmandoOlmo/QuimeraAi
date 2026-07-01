@@ -42,6 +42,9 @@ describe('Agency billing canonical contract', () => {
         expect(stripeApi).toContain('stripe.checkout.sessions.create');
         expect(stripeApi).toContain('mode: "subscription"');
         expect(stripeApi).toContain('billingFlow: "agency_client_payment_link"');
+        expect(stripeApi).toContain('const baseCost = Number(agencyPlan.base_cost ?? 0)');
+        expect(stripeApi).toContain('monthlyPrice < baseCost');
+        expect(stripeApi).toContain('Agency client payment links require a monthly price at or above the service plan base cost');
         expect(stripeApi).not.toContain('token and paymentMethodId are required');
         expect(stripeApi).not.toContain('const fallbackPlan = agencyPlan');
         expect(stripeApi).not.toContain('fallbackPlan?.price');
@@ -52,6 +55,18 @@ describe('Agency billing canonical contract', () => {
         expect(checkoutPage).not.toContain('paymentMethodId');
         expect(checkoutPage).not.toContain('pm_card_visa');
         expect(clientBillingManager).not.toContain('Stripe Elements');
+    });
+
+    it('prevents payment links that would sell below the agency service-plan base cost', () => {
+        expect(clientBillingManager).toContain("import { GeneratePaymentLink } from './GeneratePaymentLink'");
+        const generatePaymentLink = read('components/dashboard/agency/GeneratePaymentLink.tsx');
+
+        expect(generatePaymentLink).toContain('calculateMarkup');
+        expect(generatePaymentLink).toContain('const minimumPrice = selectedPlan?.baseCost || 0');
+        expect(generatePaymentLink).toContain('paymentPriceBelowBaseCost');
+        expect(generatePaymentLink).toContain('min={minimumPrice}');
+        expect(generatePaymentLink).toContain('disabled={!selectedPlan || generating || paymentPriceBelowBaseCost}');
+        expect(generatePaymentLink).toContain('Margen estimado');
     });
 
     it('keeps agency service-plan billing out of the platform subscription plan sync path', () => {

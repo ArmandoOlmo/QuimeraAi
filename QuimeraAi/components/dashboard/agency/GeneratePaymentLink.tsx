@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { supabase } from '../../../supabase';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { AgencyPlanCardSelector } from './plans';
-import { AgencyPlan } from '../../../types/agencyPlans';
+import { calculateMarkup, type AgencyPlan } from '../../../types/agencyPlans';
 import {
     agencyModalBodyClass,
     agencyModalOverlayClass,
@@ -80,6 +80,11 @@ export function GeneratePaymentLink({
             return;
         }
 
+        if (paymentPriceBelowBaseCost) {
+            setError(`El precio del link no puede ser menor al costo base de $${minimumPrice.toFixed(2)}`);
+            return;
+        }
+
         setGenerating(true);
         setError(null);
 
@@ -140,9 +145,15 @@ export function GeneratePaymentLink({
         onClose();
     };
 
-    const effectivePrice = useCustomPrice && customPrice
-        ? parseFloat(customPrice)
+    const parsedCustomPrice = parseFloat(customPrice);
+    const minimumPrice = selectedPlan?.baseCost || 0;
+    const effectivePrice = useCustomPrice && Number.isFinite(parsedCustomPrice)
+        ? parsedCustomPrice
         : selectedPlan?.price || 0;
+    const paymentPriceBelowBaseCost = Boolean(selectedPlan && effectivePrice < minimumPrice);
+    const marginPreview = selectedPlan
+        ? calculateMarkup(effectivePrice, selectedPlan.baseCost)
+        : { markup: 0, markupPercentage: 0 };
 
     return (
         <div className={agencyModalOverlayClass}>
@@ -222,7 +233,7 @@ export function GeneratePaymentLink({
                                                 className="flex-1 px-3 py-2 border border-q-border rounded-lg bg-q-bg text-foreground text-sm focus:ring-2 focus:ring-primary"
                                                 placeholder="0.00"
                                                 step="0.01"
-                                                min="0"
+                                                min={minimumPrice}
                                             />
                                             <span className="text-sm text-q-text-muted">/mes</span>
                                         </div>
@@ -232,14 +243,19 @@ export function GeneratePaymentLink({
                                         {useCustomPrice ? (
                                             <>
                                                 Precio del plan: <span className="line-through">${selectedPlan.price.toFixed(2)}</span>
-                                                {' → '}
+                                                {' -> '}
                                                 <span className="font-medium text-foreground">
-                                                    ${parseFloat(customPrice || '0').toFixed(2)}
+                                                    ${effectivePrice.toFixed(2)}
                                                 </span>/mes
                                             </>
                                         ) : (
                                             <>Precio del plan: <span className="font-medium text-foreground">${selectedPlan.price.toFixed(2)}</span>/mes</>
                                         )}
+                                    </div>
+                                    <div className={`text-xs ${paymentPriceBelowBaseCost ? 'text-q-error' : 'text-q-text-muted'}`}>
+                                        Costo base: <span className="font-medium">${minimumPrice.toFixed(2)}</span>/mes
+                                        {' | '}
+                                        Margen estimado: <span className="font-medium">${marginPreview.markup.toFixed(2)} ({Math.round(marginPreview.markupPercentage)}%)</span>
                                     </div>
                                 </div>
                             )}
@@ -270,7 +286,7 @@ export function GeneratePaymentLink({
                             {/* Generate Button */}
                             <button
                                 onClick={handleGenerate}
-                                disabled={!selectedPlan || generating}
+                                disabled={!selectedPlan || generating || paymentPriceBelowBaseCost}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {generating ? (
