@@ -94,6 +94,8 @@ export interface AgencySnapshotRow {
     source_project_id?: string | null;
     tags?: unknown;
     metadata?: unknown;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 export interface AgencySnapshotVersionRow {
@@ -622,6 +624,17 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 
 export class AgencySnapshotService {
     constructor(private readonly client: SupabaseClientLike = supabase as unknown as SupabaseClientLike) {}
+
+    async listSnapshots(agencyTenantId: string): Promise<AgencySnapshotRow[]> {
+        const { data, error } = await this.client
+            .from('agency_snapshots')
+            .select('id,agency_tenant_id,name,description,snapshot_type,visibility,status,source_project_id,tags,metadata,created_at,updated_at')
+            .eq('agency_tenant_id', agencyTenantId)
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    }
 
     async createSnapshotFromProject(input: CreateAgencySnapshotFromProjectInput) {
         const createdBy = input.createdBy ?? await this.getCurrentUserId();

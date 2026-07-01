@@ -19,6 +19,7 @@ import { useProject } from '../../../contexts/project';
 import { Project } from '../../../types';
 import { ProjectTransferModal } from './ProjectTransferModal';
 import { SubdomainConfigModal } from './SubdomainConfigModal';
+import { AgencySnapshotCenter } from './AgencySnapshotCenter';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 import { CatalogFilterBar, ProjectStatusFilterChips, CatalogToolbarFooter } from '../filters';
@@ -39,7 +40,7 @@ import {
 
 export function AgencyProjects() {
     const { t } = useTranslation();
-    const { projects, isLoadingProjects } = useProject();
+    const { projects, isLoadingProjects, refreshProjects } = useProject();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<ProjectFilterStatus>('all');
@@ -237,6 +238,11 @@ export function AgencyProjects() {
                     tone="accent"
                 />
             </div>
+
+            <AgencySnapshotCenter
+                projects={userProjects}
+                onSnapshotApplied={refreshProjects}
+            />
 
             {/* Projects Grid */}
             {isLoadingProjects ? (
