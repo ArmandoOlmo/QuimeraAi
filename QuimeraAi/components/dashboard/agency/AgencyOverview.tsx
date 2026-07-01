@@ -21,6 +21,10 @@ import {
     Activity,
     ShieldCheck,
     FileText,
+    ReceiptText,
+    TrendingUp,
+    FileCheck2,
+    Link2,
 } from 'lucide-react';
 import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
@@ -70,6 +74,18 @@ export function AgencyOverview() {
         storageUsedGB: 0,
         aiCreditsUsed: 0,
         totalRevenue: 0,
+        agencyFinance: {
+            ledgerRevenue: 0,
+            baseCost: 0,
+            markup: 0,
+            margin: 0,
+            marginPercentage: 0,
+            ledgerEntryCount: 0,
+            openPaymentLinks: 0,
+            pendingApprovals: 0,
+            pastDueClients: 0,
+            billingEventCount: 0,
+        },
         agencyOperatingSystem: {
             clientsWithOperatingSystem: 0,
             activeModuleSlots: 0,
@@ -83,6 +99,18 @@ export function AgencyOverview() {
     const totalClients = subClients?.length || 0;
     const selectedClient = subClients.find((client) => client.id === selectedClientId) || null;
     const criticalAlerts = resourceAlerts.filter((alert) => alert.severity === 'critical').length;
+    const agencyFinance = safeMetrics.agencyFinance || {
+        ledgerRevenue: 0,
+        baseCost: 0,
+        markup: 0,
+        margin: 0,
+        marginPercentage: 0,
+        ledgerEntryCount: 0,
+        openPaymentLinks: 0,
+        pendingApprovals: 0,
+        pastDueClients: 0,
+        billingEventCount: 0,
+    };
     const activeClientRate = totalClients > 0
         ? Math.round((safeMetrics.activeSubClients / totalClients) * 100)
         : 0;
@@ -307,6 +335,20 @@ export function AgencyOverview() {
                     tone="success"
                 />
                 <AgencyStatCard
+                    label={t('dashboard.agency.overviewPage.baseCost', 'Costo base')}
+                    value={formatCurrency(agencyFinance.baseCost)}
+                    icon={ReceiptText}
+                />
+                <AgencyStatCard
+                    label={t('dashboard.agency.overviewPage.margin', 'Margen')}
+                    value={formatCurrency(agencyFinance.margin)}
+                    icon={TrendingUp}
+                    tone={agencyFinance.margin >= 0 ? 'success' : 'danger'}
+                    hint={t('dashboard.agency.overviewPage.marginHint', '{{percentage}}% margen', {
+                        percentage: agencyFinance.marginPercentage,
+                    })}
+                />
+                <AgencyStatCard
                     label={t('dashboard.agency.overviewPage.totalClients')}
                     value={totalClients}
                     icon={Users}
@@ -321,6 +363,18 @@ export function AgencyOverview() {
                     label={t('dashboard.agency.overviewPage.totalLeads')}
                     value={formatNumber(safeMetrics.totalLeads)}
                     icon={Contact}
+                />
+                <AgencyStatCard
+                    label={t('dashboard.agency.overviewPage.pendingApprovals', 'Aprobaciones')}
+                    value={formatNumber(agencyFinance.pendingApprovals)}
+                    icon={FileCheck2}
+                    tone={agencyFinance.pendingApprovals > 0 ? 'warning' : 'success'}
+                />
+                <AgencyStatCard
+                    label={t('dashboard.agency.overviewPage.openPaymentLinks', 'Links abiertos')}
+                    value={formatNumber(agencyFinance.openPaymentLinks)}
+                    icon={Link2}
+                    tone={agencyFinance.openPaymentLinks > 0 ? 'warning' : 'info'}
                 />
                 <AgencyStatCard
                     label={t('dashboard.agency.overviewPage.totalUsers')}

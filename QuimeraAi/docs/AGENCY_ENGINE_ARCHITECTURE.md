@@ -46,6 +46,9 @@ The canonical Supabase tables are created in `supabase/migrations/20260627071535
 - `agency_reports`: report artifacts and AI summaries
 - `agency_client_notes`: internal and client-visible notes
 - `agency_landings`: canonical white-label agency landing pages
+- `agency_usage_ledger`: usage, revenue, platform cost, markup, and margin entries
+- `agency_billing_events`: idempotent Agency Stripe event records
+- `agency_snapshots`, `agency_snapshot_versions`, `agency_snapshot_applications`: agency templates and application audit trail
 
 Legacy `agencyPlans` compatibility remains only as fallback while workspaces migrate. New reads/writes should prefer `agency_service_plans`.
 Legacy `agencyLandings` remains only as a transitional PostgREST view/alias. New agency landing reads and writes must use `agency_landings` directly to avoid `/rest/v1/agencyLandings` 404s when the legacy view is not deployed.
@@ -113,6 +116,16 @@ Public branded links generated from Agency Billing are stored in `agency_client_
 `stripe-webhook` treats metadata `source = agency-engine` and `billingFlow = agency_client_payment_link` as agency client billing. It updates `agency_client_payment_links`, `agency_clients`, and `tenant.billing` while preserving `subscription_plan` as the client's finite effective Quimera plan. The agency service plan remains in `tenant.billing.agencyPlanId`; it is not written as `subscription_plan`.
 
 Agency Billing UI must not infer a configured card from temporary IDs or fake payment methods. When Stripe subscriptions provide `default_payment_method`, the webhook stores only a safe display summary in `tenant.billing.paymentMethodDetails` (`brand`, `last4`, expiry, type). Client Billing renders that summary, or an honest Stripe Billing/checkout pending state when card details are unavailable.
+
+`agency_billing_events` records Agency Stripe webhook events by `provider,event_id` so retries are idempotent and auditable independently from ecommerce `store_payment_events`. Successful Agency subscription activation writes `agency_usage_ledger` using the client monthly price and the agency service plan `base_cost`, producing revenue, cost, markup, margin, and margin percentage for Agency Command Center.
+
+Detailed production docs live in:
+
+- `docs/agency/AGENCY_ARCHITECTURE.md`
+- `docs/agency/AGENCY_BILLING_STRIPE.md`
+- `docs/agency/AGENCY_SNAPSHOTS.md`
+- `docs/agency/AGENCY_RLS_SECURITY.md`
+- `docs/production/agency-readiness-checklist.md`
 
 ## Metrics And Reports
 

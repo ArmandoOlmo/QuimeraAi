@@ -38,10 +38,17 @@ describe('production readiness probe', () => {
   });
 
   it('passes live read-only checks with valid production-shaped env', async () => {
-    const fetchImpl = vi.fn(async (url: URL | string) => ({
-      status: 200,
-      json: async () => String(url).includes('cloudflare') ? { success: true } : {},
-    }));
+    const fetchImpl = vi.fn(async (_url: URL | string, init?: RequestInit) => {
+      const authorization = String((init?.headers as Record<string, string> | undefined)?.Authorization || '');
+      if (authorization.includes(VALID_ENV.VITE_SUPABASE_ANON_KEY)) {
+        return { status: 401, json: async () => ({ code: '42501' }) };
+      }
+
+      return {
+        status: 200,
+        json: async () => String(_url).includes('cloudflare') ? { success: true } : {},
+      };
+    });
 
     const result = await runProductionReadinessProbe({
       env: {
@@ -56,6 +63,10 @@ describe('production readiness probe', () => {
 
     expect(result.ok).toBe(true);
     expect(result.summary.failed).toBe(0);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'agency-supabase-schema', status: 'pass' }),
+      expect.objectContaining({ name: 'agency-rls-negative-anon', status: 'pass' }),
+    ]));
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining('https://api.resend.com/domains'),
       expect.objectContaining({ method: 'GET' }),
@@ -64,6 +75,25 @@ describe('production readiness probe', () => {
       expect.stringContaining('https://api.stripe.com/v1/account'),
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  it('fails live readiness when anonymous callers can reach protected Agency billing tables', async () => {
+    const fetchImpl = vi.fn(async (_url: URL | string) => ({
+      status: 200,
+      json: async () => ({}),
+    }));
+
+    const result = await runProductionReadinessProbe({
+      env: VALID_ENV,
+      fetchImpl,
+      live: true,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'agency-rls-negative-anon', status: 'fail' }),
+    ]));
   });
 
   it('fails when required server-only secrets are missing', async () => {
@@ -85,6 +115,33 @@ describe('production readiness probe', () => {
       expect.objectContaining({ name: 'SUPABASE_SERVICE_ROLE_KEY', status: 'fail' }),
       expect.objectContaining({ name: 'STRIPE_WEBHOOK_SECRET', status: 'fail' }),
       expect.objectContaining({ name: 'STRIPE_SYNC_SECRET', status: 'fail' }),
+    ]));
+  });
+
+  it('accepts Stripe webhook and sync secrets when they are verified as Supabase Edge secrets', async () => {
+    const envWithEdgeSecrets: Partial<typeof VALID_ENV> = { ...VALID_ENV };
+    delete envWithEdgeSecrets.STRIPE_WEBHOOK_SECRET;
+    delete envWithEdgeSecrets.STRIPE_SYNC_SECRET;
+
+    const result = await runProductionReadinessProbe({
+      env: {
+        ...envWithEdgeSecrets,
+        SUPABASE_EDGE_SECRET_NAMES: [
+          'STRIPE_SECRET_KEY',
+          'STRIPE_WEBHOOK_SECRET',
+          'STRIPE_SYNC_SECRET',
+          'SUPABASE_SERVICE_ROLE_KEY',
+          'SUPABASE_URL',
+        ].join(','),
+      },
+      live: false,
+      strict: true,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'STRIPE_WEBHOOK_SECRET', status: 'pass' }),
+      expect.objectContaining({ name: 'STRIPE_SYNC_SECRET', status: 'pass' }),
     ]));
   });
 

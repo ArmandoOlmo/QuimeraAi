@@ -1,4 +1,4 @@
-import { isValidEmail, normalizeEmail } from './emailProviderService.js';
+import { isValidEmail, normalizeEmail } from './emailProviderService.ts';
 
 type SupabaseClient = any;
 

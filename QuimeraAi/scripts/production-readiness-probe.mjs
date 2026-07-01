@@ -100,6 +100,10 @@ export async function runProductionReadinessProbe(input = {}) {
   };
 
   const supabaseUrl = readEnv(env, 'SUPABASE_URL') || readEnv(env, 'VITE_SUPABASE_URL');
+  const supabaseProjectRef = readEnv(env, 'SUPABASE_PROJECT_REF') || inferSupabaseProjectRef(supabaseUrl);
+  const supabaseAccessToken = readEnv(env, 'SUPABASE_ACCESS_TOKEN');
+  const supabaseEdgeSecretNames = parseNameSet(readEnv(env, 'SUPABASE_EDGE_SECRET_NAMES'));
+  const canLiveCheckSupabaseEdgeSecrets = Boolean(supabaseAccessToken && supabaseProjectRef && options.live);
   const cronSecret = requireValue('CRON_SECRET', { minLength: 24 });
   const appBaseUrl = requireUrl('APP_BASE_URL', { httpsOnly: true, expectedOrigin: PRODUCTION_ORIGIN });
   const publicAppUrl = requireUrl('VITE_PUBLIC_APP_URL', { httpsOnly: true, expectedOrigin: PRODUCTION_ORIGIN });
@@ -120,12 +124,12 @@ export async function runProductionReadinessProbe(input = {}) {
     pattern: /^sk_(test|live)_/,
     patternEvidence: 'expected Stripe secret key prefix',
   });
-  requireValue('STRIPE_WEBHOOK_SECRET', {
+  requireRuntimeOrEdgeSecret('STRIPE_WEBHOOK_SECRET', {
     minLength: 20,
     pattern: /^whsec_/,
     patternEvidence: 'expected Stripe webhook signing secret prefix',
   });
-  requireValue('STRIPE_SYNC_SECRET', { minLength: 24 });
+  requireRuntimeOrEdgeSecret('STRIPE_SYNC_SECRET', { minLength: 24 });
   validateStripePublishableKey(add, readEnv(env, 'VITE_STRIPE_PUBLISHABLE_KEY'));
   const googleClientId = readEnv(env, 'GOOGLE_CALENDAR_CLIENT_ID') || readEnv(env, 'VITE_GOOGLE_CLIENT_ID');
   validateGoogleConfig(env, add, googleClientId, cronSecret);
@@ -155,7 +159,11 @@ export async function runProductionReadinessProbe(input = {}) {
         fetchImpl,
         timeoutMs: options.timeoutMs,
         supabaseUrl,
+        supabaseProjectRef,
+        supabaseAccessToken,
+        supabaseEdgeSecretNames,
         serviceRoleKey,
+        anonKey,
         resendApiKey,
         sendGridApiKey,
         stripeSecretKey,
@@ -186,6 +194,27 @@ export async function runProductionReadinessProbe(input = {}) {
     },
     checks,
   };
+
+  function requireRuntimeOrEdgeSecret(name, config = {}) {
+    const runtimeValue = readEnv(env, name);
+    if (runtimeValue) {
+      requireValue(name, config);
+      return runtimeValue;
+    }
+
+    if (supabaseEdgeSecretNames.has(name)) {
+      add({ name, status: 'pass', evidence: 'configured in Supabase Edge secrets list' });
+      return '';
+    }
+
+    if (canLiveCheckSupabaseEdgeSecrets) {
+      add({ name, status: 'skip', severity: 'info', evidence: 'will verify via Supabase Edge secrets live check' });
+      return '';
+    }
+
+    add({ name, status: 'fail', severity: 'critical', evidence: 'missing runtime value or Supabase Edge secret verification' });
+    return '';
+  }
 }
 
 function validateEmailProviderConfig(add, resendApiKey, sendGridApiKey) {
@@ -354,12 +383,170 @@ function validateCloudflareShape(add, token, accountId, requireCloudflare) {
 async function runLiveChecks(input) {
   await Promise.all([
     checkSupabase(input),
+    checkAgencySupabaseSchema(input),
+    checkAgencyRlsNegative(input),
+    checkSupabaseEdgeSecrets(input),
     checkResend(input),
     checkSendGrid(input),
     checkStripe(input),
     checkGoogleCalendarDiscovery(input),
     checkCloudflare(input),
   ]);
+}
+
+async function checkAgencySupabaseSchema({ add, fetchImpl, timeoutMs, supabaseUrl, serviceRoleKey }) {
+  if (!supabaseUrl || !serviceRoleKey || !parseUrl(supabaseUrl)) {
+    add({ name: 'agency-supabase-schema', status: 'skip', severity: 'info', evidence: 'missing URL or service role shape prerequisite' });
+    return;
+  }
+
+  const requiredTables = [
+    'agency_service_plans',
+    'agency_clients',
+    'agency_client_payment_links',
+    'agency_client_approvals',
+    'agency_reports',
+    'agency_activity',
+    'agency_usage_ledger',
+    'agency_billing_events',
+    'agency_snapshots',
+    'agency_snapshot_versions',
+    'agency_snapshot_applications',
+    'subscription_plans',
+  ];
+
+  const results = await Promise.all(requiredTables.map(async (table) => {
+    const endpoint = new URL(`/rest/v1/${table}`, supabaseUrl);
+    endpoint.searchParams.set('select', 'id');
+    endpoint.searchParams.set('limit', '0');
+    const response = await safeFetch(fetchImpl, endpoint, {
+      method: 'GET',
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    }, timeoutMs);
+    return { table, response };
+  }));
+
+  const failed = results.filter(({ response }) => !response.ok || response.status >= 400);
+  if (failed.length === 0) {
+    add({ name: 'agency-supabase-schema', status: 'pass', evidence: `${requiredTables.length} Agency tables reachable with service role` });
+    return;
+  }
+
+  add({
+    name: 'agency-supabase-schema',
+    status: 'fail',
+    severity: 'critical',
+    evidence: `unreachable tables: ${failed.map(({ table }) => table).join(', ')}`,
+  });
+}
+
+async function checkSupabaseEdgeSecrets({
+  add,
+  fetchImpl,
+  timeoutMs,
+  supabaseProjectRef,
+  supabaseAccessToken,
+  supabaseEdgeSecretNames,
+}) {
+  const required = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_SYNC_SECRET', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_URL'];
+  if (supabaseEdgeSecretNames?.size) {
+    const missingFromNames = required.filter(name => !supabaseEdgeSecretNames.has(name));
+    if (missingFromNames.length === 0) {
+      add({ name: 'supabase-edge-secrets', status: 'pass', evidence: `${required.length} required Edge secret names present` });
+      return;
+    }
+  }
+
+  if (!supabaseProjectRef || !supabaseAccessToken) {
+    add({ name: 'supabase-edge-secrets', status: 'skip', severity: 'info', evidence: 'SUPABASE_PROJECT_REF or SUPABASE_ACCESS_TOKEN missing' });
+    return;
+  }
+
+  const response = await safeFetch(fetchImpl, `https://api.supabase.com/v1/projects/${supabaseProjectRef}/secrets`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${supabaseAccessToken}` },
+  }, timeoutMs);
+
+  if (!response.ok || response.status >= 400) {
+    add({ name: 'supabase-edge-secrets', status: 'fail', severity: 'critical', evidence: response.evidence });
+    return;
+  }
+
+  const body = await response.json().catch(() => []);
+  const names = new Set(Array.isArray(body) ? body.map(secret => secret?.name).filter(Boolean) : []);
+  const missing = required.filter(name => !names.has(name));
+  if (missing.length > 0) {
+    add({ name: 'supabase-edge-secrets', status: 'fail', severity: 'critical', evidence: `missing Edge secrets: ${missing.join(', ')}` });
+    return;
+  }
+
+  add({ name: 'supabase-edge-secrets', status: 'pass', evidence: `${required.length} required Edge secret names present` });
+}
+
+async function checkAgencyRlsNegative({ add, fetchImpl, timeoutMs, supabaseUrl, anonKey }) {
+  if (!supabaseUrl || !anonKey || !parseUrl(supabaseUrl)) {
+    add({ name: 'agency-rls-negative-anon', status: 'skip', severity: 'info', evidence: 'missing URL or anon key prerequisite' });
+    return;
+  }
+
+  const probes = [
+    {
+      table: 'agency_usage_ledger',
+      method: 'GET',
+      search: { select: 'id', limit: '1' },
+      expectedCode: '42501',
+    },
+    {
+      table: 'agency_billing_events',
+      method: 'GET',
+      search: { select: 'id', limit: '1' },
+      expectedCode: '42501',
+    },
+    {
+      table: 'subscription_plans',
+      method: 'POST',
+      body: {},
+      expectedCode: '42501',
+    },
+  ];
+
+  const results = await Promise.all(probes.map(async (probe) => {
+    const endpoint = new URL(`/rest/v1/${probe.table}`, supabaseUrl);
+    Object.entries(probe.search || {}).forEach(([key, value]) => endpoint.searchParams.set(key, value));
+    const response = await safeFetch(fetchImpl, endpoint, {
+      method: probe.method,
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: probe.body ? JSON.stringify(probe.body) : undefined,
+    }, timeoutMs);
+    const body = await response.json().catch(() => ({}));
+    return {
+      ...probe,
+      status: response.status,
+      code: typeof body?.code === 'string' ? body.code : '',
+      evidence: response.evidence,
+    };
+  }));
+
+  const leaks = results.filter(result => result.status < 400 || result.code !== result.expectedCode);
+  if (leaks.length === 0) {
+    add({ name: 'agency-rls-negative-anon', status: 'pass', evidence: `${results.length} anonymous Agency billing probes denied with 42501` });
+    return;
+  }
+
+  add({
+    name: 'agency-rls-negative-anon',
+    status: 'fail',
+    severity: 'critical',
+    evidence: leaks.map(result => `${result.method} ${result.table} returned HTTP ${result.status}${result.code ? ` code ${result.code}` : ''}`).join('; '),
+  });
 }
 
 async function checkSupabase({ add, fetchImpl, timeoutMs, supabaseUrl, serviceRoleKey }) {
@@ -500,12 +687,26 @@ function readEnv(env, name) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function parseNameSet(value) {
+  return new Set(String(value || '')
+    .split(',')
+    .map(name => name.trim())
+    .filter(Boolean));
+}
+
 function parseUrl(value) {
   try {
     return new URL(value);
   } catch (_error) {
     return null;
   }
+}
+
+function inferSupabaseProjectRef(supabaseUrl) {
+  const parsed = parseUrl(supabaseUrl);
+  if (!parsed) return '';
+  const firstHostPart = parsed.hostname.split('.')[0] || '';
+  return /^[a-z0-9]{20}$/i.test(firstHostPart) ? firstHostPart : '';
 }
 
 function isStrongGoogleEncryptionKey(value) {

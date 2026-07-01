@@ -53,6 +53,7 @@ serve(async (req) => {
   }
 
   let paymentEvent: any = null;
+  let agencyBillingEvent: any = null;
 
   try {
     const registration = await registerPaymentEvent(event);
@@ -62,6 +63,15 @@ serve(async (req) => {
 
     paymentEvent = registration.row;
     await updatePaymentEventStatus(paymentEvent.id, "processing");
+
+    const agencyRegistration = await registerAgencyBillingEvent(event);
+    if (agencyRegistration?.duplicate) {
+      await updatePaymentEventStatus(paymentEvent.id, "processed", { processedAt: true });
+      return json({ received: true, duplicate: true });
+    }
+
+    agencyBillingEvent = agencyRegistration?.row || null;
+    if (agencyBillingEvent?.id) await updateAgencyBillingEventStatus(agencyBillingEvent.id, "processing");
 
     switch (event.type) {
       case "checkout.session.completed":
@@ -96,6 +106,7 @@ serve(async (req) => {
     }
 
     if (paymentEvent?.id) await updatePaymentEventStatus(paymentEvent.id, "processed", { processedAt: true });
+    if (agencyBillingEvent?.id) await updateAgencyBillingEventStatus(agencyBillingEvent.id, "processed", { processedAt: true });
     return json({ received: true });
   } catch (error: any) {
     if (paymentEvent?.id) {
@@ -103,6 +114,13 @@ serve(async (req) => {
         processingError: error.message || "Webhook processing error",
       }).catch((eventError) => {
         console.error("[stripe-webhook] could not mark event failed:", eventError.message);
+      });
+    }
+    if (agencyBillingEvent?.id) {
+      await updateAgencyBillingEventStatus(agencyBillingEvent.id, "failed", {
+        processingError: error.message || "Webhook processing error",
+      }).catch((eventError) => {
+        console.error("[stripe-webhook] could not mark agency event failed:", eventError.message);
       });
     }
     console.error("[stripe-webhook] processing error:", error);
@@ -119,6 +137,20 @@ function json(body: unknown, status = 200) {
 
 function iso(timestamp?: number | null): string | null {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
+}
+
+function dateOnly(value?: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : null;
+}
+
+function readPositiveAmount(...values: unknown[]): number {
+  for (const value of values) {
+    const amount = Number(value);
+    if (Number.isFinite(amount) && amount > 0) return amount;
+  }
+  return 0;
 }
 
 function isUuid(value?: string | null) {
@@ -145,6 +177,46 @@ function extractPaymentEventRefs(event: Stripe.Event) {
     orderId: metadata.orderId || metadata.order_id || null,
     storeId: metadata.storeId || metadata.store_id || null,
     projectId: isUuid(metadata.projectId || metadata.project_id) ? metadata.projectId || metadata.project_id : null,
+  };
+}
+
+function readStripeObjectId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value && "id" in value) {
+    return String((value as { id?: unknown }).id || "") || null;
+  }
+  return null;
+}
+
+function extractAgencyBillingEventRefs(event: Stripe.Event) {
+  const object = event.data.object as any;
+  const metadata = {
+    ...(object?.metadata || {}),
+    ...(object?.subscription_details?.metadata || {}),
+    ...(object?.lines?.data?.[0]?.metadata || {}),
+  };
+  const checkoutSessionId = object?.object === "checkout.session"
+    ? object.id
+    : readStripeObjectId(object?.checkout_session) || metadata.checkoutSessionId || metadata.checkout_session_id || null;
+  const subscriptionId = object?.object === "subscription"
+    ? object.id
+    : readStripeObjectId(object?.subscription) || metadata.stripeSubscriptionId || metadata.subscriptionId || null;
+  const invoiceId = object?.object === "invoice"
+    ? object.id
+    : readStripeObjectId(object?.invoice) || metadata.stripeInvoiceId || metadata.invoiceId || null;
+  const customerId = readStripeObjectId(object?.customer) || metadata.stripeCustomerId || metadata.customerId || null;
+
+  return {
+    isAgencyBilling: isAgencyClientBillingMetadata(metadata),
+    metadata,
+    agencyTenantId: isUuid(metadata.agencyTenantId) ? metadata.agencyTenantId : null,
+    clientTenantId: isUuid(metadata.clientTenantId || metadata.tenantId) ? metadata.clientTenantId || metadata.tenantId : null,
+    paymentLinkToken: metadata.paymentLinkToken || null,
+    checkoutSessionId,
+    subscriptionId,
+    invoiceId,
+    customerId,
   };
 }
 
@@ -199,6 +271,77 @@ async function registerPaymentEvent(event: Stripe.Event) {
   return { duplicate: false, row: data };
 }
 
+async function registerAgencyBillingEvent(event: Stripe.Event): Promise<{ duplicate: boolean; row: any } | null> {
+  const refs = extractAgencyBillingEventRefs(event);
+  if (!refs.isAgencyBilling) return null;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("agency_billing_events")
+    .select("*")
+    .eq("provider", "stripe")
+    .eq("event_id", event.id)
+    .maybeSingle();
+  if (existingError) {
+    if (isMissingTableError(existingError)) return null;
+    throw existingError;
+  }
+  if (existing) {
+    const status = String(existing.status || "");
+    return { duplicate: status === "processing" || status === "processed", row: existing };
+  }
+
+  let paymentLinkId: string | null = null;
+  if (refs.paymentLinkToken) {
+    const { data: paymentLink, error: paymentLinkError } = await supabase
+      .from("agency_client_payment_links")
+      .select("id")
+      .eq("token", refs.paymentLinkToken)
+      .maybeSingle();
+    if (paymentLinkError && !isMissingTableError(paymentLinkError)) throw paymentLinkError;
+    paymentLinkId = paymentLink?.id || null;
+  }
+
+  const { data, error } = await supabase
+    .from("agency_billing_events")
+    .insert({
+      provider: "stripe",
+      event_id: event.id,
+      event_type: event.type,
+      agency_tenant_id: refs.agencyTenantId,
+      client_tenant_id: refs.clientTenantId,
+      payment_link_id: paymentLinkId,
+      payment_link_token: refs.paymentLinkToken,
+      stripe_customer_id: refs.customerId,
+      stripe_subscription_id: refs.subscriptionId,
+      stripe_invoice_id: refs.invoiceId,
+      stripe_checkout_session_id: refs.checkoutSessionId,
+      status: "received",
+      payload: event as any,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    if (isMissingTableError(error)) return null;
+    const duplicate = error.code === "23505" || /duplicate|unique/i.test(error.message || "");
+    if (duplicate) {
+      const { data: raced, error: racedError } = await supabase
+        .from("agency_billing_events")
+        .select("*")
+        .eq("provider", "stripe")
+        .eq("event_id", event.id)
+        .maybeSingle();
+      if (racedError) throw racedError;
+      if (!raced) throw error;
+      const status = String(raced?.status || "");
+      return { duplicate: status === "processing" || status === "processed", row: raced };
+    }
+    throw error;
+  }
+
+  return { duplicate: false, row: data };
+}
+
 async function updatePaymentEventStatus(
   id: string,
   status: "processing" | "processed" | "failed",
@@ -217,6 +360,27 @@ async function updatePaymentEventStatus(
     .update(update)
     .eq("id", id);
   if (error) throw error;
+}
+
+async function updateAgencyBillingEventStatus(
+  id: string,
+  status: "processing" | "processed" | "failed",
+  options: { processingError?: string; processedAt?: boolean } = {},
+) {
+  const update: Record<string, unknown> = {
+    status,
+    processing_error: options.processingError || null,
+    updated_at: new Date().toISOString(),
+  };
+  if (options.processedAt || status === "failed") {
+    update.processed_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from("agency_billing_events")
+    .update(update)
+    .eq("id", id);
+  if (error && !isMissingTableError(error)) throw error;
 }
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
@@ -472,8 +636,89 @@ async function syncAgencyClientSubscription(
       : subscription.status === "trialing"
         ? "trial"
         : subscription.status,
+    currentPeriodStart: iso(subscription.current_period_start),
     currentPeriodEnd: iso(subscription.current_period_end),
   });
+}
+
+function isRecordableAgencyLedgerStatus(status?: string | null) {
+  return ["active", "trial", "trialing"].includes(String(status || ""));
+}
+
+async function recordAgencyUsageLedger(params: {
+  agencyTenantId?: string | null;
+  clientTenantId?: string | null;
+  agencyPlanId?: string | null;
+  agencyPlanName?: string | null;
+  monthlyPrice?: unknown;
+  status?: string | null;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  stripeCheckoutSessionId?: string | null;
+  stripeSubscriptionId?: string | null;
+  paymentLinkToken?: string | null;
+}) {
+  if (!params.agencyTenantId || !params.clientTenantId) return;
+  if (!isRecordableAgencyLedgerStatus(params.status)) return;
+
+  let plan: any = null;
+  if (params.agencyPlanId) {
+    const { data, error } = await supabase
+      .from("agency_service_plans")
+      .select("id,name,price,base_cost")
+      .eq("id", params.agencyPlanId)
+      .maybeSingle();
+    if (error && !isMissingTableError(error)) throw error;
+    plan = data || null;
+  }
+
+  const unitPrice = readPositiveAmount(params.monthlyPrice, plan?.price);
+  const unitCost = readPositiveAmount(plan?.base_cost);
+  if (unitPrice <= 0 && unitCost <= 0) return;
+
+  const periodKey = params.currentPeriodEnd ||
+    params.stripeSubscriptionId ||
+    params.stripeCheckoutSessionId ||
+    params.paymentLinkToken ||
+    new Date().toISOString().slice(0, 10);
+  const sourceKey = params.stripeSubscriptionId ||
+    params.stripeCheckoutSessionId ||
+    params.paymentLinkToken ||
+    params.clientTenantId;
+  const idempotencyKey = `stripe:agency-client-subscription:${sourceKey}:${periodKey}`;
+
+  const { error } = await supabase
+    .from("agency_usage_ledger")
+    .insert({
+      agency_tenant_id: params.agencyTenantId,
+      client_tenant_id: params.clientTenantId,
+      agency_plan_id: plan?.id || null,
+      source: "stripe-webhook",
+      usage_type: "subscription",
+      usage_quantity: 1,
+      unit_cost: unitCost,
+      unit_price: unitPrice,
+      currency: "usd",
+      billing_status: params.status || "active",
+      billing_period_start: dateOnly(params.currentPeriodStart),
+      billing_period_end: dateOnly(params.currentPeriodEnd),
+      provider: "stripe",
+      provider_event_id: params.stripeSubscriptionId || params.stripeCheckoutSessionId || params.paymentLinkToken || null,
+      stripe_subscription_id: params.stripeSubscriptionId || null,
+      stripe_checkout_session_id: params.stripeCheckoutSessionId || null,
+      idempotency_key: idempotencyKey,
+      metadata: {
+        agencyPlanName: params.agencyPlanName || plan?.name || null,
+        paymentLinkToken: params.paymentLinkToken || null,
+        status: params.status || null,
+        source: "stripe-webhook",
+      },
+    });
+
+  if (!error) return;
+  if (isMissingTableError(error)) return;
+  if (error.code === "23505" || /duplicate|unique/i.test(error.message || "")) return;
+  throw error;
 }
 
 async function markAgencyPaymentLinkCompleted(params: {
@@ -489,6 +734,7 @@ async function markAgencyPaymentLinkCompleted(params: {
   stripeSubscriptionId?: string | null;
   paymentMethodDetails?: Record<string, unknown> | null;
   status?: string | null;
+  currentPeriodStart?: string | null;
   currentPeriodEnd?: string | null;
 }) {
   if (!params.tenantId) return;
@@ -504,11 +750,12 @@ async function markAgencyPaymentLinkCompleted(params: {
   const effectivePlanId = normalizePlanId(params.effectivePlanId || tenant.billing?.effectivePlanId || tenant.subscription_plan || "individual");
   const status = params.status || "active";
   const billingMode = params.billingMode || "direct";
+  const resolvedAgencyTenantId = params.agencyTenantId || tenant.billing?.agencyTenantId || null;
   const billing = {
     ...(tenant.billing || {}),
     mode: billingMode,
     effectivePlanId,
-    agencyTenantId: params.agencyTenantId || tenant.billing?.agencyTenantId || null,
+    agencyTenantId: resolvedAgencyTenantId,
     agencyPlanId: params.agencyPlanId || tenant.billing?.agencyPlanId || null,
     agencyPlanName: params.agencyPlanName || tenant.billing?.agencyPlanName || null,
     status,
@@ -564,11 +811,25 @@ async function markAgencyPaymentLinkCompleted(params: {
     if (linkError && !isMissingTableError(linkError)) throw linkError;
   }
 
-  if (params.agencyTenantId) {
+  if (resolvedAgencyTenantId) {
+    await recordAgencyUsageLedger({
+      agencyTenantId: resolvedAgencyTenantId,
+      clientTenantId: params.tenantId,
+      agencyPlanId: billing.agencyPlanId,
+      agencyPlanName: billing.agencyPlanName,
+      monthlyPrice: billing.monthlyPrice,
+      status,
+      currentPeriodStart: params.currentPeriodStart,
+      currentPeriodEnd: params.currentPeriodEnd,
+      stripeCheckoutSessionId: params.stripeCheckoutSessionId,
+      stripeSubscriptionId: params.stripeSubscriptionId,
+      paymentLinkToken: params.paymentLinkToken,
+    });
+
     const { error: relationshipError } = await supabase
       .from("agency_clients")
       .upsert({
-        agency_tenant_id: params.agencyTenantId,
+        agency_tenant_id: resolvedAgencyTenantId,
         client_tenant_id: params.tenantId,
         agency_plan_id: params.agencyPlanId || null,
         billing_mode: billingMode,
@@ -585,7 +846,7 @@ async function markAgencyPaymentLinkCompleted(params: {
 
     if (shouldRecordPaymentActivity) {
       const { error: activityError } = await supabase.from("agency_activity").insert({
-        agency_tenant_id: params.agencyTenantId,
+        agency_tenant_id: resolvedAgencyTenantId,
         client_tenant_id: params.tenantId,
         type: "payment_received",
         title: "Client subscription activated",
