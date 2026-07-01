@@ -23,7 +23,7 @@ import { PageSection } from '../../types';
 import { SitePage } from '../../types/project';
 import { usePlanAccess } from '../../hooks/usePlanFeatures';
 import { resolveProjectName } from '../../utils/resolveProjectName';
-import { getInitialDataForLandingComponent } from '../../utils/landingSectionDefaults';
+import { getInitialDataForLandingComponent, isQuimeraLandingComponent } from '../../utils/landingSectionDefaults';
 import PageSettings from '../dashboard/PageSettings';
 import PageSelector from '../dashboard/PageSelector';
 import { PageTemplateId, PAGE_TEMPLATES } from '../../types/onboarding';
@@ -588,7 +588,8 @@ const Controls: React.FC = () => {
       section !== 'typography' &&
       section !== 'footer' &&
       section !== 'colors' &&
-      !isRetiredDesignSuiteSection(section)
+      !isRetiredDesignSuiteSection(section) &&
+      !isQuimeraLandingComponent(section)
   );
 
   const handleAddComponent = (section: PageSection) => {
