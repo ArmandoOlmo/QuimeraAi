@@ -11,6 +11,7 @@ describe('Agency production readiness contract', () => {
     const agencyMetricsHook = read('hooks/useAgencyMetrics.ts');
     const agencyOverview = read('components/dashboard/agency/AgencyOverview.tsx');
     const readinessProbe = read('scripts/production-readiness-probe.mjs');
+    const agencyRlsNegativeProbe = read('scripts/agency-rls-negative-probe.mjs');
     const packageJson = read('package.json');
     const agencyStripeBillingHelper = read('supabase/functions/_shared/agency-stripe-billing.ts');
 
@@ -90,6 +91,14 @@ describe('Agency production readiness contract', () => {
         expect(readinessProbe).toContain('anonymous Agency billing probes denied with 42501');
         expect(packageJson).toContain('readiness:agency-rls-negative');
         expect(fs.existsSync(path.join(rootDir, 'scripts/agency-rls-negative-probe.mjs'))).toBe(true);
+        expect(agencyRlsNegativeProbe).toContain('insert into public.agency_client_notes');
+        expect(agencyRlsNegativeProbe).toContain('insert into public.agency_reports');
+        expect(agencyRlsNegativeProbe).toContain('insert into public.agency_usage_ledger');
+        expect(agencyRlsNegativeProbe).toContain('set local role authenticated');
+        expect(agencyRlsNegativeProbe).toContain('agency_service_plan_rows');
+        expect(agencyRlsNegativeProbe).toContain('own_internal_note_rows');
+        expect(agencyRlsNegativeProbe).toContain('other_client_reports');
+        expect(agencyRlsNegativeProbe).toContain('own_payment_link_rows');
     });
 
     it('keeps remote Supabase migration history compatible with the source checkout', () => {

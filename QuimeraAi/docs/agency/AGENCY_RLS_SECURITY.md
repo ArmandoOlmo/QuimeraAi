@@ -27,5 +27,12 @@ Do not create client-facing policies on those tables. If client-visible usage su
 - Authenticated non-platform users cannot insert, update, or delete `subscription_plans`.
 - Client tenant users cannot select raw `agency_usage_ledger`.
 - Client tenant users cannot select raw `agency_billing_events`.
+- Client tenant users cannot select `agency_service_plans`, which contain agency-only `base_cost`, `markup`, and `markup_percentage`.
+- Client tenant users can select only their own `agency_clients` relationship and cannot read other clients for the same agency.
+- Client tenant users can select only `agency_client_notes.visibility = 'client_visible'` for their own client tenant.
+- Client tenant users can select only their own `agency_reports` with `status in ('sent', 'published')`.
+- Client tenant users can select only their own `agency_client_payment_links`.
 - Client tenant users respond to approvals only through `onboarding-api`.
 - Webhook processing is idempotent on repeated Stripe `event.id`.
+
+`npm run readiness:agency-rls-negative` verifies these client-facing boundaries with temporary rows inside one rollback-only transaction.

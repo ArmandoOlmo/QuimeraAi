@@ -11,7 +11,7 @@
 - Apply `20260701153400_agency_production_ready_hardening.sql`.
 - Confirm `subscription_plans` no longer has an authenticated `FOR ALL` policy.
 - Confirm the Agency tables exist: `agency_usage_ledger`, `agency_billing_events`, `agency_snapshots`, `agency_snapshot_versions`, and `agency_snapshot_applications`.
-- Confirm clients cannot read raw usage ledger or billing event rows. Agency owner/admin and platform owner paths are the only authenticated read/write paths.
+- Confirm clients cannot read raw usage ledger, billing event rows, Agency service plan cost/markup data, internal notes, draft reports, or other client rows. Agency owner/admin and platform owner paths are the only authenticated read/write paths.
 
 ## Stripe
 
@@ -34,7 +34,7 @@
 
 - Run focused tests:
   - `npm run test:run -- tests/utils/agencyProductionReadinessContract.test.ts tests/utils/agencyBillingContract.test.ts tests/utils/agencyStripeWebhookHelpers.test.ts tests/scripts/productionReadinessProbe.test.ts`
-- Run authenticated RLS negative probe against the linked Supabase project:
+- Run authenticated RLS negative probe against the linked Supabase project. The probe creates temporary Agency/client rows inside a transaction, switches to a synthetic authenticated client, verifies client-visible rows only, and rolls back:
   - `npm run readiness:agency-rls-negative`
 - Run app build:
   - `npm run build`
