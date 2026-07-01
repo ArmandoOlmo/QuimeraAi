@@ -33,6 +33,7 @@ import QuimeraLoader from '../ui/QuimeraLoader';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import MobileSearchModal from '../ui/MobileSearchModal';
 import ProjectThumbnailFallback from '../dashboard/ProjectThumbnailFallback';
+import PreviewOverlayCard from '../dashboard/PreviewOverlayCard';
 import { getDynamicThumbnailUrl } from '../../utils/thumbnailHelper';
 import { WebsiteCatalogToolbar } from '../dashboard/filters';
 import { useProjectCatalogFilters } from '../../hooks/useProjectCatalogFilters';
@@ -369,62 +370,39 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate, isSelected, onToggleSelect }) => {
     const { t } = useTranslation();
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
+    const isPublished = project.status === 'Published';
 
     return (
-        <div className={`group relative bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:border-q-border hover:-translate-y-1 w-full ${isSelected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : ''}`}>
-            {/* Selection Checkbox */}
-            <div
-                className="absolute top-3 left-3 z-10"
-                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
-            >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-q-text/40 text-white/70 hover:bg-q-text/60 backdrop-blur-sm'}`}>
-                    {isSelected && <span className="text-xs font-bold">✓</span>}
-                </div>
-            </div>
-
-            {/* Clickable area */}
-            <button onClick={onSelect} className="w-full text-left">
-                {/* Thumbnail */}
-                <div className="aspect-video relative overflow-hidden bg-muted">
-                    {thumbnailUrl ? (
-                        <img
-                            src={thumbnailUrl}
-                            alt={project.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                    ) : (
-                        <ProjectThumbnailFallback />
-                    )}
-
-                    {/* Status Badge */}
-                    <div className="absolute top-3 right-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                            ? 'bg-q-success/90 text-white'
-                            : 'bg-q-surface-overlay/90 text-white'
-                            }`}>
-                            {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                        </span>
-                    </div>
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                        <span className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                            <PenTool size={16} strokeWidth={2} />
-                            {t('cms.manageContent', 'Gestionar Contenido')}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                    <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
-                        {project.name}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-q-text-muted">
+        <div className="relative">
+            <PreviewOverlayCard
+                thumbnailUrl={thumbnailUrl}
+                title={project.name}
+                titleText={project.name}
+                imageAlt={project.name}
+                onClick={onSelect}
+                ariaLabel={project.name}
+                isSelected={isSelected}
+                className={isSelected ? 'bg-primary/5' : ''}
+                badge={(
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm ${isPublished ? 'bg-q-success/90' : 'bg-q-surface-overlay/90'}`}>
+                        {isPublished ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                    </span>
+                )}
+                metadata={(
+                    <span className="inline-flex items-center gap-2">
                         <Clock size={12} />
-                        <span>{formatDate(project.lastUpdated)}</span>
-                    </div>
-                </div>
+                        {formatDate(project.lastUpdated)}
+                    </span>
+                )}
+                cornerAction={<PenTool size={18} strokeWidth={2} aria-hidden="true" />}
+            />
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+                className={`absolute left-3 top-3 z-30 flex h-6 w-6 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-primary text-primary-foreground shadow-lg' : 'bg-q-text/40 text-white/70 backdrop-blur-sm hover:bg-q-text/60'}`}
+                aria-label={t('cms.selectProject', 'Seleccionar proyecto')}
+            >
+                {isSelected && <span className="text-xs font-bold">✓</span>}
             </button>
         </div>
     );

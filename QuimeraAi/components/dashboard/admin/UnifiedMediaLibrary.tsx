@@ -267,7 +267,10 @@ const UnifiedMediaLibrary: React.FC<UnifiedMediaLibraryProps> = ({ onBack }) => 
                                                                     <button onClick={(e) => { e.stopPropagation(); setPreviewAsset(asset); }} className="p-1.5 bg-q-surface/90 text-q-text rounded-md shadow-lg transition-transform hover:scale-110" title={t('superadmin.unifiedMedia.viewDetails', 'Ver detalles')}><Eye size={14} /></button>
                                                                 </div>
                                                             )}
-                                                            {!isSelectionMode && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity"><p className="text-white text-xs font-medium truncate">{asset.name}</p><p className="text-white/70 text-[10px] mt-0.5">{formatBytes(asset.size)}</p></div>}
+                                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-3">
+                                                                <p className="truncate text-xs font-medium text-white">{asset.name}</p>
+                                                                <p className="mt-0.5 text-[10px] text-white/70">{formatBytes(asset.size)}</p>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );

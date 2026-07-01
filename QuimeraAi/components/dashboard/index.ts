@@ -21,6 +21,7 @@ export { default as SuperAdminDashboard } from './SuperAdminDashboard';
 export { default as ProjectCard } from './ProjectCard';
 export { default as ProjectCardSkeleton } from './ProjectCardSkeleton';
 export { default as ProjectListItem } from './ProjectListItem';
+export { default as PreviewOverlayCard } from './PreviewOverlayCard';
 
 // Dashboard Sub-Components (extracted from Dashboard.tsx)
 export { default as DashboardHeader } from './DashboardHeader';
@@ -59,7 +60,6 @@ export * from './email';
 export * from './finance';
 export * from './navigation';
 export * from './seo';
-
 
 
 

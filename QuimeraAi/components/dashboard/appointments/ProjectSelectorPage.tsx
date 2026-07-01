@@ -29,6 +29,7 @@ import QuimeraLoader from '../../ui/QuimeraLoader';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
 import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import PreviewOverlayCard from '../PreviewOverlayCard';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 import { WebsiteCatalogToolbar } from '../filters';
 import { useProjectCatalogFilters } from '../../../hooks/useProjectCatalogFilters';
@@ -273,58 +274,30 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, formatDate }) => {
     const { t } = useTranslation();
     const thumbnailUrl = getDynamicThumbnailUrl(project as any);
+    const isPublished = project.status === 'Published';
 
     return (
-        <button
+        <PreviewOverlayCard
+            thumbnailUrl={thumbnailUrl}
+            title={project.name}
+            titleText={project.name}
+            imageAlt={project.name}
             onClick={onSelect}
-            className="group relative bg-q-surface/80 backdrop-blur-xl hover:bg-q-surface border border-q-border/60 rounded-2xl overflow-hidden transition-all duration-300 text-left hover:border-q-border hover:-translate-y-1 w-full"
-        >
-            <div
-                className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 z-0 pointer-events-none"
-                aria-hidden="true"
-            />
-            {/* Thumbnail */}
-            <div className="aspect-video relative overflow-hidden bg-muted">
-                {thumbnailUrl ? (
-                    <img
-                        src={thumbnailUrl}
-                        alt={project.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                ) : (
-                    <ProjectThumbnailFallback />
-                )}
-
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Published'
-                        ? 'bg-q-success/90 text-white'
-                        : 'bg-q-surface-overlay/90 text-white'
-                        }`}>
-                        {project.status === 'Published' ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
-                    </span>
-                </div>
-
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                    <span className="quimera-guide-cta flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                        <Calendar size={16} />
-                        {t('appointments.projectSelector.viewAppointments')}
-                    </span>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4">
-                <h3 className="font-semibold text-foreground mb-1 truncate group-hover:text-[var(--quimera-status-accent-from)] transition-colors">
-                    {project.name}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-q-text-muted">
+            ariaLabel={project.name}
+            className="w-full"
+            badge={(
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm ${isPublished ? 'bg-q-success/90' : 'bg-q-surface-overlay/90'}`}>
+                    {isPublished ? t('dashboard.published', 'Publicado') : t('dashboard.draft', 'Borrador')}
+                </span>
+            )}
+            metadata={(
+                <span className="inline-flex items-center gap-2">
                     <Clock size={12} />
-                    <span>{formatDate(project.lastUpdated)}</span>
-                </div>
-            </div>
-        </button>
+                    {formatDate(project.lastUpdated)}
+                </span>
+            )}
+            cornerAction={<Calendar size={18} aria-hidden="true" />}
+        />
     );
 };
 
@@ -394,6 +367,4 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({ project, onSelect, fo
 };
 
 export default ProjectSelectorPage;
-
-
 

@@ -667,13 +667,11 @@ const ImageLibraryManagement: React.FC<ImageLibraryManagementProps> = ({ onBack,
                                                             decoding="async"
                                                         />
 
-                                                        {/* Filename overlay on hover - only when not in selection mode */}
-                                                        {!library.isSelectionMode && (
-                                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <p className="text-white text-xs font-medium truncate">{file.name}</p>
-                                                                <p className="text-white/70 text-[10px] mt-0.5">{formatBytes(file.size)}</p>
-                                                            </div>
-                                                        )}
+                                                        {/* Filename overlay */}
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-3">
+                                                            <p className="truncate text-xs font-medium text-white">{file.name}</p>
+                                                            <p className="mt-0.5 text-[10px] text-white/70">{formatBytes(file.size)}</p>
+                                                        </div>
 
                                                         {/* View details button */}
                                                         {!library.isSelectionMode && (

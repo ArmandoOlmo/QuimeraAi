@@ -252,13 +252,19 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                                     key={ref.id}
                                                     className={`bg-q-surface rounded-xl border overflow-hidden transition-all group hover:border-q-accent/30 ${isActive ? 'ring-1 ring-q-accent/40' : 'border-q-border'}`}
                                                 >
-                                                    {/* Thumbnail */}
                                                     <div className="aspect-video bg-q-bg relative overflow-hidden">
                                                         <img
                                                             src={ref.thumbnailUrl || ref.imageUrl}
                                                             alt={ref.label}
                                                             className="w-full h-full object-cover"
                                                         />
+                                                        <button
+                                                            onClick={() => toggleDefault(ref)}
+                                                            className={`absolute left-2 top-2 z-20 rounded-full bg-black/35 p-1.5 backdrop-blur-sm transition-colors ${ref.isDefault ? 'text-q-accent' : 'text-white/70 hover:text-white'}`}
+                                                            title={ref.isDefault ? 'Default reference' : 'Set as default'}
+                                                        >
+                                                            <Star size={14} fill={ref.isDefault ? 'currentColor' : 'none'} />
+                                                        </button>
                                                         <div className="absolute inset-0 bg-q-text/0 group-hover:bg-q-text/40 transition-colors flex items-center justify-center gap-2">
                                                             <button
                                                                 onClick={() => openEditModal(ref)}
@@ -281,30 +287,20 @@ export default function VisualIdentityKitManager({ onBack, projectId, kitScope =
                                                         }`}>
                                                             {ref.usage === 'always' ? 'Siempre' : ref.usage === 'contextual' ? 'Contextual' : 'Opcional'}
                                                         </span>
-                                                    </div>
-                                                    {/* Info */}
-                                                    <div className="p-3">
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <h4 className="text-sm font-semibold text-q-text truncate">{ref.label}</h4>
-                                                            <button
-                                                                onClick={() => toggleDefault(ref)}
-                                                                className={`shrink-0 ${ref.isDefault ? 'text-q-accent' : 'text-q-text-secondary/30 hover:text-q-text-secondary'}`}
-                                                                title={ref.isDefault ? 'Default reference' : 'Set as default'}
-                                                            >
-                                                                <Star size={14} fill={ref.isDefault ? 'currentColor' : 'none'} />
-                                                            </button>
+                                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-3 pt-8">
+                                                            <h4 className="truncate text-sm font-semibold text-white">{ref.label}</h4>
+                                                            {ref.aiPromptHint && (
+                                                                <p className="mt-1 line-clamp-2 text-[11px] leading-tight text-white/75">
+                                                                    <Tag size={10} className="inline mr-1" />
+                                                                    {ref.aiPromptHint}
+                                                                </p>
+                                                            )}
+                                                            {ref.position && (
+                                                                <p className="mt-1 text-[10px] text-q-accent">
+                                                                    Posicion: {ref.position}
+                                                                </p>
+                                                            )}
                                                         </div>
-                                                        {ref.aiPromptHint && (
-                                                            <p className="text-[11px] text-q-text-secondary mt-1 line-clamp-2 leading-tight">
-                                                                <Tag size={10} className="inline mr-1" />
-                                                                {ref.aiPromptHint}
-                                                            </p>
-                                                        )}
-                                                        {ref.position && (
-                                                            <p className="text-[10px] text-q-accent/70 mt-1">
-                                                                Posicion: {ref.position}
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             );

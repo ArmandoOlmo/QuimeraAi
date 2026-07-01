@@ -43,6 +43,7 @@ import {
     CONTENT_STUDIO_USER_FLOW,
     CONTENT_TYPE_DEFINITIONS,
 } from '../../utils/contentStudio';
+import PreviewOverlayCard from '../dashboard/PreviewOverlayCard';
 import { CollapsibleSection, CollapsiblePanelHeader } from '../ui/CollapsibleSection';
 
 type StudioMode = 'user' | 'admin';
@@ -933,25 +934,22 @@ export const ContentStudioShell: React.FC<ContentStudioShellProps> = ({
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                         {filteredAssets.map(asset => (
                             <article key={asset.id} className="overflow-hidden rounded-xl border border-q-border bg-q-surface/80">
-                                <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-q-bg">
-                                    <div className="absolute inset-0 quimera-content-studio-preview-grid" />
-                                    {asset.thumbnailUrl || asset.url ? (
-                                        <img src={asset.thumbnailUrl || asset.url} alt="" className="relative h-full w-full object-cover" />
-                                    ) : (
-                                        <Package className="relative h-8 w-8 text-q-text-muted" />
-                                    )}
-                                    <div className="absolute left-3 top-3 flex items-center gap-2">
+                                <PreviewOverlayCard
+                                    thumbnailUrl={asset.thumbnailUrl || asset.url}
+                                    title={`${formatLabel(asset.type)} · ${asset.format}`}
+                                    titleText={`${formatLabel(asset.type)} · ${asset.format}`}
+                                    description={asset.prompt}
+                                    mediaClassName="aspect-[4/3]"
+                                    className="rounded-none border-0"
+                                    fallback={<Package className="h-8 w-8 text-q-text-muted" />}
+                                    topLeft={(
+                                        <>
                                         <Pill tone={asset.status}>{formatLabel(asset.status)}</Pill>
                                         <span className="rounded-md border border-q-border bg-q-surface/90 px-2 py-1 text-[10px] font-semibold text-q-text-secondary">v{asset.version}</span>
-                                    </div>
-                                </div>
+                                        </>
+                                    )}
+                                />
                                 <div className="space-y-3 p-3">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <p className="truncate text-sm font-semibold text-q-text">{formatLabel(asset.type)} · {asset.format}</p>
-                                            <p className="mt-1 line-clamp-3 text-xs leading-5 text-q-text-muted">{asset.prompt}</p>
-                                        </div>
-                                    </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button type="button" onClick={() => onAssetStatusChange?.(asset.id, 'approved')} className="rounded-md border border-q-success/40 px-2 py-1.5 text-[11px] font-semibold text-q-success hover:bg-q-success/10">Approve</button>
                                         <button type="button" onClick={() => onAssetStatusChange?.(asset.id, 'rejected')} className="rounded-md border border-q-border px-2 py-1.5 text-[11px] font-semibold text-q-text-secondary hover:bg-q-surface-elevated">Reject</button>
@@ -1401,22 +1399,18 @@ export const ContentStudioShell: React.FC<ContentStudioShellProps> = ({
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {filteredAssets.map(asset => (
-                            <article key={asset.id} className="rounded-lg border border-q-border bg-q-surface p-4">
-                                <div className="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-md border border-dashed border-q-border bg-q-bg">
-                                    {asset.thumbnailUrl || asset.url ? (
-                                        <img src={asset.thumbnailUrl || asset.url} alt="" className="h-full w-full object-cover" />
-                                    ) : (
-                                        <Package className="h-8 w-8 text-q-text-muted" />
-                                    )}
-                                </div>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-q-text">{formatLabel(asset.type)} v{asset.version}</p>
-                                        <p className="mt-1 line-clamp-3 text-xs leading-5 text-q-text-muted">{asset.prompt}</p>
-                                    </div>
-                                    <Pill tone={asset.status}>{formatLabel(asset.status)}</Pill>
-                                </div>
-                                <div className="mt-3 grid grid-cols-2 gap-2">
+                            <article key={asset.id} className="overflow-hidden rounded-lg border border-q-border bg-q-surface">
+                                <PreviewOverlayCard
+                                    thumbnailUrl={asset.thumbnailUrl || asset.url}
+                                    title={`${formatLabel(asset.type)} v${asset.version}`}
+                                    titleText={`${formatLabel(asset.type)} v${asset.version}`}
+                                    description={asset.prompt}
+                                    mediaClassName="aspect-[4/3]"
+                                    className="rounded-none border-0"
+                                    fallback={<Package className="h-8 w-8 text-q-text-muted" />}
+                                    topRight={<Pill tone={asset.status}>{formatLabel(asset.status)}</Pill>}
+                                />
+                                <div className="grid grid-cols-2 gap-2 p-4">
                                     <button type="button" onClick={() => onAssetStatusChange?.(asset.id, 'approved')} className="rounded-md border border-q-success/30 px-2 py-1 text-xs font-semibold text-q-success">Approve</button>
                                     <button type="button" onClick={() => onAssetStatusChange?.(asset.id, 'rejected')} className="rounded-md border border-q-border px-2 py-1 text-xs font-semibold text-q-text-secondary">Reject</button>
                                     <button type="button" onClick={() => onRegenerateAsset?.(asset.id)} className="rounded-md border border-q-border px-2 py-1 text-xs font-semibold text-q-text-secondary hover:bg-q-surface-elevated">Regenerate</button>

@@ -31,7 +31,7 @@ import ChatbotEngineDashboard from './ChatbotEngineDashboard';
 import { useProjectChatStats, ProjectChatStats } from '../../chat/hooks/useProjectChatStats';
 import MobileSearchModal from '../../ui/MobileSearchModal';
 import HeaderBackButton from '../../ui/HeaderBackButton';
-import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import PreviewOverlayCard from '../PreviewOverlayCard';
 import { getDynamicThumbnailUrl } from '../../../utils/thumbnailHelper';
 import { normalizeChatAppearanceConfig } from '../../../utils/chatThemes';
 
@@ -389,55 +389,32 @@ const AiAssistantDashboard: React.FC = () => {
                                         const thumbnailUrl = getDynamicThumbnailUrl(project);
 
                                         return (
-                                            <button
+                                            <PreviewOverlayCard
                                                 key={project.id}
+                                                thumbnailUrl={thumbnailUrl}
+                                                title={project.name}
+                                                titleText={project.name}
+                                                imageAlt={project.name}
                                                 onClick={() => handleSelectProject(project.id)}
-                                                className="group relative rounded-2xl overflow-hidden transition-all duration-300 flex flex-col text-left bg-q-surface/80 backdrop-blur-xl border border-q-border/60 hover:border-q-border hover:-translate-y-0.5"
-                                            >
-                                                <div
-                                                    className="quimera-status-card-accent-bg quimera-status-card-blob absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl group-hover:scale-110 transition-all duration-500 z-0 pointer-events-none"
-                                                    aria-hidden="true"
-                                                />
-                                                {/* Activity Indicator */}
-                                                {hasActivity && (
-                                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-q-success/20 backdrop-blur-sm border border-q-success/30">
+                                                ariaLabel={project.name}
+                                                mediaClassName="min-h-[320px]"
+                                                topRight={hasActivity ? (
+                                                    <div className="flex items-center gap-1.5 rounded-full border border-q-success/30 bg-q-success/20 px-2.5 py-1 backdrop-blur-sm">
                                                         <span className="w-2 h-2 bg-q-success rounded-full animate-pulse" />
                                                         <span className="text-xs font-semibold text-q-success">
-                                                            {t('aiAssistant.dashboard.activeConversationsBadge', { count: projectStats.activeConversations })}
+                                                            {t('aiAssistant.dashboard.activeConversationsBadge', { count: projectStats?.activeConversations || 0 })}
                                                         </span>
                                                     </div>
+                                                ) : undefined}
+                                                metadata={(
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <Clock size={14} />
+                                                        {formatLastActivity(projectStats?.lastActivity || null)}
+                                                    </span>
                                                 )}
-
-                                                {/* Thumbnail Section */}
-                                                <div className="relative h-40 overflow-hidden">
-                                                    {thumbnailUrl ? (
-                                                        <img
-                                                            src={thumbnailUrl}
-                                                            alt={project.name}
-                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                        />
-                                                    ) : (
-                                                        <ProjectThumbnailFallback />
-                                                    )}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
-                                                </div>
-
-                                                {/* Content Section */}
-                                                <div className="relative z-10 p-5 space-y-4">
-                                                    <div>
-                                                        <h3 className="font-bold text-lg text-foreground line-clamp-1 group-hover:text-[var(--quimera-status-accent-from)] transition-colors">
-                                                            {project.name}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 mt-1 text-sm text-q-text-muted">
-                                                            <Clock size={14} />
-                                                            <span>
-                                                                {formatLastActivity(projectStats?.lastActivity || null)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Stats Row */}
-                                                    <div className="grid grid-cols-3 gap-2">
+                                                footer={(
+                                                    <div className="space-y-3">
+                                                        <div className="grid grid-cols-3 gap-2">
                                                         {[
                                                             { value: projectStats?.totalMessages || 0, label: t('aiAssistant.dashboard.projectStats.messages') },
                                                             { value: projectStats?.totalLeads || 0, label: t('aiAssistant.dashboard.projectStats.leads') },
@@ -445,55 +422,49 @@ const AiAssistantDashboard: React.FC = () => {
                                                         ].map((stat) => (
                                                             <div
                                                                 key={stat.label}
-                                                                className="text-center p-2 rounded-lg border border-q-border/50 bg-q-surface/50"
+                                                                className="rounded-lg border border-white/15 bg-white/10 p-2 text-center backdrop-blur-sm"
                                                             >
-                                                                <div className="text-lg font-bold text-foreground">{stat.value}</div>
-                                                                <div className="text-[10px] text-q-text-muted uppercase tracking-wide">{stat.label}</div>
+                                                                <div className="text-lg font-bold text-white">{stat.value}</div>
+                                                                <div className="text-[10px] uppercase tracking-wide text-white/70">{stat.label}</div>
                                                             </div>
                                                         ))}
-                                                    </div>
-
-                                                    {/* Channels & Trend */}
-                                                    <div className="flex items-center justify-between pt-2 border-t border-q-border/50">
-                                                        {/* Active Channels */}
-                                                        <div className="flex items-center gap-1">
+                                                        </div>
+                                                        <div className="flex items-center justify-between border-t border-white/15 pt-2">
+                                                            <div className="flex items-center gap-1">
                                                             {projectStats?.channelBreakdown.slice(0, 3).map(({ channel }) => (
                                                                 <div
                                                                     key={channel}
-                                                                    className="w-6 h-6 rounded-full bg-secondary/80 flex items-center justify-center"
+                                                                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15"
                                                                     title={channel}
                                                                 >
                                                                     {getChannelIcon(channel)}
                                                                 </div>
                                                             ))}
                                                             {(!projectStats?.channelBreakdown.length) && (
-                                                                <span className="text-xs text-q-text-muted">{t('aiAssistant.dashboard.noChannels')}</span>
+                                                                <span className="text-xs text-white/70">{t('aiAssistant.dashboard.noChannels')}</span>
                                                             )}
-                                                        </div>
-
-                                                        {/* Trend Indicator */}
-                                                        {projectStats?.trend && projectStats.trend !== 'stable' && (
-                                                            <div className={`flex items-center gap-1 text-xs font-medium ${projectStats.trend === 'up'
-                                                                ? 'text-q-success'
-                                                                : 'text-q-error'
-                                                                }`}>
-                                                                {projectStats.trend === 'up' ? (
-                                                                    <TrendingUp size={14} />
-                                                                ) : (
-                                                                    <TrendingDown size={14} />
-                                                                )}
-                                                                <span>{projectStats.trendPercentage.toFixed(0)}%</span>
                                                             </div>
-                                                        )}
-
-                                                        {/* Arrow */}
-                                                        <ArrowUpRight
-                                                            size={18}
-                                                            className="quimera-status-card-link group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"
-                                                        />
+                                                            {projectStats?.trend && projectStats.trend !== 'stable' && (
+                                                                <div className={`flex items-center gap-1 text-xs font-medium ${projectStats.trend === 'up'
+                                                                    ? 'text-q-success'
+                                                                    : 'text-q-error'
+                                                                    }`}>
+                                                                    {projectStats.trend === 'up' ? (
+                                                                        <TrendingUp size={14} />
+                                                                    ) : (
+                                                                        <TrendingDown size={14} />
+                                                                    )}
+                                                                    <span>{projectStats.trendPercentage.toFixed(0)}%</span>
+                                                                </div>
+                                                            )}
+                                                            <ArrowUpRight
+                                                                size={18}
+                                                                className="text-white/80 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </button>
+                                                )}
+                                            />
                                         );
                                     })}
                                 </div>

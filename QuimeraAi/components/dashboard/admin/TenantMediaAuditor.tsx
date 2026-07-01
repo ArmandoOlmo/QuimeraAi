@@ -120,11 +120,11 @@ export default function TenantMediaAuditor() {
                                         <span className="text-xs truncate max-w-[80%]">{file.type || 'Unknown'}</span>
                                     </div>
                                 )}
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <p className="text-white text-xs font-medium truncate">{file.name}</p>
-                                    <div className="flex items-center justify-between mt-1">
-                                        <span className="text-white/70 text-[10px]">{formatBytes(file.size)}</span>
-                                        <span className="text-white/70 text-[10px] truncate max-w-[60px]" title={file.tenantId}>{file.tenantId?.substring(0,6) || 'No tenant'}</span>
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-3 pt-6">
+                                    <p className="truncate text-xs font-medium text-white">{file.name}</p>
+                                    <div className="mt-1 flex items-center justify-between">
+                                        <span className="text-[10px] text-white/70">{formatBytes(file.size)}</span>
+                                        <span className="max-w-[60px] truncate text-[10px] text-white/70" title={file.tenantId}>{file.tenantId?.substring(0,6) || 'No tenant'}</span>
                                     </div>
                                 </div>
                             </div>

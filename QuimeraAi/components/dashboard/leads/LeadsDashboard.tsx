@@ -20,7 +20,7 @@ import { useCRM } from '../../../contexts/crm';
 import { useAI } from '../../../contexts/ai';
 import { useProject } from '../../../contexts/project';
 import DashboardSidebar from '../DashboardSidebar';
-import ProjectThumbnailFallback from '../ProjectThumbnailFallback';
+import PreviewOverlayCard from '../PreviewOverlayCard';
 import { getSourceConfig, getLeadScoreLabel } from '../../../utils/leadScoring';
 import {
     Menu, Plus, Search,
@@ -1373,51 +1373,32 @@ const LeadsDashboard: React.FC = () => {
                                             : t('leads.dashboard.draft');
 
                                         return (
-                                            <button
+                                            <PreviewOverlayCard
                                                 key={project.id}
+                                                thumbnailUrl={thumbnailUrl}
+                                                title={projectName}
+                                                titleText={projectName}
+                                                imageAlt={projectName}
+                                                description={t('leads.selectProjectMessage')}
                                                 onClick={() => handleSelectProject(project.id)}
-                                                className="group relative flex flex-col overflow-hidden rounded-2xl border border-q-border/60 bg-q-surface/80 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-q-border"
-                                            >
-                                                <div
-                                                    className="quimera-status-card-accent-bg quimera-status-card-blob pointer-events-none absolute -right-8 -top-8 z-0 h-32 w-32 rounded-full blur-2xl transition-all duration-500 group-hover:scale-110"
-                                                    aria-hidden="true"
-                                                />
-                                                <div className="relative h-40 overflow-hidden">
-                                                    {thumbnailUrl ? (
-                                                        <img
-                                                            src={thumbnailUrl}
-                                                            alt={projectName}
-                                                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                        />
-                                                    ) : (
-                                                        <ProjectThumbnailFallback />
-                                                    )}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
-                                                </div>
-                                                <div className="relative z-10 space-y-4 p-5">
-                                                    <div className="flex min-w-0 items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <h3 className="truncate text-lg font-bold text-foreground transition-colors group-hover:text-[var(--quimera-status-accent-from)]">
-                                                                {projectName}
-                                                            </h3>
-                                                            <p className="mt-1 text-sm text-q-text-muted">
-                                                                {t('leads.selectProjectMessage')}
-                                                            </p>
-                                                        </div>
-                                                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                                                            isPublished
-                                                                ? 'bg-q-success/15 text-q-success'
-                                                                : 'bg-q-surface-overlay text-q-text-muted'
-                                                        }`}>
-                                                            {statusLabel}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between border-t border-q-border/50 pt-3 text-xs font-medium text-q-text-muted">
+                                                ariaLabel={projectName}
+                                                mediaClassName="min-h-[260px]"
+                                                badge={(
+                                                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm ${
+                                                        isPublished
+                                                            ? 'bg-q-success/90 text-white'
+                                                            : 'bg-q-surface-overlay/90 text-white'
+                                                    }`}>
+                                                        {statusLabel}
+                                                    </span>
+                                                )}
+                                                footer={(
+                                                    <div className="flex items-center justify-between border-t border-white/15 pt-3 text-xs font-medium text-white/80">
                                                         <span>{t('leads.dashboard.title')}</span>
                                                         <MoveRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                                                     </div>
-                                                </div>
-                                            </button>
+                                                )}
+                                            />
                                         );
                                     })}
                                 </div>
