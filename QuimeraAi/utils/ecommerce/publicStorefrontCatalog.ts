@@ -3,6 +3,7 @@ import type { EcommerceBlueprint, StarterProductBlueprint } from '../../types/bu
 import {
     buildStoreIdentityOrFilter,
     getStoreIdentityQueryIds,
+    isSupabaseUuid,
     resolveProjectBackedStoreIdentity,
 } from './storeIdentity';
 
@@ -341,14 +342,18 @@ const resolveStorefrontIdentityContext = async (storeId: string): Promise<Storef
     let queryIds = getStoreIdentityQueryIds(storeId);
     let publicStore: Record<string, any> | null = null;
     let projectData: Record<string, any> | null = null;
+    let projectRow: Record<string, any> | null = null;
 
-    const { data: projectRow, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', storeId)
-        .maybeSingle();
+    if (isSupabaseUuid(storeId)) {
+        const { data, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', storeId)
+            .maybeSingle();
 
-    if (projectError) throw projectError;
+        if (error) throw error;
+        projectRow = data || null;
+    }
 
     if (projectRow) {
         projectData = projectRow;
@@ -370,7 +375,7 @@ const resolveStorefrontIdentityContext = async (storeId: string): Promise<Storef
             });
             queryIds = getStoreIdentityQueryIds(identity);
 
-            if (identity.projectId) {
+            if (identity.projectId && isSupabaseUuid(identity.projectId)) {
                 const { data: linkedProjectRow, error: linkedProjectError } = await supabase
                     .from('projects')
                     .select('*')

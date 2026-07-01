@@ -27,6 +27,12 @@ const asString = (value: unknown): string | null => (
     typeof value === 'string' && value.trim() ? value.trim() : null
 );
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isSupabaseUuid(value: unknown): value is string {
+    return typeof value === 'string' && UUID_RE.test(value.trim());
+}
+
 const fromPublicStoreData = (publicStore?: Record<string, unknown> | null): string | null => {
     const data = isRecord(publicStore?.data) ? publicStore.data : {};
     return asString(publicStore?.project_id)
@@ -124,7 +130,7 @@ export function buildStoreIdentityOrFilter(ids: string[]): string {
                 `store_id.eq.${id}`,
                 `public_store_id.eq.${id}`,
             ];
-            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+            if (isSupabaseUuid(id)) {
                 filters.push(`project_id.eq.${id}`);
             }
             return filters;

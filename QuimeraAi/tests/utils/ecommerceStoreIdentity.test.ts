@@ -3,6 +3,7 @@ import {
     buildStoreIdentityOrFilter,
     getStorefrontReferenceId,
     getStoreIdentityQueryIds,
+    isSupabaseUuid,
     resolveProjectBackedStoreIdentity,
 } from '../../utils/ecommerce/storeIdentity';
 
@@ -63,6 +64,13 @@ describe('ecommerce store identity', () => {
         expect(filter).toContain('public_store_id.eq.store-slug');
         expect(filter).not.toContain('project_id.eq.store-slug');
         expect(filter).toContain('project_id.eq.33333333-3333-4333-8333-333333333333');
+    });
+
+    it('recognizes only UUID-shaped values as Supabase project IDs', () => {
+        expect(isSupabaseUuid('33333333-3333-4333-8333-333333333333')).toBe(true);
+        expect(isSupabaseUuid('agency-landing-mode')).toBe(false);
+        expect(isSupabaseUuid('store_123')).toBe(false);
+        expect(isSupabaseUuid(null)).toBe(false);
     });
 
     it('dedupes all query ids for project-backed reads', () => {

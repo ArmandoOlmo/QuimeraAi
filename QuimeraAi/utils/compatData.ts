@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { isSupabaseUuid } from './ecommerce/storeIdentity';
 import { uploadPlatformAsset } from './platformAssetUpload';
 
 type AnyRecord = Record<string, any>;
@@ -335,6 +336,24 @@ const FIELD_ALIASES: Record<string, string> = {
 };
 
 const SERVER_NOW = Symbol('serverNow');
+const UUID_EQUALITY_COLUMNS = new Set([
+    'projects.id',
+    'projects.user_id',
+    'projects.tenant_id',
+    'custom_domains.project_id',
+    'subdomains.project_id',
+    'store_settings.project_id',
+    'store_categories.project_id',
+    'store_products.project_id',
+    'store_users.project_id',
+    'store_user_segments.project_id',
+    'store_user_activities.project_id',
+    'store_orders.project_id',
+    'store_reviews.project_id',
+    'store_discounts.project_id',
+    'store_stock_notifications.project_id',
+    'store_wishlists.project_id',
+]);
 
 function partsFrom(input: unknown[]): string[] {
     const out: string[] = [];
@@ -439,15 +458,40 @@ function resolvePath(path: string[]): ResolvedPath {
 function applyEqId(query: any, resolved: ResolvedPath) {
     if (!resolved.id) return query;
     if (resolved.table === 'custom_domains') return query.eq('domain_name', resolved.id);
-    return query.eq('id', resolved.id);
+    return applyEqComparison(query, resolved.table, 'id', resolved.id);
 }
 
-function applyFilter(query: any, field: string, op: Operator, value: any) {
+function isInvalidUuidComparison(table: string, column: string, value: any): boolean {
+    return typeof value === 'string'
+        && value.trim().length > 0
+        && UUID_EQUALITY_COLUMNS.has(`${table}.${column}`)
+        && !isSupabaseUuid(value);
+}
+
+function applyEqComparison(query: any, table: string, column: string, value: any) {
+    const normalizedValue = normalizeValue(value);
+    if (isInvalidUuidComparison(table, column, normalizedValue)) return query.is(column, null);
+    return query.eq(column, normalizedValue);
+}
+
+function applyInComparison(query: any, table: string, column: string, value: any) {
+    const normalizedValue = normalizeValue(value);
+    const values = Array.isArray(normalizedValue) ? normalizedValue : [normalizedValue];
+
+    if (UUID_EQUALITY_COLUMNS.has(`${table}.${column}`)) {
+        const validValues = values.filter(isSupabaseUuid);
+        return validValues.length > 0 ? query.in(column, validValues) : query.is(column, null);
+    }
+
+    return query.in(column, values);
+}
+
+function applyFilter(query: any, table: string, field: string, op: Operator, value: any) {
     const column = camelToSnake(field);
     const normalizedValue = normalizeValue(value);
     switch (op) {
         case '==':
-            return query.eq(column, normalizedValue);
+            return applyEqComparison(query, table, column, normalizedValue);
         case '!=':
             return query.neq(column, normalizedValue);
         case '<':
@@ -459,7 +503,7 @@ function applyFilter(query: any, field: string, op: Operator, value: any) {
         case '>=':
             return query.gte(column, normalizedValue);
         case 'in':
-            return query.in(column, Array.isArray(normalizedValue) ? normalizedValue : [normalizedValue]);
+            return applyInComparison(query, table, column, normalizedValue);
         case 'array-contains':
             return query.contains(column, [normalizedValue]);
         default:
@@ -471,9 +515,9 @@ function buildSelect(ref: DataRef | DataQuery) {
     const resolved = resolvePath(ref.path);
     let q = supabase.from(resolved.table).select('*');
     q = applyEqId(q, resolved);
-    for (const filter of resolved.filters) q = applyFilter(q, filter.field, filter.op, filter.value);
+    for (const filter of resolved.filters) q = applyFilter(q, resolved.table, filter.field, filter.op, filter.value);
     for (const constraint of ((ref as DataQuery).constraints || [])) {
-        if (constraint.type === 'where') q = applyFilter(q, constraint.field, constraint.op, constraint.value);
+        if (constraint.type === 'where') q = applyFilter(q, resolved.table, constraint.field, constraint.op, constraint.value);
         if (constraint.type === 'order') q = q.order(camelToSnake(constraint.field), { ascending: constraint.direction !== 'desc' });
         if (constraint.type === 'limit') q = q.limit(constraint.count);
     }
@@ -488,7 +532,7 @@ function buildMutation(table: string, ref: DataRef) {
 
 function applyMutationFilters(query: any, resolved: ResolvedPath) {
     let q = applyEqId(query, resolved);
-    for (const filter of resolved.filters) q = applyFilter(q, filter.field, filter.op, filter.value);
+    for (const filter of resolved.filters) q = applyFilter(q, resolved.table, filter.field, filter.op, filter.value);
     return q;
 }
 
@@ -683,7 +727,7 @@ export async function deleteDoc(ref: DataRef) {
     const resolved = resolvePath(ref.path);
     let q = supabase.from(resolved.table).delete();
     q = applyEqId(q, resolved);
-    for (const filter of resolved.filters) q = applyFilter(q, filter.field, filter.op, filter.value);
+    for (const filter of resolved.filters) q = applyFilter(q, resolved.table, filter.field, filter.op, filter.value);
     const { error } = await q;
     if (error) throw error;
 }

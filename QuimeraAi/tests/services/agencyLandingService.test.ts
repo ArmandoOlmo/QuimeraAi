@@ -34,6 +34,14 @@ describe('Agency landing canonical Supabase contract', () => {
         expect(service).not.toContain("'domain.subdomain'");
     });
 
+    it('does not send the agency landing sentinel into UUID project filters', () => {
+        expect(compatData).toContain("'projects.id'");
+        expect(compatData).toContain("'store_products.project_id'");
+        expect(compatData).toContain('isInvalidUuidComparison');
+        expect(compatData).toContain('return query.is(column, null)');
+        expect(compatData).toContain("applyEqComparison(query, resolved.table, 'id', resolved.id)");
+    });
+
     it('degrades cleanly while production is waiting for the migration', () => {
         expect(service).toContain('isMissingAgencyLandingTableError');
         expect(service).toContain("candidate?.code === 'PGRST205'");
