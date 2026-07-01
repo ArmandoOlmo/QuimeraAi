@@ -4,6 +4,7 @@ import { useSafeAI } from '../../contexts/ai';
 import { useSafeFiles } from '../../contexts/files';
 import { useSafeMedia } from '../../contexts/media';
 import type { MediaCategory } from '../../types/media';
+import type { FileRecord } from '../../types';
 import { useProject } from '../../contexts/project';
 import { useTranslation } from 'react-i18next';
 import {
@@ -274,11 +275,23 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
     // Filter project images for the library browser (active editor project vs explicit prop)
     const libraryProjectId = activeProjectId || projectId;
     const libraryImages = useMemo(() => {
-        let sourceFiles = files;
+        const mediaFiles = (mediaCtx?.mediaAssets || []).map(a => ({
+            id: a.id,
+            name: a.name,
+            url: a.url,
+            downloadURL: a.downloadURL || a.url,
+            size: a.size || 0,
+            type: a.type || 'image/png',
+            storagePath: a.storagePath || a.folderPath || '',
+            projectId: '',
+            createdAt: a.createdAt,
+        } as FileRecord));
+
+        let sourceFiles: FileRecord[] = files;
         if (effectiveDestination === 'global') {
-            sourceFiles = mediaCtx?.mediaAssets?.length ? mediaCtx.mediaAssets : globalFiles;
+            sourceFiles = mediaFiles.length ? mediaFiles : globalFiles;
         } else if (effectiveDestination === 'admin') {
-            sourceFiles = mediaCtx?.mediaAssets?.length ? mediaCtx.mediaAssets : adminAssets;
+            sourceFiles = mediaFiles.length ? mediaFiles : adminAssets;
             if (adminCategory) {
                 sourceFiles = sourceFiles.filter(f => (f as any).category === adminCategory);
             }
@@ -292,7 +305,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
             result = searchFiles(result, librarySearchQuery);
         }
         return result;
-    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, libraryProjectId, effectiveDestination]);
+    }, [files, globalFiles, adminAssets, adminCategory, librarySearchQuery, libraryProjectId, effectiveDestination, mediaCtx?.mediaAssets]);
 
     // Add a library image as a reference (converts to base64 via img+canvas to avoid CORS)
     const handleAddLibraryImage = async (downloadURL: string) => {
@@ -412,6 +425,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                         description: `Generated AI image: ${promptText.substring(0, 50)}...`,
                         isAiGenerated: true,
                         aiPrompt: promptText,
+                        legacyScope: 'global',
                     });
                 } else {
                     savedUrl = await uploadGlobalFile(file);
@@ -919,7 +933,12 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                     placeholder={t('editor.describeImage', { defaultValue: 'Describe your image...' })}
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleGenerate()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            void handleGenerate();
+                                        }
+                                    }}
                                 />
                                 <div className="flex items-center gap-2">
                                     <button
@@ -931,7 +950,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                                         {isEnhancing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} />}
                                     </button>
                                     <button
-                                        onClick={handleGenerate}
+                                        onClick={() => void handleGenerate()}
                                         disabled={isGenerating || !prompt}
                                         className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-q-accent text-q-text-on-accent hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-30 disabled:hover:shadow-none"
                                         title={t('editor.generate', { defaultValue: 'Generate' })}
@@ -942,7 +961,7 @@ const ImageGeneratorPanel: React.FC<ImageGeneratorPanelProps> = ({ destination =
                             </div>
                             </div>
                             <button
-                                onClick={handleGenerate}
+                                onClick={() => void handleGenerate()}
                                 disabled={isGenerating || !prompt}
                                 className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 bg-q-accent hover:bg-q-accent/80 text-primary-foreground px-6 py-3 rounded-lg font-bold text-sm transition-all disabled:opacity-50"
                             >

@@ -32,6 +32,8 @@ import StudioGenerationOverlay from '../studio/StudioGenerationOverlay';
 import StudioSummaryPanel from '../studio/StudioSummaryPanel';
 import { getAiStudioSummary, getAiStudioSummaryCopy, type StudioUXSummary } from '../../utils/studioUX';
 import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../ui/CollapsibleSection';
+import PortalAnchoredMenu from '../ui/PortalAnchoredMenu';
+import { useSafeFiles } from '../../contexts/files';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -459,7 +461,7 @@ const BriefPanel: React.FC<{
     isGenerating: boolean;
     onGenerate: () => void;
     referenceImages: string[];
-    onAddReferenceImage: (base64: string) => void;
+    onAddReferenceImage: (imageUrl: string) => void;
     onRemoveReferenceImage: (index: number) => void;
     onUpdateColor: (colorKey: string, newColor: string) => void;
     onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: FontFamily) => void;
@@ -469,6 +471,8 @@ const BriefPanel: React.FC<{
 }> = ({ summary, brief, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents, availableComponents }) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const componentPickerTriggerRef = useRef<HTMLButtonElement>(null);
+    const filesCtx = useSafeFiles();
     const [isDragging, setIsDragging] = useState(false);
     const [showComponentPicker, setShowComponentPicker] = useState(false);
     const [showLibraryPicker, setShowLibraryPicker] = useState(false);
@@ -497,8 +501,13 @@ const BriefPanel: React.FC<{
         const toProcess = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
         for (const file of toProcess) {
             try {
-                const base64 = await fileToBase64(file);
-                if (base64) onAddReferenceImage(base64);
+                const libraryUrl = filesCtx?.hasActiveProject ? await filesCtx.uploadFile(file) : undefined;
+                if (libraryUrl) {
+                    onAddReferenceImage(libraryUrl);
+                } else {
+                    const base64 = await fileToBase64(file);
+                    if (base64) onAddReferenceImage(base64);
+                }
             } catch (e) { console.error('Error converting file:', e); }
         }
     };
@@ -618,26 +627,32 @@ const BriefPanel: React.FC<{
                         onRemove={onToggleComponent}
                     />
                     {/* Inline add button */}
-                    <div className="relative">
+                    <div>
                         <button
+                            ref={componentPickerTriggerRef}
                             onClick={() => setShowComponentPicker(!showComponentPicker)}
                             className="inline-flex items-center gap-0.5 h-[22px] px-1.5 rounded border border-dashed border-q-border text-q-text-secondary/60 hover:border-q-accent/40 hover:text-q-accent text-[9px] font-medium transition-all cursor-pointer leading-none"
                         >
                             <Plus size={9} />
                         </button>
-                        {showComponentPicker && availableToAdd.length > 0 && (
-                            <div className="absolute left-0 top-full mt-1 z-50 bg-q-surface border border-q-border rounded-lg shadow-2xl shadow-black/40 max-h-52 overflow-y-auto w-44 custom-scrollbar py-1">
-                                {availableToAdd.map(comp => (
-                                    <button
-                                        key={comp.key}
-                                        onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
-                                        className="w-full text-left px-2.5 py-1 text-[10px] text-q-text-secondary hover:bg-q-accent/10 hover:text-q-accent transition-colors cursor-pointer"
-                                    >
-                                        {comp.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        <PortalAnchoredMenu
+                            isOpen={showComponentPicker && availableToAdd.length > 0}
+                            onClose={() => setShowComponentPicker(false)}
+                            triggerRef={componentPickerTriggerRef}
+                            width={176}
+                            maxHeight={208}
+                            className="py-1 shadow-2xl shadow-black/40"
+                        >
+                            {availableToAdd.map(comp => (
+                                <button
+                                    key={comp.key}
+                                    onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
+                                    className="w-full text-left px-2.5 py-1 text-[10px] text-q-text-secondary hover:bg-q-accent/10 hover:text-q-accent transition-colors cursor-pointer"
+                                >
+                                    {comp.label}
+                                </button>
+                            ))}
+                        </PortalAnchoredMenu>
                     </div>
                 </div>
             </CollapsibleSection>

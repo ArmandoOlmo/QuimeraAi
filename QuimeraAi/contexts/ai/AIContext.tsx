@@ -349,6 +349,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         source: 'ai_generation',
                         destination: 'admin',
                         adminCategory: category,
+                        legacyScope: 'admin',
                     },
                     created_by: user.id,
                     created_at: now,
@@ -373,6 +374,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         aiPrompt: prompt,
                         usedIn,
                         syncedTo: 'media_assets',
+                        legacyScope: 'admin',
                     },
                     created_at: now,
                 }]);
@@ -398,6 +400,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         uploadedBy: user.id,
                         isAiGenerated: true,
                         aiPrompt: prompt,
+                        legacyScope: 'global',
                     },
                     created_at: now,
                 }]);
@@ -423,13 +426,12 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                         storagePath,
                         uploadedBy: user.id,
                         syncedFrom: 'global_files',
+                        legacyScope: 'global',
                     },
                     created_by: user.id,
                     created_at: now,
                 }]);
-                if (mediaErr) {
-                    console.warn('[AIContext] global_files saved but media_assets sync failed:', mediaErr);
-                }
+                if (mediaErr) throw mediaErr;
 
                 notifyLibraryUpdated('global');
                 return;
@@ -437,11 +439,10 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
             const tenantId = await resolveProjectTenantId(options?.projectId, options?.tenantId);
             if (!options?.projectId || !tenantId) {
-                console.warn('[AIContext] Generated image was not saved to project library: missing projectId or tenantId.', {
+                throw new Error('[AIContext] Generated image was not saved to project library: missing projectId or tenantId. ' + JSON.stringify({
                     projectId: options?.projectId,
                     tenantId,
-                });
-                return;
+                }));
             }
 
             const { error } = await supabase.from('files').insert([{
@@ -467,9 +468,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             notifyLibraryUpdated('user', options.projectId);
         } catch (error) {
             console.warn('[AIContext] Generated image saved to storage but not linked to library:', error);
-            if ((options?.destination || 'user') === 'admin') {
-                throw error;
-            }
+            throw error;
         }
     };
 

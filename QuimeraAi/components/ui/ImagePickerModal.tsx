@@ -132,7 +132,7 @@ const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             }));
 
         return [...brandAssetImages, ...userImages];
-    }, [adminAssets, files, useProjectLibrary]);
+    }, [adminAssets, files, mediaCtx?.mediaAssets, useProjectLibrary]);
 
     // Filter by search
     const filteredImages = useMemo(() => {

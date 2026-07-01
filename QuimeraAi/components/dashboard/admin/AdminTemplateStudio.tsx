@@ -30,6 +30,8 @@ import StudioResultSummary from '../../studio/StudioResultSummary';
 import StudioSummaryPanel from '../../studio/StudioSummaryPanel';
 import { getTemplateStudioSummary, getTemplateStudioSummaryCopy, type StudioUXSummary } from '../../../utils/studioUX';
 import { CollapsibleSection, CollapsiblePanelHeader, useCollapsibleSections } from '../../ui/CollapsibleSection';
+import PortalAnchoredMenu from '../../ui/PortalAnchoredMenu';
+import { useSafeMedia } from '../../../contexts/media';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -80,10 +82,6 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
         generatedTemplate: studio.generatedTemplate,
         copy: getTemplateStudioSummaryCopy(translate),
     });
-
-    const focusInput = () => {
-        inputRef.current?.focus();
-    };
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(9,4,17,0.72)] p-0 backdrop-blur-sm lg:p-4" style={{ animation: 'aws-fadeIn 0.25s ease' }}>
@@ -318,11 +316,6 @@ export const AdminTemplateStudio: React.FC<{ isOpen: boolean; onClose: () => voi
                             onClick: () => studio.sendMessage(t('aiTemplateStudio.flow.actions.improveTemplateBriefPrompt')),
                             disabled: studio.isThinking || studio.isGenerating,
                         },
-                        {
-                            label: t('aiTemplateStudio.flow.actions.addModules'),
-                            onClick: focusInput,
-                            disabled: studio.isGenerating,
-                        },
                     ]}
                 />
 
@@ -467,7 +460,7 @@ const BriefPanel: React.FC<{
     isGenerating: boolean;
     onGenerate: () => void;
     referenceImages: string[];
-    onAddReferenceImage: (base64: string) => void;
+    onAddReferenceImage: (imageUrl: string) => void;
     onRemoveReferenceImage: (index: number) => void;
     onUpdateColor: (colorKey: string, newColor: string) => void;
     onUpdateFont: (fontKey: 'header' | 'body' | 'button', newFont: string) => void;
@@ -476,6 +469,8 @@ const BriefPanel: React.FC<{
 }> = ({ summary, brief, referenceImages, onAddReferenceImage, onRemoveReferenceImage, onUpdateColor, onUpdateFont, onToggleComponent, onSetComponents }) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const componentPickerTriggerRef = useRef<HTMLButtonElement>(null);
+    const mediaCtx = useSafeMedia();
     const [isDragging, setIsDragging] = useState(false);
     const [showComponentPicker, setShowComponentPicker] = useState(false);
     const [showLibraryPicker, setShowLibraryPicker] = useState(false);
@@ -504,9 +499,19 @@ const BriefPanel: React.FC<{
         const toProcess = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, remaining);
         for (const file of toProcess) {
             try {
-                const base64 = await fileToBase64(file);
-                if (base64) onAddReferenceImage(base64);
-            } catch (e) { console.error('Error converting file:', e); }
+                const libraryUrl = mediaCtx
+                    ? await mediaCtx.uploadMediaAsset(file, 'template', {
+                        description: 'AI Template Studio reference image',
+                        tags: ['reference', 'template'],
+                    })
+                    : undefined;
+                if (libraryUrl) {
+                    onAddReferenceImage(libraryUrl);
+                } else {
+                    const base64 = await fileToBase64(file);
+                    if (base64) onAddReferenceImage(base64);
+                }
+            } catch (e) { console.error('Error uploading reference image:', e); }
         }
     };
 
@@ -628,27 +633,32 @@ const BriefPanel: React.FC<{
                     />
                 </div>
                 {/* Add Component */}
-                <div className="relative mt-1.5">
+                <div className="mt-1.5">
                     <button
+                        ref={componentPickerTriggerRef}
                         onClick={() => setShowComponentPicker(!showComponentPicker)}
                         className="inline-flex h-[24px] items-center gap-1 rounded border border-dashed border-q-border px-2 text-[10px] font-medium leading-none text-q-text-secondary transition-all hover:border-q-accent/40 hover:text-q-accent"
                     >
                         <Plus size={10} />
                         {t('aiTemplateStudio.briefPanel.addComponent')}
                     </button>
-                    {showComponentPicker && availableToAdd.length > 0 && (
-                        <div className="absolute left-0 top-full mt-1 z-50 bg-q-surface border border-q-border rounded-lg shadow-xl max-h-48 overflow-y-auto w-48 custom-scrollbar">
-                            {availableToAdd.map(comp => (
-                                <button
-                                    key={comp.key}
-                                    onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
-                                    className="w-full text-left px-3 py-1.5 text-[10px] text-q-text-secondary hover:bg-q-accent/10 hover:text-q-accent transition-colors cursor-pointer"
-                                >
-                                    {comp.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    <PortalAnchoredMenu
+                        isOpen={showComponentPicker && availableToAdd.length > 0}
+                        onClose={() => setShowComponentPicker(false)}
+                        triggerRef={componentPickerTriggerRef}
+                        width={192}
+                        maxHeight={192}
+                    >
+                        {availableToAdd.map(comp => (
+                            <button
+                                key={comp.key}
+                                onClick={() => { onToggleComponent(comp.key); setShowComponentPicker(false); }}
+                                className="w-full text-left px-3 py-1.5 text-[10px] text-q-text-secondary hover:bg-q-accent/10 hover:text-q-accent transition-colors cursor-pointer"
+                            >
+                                {comp.label}
+                            </button>
+                        ))}
+                    </PortalAnchoredMenu>
                 </div>
             </CollapsibleSection>
 

@@ -217,7 +217,8 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ label, value, onChange, onSel
             } else if (destination === 'global') {
                 if (mediaCtx) {
                     await mediaCtx.uploadMediaAsset(file, 'other', {
-                        description: 'Uploaded via ImagePicker'
+                        description: 'Uploaded via ImagePicker',
+                        legacyScope: 'global',
                     });
                 } else {
                     await uploadGlobalFile(file);

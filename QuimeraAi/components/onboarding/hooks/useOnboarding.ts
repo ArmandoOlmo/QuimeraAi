@@ -2317,26 +2317,39 @@ TEMPLATE #${t.index}: "${t.name}"
             if (user?.id && Object.keys(generatedImages).length > 0) {
                 const registerImages = async () => {
                     try {
+                        const { data: memberRow } = await supabase
+                            .from('tenant_members')
+                            .select('tenant_id')
+                            .eq('user_id', user.id)
+                            .limit(1)
+                            .maybeSingle();
+                        const tenantId = memberRow?.tenant_id || user.id;
                         const imagesToInsert = Object.entries(generatedImages).map(([promptKey, imageUrl]) => {
                             const matchingItem = imageItems.find(item => item.promptKey === promptKey);
                             return {
-                                name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
-                                storage_path: '',
-                                download_url: imageUrl,
-                                size: 0,
-                                type: 'image/jpeg',
-                                created_at: new Date().toISOString(),
-                                notes: matchingItem?.prompt || promptKey,
-                                ai_summary: '',
+                                tenant_id: tenantId,
                                 project_id: newProject.id,
-                                project_name: newProject.name,
-                                source: 'onboarding',
+                                name: `onboarding-${promptKey.replace(/[.\[\]]/g, '-')}`,
+                                url: imageUrl,
+                                size: 0,
+                                type: imageUrl.includes('.png') ? 'image/png' : 'image/jpeg',
+                                metadata: {
+                                    storagePath: '',
+                                    source: 'onboarding',
+                                    promptKey,
+                                    notes: matchingItem?.prompt || promptKey,
+                                    projectName: newProject.name,
+                                },
+                                created_at: new Date().toISOString(),
                             };
                         });
                         if (imagesToInsert.length > 0) {
-                            await supabase.from('files').insert(imagesToInsert);
+                            const { error: filesInsertError } = await supabase.from('files').insert(imagesToInsert);
+                            if (filesInsertError) throw filesInsertError;
                         }
-                    } catch (_e) { /* skip */ }
+                    } catch (registerError) {
+                        console.warn('[Onboarding] Generated images were saved but could not be registered in the project library:', registerError);
+                    }
                 };
                 registerImages().catch(() => {});
             }

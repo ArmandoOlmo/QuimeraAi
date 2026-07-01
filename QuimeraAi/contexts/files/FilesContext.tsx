@@ -10,6 +10,7 @@ import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
+import { LEGACY_CATEGORY_MAP, type MediaCategory } from '../../types/media';
 
 // Admin Asset Categories
 export type AdminAssetCategory = 
@@ -106,6 +107,77 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // Admin Assets State
     const [adminAssets, setAdminAssets] = useState<AdminAssetRecord[]>([]);
     const [isAdminAssetsLoading, setIsAdminAssetsLoading] = useState(false);
+
+    const notifyMediaUpdated = useCallback(() => {
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('quimera:media-updated'));
+        }
+    }, []);
+
+    const mapLegacyCategory = (category?: AdminAssetCategory | string): MediaCategory => {
+        return (category && LEGACY_CATEGORY_MAP[category]) || 'other';
+    };
+
+    const upsertMediaAssetMirror = useCallback(async (asset: {
+        id: string;
+        name: string;
+        url: string;
+        size?: number | null;
+        type?: string | null;
+        category?: AdminAssetCategory | MediaCategory | string;
+        storagePath?: string;
+        description?: string;
+        tags?: string[];
+        isAiGenerated?: boolean;
+        aiPrompt?: string;
+        metadata?: Record<string, any>;
+        createdAt?: string;
+    }) => {
+        if (!user) throw new Error('User not authenticated');
+
+        const mediaCategory = mapLegacyCategory(asset.category);
+        const metadata = {
+            ...(asset.metadata || {}),
+            storagePath: asset.storagePath || asset.metadata?.storagePath || '',
+            uploadedBy: user.id,
+            legacyMirror: true,
+        };
+
+        const { error } = await supabase
+            .from('media_assets')
+            .upsert({
+                id: asset.id,
+                name: asset.name,
+                url: asset.url,
+                size: asset.size || 0,
+                type: asset.type || 'image/png',
+                category: mediaCategory,
+                folder_path: asset.storagePath || `media/${mediaCategory}`,
+                tags: asset.tags || [],
+                description: asset.description || '',
+                is_ai_generated: asset.isAiGenerated || false,
+                ai_prompt: asset.aiPrompt || '',
+                is_system_asset: false,
+                used_in: [] as any,
+                usage_count: 0,
+                metadata,
+                created_by: user.id,
+                created_at: asset.createdAt || new Date().toISOString(),
+            }, { onConflict: 'id' });
+
+        if (error) throw error;
+        notifyMediaUpdated();
+    }, [notifyMediaUpdated, user]);
+
+    const deleteMediaAssetMirror = useCallback(async (assetId: string) => {
+        const { error } = await supabase
+            .from('media_assets')
+            .delete()
+            .eq('id', assetId);
+
+        if (error) throw error;
+        notifyMediaUpdated();
+    }, [notifyMediaUpdated]);
 
     // Reusable fetch for project files. Exposed via context so consumers can
     // trigger an explicit refresh after async writes (AI generation, uploads, …).
@@ -444,7 +516,8 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 type: file.type,
                 metadata: {
                     storagePath,
-                    uploadedBy: user.id
+                    uploadedBy: user.id,
+                    legacyScope: 'global',
                 },
                 created_at: new Date().toISOString()
             };
@@ -452,10 +525,24 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const { data, error } = await supabase
                 .from('global_files')
                 .insert([fileRecord])
-                .select('id')
+                .select('*')
                 .single();
 
             if (error) throw error;
+
+            if (data) {
+                await upsertMediaAssetMirror({
+                    id: data.id,
+                    name: data.name,
+                    url: data.url,
+                    size: data.size,
+                    type: data.type,
+                    category: 'other',
+                    storagePath,
+                    metadata: data.metadata || fileRecord.metadata,
+                    createdAt: data.created_at,
+                });
+            }
             
             await fetchGlobalFiles(); // refresh
             
@@ -480,6 +567,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .eq('id', fileId);
 
             if (error) throw error;
+            await deleteMediaAssetMirror(fileId);
             setGlobalFiles(prev => prev.filter(f => f.id !== fileId));
         } catch (error) {
             console.error("[FilesContext] Error deleting global file:", error);
@@ -562,15 +650,36 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     isAiGenerated: options?.isAiGenerated || false,
                     aiPrompt: options?.aiPrompt || '',
                     usedIn: [],
+                    legacyScope: 'admin',
                 },
                 created_at: new Date().toISOString()
             };
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('admin_assets')
-                .insert([assetRecord]);
+                .insert([assetRecord])
+                .select('*')
+                .single();
 
             if (error) throw error;
+
+            if (data) {
+                await upsertMediaAssetMirror({
+                    id: data.id,
+                    name: data.name,
+                    url: data.url,
+                    size: data.size,
+                    type: data.type,
+                    category: data.category || category,
+                    storagePath,
+                    description: options?.description || '',
+                    tags: options?.tags || [],
+                    isAiGenerated: options?.isAiGenerated || false,
+                    aiPrompt: options?.aiPrompt || '',
+                    metadata: data.metadata || assetRecord.metadata,
+                    createdAt: data.created_at,
+                });
+            }
 
             await fetchAdminAssets();
             return downloadURL;
@@ -602,15 +711,34 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     tags: options?.tags || [],
                     isAiGenerated: false,
                     usedIn: [],
+                    legacyScope: 'admin',
                 },
                 created_at: new Date().toISOString()
             };
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('admin_assets')
-                .insert([assetRecord]);
+                .insert([assetRecord])
+                .select('*')
+                .single();
 
             if (error) throw error;
+
+            if (data) {
+                await upsertMediaAssetMirror({
+                    id: data.id,
+                    name: data.name,
+                    url: data.url,
+                    size: data.size,
+                    type: data.type,
+                    category: data.category || category,
+                    storagePath: '',
+                    description: options?.description || '',
+                    tags: options?.tags || [],
+                    metadata: data.metadata || assetRecord.metadata,
+                    createdAt: data.created_at,
+                });
+            }
             
             await fetchAdminAssets();
             return url;
@@ -639,6 +767,26 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .eq('id', assetId);
 
             if (error) throw error;
+
+            const mediaUpdates: Record<string, any> = {
+                metadata: {
+                    ...metadata,
+                    legacyMirror: true,
+                },
+            };
+            if (updates.category !== undefined) mediaUpdates.category = mapLegacyCategory(updates.category);
+            if (updates.description !== undefined) mediaUpdates.description = updates.description;
+            if (updates.tags !== undefined) mediaUpdates.tags = updates.tags;
+            if (updates.isAiGenerated !== undefined) mediaUpdates.is_ai_generated = updates.isAiGenerated;
+            if (updates.aiPrompt !== undefined) mediaUpdates.ai_prompt = updates.aiPrompt;
+
+            const { error: mediaError } = await supabase
+                .from('media_assets')
+                .update(mediaUpdates)
+                .eq('id', assetId);
+
+            if (mediaError) throw mediaError;
+            notifyMediaUpdated();
             
             setAdminAssets(prev => prev.map(a => 
                 a.id === assetId ? { ...a, ...updates } : a
@@ -663,6 +811,7 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 .eq('id', assetId);
 
             if (error) throw error;
+            await deleteMediaAssetMirror(assetId);
             setAdminAssets(prev => prev.filter(asset => asset.id !== assetId));
         } catch (error) {
             console.error("[FilesContext] Error deleting admin asset:", error);

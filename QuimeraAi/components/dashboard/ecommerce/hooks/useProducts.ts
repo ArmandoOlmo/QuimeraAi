@@ -100,6 +100,29 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             .replace(/(^-|-$)/g, '');
     };
 
+    const resolveLibraryTenantId = useCallback(async (): Promise<string> => {
+        const { data: projectRow, error: projectError } = await supabase
+            .from('projects')
+            .select('tenant_id')
+            .eq('id', effectiveStoreId)
+            .maybeSingle();
+
+        if (projectError) throw projectError;
+        if (projectRow?.tenant_id) return projectRow.tenant_id;
+
+        const { data: memberRow, error: memberError } = await supabase
+            .from('tenant_members')
+            .select('tenant_id')
+            .eq('user_id', userId)
+            .limit(1)
+            .maybeSingle();
+
+        if (memberError) throw memberError;
+        if (memberRow?.tenant_id) return memberRow.tenant_id;
+
+        throw new Error('No tenant membership found for product image library registration');
+    }, [effectiveStoreId, userId]);
+
     // Upload product image
     const uploadImage = useCallback(
         async (file: File, productId: string): Promise<ProductImage> => {
@@ -116,6 +139,30 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 .from('platform-assets')
                 .getPublicUrl(imagePath);
 
+            const tenantId = await resolveLibraryTenantId();
+            const { error: fileInsertError } = await supabase
+                .from('files')
+                .insert([{
+                    tenant_id: tenantId,
+                    project_id: effectiveStoreId,
+                    name: file.name,
+                    url,
+                    size: file.size,
+                    type: file.type,
+                    metadata: {
+                        storagePath: imagePath,
+                        source: 'ecommerce_product',
+                        productId,
+                        imageId,
+                    },
+                    created_at: new Date().toISOString(),
+                }]);
+
+            if (fileInsertError) {
+                await supabase.storage.from('platform-assets').remove([imagePath]).catch(() => undefined);
+                throw fileInsertError;
+            }
+
             return {
                 id: imageId,
                 url,
@@ -123,7 +170,7 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                 position: 0,
             };
         },
-        [userId, effectiveStoreId]
+        [effectiveStoreId, resolveLibraryTenantId, userId]
     );
 
     // Delete product image
@@ -137,6 +184,16 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
                     .remove([imagePath]);
             } catch (err) {
                 console.warn('Image may not exist:', err);
+            }
+
+            const { error: libraryDeleteError } = await supabase
+                .from('files')
+                .delete()
+                .eq('project_id', effectiveStoreId)
+                .contains('metadata', { storagePath: imagePath });
+
+            if (libraryDeleteError) {
+                console.warn('Product image was removed from storage but not from project library:', libraryDeleteError);
             }
         },
         [userId, effectiveStoreId]

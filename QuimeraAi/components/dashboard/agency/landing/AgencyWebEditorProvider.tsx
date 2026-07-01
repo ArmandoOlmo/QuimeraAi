@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from '../../../../contexts/core/AuthContext';
 import { useSafeProject, ProjectContext } from '../../../../contexts/project/ProjectContext';
 import { EditorContext, useSafeEditor } from '../../../../contexts/EditorContext';
@@ -11,7 +11,6 @@ import QuimeraLoader from '../../../ui/QuimeraLoader';
 import { toast } from 'react-hot-toast';
 import { AgencyLandingConfig } from '../../../../types/agencyLanding';
 import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
-import { db, collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from '@/utils/compatData';
 import { supabase } from '../../../../supabase';
 import { getInitialDataForLandingComponent } from '../../../../utils/landingSectionDefaults';
 
@@ -21,6 +20,7 @@ interface AgencyWebEditorProviderProps {
 
 const AGENCY_STRUCTURE_ORDER: PageSection[] = ['colors', 'typography', 'header'];
 const AGENCY_FOOTER_SECTION: PageSection = 'footer';
+const AGENCY_LANDING_PROJECT_ID = 'agency-landing-mode';
 
 const createDefaultAgencySection = (type: PageSection, order: number): AgencyLandingConfig['sections'][number] => ({
     id: type,
@@ -90,6 +90,46 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
 
     const tenantId = currentTenant?.id;
 
+    const mapAgencyFileRow = useCallback((row: any): FileRecord => ({
+        id: row.id,
+        name: row.name,
+        url: row.url,
+        downloadURL: row.url,
+        size: row.size || 0,
+        type: row.type || 'image/png',
+        storagePath: row.metadata?.storagePath || '',
+        projectId: row.project_id || AGENCY_LANDING_PROJECT_ID,
+        tenantId: row.tenant_id,
+        createdAt: row.created_at,
+        notes: row.metadata?.notes,
+        summary: row.metadata?.summary,
+    }), []);
+
+    const refreshAgencyFiles = useCallback(async () => {
+        if (!tenantId) {
+            setAgencyFiles([]);
+            setIsAgencyFilesLoading(false);
+            return;
+        }
+
+        setIsAgencyFilesLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('files')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .eq('project_id', AGENCY_LANDING_PROJECT_ID)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setAgencyFiles((data || []).map(mapAgencyFileRow));
+        } catch (error) {
+            console.error("Error fetching agency files:", error);
+        } finally {
+            setIsAgencyFilesLoading(false);
+        }
+    }, [mapAgencyFileRow, tenantId]);
+
     // Fetch and listen to Agency Files
     useEffect(() => {
         if (!tenantId) {
@@ -98,25 +138,23 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             return;
         }
 
-        setIsAgencyFilesLoading(true);
-        const filesPath = `agencies/${tenantId}/files`;
-        const q = query(collection(db, filesPath), orderBy('createdAt', 'desc'));
+        refreshAgencyFiles();
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const filesData = snapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                projectId: 'agency-landing-mode', // Mock projectId so ImagePicker displays them
-                ...docSnapshot.data()
-            })) as FileRecord[];
-            setAgencyFiles(filesData);
-            setIsAgencyFilesLoading(false);
-        }, (error) => {
-            console.error("Error fetching agency files:", error);
-            setIsAgencyFilesLoading(false);
-        });
+        const channel = supabase.channel(`agency-landing-files:${tenantId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'files',
+                filter: `project_id=eq.${AGENCY_LANDING_PROJECT_ID}`,
+            }, () => {
+                refreshAgencyFiles();
+            })
+            .subscribe();
 
-        return () => unsubscribe();
-    }, [tenantId]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [refreshAgencyFiles, tenantId]);
 
     useEffect(() => {
         if (!tenantId) return;
@@ -257,9 +295,9 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         saveProject: saveProjectMock,
         publishProject: publishProjectMock,
         // Dummy project active
-        activeProjectId: 'agency-landing-mode',
+        activeProjectId: AGENCY_LANDING_PROJECT_ID,
         activeProject: {
-            id: 'agency-landing-mode',
+            id: AGENCY_LANDING_PROJECT_ID,
             name: 'Agency Landing',
             data: data,
             theme: theme,
@@ -286,7 +324,7 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
         setComponentOrder,
         sectionVisibility,
         setSectionVisibility,
-        activeProjectId: 'agency-landing-mode',
+        activeProjectId: AGENCY_LANDING_PROJECT_ID,
         activeProject: customProjectCtx.activeProject,
         saveProject: saveProjectMock,
         publishProject: publishProjectMock
@@ -313,18 +351,37 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
                 .from('platform-assets')
                 .getPublicUrl(storagePath);
 
-            const fileRecord: Omit<FileRecord, 'id'> = {
+            const createdAt = new Date().toISOString();
+            const fileRecord = {
+                tenant_id: tenantId,
+                project_id: AGENCY_LANDING_PROJECT_ID,
                 name: file.name,
-                type: file.type,
+                url: downloadURL,
                 size: file.size,
-                downloadURL,
-                storagePath,
-                projectId: 'agency-landing-mode',
-                createdAt: new Date().toISOString(),
+                type: file.type,
+                metadata: {
+                    storagePath,
+                    source: 'agency_landing',
+                },
+                created_at: createdAt,
             };
 
-            const filesPath = `agencies/${tenantId}/files`;
-            await addDoc(collection(db, filesPath), fileRecord);
+            const { data: inserted, error } = await supabase
+                .from('files')
+                .insert([fileRecord])
+                .select('*')
+                .single();
+
+            if (error) {
+                await supabase.storage.from('platform-assets').remove([storagePath]).catch(() => undefined);
+                throw error;
+            }
+
+            if (inserted) {
+                const nextFile = mapAgencyFileRow(inserted);
+                setAgencyFiles(prev => [nextFile, ...prev.filter(f => f.id !== nextFile.id)]);
+            }
+
             return downloadURL;
         },
         deleteFile: async (fileId: string, storagePath: string) => {
@@ -335,8 +392,15 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
                 .remove([storagePath])
                 .catch(() => console.warn("File not found in storage"));
                 
-            const filePath = `agencies/${tenantId}/files/${fileId}`;
-            await deleteDoc(doc(db, filePath));
+            const { error } = await supabase
+                .from('files')
+                .delete()
+                .eq('id', fileId)
+                .eq('tenant_id', tenantId)
+                .eq('project_id', AGENCY_LANDING_PROJECT_ID);
+
+            if (error) throw error;
+            setAgencyFiles(prev => prev.filter(f => f.id !== fileId));
         },
         uploadImageAndGetURL: async (file: File, path: string): Promise<string> => {
             if (!tenantId) throw new Error("No tenant active");
@@ -353,6 +417,35 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             const { data: { publicUrl: url } } = supabase.storage
                 .from('platform-assets')
                 .getPublicUrl(fullPath);
+
+            const { data: inserted, error } = await supabase
+                .from('files')
+                .insert([{
+                    tenant_id: tenantId,
+                    project_id: AGENCY_LANDING_PROJECT_ID,
+                    name: file.name,
+                    url,
+                    size: file.size,
+                    type: file.type,
+                    metadata: {
+                        storagePath: fullPath,
+                        source: 'agency_landing_direct_upload',
+                        requestedPath: path,
+                    },
+                    created_at: new Date().toISOString(),
+                }])
+                .select('*')
+                .single();
+
+            if (error) {
+                await supabase.storage.from('platform-assets').remove([fullPath]).catch(() => undefined);
+                throw error;
+            }
+
+            if (inserted) {
+                const nextFile = mapAgencyFileRow(inserted);
+                setAgencyFiles(prev => [nextFile, ...prev.filter(f => f.id !== nextFile.id)]);
+            }
 
             return url;
         }

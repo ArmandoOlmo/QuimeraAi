@@ -1,6 +1,6 @@
 import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload, FileText, Image as ImageIcon } from 'lucide-react';
-import { validateFileSize, validateFileType, isImageFile } from '../../utils/fileHelpers';
+import { validateFileSize, validateFileType } from '../../utils/fileHelpers';
 
 interface DragDropZoneProps {
     onFileSelect: (file: File) => void | Promise<void>;
@@ -39,6 +39,21 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
         if (allowedTypes.length > 0) {
             const typeValidation = validateFileType(file, allowedTypes);
             if (!typeValidation.valid) return typeValidation;
+        } else if (accept && accept !== '*') {
+            const acceptedPatterns = accept.split(',').map(pattern => pattern.trim()).filter(Boolean);
+            const matchesAccept = acceptedPatterns.some(pattern => {
+                if (pattern.endsWith('/*')) {
+                    return file.type.startsWith(pattern.slice(0, -1));
+                }
+                if (pattern.startsWith('.')) {
+                    return file.name.toLowerCase().endsWith(pattern.toLowerCase());
+                }
+                return file.type === pattern;
+            });
+
+            if (!matchesAccept) {
+                return { valid: false, error: `Invalid file type. Accepted: ${accept}` };
+            }
         }
 
         return { valid: true };
@@ -207,4 +222,3 @@ const DragDropZone: React.FC<DragDropZoneProps> = ({
 };
 
 export default DragDropZone;
-
