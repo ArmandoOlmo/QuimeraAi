@@ -9,10 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useServiceAccess } from '../../../hooks/useServiceAccess';
 import { TenantBranding } from '../../../types/multiTenant';
-import { supabase } from '../../../supabase';
 import ColorControl from '../../ui/ColorControl';
 import { toast } from 'react-hot-toast';
 import AgencyDomainPanel from './AgencyDomainPanel';
+import { uploadPlatformAsset } from '../../../utils/platformAssetUpload';
 import {
     Shield,
     Upload,
@@ -96,15 +96,10 @@ export function WhiteLabelSettings() {
 
     // Upload file to Supabase Storage
     const uploadFile = useCallback(async (file: File, path: string): Promise<string> => {
-        const { error } = await supabase.storage
-            .from('platform-assets')
-            .upload(path, file, { upsert: true });
-
-        if (error) throw error;
-
-        const { data: { publicUrl } } = supabase.storage
-            .from('platform-assets')
-            .getPublicUrl(path);
+        const { publicUrl } = await uploadPlatformAsset(path, file, {
+            upsert: true,
+            contentType: file.type || 'application/octet-stream',
+        });
 
         return publicUrl;
     }, []);

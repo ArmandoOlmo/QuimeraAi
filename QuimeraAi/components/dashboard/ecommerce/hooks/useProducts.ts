@@ -8,6 +8,7 @@ import { supabase } from '../../../../supabase';
 import { Product, ProductImage, ProductStatus } from '../../../../types/ecommerce';
 import { mapProductFromDB, mapProductToDB } from '../../../../utils/ecommerceMappers';
 import { createRealtimeChannelName } from './realtimeChannel';
+import { uploadPlatformAsset } from '../../../../utils/platformAssetUpload';
 
 interface UseProductsOptions {
     categoryId?: string;
@@ -129,15 +130,10 @@ export const useProducts = (userId: string, storeId?: string, options?: UseProdu
             const imageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const imagePath = `users/${userId}/stores/${effectiveStoreId}/products/${productId}/${imageId}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(imagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(imagePath);
+            const { publicUrl: url } = await uploadPlatformAsset(imagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const tenantId = await resolveLibraryTenantId();
             const { error: fileInsertError } = await supabase

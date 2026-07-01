@@ -13,6 +13,7 @@ import { AgencyLandingConfig } from '../../../../types/agencyLanding';
 import { FilesContext, useFiles } from '../../../../contexts/files/FilesContext';
 import { supabase } from '../../../../supabase';
 import { getInitialDataForLandingComponent } from '../../../../utils/landingSectionDefaults';
+import { uploadPlatformAsset } from '../../../../utils/platformAssetUpload';
 
 interface AgencyWebEditorProviderProps {
     children: ReactNode;
@@ -341,15 +342,10 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const createdAt = new Date().toISOString();
             const fileRecord = {
@@ -408,15 +404,10 @@ export const AgencyWebEditorProvider: React.FC<AgencyWebEditorProviderProps> = (
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const fullPath = `agencies/${tenantId}/landing_images/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(fullPath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(fullPath);
+            const { publicUrl: url } = await uploadPlatformAsset(fullPath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const { data: inserted, error } = await supabase
                 .from('files')

@@ -15,6 +15,7 @@ import { logApiCall } from '../../services/apiLoggingService';
 import { canPerformOperation, consumeCreditsWithPoolDetection } from '../../services/aiCreditsService';
 import { Modality } from '@google/genai';
 import { supabase } from '../../supabase';
+import { uploadPlatformAsset } from '../../utils/platformAssetUpload';
 
 const DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image-preview';
 const OPENAI_IMAGE_MODEL_ALIASES = new Set([
@@ -494,22 +495,14 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
                 ? `global/files/${fileName}`
                 : `users/${user?.id || 'anonymous'}/projects/${options?.projectId || 'unassigned'}/files/${fileName}`;
 
-        const { error } = await supabase.storage
-            .from('platform-assets')
-            .upload(filePath, blob, {
-                contentType: mimeType,
-                cacheControl: '31536000',
-                upsert: false
-            });
-
-        if (error) throw error;
-
-        const { data: publicUrlData } = supabase.storage
-            .from('platform-assets')
-            .getPublicUrl(filePath);
+        const { publicUrl } = await uploadPlatformAsset(filePath, blob, {
+            contentType: mimeType,
+            cacheControl: '31536000',
+            upsert: false,
+        });
 
         await saveGeneratedImageToLibrary(
-            publicUrlData.publicUrl,
+            publicUrl,
             filePath,
             fileName,
             mimeType,
@@ -518,7 +511,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             options
         );
 
-        return publicUrlData.publicUrl;
+        return publicUrl;
     };
 
     const uploadGeneratedVideoFromUrl = async (

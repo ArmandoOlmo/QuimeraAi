@@ -7,6 +7,7 @@ import { FileRecord, LLMPrompt } from '../../types';
 import { supabase } from '../../supabase';
 import { generateContentViaProxy, extractTextFromResponse } from '../../utils/geminiProxyClient';
 import { logApiCall } from '../../services/apiLoggingService';
+import { uploadPlatformAsset } from '../../utils/platformAssetUpload';
 import type { User } from '@supabase/supabase-js';
 
 interface UseEditorFilesParams {
@@ -92,15 +93,10 @@ export const useEditorFiles = ({
             const timestamp = Date.now();
             const storagePath = `users/${userId}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const { data: project } = await supabase.from('projects').select('tenant_id').eq('id', activeProjectId).single();
 
@@ -232,15 +228,10 @@ export const useEditorFiles = ({
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `global/files/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const userId = user?.id || (user as any)?.uid;
             
@@ -367,15 +358,10 @@ export const useEditorFiles = ({
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `user_uploads/${userId}/${path}/${Date.now()}-${safeFileName}`;
             
-            const { error } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (error) throw error;
-            
-            const { data: { publicUrl } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
                 
             return publicUrl;
         } catch (error) {

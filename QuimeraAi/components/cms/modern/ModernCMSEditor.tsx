@@ -43,6 +43,7 @@ import { useRouter } from '../../../hooks/useRouter';
 import { ROUTES } from '../../../routes/config';
 import { logApiCall } from '../../../services/apiLoggingService';
 import { supabase } from '../../../supabase';
+import { uploadPlatformAsset } from '../../../utils/platformAssetUpload';
 import { useViewportType } from '../../../hooks/use-mobile';
 import MobileBottomSheet from '../../ui/MobileBottomSheet';
 import TabletSlidePanel from '../../ui/TabletSlidePanel';
@@ -576,15 +577,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             setPodcastAudioUrl(url);
         } catch (error) {
@@ -611,15 +607,10 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `cms_podcast/${user?.id || 'unknown'}/${activeProject?.id || 'unknown'}/${timestamp}_${safeFileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             setPodcastAudioUrl(url);
         } catch (error) {
@@ -646,16 +637,11 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
             setUploadProgress(50); // Fake progress since supabase-js standard upload doesn't support it
 
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
             setUploadProgress(100);
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
 
             console.log('[Video Upload] ✅ Download URL:', url.substring(0, 80) + '...');
 
@@ -689,16 +675,11 @@ const ModernCMSEditor: React.FC<ModernCMSEditorProps> = ({ post, onClose }) => {
 
             setUploadProgress(50); // Fake progress
 
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
             setUploadProgress(100);
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
 
             console.log('[Video Drop] ✅ Done:', url.substring(0, 80) + '...');
 

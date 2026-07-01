@@ -3,6 +3,7 @@ import { sanitizeHtml } from '../utils/sanitize';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../supabase';
 import { signInWithGoogle } from '../utils/googleAuth';
+import { uploadPlatformAsset } from '../utils/platformAssetUpload';
 
 import { Eye, EyeOff, ArrowRight, Zap, Layout, Image as ImageIcon, Sparkles, CheckCircle, X, PlayCircle, Hexagon, ChevronDown, HelpCircle } from 'lucide-react';
 import LanguageSelector from './ui/LanguageSelector';
@@ -153,36 +154,36 @@ const Auth: React.FC<AuthProps> = ({ onVerificationEmailSent }) => {
                 return;
             }
             try {
-                let photoURL = '';
-                if (profilePhoto) {
-                    const tempId = Date.now().toString();
-                    const imagePath = `users/temp-avatars/temp-${tempId}`;
-                    
-                    const { error: uploadError } = await supabase.storage
-                        .from('platform-assets')
-                        .upload(imagePath, profilePhoto, { upsert: true });
-                        
-                    if (uploadError) {
-                        console.error('Error uploading profile photo:', uploadError);
-                    } else {
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('platform-assets')
-                            .getPublicUrl(imagePath);
-                        photoURL = publicUrl;
-                    }
-                }
-
                 const { data, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
                         data: {
                             full_name: name,
-                            avatar_url: photoURL || '',
+                            avatar_url: '',
                         }
                     }
                 });
                 if (error) throw error;
+
+                if (profilePhoto && data.session && data.user) {
+                    try {
+                        const safeFileName = profilePhoto.name.replace(/[^a-zA-Z0-9.-]/g, '_') || 'avatar.png';
+                        const imagePath = `users/${data.user.id}/profile/avatar_${Date.now()}_${safeFileName}`;
+                        const { publicUrl } = await uploadPlatformAsset(imagePath, profilePhoto, {
+                            upsert: true,
+                            contentType: profilePhoto.type || 'application/octet-stream',
+                        });
+                        await supabase.auth.updateUser({
+                            data: {
+                                full_name: name,
+                                avatar_url: publicUrl,
+                            },
+                        });
+                    } catch (uploadError) {
+                        console.error('Error uploading profile photo:', uploadError);
+                    }
+                }
 
                 if (data.session === null) {
                     onVerificationEmailSent(email);

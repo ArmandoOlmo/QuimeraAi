@@ -19,6 +19,7 @@ import {
 import { ClientIntakeForm, type ClientIntakeData } from './ClientIntakeForm';
 import { useTenant } from '../../../contexts/tenant/TenantContext';
 import { useServiceAccess } from '../../../hooks/useServiceAccess';
+import { uploadPlatformAsset } from '../../../utils/platformAssetUpload';
 
 // ============================================================================
 // TYPES
@@ -41,9 +42,6 @@ interface OnboardingWorkflowProps {
   onCancel?: () => void;
 }
 
-type SupabaseClient = typeof import('@/supabase')['supabase'];
-
-const CLIENT_LOGO_BUCKET = 'platform-assets';
 const MAX_CLIENT_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
 
 function sanitizeStorageFileName(fileName: string): string {
@@ -70,7 +68,6 @@ function buildClientLogoStoragePath(agencyTenantId: string, fileName: string): s
 }
 
 async function uploadClientLogoToStorage(
-  supabaseClient: SupabaseClient,
   agencyTenantId: string,
   file: File,
 ): Promise<string> {
@@ -83,19 +80,11 @@ async function uploadClientLogoToStorage(
   }
 
   const storagePath = buildClientLogoStoragePath(agencyTenantId, file.name);
-  const { error: uploadError } = await supabaseClient.storage
-    .from(CLIENT_LOGO_BUCKET)
-    .upload(storagePath, file, {
-      cacheControl: '3600',
-      contentType: file.type || 'application/octet-stream',
-      upsert: false,
-    });
-
-  if (uploadError) throw uploadError;
-
-  const { data: { publicUrl } } = supabaseClient.storage
-    .from(CLIENT_LOGO_BUCKET)
-    .getPublicUrl(storagePath);
+  const { publicUrl } = await uploadPlatformAsset(storagePath, file, {
+    cacheControl: '3600',
+    contentType: file.type || 'application/octet-stream',
+    upsert: false,
+  });
 
   return publicUrl;
 }
@@ -175,7 +164,7 @@ export function OnboardingWorkflow({
         );
 
         try {
-          logoUrl = await uploadClientLogoToStorage(supabase, currentTenant.id, data.logo);
+          logoUrl = await uploadClientLogoToStorage(currentTenant.id, data.logo);
 
           updateProgress(
             'upload_logo',

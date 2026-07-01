@@ -76,7 +76,7 @@ import SlashCommands from '../../cms/modern/SlashCommands';
 import ImagePicker from '../../ui/ImagePicker';
 import { generateContentViaProxy, extractTextFromResponse } from '../../../utils/geminiProxyClient';
 import { logApiCall } from '../../../services/apiLoggingService';
-import { supabase } from '../../../supabase';
+import { uploadPlatformAsset } from '../../../utils/platformAssetUpload';
 import {
     translateNewsContent,
     buildTranslatedNews,
@@ -296,16 +296,11 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
             const storagePath = `admin_news_video/${user?.id || 'unknown'}/${timestamp}_${safeFileName}`;
 
             setUploadProgress(50); // Fake progress
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
             setUploadProgress(100);
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
 
             setVideoUrl(url);
             showToast('Video subido correctamente', 'success');
@@ -334,16 +329,11 @@ const NewsEditor: React.FC<NewsEditorProps> = ({ news, onClose, onTranslationCre
             const storagePath = `admin_news_video/${user?.id || 'unknown'}/${timestamp}_${safeFileName}`;
 
             setUploadProgress(50); // Fake progress
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
+            const { publicUrl: url } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
             setUploadProgress(100);
-
-            const { data: { publicUrl: url } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
 
             setVideoUrl(url);
             showToast('Video subido correctamente', 'success');
@@ -901,7 +891,7 @@ Text to format:
                                     className="ml-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-q-text-secondary hover:bg-q-bg hover:text-q-text"
                                     aria-label={t('common.close', 'Cerrar')}
                                 >
-                                    <XIcon size={18} />
+                                    <X size={18} />
                                 </button>
                             </div>
                             <div className="space-y-3 p-4 md:p-6">

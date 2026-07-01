@@ -25,6 +25,7 @@ import { extractActiveHeroImage } from '../../utils/thumbnailHelper';
 import { mapSupabaseRowToProject, normalizeProjectComponentOrder, resolveProjectMenus } from '../../utils/mapSupabaseProject';
 import { isLegacyStorageUrl, normalizeImageUrl } from '../../utils/imageUrl';
 import { downloadProjectAsHtml } from '../../utils/projectExporter';
+import { uploadPlatformAsset } from '../../utils/platformAssetUpload';
 import {
     createSnapshotBeforeManualSave,
     syncWebsiteBlueprintFromEditor,
@@ -1980,18 +1981,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
         console.log('[ProjectContext] Uploading to storage path:', storagePath);
         
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-            .from('projects')
-            .upload(storagePath, file, { upsert: true });
-
-        if (uploadErr) {
-            console.error('[ProjectContext] Failed to upload thumbnail:', uploadErr);
-            throw uploadErr;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-            .from('projects')
-            .getPublicUrl(storagePath);
+        const { publicUrl } = await uploadPlatformAsset(storagePath, file, {
+            upsert: true,
+            contentType: file.type || 'application/octet-stream',
+        });
 
         const downloadURL = publicUrl;
         console.log('[ProjectContext] Got download URL:', downloadURL);
@@ -2028,18 +2021,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
             ? `templates/${projectId}/favicon.ico`
             : `${getProjectStoragePath(user.id, projectId, currentTenantId)}/favicon.ico`;
 
-        const { error: uploadErr } = await supabase.storage
-            .from('projects')
-            .upload(storagePath, file, { upsert: true });
-
-        if (uploadErr) {
-            console.error('[ProjectContext] Failed to upload favicon:', uploadErr);
-            throw uploadErr;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-            .from('projects')
-            .getPublicUrl(storagePath);
+        const { publicUrl } = await uploadPlatformAsset(storagePath, file, {
+            upsert: true,
+            contentType: file.type || 'application/octet-stream',
+        });
 
         const downloadURL = publicUrl;
 

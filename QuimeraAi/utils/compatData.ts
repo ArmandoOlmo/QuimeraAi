@@ -1,5 +1,6 @@
 import { supabase } from '@/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { uploadPlatformAsset } from './platformAssetUpload';
 
 type AnyRecord = Record<string, any>;
 type Direction = 'asc' | 'desc';
@@ -732,6 +733,11 @@ export function endBefore(_value: any): QueryConstraint {
 export const ref = (_storage: unknown, path: string) => ({ bucket: 'platform-assets', path });
 
 export async function uploadBytes(storageRef: { bucket: string; path: string }, file: Blob | ArrayBuffer | Uint8Array) {
+    if (storageRef.bucket === 'platform-assets') {
+        await uploadPlatformAsset(storageRef.path, file, { upsert: true });
+        return { ref: storageRef };
+    }
+
     const { error } = await supabase.storage.from(storageRef.bucket).upload(storageRef.path, file, { upsert: true });
     if (error) throw error;
     return { ref: storageRef };

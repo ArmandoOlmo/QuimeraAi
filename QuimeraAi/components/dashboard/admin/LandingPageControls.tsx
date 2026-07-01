@@ -12,7 +12,7 @@ import GlobalStylesControl from '../../ui/GlobalStylesControl';
 import FontFamilyPicker from '../../ui/FontFamilyPicker';
 import FontWeightPicker from '../../ui/FontWeightPicker';
 import { resolveFontFamily } from '../../../utils/fontLoader';
-import { supabase } from '../../../supabase';
+import { uploadPlatformAsset } from '../../../utils/platformAssetUpload';
 import { ProjectContext } from '../../../contexts/project';
 import ColorControl from '../../ui/ColorControl';
 
@@ -244,15 +244,10 @@ const LandingPageControls: React.FC<LandingPageControlsProps> = ({
                 const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
                 const path = `admin/landing_page/assets/${timestamp}_${safeFileName}`;
 
-                const { error: uploadError } = await supabase.storage
-                    .from('platform-assets')
-                    .upload(path, file, { upsert: true });
-
-                if (uploadError) throw uploadError;
-
-                const { data: { publicUrl: url } } = supabase.storage
-                    .from('platform-assets')
-                    .getPublicUrl(path);
+                const { publicUrl: url } = await uploadPlatformAsset(path, file, {
+                    upsert: true,
+                    contentType: file.type || 'application/octet-stream',
+                });
 
                 return url;
             } catch (error) {

@@ -11,6 +11,7 @@ import { useAuth } from '../core/AuthContext';
 import { useSafeProject } from '../project';
 import { useSafeTenant } from '../tenant';
 import { LEGACY_CATEGORY_MAP, type MediaCategory } from '../../types/media';
+import { uploadPlatformAsset } from '../../utils/platformAssetUpload';
 
 // Admin Asset Categories
 export type AdminAssetCategory = 
@@ -322,15 +323,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `users/${user.id}/projects/${activeProjectId}/files/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const createdAt = new Date().toISOString();
             const fileRecord = {
@@ -448,15 +444,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const fullPath = `${path}/${timestamp}_${safeFileName}`;
         
-        const { error } = await supabase.storage
-            .from('platform-assets')
-            .upload(fullPath, file, { upsert: true });
-            
-        if (error) throw error;
-        
-        const { data: { publicUrl } } = supabase.storage
-            .from('platform-assets')
-            .getPublicUrl(fullPath);
+        const { publicUrl } = await uploadPlatformAsset(fullPath, file, {
+            upsert: true,
+            contentType: file.type || 'application/octet-stream',
+        });
             
         return publicUrl;
     };
@@ -499,15 +490,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `global/files/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const fileRecord = {
                 name: file.name,
@@ -626,15 +612,10 @@ export const FilesProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const storagePath = `admin/assets/${category}/${timestamp}_${safeFileName}`;
             
-            const { error: uploadError } = await supabase.storage
-                .from('platform-assets')
-                .upload(storagePath, file, { upsert: true });
-                
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl: downloadURL } } = supabase.storage
-                .from('platform-assets')
-                .getPublicUrl(storagePath);
+            const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
 
             const assetRecord = {
                 name: file.name,

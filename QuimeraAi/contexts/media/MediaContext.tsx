@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { supabase } from '../../supabase';
 import { useAuth } from '../core/AuthContext';
 import type { MediaAssetRecord, MediaCategory } from '../../types/media';
+import { uploadPlatformAsset } from '../../utils/platformAssetUpload';
 
 interface MediaContextType {
     mediaAssets: MediaAssetRecord[];
@@ -208,15 +209,10 @@ export const MediaProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const storagePath = `media/${category}/${timestamp}_${safeFileName}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from('platform-assets')
-            .upload(storagePath, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl: downloadURL } } = supabase.storage
-            .from('platform-assets')
-            .getPublicUrl(storagePath);
+        const { publicUrl: downloadURL } = await uploadPlatformAsset(storagePath, file, {
+            upsert: true,
+            contentType: file.type || 'application/octet-stream',
+        });
 
         const assetRecord = {
             name: file.name,
